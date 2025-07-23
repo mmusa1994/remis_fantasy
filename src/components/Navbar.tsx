@@ -163,45 +163,97 @@ export default function Navbar() {
               <motion.button
                 key={item.name}
                 onClick={() => handleNavClick(item.href)}
-                className="relative group text-theme-text-secondary hover:text-theme-foreground font-semibold transition-all duration-500 text-sm uppercase tracking-widest font-russo theme-transition"
+                className="relative group text-theme-text-secondary hover:text-theme-foreground font-semibold transition-all duration-500 text-sm uppercase tracking-widest font-russo theme-transition px-4 py-2"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
               >
-                {/* Glowing background on hover */}
+                {/* Dynamic background on hover - adapts to theme */}
                 <motion.div
-                  className="absolute inset-0 -m-3 bg-gradient-to-r from-red-900/20 via-gray-800/30 to-red-900/20 minimal-radius blur-sm"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileHover={{ opacity: 1, scale: 1.1 }}
-                  transition={{ duration: 0.3 }}
+                  className={`absolute inset-0 minimal-radius backdrop-blur-sm ${
+                    theme === 'light' 
+                      ? 'bg-gradient-to-r from-blue-100/60 via-slate-100/80 to-blue-100/60 shadow-lg' 
+                      : 'bg-gradient-to-r from-red-900/30 via-gray-800/40 to-red-900/30'
+                  }`}
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  whileHover={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                 />
 
-                <span className="relative z-10 group-hover:text-shadow-lg">
+                {/* Subtle inner glow */}
+                <motion.div
+                  className={`absolute inset-0 minimal-radius ${
+                    theme === 'light'
+                      ? 'bg-gradient-to-r from-transparent via-blue-200/20 to-transparent'
+                      : 'bg-gradient-to-r from-transparent via-red-500/10 to-transparent'
+                  }`}
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                />
+
+                <span className="relative z-10 drop-shadow-sm">
                   {item.name}
                 </span>
 
-                {/* Sophisticated underline */}
+                {/* Sophisticated underline - theme adaptive */}
                 <motion.div
-                  className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-red-600 to-transparent origin-center"
+                  className={`absolute -bottom-1 left-2 right-2 h-0.5 ${
+                    theme === 'light'
+                      ? 'bg-gradient-to-r from-transparent via-blue-600 to-transparent'
+                      : 'bg-gradient-to-r from-transparent via-red-500 to-transparent'
+                  } origin-center`}
                   initial={{ scaleX: 0, opacity: 0 }}
                   whileHover={{ scaleX: 1, opacity: 1 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
                 />
 
-                {/* Border accent on sides */}
+                {/* Top accent line */}
                 <motion.div
-                  className="absolute top-0 bottom-0 left-0 w-0.5 bg-gradient-to-b from-transparent via-red-700 to-transparent"
-                  initial={{ opacity: 0, scaleY: 0 }}
-                  whileHover={{ opacity: 1, scaleY: 1 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className={`absolute -top-1 left-2 right-2 h-0.5 ${
+                    theme === 'light'
+                      ? 'bg-gradient-to-r from-transparent via-slate-400/60 to-transparent'
+                      : 'bg-gradient-to-r from-transparent via-gray-400/40 to-transparent'
+                  }`}
+                  initial={{ scaleX: 0, opacity: 0 }}
+                  whileHover={{ scaleX: 1, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                />
+
+                {/* Corner accents */}
+                <motion.div
+                  className={`absolute top-0 left-0 w-1 h-1 ${
+                    theme === 'light' ? 'bg-blue-500' : 'bg-red-500'
+                  } minimal-radius`}
+                  initial={{ scale: 0, opacity: 0 }}
+                  whileHover={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2, delay: 0.2 }}
                 />
                 <motion.div
-                  className="absolute top-0 bottom-0 right-0 w-0.5 bg-gradient-to-b from-transparent via-red-700 to-transparent"
-                  initial={{ opacity: 0, scaleY: 0 }}
-                  whileHover={{ opacity: 1, scaleY: 1 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className={`absolute top-0 right-0 w-1 h-1 ${
+                    theme === 'light' ? 'bg-blue-500' : 'bg-red-500'
+                  } minimal-radius`}
+                  initial={{ scale: 0, opacity: 0 }}
+                  whileHover={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2, delay: 0.25 }}
+                />
+                <motion.div
+                  className={`absolute bottom-0 left-0 w-1 h-1 ${
+                    theme === 'light' ? 'bg-blue-500' : 'bg-red-500'
+                  } minimal-radius`}
+                  initial={{ scale: 0, opacity: 0 }}
+                  whileHover={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2, delay: 0.3 }}
+                />
+                <motion.div
+                  className={`absolute bottom-0 right-0 w-1 h-1 ${
+                    theme === 'light' ? 'bg-blue-500' : 'bg-red-500'
+                  } minimal-radius`}
+                  initial={{ scale: 0, opacity: 0 }}
+                  whileHover={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2, delay: 0.35 }}
                 />
               </motion.button>
             ))}
