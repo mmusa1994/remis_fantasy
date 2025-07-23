@@ -170,25 +170,29 @@ export default function RegistrationForm() {
       }
 
       // Insert registration data
-      const { error } = await supabase.from("registration_25_26").insert([
-        {
-          first_name: formData.first_name.trim(),
-          last_name: formData.last_name.trim(),
-          email: formData.email.trim(),
-          phone: formData.phone.trim(),
-          team_name: formData.team_name.trim(),
-          league_type: formData.league_type,
-          h2h_league: formData.h2h_league,
-          payment_method: formData.payment_method,
-          cash_status: formData.cash_status,
-          payment_proof_url: paymentProofUrl,
-          created_at: new Date().toISOString(),
-        },
-      ]);
+      const { data: insertedData, error } = await supabase
+        .from("registration_25_26")
+        .insert([
+          {
+            first_name: formData.first_name.trim(),
+            last_name: formData.last_name.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+            team_name: formData.team_name.trim(),
+            league_type: formData.league_type,
+            h2h_league: formData.h2h_league,
+            payment_method: formData.payment_method,
+            cash_status: formData.cash_status,
+            payment_proof_url: paymentProofUrl,
+            created_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
 
       if (error) throw error;
 
-      // Send confirmation email
+      // Send registration confirmation email (without codes) to user and admin notification
       try {
         const emailResponse = await fetch("/api/send-email", {
           method: "POST",
@@ -196,6 +200,8 @@ export default function RegistrationForm() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            emailType: "registration",
+            registrationId: insertedData?.id,
             userData: {
               first_name: formData.first_name.trim(),
               last_name: formData.last_name.trim(),
@@ -365,7 +371,8 @@ export default function RegistrationForm() {
                 backgroundSize: "200% 200%",
                 mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
                 maskComposite: "xor",
-                WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                WebkitMask:
+                  "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
                 WebkitMaskComposite: "xor",
                 padding: "2px",
               }}
@@ -394,9 +401,7 @@ export default function RegistrationForm() {
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                 >
-                  <motion.span
-                    className="text-theme-heading-primary theme-transition"
-                  >
+                  <motion.span className="text-theme-heading-primary theme-transition">
                     Lični Podaci
                   </motion.span>
                 </motion.h3>
@@ -405,7 +410,6 @@ export default function RegistrationForm() {
                   {/* First Name */}
                   <div className="relative">
                     <div className="relative">
-
                       <motion.input
                         type="text"
                         id="first_name"
@@ -453,7 +457,6 @@ export default function RegistrationForm() {
                   {/* Last Name */}
                   <div className="relative">
                     <div className="relative">
-
                       <motion.input
                         type="text"
                         id="last_name"
@@ -517,7 +520,6 @@ export default function RegistrationForm() {
                   {/* Email */}
                   <div className="relative">
                     <div className="relative">
-
                       <motion.input
                         type="email"
                         id="email"
@@ -565,7 +567,6 @@ export default function RegistrationForm() {
                   {/* Phone */}
                   <div className="relative">
                     <div className="relative">
-
                       <motion.input
                         type="tel"
                         id="phone"
@@ -627,7 +628,6 @@ export default function RegistrationForm() {
 
                 <div className="relative">
                   <div className="relative">
-
                     <motion.input
                       type="text"
                       id="team_name"
@@ -1345,7 +1345,10 @@ export default function RegistrationForm() {
                         >
                           Dobrodošli u REMIS Fantasy 2025/26!
                           <br className="md:hidden" />
-                          Poslali smo vam email sa kodovima za pristup ligi.
+                          Poslali smo vam email sa potvrdom prijave.
+                          <br />
+                          Kodovi za pristup ligi će vam biti poslati nakon
+                          revizije uplate.
                         </motion.p>
                       </div>
                     </div>

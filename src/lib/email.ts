@@ -103,14 +103,18 @@ const createPremiumTemplate = (userData: UserData) => `
             font-size: 18px;
         }
         .access-code {
-            background: #333;
-            color: #F5D056;
-            font-size: 24px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 28px;
             font-weight: bold;
-            padding: 15px;
-            border-radius: 6px;
-            letter-spacing: 2px;
-            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            padding: 20px 15px;
+            border-radius: 8px;
+            letter-spacing: 3px;
+            margin: 15px 0;
+            border: 3px solid #F5D056;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
         .footer {
             background: #333;
@@ -269,14 +273,18 @@ const createStandardTemplate = (userData: UserData) => `
             font-size: 18px;
         }
         .access-code {
-            background: #333;
-            color: #9EEBEB;
-            font-size: 24px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 28px;
             font-weight: bold;
-            padding: 15px;
-            border-radius: 6px;
-            letter-spacing: 2px;
-            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            padding: 20px 15px;
+            border-radius: 8px;
+            letter-spacing: 3px;
+            margin: 15px 0;
+            border: 3px solid #4FC3F7;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
         .footer {
             background: #333;
@@ -469,25 +477,30 @@ const createPremiumH2HTemplate = (userData: UserData) => `
         }
         .access-code {
             background: #1a1a1a;
-            font-size: 28px;
+            font-family: 'Courier New', monospace;
+            font-size: 32px;
             font-weight: bold;
-            padding: 20px;
-            border-radius: 10px;
-            letter-spacing: 3px;
-            border: 3px solid;
-            box-shadow: 0 0 20px;
+            padding: 25px 20px;
+            border-radius: 12px;
+            letter-spacing: 4px;
+            border: 4px solid;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            margin: 20px 0;
+            text-align: center;
         }
         .premium-code {
-            color: #ffd700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            color: #ffffff;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             border-color: #ffd700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4), inset 0 2px 4px rgba(255, 215, 0, 0.1);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
         .h2h-code {
-            color: #87ceeb;
-            text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
-            border-color: #87ceeb;
-            box-shadow: 0 0 20px rgba(135, 206, 235, 0.3);
+            color: #ffffff;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-color: #ff4444;
+            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4), inset 0 2px 4px rgba(255, 68, 68, 0.1);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
         .footer {
             background: #333;
@@ -725,25 +738,30 @@ const createStandardH2HTemplate = (userData: UserData) => `
         }
         .access-code {
             background: #1a1a1a;
-            font-size: 28px;
+            font-family: 'Courier New', monospace;
+            font-size: 32px;
             font-weight: bold;
-            padding: 20px;
-            border-radius: 10px;
-            letter-spacing: 3px;
-            border: 3px solid;
-            box-shadow: 0 0 20px;
+            padding: 25px 20px;
+            border-radius: 12px;
+            letter-spacing: 4px;
+            border: 4px solid;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            margin: 20px 0;
+            text-align: center;
         }
         .standard-code {
-            color: #0ea5e9;
-            text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
-            border-color: #0ea5e9;
-            box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+            color: #ffffff;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-color: #4FC3F7;
+            box-shadow: 0 6px 20px rgba(79, 195, 247, 0.4), inset 0 2px 4px rgba(79, 195, 247, 0.1);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
         .h2h-code {
-            color: #87ceeb;
-            text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
-            border-color: #87ceeb;
-            box-shadow: 0 0 20px rgba(135, 206, 235, 0.3);
+            color: #ffffff;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-color: #ff4444;
+            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4), inset 0 2px 4px rgba(255, 68, 68, 0.1);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
         .footer {
             background: #333;
@@ -858,6 +876,431 @@ const createStandardH2HTemplate = (userData: UserData) => `
 </html>
 `;
 
+// Admin confirmation template
+const createAdminConfirmationTemplate = (userData: UserData) => `
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REMIS Fantasy - Nova Registracija</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .alert-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .alert-section h2 {
+            color: #856404;
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        .alert-section p {
+            color: #856404;
+            margin: 0;
+            font-size: 16px;
+        }
+        .user-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .user-details h3 {
+            color: #333;
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #495057;
+            min-width: 120px;
+        }
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+        .league-info {
+            background: ${
+              userData.league_type === "premium" ? "#fff8e1" : "#e3f2fd"
+            };
+            border: 2px solid ${
+              userData.league_type === "premium" ? "#ffc107" : "#2196f3"
+            };
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .league-info h4 {
+            color: ${
+              userData.league_type === "premium" ? "#ff8f00" : "#1976d2"
+            };
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .league-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: ${
+              userData.league_type === "premium" ? "#ff8f00" : "#1976d2"
+            };
+        }
+        .h2h-badge {
+            background: #ff5722;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .footer {
+            background: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .footer p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .timestamp {
+            color: #6c757d;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Nova Registracija</h1>
+            <p>REMIS Fantasy Admin Panel</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert-section">
+                <h2>🔔 Notification</h2>
+                <p>Registrovan je novi korisnik na REMIS Fantasy platform</p>
+            </div>
+            
+            <div class="user-details">
+                <h3>Korisničke Informacije</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Ime i Prezime:</span>
+                    <span class="detail-value">${userData.first_name} ${
+  userData.last_name
+}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value">${userData.email}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Telefon:</span>
+                    <span class="detail-value">${userData.phone}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Naziv Tima:</span>
+                    <span class="detail-value">${userData.team_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Tip Lige:</span>
+                    <span class="detail-value">${
+                      userData.league_type === "premium"
+                        ? "Premium Liga"
+                        : "Standard Liga"
+                    }</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">H2H Liga:</span>
+                    <span class="detail-value">${
+                      userData.h2h_league ? "Da" : "Ne"
+                    }</span>
+                </div>
+            </div>
+            
+            <div class="league-info">
+                <h4>${
+                  userData.league_type === "premium"
+                    ? "🏆 Premium Liga"
+                    : "⚽ Standard Liga"
+                }</h4>
+                <div class="league-price">
+                    ${
+                      userData.league_type === "premium"
+                        ? "50€ / 100KM"
+                        : "15€ / 30KM"
+                    }
+                </div>
+                ${
+                  userData.h2h_league
+                    ? '<div class="h2h-badge">+ H2H Liga</div>'
+                    : ""
+                }
+            </div>
+            
+            <div class="timestamp">
+                <p>Registracija izvršena: ${new Date().toLocaleString("sr-RS", {
+                  timeZone: "Europe/Belgrade",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>REMIS Fantasy Admin Panel</strong></p>
+            <p>Automatska notifikacija sistema</p>
+        </div>
+    </div>
+</body>
+</html>
+`;
+
+// Registration confirmation template (simple confirmation)
+const createRegistrationConfirmationTemplate = (userData: UserData) => `
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REMIS Fantasy - Registracija Uspješna</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        .content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .success-message {
+            font-size: 18px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .user-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: left;
+        }
+        .user-info h3 {
+            color: #4CAF50;
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            text-align: center;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .info-value {
+            color: #333;
+        }
+        .next-steps {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        .next-steps h3 {
+            color: #1976d2;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+        .next-steps p {
+            color: #333;
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+        .highlight {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .highlight p {
+            margin: 0;
+            color: #e65100;
+            font-weight: 500;
+        }
+        .footer {
+            background: #333;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .footer p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">✅</div>
+            <h1>Registracija Uspješna!</h1>
+        </div>
+        
+        <div class="content">
+            <div class="success-message">
+                <p>Pozdrav ${userData.first_name}!</p>
+                <p>Tvoja registracija za REMIS Fantasy ${
+                  userData.league_type === "premium" ? "Premium" : "Standard"
+                } ligu je uspješno primljena.</p>
+            </div>
+            
+            <div class="user-info">
+                <h3>Potvrda Registracije</h3>
+                <div class="info-row">
+                    <span class="info-label">Ime:</span>
+                    <span class="info-value">${userData.first_name} ${
+  userData.last_name
+}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">${userData.email}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tim:</span>
+                    <span class="info-value">${userData.team_name}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Liga:</span>
+                    <span class="info-value">${
+                      userData.league_type === "premium"
+                        ? "Premium Liga (50€/100KM)"
+                        : "Standard Liga (15€/30KM)"
+                    }</span>
+                </div>
+                ${
+                  userData.h2h_league
+                    ? '<div class="info-row"><span class="info-label">H2H Liga:</span><span class="info-value">Uključena</span></div>'
+                    : ""
+                }
+            </div>
+            
+            <div class="next-steps">
+                <h3>Sledeći Koraci</h3>
+                <p>• Naš tim će pregledati tvoju registraciju</p>
+                <p>• Uskoro ćeš primiti email sa pristupnim kodovima</p>
+                <p>• Kodovi će ti omogućiti pristup ligama na platformi</p>
+            </div>
+            
+            <div class="highlight">
+                <p><strong>Važno:</strong> Čuvaj sve email-ove koje ćeš primiti jer sadrže pristupne kodove potrebne za igranje!</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>REMIS Fantasy 2025/26</strong></p>
+            <p>Kontakt: info@remisfantasy.com</p>
+            <p>Hvala ti što si dio naše zajednice! 🎉</p>
+        </div>
+    </div>
+</body>
+</html>
+`;
+
 // Function to send confirmation email
 export const sendConfirmationEmail = async (userData: UserData) => {
   try {
@@ -891,6 +1334,55 @@ export const sendConfirmationEmail = async (userData: UserData) => {
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error("Error sending email:", error);
+    throw error;
+  }
+};
+
+// Function to send admin notification email
+export const sendAdminNotificationEmail = async (
+  userData: UserData,
+  adminEmail: string = process.env.ADMIN_EMAIL || "admin@remisfantasy.com"
+) => {
+  try {
+    const emailTemplate = createAdminConfirmationTemplate(userData);
+    const subject = `🔔 Nova Registracija - ${userData.first_name} ${
+      userData.last_name
+    } (${userData.league_type.toUpperCase()})`;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: adminEmail,
+      subject: subject,
+      html: emailTemplate,
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("Admin notification email sent successfully:", result);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("Error sending admin notification email:", error);
+    throw error;
+  }
+};
+
+// Function to send registration confirmation email (simple confirmation without access codes)
+export const sendRegistrationConfirmationEmail = async (userData: UserData) => {
+  try {
+    const emailTemplate = createRegistrationConfirmationTemplate(userData);
+    const subject = `✅ REMIS Fantasy - Registracija Potvrđena`;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: userData.email,
+      subject: subject,
+      html: emailTemplate,
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("Registration confirmation email sent successfully:", result);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("Error sending registration confirmation email:", error);
     throw error;
   }
 };

@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import { LogOut } from "lucide-react";
+import { LogOut, Mail, CheckCircle, Send } from "lucide-react";
 
 interface Registration {
   id: string;
@@ -24,6 +24,12 @@ interface Registration {
   admin_notes?: string;
   admin_confirmed_by?: string;
   admin_confirmed_at?: string;
+  package_type?: string;
+  registration_email_sent?: boolean;
+  codes_email_sent?: boolean;
+  email_template_type?: string;
+  registration_email_sent_at?: string;
+  codes_email_sent_at?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -43,6 +49,7 @@ export default function AdminDashboard() {
     payment_status: "all",
     payment_method: "all",
     cash_status: "all",
+    codes_email_status: "all",
   });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<{
@@ -53,6 +60,7 @@ export default function AdminDashboard() {
   const [loadingFile, setLoadingFile] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(25);
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -106,6 +114,49 @@ export default function AdminDashboard() {
     await fetchRegistrations();
   };
 
+  const sendCodesEmail = async (registration: Registration) => {
+    try {
+      setSendingEmail(registration.id);
+
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailType: "codes",
+          registrationId: registration.id,
+          userData: {
+            first_name: registration.first_name,
+            last_name: registration.last_name,
+            email: registration.email,
+            phone: registration.phone,
+            team_name: registration.team_name,
+            league_type: registration.league_type,
+            h2h_league: registration.h2h_league,
+            payment_method: registration.payment_method,
+            cash_status: registration.cash_status,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send email");
+      }
+
+      // Refresh registrations to update email status
+      await fetchRegistrations();
+
+      // Show success message (you can add a toast notification here)
+      alert("Email sa kodovima je uspešno poslat!");
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert("Greška pri slanju emaila. Pokušajte ponovo.");
+    } finally {
+      setSendingEmail(null);
+    }
+  };
+
   const applyFilters = () => {
     let filtered = [...registrations];
 
@@ -156,6 +207,15 @@ export default function AdminDashboard() {
     if (filters.cash_status !== "all") {
       filtered = filtered.filter(
         (reg) => reg.cash_status === filters.cash_status
+      );
+    }
+
+    // Codes email status filter
+    if (filters.codes_email_status !== "all") {
+      filtered = filtered.filter((reg) =>
+        filters.codes_email_status === "sent"
+          ? reg.codes_email_sent === true
+          : reg.codes_email_sent !== true
       );
     }
 
@@ -216,7 +276,9 @@ export default function AdminDashboard() {
                 priority
               />
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">REMIS Fantasy Admin</h1>
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                  REMIS Fantasy Admin
+                </h1>
                 <p className="text-xs sm:text-sm opacity-75 truncate">
                   Welcome, {session?.user?.email}
                 </p>
@@ -503,6 +565,23 @@ export default function AdminDashboard() {
                 <option value="rejected">Rejected</option>
               </select>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email Status
+              </label>
+              <select
+                value={filters.codes_email_status}
+                onChange={(e) =>
+                  setFilters({ ...filters, codes_email_status: e.target.value })
+                }
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 transition-all duration-200"
+              >
+                <option value="all">All</option>
+                <option value="sent">Codes Sent</option>
+                <option value="pending">Codes Pending</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -549,6 +628,12 @@ export default function AdminDashboard() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Payment Proof
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
@@ -688,6 +773,82 @@ export default function AdminDashboard() {
                         </button>
                       ) : (
                         <span className="text-red-600 text-sm">No proof</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1">
+                          {reg.registration_email_sent ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                              <CheckCircle className="w-3 h-3" />
+                              Registration
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                              <Mail className="w-3 h-3" />
+                              Not sent
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {reg.codes_email_sent ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                              <CheckCircle className="w-3 h-3" />
+                              Codes sent
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                              <Mail className="w-3 h-3" />
+                              Codes pending
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {!reg.codes_email_sent && (
+                        <button
+                          onClick={() => sendCodesEmail(reg)}
+                          disabled={sendingEmail === reg.id}
+                          className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                            sendingEmail === reg.id
+                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              : "bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl"
+                          }`}
+                        >
+                          {sendingEmail === reg.id ? (
+                            <>
+                              <svg
+                                className="w-4 h-4 animate-spin"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                              </svg>
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4" />
+                              Send Codes
+                            </>
+                          )}
+                        </button>
+                      )}
+                      {reg.codes_email_sent && (
+                        <div className="text-xs text-gray-500">
+                          Sent on{" "}
+                          {reg.codes_email_sent_at &&
+                            new Date(
+                              reg.codes_email_sent_at
+                            ).toLocaleDateString()}
+                        </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
