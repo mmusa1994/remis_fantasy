@@ -42,7 +42,7 @@ export default function Toast({
             damping: 30,
             duration: 0.3,
           }}
-          className="fixed top-[85px] left-1/4 transform -translate-x-1/2 z-50 max-w-lg w-[calc(100%-16px)] mx-2"
+          className="fixed top-[85px] right-4 z-50 max-w-lg w-[calc(100%-32px)] sm:w-auto sm:max-w-md"
         >
           <div
             className={`
