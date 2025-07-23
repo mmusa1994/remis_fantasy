@@ -1217,14 +1217,16 @@ export default function RegistrationForm() {
                           i pošaljite novac:
                         </p>
 
-                        <div className="flex items-center gap-2 bg-black/40 rounded-lg p-3 border border-gray-700/50">
-                          <Mail className="w-4 h-4 text-green-400 flex-shrink-0" />
-                          <span className="text-white font-mono text-sm flex-1">
-                            muhamed.musa1994@gmail.com
-                          </span>
+                        <div className="bg-black/40 rounded-lg p-3 border border-gray-700/50">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Mail className="w-4 h-4 text-green-400 flex-shrink-0" />
+                            <span className="text-white font-mono text-xs sm:text-sm flex-1 break-all">
+                              muhamed.musa1994@gmail.com
+                            </span>
+                          </div>
                           <motion.button
                             onClick={copyEmailToClipboard}
-                            className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors border"
+                            className="w-full sm:w-auto flex items-center justify-center gap-1 px-3 py-2 rounded text-xs font-medium transition-colors border"
                             style={{
                               backgroundColor: emailCopied
                                 ? "rgba(34, 197, 94, 0.2)"
@@ -1234,8 +1236,8 @@ export default function RegistrationForm() {
                                 : "rgba(107, 114, 128, 0.4)",
                               color: emailCopied ? "#22c55e" : "#9ca3af",
                             }}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                           >
                             <Copy className="w-3 h-3" />
                             {emailCopied ? "Kopirano!" : "Kopiraj"}
