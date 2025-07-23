@@ -3,11 +3,15 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
+    console.log("Middleware - Token:", !!req.nextauth.token);
     return NextResponse.next();
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token }) => {
+        console.log("Middleware authorized check:", !!token);
+        return !!token;
+      },
     },
   }
 );

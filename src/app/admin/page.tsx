@@ -22,14 +22,9 @@ export default function AdminLogin() {
       const result = await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        redirect: true,
+        callbackUrl: "/admin/dashboard",
       });
-
-      if (result?.error) {
-        setError("Invalid email or password");
-      } else {
-        router.push("/admin/dashboard");
-      }
     } catch (error) {
       setError("An error occurred. Please try again.");
     } finally {

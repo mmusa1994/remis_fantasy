@@ -56,8 +56,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/admin");
+    } else if (status === "authenticated" && session) {
+      console.log("User authenticated:", session.user);
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   useEffect(() => {
     fetchRegistrations();
