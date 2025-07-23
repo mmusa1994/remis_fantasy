@@ -73,6 +73,15 @@ export default function RegistrationForm() {
 
     if (!formData.phone.trim()) {
       newErrors.phone = "Broj telefona je obavezan";
+    } else {
+      // Simple phone validation - allows various formats but ensures it looks like a phone number
+      const phoneRegex = /^[\+]?[\d\s\-\(\)]{8,20}$/;
+      const cleanPhone = formData.phone.replace(/\s/g, ""); // Remove spaces for length check
+
+      if (!phoneRegex.test(formData.phone) || cleanPhone.length < 8) {
+        newErrors.phone =
+          "Molimo unesite valjan broj telefona (minimum 8 cifara)";
+      }
     }
 
     if (!formData.team_name.trim()) {
@@ -1090,7 +1099,7 @@ export default function RegistrationForm() {
                           { id: "paid", name: "Plaćeno", color: "green" },
                           {
                             id: "pending",
-                            name: "Na Čekanju",
+                            name: "Dostaviti ću",
                             color: "yellow",
                           },
                         ].map((status) => (

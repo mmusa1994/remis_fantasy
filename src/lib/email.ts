@@ -103,8 +103,8 @@ const createPremiumTemplate = (userData: UserData) => `
             font-size: 18px;
         }
         .access-code {
-            background: #1a1a1a;
-            color: #ffffff;
+            background: #000000;
+            color: #ffffff !important;
             font-size: 28px;
             font-weight: bold;
             font-family: 'Courier New', monospace;
@@ -114,7 +114,7 @@ const createPremiumTemplate = (userData: UserData) => `
             margin: 15px 0;
             border: 3px solid #F5D056;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            text-align: center;
         }
         .footer {
             background: #333;
@@ -489,18 +489,16 @@ const createPremiumH2HTemplate = (userData: UserData) => `
             text-align: center;
         }
         .premium-code {
-            color: #ffffff;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff !important;
+            background: #000000;
             border-color: #ffd700;
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4), inset 0 2px 4px rgba(255, 215, 0, 0.1);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         .h2h-code {
-            color: #ffffff;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff !important;
+            background: #000000;
             border-color: #ff4444;
-            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4), inset 0 2px 4px rgba(255, 68, 68, 0.1);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         .footer {
             background: #333;
@@ -750,11 +748,10 @@ const createStandardH2HTemplate = (userData: UserData) => `
             text-align: center;
         }
         .standard-code {
-            color: #ffffff;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff !important;
+            background: #000000;
             border-color: #4FC3F7;
-            box-shadow: 0 6px 20px rgba(79, 195, 247, 0.4), inset 0 2px 4px rgba(79, 195, 247, 0.1);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         .h2h-code {
             color: #ffffff;

@@ -463,22 +463,24 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-bold text-gray-800">Filters</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search
-              </label>
-              <input
-                type="text"
-                placeholder="Name, email, team..."
-                value={filters.search}
-                onChange={(e) =>
-                  setFilters({ ...filters, search: e.target.value })
-                }
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all duration-200"
-              />
-            </div>
+          {/* Search Bar - Full Width */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Search
+            </label>
+            <input
+              type="text"
+              placeholder="Name, email, team..."
+              value={filters.search}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all duration-200"
+            />
+          </div>
 
+          {/* Filter Dropdowns - Responsive Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 League Type
@@ -488,7 +490,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setFilters({ ...filters, league_type: e.target.value })
                 }
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 transition-all duration-200"
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
               >
                 <option value="all">All Leagues</option>
                 <option value="standard">Standard</option>
@@ -505,7 +507,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setFilters({ ...filters, h2h_league: e.target.value })
                 }
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 transition-all duration-200"
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
               >
                 <option value="all">All</option>
                 <option value="yes">H2H Yes</option>
@@ -522,7 +524,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setFilters({ ...filters, payment_status: e.target.value })
                 }
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 transition-all duration-200"
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
               >
                 <option value="all">All</option>
                 <option value="paid">Paid</option>
@@ -539,7 +541,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setFilters({ ...filters, payment_method: e.target.value })
                 }
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 transition-all duration-200"
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
               >
                 <option value="all">All Methods</option>
                 <option value="bank">Bank Transfer</option>
@@ -557,7 +559,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setFilters({ ...filters, cash_status: e.target.value })
                 }
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 transition-all duration-200"
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
@@ -575,13 +577,31 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setFilters({ ...filters, codes_email_status: e.target.value })
                 }
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 transition-all duration-200"
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
               >
                 <option value="all">All</option>
                 <option value="sent">Codes Sent</option>
                 <option value="pending">Codes Pending</option>
               </select>
             </div>
+          </div>
+
+          {/* Clear Filters Button */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={() => setFilters({
+                search: "",
+                league_type: "all",
+                h2h_league: "all",
+                payment_status: "all",
+                payment_method: "all",
+                cash_status: "all",
+                codes_email_status: "all",
+              })}
+              className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+            >
+              Clear All Filters
+            </button>
           </div>
         </div>
 
@@ -670,8 +690,8 @@ export default function AdminDashboard() {
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           reg.h2h_league
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
                         {reg.h2h_league ? "✓" : "✗"}
