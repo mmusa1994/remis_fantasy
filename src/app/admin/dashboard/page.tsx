@@ -50,6 +50,8 @@ export default function AdminDashboard() {
   } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingFile, setLoadingFile] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(25);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -155,10 +157,36 @@ export default function AdminDashboard() {
     }
 
     setFilteredRegistrations(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/admin" });
+  };
+
+  // Pagination functions
+  const totalPages = Math.ceil(filteredRegistrations.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentRegistrations = filteredRegistrations.slice(
+    startIndex,
+    endIndex
+  );
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   if (status === "loading" || loading) {
@@ -480,8 +508,10 @@ export default function AdminDashboard() {
               Registrations
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              Showing {filteredRegistrations.length} of {registrations.length}{" "}
-              registrations
+              Showing {startIndex + 1}-
+              {Math.min(endIndex, filteredRegistrations.length)} of{" "}
+              {filteredRegistrations.length} registrations
+              {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
             </p>
           </div>
           <div className="overflow-x-auto">
@@ -521,7 +551,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredRegistrations.map((reg) => (
+                {currentRegistrations.map((reg) => (
                   <tr key={reg.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {reg.first_name} {reg.last_name}
@@ -663,6 +693,66 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="bg-white px-6 py-4 border-t border-gray-200 rounded-b-xl">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Showing {startIndex + 1} to{" "}
+                  {Math.min(endIndex, filteredRegistrations.length)} of{" "}
+                  {filteredRegistrations.length} registrations
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNumber;
+                      if (totalPages <= 5) {
+                        pageNumber = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNumber = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNumber = totalPages - 4 + i;
+                      } else {
+                        pageNumber = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <button
+                          key={pageNumber}
+                          onClick={() => goToPage(pageNumber)}
+                          className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                            currentPage === pageNumber
+                              ? "bg-amber-500 text-white"
+                              : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {pageNumber}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
