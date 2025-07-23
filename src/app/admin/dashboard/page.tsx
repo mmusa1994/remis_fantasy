@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
+import { LogOut } from "lucide-react";
 
 interface Registration {
   id: string;
@@ -205,27 +206,29 @@ export default function AdminDashboard() {
       <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <Image
                 src="/images/rf-logo.svg"
                 alt="REMIS Fantasy Logo"
                 width={40}
                 height={40}
-                className="w-10 h-10"
+                className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
                 priority
               />
-              <div>
-                <h1 className="text-2xl font-bold">REMIS Fantasy Admin</h1>
-                <p className="text-sm opacity-75">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">REMIS Fantasy Admin</h1>
+                <p className="text-xs sm:text-sm opacity-75 truncate">
                   Welcome, {session?.user?.email}
                 </p>
               </div>
             </div>
             <button
               onClick={handleSignOut}
-              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+              className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+              title="Sign Out"
             >
-              Sign Out
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
         </div>
@@ -354,11 +357,11 @@ export default function AdminDashboard() {
                 <h3 className="text-sm font-medium text-gray-500">
                   H2H Participants
                 </h3>
-                <p className="text-3xl font-bold text-green-600">
+                <p className="text-3xl font-bold text-red-900">
                   {registrations.filter((r) => r.h2h_league).length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-red-800 to-red-900 rounded-lg flex items-center justify-center">
                 <svg
                   className="w-6 h-6 text-white"
                   fill="none"
@@ -582,8 +585,8 @@ export default function AdminDashboard() {
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           reg.h2h_league
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {reg.h2h_league ? "✓" : "✗"}

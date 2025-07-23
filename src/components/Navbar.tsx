@@ -4,6 +4,8 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const navItems = [
   { name: "Registracija", href: "#registration" },
@@ -14,11 +16,15 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
+  const { theme } = useTheme();
 
   const backgroundColor = useTransform(
     scrollY,
     [0, 100],
-    ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.95)"]
+    [
+      "transparent",
+      theme === "dark" ? "rgba(0, 0, 0, 0.95)" : "rgba(245, 245, 220, 0.95)",
+    ]
   );
 
   const backdropBlur = useTransform(
@@ -44,11 +50,12 @@ export default function Navbar() {
 
   return (
     <motion.nav
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-700"
+      className="fixed top-0 left-0 right-0 transition-all duration-700 theme-transition"
       style={{
         backgroundColor,
         backdropFilter: backdropBlur,
         WebkitBackdropFilter: backdropBlur,
+        zIndex: 9999,
       }}
     >
       {/* Animated border-bottom */}
@@ -104,7 +111,7 @@ export default function Navbar() {
             >
               {/* Sophisticated glow effect */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-br from-red-900/40 via-gray-600/30 to-red-800/40 rounded-full blur-xl"
+                className="absolute inset-0 bg-gradient-to-br from-red-900/40 via-gray-600/30 to-red-800/40 force-circle blur-xl"
                 animate={{
                   scale: [1, 1.3, 1],
                   opacity: [0.4, 0.7, 0.4],
@@ -132,7 +139,7 @@ export default function Navbar() {
 
               {/* Elegant rotating border */}
               <motion.div
-                className="absolute inset-0 rounded-full"
+                className="absolute inset-0 force-circle"
                 style={{
                   background:
                     "conic-gradient(from 0deg, transparent 0deg, rgba(139, 69, 19, 0.6) 90deg, transparent 180deg, rgba(220, 38, 38, 0.4) 270deg, transparent 360deg)",
@@ -151,12 +158,12 @@ export default function Navbar() {
           </motion.div>
 
           {/* Navigation Links - Right */}
-          <div className="hidden lg:flex items-center space-x-10">
+          <div className="hidden lg:flex items-center space-x-6">
             {navItems.map((item, index) => (
               <motion.button
                 key={item.name}
                 onClick={() => handleNavClick(item.href)}
-                className="relative group text-gray-300 hover:text-white font-semibold transition-all duration-500 text-sm uppercase tracking-widest font-russo"
+                className="relative group text-theme-text-secondary hover:text-theme-foreground font-semibold transition-all duration-500 text-sm uppercase tracking-widest font-russo theme-transition"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -165,7 +172,7 @@ export default function Navbar() {
               >
                 {/* Glowing background on hover */}
                 <motion.div
-                  className="absolute inset-0 -m-3 bg-gradient-to-r from-red-900/20 via-gray-800/30 to-red-900/20 rounded-lg blur-sm"
+                  className="absolute inset-0 -m-3 bg-gradient-to-r from-red-900/20 via-gray-800/30 to-red-900/20 minimal-radius blur-sm"
                   initial={{ opacity: 0, scale: 0.8 }}
                   whileHover={{ opacity: 1, scale: 1.1 }}
                   transition={{ duration: 0.3 }}
@@ -198,13 +205,17 @@ export default function Navbar() {
                 />
               </motion.button>
             ))}
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden">
+          {/* Mobile Menu Button and Theme Toggle */}
+          <div className="lg:hidden flex items-center space-x-3">
+            <ThemeToggle />
             <motion.button
               onClick={() => setIsOpen(!isOpen)}
-              className="relative text-gray-300 hover:text-white transition-colors duration-300 p-3 rounded-lg backdrop-blur-sm bg-gray-900/30 border border-gray-700/50"
+              className="relative text-theme-text-secondary hover:text-theme-foreground transition-colors duration-300 p-3 minimal-radius backdrop-blur-sm bg-theme-secondary border border-theme-border theme-transition"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -221,22 +232,29 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       <motion.div
-        className="lg:hidden overflow-hidden"
+        className="lg:hidden overflow-hidden relative"
         initial={false}
         animate={{
           height: isOpen ? "auto" : 0,
           opacity: isOpen ? 1 : 0,
         }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
+        style={{ zIndex: 9999 }}
       >
-        <div className="bg-black/95 backdrop-blur-xl border-t border-gray-800/50">
+        <div className="backdrop-blur-xl border-t border-theme-border theme-transition shadow-2xl"
+             style={{
+               background: `var(--theme-background)`,
+               backdropFilter: 'blur(20px)',
+               WebkitBackdropFilter: 'blur(20px)',
+               boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+             }}>
           <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
             <div className="space-y-4">
               {navItems.map((item, index) => (
                 <motion.button
                   key={item.name}
                   onClick={() => handleNavClick(item.href)}
-                  className="block w-full text-left text-gray-300 hover:text-white font-semibold py-4 px-6 rounded-lg hover:bg-gray-900/50 border border-gray-800/30 hover:border-red-800/50 transition-all duration-400 text-base uppercase tracking-wider backdrop-blur-sm font-russo"
+                  className="block w-full text-left text-theme-text-secondary hover:text-theme-foreground font-semibold py-4 px-6 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border border-theme-border hover:border-theme-border-strong transition-all duration-400 text-base uppercase tracking-wider backdrop-blur-sm font-russo theme-transition"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{
                     opacity: isOpen ? 1 : 0,

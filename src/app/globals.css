@@ -11,24 +11,115 @@
   font-display: swap;
 }
 
-:root {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --accent: #3b82f6;
-  --muted: #64748b;
-  --border: #e2e8f0;
+/* Light Theme Colors - BEIGE PALETTE */
+:root[data-theme="light"] {
+  /* Basic colors - BEIGE */
+  --theme-background: #f5f5dc;
+  --theme-foreground: #2d2d2d;
+  --theme-muted: #8b7355;
+  
+  /* Primary colors */
+  --theme-primary: #8b4513;
+  --theme-primary-foreground: #f5f5dc;
+  
+  /* Surface colors - BEIGE variants */
+  --theme-secondary: #faf8f3;
+  --theme-accent: #f0ead6;
+  --theme-card: #fefdf8;
+  --theme-card-secondary: #f5f5dc;
+  
+  /* Border colors - BEIGE */
+  --theme-border: #d2b48c;
+  --theme-border-strong: #bc9a6a;
+  --theme-border-dark: #555555;
+  
+  /* Text colors - BEIGE theme - BETTER CONTRAST */
+  --theme-text-primary: #1a1a1a;
+  --theme-text-secondary: #333333;
+  --theme-text-muted: #555555;
+  
+  /* Special heading colors for light theme */
+  --theme-heading-primary: #2d1810;
+  --theme-heading-secondary: #4a2c17;
+  --theme-beige-dark: #8b4513;
+  
+  /* Brand colors for light theme - BEIGE variants */
+  --theme-red-primary: #a0522d;
+  --theme-red-secondary: #deb887;
+  --theme-burgundy: #8b4513;
+  --theme-gray: #696969;
+  
+  /* Form colors - BEIGE */
+  --theme-input-bg: rgba(250, 248, 243, 0.9);
+  --theme-input-border: #8b7355;
+  --theme-input-focus: #8b4513;
+  --theme-placeholder: #666666;
+  
+  /* Glass effect for light theme - BEIGE */
+  --theme-glass-bg: rgba(245, 245, 220, 0.8);
+  --theme-glass-border: rgba(210, 180, 140, 0.5);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-    --secondary: #1e293b;
-    --border: #334155;
-  }
+/* Dark Theme Colors - PURE BLACK PALETTE */
+:root[data-theme="dark"],
+:root {
+  /* Basic colors - PURE BLACK */
+  --theme-background: #000000;
+  --theme-foreground: #ffffff;
+  --theme-muted: #666666;
+  
+  /* Primary colors */
+  --theme-primary: #ffffff;
+  --theme-primary-foreground: #000000;
+  
+  /* Surface colors - BLACK variants */
+  --theme-secondary: #111111;
+  --theme-accent: #222222;
+  --theme-card: #111111;
+  --theme-card-secondary: #000000;
+  
+  /* Border colors - BLACK/GRAY */
+  --theme-border: #333333;
+  --theme-border-strong: #444444;
+  --theme-border-dark: #666666;
+  
+  /* Text colors - BLACK theme - BETTER CONTRAST */
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #dddddd;
+  --theme-text-muted: #aaaaaa;
+  
+  /* Special heading colors for dark theme */
+  --theme-heading-primary: #ffffff;
+  --theme-heading-secondary: #dddddd;
+  --theme-beige-dark: #ffffff;
+  
+  /* Brand colors for dark theme - BLACK variants */
+  --theme-red-primary: #dc2626;
+  --theme-red-secondary: #991b1b;
+  --theme-burgundy: #8b4513;
+  --theme-gray: #666666;
+  
+  /* Form colors - BLACK */
+  --theme-input-bg: rgba(17, 17, 17, 0.9);
+  --theme-input-border: #333333;
+  --theme-input-focus: #ffffff;
+  --theme-placeholder: #bbbbbb;
+  
+  /* Glass effect for dark theme - BLACK */
+  --theme-glass-bg: rgba(17, 17, 17, 0.3);
+  --theme-glass-border: rgba(51, 51, 51, 0.5);
+}
+
+/* Legacy CSS variables for backward compatibility */
+:root {
+  --background: var(--theme-background);
+  --foreground: var(--theme-foreground);
+  --primary: var(--theme-primary);
+  --primary-foreground: var(--theme-primary-foreground);
+  --secondary: var(--theme-secondary);
+  --accent: var(--theme-accent);
+  --muted: var(--theme-muted);
+  --border: var(--theme-border);
 }
 
 * {
@@ -38,11 +129,12 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--theme-background);
+  color: var(--theme-foreground);
   font-family: "Russo One", system-ui, -apple-system, sans-serif;
   line-height: 1.6;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html {
@@ -62,11 +154,148 @@ html {
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--theme-glass-bg);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--theme-glass-border);
 }
 
 .shadow-glow {
   box-shadow: 0 0 50px rgba(59, 130, 246, 0.15);
+}
+
+/* Theme-aware utility classes */
+.bg-theme-background {
+  background-color: var(--theme-background);
+}
+
+.bg-theme-card {
+  background-color: var(--theme-card);
+}
+
+.bg-theme-secondary {
+  background-color: var(--theme-secondary);
+}
+
+.bg-theme-accent {
+  background-color: var(--theme-accent);
+}
+
+.text-theme-foreground {
+  color: var(--theme-foreground);
+}
+
+.text-theme-primary {
+  color: var(--theme-text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--theme-text-secondary);
+}
+
+.text-theme-muted {
+  color: var(--theme-text-muted);
+}
+
+.border-theme-border {
+  border-color: var(--theme-border);
+}
+
+.border-theme-strong {
+  border-color: var(--theme-border-strong);
+}
+
+.border-theme-dark {
+  border-color: var(--theme-border-dark);
+}
+
+/* Theme-aware form styles */
+.input-theme {
+  background-color: var(--theme-input-bg);
+  border-color: var(--theme-input-border);
+  color: var(--theme-foreground);
+  backdrop-filter: blur(10px);
+}
+
+
+.input-theme:focus {
+  border-color: var(--theme-input-focus);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  background-color: var(--theme-input-bg);
+}
+
+/* Label animation improvements - NO DUPLICATES */
+.floating-label {
+  position: absolute;
+  left: 1rem;
+  top: -0.625rem;
+  background-color: var(--theme-background);
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  color: var(--theme-foreground);
+  transition: all 0.3s ease;
+  z-index: 10;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.floating-label-placeholder {
+  top: 1rem;
+  font-size: 1rem;
+  color: var(--theme-placeholder);
+  background-color: transparent;
+  padding: 0;
+}
+
+/* Hide actual placeholder to prevent duplicates */
+.input-theme::placeholder {
+  color: transparent;
+  opacity: 0;
+}
+
+@media (min-width: 768px) {
+  .floating-label {
+    font-size: 0.875rem;
+  }
+  
+  .floating-label-placeholder {
+    font-size: 1rem;
+  }
+}
+
+/* Theme transitions */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Global border-radius override - MINIMAL RADIUS */
+* {
+  border-radius: 2px !important;
+}
+
+/* Specific overrides for components that need even less radius */
+.minimal-radius {
+  border-radius: 1px !important;
+}
+
+.no-radius {
+  border-radius: 0px !important;
+}
+
+/* Force circular shape for logos */
+.force-circle {
+  border-radius: 50% !important;
+}
+
+/* Theme-aware heading colors */
+.text-theme-heading-primary {
+  color: var(--theme-heading-primary);
+}
+
+.text-theme-heading-secondary {
+  color: var(--theme-heading-secondary);
+}
+
+.text-theme-beige-dark {
+  color: var(--theme-beige-dark);
 }

@@ -62,7 +62,7 @@ const prizes: Prize[] = [
     subtitle: "40 učesnika - Head-to-Head",
     image: "/images/new-season/h2h.png",
     description:
-      "Direktni sukobi u turnirskom formatu s bogatim nagradnim fondom od 720 KM / 368 €.",
+      "Najnepredvidivija liga sa bogatim nagradnim fondom od 720 KM / 368 €.",
     tier: "h2h",
     price: "20 KM / 10 €",
     features: [
@@ -261,13 +261,13 @@ export default function PrizesGallery() {
   return (
     <section
       id="prizes"
-      className="relative w-full min-h-screen bg-black py-20 overflow-hidden"
+      className="relative w-full min-h-screen bg-theme-background py-20 overflow-hidden theme-transition"
     >
       {/* Epic Background Effects */}
       <div className="absolute inset-0">
         {/* Animated orbs - Dynamic colors based on current prize */}
         <motion.div
-          className={`absolute top-20 left-20 w-96 h-96 bg-gradient-to-r ${colors.gradient} rounded-full blur-3xl opacity-15`}
+          className={`absolute top-20 left-20 w-96 h-96 bg-gradient-to-r ${colors.gradient} minimal-radius blur-3xl opacity-15`}
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.1, 0.2, 0.1],
@@ -280,7 +280,7 @@ export default function PrizesGallery() {
           }}
         />
         <motion.div
-          className={`absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-l ${colors.gradient} rounded-full blur-3xl opacity-10`}
+          className={`absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-l ${colors.gradient} minimal-radius blur-3xl opacity-10`}
           animate={{
             scale: [1.2, 1, 1.2],
             opacity: [0.15, 0.25, 0.15],
@@ -303,7 +303,7 @@ export default function PrizesGallery() {
           return (
             <motion.div
               key={i}
-              className="absolute w-1 h-1 bg-white rounded-full opacity-30"
+              className="absolute w-1 h-1 bg-white minimal-radius opacity-30"
               style={{
                 left: `${leftPos}%`,
                 top: `${topPos}%`,
@@ -352,26 +352,13 @@ export default function PrizesGallery() {
               stiffness: 120,
             }}
           >
-            <motion.span
-              className="bg-gradient-to-r from-gray-300 via-red-700 via-red-800 to-black bg-clip-text text-transparent drop-shadow-2xl"
-              animate={{
-                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              style={{
-                backgroundSize: "200% 200%",
-              }}
-            >
+            <motion.span className="text-theme-heading-primary drop-shadow-2xl theme-transition">
               Nagrade za 25/26 sezonu!
             </motion.span>
           </motion.h2>
 
           <motion.p
-            className="text-gray-400 text-base md:text-lg w-full max-w-4xl mx-auto leading-relaxed font-medium"
+            className="text-theme-text-secondary text-base md:text-lg w-full max-w-4xl mx-auto leading-relaxed font-medium theme-transition"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{
@@ -391,18 +378,18 @@ export default function PrizesGallery() {
           {/* Navigation Buttons */}
           <motion.button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-black/70 backdrop-blur-xl rounded-2xl flex items-center justify-center text-white hover:bg-black/80 transition-all duration-300 border border-white/10 shadow-2xl"
-            whileHover={{ scale: 1.1, rotateY: -15 }}
-            whileTap={{ scale: 0.9 }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-theme-secondary/70 backdrop-blur-xl minimal-radius flex items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-300 border border-theme-border shadow-2xl theme-transition"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <ChevronLeft className="w-8 h-8" />
           </motion.button>
 
           <motion.button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-black/70 backdrop-blur-xl rounded-2xl flex items-center justify-center text-white hover:bg-black/80 transition-all duration-300 border border-white/10 shadow-2xl"
-            whileHover={{ scale: 1.1, rotateY: 15 }}
-            whileTap={{ scale: 0.9 }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-theme-secondary/70 backdrop-blur-xl minimal-radius flex items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-300 border border-theme-border shadow-2xl theme-transition"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <ChevronRight className="w-8 h-8" />
           </motion.button>
@@ -491,7 +478,7 @@ export default function PrizesGallery() {
                         )}
 
                         <motion.h3
-                          className="text-xl lg:text-3xl font-black text-white mb-2 leading-tight"
+                          className="text-xl lg:text-3xl font-black text-theme-heading-primary mb-2 leading-tight theme-transition"
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.6, delay: 0.2 }}
@@ -509,7 +496,7 @@ export default function PrizesGallery() {
                         </motion.h4>
 
                         <motion.p
-                          className="text-gray-400 text-sm lg:text-base leading-relaxed mb-4"
+                          className="text-theme-text-secondary text-sm lg:text-base leading-relaxed mb-4 theme-transition"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.6, delay: 0.4 }}
@@ -525,7 +512,7 @@ export default function PrizesGallery() {
                           transition={{ duration: 0.6, delay: 0.5 }}
                         >
                           {/* Quick Summary */}
-                          <div className="text-gray-300 text-sm mb-3">
+                          <div className="text-theme-text-muted text-sm mb-3 theme-transition">
                             {currentPrize.tier === "h2h" &&
                               "Turnirski format sa direktnim sukobima"}
                             {currentPrize.tier === "standard" &&
@@ -541,7 +528,7 @@ export default function PrizesGallery() {
                           {/* Accordion Toggle */}
                           <motion.button
                             onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-medium mb-2"
+                            className="flex items-center gap-2 text-theme-text-muted hover:text-theme-foreground transition-colors text-sm font-medium mb-2 theme-transition"
                             whileTap={{ scale: 0.95 }}
                           >
                             {isAccordionOpen ? (
@@ -581,12 +568,12 @@ export default function PrizesGallery() {
                                         }}
                                       >
                                         <div
-                                          className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                                          className="w-1.5 h-1.5 minimal-radius mt-1.5 flex-shrink-0"
                                           style={{
                                             backgroundColor: colors.primary,
                                           }}
                                         ></div>
-                                        <span className="text-gray-300 font-medium leading-relaxed">
+                                        <span className="text-theme-text-secondary font-medium leading-relaxed theme-transition">
                                           {feature}
                                         </span>
                                       </motion.div>
@@ -608,7 +595,7 @@ export default function PrizesGallery() {
                       >
                         <motion.button
                           onClick={() => openModal(currentPrize)}
-                          className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg border"
+                          className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 minimal-radius font-bold text-sm transition-all duration-300 shadow-lg border"
                           style={{
                             background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
                             borderColor: `${colors.primary}40`,
@@ -653,7 +640,7 @@ export default function PrizesGallery() {
               <motion.button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`relative overflow-hidden rounded-full transition-all duration-300 ${
+                className={`relative overflow-hidden minimal-radius transition-all duration-300 ${
                   index === currentIndex
                     ? "w-12 h-4"
                     : "w-4 h-4 bg-gray-600 hover:bg-gray-500"
@@ -670,7 +657,7 @@ export default function PrizesGallery() {
               >
                 {index === currentIndex && (
                   <motion.div
-                    className="absolute inset-0 bg-white/20 rounded-full"
+                    className="absolute inset-0 bg-white/20 minimal-radius"
                     animate={{ x: ["-100%", "100%"] }}
                     transition={{
                       duration: 5,
@@ -684,9 +671,9 @@ export default function PrizesGallery() {
           </div>
 
           {/* Progress Bar */}
-          <div className="w-full bg-gray-800 rounded-full h-1 mt-4 overflow-hidden">
+          <div className="w-full bg-gray-800 minimal-radius h-1 mt-4 overflow-hidden">
             <motion.div
-              className="h-full rounded-full"
+              className="h-full minimal-radius"
               style={{
                 background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80, #000000)`,
               }}

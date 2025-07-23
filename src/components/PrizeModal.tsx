@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { X, Award, Trophy, Medal, Users } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Prize {
   id: number;
@@ -73,6 +74,7 @@ const tierColors = {
 };
 
 export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) {
+  const { theme } = useTheme();
   const [isClosing, setIsClosing] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -176,7 +178,7 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
               }}
             >
               {/* Inner Modal Container */}
-              <div className="bg-black rounded-2xl sm:rounded-3xl overflow-hidden relative w-full h-full">
+              <div className={`${theme === 'light' ? 'bg-theme-background' : 'bg-black'} rounded-2xl sm:rounded-3xl overflow-hidden relative w-full h-full theme-transition`}>
                 {/* Background Effects */}
                 <div className="absolute inset-0">
                   <div
@@ -211,7 +213,11 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                 {/* Close Button */}
                 <motion.button
                   onClick={handleClose}
-                  className="absolute top-3 right-3 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 bg-black/70 backdrop-blur-xl rounded-full flex items-center justify-center text-white hover:bg-black/80 transition-all duration-300 border border-white/10"
+                  className={`absolute top-3 right-3 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 backdrop-blur-xl rounded-full flex items-center justify-center transition-all duration-300 theme-transition ${
+                    theme === 'light' 
+                      ? 'bg-theme-secondary/70 hover:bg-theme-accent text-theme-foreground border border-theme-border' 
+                      : 'bg-black/70 hover:bg-black/80 text-white border border-white/10'
+                  }`}
                   style={{ zIndex: 50 }}
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
@@ -270,7 +276,7 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                           </motion.div>
                         )}
 
-                        <h2 className="text-xl sm:text-2xl lg:text-4xl font-black text-white leading-tight">
+                        <h2 className={`text-xl sm:text-2xl lg:text-4xl font-black leading-tight theme-transition ${theme === 'light' ? 'text-theme-heading-primary' : 'text-white'}`}>
                           {prize.title}
                         </h2>
 
@@ -278,13 +284,13 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                           {prize.subtitle}
                         </h3>
 
-                        <p className="text-gray-300 text-sm sm:text-base lg:text-lg leading-relaxed">
+                        <p className={`text-sm sm:text-base lg:text-lg leading-relaxed theme-transition ${theme === 'light' ? 'text-theme-text-secondary' : 'text-gray-300'}`}>
                           {prize.description}
                         </p>
 
                         {/* Stats */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 pt-2">
-                          <div className="flex items-center gap-2 text-gray-400">
+                          <div className={`flex items-center gap-2 theme-transition ${theme === 'light' ? 'text-theme-text-muted' : 'text-gray-400'}`}>
                             <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                             <span className="text-xs sm:text-sm font-medium">
                               {prize.tier === "h2h" 
@@ -296,7 +302,7 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                                 : "Bez limita"}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-gray-400">
+                          <div className={`flex items-center gap-2 theme-transition ${theme === 'light' ? 'text-theme-text-muted' : 'text-gray-400'}`}>
                             <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
                             <span className="text-xs sm:text-sm font-medium">
                               {prize.features.length} nagrada
@@ -310,7 +316,7 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                   {/* Features Section */}
                   <div className="px-4 sm:px-8 pb-4 sm:pb-8">
                     <motion.h4
-                      className="text-lg sm:text-xl lg:text-2xl font-black text-white mb-4 sm:mb-6 flex items-center gap-2"
+                      className={`text-lg sm:text-xl lg:text-2xl font-black mb-4 sm:mb-6 flex items-center gap-2 theme-transition ${theme === 'light' ? 'text-theme-heading-primary' : 'text-white'}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, delay: 0.4 }}
@@ -328,7 +334,11 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                       {prize.features.map((feature, index) => (
                         <motion.div
                           key={index}
-                          className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300"
+                          className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg sm:rounded-xl backdrop-blur-sm transition-all duration-300 theme-transition ${
+                            theme === 'light' 
+                              ? 'bg-theme-secondary/30 border border-theme-border hover:border-theme-border-strong' 
+                              : 'bg-white/5 border border-white/10 hover:border-white/20'
+                          }`}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{
@@ -344,7 +354,7 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                             className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mt-1.5 sm:mt-2 flex-shrink-0"
                             style={{ backgroundColor: colors.primary }}
                           />
-                          <span className="text-gray-200 font-medium leading-relaxed text-sm sm:text-base">
+                          <span className={`font-medium leading-relaxed text-sm sm:text-base theme-transition ${theme === 'light' ? 'text-theme-text-secondary' : 'text-gray-200'}`}>
                             {feature}
                           </span>
                         </motion.div>
@@ -355,12 +365,16 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                   {/* Footer */}
                   <div className="px-4 sm:px-8 pb-4 sm:pb-8">
                     <motion.div
-                      className="bg-gradient-to-r from-white/5 to-transparent p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-white/10"
+                      className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl theme-transition ${
+                        theme === 'light' 
+                          ? 'bg-gradient-to-r from-theme-secondary/50 to-transparent border border-theme-border' 
+                          : 'bg-gradient-to-r from-white/5 to-transparent border border-white/10'
+                      }`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, delay: 0.7 }}
                     >
-                      <p className="text-gray-400 text-xs sm:text-sm leading-relaxed text-center">
+                      <p className={`text-xs sm:text-sm leading-relaxed text-center theme-transition ${theme === 'light' ? 'text-theme-text-muted' : 'text-gray-400'}`}>
                         Sve nagrade se dodeljuju na kraju sezone. Mesečne nagrade se dodeljuju svakog meseca.
                         <br className="hidden sm:block" />
                         <span className={`${colors.icon} font-medium block sm:inline mt-2 sm:mt-0`}>
