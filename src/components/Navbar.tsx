@@ -84,7 +84,7 @@ export default function Navbar() {
         />
       </motion.div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex items-center justify-between h-20">
           {/* Logo - Left */}
           <motion.div
@@ -230,7 +230,7 @@ export default function Navbar() {
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
         <div className="bg-black/95 backdrop-blur-xl border-t border-gray-800/50">
-          <div className="container mx-auto px-6 py-6">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
             <div className="space-y-4">
               {navItems.map((item, index) => (
                 <motion.button

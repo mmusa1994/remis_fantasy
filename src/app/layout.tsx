@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "REMIS Fantasy 2025/26",
-  description: "Prijavi se za novu sezonu REMIS Fantasy football lige",
+  title: "REMIS Fantasy",
+  description: "Fantasy mini leagues",
 };
 
 export default function RootLayout({

@@ -3,8 +3,19 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-import { CheckCircle, AlertCircle, Trophy, Upload } from "lucide-react";
+import {
+  CheckCircle,
+  AlertCircle,
+  Upload,
+  Building2,
+  Banknote,
+  CreditCardIcon,
+  Download,
+  Mail,
+  Copy,
+} from "lucide-react";
 import Image from "next/image";
+import { downloadPaymentInstructions } from "@/utils/downloadPDF";
 
 interface FormData {
   first_name: string;
@@ -14,6 +25,8 @@ interface FormData {
   team_name: string;
   league_type: "standard" | "premium" | "";
   h2h_league: boolean;
+  payment_method: "bank" | "wise" | "cash" | "";
+  cash_status?: "paid" | "pending" | string;
   payment_proof?: File;
 }
 
@@ -26,6 +39,8 @@ export default function RegistrationForm() {
     team_name: "",
     league_type: "",
     h2h_league: false,
+    payment_method: "",
+    cash_status: undefined,
     payment_proof: undefined,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,38 +50,47 @@ export default function RegistrationForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [dragActive, setDragActive] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [emailCopied, setEmailCopied] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.first_name.trim()) {
-      newErrors.first_name = "First name is required";
+      newErrors.first_name = "Ime je obavezno";
     }
 
     if (!formData.last_name.trim()) {
-      newErrors.last_name = "Last name is required";
+      newErrors.last_name = "Prezime je obavezno";
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = "Email je obavezan";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
+      newErrors.email = "Molimo unesite valjan email";
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
+      newErrors.phone = "Broj telefona je obavezan";
     }
 
     if (!formData.team_name.trim()) {
-      newErrors.team_name = "Team name is required";
+      newErrors.team_name = "Ime tima je obavezno";
     }
 
     if (!formData.league_type) {
-      newErrors.league_type = "Please select a league type";
+      newErrors.league_type = "Molimo odaberite tip lige";
     }
 
-    if (!formData.payment_proof) {
-      newErrors.payment_proof = "Payment proof is required";
+    if (!formData.payment_method) {
+      newErrors.payment_method = "Molimo odaberite način plaćanja";
+    }
+
+    if (formData.payment_method === "cash" && !formData.cash_status) {
+      newErrors.cash_status = "Molimo odaberite status keš plaćanja";
+    }
+
+    if (formData.payment_method !== "cash" && !formData.payment_proof) {
+      newErrors.payment_proof = "Dokaz o uplati je obavezan";
     }
 
     setErrors(newErrors);
@@ -80,7 +104,7 @@ export default function RegistrationForm() {
     if (file.size > maxSize) {
       setErrors((prev) => ({
         ...prev,
-        payment_proof: "File size must be less than 10MB",
+        payment_proof: "Veličina fajla mora biti manja od 10MB",
       }));
       return;
     }
@@ -88,7 +112,7 @@ export default function RegistrationForm() {
     if (!allowedTypes.some((type) => file.type.startsWith(type))) {
       setErrors((prev) => ({
         ...prev,
-        payment_proof: "Only images and PDF files are allowed",
+        payment_proof: "Dozvoljene su samo slike i PDF fajlovi",
       }));
       return;
     }
@@ -155,6 +179,8 @@ export default function RegistrationForm() {
           team_name: formData.team_name.trim(),
           league_type: formData.league_type,
           h2h_league: formData.h2h_league,
+          payment_method: formData.payment_method,
+          cash_status: formData.cash_status,
           payment_proof_url: paymentProofUrl,
           created_at: new Date().toISOString(),
         },
@@ -178,6 +204,8 @@ export default function RegistrationForm() {
               team_name: formData.team_name.trim(),
               league_type: formData.league_type,
               h2h_league: formData.h2h_league,
+              payment_method: formData.payment_method,
+              cash_status: formData.cash_status,
             },
           }),
         });
@@ -201,6 +229,8 @@ export default function RegistrationForm() {
         team_name: "",
         league_type: "",
         h2h_league: false,
+        payment_method: "",
+        cash_status: undefined,
         payment_proof: undefined,
       });
     } catch (error) {
@@ -213,11 +243,21 @@ export default function RegistrationForm() {
 
   const handleInputChange = (
     field: keyof FormData,
-    value: string | boolean
+    value: string | boolean | undefined
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const copyEmailToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText("muhamed.musa1994@gmail.com");
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy email: ", err);
     }
   };
 
@@ -227,7 +267,7 @@ export default function RegistrationForm() {
       name: "Standard Liga",
       price: "15€ / 30KM",
       image: "/images/form/standard-form.png",
-      description: "Klasična liga s osnovnim nagradama",
+      description: "Klasična liga sa osnovnim nagradama",
       colors: {
         border: "border-sky-400",
         bg: "bg-sky-400/10",
@@ -242,7 +282,7 @@ export default function RegistrationForm() {
       name: "Premium Liga",
       price: "50€ / 100KM",
       image: "/images/form/premium-form.png",
-      description: "VIP liga s ekskluzivnim nagradama",
+      description: "VIP liga sa ekskluzivnim nagradama",
       colors: {
         border: "border-yellow-400",
         bg: "bg-yellow-400/10",
@@ -263,21 +303,21 @@ export default function RegistrationForm() {
       border: "border-red-500",
       bg: "bg-red-500/10",
       hover: "hover:border-red-500/50",
-      text: "text-red-400",
+      text: "text-white",
       badge: "bg-gradient-to-r from-red-500 to-gray-600",
       badgeRing: "ring-red-500/50",
     },
   };
 
   return (
-    <section className="relative py-32 bg-black overflow-hidden">
+    <section className="relative w-full py-32 bg-black overflow-hidden">
       {/* Subtle Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-900/10 via-gray-800/5 to-red-800/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-l from-gray-900/10 via-red-900/5 to-gray-800/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -296,7 +336,7 @@ export default function RegistrationForm() {
             }}
           >
             <motion.span
-              className="bg-gradient-to-r from-red-700 via-red-600 to-gray-400 bg-clip-text text-transparent drop-shadow-2xl"
+              className="bg-gradient-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent drop-shadow-2xl"
               animate={{
                 backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
               }}
@@ -314,7 +354,7 @@ export default function RegistrationForm() {
           </motion.h2>
 
           <motion.p
-            className="text-gray-300 text-sm md:text-base lg:text-lg max-w-3xl mx-auto leading-relaxed font-medium"
+            className="text-gray-300 text-sm md:text-base lg:text-lg w-full max-w-3xl mx-auto leading-relaxed font-medium"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{
@@ -327,7 +367,7 @@ export default function RegistrationForm() {
           </motion.p>
         </motion.div>
 
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full max-w-4xl mx-auto">
           <motion.div className="relative">
             {/* Animated burgundy border */}
             <motion.div
@@ -359,13 +399,13 @@ export default function RegistrationForm() {
               {/* Personal Info Section */}
               <div className="mb-12">
                 <motion.h3
-                  className="text-xl md:text-2xl font-black mb-6"
+                  className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                 >
                   <motion.span
-                    className="bg-gradient-to-r from-red-700 via-red-600 to-gray-400 bg-clip-text text-transparent"
+                    className="bg-gradient-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent"
                     animate={{
                       backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                     }}
@@ -430,9 +470,9 @@ export default function RegistrationForm() {
                       />
                       <label
                         htmlFor="first_name"
-                        className="absolute left-4 -top-2.5 bg-black px-2 text-sm text-red-400 transition-all duration-300 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-red-400 peer-focus:bg-black z-10"
+                        className="absolute left-4 -top-2.5 bg-black px-2 text-xs md:text-sm text-white transition-all duration-300 peer-placeholder-shown:text-sm md:peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-xs md:peer-focus:text-sm peer-focus:text-white peer-focus:bg-black z-10 font-medium"
                       >
-                        Ime
+                        Ime *
                       </label>
                     </div>
                     <AnimatePresence>
@@ -441,7 +481,7 @@ export default function RegistrationForm() {
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="text-red-400 text-sm mt-2 flex items-center gap-1"
+                          className="text-white text-xs md:text-sm mt-2 flex items-center gap-1 font-medium"
                         >
                           <AlertCircle className="w-4 h-4" />
                           {errors.first_name}
@@ -497,9 +537,9 @@ export default function RegistrationForm() {
                       />
                       <label
                         htmlFor="last_name"
-                        className="absolute left-4 -top-2.5 bg-black px-2 text-sm text-red-400 transition-all duration-300 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-red-400 peer-focus:bg-black z-10"
+                        className="absolute left-4 -top-2.5 bg-black px-2 text-xs md:text-sm text-white transition-all duration-300 peer-placeholder-shown:text-sm md:peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-xs md:peer-focus:text-sm peer-focus:text-white peer-focus:bg-black z-10 font-medium"
                       >
-                        Prezime
+                        Prezime *
                       </label>
                     </div>
                     <AnimatePresence>
@@ -508,7 +548,7 @@ export default function RegistrationForm() {
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="text-red-400 text-sm mt-2 flex items-center gap-1"
+                          className="text-white text-xs md:text-sm mt-2 flex items-center gap-1 font-medium"
                         >
                           <AlertCircle className="w-4 h-4" />
                           {errors.last_name}
@@ -522,13 +562,13 @@ export default function RegistrationForm() {
               {/* Contact Info Section */}
               <div className="mb-12">
                 <motion.h3
-                  className="text-xl md:text-2xl font-black mb-6"
+                  className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                 >
                   <motion.span
-                    className="bg-gradient-to-r from-red-700 via-red-600 to-gray-400 bg-clip-text text-transparent"
+                    className="bg-gradient-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent"
                     animate={{
                       backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                     }}
@@ -593,9 +633,9 @@ export default function RegistrationForm() {
                       />
                       <label
                         htmlFor="email"
-                        className="absolute left-4 -top-2.5 bg-black px-2 text-sm text-red-400 transition-all duration-300 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-red-400 peer-focus:bg-black z-10"
+                        className="absolute left-4 -top-2.5 bg-black px-2 text-xs md:text-sm text-white transition-all duration-300 peer-placeholder-shown:text-sm md:peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-xs md:peer-focus:text-sm peer-focus:text-white peer-focus:bg-black z-10 font-medium"
                       >
-                        Email Adresa
+                        Email Adresa *
                       </label>
                     </div>
                     <AnimatePresence>
@@ -604,7 +644,7 @@ export default function RegistrationForm() {
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="text-red-400 text-sm mt-2 flex items-center gap-1"
+                          className="text-white text-xs md:text-sm mt-2 flex items-center gap-1 font-medium"
                         >
                           <AlertCircle className="w-4 h-4" />
                           {errors.email}
@@ -660,9 +700,9 @@ export default function RegistrationForm() {
                       />
                       <label
                         htmlFor="phone"
-                        className="absolute left-4 -top-2.5 bg-black px-2 text-sm text-red-400 transition-all duration-300 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-red-400 peer-focus:bg-black z-10"
+                        className="absolute left-4 -top-2.5 bg-black px-2 text-xs md:text-sm text-white transition-all duration-300 peer-placeholder-shown:text-sm md:peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-xs md:peer-focus:text-sm peer-focus:text-white peer-focus:bg-black z-10 font-medium"
                       >
-                        Broj Telefona
+                        Broj Telefona *
                       </label>
                     </div>
                     <AnimatePresence>
@@ -671,7 +711,7 @@ export default function RegistrationForm() {
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="text-red-400 text-sm mt-2 flex items-center gap-1"
+                          className="text-white text-xs md:text-sm mt-2 flex items-center gap-1 font-medium"
                         >
                           <AlertCircle className="w-4 h-4" />
                           {errors.phone}
@@ -685,13 +725,13 @@ export default function RegistrationForm() {
               {/* Team Info */}
               <div className="mb-12">
                 <motion.h3
-                  className="text-xl md:text-2xl font-black mb-6"
+                  className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                 >
                   <motion.span
-                    className="bg-gradient-to-r from-red-700 via-red-600 to-gray-400 bg-clip-text text-transparent"
+                    className="bg-gradient-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent"
                     animate={{
                       backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                     }}
@@ -754,7 +794,7 @@ export default function RegistrationForm() {
                     />
                     <label
                       htmlFor="team_name"
-                      className="absolute left-4 -top-2.5 bg-black px-2 text-sm text-red-400 transition-all duration-300 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-red-400 peer-focus:bg-black z-10"
+                      className="absolute left-4 -top-2.5 bg-black px-2 text-xs md:text-sm text-white transition-all duration-300 peer-placeholder-shown:text-sm md:peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-xs md:peer-focus:text-sm peer-focus:text-white peer-focus:bg-black z-10 font-medium"
                     >
                       Ime Ekipe
                     </label>
@@ -765,7 +805,7 @@ export default function RegistrationForm() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="text-red-400 text-sm mt-2 flex items-center gap-1"
+                        className="text-white text-sm mt-2 flex items-center gap-1"
                       >
                         <AlertCircle className="w-4 h-4" />
                         {errors.team_name}
@@ -778,13 +818,13 @@ export default function RegistrationForm() {
               {/* League Selection */}
               <div className="mb-12">
                 <motion.h3
-                  className="text-xl md:text-2xl font-black mb-6"
+                  className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                 >
                   <motion.span
-                    className="bg-gradient-to-r from-red-700 via-red-600 to-gray-400 bg-clip-text text-transparent"
+                    className="bg-gradient-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent"
                     animate={{
                       backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                     }}
@@ -837,6 +877,7 @@ export default function RegistrationForm() {
                           src={option.image}
                           alt={option.name}
                           fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="object-cover opacity-90"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
@@ -865,11 +906,11 @@ export default function RegistrationForm() {
                       {/* Content */}
                       <div className="p-6 bg-black/60">
                         <h4
-                          className={`text-xl font-bold ${option.colors.text} mb-2`}
+                          className={`text-lg md:text-xl font-bold ${option.colors.text} mb-2`}
                         >
                           {option.name}
                         </h4>
-                        <p className="text-gray-300 text-sm">
+                        <p className="text-gray-300 text-xs md:text-sm leading-tight">
                           {option.description}
                         </p>
                       </div>
@@ -889,13 +930,13 @@ export default function RegistrationForm() {
                 </div>
 
                 <motion.h3
-                  className="text-xl md:text-2xl font-black mb-6"
+                  className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                 >
                   <motion.span
-                    className="bg-gradient-to-r from-red-700 via-red-600 to-gray-400 bg-clip-text text-transparent"
+                    className="bg-gradient-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent"
                     animate={{
                       backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                     }}
@@ -943,6 +984,7 @@ export default function RegistrationForm() {
                       src={h2hOption.image}
                       alt={h2hOption.name}
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
                       className="object-cover opacity-90"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
@@ -983,11 +1025,11 @@ export default function RegistrationForm() {
                   {/* Content */}
                   <div className="p-6 bg-black/60">
                     <h4
-                      className={`text-xl font-bold ${h2hOption.colors.text} mb-2`}
+                      className={`text-lg md:text-xl font-bold ${h2hOption.colors.text} mb-2`}
                     >
                       {h2hOption.name}
                     </h4>
-                    <p className="text-gray-300 text-sm">
+                    <p className="text-gray-300 text-xs md:text-sm leading-tight">
                       {h2hOption.description}
                     </p>
                   </div>
@@ -999,7 +1041,7 @@ export default function RegistrationForm() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-red-400 text-sm mt-4 flex items-center gap-1"
+                      className="text-white text-xs md:text-sm mt-4 flex items-center gap-1 font-medium"
                     >
                       <AlertCircle className="w-4 h-4" />
                       {errors.league_type}
@@ -1008,16 +1050,16 @@ export default function RegistrationForm() {
                 </AnimatePresence>
               </div>
 
-              {/* File Upload */}
+              {/* Payment Method Selection */}
               <div className="mb-12">
                 <motion.h3
-                  className="text-xl md:text-2xl font-black mb-6"
+                  className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                 >
                   <motion.span
-                    className="bg-gradient-to-r from-red-700 via-red-600 to-gray-400 bg-clip-text text-transparent"
+                    className="bg-gradient-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent"
                     animate={{
                       backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                     }}
@@ -1030,97 +1072,395 @@ export default function RegistrationForm() {
                       backgroundSize: "200% 200%",
                     }}
                   >
-                    Dokaz o Uplati
+                    Način Plaćanja *
                   </motion.span>
                 </motion.h3>
 
-                <motion.div
-                  className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 bg-black/60 ${
-                    dragActive
-                      ? "border-red-500 bg-red-500/10"
-                      : errors.payment_proof
-                      ? "border-red-400"
-                      : "border-gray-600/50 hover:border-red-500/50"
-                  }`}
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                  whileHover={{ scale: 1.01 }}
-                >
-                  <input
-                    type="file"
-                    id="payment_proof"
-                    accept="image/*,.pdf"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload(e.target.files[0]);
-                      }
-                    }}
-                    className="sr-only"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+                  {[
+                    {
+                      id: "bank",
+                      name: "Bankovni Račun",
+                      Icon: Building2,
+                      color: "blue",
+                    },
 
-                  <label htmlFor="payment_proof" className="cursor-pointer">
-                    <div className="space-y-4">
-                      {formData.payment_proof ? (
+                    {
+                      id: "wise",
+                      name: "Wise",
+                      Icon: CreditCardIcon,
+                      color: "green",
+                    },
+                    {
+                      id: "cash",
+                      name: "Keš",
+                      Icon: Banknote,
+                      color: "yellow",
+                    },
+                  ].map((method) => (
+                    <motion.div
+                      key={method.id}
+                      className={`relative cursor-pointer rounded-xl border-2 p-3 md:p-4 text-center transition-all duration-300 ${
+                        formData.payment_method === method.id
+                          ? "border-red-500 bg-red-500/10 shadow-lg ring-2 ring-red-500/50"
+                          : "border-gray-600/50 hover:border-red-500/50 hover:bg-red-500/5"
+                      }`}
+                      onClick={() => {
+                        handleInputChange("payment_method", method.id);
+                        if (method.id !== "cash") {
+                          handleInputChange("cash_status", undefined);
+                        }
+                      }}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      <div className="flex flex-col items-center space-y-2">
+                        <method.Icon
+                          className={`w-6 h-6 md:w-8 md:h-8 ${
+                            formData.payment_method === method.id
+                              ? "text-white"
+                              : method.color === "blue"
+                              ? "text-blue-400"
+                              : method.color === "purple"
+                              ? "text-purple-400"
+                              : method.color === "green"
+                              ? "text-green-400"
+                              : "text-yellow-400"
+                          }`}
+                        />
+                        <div className="text-white text-xs md:text-sm font-bold leading-tight">
+                          {method.name}
+                        </div>
+                      </div>
+                      {formData.payment_method === method.id && (
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="text-green-400"
+                          className="absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 bg-red-500 rounded-full flex items-center justify-center"
                         >
-                          <CheckCircle className="w-12 h-12 mx-auto mb-4" />
-                          <p className="font-bold text-lg">
-                            {formData.payment_proof.name}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            {(
-                              formData.payment_proof.size /
-                              1024 /
-                              1024
-                            ).toFixed(2)}{" "}
-                            MB
-                          </p>
+                          <CheckCircle className="w-3 h-3 md:w-4 md:h-4 text-white" />
                         </motion.div>
-                      ) : (
-                        <>
-                          <Upload className="w-12 h-12 mx-auto text-red-400" />
-                          <div>
-                            <p className="text-lg font-bold text-white mb-2">
-                              Otpusti fajl ovdje ili klikni za upload
-                            </p>
-                            <p className="text-gray-400 text-sm">
-                              PNG, JPG, PDF do 10MB
-                            </p>
-                          </div>
-                        </>
                       )}
-                    </div>
-                  </label>
-                </motion.div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Bank Account Download Instructions */}
+                <AnimatePresence>
+                  {formData.payment_method === "bank" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mb-6"
+                    >
+                      <motion.button
+                        onClick={() => {
+                          const selectedLeague = leagueOptions.find(
+                            (option) => option.id === formData.league_type
+                          );
+                          const leagueType = selectedLeague
+                            ? selectedLeague.name
+                            : "Fantasy Football Liga";
+                          downloadPaymentInstructions(leagueType);
+                        }}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all duration-300 border border-gray-600/50 bg-gray-900/30 hover:bg-gray-800/50 hover:border-gray-500/60 text-gray-300 hover:text-white group cursor-pointer backdrop-blur-sm"
+                        whileHover={{
+                          scale: 1.01,
+                          transition: { duration: 0.3 },
+                        }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        <Download className="w-5 h-5 group-hover:animate-bounce" />
+                        <span>Preuzmi uputstva za bankovnu uplatu</span>
+                      </motion.button>
+
+                      <motion.p
+                        className="text-gray-400 text-xs mt-3 text-center sm:text-left"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        📄 PDF dokument sa detaljnim uputstvima i podacima za
+                        uplatu
+                      </motion.p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Wise Payment Instructions */}
+                <AnimatePresence>
+                  {formData.payment_method === "wise" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mb-6"
+                    >
+                      <motion.div
+                        className="bg-gray-900/30 border border-gray-600/50 rounded-xl p-4 backdrop-blur-sm"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                            <Mail className="w-4 h-4 text-green-400" />
+                          </div>
+                          <h4 className="text-white font-semibold text-sm">
+                            Wise Uplata
+                          </h4>
+                        </div>
+
+                        <p className="text-gray-300 text-xs mb-4 leading-relaxed">
+                          Za Wise uplatu, pronađite korisnika putem email adrese
+                          i pošaljite novac:
+                        </p>
+
+                        <div className="flex items-center gap-2 bg-black/40 rounded-lg p-3 border border-gray-700/50">
+                          <Mail className="w-4 h-4 text-green-400 flex-shrink-0" />
+                          <span className="text-white font-mono text-sm flex-1">
+                            muhamed.musa1994@gmail.com
+                          </span>
+                          <motion.button
+                            onClick={copyEmailToClipboard}
+                            className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors border"
+                            style={{
+                              backgroundColor: emailCopied
+                                ? "rgba(34, 197, 94, 0.2)"
+                                : "rgba(107, 114, 128, 0.2)",
+                              borderColor: emailCopied
+                                ? "rgba(34, 197, 94, 0.4)"
+                                : "rgba(107, 114, 128, 0.4)",
+                              color: emailCopied ? "#22c55e" : "#9ca3af",
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Copy className="w-3 h-3" />
+                            {emailCopied ? "Kopirano!" : "Kopiraj"}
+                          </motion.button>
+                        </div>
+
+                        <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                          <p className="text-blue-300 text-xs font-medium">
+                            💡 Napomena: U opis uplate navedite vaše ime i tip
+                            lige koje se prijavljujete.
+                          </p>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Cash Status Options */}
+                <AnimatePresence>
+                  {formData.payment_method === "cash" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mb-6"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                        {[
+                          { id: "paid", name: "Plaćeno", color: "green" },
+                          {
+                            id: "pending",
+                            name: "Na Čekanju",
+                            color: "yellow",
+                          },
+                        ].map((status) => (
+                          <motion.div
+                            key={status.id}
+                            className={`relative cursor-pointer rounded-xl border-2 p-3 md:p-4 text-center transition-all duration-300 ${
+                              formData.cash_status === status.id
+                                ? status.color === "green"
+                                  ? "border-green-500 bg-green-500/10 shadow-lg ring-2 ring-green-500/50"
+                                  : "border-yellow-500 bg-yellow-500/10 shadow-lg ring-2 ring-yellow-500/50"
+                                : "border-gray-600/50 hover:border-gray-400/50"
+                            }`}
+                            onClick={() =>
+                              handleInputChange("cash_status", status.id)
+                            }
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                          >
+                            <div
+                              className={`text-xs md:text-sm font-bold ${
+                                formData.cash_status === status.id
+                                  ? status.color === "green"
+                                    ? "text-green-300"
+                                    : "text-yellow-300"
+                                  : "text-white"
+                              }`}
+                            >
+                              {status.name}
+                            </div>
+                            {formData.cash_status === status.id && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className={`absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center ${
+                                  status.color === "green"
+                                    ? "bg-green-500"
+                                    : "bg-yellow-500"
+                                }`}
+                              >
+                                <CheckCircle className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                              </motion.div>
+                            )}
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <AnimatePresence>
-                  {errors.payment_proof && (
+                  {errors.payment_method && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-red-400 text-sm mt-4 flex items-center gap-1"
+                      className="text-white text-xs md:text-sm mb-4 flex items-center gap-1 font-medium"
                     >
                       <AlertCircle className="w-4 h-4" />
-                      {errors.payment_proof}
+                      {errors.payment_method}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {errors.cash_status && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="text-white text-xs md:text-sm mb-4 flex items-center gap-1 font-medium"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.cash_status}
                     </motion.p>
                   )}
                 </AnimatePresence>
               </div>
 
+              {/* File Upload */}
+              {formData.payment_method !== "cash" && (
+                <div className="mb-12">
+                  <motion.h3
+                    className="text-xl md:text-2xl font-black mb-6"
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                  >
+                    <motion.span
+                      className="bg-gradient-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent"
+                      animate={{
+                        backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                      }}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      style={{
+                        backgroundSize: "200% 200%",
+                      }}
+                    >
+                      Dokaz o Uplati
+                    </motion.span>
+                  </motion.h3>
+
+                  <motion.div
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 bg-black/60 ${
+                      dragActive
+                        ? "border-red-500 bg-red-500/10"
+                        : errors.payment_proof
+                        ? "border-red-400"
+                        : "border-gray-600/50 hover:border-red-500/50"
+                    }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <input
+                      type="file"
+                      id="payment_proof"
+                      accept="image/*,.pdf"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileUpload(e.target.files[0]);
+                        }
+                      }}
+                      className="sr-only"
+                    />
+
+                    <label htmlFor="payment_proof" className="cursor-pointer">
+                      <div className="space-y-4">
+                        {formData.payment_proof ? (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="text-green-400"
+                          >
+                            <CheckCircle className="w-12 h-12 mx-auto mb-4" />
+                            <p className="font-bold text-lg">
+                              {formData.payment_proof.name}
+                            </p>
+                            <p className="text-sm text-gray-400">
+                              {(
+                                formData.payment_proof.size /
+                                1024 /
+                                1024
+                              ).toFixed(2)}{" "}
+                              MB
+                            </p>
+                          </motion.div>
+                        ) : (
+                          <>
+                            <Upload className="w-12 h-12 mx-auto text-white" />
+                            <div>
+                              <p className="text-lg font-bold text-white mb-2">
+                                Prevuci fajl ovdje ili klikni za upload
+                              </p>
+                              <p className="text-gray-400 text-sm">
+                                PNG, JPG, PDF do 10MB
+                              </p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </label>
+                  </motion.div>
+
+                  <AnimatePresence>
+                    {errors.payment_proof && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="text-white text-xs md:text-sm mt-4 flex items-center gap-1 font-medium"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.payment_proof}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
               {/* Submit Button */}
               <motion.button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-red-600 via-red-700 to-gray-800 hover:from-red-700 hover:via-red-800 hover:to-gray-900 text-white font-black py-6 px-12 rounded-2xl text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-2xl border-2 border-red-500/50 font-russo"
+                className="w-full bg-gradient-to-r from-blue-600 via-slate-700 to-gray-800 hover:from-blue-700 hover:via-slate-800 hover:to-gray-900 text-white font-black py-4 md:py-6 px-8 md:px-12 rounded-2xl text-lg md:text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-2xl border-2 border-blue-500/50 font-russo"
                 whileHover={{
                   scale: 1.02,
-                  boxShadow: "0 25px 50px rgba(220, 38, 38, 0.4)",
+                  boxShadow: "0 25px 50px rgba(59, 130, 246, 0.4)",
                 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -1134,7 +1474,7 @@ export default function RegistrationForm() {
                       className="flex items-center justify-center gap-3"
                     >
                       <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>OBRAĐUJEM REGISTRACIJU...</span>
+                      <span>OBRAĐUJEM PRIJAVU...</span>
                     </motion.div>
                   ) : (
                     <motion.span
@@ -1144,15 +1484,15 @@ export default function RegistrationForm() {
                       exit={{ opacity: 0, y: -10 }}
                       className="flex items-center justify-center gap-3"
                     >
-                      <span>PRIJAVA</span>
+                      <span>PRIJAVI SE</span>
                     </motion.span>
                   )}
                 </AnimatePresence>
 
                 {/* Animated Background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 via-gray-800/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-gray-800/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <motion.div
-                  className="absolute -inset-1 bg-gradient-to-r from-red-600 to-gray-800 rounded-2xl opacity-30 blur"
+                  className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-gray-800 rounded-2xl opacity-30 blur"
                   animate={{ rotate: 360 }}
                   transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                 />
@@ -1187,7 +1527,7 @@ export default function RegistrationForm() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.4 }}
                         >
-                          REGISTRACIJA USPJEŠNA!
+                          PRIJAVA USPJEŠNA!
                         </motion.h4>
                         <motion.p
                           className="text-green-200 text-sm md:text-sm leading-relaxed"
@@ -1195,9 +1535,9 @@ export default function RegistrationForm() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.6 }}
                         >
-                          Dobrodošao u REMIS Fantasy 2025/26!
+                          Dobrodošli u REMIS Fantasy 2025/26!
                           <br className="md:hidden" />
-                          Poslali smo ti email sa kodovima za pristup ligi.
+                          Poslali smo vam email sa kodovima za pristup ligi.
                         </motion.p>
                       </div>
                     </div>
@@ -1217,10 +1557,10 @@ export default function RegistrationForm() {
                       </div>
                       <div>
                         <h4 className="text-red-300 font-black text-lg mb-1">
-                          GREŠKA PRI REGISTRACIJI
+                          GREŠKA PRI PRIJAVI
                         </h4>
                         <p className="text-red-200 text-sm">
-                          Nešto je pošlo po zlu. Molimo pokušaj ponovo.
+                          Nešto je pošlo po zlu. Molimo pokušajte ponovo.
                         </p>
                       </div>
                     </div>

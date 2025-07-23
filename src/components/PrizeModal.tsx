@@ -1,0 +1,396 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { X, Award, Trophy, Medal, Users } from "lucide-react";
+
+interface Prize {
+  id: number;
+  title: string;
+  subtitle: string;
+  image: string;
+  description: string;
+  tier: "intro" | "free" | "standard" | "premium" | "h2h";
+  price?: string;
+  features: string[];
+}
+
+interface PrizeModalProps {
+  prize: Prize | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const tierColors = {
+  intro: {
+    primary: "#F5D056",
+    secondary: "#28D5E5",
+    gradient: "from-[#F5D056] via-[#28D5E5] to-black",
+    accent: "text-[#F5D056]",
+    bg: "from-[#F5D056]/10 via-[#28D5E5]/5 to-black/20",
+    border: "border-[#F5D056]/30",
+    icon: "text-[#F5D056]",
+    glow: "shadow-[#F5D056]/20",
+  },
+  free: {
+    primary: "#B114D9",
+    gradient: "from-[#B114D9] via-gray-700 to-black",
+    accent: "text-[#B114D9]",
+    bg: "from-[#B114D9]/10 via-gray-500/5 to-black/20",
+    border: "border-[#B114D9]/40",
+    icon: "text-[#B114D9]",
+    glow: "shadow-[#B114D9]/25",
+  },
+  standard: {
+    primary: "#28D5E5",
+    gradient: "from-[#28D5E5] via-gray-600 to-black",
+    accent: "text-[#28D5E5]",
+    bg: "from-[#28D5E5]/10 via-gray-500/5 to-black/20",
+    border: "border-[#28D5E5]/40",
+    icon: "text-[#28D5E5]",
+    glow: "shadow-[#28D5E5]/25",
+  },
+  premium: {
+    primary: "#F5D056",
+    gradient: "from-[#F5D056] via-gray-500 to-black",
+    accent: "text-[#F5D056]",
+    bg: "from-[#F5D056]/10 via-gray-400/5 to-black/20",
+    border: "border-[#F5D056]/40",
+    icon: "text-[#F5D056]",
+    glow: "shadow-[#F5D056]/25",
+  },
+  h2h: {
+    primary: "#901E1B",
+    gradient: "from-[#901E1B] via-gray-700 to-black",
+    accent: "text-[#901E1B]",
+    bg: "from-[#901E1B]/10 via-gray-600/5 to-black/20",
+    border: "border-[#901E1B]/40",
+    icon: "text-[#901E1B]",
+    glow: "shadow-[#901E1B]/25",
+  },
+};
+
+export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) {
+  const [isClosing, setIsClosing] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 300);
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+  if (!prize || !mounted) return null;
+
+  const colors = tierColors[prize.tier];
+
+  const modalContent = (
+    <AnimatePresence>
+      {isOpen && (
+        <div
+          className="fixed inset-0 flex items-center justify-center p-2 sm:p-4"
+          style={{ 
+            zIndex: 999999,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            margin: 0,
+            padding: 0,
+            transform: 'none',
+          }}
+        >
+          {/* Backdrop */}
+          <motion.div
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleBackdropClick}
+            style={{ zIndex: 1 }}
+          />
+
+          {/* Modal Content */}
+          <motion.div
+            className="relative w-[95vw] sm:w-[90vw] md:w-[80vw] lg:w-[70vw] xl:w-[60vw] max-w-4xl h-[95vh] sm:h-[90vh] md:h-[85vh] max-h-[800px] overflow-hidden"
+            style={{ zIndex: 10 }}
+            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 30,
+              duration: 0.4 
+            }}
+          >
+            {/* Animated Border Container */}
+            <motion.div
+              className="relative w-full h-full p-[2px] sm:p-[3px] rounded-2xl sm:rounded-3xl overflow-hidden"
+              animate={{
+                backgroundImage: [
+                  `conic-gradient(from 0deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
+                  `conic-gradient(from 60deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
+                  `conic-gradient(from 120deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
+                  `conic-gradient(from 180deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
+                  `conic-gradient(from 240deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
+                  `conic-gradient(from 300deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
+                  `conic-gradient(from 360deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
+                ],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              style={{
+                background: `conic-gradient(from 0deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
+              }}
+            >
+              {/* Inner Modal Container */}
+              <div className="bg-black rounded-2xl sm:rounded-3xl overflow-hidden relative w-full h-full">
+                {/* Background Effects */}
+                <div className="absolute inset-0">
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} opacity-5`}
+                  />
+                  <motion.div
+                    className={`absolute top-10 left-10 w-32 h-32 bg-gradient-to-r ${colors.gradient} rounded-full blur-3xl opacity-20`}
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      opacity: [0.1, 0.3, 0.1],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                  <motion.div
+                    className={`absolute bottom-10 right-10 w-24 h-24 bg-gradient-to-l ${colors.gradient} rounded-full blur-3xl opacity-15`}
+                    animate={{
+                      scale: [1.2, 1, 1.2],
+                      opacity: [0.15, 0.25, 0.15],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                </div>
+
+                {/* Close Button */}
+                <motion.button
+                  onClick={handleClose}
+                  className="absolute top-3 right-3 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 bg-black/70 backdrop-blur-xl rounded-full flex items-center justify-center text-white hover:bg-black/80 transition-all duration-300 border border-white/10"
+                  style={{ zIndex: 50 }}
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <X className="w-4 h-4 sm:w-6 sm:h-6" />
+                </motion.button>
+
+                {/* Modal Content */}
+                <div className="relative w-full h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent" style={{ zIndex: 20 }}>
+                  {/* Header Section */}
+                  <div className="relative p-4 sm:p-8 pb-3 sm:pb-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 items-center">
+                      {/* Image */}
+                      <motion.div
+                        className="relative h-48 sm:h-64 lg:h-80 overflow-hidden rounded-xl sm:rounded-2xl"
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                      >
+                        <Image
+                          src={prize.image}
+                          alt={prize.title}
+                          fill
+                          className="object-contain"
+                          priority
+                          quality={100}
+                        />
+                        <div
+                          className={`absolute inset-0 bg-gradient-to-t ${colors.bg} opacity-30 rounded-xl sm:rounded-2xl`}
+                        />
+                      </motion.div>
+
+                      {/* Title and Info */}
+                      <motion.div
+                        className="space-y-3 sm:space-y-4"
+                        initial={{ opacity: 0, x: 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                      >
+                        {/* Price Badge */}
+                        {prize.price && (
+                          <motion.div
+                            className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-white font-bold text-sm sm:text-base shadow-lg border"
+                            style={{
+                              background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
+                              borderColor: `${colors.primary}40`,
+                              boxShadow: `0 4px 14px 0 ${colors.primary}25`,
+                            }}
+                            whileHover={{
+                              boxShadow: `0 6px 20px 0 ${colors.primary}35`,
+                              scale: 1.05,
+                            }}
+                          >
+                            <Award className="w-4 h-4 sm:w-5 sm:h-5" />
+                            {prize.price}
+                          </motion.div>
+                        )}
+
+                        <h2 className="text-xl sm:text-2xl lg:text-4xl font-black text-white leading-tight">
+                          {prize.title}
+                        </h2>
+
+                        <h3 className={`text-base sm:text-lg lg:text-2xl ${colors.accent} font-semibold`}>
+                          {prize.subtitle}
+                        </h3>
+
+                        <p className="text-gray-300 text-sm sm:text-base lg:text-lg leading-relaxed">
+                          {prize.description}
+                        </p>
+
+                        {/* Stats */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 pt-2">
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="text-xs sm:text-sm font-medium">
+                              {prize.tier === "h2h" 
+                                ? "40 učesnika" 
+                                : prize.tier === "premium" 
+                                ? "50 učesnika"
+                                : prize.tier === "standard"
+                                ? "100 učesnika"
+                                : "Bez limita"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="text-xs sm:text-sm font-medium">
+                              {prize.features.length} nagrada
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+
+                  {/* Features Section */}
+                  <div className="px-4 sm:px-8 pb-4 sm:pb-8">
+                    <motion.h4
+                      className="text-lg sm:text-xl lg:text-2xl font-black text-white mb-4 sm:mb-6 flex items-center gap-2"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.4 }}
+                    >
+                      <Medal className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.icon}`} />
+                      Nagrade i Benefiti
+                    </motion.h4>
+
+                    <motion.div
+                      className="grid grid-cols-1 gap-3 sm:gap-4"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.5 }}
+                    >
+                      {prize.features.map((feature, index) => (
+                        <motion.div
+                          key={index}
+                          className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            duration: 0.4,
+                            delay: 0.6 + index * 0.1,
+                          }}
+                          whileHover={{ 
+                            scale: 1.02,
+                            backgroundColor: "rgba(255, 255, 255, 0.08)"
+                          }}
+                        >
+                          <div
+                            className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mt-1.5 sm:mt-2 flex-shrink-0"
+                            style={{ backgroundColor: colors.primary }}
+                          />
+                          <span className="text-gray-200 font-medium leading-relaxed text-sm sm:text-base">
+                            {feature}
+                          </span>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-4 sm:px-8 pb-4 sm:pb-8">
+                    <motion.div
+                      className="bg-gradient-to-r from-white/5 to-transparent p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-white/10"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.7 }}
+                    >
+                      <p className="text-gray-400 text-xs sm:text-sm leading-relaxed text-center">
+                        Sve nagrade se dodeljuju na kraju sezone. Mesečne nagrade se dodeljuju svakog meseca.
+                        <br className="hidden sm:block" />
+                        <span className={`${colors.icon} font-medium block sm:inline mt-2 sm:mt-0`}>
+                          Registruj se sada i osiguraj svoje mesto u {prize.title}!
+                        </span>
+                      </p>
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* Decorative corner elements */}
+                <div
+                  className="absolute top-0 left-0 w-20 h-20 opacity-20 rounded-br-2xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primary}30, transparent)`,
+                  }}
+                />
+                <div
+                  className="absolute bottom-0 right-0 w-20 h-20 opacity-20 rounded-tl-2xl"
+                  style={{
+                    background: `linear-gradient(315deg, ${colors.primary}30, transparent)`,
+                  }}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+
+  return createPortal(modalContent, document.body);
+}

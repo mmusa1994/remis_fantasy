@@ -8,7 +8,15 @@ import {
   PanInfo,
 } from "framer-motion";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Award } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Award,
+  Eye,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import PrizeModal from "./PrizeModal";
 
 interface Prize {
   id: number;
@@ -164,6 +172,9 @@ export default function PrizesGallery() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const x = useMotionValue(0);
 
   // Auto-play functionality
@@ -205,6 +216,7 @@ export default function PrizesGallery() {
     setIsAutoPlaying(false);
     setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % prizes.length);
+    setIsAccordionOpen(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
@@ -212,6 +224,7 @@ export default function PrizesGallery() {
     setIsAutoPlaying(false);
     setDirection(-1);
     setCurrentIndex((prev) => (prev - 1 + prizes.length) % prizes.length);
+    setIsAccordionOpen(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
@@ -219,6 +232,7 @@ export default function PrizesGallery() {
     setIsAutoPlaying(false);
     setDirection(index > currentIndex ? 1 : -1);
     setCurrentIndex(index);
+    setIsAccordionOpen(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
@@ -233,13 +247,25 @@ export default function PrizesGallery() {
     }
   };
 
+  const openModal = (prize: Prize) => {
+    setSelectedPrize(prize);
+    setIsModalOpen(true);
+    setIsAutoPlaying(false);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedPrize(null);
+    setTimeout(() => setIsAutoPlaying(true), 1000);
+  };
+
   const currentPrize = prizes[currentIndex];
   const colors = tierColors[currentPrize.tier];
 
   return (
     <section
       id="prizes"
-      className="relative min-h-screen bg-black py-20 overflow-hidden"
+      className="relative w-full min-h-screen bg-black py-20 overflow-hidden"
     >
       {/* Epic Background Effects */}
       <div className="absolute inset-0">
@@ -311,7 +337,7 @@ export default function PrizesGallery() {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Epic Header */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -349,7 +375,7 @@ export default function PrizesGallery() {
           </motion.h2>
 
           <motion.p
-            className="text-gray-400 text-base md:text-lg max-w-4xl mx-auto leading-relaxed font-medium"
+            className="text-gray-400 text-base md:text-lg w-full max-w-4xl mx-auto leading-relaxed font-medium"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{
@@ -365,7 +391,7 @@ export default function PrizesGallery() {
         </motion.div>
 
         {/* Main Carousel Container */}
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative w-full max-w-7xl mx-auto">
           {/* Navigation Buttons */}
           <motion.button
             onClick={prevSlide}
@@ -434,6 +460,7 @@ export default function PrizesGallery() {
                           src={currentPrize.image}
                           alt={currentPrize.title}
                           fill
+                          sizes="(max-width: 1024px) 0vw, 40vw"
                           className="object-contain p-4"
                           priority
                           quality={100}
@@ -445,8 +472,9 @@ export default function PrizesGallery() {
                     </div>
 
                     {/* Right Side - Content */}
-                    <div className="col-span-1 lg:col-span-3 p-6 lg:p-8 flex flex-col justify-center space-y-6">
-                      <div>
+                    <div className="col-span-1 lg:col-span-3 p-4 lg:p-8 flex flex-col justify-between min-h-full">
+                      {/* Top Content */}
+                      <div className="flex-1">
                         {/* Price Badge */}
                         {currentPrize.price && (
                           <motion.div
@@ -467,7 +495,7 @@ export default function PrizesGallery() {
                         )}
 
                         <motion.h3
-                          className="text-2xl lg:text-3xl font-black text-white mb-2 leading-tight"
+                          className="text-xl lg:text-3xl font-black text-white mb-2 leading-tight"
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.6, delay: 0.2 }}
@@ -476,7 +504,7 @@ export default function PrizesGallery() {
                         </motion.h3>
 
                         <motion.h4
-                          className={`text-lg lg:text-xl ${colors.accent} font-semibold mb-4`}
+                          className={`text-base lg:text-xl ${colors.accent} font-semibold mb-3`}
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.6, delay: 0.3 }}
@@ -485,42 +513,122 @@ export default function PrizesGallery() {
                         </motion.h4>
 
                         <motion.p
-                          className="text-gray-400 text-base leading-relaxed mb-6"
+                          className="text-gray-400 text-sm lg:text-base leading-relaxed mb-4"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.6, delay: 0.4 }}
                         >
                           {currentPrize.description}
                         </motion.p>
+
+                        {/* Features Preview/Accordion */}
+                        <motion.div
+                          className="mb-4"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 0.5 }}
+                        >
+                          {/* Quick Summary */}
+                          <div className="text-gray-300 text-sm mb-3">
+                            {currentPrize.tier === "h2h" &&
+                              "Turnirski format sa direktnim sukobima"}
+                            {currentPrize.tier === "standard" &&
+                              "Klasična liga sa mjesečnim nagradama"}
+                            {currentPrize.tier === "premium" &&
+                              "VIP liga sa najvećim nagradama"}
+                            {currentPrize.tier === "free" &&
+                              "Besplatno učešće za veterane"}
+                            {currentPrize.tier === "intro" &&
+                              "Dobrodošli u novu sezonu"}
+                          </div>
+
+                          {/* Accordion Toggle */}
+                          <motion.button
+                            onClick={() => setIsAccordionOpen(!isAccordionOpen)}
+                            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-medium mb-2"
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {isAccordionOpen ? (
+                              <>
+                                <ChevronUp className="w-4 h-4" />
+                                Sakrij nagrade
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-4 h-4" />
+                                Prikaži nagrade ({currentPrize.features.length})
+                              </>
+                            )}
+                          </motion.button>
+
+                          {/* Accordion Content */}
+                          <AnimatePresence>
+                            {isAccordionOpen && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="space-y-2 max-h-32 lg:max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                                  {currentPrize.features.map(
+                                    (feature, index) => (
+                                      <motion.div
+                                        key={index}
+                                        className="flex items-start gap-3 text-xs lg:text-sm"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{
+                                          duration: 0.4,
+                                          delay: index * 0.05,
+                                        }}
+                                      >
+                                        <div
+                                          className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                                          style={{
+                                            backgroundColor: colors.primary,
+                                          }}
+                                        ></div>
+                                        <span className="text-gray-300 font-medium leading-relaxed">
+                                          {feature}
+                                        </span>
+                                      </motion.div>
+                                    )
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </motion.div>
                       </div>
 
-                      {/* Features List */}
+                      {/* Bottom - Always Visible Button */}
                       <motion.div
-                        className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
+                        className="flex-shrink-0 pt-2"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.5 }}
+                        transition={{ duration: 0.6, delay: 0.7 }}
                       >
-                        {currentPrize.features.map((feature, index) => (
-                          <motion.div
-                            key={index}
-                            className="flex items-start gap-3 text-sm"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{
-                              duration: 0.4,
-                              delay: 0.6 + index * 0.05,
-                            }}
-                          >
-                            <div
-                              className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                              style={{ backgroundColor: colors.primary }}
-                            ></div>
-                            <span className="text-gray-300 font-medium leading-relaxed">
-                              {feature}
-                            </span>
-                          </motion.div>
-                        ))}
+                        <motion.button
+                          onClick={() => openModal(currentPrize)}
+                          className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg border"
+                          style={{
+                            background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
+                            borderColor: `${colors.primary}40`,
+                            boxShadow: `0 4px 14px 0 ${colors.primary}25`,
+                            color: "#ffffff",
+                          }}
+                          whileHover={{
+                            boxShadow: `0 6px 20px 0 ${colors.primary}35`,
+                            scale: 1.02,
+                            transition: { duration: 0.3 },
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Eye className="w-4 h-4" />
+                          Pogledaj Detalje
+                        </motion.button>
                       </motion.div>
                     </div>
                   </div>
@@ -596,6 +704,13 @@ export default function PrizesGallery() {
             />
           </div>
         </div>
+
+        {/* Prize Details Modal */}
+        <PrizeModal
+          prize={selectedPrize}
+          isOpen={isModalOpen}
+          onClose={closeModal}
+        />
       </div>
     </section>
   );
