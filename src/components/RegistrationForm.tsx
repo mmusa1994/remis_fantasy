@@ -162,6 +162,36 @@ export default function RegistrationForm() {
 
       if (error) throw error;
 
+      // Send confirmation email
+      try {
+        const emailResponse = await fetch("/api/send-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userData: {
+              first_name: formData.first_name.trim(),
+              last_name: formData.last_name.trim(),
+              email: formData.email.trim(),
+              phone: formData.phone.trim(),
+              team_name: formData.team_name.trim(),
+              league_type: formData.league_type,
+              h2h_league: formData.h2h_league,
+            },
+          }),
+        });
+
+        if (!emailResponse.ok) {
+          console.warn("Email sending failed, but registration was successful");
+        }
+      } catch (emailError) {
+        console.warn(
+          "Email sending failed, but registration was successful:",
+          emailError
+        );
+      }
+
       setSubmitStatus("success");
       setFormData({
         first_name: "",
@@ -1167,7 +1197,7 @@ export default function RegistrationForm() {
                         >
                           Dobrodošao u REMIS Fantasy 2025/26!
                           <br className="md:hidden" />
-                          Kontaktiraćemo te uskoro.
+                          Poslali smo ti email sa kodovima za pristup ligi.
                         </motion.p>
                       </div>
                     </div>
