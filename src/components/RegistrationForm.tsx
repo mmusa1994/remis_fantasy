@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import Toast from "./Toast";
 import { supabase } from "@/lib/supabase";
+import ReCAPTCHA from "react-google-recaptcha";
 import {
   CheckCircle,
   AlertCircle,
@@ -63,6 +64,8 @@ export default function RegistrationForm() {
     message: "",
     type: "success",
   });
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -112,6 +115,10 @@ export default function RegistrationForm() {
 
     if (formData.payment_method !== "cash" && !formData.payment_proof) {
       newErrors.payment_proof = "Dokaz o uplati je obavezan";
+    }
+
+    if (!recaptchaToken) {
+      newErrors.recaptcha = "Molimo potvrdite da niste robot";
     }
 
     setErrors(newErrors);
@@ -223,6 +230,7 @@ export default function RegistrationForm() {
           body: JSON.stringify({
             emailType: "registration",
             registrationId: insertedData?.id,
+            recaptchaToken: recaptchaToken,
             userData: {
               first_name: formData.first_name.trim(),
               last_name: formData.last_name.trim(),
@@ -268,14 +276,24 @@ export default function RegistrationForm() {
         cash_status: undefined,
         payment_proof: undefined,
       });
-    } catch (error) {
+      
+      setRecaptchaToken(null);
+      recaptchaRef.current?.reset();
+    } catch (error: any) {
       console.error("Registration error:", error);
       setSubmitStatus("error");
+
+      let errorMessage = "Greška pri registraciji. Pokušajte ponovo.";
+      
+      if (error?.message?.includes("email_unique_constraint") || 
+          error?.message?.includes("already exists")) {
+        errorMessage = "Email adresa je već registrovana. Molimo koristite drugu email adresu.";
+      }
 
       // Show error toast
       setToast({
         show: true,
-        message: "Greška pri registraciji. Pokušajte ponovo.",
+        message: errorMessage,
         type: "error",
       });
     } finally {
@@ -1305,6 +1323,38 @@ export default function RegistrationForm() {
                     </AnimatePresence>
                   </div>
                 )}
+
+                {/* reCAPTCHA */}
+                <div className="mb-8">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="flex justify-center"
+                  >
+                    <ReCAPTCHA
+                      ref={recaptchaRef}
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
+                      onChange={setRecaptchaToken}
+                      onExpired={() => setRecaptchaToken(null)}
+                      theme="dark"
+                    />
+                  </motion.div>
+                  
+                  <AnimatePresence>
+                    {errors.recaptcha && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="text-red-400 text-xs md:text-sm mt-4 flex items-center justify-center gap-1 font-medium theme-transition"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.recaptcha}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* Submit Button */}
                 <motion.button

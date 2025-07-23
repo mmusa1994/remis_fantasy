@@ -5,11 +5,42 @@ import {
   sendRegistrationConfirmationEmail,
 } from "@/lib/email";
 import { supabase } from "@/lib/supabase";
+import { registrationLimiter } from "@/lib/rate-limiter";
 
 export async function POST(request: NextRequest) {
   try {
+    const clientIP = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     'unknown';
+
+    const rateLimitResult = registrationLimiter.isAllowed(clientIP);
+    
+    if (!rateLimitResult.allowed) {
+      const resetTimeMinutes = Math.ceil((rateLimitResult.resetTime! - Date.now()) / 60000);
+      return NextResponse.json(
+        { error: `Previše zahtjeva. Pokušajte ponovo za ${resetTimeMinutes} minuta.` }, 
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
-    const { userData, emailType = "codes", registrationId } = body;
+    const { userData, emailType = "codes", registrationId, recaptchaToken } = body;
+
+    if (recaptchaToken) {
+      const recaptchaResponse = await fetch(
+        `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
+        { method: 'POST' }
+      );
+      
+      const recaptchaData = await recaptchaResponse.json();
+      
+      if (!recaptchaData.success) {
+        return NextResponse.json(
+          { error: "reCAPTCHA verifikacija neuspešna" }, 
+          { status: 400 }
+        );
+      }
+    }
 
     if (!userData || !userData.email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });

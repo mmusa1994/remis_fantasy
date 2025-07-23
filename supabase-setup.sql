@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS registration_25_26 (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  email TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
   phone TEXT NOT NULL,
   team_name TEXT NOT NULL,
   league_type TEXT NOT NULL CHECK (league_type IN ('standard', 'premium')),
