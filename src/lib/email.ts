@@ -139,27 +139,27 @@ const createPremiumTemplate = (userData: UserData) => `
                 <h3>Tvoji Podaci</h3>
                 <div class="info-row">
                     <span class="info-label">Ime:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.first_name || "N/A"
                     }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Prezime:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.last_name || "N/A"
                     }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Email:</span>
-                    <span class="info-value">${userData.email || "N/A"}</span>
+                    <span class="info-value"> ${userData.email || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Telefon:</span>
-                    <span class="info-value">${userData.phone || "N/A"}</span>
+                    <span class="info-value"> ${userData.phone || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Ekipa:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.team_name || "N/A"
                     }</span>
                 </div>
@@ -171,7 +171,7 @@ const createPremiumTemplate = (userData: UserData) => `
             
             <div class="code-section">
                 <h3>Kod za Pristup</h3>
-                <div class="access-code">premium_code</div>
+                <div class="access-code">ufdndr</div>
                 <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Premium ligi!
                 </p>
@@ -305,27 +305,27 @@ const createStandardTemplate = (userData: UserData) => `
                 <h3>Tvoji Podaci</h3>
                 <div class="info-row">
                     <span class="info-label">Ime:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.first_name || "N/A"
                     }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Prezime:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.last_name || "N/A"
                     }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Email:</span>
-                    <span class="info-value">${userData.email || "N/A"}</span>
+                    <span class="info-value"> ${userData.email || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Telefon:</span>
-                    <span class="info-value">${userData.phone || "N/A"}</span>
+                    <span class="info-value"> ${userData.phone || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Ekipa:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.team_name || "N/A"
                     }</span>
                 </div>
@@ -337,7 +337,7 @@ const createStandardTemplate = (userData: UserData) => `
             
             <div class="code-section">
                 <h3>Kod za Pristup</h3>
-                <div class="access-code">standard_code</div>
+                <div class="access-code">ho2hco</div>
                 <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Standard ligi!
                 </p>
@@ -550,27 +550,27 @@ const createPremiumH2HTemplate = (userData: UserData) => `
                 <h3>Tvoji Podaci</h3>
                 <div class="info-row">
                     <span class="info-label">Ime:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.first_name || "N/A"
                     }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Prezime:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.last_name || "N/A"
                     }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Email:</span>
-                    <span class="info-value">${userData.email || "N/A"}</span>
+                    <span class="info-value"> ${userData.email || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Telefon:</span>
-                    <span class="info-value">${userData.phone || "N/A"}</span>
+                    <span class="info-value"> ${userData.phone || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Ekipa:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.team_name || "N/A"
                     }</span>
                 </div>
@@ -578,7 +578,7 @@ const createPremiumH2HTemplate = (userData: UserData) => `
             
             <div class="premium-code-section">
                 <h3>Premium Liga Kod</h3>
-                <div class="access-code">premium_code</div>
+                <div class="access-code">ufdndr</div>
                 <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Premium ligi!
                 </p>
@@ -586,7 +586,7 @@ const createPremiumH2HTemplate = (userData: UserData) => `
             
             <div class="h2h-code-section">
                 <h3>H2H Liga Kod</h3>
-                <div class="access-code">h2h_code</div>
+                <div class="access-code">5wieya</div>
                 <p style="color: white; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup H2H ligi!
                 </p>
@@ -806,27 +806,27 @@ const createStandardH2HTemplate = (userData: UserData) => `
                 <h3>Tvoji Podaci</h3>
                 <div class="info-row">
                     <span class="info-label">Ime:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.first_name || "N/A"
                     }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Prezime:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.last_name || "N/A"
                     }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Email:</span>
-                    <span class="info-value">${userData.email || "N/A"}</span>
+                    <span class="info-value"> ${userData.email || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Telefon:</span>
-                    <span class="info-value">${userData.phone || "N/A"}</span>
+                    <span class="info-value"> ${userData.phone || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Ekipa:</span>
-                    <span class="info-value">${
+                    <span class="info-value"> ${
                       userData.team_name || "N/A"
                     }</span>
                 </div>
@@ -834,7 +834,7 @@ const createStandardH2HTemplate = (userData: UserData) => `
             
             <div class="standard-code-section">
                 <h3>Standard Liga Kod</h3>
-                <div class="access-code">standard_code</div>
+                <div class="access-code">ho2hco</div>
                 <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Standard ligi!
                 </p>
@@ -842,7 +842,7 @@ const createStandardH2HTemplate = (userData: UserData) => `
             
             <div class="h2h-code-section">
                 <h3>H2H Liga Kod</h3>
-                <div class="access-code">h2h_code</div>
+                <div class="access-code">5wieya</div>
                 <p style="color: white; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup H2H ligi!
                 </p>
