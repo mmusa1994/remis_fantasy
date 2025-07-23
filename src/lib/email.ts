@@ -175,7 +175,7 @@ const createPremiumTemplate = (userData: UserData) => `
             
             <div class="code-section">
                 <h3>Kod za Pristup</h3>
-                <div class="access-code">ufdndr</div>
+                <div class="access-code premium-code">ufdndr</div>
                 <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Premium ligi!
                 </p>
@@ -345,7 +345,7 @@ const createStandardTemplate = (userData: UserData) => `
             
             <div class="code-section">
                 <h3>Kod za Pristup</h3>
-                <div class="access-code">ho2hco</div>
+                <div class="access-code standard-code">ho2hco</div>
                 <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Standard ligi!
                 </p>
@@ -591,16 +591,16 @@ const createPremiumH2HTemplate = (userData: UserData) => `
             
             <div class="premium-code-section">
                 <h3>Premium Liga Kod</h3>
-                <div class="access-code">ufdndr</div>
-                <p style="color: #333; margin-top: 10px; font-weight: bold;">
+                <div class="access-code premium-code">ufdndr</div>
+                <p style="color: #333; margin-top: 15px; font-weight: bold; font-size: 14px;">
                     Koristi ovaj kod za pristup Premium ligi!
                 </p>
             </div>
             
             <div class="h2h-code-section">
                 <h3>H2H Liga Kod</h3>
-                <div class="access-code">5wieya</div>
-                <p style="color: white; margin-top: 10px; font-weight: bold;">
+                <div class="access-code h2h-code">5wieya</div>
+                <p style="color: #333; margin-top: 15px; font-weight: bold; font-size: 14px;">
                     Koristi ovaj kod za pristup H2H ligi!
                 </p>
             </div>
@@ -852,16 +852,16 @@ const createStandardH2HTemplate = (userData: UserData) => `
             
             <div class="standard-code-section">
                 <h3>Standard Liga Kod</h3>
-                <div class="access-code">ho2hco</div>
-                <p style="color: #333; margin-top: 10px; font-weight: bold;">
+                <div class="access-code standard-code">ho2hco</div>
+                <p style="color: #333; margin-top: 15px; font-weight: bold; font-size: 14px;">
                     Koristi ovaj kod za pristup Standard ligi!
                 </p>
             </div>
             
             <div class="h2h-code-section">
                 <h3>H2H Liga Kod</h3>
-                <div class="access-code">5wieya</div>
-                <p style="color: white; margin-top: 10px; font-weight: bold;">
+                <div class="access-code h2h-code">5wieya</div>
+                <p style="color: #333; margin-top: 15px; font-weight: bold; font-size: 14px;">
                     Koristi ovaj kod za pristup H2H ligi!
                 </p>
             </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
 import {
   CheckCircle,
@@ -31,6 +32,7 @@ interface FormData {
 }
 
 export default function RegistrationForm() {
+  const { theme } = useTheme();
   const [formData, setFormData] = useState<FormData>({
     first_name: "",
     last_name: "",
@@ -1313,7 +1315,7 @@ export default function RegistrationForm() {
                     initial={{ opacity: 0, y: 20, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                    className="mt-8 bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-teal-500/20 border border-green-400/50 minimal-radius p-4 md:p-6 backdrop-blur-xl"
+                    className="mt-8 bg-gradient-to-r from-green-500/30 via-emerald-500/30 to-teal-500/30 border border-green-500/60 minimal-radius p-4 md:p-6 backdrop-blur-xl shadow-lg"
                   >
                     <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
                       <motion.div
@@ -1330,7 +1332,11 @@ export default function RegistrationForm() {
                       </motion.div>
                       <div className="space-y-2">
                         <motion.h4
-                          className="text-green-300 font-black text-xl md:text-lg mb-1"
+                          className={`${
+                            theme === "light"
+                              ? "text-gray-900"
+                              : "text-green-300"
+                          } font-black text-xl md:text-lg mb-1`}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.4 }}
@@ -1338,13 +1344,17 @@ export default function RegistrationForm() {
                           PRIJAVA USPJEŠNA!
                         </motion.h4>
                         <motion.p
-                          className="text-green-200 text-sm md:text-sm leading-relaxed"
+                          className={`${
+                            theme === "light"
+                              ? "text-gray-800"
+                              : "text-green-200"
+                          } text-sm md:text-sm leading-relaxed font-bold`}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.6 }}
                         >
                           Dobrodošli u REMIS Fantasy 2025/26!
-                          <br className="md:hidden" />
+                          <br />
                           Poslali smo vam email sa potvrdom prijave.
                           <br />
                           Kodovi za pristup ligi će vam biti poslati nakon
