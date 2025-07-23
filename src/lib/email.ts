@@ -31,180 +31,137 @@ const createPremiumTemplate = (userData: UserData) => `
     <style>
         body {
             margin: 0;
-            padding: 0;
+            padding: 20px;
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            color: #ffffff;
+            background: #f5f5f5;
+            color: #333;
         }
         .container {
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            border-radius: 20px;
+            background: white;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         .header {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-            padding: 40px 30px;
+            background: #F5D056;
+            padding: 30px 20px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shine 3s infinite;
-        }
-        @keyframes shine {
-            0% { left: -100%; }
-            100% { left: 100%; }
         }
         .header h1 {
             margin: 0;
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
-            color: #1a1a1a;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1;
+            color: #333;
         }
         .content {
-            padding: 40px 30px;
+            padding: 30px 20px;
         }
-        .welcome-section {
+        .welcome-text {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+            color: #666;
+            line-height: 1.6;
         }
-        .welcome-section h2 {
-            color: #ffd700;
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
         }
-        .user-info {
-            background: rgba(255, 215, 0, 0.1);
-            border: 2px solid #ffd700;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 30px 0;
+        .info-section h3 {
+            color: #333;
+            margin: 0 0 15px 0;
+            font-size: 18px;
             text-align: center;
-        }
-        .user-info h3 {
-            color: #ffd700;
-            margin-bottom: 15px;
-            font-size: 20px;
         }
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
         }
         .info-label {
             font-weight: bold;
-            color: #ffd700;
+            color: #555;
         }
         .info-value {
-            color: #ffffff;
+            color: #333;
         }
         .code-section {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border-radius: 15px;
-            padding: 30px;
+            background: #F5D056;
+            border-radius: 8px;
+            padding: 25px;
             text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+            margin: 25px 0;
         }
         .code-section h3 {
-            color: #1a1a1a;
-            font-size: 22px;
-            margin-bottom: 15px;
-            font-weight: bold;
+            color: #333;
+            margin: 0 0 15px 0;
+            font-size: 18px;
         }
         .access-code {
-            background: #1a1a1a;
-            color: #ffd700;
-            font-size: 28px;
+            background: #333;
+            color: #F5D056;
+            font-size: 24px;
             font-weight: bold;
-            padding: 20px;
-            border-radius: 10px;
-            letter-spacing: 3px;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-            border: 3px solid #ffd700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            padding: 15px;
+            border-radius: 6px;
+            letter-spacing: 2px;
+            margin: 10px 0;
         }
         .footer {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            padding: 30px;
+            background: #333;
+            color: white;
+            padding: 20px;
             text-align: center;
-            border-top: 2px solid #ffd700;
         }
         .footer p {
-            color: #cccccc;
             margin: 5px 0;
-        }
-        .contact-info {
-            color: #ffd700;
-            font-weight: bold;
-        }
-        .trophy-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏆 REMIS FANTASY PREMIUM 🏆</h1>
+            <h1>Premium Liga</h1>
         </div>
         
         <div class="content">
-            <div class="welcome-section">
-                <div class="trophy-icon">🏆</div>
-                <h2>Dobrodošao u Premium Ligu!</h2>
+            <div class="welcome-text">
                 <p>Čestitamo! Uspješno si se registrovao za REMIS Fantasy Premium ligu 2025/26 sezone.</p>
             </div>
             
-            <div class="user-info">
-                <h3>📋 Tvoji Podaci</h3>
+            <div class="info-section">
+                <h3>Tvoji Podaci</h3>
                 <div class="info-row">
                     <span class="info-label">Ime:</span>
-                    <span class="info-value">${userData.first_name}</span>
+                    <span class="info-value">${
+                      userData.first_name || "N/A"
+                    }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Prezime:</span>
-                    <span class="info-value">${userData.last_name}</span>
+                    <span class="info-value">${
+                      userData.last_name || "N/A"
+                    }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Email:</span>
-                    <span class="info-value">${userData.email}</span>
+                    <span class="info-value">${userData.email || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Telefon:</span>
-                    <span class="info-value">${userData.phone}</span>
+                    <span class="info-value">${userData.phone || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Ekipa:</span>
-                    <span class="info-value">${userData.team_name}</span>
+                    <span class="info-value">${
+                      userData.team_name || "N/A"
+                    }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Liga:</span>
@@ -213,9 +170,9 @@ const createPremiumTemplate = (userData: UserData) => `
             </div>
             
             <div class="code-section">
-                <h3>🔑 Kod za Pristup Premium Ligi</h3>
+                <h3>Kod za Pristup</h3>
                 <div class="access-code">premium_code</div>
-                <p style="color: #1a1a1a; margin-top: 15px; font-weight: bold;">
+                <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Premium ligi!
                 </p>
             </div>
@@ -223,8 +180,7 @@ const createPremiumTemplate = (userData: UserData) => `
         
         <div class="footer">
             <p><strong>REMIS Fantasy 2025/26</strong></p>
-            <p class="contact-info">📧 Kontakt: info@remisfantasy.com</p>
-            <p>Hvala ti na prijavi! 🚀</p>
+            <p>Kontakt: info@remisfantasy.com</p>
         </div>
     </div>
 </body>
@@ -241,180 +197,137 @@ const createStandardTemplate = (userData: UserData) => `
     <style>
         body {
             margin: 0;
-            padding: 0;
+            padding: 20px;
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            color: #ffffff;
+            background: #f5f5f5;
+            color: #333;
         }
         .container {
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            border-radius: 20px;
+            background: white;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         .header {
-            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 50%, #0ea5e9 100%);
-            padding: 40px 30px;
+            background: #9EEBEB;
+            padding: 30px 20px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shine 3s infinite;
-        }
-        @keyframes shine {
-            0% { left: -100%; }
-            100% { left: 100%; }
         }
         .header h1 {
             margin: 0;
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
-            color: #ffffff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1;
+            color: #333;
         }
         .content {
-            padding: 40px 30px;
+            padding: 30px 20px;
         }
-        .welcome-section {
+        .welcome-text {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+            color: #666;
+            line-height: 1.6;
         }
-        .welcome-section h2 {
-            color: #0ea5e9;
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
         }
-        .user-info {
-            background: rgba(14, 165, 233, 0.1);
-            border: 2px solid #0ea5e9;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 30px 0;
+        .info-section h3 {
+            color: #333;
+            margin: 0 0 15px 0;
+            font-size: 18px;
             text-align: center;
-        }
-        .user-info h3 {
-            color: #0ea5e9;
-            margin-bottom: 15px;
-            font-size: 20px;
         }
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(14, 165, 233, 0.3);
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
         }
         .info-label {
             font-weight: bold;
-            color: #0ea5e9;
+            color: #555;
         }
         .info-value {
-            color: #ffffff;
+            color: #333;
         }
         .code-section {
-            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
-            border-radius: 15px;
-            padding: 30px;
+            background: #9EEBEB;
+            border-radius: 8px;
+            padding: 25px;
             text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+            margin: 25px 0;
         }
         .code-section h3 {
-            color: #ffffff;
-            font-size: 22px;
-            margin-bottom: 15px;
-            font-weight: bold;
+            color: #333;
+            margin: 0 0 15px 0;
+            font-size: 18px;
         }
         .access-code {
-            background: #1a1a1a;
-            color: #0ea5e9;
-            font-size: 28px;
+            background: #333;
+            color: #9EEBEB;
+            font-size: 24px;
             font-weight: bold;
-            padding: 20px;
-            border-radius: 10px;
-            letter-spacing: 3px;
-            text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
-            border: 3px solid #0ea5e9;
-            box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+            padding: 15px;
+            border-radius: 6px;
+            letter-spacing: 2px;
+            margin: 10px 0;
         }
         .footer {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            padding: 30px;
+            background: #333;
+            color: white;
+            padding: 20px;
             text-align: center;
-            border-top: 2px solid #0ea5e9;
         }
         .footer p {
-            color: #cccccc;
             margin: 5px 0;
-        }
-        .contact-info {
-            color: #0ea5e9;
-            font-weight: bold;
-        }
-        .trophy-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>⚽ REMIS FANTASY STANDARD ⚽</h1>
+            <h1>Standard Liga</h1>
         </div>
         
         <div class="content">
-            <div class="welcome-section">
-                <div class="trophy-icon">⚽</div>
-                <h2>Dobrodošao u Standard Ligu!</h2>
+            <div class="welcome-text">
                 <p>Čestitamo! Uspješno si se registrovao za REMIS Fantasy Standard ligu 2025/26 sezone.</p>
             </div>
             
-            <div class="user-info">
-                <h3>📋 Tvoji Podaci</h3>
+            <div class="info-section">
+                <h3>Tvoji Podaci</h3>
                 <div class="info-row">
                     <span class="info-label">Ime:</span>
-                    <span class="info-value">${userData.first_name}</span>
+                    <span class="info-value">${
+                      userData.first_name || "N/A"
+                    }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Prezime:</span>
-                    <span class="info-value">${userData.last_name}</span>
+                    <span class="info-value">${
+                      userData.last_name || "N/A"
+                    }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Email:</span>
-                    <span class="info-value">${userData.email}</span>
+                    <span class="info-value">${userData.email || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Telefon:</span>
-                    <span class="info-value">${userData.phone}</span>
+                    <span class="info-value">${userData.phone || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Ekipa:</span>
-                    <span class="info-value">${userData.team_name}</span>
+                    <span class="info-value">${
+                      userData.team_name || "N/A"
+                    }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Liga:</span>
@@ -423,9 +336,9 @@ const createStandardTemplate = (userData: UserData) => `
             </div>
             
             <div class="code-section">
-                <h3>🔑 Kod za Pristup Standard Ligi</h3>
+                <h3>Kod za Pristup</h3>
                 <div class="access-code">standard_code</div>
-                <p style="color: #ffffff; margin-top: 15px; font-weight: bold;">
+                <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Standard ligi!
                 </p>
             </div>
@@ -433,8 +346,7 @@ const createStandardTemplate = (userData: UserData) => `
         
         <div class="footer">
             <p><strong>REMIS Fantasy 2025/26</strong></p>
-            <p class="contact-info">📧 Kontakt: info@remisfantasy.com</p>
-            <p>Hvala ti na prijavi! 🚀</p>
+            <p>Kontakt: info@remisfantasy.com</p>
         </div>
     </div>
 </body>
@@ -451,25 +363,23 @@ const createPremiumH2HTemplate = (userData: UserData) => `
     <style>
         body {
             margin: 0;
-            padding: 0;
+            padding: 20px;
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            color: #ffffff;
+            background: #f5f5f5;
+            color: #333;
         }
         .container {
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            border-radius: 20px;
+            background: white;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         .header {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-            padding: 40px 30px;
+            background: #F5D056;
+            padding: 30px 20px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
         }
         .header::before {
             content: '';
@@ -487,25 +397,18 @@ const createPremiumH2HTemplate = (userData: UserData) => `
         }
         .header h1 {
             margin: 0;
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
-            color: #1a1a1a;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1;
+            color: #333;
         }
         .content {
-            padding: 40px 30px;
+            padding: 30px 20px;
         }
-        .welcome-section {
+        .welcome-text {
             text-align: center;
-            margin-bottom: 40px;
-        }
-        .welcome-section h2 {
-            color: #ffd700;
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            margin-bottom: 30px;
+            color: #666;
+            line-height: 1.6;
         }
         .user-info {
             background: rgba(255, 215, 0, 0.1);
@@ -529,29 +432,24 @@ const createPremiumH2HTemplate = (userData: UserData) => `
         }
         .info-label {
             font-weight: bold;
-            color: #ffd700;
+            color: #333;
         }
         .info-value {
-            color: #ffffff;
+            color: #555;
         }
         .premium-code-section {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border-radius: 15px;
-            padding: 30px;
+            background: #F5D056;
+            border-radius: 8px;
+            padding: 25px;
             text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
-            animation: pulse 2s infinite;
+            margin: 25px 0;
         }
         .h2h-code-section {
-            background: linear-gradient(135deg, #87ceeb 0%, #b0e0e6 100%);
-            border-radius: 15px;
-            padding: 30px;
+            background: #FF0C0C;
+            border-radius: 8px;
+            padding: 25px;
             text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 10px 30px rgba(135, 206, 235, 0.3);
-            animation: pulse 2s infinite;
-            animation-delay: 1s;
+            margin: 25px 0;
         }
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
@@ -592,18 +490,14 @@ const createPremiumH2HTemplate = (userData: UserData) => `
             box-shadow: 0 0 20px rgba(135, 206, 235, 0.3);
         }
         .footer {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            padding: 30px;
+            background: #333;
+            color: white;
+            padding: 20px;
             text-align: center;
-            border-top: 2px solid #ffd700;
         }
         .footer p {
-            color: #cccccc;
             margin: 5px 0;
-        }
-        .contact-info {
-            color: #ffd700;
-            font-weight: bold;
+            font-size: 14px;
         }
         .trophy-icon {
             font-size: 48px;
@@ -644,62 +538,56 @@ const createPremiumH2HTemplate = (userData: UserData) => `
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏆 REMIS FANTASY PREMIUM + H2H 🏆</h1>
+            <h1>Premium + H2H Liga</h1>
         </div>
         
         <div class="content">
-            <div class="welcome-section">
-                <div class="trophy-icon">🏆</div>
-                <h2>Dobrodošao u Premium + H2H Ligu!</h2>
+            <div class="welcome-text">
                 <p>Čestitamo! Uspješno si se registrovao za REMIS Fantasy Premium ligu i H2H dodatnu ligu 2025/26 sezone.</p>
             </div>
             
-            <div class="user-info">
-                <h3>📋 Tvoji Podaci</h3>
+            <div class="info-section">
+                <h3>Tvoji Podaci</h3>
                 <div class="info-row">
                     <span class="info-label">Ime:</span>
-                    <span class="info-value">${userData.first_name}</span>
+                    <span class="info-value">${
+                      userData.first_name || "N/A"
+                    }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Prezime:</span>
-                    <span class="info-value">${userData.last_name}</span>
+                    <span class="info-value">${
+                      userData.last_name || "N/A"
+                    }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Email:</span>
-                    <span class="info-value">${userData.email}</span>
+                    <span class="info-value">${userData.email || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Telefon:</span>
-                    <span class="info-value">${userData.phone}</span>
+                    <span class="info-value">${userData.phone || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Ekipa:</span>
-                    <span class="info-value">${userData.team_name}</span>
+                    <span class="info-value">${
+                      userData.team_name || "N/A"
+                    }</span>
                 </div>
             </div>
             
-            <div class="league-info">
-                <h4>🏆 Premium Liga (50€ / 100KM)</h4>
-                <p>VIP liga s ekskluzivnim nagradama</p>
-            </div>
-            
-            <div class="h2h-info">
-                <h4>⚔️ H2H Liga (10€ / 20KM)</h4>
-                <p>Head-to-Head dodatna liga sa posebnim nagradama</p>
-            </div>
-            
             <div class="premium-code-section">
-                <h3>🔑 Kod za Pristup Premium Ligi</h3>
-                <div class="access-code premium-code">premium_code</div>
-                <p style="color: #1a1a1a; margin-top: 15px; font-weight: bold;">
+                <h3>Premium Liga Kod</h3>
+                <div class="access-code">premium_code</div>
+                <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Premium ligi!
                 </p>
             </div>
             
             <div class="h2h-code-section">
-                <h3>⚔️ Kod za Pristup H2H Ligi</h3>
-                <div class="access-code h2h-code">h2h_code</div>
-                <p style="color: #1a1a1a; margin-top: 15px; font-weight: bold;">
+                <h3>H2H Liga Kod</h3>
+                <div class="access-code">h2h_code</div>
+                <p style="color: white; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup H2H ligi!
                 </p>
             </div>
@@ -707,8 +595,7 @@ const createPremiumH2HTemplate = (userData: UserData) => `
         
         <div class="footer">
             <p><strong>REMIS Fantasy 2025/26</strong></p>
-            <p class="contact-info">📧 Kontakt: info@remisfantasy.com</p>
-            <p>Hvala ti na prijavi! 🚀</p>
+            <p>Kontakt: info@remisfantasy.com</p>
         </div>
     </div>
 </body>
@@ -725,25 +612,23 @@ const createStandardH2HTemplate = (userData: UserData) => `
     <style>
         body {
             margin: 0;
-            padding: 0;
+            padding: 20px;
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            color: #ffffff;
+            background: #f5f5f5;
+            color: #333;
         }
         .container {
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            border-radius: 20px;
+            background: white;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         .header {
-            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 50%, #0ea5e9 100%);
-            padding: 40px 30px;
+            background: #9EEBEB;
+            padding: 30px 20px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
         }
         .header::before {
             content: '';
@@ -803,29 +688,24 @@ const createStandardH2HTemplate = (userData: UserData) => `
         }
         .info-label {
             font-weight: bold;
-            color: #0ea5e9;
+            color: #333;
         }
         .info-value {
-            color: #ffffff;
+            color: #555;
         }
         .standard-code-section {
-            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
-            border-radius: 15px;
-            padding: 30px;
+            background: #9EEBEB;
+            border-radius: 8px;
+            padding: 25px;
             text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
-            animation: pulse 2s infinite;
+            margin: 25px 0;
         }
         .h2h-code-section {
-            background: linear-gradient(135deg, #87ceeb 0%, #b0e0e6 100%);
-            border-radius: 15px;
-            padding: 30px;
+            background: #FF0C0C;
+            border-radius: 8px;
+            padding: 25px;
             text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 10px 30px rgba(135, 206, 235, 0.3);
-            animation: pulse 2s infinite;
-            animation-delay: 1s;
+            margin: 25px 0;
         }
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
@@ -866,18 +746,14 @@ const createStandardH2HTemplate = (userData: UserData) => `
             box-shadow: 0 0 20px rgba(135, 206, 235, 0.3);
         }
         .footer {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            padding: 30px;
+            background: #333;
+            color: white;
+            padding: 20px;
             text-align: center;
-            border-top: 2px solid #0ea5e9;
         }
         .footer p {
-            color: #cccccc;
             margin: 5px 0;
-        }
-        .contact-info {
-            color: #0ea5e9;
-            font-weight: bold;
+            font-size: 14px;
         }
         .trophy-icon {
             font-size: 48px;
@@ -918,62 +794,56 @@ const createStandardH2HTemplate = (userData: UserData) => `
 <body>
     <div class="container">
         <div class="header">
-            <h1>⚽ REMIS FANTASY STANDARD + H2H ⚽</h1>
+            <h1>Standard + H2H Liga</h1>
         </div>
         
         <div class="content">
-            <div class="welcome-section">
-                <div class="trophy-icon">⚽</div>
-                <h2>Dobrodošao u Standard + H2H Ligu!</h2>
+            <div class="welcome-text">
                 <p>Čestitamo! Uspješno si se registrovao za REMIS Fantasy Standard ligu i H2H dodatnu ligu 2025/26 sezone.</p>
             </div>
             
-            <div class="user-info">
-                <h3>📋 Tvoji Podaci</h3>
+            <div class="info-section">
+                <h3>Tvoji Podaci</h3>
                 <div class="info-row">
                     <span class="info-label">Ime:</span>
-                    <span class="info-value">${userData.first_name}</span>
+                    <span class="info-value">${
+                      userData.first_name || "N/A"
+                    }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Prezime:</span>
-                    <span class="info-value">${userData.last_name}</span>
+                    <span class="info-value">${
+                      userData.last_name || "N/A"
+                    }</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Email:</span>
-                    <span class="info-value">${userData.email}</span>
+                    <span class="info-value">${userData.email || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Telefon:</span>
-                    <span class="info-value">${userData.phone}</span>
+                    <span class="info-value">${userData.phone || "N/A"}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Ekipa:</span>
-                    <span class="info-value">${userData.team_name}</span>
+                    <span class="info-value">${
+                      userData.team_name || "N/A"
+                    }</span>
                 </div>
             </div>
             
-            <div class="league-info">
-                <h4>⚽ Standard Liga (15€ / 30KM)</h4>
-                <p>Klasična liga s osnovnim nagradama</p>
-            </div>
-            
-            <div class="h2h-info">
-                <h4>⚔️ H2H Liga (10€ / 20KM)</h4>
-                <p>Head-to-Head dodatna liga sa posebnim nagradama</p>
-            </div>
-            
             <div class="standard-code-section">
-                <h3>🔑 Kod za Pristup Standard Ligi</h3>
-                <div class="access-code standard-code">standard_code</div>
-                <p style="color: #ffffff; margin-top: 15px; font-weight: bold;">
+                <h3>Standard Liga Kod</h3>
+                <div class="access-code">standard_code</div>
+                <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Standard ligi!
                 </p>
             </div>
             
             <div class="h2h-code-section">
-                <h3>⚔️ Kod za Pristup H2H Ligi</h3>
-                <div class="access-code h2h-code">h2h_code</div>
-                <p style="color: #1a1a1a; margin-top: 15px; font-weight: bold;">
+                <h3>H2H Liga Kod</h3>
+                <div class="access-code">h2h_code</div>
+                <p style="color: white; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup H2H ligi!
                 </p>
             </div>
@@ -981,8 +851,7 @@ const createStandardH2HTemplate = (userData: UserData) => `
         
         <div class="footer">
             <p><strong>REMIS Fantasy 2025/26</strong></p>
-            <p class="contact-info">📧 Kontakt: info@remisfantasy.com</p>
-            <p>Hvala ti na prijavi! 🚀</p>
+            <p>Kontakt: info@remisfantasy.com</p>
         </div>
     </div>
 </body>

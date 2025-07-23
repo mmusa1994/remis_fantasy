@@ -26,7 +26,7 @@ interface FormData {
   league_type: "standard" | "premium" | "";
   h2h_league: boolean;
   payment_method: "bank" | "wise" | "cash" | "";
-  cash_status?: "paid" | "pending" | string;
+  cash_status?: "paid" | "pending" | "unpaid" | "confirmed" | "rejected";
   payment_proof?: File;
 }
 
@@ -949,7 +949,7 @@ export default function RegistrationForm() {
                       backgroundSize: "200% 200%",
                     }}
                   >
-                    Dodatna Liga
+                    Dodatna Liga (*samo 40 mjesta)
                   </motion.span>
                 </motion.h3>
                 {/* H2H League Option */}

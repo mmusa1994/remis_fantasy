@@ -16,7 +16,7 @@ interface Registration {
   league_type: string;
   h2h_league: boolean;
   payment_method?: string;
-  cash_status?: string;
+  cash_status?: "paid" | "pending" | "unpaid" | "confirmed" | "rejected";
   payment_proof_url: string | null;
   payment_amount?: number;
   payment_date?: string;
@@ -262,14 +262,14 @@ export default function AdminDashboard() {
                 <h3 className="text-sm font-medium text-gray-500">
                   Standard League
                 </h3>
-                <p className="text-3xl font-bold text-amber-600">
+                <p className="text-3xl font-bold text-blue-600">
                   {
                     registrations.filter((r) => r.league_type === "standard")
                       .length
                   }
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-500 rounded-lg flex items-center justify-center">
                 <svg
                   className="w-6 h-6 text-white"
                   fill="none"
@@ -293,14 +293,14 @@ export default function AdminDashboard() {
                 <h3 className="text-sm font-medium text-gray-500">
                   Premium League
                 </h3>
-                <p className="text-3xl font-bold text-red-600">
+                <p className="text-3xl font-bold text-yellow-600">
                   {
                     registrations.filter((r) => r.league_type === "premium")
                       .length
                   }
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center">
                 <svg
                   className="w-6 h-6 text-white"
                   fill="none"
@@ -324,11 +324,11 @@ export default function AdminDashboard() {
                 <h3 className="text-sm font-medium text-gray-500">
                   H2H Participants
                 </h3>
-                <p className="text-3xl font-bold text-blue-600">
+                <p className="text-3xl font-bold text-green-600">
                   {registrations.filter((r) => r.h2h_league).length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
                 <svg
                   className="w-6 h-6 text-white"
                   fill="none"
@@ -539,15 +539,23 @@ export default function AdminDashboard() {
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           reg.league_type === "premium"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-amber-100 text-amber-800"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-blue-100 text-blue-800"
                         }`}
                       >
                         {reg.league_type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {reg.h2h_league ? "✓" : "✗"}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          reg.h2h_league
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {reg.h2h_league ? "✓" : "✗"}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -565,11 +573,15 @@ export default function AdminDashboard() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          reg.cash_status === "confirmed"
+                          reg.cash_status === "paid"
+                            ? "bg-green-100 text-green-800"
+                            : reg.cash_status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : reg.cash_status === "confirmed"
                             ? "bg-green-100 text-green-800"
                             : reg.cash_status === "rejected"
                             ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {reg.cash_status || "N/A"}
