@@ -480,10 +480,11 @@ const createPremiumH2HTemplate = (userData: UserData) => `
             font-weight: bold;
         }
         .h2h-code-section h3 {
-            color: #1a1a1a;
+            color: #ffffff !important;
             font-size: 22px;
             margin-bottom: 15px;
             font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
         }
         .access-code {
             background: #1a1a1a !important;
@@ -615,7 +616,7 @@ const createPremiumH2HTemplate = (userData: UserData) => `
             
             <div class="h2h-code-section">
                 <h3>H2H Liga Kod</h3>
-                <div class="access-code h2h-code">5wieya</div>
+                <div class="access-code h2h-code" style="background: #1a1a1a !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important; font-family: 'Courier New', 'Monaco', 'Lucida Console', monospace !important; font-size: 28px !important; font-weight: bold !important; padding: 20px 15px !important; border-radius: 8px !important; letter-spacing: 3px !important; border: 3px solid #8B0000 !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; margin: 15px 0 !important; text-align: center !important; display: block !important; min-height: 50px !important; line-height: 1.2 !important;">5wieya</div>
                 <p style="color: #333; margin-top: 15px; font-weight: bold; font-size: 14px;">
                     Koristi ovaj kod za pristup H2H ligi!
                 </p>
@@ -659,68 +660,46 @@ const createStandardH2HTemplate = (userData: UserData) => `
             padding: 30px 20px;
             text-align: center;
         }
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shine 3s infinite;
-        }
-        @keyframes shine {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
         .header h1 {
             margin: 0;
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
-            color: #ffffff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1;
+            color: #333;
         }
         .content {
-            padding: 40px 30px;
+            padding: 30px 20px;
         }
-        .welcome-section {
+        .welcome-text {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+            color: #666;
+            line-height: 1.6;
         }
-        .welcome-section h2 {
-            color: #0ea5e9;
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
         }
-        .user-info {
-            background: rgba(14, 165, 233, 0.1);
-            border: 2px solid #0ea5e9;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 30px 0;
+        .info-section h3 {
+            color: #333;
+            margin: 0 0 15px 0;
+            font-size: 18px;
             text-align: center;
-        }
-        .user-info h3 {
-            color: #0ea5e9;
-            margin-bottom: 15px;
-            font-size: 20px;
         }
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(14, 165, 233, 0.3);
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
         }
         .info-label {
             font-weight: bold;
-            color: #333;
+            color: #555;
         }
         .info-value {
-            color: #555;
+            color: #333;
         }
         .standard-code-section {
             background: #9EEBEB;
@@ -730,60 +709,46 @@ const createStandardH2HTemplate = (userData: UserData) => `
             margin: 25px 0;
         }
         .h2h-code-section {
-            background: #FF0C0C;
+            background: #8B0000;
             border-radius: 8px;
             padding: 25px;
             text-align: center;
             margin: 25px 0;
         }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
         .standard-code-section h3 {
-            color: #ffffff;
-            font-size: 22px;
-            margin-bottom: 15px;
-            font-weight: bold;
+            color: #333;
+            margin: 0 0 15px 0;
+            font-size: 18px;
         }
         .h2h-code-section h3 {
-            color: #1a1a1a;
-            font-size: 22px;
-            margin-bottom: 15px;
-            font-weight: bold;
+            color: #ffffff !important;
+            margin: 0 0 15px 0;
+            font-size: 18px;
         }
         .access-code {
             background: #1a1a1a !important;
-            font-family: 'Courier New', 'Monaco', 'Lucida Console', monospace !important;
-            font-size: 32px !important;
+            color: #ffffff !important;
+            font-size: 28px !important;
             font-weight: bold !important;
-            padding: 25px 20px !important;
-            border-radius: 12px !important;
-            letter-spacing: 4px !important;
-            border: 4px solid !important;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3) !important;
-            margin: 20px 0 !important;
+            font-family: 'Courier New', 'Monaco', 'Lucida Console', monospace !important;
+            padding: 20px 15px !important;
+            border-radius: 8px !important;
+            letter-spacing: 3px !important;
+            margin: 15px 0 !important;
             text-align: center !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+            -webkit-text-fill-color: #ffffff !important;
             display: block !important;
-            width: auto !important;
-            min-height: 60px !important;
+            min-height: 50px !important;
             line-height: 1.2 !important;
         }
         .standard-code {
-            color: #ffffff !important;
-            background: #1a1a1a !important;
-            border-color: #4FC3F7 !important;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
-            -webkit-text-fill-color: #ffffff !important;
+            border: 3px solid #4FC3F7 !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
         }
         .h2h-code {
-            color: #ffffff !important;
-            background: #1a1a1a !important;
-            border-color: #ff4444 !important;
-            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4) !important, inset 0 2px 4px rgba(255, 68, 68, 0.1) !important;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
-            -webkit-text-fill-color: #ffffff !important;
+            border: 3px solid #8B0000 !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
         }
         .footer {
             background: #333;
@@ -794,40 +759,6 @@ const createStandardH2HTemplate = (userData: UserData) => `
         .footer p {
             margin: 5px 0;
             font-size: 14px;
-        }
-        .trophy-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
-        .league-info {
-            background: rgba(14, 165, 233, 0.1);
-            border: 2px solid #0ea5e9;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .league-info h4 {
-            color: #0ea5e9;
-            margin-bottom: 10px;
-        }
-        .h2h-info {
-            background: rgba(135, 206, 235, 0.1);
-            border: 2px solid #87ceeb;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .h2h-info h4 {
-            color: #87ceeb;
-            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -870,12 +801,16 @@ const createStandardH2HTemplate = (userData: UserData) => `
                       userData.team_name || "N/A"
                     }</span>
                 </div>
+                <div class="info-row">
+                    <span class="info-label">Liga:</span>
+                    <span class="info-value">Standard Liga (15€ / 30KM) + H2H Liga</span>
+                </div>
             </div>
             
             <div class="standard-code-section">
                 <h3>Standard Liga Kod</h3>
                 <div class="access-code standard-code">ho2hco</div>
-                <p style="color: #333; margin-top: 15px; font-weight: bold; font-size: 14px;">
+                <p style="color: #333; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup Standard ligi!
                 </p>
             </div>
@@ -883,7 +818,7 @@ const createStandardH2HTemplate = (userData: UserData) => `
             <div class="h2h-code-section">
                 <h3>H2H Liga Kod</h3>
                 <div class="access-code h2h-code">5wieya</div>
-                <p style="color: #333; margin-top: 15px; font-weight: bold; font-size: 14px;">
+                <p style="color: #ffffff; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup H2H ligi!
                 </p>
             </div>
