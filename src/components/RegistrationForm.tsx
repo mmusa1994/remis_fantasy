@@ -31,6 +31,7 @@ interface FormData {
   payment_method: "bank" | "wise" | "cash" | "";
   cash_status?: "paid" | "pending" | "unpaid" | "confirmed" | "rejected";
   payment_proof?: File;
+  notes: string;
 }
 
 export default function RegistrationForm() {
@@ -46,6 +47,7 @@ export default function RegistrationForm() {
     payment_method: "",
     cash_status: undefined,
     payment_proof: undefined,
+    notes: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<
@@ -212,6 +214,7 @@ export default function RegistrationForm() {
             payment_method: formData.payment_method,
             cash_status: formData.cash_status,
             payment_proof_url: paymentProofUrl,
+            notes: formData.notes.trim(),
             created_at: new Date().toISOString(),
           },
         ])
@@ -275,6 +278,7 @@ export default function RegistrationForm() {
         payment_method: "",
         cash_status: undefined,
         payment_proof: undefined,
+        notes: "",
       });
       
       setRecaptchaToken(null);
@@ -1323,6 +1327,38 @@ export default function RegistrationForm() {
                     </AnimatePresence>
                   </div>
                 )}
+
+                {/* Notes */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="mb-8"
+                >
+                  <label
+                    htmlFor="notes"
+                    className="block text-sm md:text-base font-bold mb-3 theme-transition font-russo"
+                  >
+                    Napomene (opciono)
+                  </label>
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    value={formData.notes}
+                    onChange={(e) =>
+                      setFormData({ ...formData, notes: e.target.value })
+                    }
+                    className="w-full px-4 py-3 md:px-6 md:py-4 minimal-radius bg-white/5 backdrop-blur-sm border-2 border-white/20 focus:border-blue-400 focus:outline-none text-sm md:text-base theme-transition placeholder:text-gray-400 font-medium font-inter resize-vertical"
+                    placeholder="Unesite dodatne napomene ili komentare..."
+                    rows={4}
+                    maxLength={1000}
+                  />
+                  <div className="text-right mt-1">
+                    <span className="text-xs text-gray-400">
+                      {formData.notes.length}/1000
+                    </span>
+                  </div>
+                </motion.div>
 
                 {/* reCAPTCHA */}
                 <div className="mb-8">

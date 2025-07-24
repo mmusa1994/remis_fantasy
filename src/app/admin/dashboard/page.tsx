@@ -61,6 +61,8 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(25);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  const [editingNotes, setEditingNotes] = useState<string | null>(null);
+  const [notesValue, setNotesValue] = useState<string>("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -589,15 +591,17 @@ export default function AdminDashboard() {
           {/* Clear Filters Button */}
           <div className="mt-6 flex justify-end">
             <button
-              onClick={() => setFilters({
-                search: "",
-                league_type: "all",
-                h2h_league: "all",
-                payment_status: "all",
-                payment_method: "all",
-                cash_status: "all",
-                codes_email_status: "all",
-              })}
+              onClick={() =>
+                setFilters({
+                  search: "",
+                  league_type: "all",
+                  h2h_league: "all",
+                  payment_status: "all",
+                  payment_method: "all",
+                  cash_status: "all",
+                  codes_email_status: "all",
+                })
+              }
               className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
             >
               Clear All Filters
@@ -654,6 +658,9 @@ export default function AdminDashboard() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Admin Notes
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
@@ -868,6 +875,70 @@ export default function AdminDashboard() {
                             new Date(
                               reg.codes_email_sent_at
                             ).toLocaleDateString()}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs">
+                      {editingNotes === reg.id ? (
+                        <div className="flex gap-2 items-center">
+                          <textarea
+                            value={notesValue}
+                            onChange={(e) => setNotesValue(e.target.value)}
+                            className="w-full p-2 text-sm border border-gray-300 rounded-md resize-none"
+                            rows={2}
+                            placeholder="Dodaj napomenu..."
+                          />
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const { error } = await supabase
+                                    .from("registration_25_26")
+                                    .update({ admin_notes: notesValue })
+                                    .eq("id", reg.id);
+
+                                  if (error) throw error;
+
+                                  setEditingNotes(null);
+                                  setNotesValue("");
+                                  await fetchRegistrations();
+                                } catch (error) {
+                                  console.error("Error updating notes:", error);
+                                  alert("Greška pri ažuriranju napomene");
+                                }
+                              }}
+                              className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingNotes(null);
+                                setNotesValue("");
+                              }}
+                              className="px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
+                            >
+                              ✗
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="truncate"
+                            title={reg.admin_notes || "X"}
+                          >
+                            {reg.admin_notes || "X"}
+                          </span>
+                          <button
+                            onClick={() => {
+                              setEditingNotes(reg.id);
+                              setNotesValue(reg.admin_notes || "");
+                            }}
+                            className="text-blue-500 hover:text-blue-700 text-xs underline flex-shrink-0"
+                          >
+                            Uredi
+                          </button>
                         </div>
                       )}
                     </td>
