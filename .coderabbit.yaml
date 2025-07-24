@@ -1,0 +1,205 @@
+# CodeRabbit Configuration for Comprehensive Code Reviews
+language: en-US
+early_access: false
+
+reviews:
+  # Use assertive profile for thorough, detailed reviews
+  profile: assertive
+
+  # Enable requesting changes for critical issues
+  request_changes_workflow: true
+
+  # Enhanced summary with structured format
+  high_level_summary: true
+  high_level_summary_placeholder: |
+    ## 📊 **Code Review Summary**
+
+    ### 🎯 **Focus Areas**
+    - Architecture & Design
+    - Code Quality & Best Practices 
+    - Security & Performance
+    - User Experience & Accessibility
+
+    ### 📈 **Review Metrics**
+    - **Files Changed**: {{files_changed}}
+    - **Lines Added**: {{lines_added}}
+    - **Lines Removed**: {{lines_removed}}
+
+    ### 🔍 **Key Findings**
+    {{summary}}
+
+  # Disable poems for professional reviews
+  poem: false
+
+  # Keep review status enabled
+  review_status: true
+
+  # Collapse empty files for cleaner reviews
+  collapse_empty_files: true
+
+  # Auto review configuration
+  auto_review:
+    enabled: true
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+      - "DRAFT"
+      - "SKIP REVIEW"
+    drafts: false
+    base_branches:
+      - "master"
+      - "stage"
+      - "dev"
+
+  # Path filtering to focus on important files
+  path_filters:
+    - "!**/*.min.js"
+    - "!**/node_modules/**"
+    - "!**/*.log"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/.next/**"
+    - "!**/coverage/**"
+
+  # File patterns for detailed review
+  review_patterns:
+    - pattern: "**/*.js"
+      enabled: true
+    - pattern: "**/*.jsx"
+      enabled: true
+    - pattern: "**/*.ts"
+      enabled: true
+    - pattern: "**/*.tsx"
+      enabled: true
+    - pattern: "**/api/**/*.js"
+      enabled: true
+    - pattern: "**/prisma/**"
+      enabled: true
+    - pattern: "**/*.json"
+      enabled: true
+
+# Enhanced chat configuration
+chat:
+  auto_reply: true
+
+  # Custom system prompt for comprehensive reviews
+  system_prompt: |
+    You are a senior full-stack developer expert in Next.js, React, Prisma, and modern web development.
+
+    Your role is to provide comprehensive, actionable code reviews focusing on:
+
+    🏗️ **Architecture & Design**:
+    - Component structure and organization
+    - API design and data flow
+    - Database schema and relationships
+    - Separation of concerns
+
+    🧹 **Code Quality**:
+    - Best practices and patterns
+    - Error handling and validation
+    - Performance optimizations
+    - Code maintainability
+
+    🛡️ **Security & Reliability**:
+    - Input validation and sanitization
+    - Authentication and authorization
+    - Potential security vulnerabilities
+    - Data integrity
+
+    📱 **User Experience**:
+    - Loading states and error feedback
+    - Responsive design considerations
+    - Accessibility improvements
+    - Performance impact
+
+    🧪 **Testing & Maintenance**:
+    - Testability and test coverage
+    - Code maintainability
+    - Documentation quality
+    - Technical debt
+
+    **Review Guidelines:**
+    - Provide specific, actionable feedback with code examples
+    - Use emojis and formatting for clear categorization
+    - Prioritize issues by severity (🔴 High, 🟡 Medium, 🟢 Low)
+    - Suggest concrete improvements
+    - Focus on both immediate fixes and long-term maintainability
+
+    **This codebase is a fitness application with:**
+    - Next.js 14 App Router
+    - React 18 with modern hooks
+    - Prisma ORM with MySQL
+    - NextAuth.js authentication
+    - Tailwind CSS styling
+
+    **Special attention to:**
+    - Remove console.log statements (production code)
+    - Proper error handling with user feedback
+    - Input validation using Zod or similar
+    - Database query optimization
+    - React performance patterns
+    - Security best practices
+
+# Knowledge base for context
+knowledge_base:
+  enabled: true
+  sources:
+    - "README.md"
+    - "package.json"
+    - "prisma/schema.prisma"
+    - "next.config.mjs"
+    - "tailwind.config.js"
+
+# Custom instructions for specific review focus
+instructions: |
+  ## 🎯 **Review Focus Areas**
+
+  ### 🔴 **Critical Issues** (Request Changes):
+  - Security vulnerabilities (SQL injection, XSS, etc.)
+  - Data integrity issues
+  - Authentication/authorization bypasses
+  - Memory leaks or performance bottlenecks
+  - Breaking changes without migration
+
+  ### 🟡 **Important Issues** (Strong Suggestions):
+  - Code quality problems (console.log, debug comments)
+  - Missing error handling
+  - Performance inefficiencies
+  - Poor component structure
+  - Missing input validation
+
+  ### 🟢 **Minor Issues** (Recommendations):
+  - Style inconsistencies
+  - Minor optimizations
+  - Documentation improvements
+  - Code organization suggestions
+
+  ## 📋 **Checklist for Each Review**:
+
+  ✅ **API Routes**:
+  - [ ] Authentication checks present
+  - [ ] Input validation implemented
+  - [ ] Error handling with proper status codes
+  - [ ] No console.log statements
+  - [ ] Proper HTTP methods used
+
+  ✅ **React Components**:
+  - [ ] Proper hooks usage
+  - [ ] Error boundaries where needed
+  - [ ] Loading states implemented
+  - [ ] Accessibility considerations
+  - [ ] Performance optimizations (memo, useMemo, useCallback)
+
+  ✅ **Database**:
+  - [ ] Proper indexing for queries
+  - [ ] No N+1 query problems
+  - [ ] Secure data access patterns
+  - [ ] Proper relationship definitions
+
+  ✅ **Security**:
+  - [ ] Input sanitization
+  - [ ] File upload security
+  - [ ] Rate limiting considerations
+  - [ ] CORS configuration
+
+  Provide detailed explanations and code examples for each issue found.
