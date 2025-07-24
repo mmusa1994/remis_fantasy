@@ -79,8 +79,6 @@ league_code (TEXT, NULLABLE)
 created_at (TIMESTAMP WITH TIME ZONE)
 ```
 
-![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/mmusa1994/remis_fantasy?utm_source=oss&utm_medium=github&utm_campaign=mmusa1994%2Fremis_fantasy&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
-
 ## 🎯 Future Enhancements
 
 - Admin panel for managing registrations
@@ -95,6 +93,10 @@ created_at (TIMESTAMP WITH TIME ZONE)
 - Smooth 60fps animations
 - Mobile-first responsive design
 - Lazy loading for optimal performance
+
+## CodeRabbit
+
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/mmusa1994/remis_fantasy?utm_source=oss&utm_medium=github&utm_campaign=mmusa1994%2Fremis_fantasy&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 ## 🤝 Contributing
 
