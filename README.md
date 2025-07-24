@@ -56,11 +56,13 @@ Open [http://localhost:3000](http://localhost:3000) to view the site.
 ## 🎨 Design Features
 
 ### New 2025/26 Season Rules
+
 - **CBIT/CBIRT Scoring**: Enhanced defensive player scoring system
 - **Dual Chip Strategy**: Two distinct chip sets for different play styles
 - **Mini-League Exclusivity**: Invitation-only competition format
 
 ### Interactive Elements
+
 - Parallax hero section with animated background elements
 - Champion cards with 3D flip animations on hover
 - Smooth accordion interfaces for rules explanations
@@ -76,6 +78,8 @@ email (TEXT, NOT NULL, UNIQUE)
 league_code (TEXT, NULLABLE)
 created_at (TIMESTAMP WITH TIME ZONE)
 ```
+
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/mmusa1994/remis_fantasy?utm_source=oss&utm_medium=github&utm_campaign=mmusa1994%2Fremis_fantasy&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 ## 🎯 Future Enhancements
 

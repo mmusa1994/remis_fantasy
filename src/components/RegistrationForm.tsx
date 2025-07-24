@@ -1187,7 +1187,13 @@ export default function RegistrationForm() {
                           </div>
 
                           <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/30 minimal-radius">
-                            <p className={`${theme === "light" ? "text-yellow-700" : "text-yellow-300"} text-xs font-medium`}>
+                            <p
+                              className={`${
+                                theme === "light"
+                                  ? "text-yellow-700"
+                                  : "text-yellow-300"
+                              } text-xs font-medium`}
+                            >
                               💡 Napomena: Dodajte proviziju za PayPal od 3€. U
                               opis uplate navedite vaše ime i tip lige.
                             </p>
@@ -1404,7 +1410,7 @@ export default function RegistrationForm() {
                     onChange={(e) =>
                       setFormData({ ...formData, notes: e.target.value })
                     }
-                    className="w-full px-4 py-3 md:px-6 md:py-4 minimal-radius bg-white/5 backdrop-blur-sm border-2 border-white/20 focus:border-blue-400 focus:outline-none text-sm md:text-base theme-transition placeholder:text-gray-400 font-medium font-inter resize-vertical"
+                    className="w-full px-4 py-3 md:px-6 md:py-4 minimal-radius bg-theme-background backdrop-blur-sm border-2 border-theme-border focus:border-blue-400 focus:outline-none text-sm md:text-base theme-transition placeholder:text-gray-400 font-medium font-inter resize-vertical"
                     placeholder="Unesite dodatne napomene ili komentare..."
                     rows={4}
                     maxLength={1000}
