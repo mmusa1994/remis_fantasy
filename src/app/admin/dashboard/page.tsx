@@ -568,6 +568,7 @@ export default function AdminDashboard() {
                 <option value="bank">Bank Transfer</option>
                 <option value="wise">Wise</option>
                 <option value="cash">Cash</option>
+                <option value="paypal">PayPal</option>
               </select>
             </div>
 
@@ -771,6 +772,8 @@ export default function AdminDashboard() {
                             reg.payment_method === "cash"
                               ? "bg-yellow-100 text-yellow-800"
                               : reg.payment_method === "wise"
+                              ? "bg-purple-100 text-purple-800"
+                              : reg.payment_method === "paypal"
                               ? "bg-blue-100 text-blue-800"
                               : "bg-green-100 text-green-800"
                           }`}

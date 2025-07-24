@@ -28,7 +28,7 @@ interface FormData {
   team_name: string;
   league_type: "standard" | "premium" | "";
   h2h_league: boolean;
-  payment_method: "bank" | "wise" | "cash" | "";
+  payment_method: "bank" | "wise" | "cash" | "paypal" | "";
   cash_status?: "paid" | "pending" | "unpaid" | "confirmed" | "rejected";
   payment_proof?: File;
   notes: string;
@@ -280,7 +280,7 @@ export default function RegistrationForm() {
         payment_proof: undefined,
         notes: "",
       });
-      
+
       setRecaptchaToken(null);
       recaptchaRef.current?.reset();
     } catch (error: any) {
@@ -288,10 +288,13 @@ export default function RegistrationForm() {
       setSubmitStatus("error");
 
       let errorMessage = "Greška pri registraciji. Pokušajte ponovo.";
-      
-      if (error?.message?.includes("email_unique_constraint") || 
-          error?.message?.includes("already exists")) {
-        errorMessage = "Email adresa je već registrovana. Molimo koristite drugu email adresu.";
+
+      if (
+        error?.message?.includes("email_unique_constraint") ||
+        error?.message?.includes("already exists")
+      ) {
+        errorMessage =
+          "Email adresa je već registrovana. Molimo koristite drugu email adresu.";
       }
 
       // Show error toast
@@ -968,14 +971,19 @@ export default function RegistrationForm() {
                         id: "bank",
                         name: "Bankovni Račun",
                         Icon: Building2,
-                        color: "blue",
+                        color: "purple",
                       },
-
                       {
                         id: "wise",
                         name: "Wise",
                         Icon: CreditCardIcon,
                         color: "green",
+                      },
+                      {
+                        id: "paypal",
+                        name: "PayPal",
+                        Icon: CreditCardIcon,
+                        color: "blue",
                       },
                       {
                         id: "cash",
@@ -1134,6 +1142,54 @@ export default function RegistrationForm() {
                             <p className="text-blue-300 text-xs font-medium">
                               💡 Napomena: U opis uplate navedite vaše ime i tip
                               lige koje se prijavljujete.
+                            </p>
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* PayPal Payment Instructions */}
+                  <AnimatePresence>
+                    {formData.payment_method === "paypal" && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-6"
+                      >
+                        <motion.div
+                          className="bg-theme-secondary border border-theme-border minimal-radius p-4 backdrop-blur-sm theme-transition"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                        >
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-8 h-8 bg-blue-500/20 minimal-radius flex items-center justify-center">
+                              <CreditCardIcon className="w-4 h-4 text-blue-400" />
+                            </div>
+                            <h4 className="text-theme-foreground font-semibold text-sm theme-transition">
+                              PayPal Uplata
+                            </h4>
+                          </div>
+
+                          <p className="text-theme-text-secondary text-xs mb-4 leading-relaxed theme-transition">
+                            Za PayPal uplatu, pošaljite novac na:
+                          </p>
+
+                          <div className="bg-theme-card-secondary/40 minimal-radius p-3 border border-theme-border theme-transition">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                              <span className="text-theme-foreground font-mono text-xs sm:text-sm flex-1 break-all theme-transition">
+                                {`@Majda598 (Majda Ahmečković)`}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/30 minimal-radius">
+                            <p className={`${theme === "light" ? "text-yellow-700" : "text-yellow-300"} text-xs font-medium`}>
+                              💡 Napomena: Dodajte proviziju za PayPal od 3€. U
+                              opis uplate navedite vaše ime i tip lige.
                             </p>
                           </div>
                         </motion.div>
@@ -1376,7 +1432,7 @@ export default function RegistrationForm() {
                       theme="dark"
                     />
                   </motion.div>
-                  
+
                   <AnimatePresence>
                     {errors.recaptcha && (
                       <motion.p
