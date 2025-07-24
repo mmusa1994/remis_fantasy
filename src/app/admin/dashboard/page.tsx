@@ -30,6 +30,7 @@ interface Registration {
   email_template_type?: string;
   registration_email_sent_at?: string;
   codes_email_sent_at?: string;
+  league_entry_status?: "entered" | "not_entered" | null;
   created_at: string;
   updated_at?: string;
 }
@@ -50,6 +51,7 @@ export default function AdminDashboard() {
     payment_method: "all",
     cash_status: "all",
     codes_email_status: "all",
+    league_entry_status: "all",
   });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<{
@@ -63,6 +65,9 @@ export default function AdminDashboard() {
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [editingNotes, setEditingNotes] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState<string>("");
+  const [editingLeagueStatus, setEditingLeagueStatus] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -219,6 +224,20 @@ export default function AdminDashboard() {
           ? reg.codes_email_sent === true
           : reg.codes_email_sent !== true
       );
+    }
+
+    // League entry status filter
+    if (filters.league_entry_status !== "all") {
+      filtered = filtered.filter((reg) => {
+        if (filters.league_entry_status === "entered") {
+          return reg.league_entry_status === "entered";
+        } else if (filters.league_entry_status === "not_entered") {
+          return reg.league_entry_status === "not_entered";
+        } else if (filters.league_entry_status === "not_set") {
+          return !reg.league_entry_status;
+        }
+        return true;
+      });
     }
 
     setFilteredRegistrations(filtered);
@@ -482,7 +501,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Filter Dropdowns - Responsive Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 League Type
@@ -586,6 +605,27 @@ export default function AdminDashboard() {
                 <option value="pending">Codes Pending</option>
               </select>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Liga Status
+              </label>
+              <select
+                value={filters.league_entry_status}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    league_entry_status: e.target.value,
+                  })
+                }
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
+              >
+                <option value="all">Svi</option>
+                <option value="entered">Ušao u ligu</option>
+                <option value="not_entered">Nije ušao</option>
+                <option value="not_set">Nije postavljeno</option>
+              </select>
+            </div>
           </div>
 
           {/* Clear Filters Button */}
@@ -600,6 +640,7 @@ export default function AdminDashboard() {
                   payment_method: "all",
                   cash_status: "all",
                   codes_email_status: "all",
+                  league_entry_status: "all",
                 })
               }
               className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
@@ -663,290 +704,382 @@ export default function AdminDashboard() {
                     Admin Notes
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Liga Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {currentRegistrations.map((reg) => (
-                  <tr key={reg.id} className="hover:bg-gray-50 group">
-                    <td className="sticky left-0 z-10 bg-white group-hover:bg-gray-50 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200 min-w-[160px]">
-                      {reg.first_name} {reg.last_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {reg.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {reg.phone}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {reg.team_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          reg.league_type === "premium"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
-                      >
-                        {reg.league_type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          reg.h2h_league
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {reg.h2h_league ? "✓" : "✗"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          reg.payment_method === "cash"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : reg.payment_method === "wise"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {reg.payment_method || "N/A"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          reg.cash_status === "paid"
-                            ? "bg-green-100 text-green-800"
-                            : reg.cash_status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : reg.cash_status === "confirmed"
-                            ? "bg-green-100 text-green-800"
-                            : reg.cash_status === "rejected"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {reg.cash_status || "N/A"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {reg.payment_proof_url ? (
-                        <button
-                          onClick={async () => {
-                            if (!reg.payment_proof_url) return;
+                {currentRegistrations.map((reg) => {
+                  // Determine row background color based on league entry status
+                  let rowBgClass = "hover:bg-gray-50 group";
+                  if (reg.league_entry_status === "entered") {
+                    rowBgClass = "bg-green-50 hover:bg-green-100 group";
+                  } else if (reg.league_entry_status === "not_entered") {
+                    rowBgClass = "bg-yellow-50 hover:bg-yellow-100 group";
+                  }
 
-                            setLoadingFile(reg.payment_proof_url);
-                            const isPDF = reg.payment_proof_url
-                              .toLowerCase()
-                              .endsWith(".pdf");
-
-                            try {
-                              if (isPDF) {
-                                const signedUrl = await getSignedUrl(
-                                  reg.payment_proof_url
-                                );
-                                if (signedUrl) {
-                                  setSelectedFile({
-                                    url: signedUrl,
-                                    filename: reg.payment_proof_url,
-                                  });
-                                  setSelectedImage(null);
-                                }
-                              } else {
-                                const signedUrl = await getSignedUrl(
-                                  reg.payment_proof_url
-                                );
-                                if (signedUrl) {
-                                  setSelectedImage(signedUrl);
-                                  setSelectedFile(null);
-                                }
-                              }
-                            } finally {
-                              setLoadingFile(null);
-                            }
-                          }}
-                          disabled={loadingFile === reg.payment_proof_url}
-                          className="text-green-600 hover:text-green-900 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {loadingFile === reg.payment_proof_url ? (
-                            <span className="flex items-center gap-1">
-                              <svg
-                                className="w-4 h-4 animate-spin"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                              </svg>
-                              Loading...
-                            </span>
-                          ) : reg.payment_proof_url
-                              ?.toLowerCase()
-                              .endsWith(".pdf") ? (
-                            "Download PDF"
-                          ) : (
-                            "View Proof"
-                          )}
-                        </button>
-                      ) : (
-                        <span className="text-red-600 text-sm">No proof</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1">
-                          {reg.registration_email_sent ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                              <CheckCircle className="w-3 h-3" />
-                              Registration
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
-                              <Mail className="w-3 h-3" />
-                              Not sent
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {reg.codes_email_sent ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                              <CheckCircle className="w-3 h-3" />
-                              Codes sent
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-                              <Mail className="w-3 h-3" />
-                              Codes pending
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {!reg.codes_email_sent && (
-                        <button
-                          onClick={() => sendCodesEmail(reg)}
-                          disabled={sendingEmail === reg.id}
-                          className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                            sendingEmail === reg.id
-                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                              : "bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl"
+                  return (
+                    <tr key={reg.id} className={rowBgClass}>
+                      <td
+                        className={`sticky left-0 z-10 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200 min-w-[160px] ${
+                          reg.league_entry_status === "entered"
+                            ? "bg-green-50 group-hover:bg-green-100"
+                            : reg.league_entry_status === "not_entered"
+                            ? "bg-yellow-50 group-hover:bg-yellow-100"
+                            : "bg-white group-hover:bg-gray-50"
+                        }`}
+                      >
+                        {reg.first_name} {reg.last_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {reg.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {reg.phone}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {reg.team_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            reg.league_type === "premium"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-blue-100 text-blue-800"
                           }`}
                         >
-                          {sendingEmail === reg.id ? (
-                            <>
-                              <svg
-                                className="w-4 h-4 animate-spin"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                              </svg>
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              <Send className="w-4 h-4" />
-                              Send Codes
-                            </>
-                          )}
-                        </button>
-                      )}
-                      {reg.codes_email_sent && (
-                        <div className="text-xs text-gray-500">
-                          Sent on{" "}
-                          {reg.codes_email_sent_at &&
-                            new Date(
-                              reg.codes_email_sent_at
-                            ).toLocaleDateString()}
+                          {reg.league_type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            reg.h2h_league
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {reg.h2h_league ? "✓" : "✗"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            reg.payment_method === "cash"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : reg.payment_method === "wise"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {reg.payment_method || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            reg.cash_status === "paid"
+                              ? "bg-green-100 text-green-800"
+                              : reg.cash_status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : reg.cash_status === "confirmed"
+                              ? "bg-green-100 text-green-800"
+                              : reg.cash_status === "rejected"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {reg.cash_status || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {reg.payment_proof_url ? (
+                          <button
+                            onClick={async () => {
+                              if (!reg.payment_proof_url) return;
+
+                              setLoadingFile(reg.payment_proof_url);
+                              const isPDF = reg.payment_proof_url
+                                .toLowerCase()
+                                .endsWith(".pdf");
+
+                              try {
+                                if (isPDF) {
+                                  const signedUrl = await getSignedUrl(
+                                    reg.payment_proof_url
+                                  );
+                                  if (signedUrl) {
+                                    setSelectedFile({
+                                      url: signedUrl,
+                                      filename: reg.payment_proof_url,
+                                    });
+                                    setSelectedImage(null);
+                                  }
+                                } else {
+                                  const signedUrl = await getSignedUrl(
+                                    reg.payment_proof_url
+                                  );
+                                  if (signedUrl) {
+                                    setSelectedImage(signedUrl);
+                                    setSelectedFile(null);
+                                  }
+                                }
+                              } finally {
+                                setLoadingFile(null);
+                              }
+                            }}
+                            disabled={loadingFile === reg.payment_proof_url}
+                            className="text-green-600 hover:text-green-900 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {loadingFile === reg.payment_proof_url ? (
+                              <span className="flex items-center gap-1">
+                                <svg
+                                  className="w-4 h-4 animate-spin"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                  />
+                                </svg>
+                                Loading...
+                              </span>
+                            ) : reg.payment_proof_url
+                                ?.toLowerCase()
+                                .endsWith(".pdf") ? (
+                              "Download PDF"
+                            ) : (
+                              "View Proof"
+                            )}
+                          </button>
+                        ) : (
+                          <span className="text-red-600 text-sm">No proof</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1">
+                            {reg.registration_email_sent ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                <CheckCircle className="w-3 h-3" />
+                                Registration
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                                <Mail className="w-3 h-3" />
+                                Not sent
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {reg.codes_email_sent ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                <CheckCircle className="w-3 h-3" />
+                                Codes sent
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                                <Mail className="w-3 h-3" />
+                                Codes pending
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs">
-                      {editingNotes === reg.id ? (
-                        <div className="flex gap-2 items-center">
-                          <textarea
-                            value={notesValue}
-                            onChange={(e) => setNotesValue(e.target.value)}
-                            className="w-full p-2 text-sm border border-gray-300 rounded-md resize-none"
-                            rows={2}
-                            placeholder="Dodaj napomenu..."
-                          />
-                          <div className="flex flex-col gap-1">
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {!reg.codes_email_sent && (
+                          <button
+                            onClick={() => sendCodesEmail(reg)}
+                            disabled={sendingEmail === reg.id}
+                            className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                              sendingEmail === reg.id
+                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                : "bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl"
+                            }`}
+                          >
+                            {sendingEmail === reg.id ? (
+                              <>
+                                <svg
+                                  className="w-4 h-4 animate-spin"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                  />
+                                </svg>
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="w-4 h-4" />
+                                Send Codes
+                              </>
+                            )}
+                          </button>
+                        )}
+                        {reg.codes_email_sent && (
+                          <div className="text-xs text-gray-500">
+                            Sent on{" "}
+                            {reg.codes_email_sent_at &&
+                              new Date(
+                                reg.codes_email_sent_at
+                              ).toLocaleDateString()}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 min-w-[300px]">
+                        {editingNotes === reg.id ? (
+                          <div className="flex gap-2 items-start">
+                            <textarea
+                              value={notesValue}
+                              onChange={(e) => setNotesValue(e.target.value)}
+                              className="w-full min-w-[250px] p-3 text-sm border border-gray-300 rounded-md resize-vertical"
+                              rows={4}
+                              placeholder="Dodaj napomenu..."
+                            />
+                            <div className="flex flex-col gap-1 flex-shrink-0">
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    const { error } = await supabase
+                                      .from("registration_25_26")
+                                      .update({ admin_notes: notesValue })
+                                      .eq("id", reg.id);
+
+                                    if (error) throw error;
+
+                                    setEditingNotes(null);
+                                    setNotesValue("");
+                                    await fetchRegistrations();
+                                  } catch (error) {
+                                    console.error(
+                                      "Error updating notes:",
+                                      error
+                                    );
+                                    alert("Greška pri ažuriranju napomene");
+                                  }
+                                }}
+                                className="px-3 py-2 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingNotes(null);
+                                  setNotesValue("");
+                                }}
+                                className="px-3 py-2 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+                              >
+                                ✗
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start gap-2">
+                            <div
+                              className="flex-1 max-w-[250px] break-words"
+                              title={reg.admin_notes || "Nema napomena"}
+                            >
+                              {reg.admin_notes || (
+                                <span className="inline-flex items-center justify-center w-6 h-6 border-2 border-red-500 text-red-500 font-bold text-sm">
+                                  ✗
+                                </span>
+                              )}
+                            </div>
                             <button
-                              onClick={async () => {
+                              onClick={() => {
+                                setEditingNotes(reg.id);
+                                setNotesValue(reg.admin_notes || "");
+                              }}
+                              className="text-blue-500 hover:text-blue-700 text-xs underline flex-shrink-0 mt-1"
+                            >
+                              Uredi
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {editingLeagueStatus === reg.id ? (
+                          <div className="flex gap-2 items-center">
+                            <select
+                              value={reg.league_entry_status || ""}
+                              onChange={async (e) => {
+                                const newStatus = e.target.value || null;
                                 try {
                                   const { error } = await supabase
                                     .from("registration_25_26")
-                                    .update({ admin_notes: notesValue })
+                                    .update({ league_entry_status: newStatus })
                                     .eq("id", reg.id);
 
                                   if (error) throw error;
 
-                                  setEditingNotes(null);
-                                  setNotesValue("");
+                                  setEditingLeagueStatus(null);
                                   await fetchRegistrations();
                                 } catch (error) {
-                                  console.error("Error updating notes:", error);
-                                  alert("Greška pri ažuriranju napomene");
+                                  console.error(
+                                    "Error updating league status:",
+                                    error
+                                  );
+                                  alert("Greška pri ažuriranju statusa lige");
                                 }
                               }}
-                              className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                              className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                             >
-                              ✓
-                            </button>
+                              <option value="">Nije postavljeno</option>
+                              <option value="entered">Ušao u ligu</option>
+                              <option value="not_entered">Nije ušao</option>
+                            </select>
                             <button
-                              onClick={() => {
-                                setEditingNotes(null);
-                                setNotesValue("");
-                              }}
+                              onClick={() => setEditingLeagueStatus(null)}
                               className="px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
                             >
                               ✗
                             </button>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="truncate"
-                            title={reg.admin_notes || "X"}
-                          >
-                            {reg.admin_notes || "X"}
-                          </span>
-                          <button
-                            onClick={() => {
-                              setEditingNotes(reg.id);
-                              setNotesValue(reg.admin_notes || "");
-                            }}
-                            className="text-blue-500 hover:text-blue-700 text-xs underline flex-shrink-0"
-                          >
-                            Uredi
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(reg.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                reg.league_entry_status === "entered"
+                                  ? "bg-green-100 text-green-800"
+                                  : reg.league_entry_status === "not_entered"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {reg.league_entry_status === "entered"
+                                ? "Ušao"
+                                : reg.league_entry_status === "not_entered"
+                                ? "Nije ušao"
+                                : "Nije postavljeno"}
+                            </span>
+                            <button
+                              onClick={() => setEditingLeagueStatus(reg.id)}
+                              className="text-blue-500 hover:text-blue-700 text-xs underline"
+                            >
+                              Uredi
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(reg.created_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
