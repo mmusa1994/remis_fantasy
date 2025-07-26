@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { LogOut, Mail, CheckCircle, Send, Edit, Trash2 } from "lucide-react";
+import Toast from "@/components/Toast";
 
 interface Registration {
   id: string;
@@ -33,6 +34,7 @@ interface Registration {
   league_entry_status?: "entered" | "not_entered" | null;
   created_at: string;
   updated_at?: string;
+  deleted_at?: string | null;
 }
 
 export default function AdminDashboard() {
@@ -70,6 +72,11 @@ export default function AdminDashboard() {
   );
   const [editingRecord, setEditingRecord] = useState<Registration | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<Registration>>({});
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({ show: false, message: "", type: "success" });
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -92,6 +99,7 @@ export default function AdminDashboard() {
       const { data, error } = await supabase
         .from("registration_25_26")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -156,11 +164,18 @@ export default function AdminDashboard() {
       // Refresh registrations to update email status
       await fetchRegistrations();
 
-      // Show success message (you can add a toast notification here)
-      alert("Email sa kodovima je uspešno poslat!");
+      setToast({
+        show: true,
+        message: "Email sa kodovima je uspešno poslat!",
+        type: "success"
+      });
     } catch (error) {
       console.error("Error sending email:", error);
-      alert("Greška pri slanju emaila. Pokušajte ponovo.");
+      setToast({
+        show: true,
+        message: "Greška pri slanju emaila. Pokušajte ponovo.",
+        type: "error"
+      });
     } finally {
       setSendingEmail(null);
     }
@@ -283,10 +298,18 @@ export default function AdminDashboard() {
       setEditingRecord(null);
       setEditFormData({});
       await fetchRegistrations();
-      alert("Registracija je uspešno ažurirana!");
+      setToast({
+        show: true,
+        message: "Registracija je uspešno ažurirana!",
+        type: "success"
+      });
     } catch (error) {
       console.error("Error updating registration:", error);
-      alert("Greška pri ažuriranju registracije");
+      setToast({
+        show: true,
+        message: "Greška pri ažuriranju registracije",
+        type: "error"
+      });
     }
   };
 
@@ -298,16 +321,24 @@ export default function AdminDashboard() {
     try {
       const { error } = await supabase
         .from("registration_25_26")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", id);
 
       if (error) throw error;
 
       await fetchRegistrations();
-      alert("Registracija je uspešno obrisana!");
+      setToast({
+        show: true,
+        message: "Registracija je uspešno obrisana!",
+        type: "success"
+      });
     } catch (error) {
       console.error("Error deleting registration:", error);
-      alert("Greška pri brisanju registracije");
+      setToast({
+        show: true,
+        message: "Greška pri brisanju registracije",
+        type: "error"
+      });
     }
   };
 
@@ -1037,7 +1068,11 @@ export default function AdminDashboard() {
                                       "Error updating notes:",
                                       error
                                     );
-                                    alert("Greška pri ažuriranju napomene");
+                                    setToast({
+                                      show: true,
+                                      message: "Greška pri ažuriranju napomene",
+                                      type: "error"
+                                    });
                                   }
                                 }}
                                 className="px-3 py-2 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
@@ -1101,7 +1136,11 @@ export default function AdminDashboard() {
                                     "Error updating league status:",
                                     error
                                   );
-                                  alert("Greška pri ažuriranju statusa lige");
+                                  setToast({
+                                    show: true,
+                                    message: "Greška pri ažuriranju statusa lige",
+                                    type: "error"
+                                  });
                                 }
                               }}
                               className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -1149,6 +1188,7 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex gap-2">
                           <button
+                            type="button"
                             onClick={() => handleEditRecord(reg)}
                             className="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600 transition-colors"
                             title="Edit registration"
@@ -1157,6 +1197,7 @@ export default function AdminDashboard() {
                             Edit
                           </button>
                           <button
+                            type="button"
                             onClick={() => handleDeleteRecord(reg.id)}
                             className="inline-flex items-center px-3 py-1 bg-red-500 text-white text-xs font-medium rounded-md hover:bg-red-600 transition-colors"
                             title="Delete registration"
@@ -1384,11 +1425,13 @@ export default function AdminDashboard() {
                   Edit Registration
                 </h3>
                 <button
+                  type="button"
                   onClick={() => {
                     setEditingRecord(null);
                     setEditFormData({});
                   }}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close modal"
                 >
                   <svg
                     className="w-6 h-6"
@@ -1396,6 +1439,7 @@ export default function AdminDashboard() {
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
+                    <title>Close</title>
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -1408,10 +1452,11 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-first-name" className="block text-sm font-medium text-gray-700 mb-2">
                     First Name
                   </label>
                   <input
+                    id="edit-first-name"
                     type="text"
                     value={editFormData.first_name || ""}
                     onChange={(e) =>
@@ -1422,10 +1467,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-last-name" className="block text-sm font-medium text-gray-700 mb-2">
                     Last Name
                   </label>
                   <input
+                    id="edit-last-name"
                     type="text"
                     value={editFormData.last_name || ""}
                     onChange={(e) =>
@@ -1436,10 +1482,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700 mb-2">
                     Email
                   </label>
                   <input
+                    id="edit-email"
                     type="email"
                     value={editFormData.email || ""}
                     onChange={(e) =>
@@ -1450,10 +1497,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-phone" className="block text-sm font-medium text-gray-700 mb-2">
                     Phone
                   </label>
                   <input
+                    id="edit-phone"
                     type="text"
                     value={editFormData.phone || ""}
                     onChange={(e) =>
@@ -1464,10 +1512,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-team-name" className="block text-sm font-medium text-gray-700 mb-2">
                     Team Name
                   </label>
                   <input
+                    id="edit-team-name"
                     type="text"
                     value={editFormData.team_name || ""}
                     onChange={(e) =>
@@ -1478,10 +1527,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-league-type" className="block text-sm font-medium text-gray-700 mb-2">
                     League Type
                   </label>
                   <select
+                    id="edit-league-type"
                     value={editFormData.league_type || ""}
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, league_type: e.target.value })
@@ -1494,10 +1544,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-h2h-league" className="block text-sm font-medium text-gray-700 mb-2">
                     H2H League
                   </label>
                   <select
+                    id="edit-h2h-league"
                     value={editFormData.h2h_league ? "true" : "false"}
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, h2h_league: e.target.value === "true" })
@@ -1510,10 +1561,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-payment-method" className="block text-sm font-medium text-gray-700 mb-2">
                     Payment Method
                   </label>
                   <select
+                    id="edit-payment-method"
                     value={editFormData.payment_method || ""}
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, payment_method: e.target.value })
@@ -1528,10 +1580,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-cash-status" className="block text-sm font-medium text-gray-700 mb-2">
                     Cash Status
                   </label>
                   <select
+                    id="edit-cash-status"
                     value={editFormData.cash_status || ""}
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, cash_status: e.target.value as any })
@@ -1546,10 +1599,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-email-template-type" className="block text-sm font-medium text-gray-700 mb-2">
                     Email Template Type
                   </label>
                   <select
+                    id="edit-email-template-type"
                     value={editFormData.email_template_type || ""}
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, email_template_type: e.target.value })
@@ -1587,10 +1641,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-admin-notes" className="block text-sm font-medium text-gray-700 mb-2">
                     Admin Notes
                   </label>
                   <textarea
+                    id="edit-admin-notes"
                     value={editFormData.admin_notes || ""}
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, admin_notes: e.target.value })
@@ -1604,6 +1659,7 @@ export default function AdminDashboard() {
 
               <div className="flex justify-end gap-3 mt-6">
                 <button
+                  type="button"
                   onClick={() => {
                     setEditingRecord(null);
                     setEditFormData({});
@@ -1613,6 +1669,7 @@ export default function AdminDashboard() {
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={saveEditedRecord}
                   className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 rounded-lg transition-colors"
                 >
@@ -1623,6 +1680,14 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Toast Component */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
     </div>
   );
 }
