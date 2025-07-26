@@ -5,7 +5,8 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import { LogOut, Mail, CheckCircle, Send } from "lucide-react";
+import { LogOut, Mail, CheckCircle, Send, Edit, Trash2 } from "lucide-react";
+import Toast from "@/components/Toast";
 
 interface Registration {
   id: string;
@@ -29,10 +30,11 @@ interface Registration {
   codes_email_sent?: boolean;
   email_template_type?: string;
   registration_email_sent_at?: string;
-  codes_email_sent_at?: string;
+  codes_email_sent_at?: string | null;
   league_entry_status?: "entered" | "not_entered" | null;
   created_at: string;
   updated_at?: string;
+  deleted_at?: string | null;
 }
 
 export default function AdminDashboard() {
@@ -68,6 +70,13 @@ export default function AdminDashboard() {
   const [editingLeagueStatus, setEditingLeagueStatus] = useState<string | null>(
     null
   );
+  const [editingRecord, setEditingRecord] = useState<Registration | null>(null);
+  const [editFormData, setEditFormData] = useState<Partial<Registration>>({});
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({ show: false, message: "", type: "success" });
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -90,6 +99,7 @@ export default function AdminDashboard() {
       const { data, error } = await supabase
         .from("registration_25_26")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -154,11 +164,18 @@ export default function AdminDashboard() {
       // Refresh registrations to update email status
       await fetchRegistrations();
 
-      // Show success message (you can add a toast notification here)
-      alert("Email sa kodovima je uspešno poslat!");
+      setToast({
+        show: true,
+        message: "Email sa kodovima je uspešno poslat!",
+        type: "success"
+      });
     } catch (error) {
       console.error("Error sending email:", error);
-      alert("Greška pri slanju emaila. Pokušajte ponovo.");
+      setToast({
+        show: true,
+        message: "Greška pri slanju emaila. Pokušajte ponovo.",
+        type: "error"
+      });
     } finally {
       setSendingEmail(null);
     }
@@ -246,6 +263,83 @@ export default function AdminDashboard() {
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/admin" });
+  };
+
+  const handleEditRecord = (registration: Registration) => {
+    setEditingRecord(registration);
+    setEditFormData(registration);
+  };
+
+  const saveEditedRecord = async () => {
+    if (!editingRecord) return;
+
+    try {
+      const { error } = await supabase
+        .from("registration_25_26")
+        .update({
+          first_name: editFormData.first_name,
+          last_name: editFormData.last_name,
+          email: editFormData.email,
+          phone: editFormData.phone,
+          team_name: editFormData.team_name,
+          league_type: editFormData.league_type,
+          h2h_league: editFormData.h2h_league,
+          payment_method: editFormData.payment_method,
+          cash_status: editFormData.cash_status,
+          admin_notes: editFormData.admin_notes,
+          email_template_type: editFormData.email_template_type,
+          codes_email_sent: editFormData.codes_email_sent,
+          codes_email_sent_at: editFormData.codes_email_sent_at || null
+        })
+        .eq("id", editingRecord.id);
+
+      if (error) throw error;
+
+      setEditingRecord(null);
+      setEditFormData({});
+      await fetchRegistrations();
+      setToast({
+        show: true,
+        message: "Registracija je uspešno ažurirana!",
+        type: "success"
+      });
+    } catch (error) {
+      console.error("Error updating registration:", error);
+      setToast({
+        show: true,
+        message: "Greška pri ažuriranju registracije",
+        type: "error"
+      });
+    }
+  };
+
+  const handleDeleteRecord = async (id: string) => {
+    if (!confirm("Da li ste sigurni da želite da obrišete ovu registraciju?")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("registration_25_26")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      await fetchRegistrations();
+      setToast({
+        show: true,
+        message: "Registracija je uspešno obrisana!",
+        type: "success"
+      });
+    } catch (error) {
+      console.error("Error deleting registration:", error);
+      setToast({
+        show: true,
+        message: "Greška pri brisanju registracije",
+        type: "error"
+      });
+    }
   };
 
   // Pagination functions
@@ -710,6 +804,9 @@ export default function AdminDashboard() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Edit/Delete
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -971,7 +1068,11 @@ export default function AdminDashboard() {
                                       "Error updating notes:",
                                       error
                                     );
-                                    alert("Greška pri ažuriranju napomene");
+                                    setToast({
+                                      show: true,
+                                      message: "Greška pri ažuriranju napomene",
+                                      type: "error"
+                                    });
                                   }
                                 }}
                                 className="px-3 py-2 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
@@ -1035,7 +1136,11 @@ export default function AdminDashboard() {
                                     "Error updating league status:",
                                     error
                                   );
-                                  alert("Greška pri ažuriranju statusa lige");
+                                  setToast({
+                                    show: true,
+                                    message: "Greška pri ažuriranju statusa lige",
+                                    type: "error"
+                                  });
                                 }
                               }}
                               className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -1079,6 +1184,28 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(reg.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEditRecord(reg)}
+                            className="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600 transition-colors"
+                            title="Edit registration"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRecord(reg.id)}
+                            className="inline-flex items-center px-3 py-1 bg-red-500 text-white text-xs font-medium rounded-md hover:bg-red-600 transition-colors"
+                            title="Delete registration"
+                          >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1287,6 +1414,280 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Edit Modal */}
+      {editingRecord && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Edit Registration
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingRecord(null);
+                    setEditFormData({});
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close modal"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <title>Close</title>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="edit-first-name" className="block text-sm font-medium text-gray-700 mb-2">
+                    First Name
+                  </label>
+                  <input
+                    id="edit-first-name"
+                    type="text"
+                    value={editFormData.first_name || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, first_name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="edit-last-name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Last Name
+                  </label>
+                  <input
+                    id="edit-last-name"
+                    type="text"
+                    value={editFormData.last_name || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, last_name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    id="edit-email"
+                    type="email"
+                    value={editFormData.email || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, email: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="edit-phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone
+                  </label>
+                  <input
+                    id="edit-phone"
+                    type="text"
+                    value={editFormData.phone || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, phone: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="edit-team-name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Team Name
+                  </label>
+                  <input
+                    id="edit-team-name"
+                    type="text"
+                    value={editFormData.team_name || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, team_name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="edit-league-type" className="block text-sm font-medium text-gray-700 mb-2">
+                    League Type
+                  </label>
+                  <select
+                    id="edit-league-type"
+                    value={editFormData.league_type || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, league_type: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  >
+                    <option value="standard">Standard</option>
+                    <option value="premium">Premium</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="edit-h2h-league" className="block text-sm font-medium text-gray-700 mb-2">
+                    H2H League
+                  </label>
+                  <select
+                    id="edit-h2h-league"
+                    value={editFormData.h2h_league ? "true" : "false"}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, h2h_league: e.target.value === "true" })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  >
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="edit-payment-method" className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Method
+                  </label>
+                  <select
+                    id="edit-payment-method"
+                    value={editFormData.payment_method || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, payment_method: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  >
+                    <option value="bank">Bank Transfer</option>
+                    <option value="wise">Wise</option>
+                    <option value="cash">Cash</option>
+                    <option value="paypal">PayPal</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="edit-cash-status" className="block text-sm font-medium text-gray-700 mb-2">
+                    Cash Status
+                  </label>
+                  <select
+                    id="edit-cash-status"
+                    value={editFormData.cash_status || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, cash_status: e.target.value as any })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="edit-email-template-type" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Template Type
+                  </label>
+                  <select
+                    id="edit-email-template-type"
+                    value={editFormData.email_template_type || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, email_template_type: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  >
+                    <option value="">Select template</option>
+                    <option value="standard">Standard</option>
+                    <option value="premium">Premium</option>
+                    <option value="standard_h2h">Standard + H2H</option>
+                    <option value="premium_h2h">Premium + H2H</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reset Email Status
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditFormData({ 
+                        ...editFormData, 
+                        codes_email_sent: false,
+                        codes_email_sent_at: null
+                      })
+                    }
+                    className="w-full px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
+                  >
+                    Reset Email Status (Allow Resend)
+                  </button>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Current: {editFormData.codes_email_sent ? 'Sent' : 'Not sent'}
+                  </p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label htmlFor="edit-admin-notes" className="block text-sm font-medium text-gray-700 mb-2">
+                    Admin Notes
+                  </label>
+                  <textarea
+                    id="edit-admin-notes"
+                    value={editFormData.admin_notes || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, admin_notes: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    rows={3}
+                    placeholder="Add admin notes..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingRecord(null);
+                    setEditFormData({});
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveEditedRecord}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 rounded-lg transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Component */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
     </div>
   );
 }
