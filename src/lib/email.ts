@@ -616,7 +616,7 @@ const createPremiumH2HTemplate = (userData: UserData) => `
             
             <div class="h2h-code-section">
                 <h3>H2H Liga Kod</h3>
-                <div class="access-code h2h-code" style="background: #1a1a1a !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important; font-family: 'Courier New', 'Monaco', 'Lucida Console', monospace !important; font-size: 28px !important; font-weight: bold !important; padding: 20px 15px !important; border-radius: 8px !important; letter-spacing: 3px !important; border: 3px solid #8B0000 !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; margin: 15px 0 !important; text-align: center !important; display: block !important; min-height: 50px !important; line-height: 1.2 !important;">5wieya</div>
+                <div class="access-code h2h-code" style="background: #1a1a1a !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important; font-family: 'Courier New', 'Monaco', 'Lucida Console', monospace !important; font-size: 28px !important; font-weight: bold !important; padding: 20px 15px !important; border-radius: 8px !important; letter-spacing: 3px !important; border: 3px solid #8B0000 !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; margin: 15px 0 !important; text-align: center !important; display: block !important; min-height: 50px !important; line-height: 1.2 !important;">u79pvi</div>
                 <p style="color: #333; margin-top: 15px; font-weight: bold; font-size: 14px;">
                     Koristi ovaj kod za pristup H2H ligi!
                 </p>
@@ -817,7 +817,7 @@ const createStandardH2HTemplate = (userData: UserData) => `
             
             <div class="h2h-code-section">
                 <h3>H2H Liga Kod</h3>
-                <div class="access-code h2h-code">5wieya</div>
+                <div class="access-code h2h-code">u79pvi</div>
                 <p style="color: #ffffff; margin-top: 10px; font-weight: bold;">
                     Koristi ovaj kod za pristup H2H ligi!
                 </p>
