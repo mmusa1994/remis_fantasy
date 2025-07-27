@@ -24,7 +24,7 @@ interface Prize {
   subtitle: string;
   image: string;
   description: string;
-  tier: "intro" | "free" | "standard" | "premium" | "h2h";
+  tier: "intro" | "free" | "standard" | "premium" | "h2h" | "arsenal";
   price?: string;
   features: string[];
 }
@@ -113,6 +113,24 @@ const prizes: Prize[] = [
       "Kup nagrade: 200 KM / 100 €",
     ],
   },
+  {
+    id: 6,
+    title: "Specijalna nagrada",
+    subtitle: "🏆 AUTENTIČNI DRES ARSENALA IZ SEZONE 2003/2004 🏆",
+    image: "/images/form/arsenal.png",
+    description:
+      'Original! Ovo je sveti gral svakog fudbalskog fanatika. Dres iz legendarne "Invincibles" sezone - kada su Thierry Henry i Arsenal bez poraza osvojili Premier ligu.',
+    tier: "arsenal",
+    price: "Dres Thierry Henry 03/04",
+    features: [
+      "👑 Hall of Fame Premier lige",
+      "Henry - ikona igre, genije napada, umjetnik na terenu. Ovaj dres nosi DNK nepobjedivosti. Na aukcijama dostiže vrijednost preko 1.000€, rijetkost koja se ne pušta iz ruku.",
+      "Igrač sa najviše poena u jednom kolu (PREMIUM liga) odnosi ovu istorijsku relikviju, zajedno sa certifikatom autentičnosti.",
+      "📜 OVO NIJE SAMO NAGRADA. OVO JE LEGENDA.",
+      "Ovo je dres kojim ispisujete svoju stranicu u istoriji REMIS Fantasy lige",
+      "⚔️ Budi najbolji. Uđi u legendu. Osvoji dres nepobjedivih.",
+    ],
+  },
 ];
 
 const tierColors = {
@@ -161,6 +179,16 @@ const tierColors = {
     border: "border-[#901E1B]/40",
     icon: "text-[#901E1B]",
     glow: "shadow-[#901E1B]/25",
+  },
+  arsenal: {
+    primary: "#DC143C",
+    secondary: "#FFFFFF",
+    gradient: "from-[#DC143C] via-[#FFFFFF] to-black",
+    accent: "text-[#DC143C]",
+    bg: "from-[#DC143C]/10 via-[#FFFFFF]/5 to-black/20",
+    border: "border-[#DC143C]/40",
+    icon: "text-[#DC143C]",
+    glow: "shadow-[#DC143C]/25",
   },
 };
 
@@ -523,6 +551,8 @@ export default function PrizesGallery() {
                               "Besplatno učešće za veterane"}
                             {currentPrize.tier === "intro" &&
                               "Dobrodošli u novu sezonu"}
+                            {currentPrize.tier === "arsenal" &&
+                              "Legendarna nagrada za najbolje"}
                           </div>
 
                           {/* Accordion Toggle */}

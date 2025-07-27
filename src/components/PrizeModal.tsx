@@ -13,7 +13,7 @@ interface Prize {
   subtitle: string;
   image: string;
   description: string;
-  tier: "intro" | "free" | "standard" | "premium" | "h2h";
+  tier: "intro" | "free" | "standard" | "premium" | "h2h" | "arsenal";
   price?: string;
   features: string[];
 }
@@ -70,6 +70,16 @@ const tierColors = {
     border: "border-[#901E1B]/40",
     icon: "text-[#901E1B]",
     glow: "shadow-[#901E1B]/25",
+  },
+  arsenal: {
+    primary: "#DC143C",
+    secondary: "#FFFFFF",
+    gradient: "from-[#DC143C] via-[#FFFFFF] to-black",
+    accent: "text-[#DC143C]",
+    bg: "from-[#DC143C]/10 via-[#FFFFFF]/5 to-black/20",
+    border: "border-[#DC143C]/40",
+    icon: "text-[#DC143C]",
+    glow: "shadow-[#DC143C]/25",
   },
 };
 
@@ -299,6 +309,8 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                                 ? "50 učesnika"
                                 : prize.tier === "standard"
                                 ? "100 učesnika"
+                                : prize.tier === "arsenal"
+                                ? "Specijalna nagrada"
                                 : "Bez limita"}
                             </span>
                           </div>
