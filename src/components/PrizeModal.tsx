@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { X, Award, Trophy, Medal, Users } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface Prize {
@@ -126,7 +126,7 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
   const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <div
+        <motion.div 
           className="fixed inset-0 flex items-center justify-center p-2 sm:p-4"
           style={{ 
             zIndex: 999999,
@@ -139,54 +139,35 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
             padding: 0,
             transform: 'none',
           }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
         >
-          {/* Backdrop */}
-          <motion.div
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleBackdropClick}
-            style={{ zIndex: 1 }}
-          />
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300"
+        onClick={handleBackdropClick}
+        style={{ zIndex: 1 }}
+      />
 
-          {/* Modal Content */}
-          <motion.div
-            className="relative w-[95vw] sm:w-[90vw] md:w-[80vw] lg:w-[70vw] xl:w-[60vw] max-w-4xl h-[95vh] sm:h-[90vh] md:h-[85vh] max-h-[800px] overflow-hidden"
-            style={{ zIndex: 10 }}
-            initial={{ scale: 0.8, opacity: 0, y: 50 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: 50 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 300, 
-              damping: 30,
-              duration: 0.4 
-            }}
-          >
-            {/* Animated Border Container */}
-            <motion.div
-              className="relative w-full h-full p-[2px] sm:p-[3px] rounded-2xl sm:rounded-3xl overflow-hidden"
-              animate={{
-                backgroundImage: [
-                  `conic-gradient(from 0deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
-                  `conic-gradient(from 60deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
-                  `conic-gradient(from 120deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
-                  `conic-gradient(from 180deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
-                  `conic-gradient(from 240deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
-                  `conic-gradient(from 300deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
-                  `conic-gradient(from 360deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
-                ],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-              style={{
-                background: `conic-gradient(from 0deg, ${colors.primary}, transparent, ${colors.primary}, transparent, ${colors.primary})`,
-              }}
-            >
+      {/* Modal Content */}
+      <motion.div
+        className="relative w-[95vw] sm:w-[90vw] md:w-[80vw] lg:w-[70vw] xl:w-[60vw] max-w-4xl h-[95vh] sm:h-[90vh] md:h-[85vh] max-h-[800px] overflow-hidden"
+        style={{ zIndex: 10 }}
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        {/* Modal Container */}
+        <div
+          className="relative w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, ${colors.primary}10, transparent)`,
+            border: `1px solid ${colors.primary}30`,
+          }}
+        >
               {/* Inner Modal Container */}
               <div className={`${theme === 'light' ? 'bg-theme-background' : 'bg-black'} rounded-2xl sm:rounded-3xl overflow-hidden relative w-full h-full theme-transition`}>
                 {/* Background Effects */}
@@ -194,46 +175,26 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} opacity-5`}
                   />
-                  <motion.div
-                    className={`absolute top-10 left-10 w-32 h-32 bg-gradient-to-r ${colors.gradient} rounded-full blur-3xl opacity-20`}
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      opacity: [0.1, 0.3, 0.1],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
+                  <div
+                    className={`absolute top-10 left-10 w-32 h-32 bg-gradient-to-r ${colors.gradient} rounded-full blur-3xl opacity-20 animate-pulse-gentle gpu-accelerated`}
                   />
-                  <motion.div
-                    className={`absolute bottom-10 right-10 w-24 h-24 bg-gradient-to-l ${colors.gradient} rounded-full blur-3xl opacity-15`}
-                    animate={{
-                      scale: [1.2, 1, 1.2],
-                      opacity: [0.15, 0.25, 0.15],
-                    }}
-                    transition={{
-                      duration: 4,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
+                  <div
+                    className={`absolute bottom-10 right-10 w-24 h-24 bg-gradient-to-l ${colors.gradient} rounded-full blur-3xl opacity-15 animate-float-slow gpu-accelerated`}
                   />
                 </div>
 
-                {/* Close Button */}
-                <motion.button
-                  onClick={handleClose}
-                  className={`absolute top-3 right-3 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 backdrop-blur-xl rounded-full flex items-center justify-center transition-all duration-300 theme-transition ${
-                    theme === 'light' 
-                      ? 'bg-theme-secondary/70 hover:bg-theme-accent text-theme-foreground border border-theme-border' 
-                      : 'bg-black/70 hover:bg-black/80 text-white border border-white/10'
-                  }`}
-                  style={{ zIndex: 50 }}
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <X className="w-4 h-4 sm:w-6 sm:h-6" />
-                </motion.button>
+          {/* Close Button */}
+          <button
+            onClick={handleClose}
+            className={`absolute top-3 right-3 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 backdrop-blur-xl rounded-full flex items-center justify-center transition-all duration-300 theme-transition hover-scale focus-ring ${
+              theme === 'light' 
+                ? 'bg-theme-secondary/70 hover:bg-theme-accent text-theme-foreground border border-theme-border' 
+                : 'bg-black/70 hover:bg-black/80 text-white border border-white/10'
+            }`}
+            style={{ zIndex: 50 }}
+          >
+            <X className="w-4 h-4 sm:w-6 sm:h-6" />
+          </button>
 
                 {/* Modal Content */}
                 <div className="relative w-full h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent" style={{ zIndex: 20 }}>
@@ -411,9 +372,9 @@ export default function PrizeModal({ prize, isOpen, onClose }: PrizeModalProps) 
                   }}
                 />
               </div>
-            </motion.div>
+            </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

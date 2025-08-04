@@ -299,3 +299,315 @@ html {
 .text-theme-beige-dark {
   color: var(--theme-beige-dark);
 }
+
+/* ========================================
+   PERFORMANCE-OPTIMIZED ANIMATIONS
+   Mobile-first, GPU-accelerated, 60fps
+   ======================================== */
+
+/* Respect user preferences for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Base animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.8s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.6s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+.animate-pulse-gentle {
+  animation: pulseGentle 3s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-glow-soft {
+  animation: glowSoft 4s ease-in-out infinite alternate;
+}
+
+.animate-rotate-slow {
+  animation: rotateSlow 20s linear infinite;
+}
+
+.animate-slide-x {
+  animation: slideX 8s ease-in-out infinite alternate;
+}
+
+/* Keyframe definitions - optimized for GPU acceleration */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseGentle {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glowSoft {
+  from {
+    opacity: 0.5;
+    filter: brightness(1);
+  }
+  to {
+    opacity: 0.8;
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes rotateSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slideX {
+  from {
+    transform: translateX(-20px);
+  }
+  to {
+    transform: translateX(20px);
+  }
+}
+
+/* Hover effects - mobile-optimized */
+.hover-lift {
+  transition: transform 0.2s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.hover-scale {
+  transition: transform 0.2s ease-out;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.hover-glow {
+  transition: box-shadow 0.3s ease-out;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Focus states for accessibility */
+.focus-ring {
+  transition: box-shadow 0.2s ease-out;
+}
+
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--theme-primary);
+}
+
+/* Animation delays for staggered effects */
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+
+/* Particle system - lightweight alternative */
+.particles-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.particles-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(1px 1px at 20px 30px, white, transparent),
+    radial-gradient(1px 1px at 40px 70px, white, transparent),
+    radial-gradient(1px 1px at 90px 40px, white, transparent),
+    radial-gradient(1px 1px at 130px 80px, white, transparent),
+    radial-gradient(1px 1px at 160px 30px, white, transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+  animation: particles 20s linear infinite;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+@keyframes particles {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-100px); }
+}
+
+/* Gradient animation classes */
+.gradient-shift {
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Mobile-optimized carousel */
+.carousel-slide {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.carousel-slide.entering {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.carousel-slide.active {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.carousel-slide.exiting {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+/* Performance utilities */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  .animate-fade-in-up,
+  .animate-fade-in-down,
+  .animate-slide-in-left,
+  .animate-slide-in-right {
+    animation-duration: 0.4s;
+  }
+  
+  .animate-pulse-gentle,
+  .animate-float-slow,
+  .animate-glow-soft {
+    animation-duration: 4s;
+  }
+  
+  .hover-lift:hover,
+  .hover-scale:hover {
+    transform: none; /* Disable hover effects on mobile */
+  }
+}

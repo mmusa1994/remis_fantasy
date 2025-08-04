@@ -4,15 +4,46 @@ import PaymentInstructionsPDF from "@/components/PaymentInstructionsPDF";
 
 export const downloadPaymentInstructions = async (leagueType?: string) => {
   try {
+    // Detect problematic browsers/webviews
+    const userAgent = navigator.userAgent || '';
+    const isInstagramBrowser = userAgent.includes('Instagram') || userAgent.includes('FBAN') || userAgent.includes('FBAV');
+    const isFacebookBrowser = userAgent.includes('FBAN') || userAgent.includes('FBAV') || userAgent.includes('Facebook');
+    const isTwitterBrowser = userAgent.includes('Twitter');
+    const isLinkedInBrowser = userAgent.includes('LinkedInApp');
+    const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent);
+    const isProblematicWebView = isInstagramBrowser || isFacebookBrowser || isTwitterBrowser || isLinkedInBrowser;
+
+    // If in a problematic webview, provide better UX
+    if (isProblematicWebView) {
+      console.warn("Download attempted in problematic webview");
+      
+      // Try to generate and show PDF in new tab as fallback
+      try {
+        const PDFComponent = React.createElement(PaymentInstructionsPDF, {
+          leagueType,
+        }) as React.ReactElement<any, any>;
+        const blob = await pdf(PDFComponent).toBlob();
+        const url = URL.createObjectURL(blob);
+        
+        // Try to open in new tab
+        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!newWindow) {
+          // Fallback: try direct navigation
+          window.open(url, '_self');
+        }
+        
+        // Provide user instructions
+        throw new Error("WEBVIEW_DOWNLOAD_LIMITATION");
+      } catch (err) {
+        throw new Error("Za preuzimanje PDF-a, molimo otvorite ovaj link u vašem web browser-u (Chrome, Safari, Firefox) umjesto u aplikaciji.");
+      }
+    }
+
     // Generate the PDF blob using React PDF
     const PDFComponent = React.createElement(PaymentInstructionsPDF, {
       leagueType,
     }) as React.ReactElement<any, any>;
     const blob = await pdf(PDFComponent).toBlob();
-
-    // Check if device supports downloads properly
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     // Create download link
     const url = URL.createObjectURL(blob);
@@ -54,6 +85,17 @@ export const downloadPaymentInstructions = async (leagueType?: string) => {
     
   } catch (error) {
     console.error("Error generating PDF:", error);
+    
+    // Check for problematic webview again in fallback
+    const userAgent = navigator.userAgent || '';
+    const isProblematicWebView = userAgent.includes('Instagram') || userAgent.includes('FBAN') || 
+                                 userAgent.includes('FBAV') || userAgent.includes('Twitter') || 
+                                 userAgent.includes('LinkedInApp');
+    
+    if (isProblematicWebView) {
+      throw new Error("PDF se ne može automatski preuzeti u ovoj aplikaciji. Molimo otvorite link u web browser-u ili kontaktirajte nas na muhamed.musa1994@gmail.com za uputstva.");
+    }
+    
     // Fallback to static PDF if dynamic generation fails
     const fallbackUrl = "/documents/payment-instructions.pdf";
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);

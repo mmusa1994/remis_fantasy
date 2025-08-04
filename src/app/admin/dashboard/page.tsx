@@ -167,14 +167,14 @@ export default function AdminDashboard() {
       setToast({
         show: true,
         message: "Email sa kodovima je uspešno poslat!",
-        type: "success"
+        type: "success",
       });
     } catch (error) {
       console.error("Error sending email:", error);
       setToast({
         show: true,
         message: "Greška pri slanju emaila. Pokušajte ponovo.",
-        type: "error"
+        type: "error",
       });
     } finally {
       setSendingEmail(null);
@@ -289,7 +289,7 @@ export default function AdminDashboard() {
           admin_notes: editFormData.admin_notes,
           email_template_type: editFormData.email_template_type,
           codes_email_sent: editFormData.codes_email_sent,
-          codes_email_sent_at: editFormData.codes_email_sent_at || null
+          codes_email_sent_at: editFormData.codes_email_sent_at || null,
         })
         .eq("id", editingRecord.id);
 
@@ -301,14 +301,14 @@ export default function AdminDashboard() {
       setToast({
         show: true,
         message: "Registracija je uspešno ažurirana!",
-        type: "success"
+        type: "success",
       });
     } catch (error) {
       console.error("Error updating registration:", error);
       setToast({
         show: true,
         message: "Greška pri ažuriranju registracije",
-        type: "error"
+        type: "error",
       });
     }
   };
@@ -330,14 +330,14 @@ export default function AdminDashboard() {
       setToast({
         show: true,
         message: "Registracija je uspešno obrisana!",
-        type: "success"
+        type: "success",
       });
     } catch (error) {
       console.error("Error deleting registration:", error);
       setToast({
         show: true,
         message: "Greška pri brisanju registracije",
-        type: "error"
+        type: "error",
       });
     }
   };
@@ -370,7 +370,7 @@ export default function AdminDashboard() {
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-xl">Loading...</div>
+        <div className="text-xl text-black">Loading...</div>
       </div>
     );
   }
@@ -1071,7 +1071,7 @@ export default function AdminDashboard() {
                                     setToast({
                                       show: true,
                                       message: "Greška pri ažuriranju napomene",
-                                      type: "error"
+                                      type: "error",
                                     });
                                   }
                                 }}
@@ -1138,8 +1138,9 @@ export default function AdminDashboard() {
                                   );
                                   setToast({
                                     show: true,
-                                    message: "Greška pri ažuriranju statusa lige",
-                                    type: "error"
+                                    message:
+                                      "Greška pri ažuriranju statusa lige",
+                                    type: "error",
                                   });
                                 }
                               }}
@@ -1452,7 +1453,10 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="edit-first-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-first-name"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     First Name
                   </label>
                   <input
@@ -1460,14 +1464,20 @@ export default function AdminDashboard() {
                     type="text"
                     value={editFormData.first_name || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, first_name: e.target.value })
+                      setEditFormData({
+                        ...editFormData,
+                        first_name: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="edit-last-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-last-name"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Last Name
                   </label>
                   <input
@@ -1475,14 +1485,20 @@ export default function AdminDashboard() {
                     type="text"
                     value={editFormData.last_name || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, last_name: e.target.value })
+                      setEditFormData({
+                        ...editFormData,
+                        last_name: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-email"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Email
                   </label>
                   <input
@@ -1490,14 +1506,20 @@ export default function AdminDashboard() {
                     type="email"
                     value={editFormData.email || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, email: e.target.value })
+                      setEditFormData({
+                        ...editFormData,
+                        email: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="edit-phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-phone"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Phone
                   </label>
                   <input
@@ -1505,14 +1527,20 @@ export default function AdminDashboard() {
                     type="text"
                     value={editFormData.phone || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, phone: e.target.value })
+                      setEditFormData({
+                        ...editFormData,
+                        phone: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="edit-team-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-team-name"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Team Name
                   </label>
                   <input
@@ -1520,21 +1548,30 @@ export default function AdminDashboard() {
                     type="text"
                     value={editFormData.team_name || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, team_name: e.target.value })
+                      setEditFormData({
+                        ...editFormData,
+                        team_name: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="edit-league-type" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-league-type"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     League Type
                   </label>
                   <select
                     id="edit-league-type"
                     value={editFormData.league_type || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, league_type: e.target.value })
+                      setEditFormData({
+                        ...editFormData,
+                        league_type: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   >
@@ -1544,14 +1581,20 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="edit-h2h-league" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-h2h-league"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     H2H League
                   </label>
                   <select
                     id="edit-h2h-league"
                     value={editFormData.h2h_league ? "true" : "false"}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, h2h_league: e.target.value === "true" })
+                      setEditFormData({
+                        ...editFormData,
+                        h2h_league: e.target.value === "true",
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   >
@@ -1561,14 +1604,20 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="edit-payment-method" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-payment-method"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Payment Method
                   </label>
                   <select
                     id="edit-payment-method"
                     value={editFormData.payment_method || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, payment_method: e.target.value })
+                      setEditFormData({
+                        ...editFormData,
+                        payment_method: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   >
@@ -1580,14 +1629,20 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="edit-cash-status" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-cash-status"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Cash Status
                   </label>
                   <select
                     id="edit-cash-status"
                     value={editFormData.cash_status || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, cash_status: e.target.value as any })
+                      setEditFormData({
+                        ...editFormData,
+                        cash_status: e.target.value as any,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   >
@@ -1599,14 +1654,20 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="edit-email-template-type" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-email-template-type"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Email Template Type
                   </label>
                   <select
                     id="edit-email-template-type"
                     value={editFormData.email_template_type || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, email_template_type: e.target.value })
+                      setEditFormData({
+                        ...editFormData,
+                        email_template_type: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   >
@@ -1625,10 +1686,10 @@ export default function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() =>
-                      setEditFormData({ 
-                        ...editFormData, 
+                      setEditFormData({
+                        ...editFormData,
                         codes_email_sent: false,
-                        codes_email_sent_at: null
+                        codes_email_sent_at: null,
                       })
                     }
                     className="w-full px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
@@ -1636,19 +1697,26 @@ export default function AdminDashboard() {
                     Reset Email Status (Allow Resend)
                   </button>
                   <p className="text-xs text-gray-500 mt-1">
-                    Current: {editFormData.codes_email_sent ? 'Sent' : 'Not sent'}
+                    Current:{" "}
+                    {editFormData.codes_email_sent ? "Sent" : "Not sent"}
                   </p>
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="edit-admin-notes" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-admin-notes"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Admin Notes
                   </label>
                   <textarea
                     id="edit-admin-notes"
                     value={editFormData.admin_notes || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, admin_notes: e.target.value })
+                      setEditFormData({
+                        ...editFormData,
+                        admin_notes: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                     rows={3}

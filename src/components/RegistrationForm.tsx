@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import Toast from "./Toast";
 import { supabase } from "@/lib/supabase";
@@ -387,100 +386,45 @@ export default function RegistrationForm() {
       />
 
       <section className="relative w-full py-32 bg-theme-background overflow-hidden theme-transition">
-        {/* Subtle Background Effects */}
+        {/* Optimized Background Effects */}
         <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-900/10 via-gray-800/5 to-red-800/10 minimal-radius blur-3xl"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-l from-gray-900/10 via-red-900/5 to-gray-800/10 minimal-radius blur-3xl"></div>
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-900/10 via-gray-800/5 to-red-800/10 minimal-radius blur-3xl animate-pulse-gentle gpu-accelerated"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-l from-gray-900/10 via-red-900/5 to-gray-800/10 minimal-radius blur-3xl animate-float-slow gpu-accelerated"></div>
         </div>
 
         <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-12"
-          >
-            <motion.h2
-              className="text-3xl md:text-5xl lg:text-6xl font-black mb-4 text-balance leading-tight font-russo"
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{
-                duration: 0.8,
-                delay: 0.2,
-                type: "spring",
-                stiffness: 120,
-              }}
-            >
-              <motion.span className="text-theme-heading-primary drop-shadow-2xl theme-transition">
+          <div className="text-center mb-12 animate-fade-in-up">
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-black mb-4 text-balance leading-tight font-russo animate-scale-in animate-delay-200">
+              <span className="text-theme-heading-primary drop-shadow-2xl theme-transition">
                 PRIJAVI SE ZA NOVU SEZONU
-              </motion.span>
-            </motion.h2>
+              </span>
+            </h2>
 
-            <motion.p
-              className="text-theme-text-secondary text-sm md:text-base lg:text-lg w-full max-w-3xl mx-auto leading-relaxed font-medium theme-transition"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.8,
-                delay: 0.5,
-              }}
-            >
+            <p className="text-theme-text-secondary text-sm md:text-base lg:text-lg w-full max-w-3xl mx-auto leading-relaxed font-medium theme-transition animate-fade-in animate-delay-500">
               Popuni formu i izaberi ligu za sebe koju želiš igrati, povratne
               informacije ćeš dobiti u mailu.
-            </motion.p>
-          </motion.div>
+            </p>
+          </div>
 
           <div className="w-full max-w-4xl mx-auto">
-            <motion.div className="relative">
-              {/* Animated burgundy border - ONLY BORDER, NO BACKGROUND */}
-              <motion.div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    "linear-gradient(45deg, rgba(139, 69, 19, 0.6), transparent, rgba(220, 38, 38, 0.4), transparent, rgba(139, 69, 19, 0.6))",
-                  backgroundSize: "200% 200%",
-                  mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                  maskComposite: "xor",
-                  WebkitMask:
-                    "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                  WebkitMaskComposite: "xor",
-                  padding: "2px",
-                }}
-                animate={{
-                  backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              />
-
-              <motion.form
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
+            <div className="relative">
+              <form
                 onSubmit={handleSubmit}
-                className="relative z-10 p-8 md:p-12"
+                className="relative z-10 p-8 md:p-12 animate-fade-in-up animate-delay-200 border-2 border-gray-600/30 rounded-2xl bg-theme-background/80 backdrop-blur-sm theme-transition"
               >
                 {/* Personal Info Section */}
                 <div className="mb-12">
-                  <motion.h3
-                    className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                  >
-                    <motion.span className="text-theme-heading-primary theme-transition">
+                  <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
+                    <span className="text-theme-heading-primary theme-transition">
                       Lični Podaci
-                    </motion.span>
-                  </motion.h3>
+                    </span>
+                  </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* First Name */}
                     <div className="relative">
                       <div className="relative">
-                        <motion.input
+                        <input
                           type="text"
                           id="first_name"
                           value={formData.first_name}
@@ -489,45 +433,37 @@ export default function RegistrationForm() {
                           }
                           onFocus={() => setFocusedField("first_name")}
                           onBlur={() => setFocusedField(null)}
-                          className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-300 ${
+                          className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-500 ease-in-out focus-ring ${
                             errors.first_name
                               ? "border-red-400"
                               : focusedField === "first_name"
                               ? "border-transparent"
                               : ""
                           }`}
-                          whileFocus={{ scale: 1.02 }}
                         />
                         <label
                           htmlFor="first_name"
-                          className={`floating-label theme-transition ${
+                          className={`floating-label transition-all duration-500 ease-in-out theme-transition ${
                             formData.first_name || focusedField === "first_name"
-                              ? ""
-                              : "floating-label-placeholder"
+                              ? "transform -translate-y-2 scale-90"
+                              : "floating-label-placeholder transform translate-y-0 scale-100"
                           }`}
                         >
                           Ime *
                         </label>
                       </div>
-                      <AnimatePresence>
-                        {errors.first_name && (
-                          <motion.p
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="text-red-400 text-xs md:text-sm mt-2 flex items-center gap-1 font-medium theme-transition"
-                          >
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.first_name}
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
+                      {errors.first_name && (
+                        <p className="text-red-400 text-xs md:text-sm mt-2 flex items-center gap-1 font-medium theme-transition animate-fade-in">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.first_name}
+                        </p>
+                      )}
                     </div>
 
                     {/* Last Name */}
                     <div className="relative">
                       <div className="relative">
-                        <motion.input
+                        <input
                           type="text"
                           id="last_name"
                           value={formData.last_name}
@@ -536,61 +472,48 @@ export default function RegistrationForm() {
                           }
                           onFocus={() => setFocusedField("last_name")}
                           onBlur={() => setFocusedField(null)}
-                          className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-300 ${
+                          className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-500 ease-in-out focus-ring ${
                             errors.last_name
                               ? "border-red-400"
                               : focusedField === "last_name"
                               ? "border-transparent"
                               : ""
                           }`}
-                          whileFocus={{ scale: 1.02 }}
                         />
                         <label
                           htmlFor="last_name"
-                          className={`floating-label theme-transition ${
+                          className={`floating-label transition-all duration-500 ease-in-out theme-transition ${
                             formData.last_name || focusedField === "last_name"
-                              ? ""
-                              : "floating-label-placeholder"
+                              ? "transform -translate-y-2 scale-90"
+                              : "floating-label-placeholder transform translate-y-0 scale-100"
                           }`}
                         >
                           Prezime *
                         </label>
                       </div>
-                      <AnimatePresence>
-                        {errors.last_name && (
-                          <motion.p
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="text-red-400 text-xs md:text-sm mt-2 flex items-center gap-1 font-medium theme-transition"
-                          >
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.last_name}
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
+                      {errors.last_name && (
+                        <p className="text-red-400 text-xs md:text-sm mt-2 flex items-center gap-1 font-medium theme-transition animate-fade-in">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.last_name}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 {/* Contact Info Section */}
                 <div className="mb-12">
-                  <motion.h3
-                    className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                  >
-                    <motion.span className="text-theme-heading-primary theme-transition">
+                  <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
+                    <span className="text-theme-heading-primary theme-transition">
                       Kontakt Podaci
-                    </motion.span>
-                  </motion.h3>
+                    </span>
+                  </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Email */}
                     <div className="relative">
                       <div className="relative">
-                        <motion.input
+                        <input
                           type="email"
                           id="email"
                           value={formData.email}
@@ -599,45 +522,37 @@ export default function RegistrationForm() {
                           }
                           onFocus={() => setFocusedField("email")}
                           onBlur={() => setFocusedField(null)}
-                          className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-300 ${
+                          className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-500 ease-in-out focus-ring ${
                             errors.email
                               ? "border-red-400"
                               : focusedField === "email"
                               ? "border-transparent"
                               : ""
                           }`}
-                          whileFocus={{ scale: 1.02 }}
                         />
                         <label
                           htmlFor="email"
-                          className={`floating-label theme-transition ${
+                          className={`floating-label transition-all duration-500 ease-in-out theme-transition ${
                             formData.email || focusedField === "email"
-                              ? ""
-                              : "floating-label-placeholder"
+                              ? "transform -translate-y-2 scale-90"
+                              : "floating-label-placeholder transform translate-y-0 scale-100"
                           }`}
                         >
                           Email Adresa *
                         </label>
                       </div>
-                      <AnimatePresence>
-                        {errors.email && (
-                          <motion.p
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="text-red-400 text-xs md:text-sm mt-2 flex items-center gap-1 font-medium theme-transition"
-                          >
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.email}
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
+                      {errors.email && (
+                        <p className="text-red-400 text-xs md:text-sm mt-2 flex items-center gap-1 font-medium theme-transition animate-fade-in">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
 
                     {/* Phone */}
                     <div className="relative">
                       <div className="relative">
-                        <motion.input
+                        <input
                           type="tel"
                           id="phone"
                           value={formData.phone}
@@ -646,59 +561,46 @@ export default function RegistrationForm() {
                           }
                           onFocus={() => setFocusedField("phone")}
                           onBlur={() => setFocusedField(null)}
-                          className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-300 ${
+                          className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-500 ease-in-out focus-ring ${
                             errors.phone
                               ? "border-red-400"
                               : focusedField === "phone"
                               ? "border-transparent"
                               : ""
                           }`}
-                          whileFocus={{ scale: 1.02 }}
                         />
                         <label
                           htmlFor="phone"
-                          className={`floating-label theme-transition ${
+                          className={`floating-label transition-all duration-500 ease-in-out theme-transition ${
                             formData.phone || focusedField === "phone"
-                              ? ""
-                              : "floating-label-placeholder"
+                              ? "transform -translate-y-2 scale-90"
+                              : "floating-label-placeholder transform translate-y-0 scale-100"
                           }`}
                         >
                           Broj Telefona *
                         </label>
                       </div>
-                      <AnimatePresence>
-                        {errors.phone && (
-                          <motion.p
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="text-red-400 text-xs md:text-sm mt-2 flex items-center gap-1 font-medium theme-transition"
-                          >
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.phone}
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
+                      {errors.phone && (
+                        <p className="text-red-400 text-xs md:text-sm mt-2 flex items-center gap-1 font-medium theme-transition animate-fade-in">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.phone}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 {/* Team Info */}
                 <div className="mb-12">
-                  <motion.h3
-                    className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                  >
-                    <motion.span className="text-theme-heading-primary theme-transition">
+                  <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
+                    <span className="text-theme-heading-primary theme-transition">
                       Informacije o Ekipi
-                    </motion.span>
-                  </motion.h3>
+                    </span>
+                  </h3>
 
                   <div className="relative">
                     <div className="relative">
-                      <motion.input
+                      <input
                         type="text"
                         id="team_name"
                         value={formData.team_name}
@@ -707,60 +609,47 @@ export default function RegistrationForm() {
                         }
                         onFocus={() => setFocusedField("team_name")}
                         onBlur={() => setFocusedField(null)}
-                        className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-300 ${
+                        className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-500 ease-in-out focus-ring ${
                           errors.team_name
                             ? "border-red-400"
                             : focusedField === "team_name"
                             ? "border-transparent"
                             : ""
                         }`}
-                        whileFocus={{ scale: 1.02 }}
                       />
                       <label
                         htmlFor="team_name"
-                        className={`floating-label theme-transition ${
+                        className={`floating-label transition-all duration-500 ease-in-out theme-transition ${
                           formData.team_name || focusedField === "team_name"
-                            ? ""
-                            : "floating-label-placeholder"
+                            ? "transform -translate-y-2 scale-90"
+                            : "floating-label-placeholder transform translate-y-0 scale-100"
                         }`}
                       >
                         Ime Ekipe *
                       </label>
                     </div>
-                    <AnimatePresence>
-                      {errors.team_name && (
-                        <motion.p
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="text-red-400 text-sm mt-2 flex items-center gap-1 font-medium theme-transition"
-                        >
-                          <AlertCircle className="w-4 h-4" />
-                          {errors.team_name}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
+                    {errors.team_name && (
+                      <p className="text-red-400 text-sm mt-2 flex items-center gap-1 font-medium theme-transition animate-fade-in">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.team_name}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 {/* League Selection */}
                 <div className="mb-12">
-                  <motion.h3
-                    className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                  >
-                    <motion.span className="text-theme-heading-primary theme-transition">
+                  <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
+                    <span className="text-theme-heading-primary theme-transition">
                       Tip Lige
-                    </motion.span>
-                  </motion.h3>
+                    </span>
+                  </h3>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-10">
                     {leagueOptions.map((option) => (
-                      <motion.div
+                      <div
                         key={option.id}
-                        className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl ${
+                        className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
                           formData.league_type === option.id
                             ? `${option.colors.border} ${option.colors.bg} shadow-lg ring-4 ${option.colors.badgeRing}`
                             : `border-gray-600/50 ${option.colors.hover} hover:shadow-xl`
@@ -768,12 +657,6 @@ export default function RegistrationForm() {
                         onClick={() =>
                           handleInputChange("league_type", option.id)
                         }
-                        whileHover={{
-                          scale: 1.03,
-                          y: -5,
-                          transition: { duration: 0.2 },
-                        }}
-                        whileTap={{ scale: 0.98 }}
                       >
                         <input
                           type="radio"
@@ -798,24 +681,9 @@ export default function RegistrationForm() {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
                           {/* Price Badge */}
-                          <motion.div
-                            className={`absolute top-3 right-3 md:top-4 md:right-4 ${option.colors.badge} text-white px-3 py-1.5 md:px-4 md:py-2 minimal-radius font-bold text-sm md:text-lg shadow-2xl ring-2 ${option.colors.badgeRing}`}
-                            whileHover={{ scale: 1.05 }}
-                            animate={{
-                              boxShadow: [
-                                "0 0 20px rgba(255,255,255,0.1)",
-                                "0 0 30px rgba(255,255,255,0.2)",
-                                "0 0 20px rgba(255,255,255,0.1)",
-                              ],
-                            }}
-                            transition={{
-                              duration: 2,
-                              repeat: Infinity,
-                              ease: "easeInOut",
-                            }}
-                          >
+                          <div className={`absolute top-3 right-3 md:top-4 md:right-4 ${option.colors.badge} text-white px-3 py-1.5 md:px-4 md:py-2 minimal-radius font-bold text-sm md:text-lg shadow-2xl ring-2 ${option.colors.badgeRing} animate-pulse-gentle hover-scale`}>
                             {option.price}
-                          </motion.div>
+                          </div>
                         </div>
 
                         {/* Content */}
@@ -831,32 +699,22 @@ export default function RegistrationForm() {
                         </div>
 
                         {formData.league_type === option.id && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className={`absolute top-4 left-4 w-10 h-10 ${option.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${option.colors.badgeRing}`}
-                            whileHover={{ scale: 1.1 }}
-                          >
+                          <div className={`absolute top-4 left-4 w-10 h-10 ${option.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${option.colors.badgeRing} animate-scale-in hover-scale`}>
                             <CheckCircle className="w-6 h-6 text-white" />
-                          </motion.div>
+                          </div>
                         )}
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
 
-                  <motion.h3
-                    className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                  >
-                    <motion.span className="text-theme-heading-primary theme-transition">
+                  <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
+                    <span className="text-theme-heading-primary theme-transition">
                       Dodatna Liga (*samo 40 mjesta)
-                    </motion.span>
-                  </motion.h3>
+                    </span>
+                  </h3>
                   {/* H2H League Option */}
-                  <motion.div
-                    className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl ${
+                  <div
+                    className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
                       formData.h2h_league
                         ? `${h2hOption.colors.border} ${h2hOption.colors.bg} shadow-lg ring-4 ${h2hOption.colors.badgeRing}`
                         : `border-gray-600/50 ${h2hOption.colors.hover} hover:shadow-xl`
@@ -864,12 +722,6 @@ export default function RegistrationForm() {
                     onClick={() =>
                       handleInputChange("h2h_league", !formData.h2h_league)
                     }
-                    whileHover={{
-                      scale: 1.03,
-                      y: -5,
-                      transition: { duration: 0.2 },
-                    }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     <input
                       type="checkbox"
@@ -892,35 +744,15 @@ export default function RegistrationForm() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
                       {/* Price Badge */}
-                      <motion.div
-                        className={`absolute top-4 right-4 ${h2hOption.colors.badge} text-white px-4 py-2 minimal-radius font-bold text-lg shadow-2xl ring-2 ${h2hOption.colors.badgeRing}`}
-                        whileHover={{ scale: 1.05 }}
-                        animate={{
-                          boxShadow: [
-                            "0 0 20px rgba(255,255,255,0.1)",
-                            "0 0 30px rgba(255,255,255,0.2)",
-                            "0 0 20px rgba(255,255,255,0.1)",
-                          ],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      >
+                      <div className={`absolute top-4 right-4 ${h2hOption.colors.badge} text-white px-4 py-2 minimal-radius font-bold text-lg shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-pulse-gentle hover-scale`}>
                         {h2hOption.price}
-                      </motion.div>
+                      </div>
 
                       {/* Selected indicator */}
                       {formData.h2h_league && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className={`absolute top-4 left-4 w-10 h-10 ${h2hOption.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${h2hOption.colors.badgeRing}`}
-                          whileHover={{ scale: 1.1 }}
-                        >
+                        <div className={`absolute top-4 left-4 w-10 h-10 ${h2hOption.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-scale-in hover-scale`}>
                           <CheckCircle className="w-6 h-6 text-white" />
-                        </motion.div>
+                        </div>
                       )}
                     </div>
 
@@ -935,35 +767,23 @@ export default function RegistrationForm() {
                         {h2hOption.description}
                       </p>
                     </div>
-                  </motion.div>
+                  </div>
 
-                  <AnimatePresence>
-                    {errors.league_type && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="text-red-400 text-xs md:text-sm mt-4 flex items-center gap-1 font-medium theme-transition"
-                      >
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.league_type}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
+                  {errors.league_type && (
+                    <p className="text-red-400 text-xs md:text-sm mt-4 flex items-center gap-1 font-medium theme-transition animate-fade-in">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.league_type}
+                    </p>
+                  )}
                 </div>
 
                 {/* Payment Method Selection */}
                 <div className="mb-12">
-                  <motion.h3
-                    className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6"
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                  >
-                    <motion.span className="text-theme-heading-primary theme-transition">
+                  <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
+                    <span className="text-theme-heading-primary theme-transition">
                       Način Plaćanja *
-                    </motion.span>
-                  </motion.h3>
+                    </span>
+                  </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
                     {[
@@ -992,9 +812,9 @@ export default function RegistrationForm() {
                         color: "yellow",
                       },
                     ].map((method) => (
-                      <motion.div
+                      <div
                         key={method.id}
-                        className={`relative cursor-pointer minimal-radius border-2 p-3 md:p-4 text-center transition-all duration-300 ${
+                        className={`relative cursor-pointer minimal-radius border-2 p-3 md:p-4 text-center transition-all duration-300 hover-scale ${
                           formData.payment_method === method.id
                             ? "border-red-500 bg-red-500/10 shadow-lg ring-2 ring-red-500/50"
                             : "border-gray-600/50 hover:border-red-500/50 hover:bg-red-500/5"
@@ -1005,8 +825,6 @@ export default function RegistrationForm() {
                             handleInputChange("cash_status", undefined);
                           }
                         }}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
                       >
                         <div className="flex flex-col items-center space-y-2">
                           <method.Icon
@@ -1027,302 +845,236 @@ export default function RegistrationForm() {
                           </div>
                         </div>
                         {formData.payment_method === method.id && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 bg-red-500 minimal-radius flex items-center justify-center"
-                          >
+                          <div className="absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 bg-red-500 minimal-radius flex items-center justify-center animate-scale-in">
                             <CheckCircle className="w-3 h-3 md:w-4 md:h-4 text-white" />
-                          </motion.div>
+                          </div>
                         )}
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
 
                   {/* Bank Account Download Instructions */}
-                  <AnimatePresence>
-                    {formData.payment_method === "bank" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mb-6"
+                  {formData.payment_method === "bank" && (
+                    <div className="mb-6 animate-fade-in">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const selectedLeague = leagueOptions.find(
+                            (option) => option.id === formData.league_type
+                          );
+                          const leagueType = selectedLeague
+                            ? selectedLeague.name
+                            : "Fantasy Football Liga";
+                          
+                          try {
+                            await downloadPaymentInstructions(leagueType);
+                          } catch (err: any) {
+                            // Show error toast if download fails
+                            setToast({
+                              show: true,
+                              message: err.message || "Problem sa preuzimanjem PDF-a. Molimo kontaktirajte nas na muhamed.musa1994@gmail.com",
+                              type: "error",
+                            });
+                          }
+                        }}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-4 py-3 minimal-radius font-medium text-sm transition-all duration-300 border border-theme-border bg-theme-secondary hover:bg-theme-accent hover:border-theme-border-strong text-theme-text-secondary hover:text-theme-foreground group cursor-pointer backdrop-blur-sm theme-transition hover-scale focus-ring"
                       >
-                        <motion.button
-                          onClick={() => {
-                            const selectedLeague = leagueOptions.find(
-                              (option) => option.id === formData.league_type
-                            );
-                            const leagueType = selectedLeague
-                              ? selectedLeague.name
-                              : "Fantasy Football Liga";
-                            downloadPaymentInstructions(leagueType);
-                          }}
-                          className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-4 py-3 minimal-radius font-medium text-sm transition-all duration-300 border border-theme-border bg-theme-secondary hover:bg-theme-accent hover:border-theme-border-strong text-theme-text-secondary hover:text-theme-foreground group cursor-pointer backdrop-blur-sm theme-transition"
-                          whileHover={{
-                            scale: 1.01,
-                            transition: { duration: 0.3 },
-                          }}
-                          whileTap={{ scale: 0.99 }}
-                        >
-                          <Download className="w-5 h-5 group-hover:animate-bounce" />
-                          <span>Preuzmi uputstva za bankovnu uplatu</span>
-                        </motion.button>
+                        <Download className="w-5 h-5 group-hover:animate-bounce" />
+                        <span>Preuzmi uputstva za bankovnu uplatu</span>
+                      </button>
 
-                        <motion.p
-                          className="text-gray-400 text-xs mt-3 text-center sm:text-left"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          📄 PDF dokument sa detaljnim uputstvima i podacima za
-                          uplatu
-                        </motion.p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                      <p className="text-gray-400 text-xs mt-3 text-center sm:text-left">
+                        📄 PDF dokument sa detaljnim uputstvima i podacima za
+                        uplatu
+                      </p>
+                    </div>
+                  )}
 
                   {/* Wise Payment Instructions */}
-                  <AnimatePresence>
-                    {formData.payment_method === "wise" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mb-6"
-                      >
-                        <motion.div
-                          className="bg-theme-secondary border border-theme-border minimal-radius p-4 backdrop-blur-sm theme-transition"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1 }}
-                        >
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 bg-green-500/20 minimal-radius flex items-center justify-center">
-                              <Mail className="w-4 h-4 text-green-400" />
-                            </div>
-                            <h4 className="text-theme-foreground font-semibold text-sm theme-transition">
-                              Wise Uplata
-                            </h4>
+                  {formData.payment_method === "wise" && (
+                    <div className="mb-6 animate-fade-in">
+                      <div className="bg-theme-secondary border border-theme-border minimal-radius p-4 backdrop-blur-sm theme-transition">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-green-500/20 minimal-radius flex items-center justify-center">
+                            <Mail className="w-4 h-4 text-green-400" />
                           </div>
+                          <h4 className="text-theme-foreground font-semibold text-sm theme-transition">
+                            Wise Uplata
+                          </h4>
+                        </div>
 
-                          <p className="text-theme-text-secondary text-xs mb-4 leading-relaxed theme-transition">
-                            Za Wise uplatu, pronađite korisnika putem email
-                            adrese i pošaljite novac:
+                        <p className="text-theme-text-secondary text-xs mb-4 leading-relaxed theme-transition">
+                          Za Wise uplatu, pronađite korisnika putem email
+                          adrese i pošaljite novac:
+                        </p>
+
+                        <div className="bg-theme-card-secondary/40 minimal-radius p-3 border border-theme-border theme-transition">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Mail className="w-4 h-4 text-green-400 flex-shrink-0" />
+                            <span className="text-theme-foreground font-mono text-xs sm:text-sm flex-1 break-all theme-transition">
+                              muhamed.musa1994@gmail.com
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={copyEmailToClipboard}
+                            className="w-full sm:w-auto flex items-center justify-center gap-1 px-3 py-2 rounded text-xs font-medium transition-colors border hover-scale focus-ring"
+                            style={{
+                              backgroundColor: emailCopied
+                                ? "rgba(34, 197, 94, 0.2)"
+                                : "rgba(107, 114, 128, 0.2)",
+                              borderColor: emailCopied
+                                ? "rgba(34, 197, 94, 0.4)"
+                                : "rgba(107, 114, 128, 0.4)",
+                              color: emailCopied ? "#22c55e" : "#9ca3af",
+                            }}
+                          >
+                            <Copy className="w-3 h-3" />
+                            {emailCopied ? "Kopirano!" : "Kopiraj"}
+                          </button>
+                        </div>
+
+                        <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 minimal-radius">
+                          <p className="text-blue-300 text-xs font-medium">
+                            💡 Napomena: U opis uplate navedite vaše ime i tip
+                            lige koje se prijavljujete.
                           </p>
-
-                          <div className="bg-theme-card-secondary/40 minimal-radius p-3 border border-theme-border theme-transition">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Mail className="w-4 h-4 text-green-400 flex-shrink-0" />
-                              <span className="text-theme-foreground font-mono text-xs sm:text-sm flex-1 break-all theme-transition">
-                                muhamed.musa1994@gmail.com
-                              </span>
-                            </div>
-                            <motion.button
-                              onClick={copyEmailToClipboard}
-                              className="w-full sm:w-auto flex items-center justify-center gap-1 px-3 py-2 rounded text-xs font-medium transition-colors border"
-                              style={{
-                                backgroundColor: emailCopied
-                                  ? "rgba(34, 197, 94, 0.2)"
-                                  : "rgba(107, 114, 128, 0.2)",
-                                borderColor: emailCopied
-                                  ? "rgba(34, 197, 94, 0.4)"
-                                  : "rgba(107, 114, 128, 0.4)",
-                                color: emailCopied ? "#22c55e" : "#9ca3af",
-                              }}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <Copy className="w-3 h-3" />
-                              {emailCopied ? "Kopirano!" : "Kopiraj"}
-                            </motion.button>
-                          </div>
-
-                          <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 minimal-radius">
-                            <p className="text-blue-300 text-xs font-medium">
-                              💡 Napomena: U opis uplate navedite vaše ime i tip
-                              lige koje se prijavljujete.
-                            </p>
-                          </div>
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* PayPal Payment Instructions */}
-                  <AnimatePresence>
-                    {formData.payment_method === "paypal" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mb-6"
-                      >
-                        <motion.div
-                          className="bg-theme-secondary border border-theme-border minimal-radius p-4 backdrop-blur-sm theme-transition"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1 }}
-                        >
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 bg-blue-500/20 minimal-radius flex items-center justify-center">
-                              <CreditCardIcon className="w-4 h-4 text-blue-400" />
-                            </div>
-                            <h4 className="text-theme-foreground font-semibold text-sm theme-transition">
-                              PayPal Uplata
-                            </h4>
+                  {formData.payment_method === "paypal" && (
+                    <div className="mb-6 animate-fade-in">
+                      <div className="bg-theme-secondary border border-theme-border minimal-radius p-4 backdrop-blur-sm theme-transition">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-blue-500/20 minimal-radius flex items-center justify-center">
+                            <CreditCardIcon className="w-4 h-4 text-blue-400" />
                           </div>
+                          <h4 className="text-theme-foreground font-semibold text-sm theme-transition">
+                            PayPal Uplata
+                          </h4>
+                        </div>
 
-                          <p className="text-theme-text-secondary text-xs mb-4 leading-relaxed theme-transition">
-                            Za PayPal uplatu, pošaljite novac na:
+                        <p className="text-theme-text-secondary text-xs mb-4 leading-relaxed theme-transition">
+                          Za PayPal uplatu, pošaljite novac na:
+                        </p>
+
+                        <div className="bg-theme-card-secondary/40 minimal-radius p-3 border border-theme-border theme-transition">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                            <span className="text-theme-foreground font-mono text-xs sm:text-sm flex-1 break-all theme-transition">
+                              {`@Majda598 (Majda Ahmečković)`}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/30 minimal-radius">
+                          <p
+                            className={`${
+                              theme === "light"
+                                ? "text-yellow-700"
+                                : "text-yellow-300"
+                            } text-xs font-medium`}
+                          >
+                            💡 Napomena: Dodajte proviziju za PayPal od 3€. U
+                            opis uplate navedite vaše ime i tip lige.
                           </p>
-
-                          <div className="bg-theme-card-secondary/40 minimal-radius p-3 border border-theme-border theme-transition">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                              <span className="text-theme-foreground font-mono text-xs sm:text-sm flex-1 break-all theme-transition">
-                                {`@Majda598 (Majda Ahmečković)`}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/30 minimal-radius">
-                            <p
-                              className={`${
-                                theme === "light"
-                                  ? "text-yellow-700"
-                                  : "text-yellow-300"
-                              } text-xs font-medium`}
-                            >
-                              💡 Napomena: Dodajte proviziju za PayPal od 3€. U
-                              opis uplate navedite vaše ime i tip lige.
-                            </p>
-                          </div>
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Cash Status Options */}
-                  <AnimatePresence>
-                    {formData.payment_method === "cash" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mb-6"
-                      >
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                          {[
-                            { id: "paid", name: "Plaćeno", color: "green" },
-                            {
-                              id: "pending",
-                              name: "Dostaviti ću",
-                              color: "yellow",
-                            },
-                          ].map((status) => (
-                            <motion.div
-                              key={status.id}
-                              className={`relative cursor-pointer minimal-radius border-2 p-3 md:p-4 text-center transition-all duration-300 ${
+                  {formData.payment_method === "cash" && (
+                    <div className="mb-6 animate-fade-in">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                        {[
+                          { id: "paid", name: "Plaćeno", color: "green" },
+                          {
+                            id: "pending",
+                            name: "Dostaviti ću",
+                            color: "yellow",
+                          },
+                        ].map((status) => (
+                          <div
+                            key={status.id}
+                            className={`relative cursor-pointer minimal-radius border-2 p-3 md:p-4 text-center transition-all duration-300 hover-scale ${
+                              formData.cash_status === status.id
+                                ? status.color === "green"
+                                  ? "border-green-500 bg-green-500/10 shadow-lg ring-2 ring-green-500/50"
+                                  : "border-yellow-500 bg-yellow-500/10 shadow-lg ring-2 ring-yellow-500/50"
+                                : "border-gray-600/50 hover:border-gray-400/50"
+                            }`}
+                            onClick={() =>
+                              handleInputChange("cash_status", status.id)
+                            }
+                          >
+                            <div
+                              className={`text-xs md:text-sm font-bold ${
                                 formData.cash_status === status.id
                                   ? status.color === "green"
-                                    ? "border-green-500 bg-green-500/10 shadow-lg ring-2 ring-green-500/50"
-                                    : "border-yellow-500 bg-yellow-500/10 shadow-lg ring-2 ring-yellow-500/50"
-                                  : "border-gray-600/50 hover:border-gray-400/50"
+                                    ? "text-green-300"
+                                    : "text-yellow-300"
+                                  : "text-theme-foreground theme-transition"
                               }`}
-                              onClick={() =>
-                                handleInputChange("cash_status", status.id)
-                              }
-                              whileHover={{ scale: 1.03 }}
-                              whileTap={{ scale: 0.97 }}
                             >
+                              {status.name}
+                            </div>
+                            {formData.cash_status === status.id && (
                               <div
-                                className={`text-xs md:text-sm font-bold ${
-                                  formData.cash_status === status.id
-                                    ? status.color === "green"
-                                      ? "text-green-300"
-                                      : "text-yellow-300"
-                                    : "text-theme-foreground theme-transition"
+                                className={`absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 minimal-radius flex items-center justify-center animate-scale-in ${
+                                  status.color === "green"
+                                    ? "bg-green-500"
+                                    : "bg-yellow-500"
                                 }`}
                               >
-                                {status.name}
+                                <CheckCircle className="w-3 h-3 md:w-4 md:h-4 text-white" />
                               </div>
-                              {formData.cash_status === status.id && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className={`absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 minimal-radius flex items-center justify-center ${
-                                    status.color === "green"
-                                      ? "bg-green-500"
-                                      : "bg-yellow-500"
-                                  }`}
-                                >
-                                  <CheckCircle className="w-3 h-3 md:w-4 md:h-4 text-white" />
-                                </motion.div>
-                              )}
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-                  <AnimatePresence>
-                    {errors.payment_method && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="text-red-400 text-xs md:text-sm mb-4 flex items-center gap-1 font-medium theme-transition"
-                      >
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.payment_method}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
+                  {errors.payment_method && (
+                    <p className="text-red-400 text-xs md:text-sm mb-4 flex items-center gap-1 font-medium theme-transition animate-fade-in">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.payment_method}
+                    </p>
+                  )}
 
-                  <AnimatePresence>
-                    {errors.cash_status && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="text-red-400 text-xs md:text-sm mb-4 flex items-center gap-1 font-medium theme-transition"
-                      >
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.cash_status}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
+                  {errors.cash_status && (
+                    <p className="text-red-400 text-xs md:text-sm mb-4 flex items-center gap-1 font-medium theme-transition animate-fade-in">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.cash_status}
+                    </p>
+                  )}
                 </div>
 
                 {/* File Upload */}
                 {formData.payment_method !== "cash" && (
                   <div className="mb-12">
-                    <motion.h3
-                      className="text-xl md:text-2xl font-black mb-6"
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.6, delay: 0.1 }}
-                    >
-                      <motion.span className="text-theme-heading-primary theme-transition">
+                    <h3 className="text-xl md:text-2xl font-black mb-6 animate-slide-in-left animate-delay-100">
+                      <span className="text-theme-heading-primary theme-transition">
                         Dokaz o Uplati
-                      </motion.span>
-                    </motion.h3>
+                      </span>
+                    </h3>
 
-                    <motion.div
-                      className={`relative border-2 border-dashed minimal-radius p-8 text-center transition-all duration-300 bg-theme-input-bg theme-transition ${
+                    <div
+                      className={`relative border-2 border-dashed minimal-radius p-8 text-center transition-all duration-300 bg-theme-input-bg theme-transition hover-scale ${
                         dragActive
                           ? "border-red-500 bg-red-500/10"
                           : errors.payment_proof
                           ? "border-red-400"
-                          : "border-theme-dark hover:border-red-500/50"
+                          : "border-theme-border hover:border-red-500/50"
                       }`}
                       onDragEnter={handleDrag}
                       onDragLeave={handleDrag}
                       onDragOver={handleDrag}
                       onDrop={handleDrop}
-                      whileHover={{ scale: 1.01 }}
                     >
                       <input
                         type="file"
@@ -1339,11 +1091,7 @@ export default function RegistrationForm() {
                       <label htmlFor="payment_proof" className="cursor-pointer">
                         <div className="space-y-4">
                           {formData.payment_proof ? (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="text-green-400"
-                            >
+                            <div className="text-green-400 animate-scale-in">
                               <CheckCircle className="w-12 h-12 mx-auto mb-4" />
                               <p className="font-bold text-lg">
                                 {formData.payment_proof.name}
@@ -1356,7 +1104,7 @@ export default function RegistrationForm() {
                                 ).toFixed(2)}{" "}
                                 MB
                               </p>
-                            </motion.div>
+                            </div>
                           ) : (
                             <>
                               <Upload className="w-12 h-12 mx-auto text-theme-foreground theme-transition" />
@@ -1372,31 +1120,19 @@ export default function RegistrationForm() {
                           )}
                         </div>
                       </label>
-                    </motion.div>
+                    </div>
 
-                    <AnimatePresence>
-                      {errors.payment_proof && (
-                        <motion.p
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="text-red-400 text-xs md:text-sm mt-4 flex items-center gap-1 font-medium theme-transition"
-                        >
-                          <AlertCircle className="w-4 h-4" />
-                          {errors.payment_proof}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
+                    {errors.payment_proof && (
+                      <p className="text-red-400 text-xs md:text-sm mt-4 flex items-center gap-1 font-medium theme-transition animate-fade-in">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.payment_proof}
+                      </p>
+                    )}
                   </div>
                 )}
 
                 {/* Notes */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  className="mb-8"
-                >
+                <div className="mb-8 animate-fade-in animate-delay-200">
                   <label
                     htmlFor="notes"
                     className="block text-sm md:text-base font-bold mb-3 theme-transition font-russo"
@@ -1410,7 +1146,7 @@ export default function RegistrationForm() {
                     onChange={(e) =>
                       setFormData({ ...formData, notes: e.target.value })
                     }
-                    className="w-full px-4 py-3 md:px-6 md:py-4 minimal-radius bg-theme-background backdrop-blur-sm border-2 border-theme-border focus:border-blue-400 focus:outline-none text-sm md:text-base theme-transition placeholder:text-gray-400 font-medium font-inter resize-vertical"
+                    className="w-full px-4 py-3 md:px-6 md:py-4 minimal-radius bg-theme-background backdrop-blur-sm border-2 border-theme-border focus:border-blue-400 focus:outline-none text-sm md:text-base theme-transition placeholder:text-gray-400 font-medium font-inter resize-vertical focus-ring"
                     placeholder="Unesite dodatne napomene ili komentare..."
                     rows={4}
                     maxLength={1000}
@@ -1420,16 +1156,11 @@ export default function RegistrationForm() {
                       {formData.notes.length}/1000
                     </span>
                   </div>
-                </motion.div>
+                </div>
 
                 {/* reCAPTCHA */}
                 <div className="mb-8">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                    className="flex justify-center"
-                  >
+                  <div className="flex justify-center animate-fade-in animate-delay-200">
                     <ReCAPTCHA
                       ref={recaptchaRef}
                       sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
@@ -1437,154 +1168,93 @@ export default function RegistrationForm() {
                       onExpired={() => setRecaptchaToken(null)}
                       theme="dark"
                     />
-                  </motion.div>
+                  </div>
 
-                  <AnimatePresence>
-                    {errors.recaptcha && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="text-red-400 text-xs md:text-sm mt-4 flex items-center justify-center gap-1 font-medium theme-transition"
-                      >
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.recaptcha}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
+                  {errors.recaptcha && (
+                    <p className="text-red-400 text-xs md:text-sm mt-4 flex items-center justify-center gap-1 font-medium theme-transition animate-fade-in">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.recaptcha}
+                    </p>
+                  )}
                 </div>
 
                 {/* Submit Button */}
-                <motion.button
+                <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-blue-600 via-slate-700 to-gray-800 hover:from-blue-700 hover:via-slate-800 hover:to-gray-900 text-white font-black py-4 md:py-6 px-8 md:px-12 minimal-radius text-lg md:text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-2xl border-2 border-blue-500/50 font-russo"
-                  whileHover={{
-                    scale: 1.02,
-                    boxShadow: "0 25px 50px rgba(59, 130, 246, 0.4)",
-                  }}
-                  whileTap={{ scale: 0.98 }}
+                  className="w-full bg-gradient-to-r from-blue-600 via-slate-700 to-gray-800 hover:from-blue-700 hover:via-slate-800 hover:to-gray-900 text-white font-black py-4 md:py-6 px-8 md:px-12 minimal-radius text-lg md:text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-2xl border-2 border-blue-500/50 font-russo hover-scale hover-glow focus-ring gpu-accelerated"
                 >
-                  <AnimatePresence mode="wait">
-                    {isSubmitting ? (
-                      <motion.div
-                        key="loading"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center justify-center gap-3"
-                      >
-                        <div className="w-6 h-6 border-3 border-white border-t-transparent minimal-radius animate-spin"></div>
-                        <span>OBRAĐUJEM PRIJAVU...</span>
-                      </motion.div>
-                    ) : (
-                      <motion.span
-                        key="submit"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center justify-center gap-3"
-                      >
-                        <span>PRIJAVI SE</span>
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center gap-3 animate-fade-in">
+                      <div className="w-6 h-6 border-3 border-white border-t-transparent minimal-radius animate-rotate-slow"></div>
+                      <span>OBRAĐUJEM PRIJAVU...</span>
+                    </div>
+                  ) : (
+                    <span className="flex items-center justify-center gap-3 animate-fade-in">
+                      <span>PRIJAVI SE</span>
+                    </span>
+                  )}
 
                   {/* Animated Background */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-gray-800/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <motion.div
-                    className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-gray-800 minimal-radius opacity-30 blur"
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 8,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                  />
-                </motion.button>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-gray-800 minimal-radius opacity-30 blur animate-rotate-slow" />
+                </button>
 
                 {/* Success/Error Messages */}
-                <AnimatePresence>
-                  {submitStatus === "success" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                      className="mt-8 bg-gradient-to-r from-green-500/30 via-emerald-500/30 to-teal-500/30 border border-green-500/60 minimal-radius p-4 md:p-6 backdrop-blur-xl shadow-lg"
-                    >
-                      <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
-                        <motion.div
-                          className="w-16 h-16 md:w-12 md:h-12 bg-gradient-to-r from-green-400 to-emerald-500 minimal-radius flex items-center justify-center shadow-2xl"
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 200,
-                            delay: 0.2,
-                          }}
+                {submitStatus === "success" && (
+                  <div className="mt-8 bg-gradient-to-r from-green-500/30 via-emerald-500/30 to-teal-500/30 border border-green-500/60 minimal-radius p-4 md:p-6 backdrop-blur-xl shadow-lg animate-scale-in">
+                    <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
+                      <div className="w-16 h-16 md:w-12 md:h-12 bg-gradient-to-r from-green-400 to-emerald-500 minimal-radius flex items-center justify-center shadow-2xl animate-scale-in animate-delay-200">
+                        <CheckCircle className="w-8 h-8 md:w-6 md:h-6 text-white" />
+                      </div>
+                      <div className="space-y-2">
+                        <h4
+                          className={`${
+                            theme === "light"
+                              ? "text-gray-900"
+                              : "text-green-300"
+                          } font-black text-xl md:text-lg mb-1 animate-fade-in animate-delay-400`}
                         >
-                          <CheckCircle className="w-8 h-8 md:w-6 md:h-6 text-white" />
-                        </motion.div>
-                        <div className="space-y-2">
-                          <motion.h4
-                            className={`${
-                              theme === "light"
-                                ? "text-gray-900"
-                                : "text-green-300"
-                            } font-black text-xl md:text-lg mb-1`}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 }}
-                          >
-                            PRIJAVA USPJEŠNA!
-                          </motion.h4>
-                          <motion.p
-                            className={`${
-                              theme === "light"
-                                ? "text-gray-800"
-                                : "text-green-200"
-                            } text-sm md:text-sm leading-relaxed font-bold`}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.6 }}
-                          >
-                            Dobrodošli u REMIS Fantasy 2025/26!
-                            <br />
-                            Poslali smo vam email sa potvrdom prijave.
-                            <br />
-                            Kodovi za pristup ligi će vam biti poslati nakon
-                            revizije uplate.
-                          </motion.p>
-                        </div>
+                          PRIJAVA USPJEŠNA!
+                        </h4>
+                        <p
+                          className={`${
+                            theme === "light"
+                              ? "text-gray-800"
+                              : "text-green-200"
+                          } text-sm md:text-sm leading-relaxed font-bold animate-fade-in animate-delay-500`}
+                        >
+                          Dobrodošli u REMIS Fantasy 2025/26!
+                          <br />
+                          Poslali smo vam email sa potvrdom prijave.
+                          <br />
+                          Kodovi za pristup ligi će vam biti poslati nakon
+                          revizije uplate.
+                        </p>
                       </div>
-                    </motion.div>
-                  )}
+                    </div>
+                  </div>
+                )}
 
-                  {submitStatus === "error" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                      className="mt-8 bg-gradient-to-r from-red-500/20 via-rose-500/20 to-pink-500/20 border border-red-400/50 minimal-radius p-6 backdrop-blur-xl"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-red-500 minimal-radius flex items-center justify-center">
-                          <AlertCircle className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <h4 className="text-red-300 font-black text-lg mb-1">
-                            GREŠKA PRI PRIJAVI
-                          </h4>
-                          <p className="text-red-200 text-sm">
-                            Nešto je pošlo po zlu. Molimo pokušajte ponovo.
-                          </p>
-                        </div>
+                {submitStatus === "error" && (
+                  <div className="mt-8 bg-gradient-to-r from-red-500/20 via-rose-500/20 to-pink-500/20 border border-red-400/50 minimal-radius p-6 backdrop-blur-xl animate-scale-in">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-red-500 minimal-radius flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6 text-white" />
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.form>
-            </motion.div>
+                      <div>
+                        <h4 className="text-red-300 font-black text-lg mb-1">
+                          GREŠKA PRI PRIJAVI
+                        </h4>
+                        <p className="text-red-200 text-sm">
+                          Nešto je pošlo po zlu. Molimo pokušajte ponovo.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </form>
+            </div>
           </div>
         </div>
       </section>
