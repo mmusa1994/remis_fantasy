@@ -25,7 +25,7 @@ interface FormData {
   email: string;
   phone: string;
   team_name: string;
-  league_type: "standard" | "premium" | "";
+  league_type: "standard" | "premium" | "h2h" | "";
   h2h_league: boolean;
   payment_method: "bank" | "wise" | "cash" | "paypal" | "";
   cash_status?: "paid" | "pending" | "unpaid" | "confirmed" | "rejected";
@@ -102,8 +102,8 @@ export default function RegistrationForm() {
       newErrors.team_name = "Ime tima je obavezno";
     }
 
-    if (!formData.league_type) {
-      newErrors.league_type = "Molimo odaberite tip lige";
+    if (!formData.league_type && !formData.h2h_league) {
+      newErrors.league_type = "Molimo odaberite tip lige ili H2H ligu";
     }
 
     if (!formData.payment_method) {
@@ -645,7 +645,7 @@ export default function RegistrationForm() {
                     </span>
                   </h3>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-10">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6">
                     {leagueOptions.map((option) => (
                       <div
                         key={option.id}
@@ -707,28 +707,38 @@ export default function RegistrationForm() {
                     ))}
                   </div>
 
-                  <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
-                    <span className="text-theme-heading-primary theme-transition">
-                      Dodatna Liga (*samo 40 mjesta)
-                    </span>
-                  </h3>
-                  {/* H2H League Option */}
-                  <div
-                    className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
-                      formData.h2h_league
-                        ? `${h2hOption.colors.border} ${h2hOption.colors.bg} shadow-lg ring-4 ${h2hOption.colors.badgeRing}`
-                        : `border-gray-600/50 ${h2hOption.colors.hover} hover:shadow-xl`
-                    }`}
-                    onClick={() =>
-                      handleInputChange("h2h_league", !formData.h2h_league)
+              {/* H2H League as standalone option */}
+              <div className="mb-6">
+                <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
+                  <span className="text-theme-heading-primary theme-transition">
+                    H2H Liga (*samo 40 mjesta)
+                  </span>
+                </h3>
+                <div
+                  className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
+                    formData.league_type === "h2h"
+                      ? `${h2hOption.colors.border} ${h2hOption.colors.bg} shadow-lg ring-4 ${h2hOption.colors.badgeRing}`
+                      : `border-gray-600/50 ${h2hOption.colors.hover} hover:shadow-xl`
+                  }`}
+                  onClick={() => {
+                    if (formData.league_type === "h2h") {
+                      handleInputChange("league_type", "");
+                      handleInputChange("h2h_league", false);
+                    } else {
+                      handleInputChange("league_type", "h2h");
+                      handleInputChange("h2h_league", true);
                     }
-                  >
+                  }}
+                >
                     <input
-                      type="checkbox"
-                      checked={formData.h2h_league}
-                      onChange={(e) =>
-                        handleInputChange("h2h_league", e.target.checked)
-                      }
+                      type="radio"
+                      name="league_type"
+                      value="h2h"
+                      checked={formData.league_type === "h2h"}
+                      onChange={() => {
+                        handleInputChange("league_type", "h2h");
+                        handleInputChange("h2h_league", true);
+                      }}
                       className="sr-only"
                     />
 
@@ -749,7 +759,7 @@ export default function RegistrationForm() {
                       </div>
 
                       {/* Selected indicator */}
-                      {formData.h2h_league && (
+                      {formData.league_type === "h2h" && (
                         <div className={`absolute top-4 left-4 w-10 h-10 ${h2hOption.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-scale-in hover-scale`}>
                           <CheckCircle className="w-6 h-6 text-white" />
                         </div>
@@ -767,7 +777,8 @@ export default function RegistrationForm() {
                         {h2hOption.description}
                       </p>
                     </div>
-                  </div>
+                </div>
+              </div>
 
                   {errors.league_type && (
                     <p className="text-red-400 text-xs md:text-sm mt-4 flex items-center gap-1 font-medium theme-transition animate-fade-in">

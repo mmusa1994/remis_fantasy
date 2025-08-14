@@ -18,7 +18,8 @@ interface Registration {
   league_type: string;
   h2h_league: boolean;
   payment_method?: string;
-  cash_status?: "paid" | "pending" | "unpaid" | "confirmed" | "rejected";
+  payment_status?: "paid" | "pending" | null;
+  cash_status?: "paid" | "pending" | null;
   payment_proof_url: string | null;
   payment_amount?: number;
   payment_date?: string;
@@ -49,8 +50,8 @@ export default function AdminDashboard() {
     search: "",
     league_type: "all",
     h2h_league: "all",
-    payment_status: "all",
     payment_method: "all",
+    payment_status: "all",
     cash_status: "all",
     codes_email_status: "all",
     league_entry_status: "all",
@@ -211,14 +212,7 @@ export default function AdminDashboard() {
       );
     }
 
-    // Payment status filter
-    if (filters.payment_status !== "all") {
-      filtered = filtered.filter((reg) =>
-        filters.payment_status === "paid"
-          ? reg.payment_proof_url !== null
-          : reg.payment_proof_url === null
-      );
-    }
+    // Payment status filter - now handled by cash status
 
     // Payment method filter
     if (filters.payment_method !== "all") {
@@ -227,11 +221,34 @@ export default function AdminDashboard() {
       );
     }
 
+    // Payment status filter
+    if (filters.payment_status !== "all") {
+      filtered = filtered.filter((reg) => {
+        if (filters.payment_status === "paid") {
+          return reg.payment_status === "paid";
+        } else if (filters.payment_status === "pending") {
+          return reg.payment_status === "pending";
+        } else if (filters.payment_status === "null") {
+          return (
+            reg.payment_status === null || reg.payment_status === undefined
+          );
+        }
+        return false;
+      });
+    }
+
     // Cash status filter
     if (filters.cash_status !== "all") {
-      filtered = filtered.filter(
-        (reg) => reg.cash_status === filters.cash_status
-      );
+      filtered = filtered.filter((reg) => {
+        if (filters.cash_status === "paid") {
+          return reg.cash_status === "paid";
+        } else if (filters.cash_status === "pending") {
+          return reg.cash_status === "pending";
+        } else if (filters.cash_status === "null") {
+          return reg.cash_status === null || reg.cash_status === undefined;
+        }
+        return false;
+      });
     }
 
     // Codes email status filter
@@ -285,6 +302,7 @@ export default function AdminDashboard() {
           league_type: editFormData.league_type,
           h2h_league: editFormData.h2h_league,
           payment_method: editFormData.payment_method,
+          payment_status: editFormData.payment_status,
           cash_status: editFormData.cash_status,
           admin_notes: editFormData.admin_notes,
           email_template_type: editFormData.email_template_type,
@@ -610,6 +628,8 @@ export default function AdminDashboard() {
                 <option value="all">All Leagues</option>
                 <option value="standard">Standard</option>
                 <option value="premium">Premium</option>
+                <option value="h2h">H2H</option>
+                <option value="n/a">N/A</option>
               </select>
             </div>
 
@@ -627,23 +647,6 @@ export default function AdminDashboard() {
                 <option value="all">All</option>
                 <option value="yes">H2H Yes</option>
                 <option value="no">H2H No</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Payment Status
-              </label>
-              <select
-                value={filters.payment_status}
-                onChange={(e) =>
-                  setFilters({ ...filters, payment_status: e.target.value })
-                }
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
-              >
-                <option value="all">All</option>
-                <option value="paid">Paid</option>
-                <option value="unpaid">Unpaid</option>
               </select>
             </div>
 
@@ -678,9 +681,27 @@ export default function AdminDashboard() {
                 className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
               >
                 <option value="all">All Status</option>
+                <option value="paid">Paid</option>
                 <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="rejected">Rejected</option>
+                <option value="null">NULL</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Payment Status
+              </label>
+              <select
+                value={filters.payment_status}
+                onChange={(e) =>
+                  setFilters({ ...filters, payment_status: e.target.value })
+                }
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
+              >
+                <option value="all">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="null">NULL</option>
               </select>
             </div>
 
@@ -731,8 +752,8 @@ export default function AdminDashboard() {
                   search: "",
                   league_type: "all",
                   h2h_league: "all",
-                  payment_status: "all",
                   payment_method: "all",
+                  payment_status: "all",
                   cash_status: "all",
                   codes_email_status: "all",
                   league_entry_status: "all",
@@ -785,6 +806,9 @@ export default function AdminDashboard() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cash Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Payment Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Payment Proof
@@ -846,10 +870,14 @@ export default function AdminDashboard() {
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                             reg.league_type === "premium"
                               ? "bg-yellow-100 text-yellow-800"
-                              : "bg-blue-100 text-blue-800"
+                              : reg.league_type === "h2h"
+                              ? "bg-red-100 text-red-800"
+                              : reg.league_type === "standard"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
                           }`}
                         >
-                          {reg.league_type}
+                          {reg.league_type || "N/A"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -885,14 +913,23 @@ export default function AdminDashboard() {
                               ? "bg-green-100 text-green-800"
                               : reg.cash_status === "pending"
                               ? "bg-yellow-100 text-yellow-800"
-                              : reg.cash_status === "confirmed"
-                              ? "bg-green-100 text-green-800"
-                              : reg.cash_status === "rejected"
-                              ? "bg-red-100 text-red-800"
                               : "bg-gray-100 text-gray-800"
                           }`}
                         >
                           {reg.cash_status || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            reg.payment_status === "paid"
+                              ? "bg-green-100 text-green-800"
+                              : reg.payment_status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {reg.payment_status || "N/A"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -1575,8 +1612,10 @@ export default function AdminDashboard() {
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   >
+                    <option value="">N/A</option>
                     <option value="standard">Standard</option>
                     <option value="premium">Premium</option>
+                    <option value="h2h">H2H</option>
                   </select>
                 </div>
 
@@ -1630,6 +1669,30 @@ export default function AdminDashboard() {
 
                 <div>
                   <label
+                    htmlFor="edit-payment-status"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Payment Status
+                  </label>
+                  <select
+                    id="edit-payment-status"
+                    value={editFormData.payment_status || ""}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        payment_status: e.target.value as any,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  >
+                    <option value="">NULL</option>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
                     htmlFor="edit-cash-status"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
@@ -1646,9 +1709,8 @@ export default function AdminDashboard() {
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                   >
+                    <option value="">NULL</option>
                     <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="rejected">Rejected</option>
                     <option value="paid">Paid</option>
                   </select>
                 </div>
