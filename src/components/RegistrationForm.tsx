@@ -102,8 +102,8 @@ export default function RegistrationForm() {
       newErrors.team_name = "Ime tima je obavezno";
     }
 
-    if (!formData.league_type && !formData.h2h_league) {
-      newErrors.league_type = "Molimo odaberite tip lige ili H2H ligu";
+    if (!formData.league_type) {
+      newErrors.league_type = "Molimo odaberite tip lige";
     }
 
     if (!formData.payment_method) {
@@ -707,37 +707,29 @@ export default function RegistrationForm() {
                     ))}
                   </div>
 
-              {/* H2H League as standalone option */}
+              {/* H2H League as additional option */}
               <div className="mb-6">
                 <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
                   <span className="text-theme-heading-primary theme-transition">
-                    H2H Liga (*samo 40 mjesta)
+                    H2H Liga - dodatno (*samo 40 mjesta)
                   </span>
                 </h3>
                 <div
                   className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
-                    formData.league_type === "h2h"
+                    formData.h2h_league
                       ? `${h2hOption.colors.border} ${h2hOption.colors.bg} shadow-lg ring-4 ${h2hOption.colors.badgeRing}`
                       : `border-gray-600/50 ${h2hOption.colors.hover} hover:shadow-xl`
                   }`}
                   onClick={() => {
-                    if (formData.league_type === "h2h") {
-                      handleInputChange("league_type", "");
-                      handleInputChange("h2h_league", false);
-                    } else {
-                      handleInputChange("league_type", "h2h");
-                      handleInputChange("h2h_league", true);
-                    }
+                    handleInputChange("h2h_league", !formData.h2h_league);
                   }}
                 >
                     <input
-                      type="radio"
-                      name="league_type"
-                      value="h2h"
-                      checked={formData.league_type === "h2h"}
-                      onChange={() => {
-                        handleInputChange("league_type", "h2h");
-                        handleInputChange("h2h_league", true);
+                      type="checkbox"
+                      name="h2h_league"
+                      checked={formData.h2h_league}
+                      onChange={(e) => {
+                        handleInputChange("h2h_league", e.target.checked);
                       }}
                       className="sr-only"
                     />
@@ -759,7 +751,7 @@ export default function RegistrationForm() {
                       </div>
 
                       {/* Selected indicator */}
-                      {formData.league_type === "h2h" && (
+                      {formData.h2h_league && (
                         <div className={`absolute top-4 left-4 w-10 h-10 ${h2hOption.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-scale-in hover-scale`}>
                           <CheckCircle className="w-6 h-6 text-white" />
                         </div>
@@ -873,9 +865,13 @@ export default function RegistrationForm() {
                           const selectedLeague = leagueOptions.find(
                             (option) => option.id === formData.league_type
                           );
-                          const leagueType = selectedLeague
+                          let leagueType = selectedLeague
                             ? selectedLeague.name
                             : "Fantasy Football Liga";
+                          
+                          if (formData.h2h_league) {
+                            leagueType += " + H2H Liga";
+                          }
                           
                           try {
                             await downloadPaymentInstructions(leagueType);
