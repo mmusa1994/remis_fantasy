@@ -1031,8 +1031,8 @@ const createAdminConfirmationTemplate = (userData: UserData) => `
             <div class="league-info">
                 <h4>${
                   userData.league_type === "premium"
-                    ? "🏆 Premium Liga"
-                    : "⚽ Standard Liga"
+                    ? "Premium Liga"
+                    : "Standard Liga"
                 }</h4>
                 <div class="league-price">
                     ${
@@ -1251,7 +1251,7 @@ const createRegistrationConfirmationTemplate = (userData: UserData) => `
         <div class="footer">
             <p><strong>REMIS Fantasy 2025/26</strong></p>
             <p>Kontakt: info@remisfantasy.com</p>
-            <p>Hvala ti što si dio naše zajednice! 🎉</p>
+            <p>Hvala ti što si dio naše zajednice!</p>
         </div>
     </div>
 </body>
@@ -1267,16 +1267,16 @@ export const sendConfirmationEmail = async (userData: UserData) => {
     // Determine which template to use based on user selections
     if (userData.league_type === "premium" && userData.h2h_league) {
       emailTemplate = createPremiumH2HTemplate(userData);
-      subject = "🏆 REMIS Fantasy - Potvrda Premium + H2H Lige";
+      subject = "REMIS Fantasy - Potvrda Premium + H2H Lige";
     } else if (userData.league_type === "premium") {
       emailTemplate = createPremiumTemplate(userData);
-      subject = "🏆 REMIS Fantasy - Potvrda Premium Lige";
+      subject = "REMIS Fantasy - Potvrda Premium Lige";
     } else if (userData.league_type === "standard" && userData.h2h_league) {
       emailTemplate = createStandardH2HTemplate(userData);
-      subject = "⚽ REMIS Fantasy - Potvrda Standard + H2H Lige";
+      subject = "REMIS Fantasy - Potvrda Standard + H2H Lige";
     } else {
       emailTemplate = createStandardTemplate(userData);
-      subject = "⚽ REMIS Fantasy - Potvrda Standard Lige";
+      subject = "REMIS Fantasy - Potvrda Standard Lige";
     }
 
     const mailOptions = {

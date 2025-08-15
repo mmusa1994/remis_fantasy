@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { LogOut, Mail, CheckCircle, Send, Edit, Trash2 } from "lucide-react";
-import Toast from "@/components/Toast";
+import Toast from "@/components/shared/Toast";
 
 interface Registration {
   id: string;
@@ -87,13 +87,107 @@ export default function AdminDashboard() {
     }
   }, [status, session, router]);
 
+  const applyFilters = () => {
+    let filtered = [...registrations];
+
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (reg) =>
+          reg.first_name.toLowerCase().includes(searchLower) ||
+          reg.last_name.toLowerCase().includes(searchLower) ||
+          reg.email.toLowerCase().includes(searchLower) ||
+          reg.team_name.toLowerCase().includes(searchLower) ||
+          reg.phone.includes(searchLower)
+      );
+    }
+
+    // League type filter
+    if (filters.league_type !== "all") {
+      filtered = filtered.filter(
+        (reg) => reg.league_type === filters.league_type
+      );
+    }
+
+    // H2H filter
+    if (filters.h2h_league !== "all") {
+      filtered = filtered.filter(
+        (reg) => reg.h2h_league === (filters.h2h_league === "yes")
+      );
+    }
+
+    // Payment method filter
+    if (filters.payment_method !== "all") {
+      filtered = filtered.filter(
+        (reg) => reg.payment_method === filters.payment_method
+      );
+    }
+
+    // Payment status filter
+    if (filters.payment_status !== "all") {
+      filtered = filtered.filter((reg) => {
+        if (filters.payment_status === "paid") {
+          return reg.payment_status === "paid";
+        } else if (filters.payment_status === "pending") {
+          return reg.payment_status === "pending";
+        } else if (filters.payment_status === "null") {
+          return (
+            reg.payment_status === null || reg.payment_status === undefined
+          );
+        }
+        return false;
+      });
+    }
+
+    // Cash status filter
+    if (filters.cash_status !== "all") {
+      filtered = filtered.filter((reg) => {
+        if (filters.cash_status === "paid") {
+          return reg.cash_status === "paid";
+        } else if (filters.cash_status === "pending") {
+          return reg.cash_status === "pending";
+        } else if (filters.cash_status === "null") {
+          return reg.cash_status === null || reg.cash_status === undefined;
+        }
+        return false;
+      });
+    }
+
+    // Codes email status filter
+    if (filters.codes_email_status !== "all") {
+      filtered = filtered.filter((reg) =>
+        filters.codes_email_status === "sent"
+          ? reg.codes_email_sent === true
+          : reg.codes_email_sent !== true
+      );
+    }
+
+    // League entry status filter
+    if (filters.league_entry_status !== "all") {
+      filtered = filtered.filter((reg) => {
+        if (filters.league_entry_status === "entered") {
+          return reg.league_entry_status === "entered";
+        } else if (filters.league_entry_status === "not_entered") {
+          return reg.league_entry_status === "not_entered";
+        } else if (filters.league_entry_status === "not_set") {
+          return !reg.league_entry_status;
+        }
+        return true;
+      });
+    }
+
+    setFilteredRegistrations(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   useEffect(() => {
     fetchRegistrations();
   }, []);
 
   useEffect(() => {
     applyFilters();
-  }, [registrations, filters]);
+  }, [registrations, filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchRegistrations = async () => {
     try {
@@ -180,102 +274,6 @@ export default function AdminDashboard() {
     } finally {
       setSendingEmail(null);
     }
-  };
-
-  const applyFilters = () => {
-    let filtered = [...registrations];
-
-    // Search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        (reg) =>
-          reg.first_name.toLowerCase().includes(searchLower) ||
-          reg.last_name.toLowerCase().includes(searchLower) ||
-          reg.email.toLowerCase().includes(searchLower) ||
-          reg.team_name.toLowerCase().includes(searchLower) ||
-          reg.phone.includes(searchLower)
-      );
-    }
-
-    // League type filter
-    if (filters.league_type !== "all") {
-      filtered = filtered.filter(
-        (reg) => reg.league_type === filters.league_type
-      );
-    }
-
-    // H2H filter
-    if (filters.h2h_league !== "all") {
-      filtered = filtered.filter(
-        (reg) => reg.h2h_league === (filters.h2h_league === "yes")
-      );
-    }
-
-    // Payment status filter - now handled by cash status
-
-    // Payment method filter
-    if (filters.payment_method !== "all") {
-      filtered = filtered.filter(
-        (reg) => reg.payment_method === filters.payment_method
-      );
-    }
-
-    // Payment status filter
-    if (filters.payment_status !== "all") {
-      filtered = filtered.filter((reg) => {
-        if (filters.payment_status === "paid") {
-          return reg.payment_status === "paid";
-        } else if (filters.payment_status === "pending") {
-          return reg.payment_status === "pending";
-        } else if (filters.payment_status === "null") {
-          return (
-            reg.payment_status === null || reg.payment_status === undefined
-          );
-        }
-        return false;
-      });
-    }
-
-    // Cash status filter
-    if (filters.cash_status !== "all") {
-      filtered = filtered.filter((reg) => {
-        if (filters.cash_status === "paid") {
-          return reg.cash_status === "paid";
-        } else if (filters.cash_status === "pending") {
-          return reg.cash_status === "pending";
-        } else if (filters.cash_status === "null") {
-          return reg.cash_status === null || reg.cash_status === undefined;
-        }
-        return false;
-      });
-    }
-
-    // Codes email status filter
-    if (filters.codes_email_status !== "all") {
-      filtered = filtered.filter((reg) =>
-        filters.codes_email_status === "sent"
-          ? reg.codes_email_sent === true
-          : reg.codes_email_sent !== true
-      );
-    }
-
-    // League entry status filter
-    if (filters.league_entry_status !== "all") {
-      filtered = filtered.filter((reg) => {
-        if (filters.league_entry_status === "entered") {
-          return reg.league_entry_status === "entered";
-        } else if (filters.league_entry_status === "not_entered") {
-          return reg.league_entry_status === "not_entered";
-        } else if (filters.league_entry_status === "not_set") {
-          return !reg.league_entry_status;
-        }
-        return true;
-      });
-    }
-
-    setFilteredRegistrations(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleSignOut = () => {
