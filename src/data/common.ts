@@ -2,6 +2,7 @@ import { AppConfig, MainNavigationItem, TierColorConfig } from "./types";
 
 // Main navigation items
 export const mainNavigation: MainNavigationItem[] = [
+  { name: "Početna", href: "/" },
   { name: "Premier League", href: "/premier-league" },
   { name: "Champions League", href: "/champions-league" },
   { name: "F1 Fantasy", href: "/f1-fantasy" },

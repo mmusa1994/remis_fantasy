@@ -12,6 +12,7 @@ import {
   Calendar,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function Home() {
   const { theme } = useTheme();
@@ -31,19 +32,15 @@ export default function Home() {
         <div className="max-w-6xl mx-auto text-center">
           {/* Logo */}
           <div
-            className={`w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 mx-auto mb-8 md:mb-12 rounded-full flex items-center justify-center ${
-              theme === "dark"
-                ? "bg-gradient-to-br from-orange-600 to-red-800 shadow-2xl shadow-orange-500/20"
-                : "bg-gradient-to-br from-orange-500 to-red-700 shadow-2xl shadow-orange-300/30"
-            }`}
+            className={`w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 mx-auto mb-8 flex items-center justify-center bg-[#800020] shadow-2xl border-2 border-white`}
           >
-            <svg
-              className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-white"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2L13.09 8.26L22 9L13.09 10.74L12 17L10.91 10.74L2 9L10.91 8.26L12 2Z" />
-            </svg>
+            <Image
+              src="/images/rf-logo.svg"
+              alt="Premier League Logo"
+              width={1000}
+              height={1000}
+              className="object-cover"
+            />
           </div>
 
           <h1
