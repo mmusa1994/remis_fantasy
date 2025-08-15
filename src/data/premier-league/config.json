@@ -1,0 +1,95 @@
+{
+  "id": "premier",
+  "name": "Premier League",
+  "subtitle": "Fantasy Liga",
+  "description": "Dobrodošli u najuzbudljiviju Premier League fantasy ligu! Registrujte se, osvojite nevjerovatne nagrade i pokažite svoje znanje fudbala.",
+  "logoPath": "/images/logos/pl-logo.jpg",
+  "primaryColor": "purple",
+  "secondaryColor": "orange",
+  "stats": [
+    {
+      "label": "Ukupan nagradni fond",
+      "value": "6.400 KM",
+      "icon": "DollarSign"
+    },
+    {
+      "label": "Broj liga",
+      "value": "4",
+      "icon": "Trophy"
+    },
+    {
+      "label": "Mjesečne nagrade",
+      "value": "10x",
+      "icon": "Calendar"
+    },
+    {
+      "label": "Kup nagrade",
+      "value": "3x",
+      "icon": "Medal"
+    }
+  ],
+  "navigation": [
+    {
+      "title": "Registracija",
+      "description": "Registruj se za sve dostupne lige",
+      "href": "/premier-league/registracija",
+      "icon": "PenTool",
+      "color": "purple"
+    },
+    {
+      "title": "Nagrade",
+      "description": "Pogledaj sve dostupne nagrade",
+      "href": "/premier-league/nagrade",
+      "icon": "Trophy",
+      "color": "yellow"
+    },
+    {
+      "title": "Galerija",
+      "description": "Slike i memorije prethodnih sezona",
+      "href": "/premier-league/galerija",
+      "icon": "Camera",
+      "color": "blue"
+    },
+    {
+      "title": "Tabele",
+      "description": "Trenutni rezultati i tabele",
+      "href": "/premier-league/tabele",
+      "icon": "BarChart3",
+      "color": "green"
+    }
+  ],
+  "pageContent": {
+    "hero": {
+      "title": "Premier League",
+      "subtitle": "Fantasy Liga",
+      "description": "Dobrodošli u najuzbudljiviju Premier League fantasy ligu! Registrujte se, osvojite nevjerovatne nagrade i pokažite svoje znanje fudbala.",
+      "ctaButtons": {
+        "primary": {
+          "text": "Registruj se sada",
+          "href": "/premier-league/registracija"
+        },
+        "secondary": {
+          "text": "Pogledaj nagrade",
+          "href": "/premier-league/nagrade"
+        }
+      }
+    },
+    "sections": {
+      "navigation": {
+        "title": "Istraži Premier League Fantasy"
+      },
+      "prizes": {
+        "title": "Premier League Nagrade",
+        "subtitle": "Osvajaj nevjerovatne nagrade tokom cijele Premier League sezone!"
+      },
+      "gallery": {
+        "title": "Premier League Galerija",
+        "description": "Uskoro ćete ovdje moći pregledati slike i uspomene iz prethodnih sezona Premier League Fantasy lige. Najuzbudljiviji momenti, ceremonije dodjele nagrada i proslava pobjeda čekaju vas!"
+      },
+      "tables": {
+        "title": "Premier League Tabele",
+        "description": "Ovdje ćete moći pratiti trenutne rezultate i tabele svih Premier League Fantasy liga. Rezultati se ažuriraju u realnom vremenu kada sezona počne!"
+      }
+    }
+  }
+}

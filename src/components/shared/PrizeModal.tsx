@@ -13,7 +13,7 @@ interface Prize {
   subtitle: string;
   image: string;
   description: string;
-  tier: "intro" | "free" | "standard" | "premium" | "h2h" | "arsenal";
+  tier: "intro" | "free" | "standard" | "premium" | "h2h" | "arsenal" | "champions" | "f1";
   price?: string;
   features: string[];
 }
@@ -80,6 +80,24 @@ const tierColors = {
     border: "border-[#DC143C]/40",
     icon: "text-[#DC143C]",
     glow: "shadow-[#DC143C]/25",
+  },
+  champions: {
+    primary: "#003366",
+    gradient: "from-[#003366] via-gray-600 to-black",
+    accent: "text-[#003366]",
+    bg: "from-[#003366]/10 via-gray-500/5 to-black/20",
+    border: "border-[#003366]/40",
+    icon: "text-[#003366]",
+    glow: "shadow-[#003366]/25",
+  },
+  f1: {
+    primary: "#E10600",
+    gradient: "from-[#E10600] via-gray-600 to-black",
+    accent: "text-[#E10600]",
+    bg: "from-[#E10600]/10 via-gray-500/5 to-black/20",
+    border: "border-[#E10600]/40",
+    icon: "text-[#E10600]",
+    glow: "shadow-[#E10600]/25",
   },
 };
 

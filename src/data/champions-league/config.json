@@ -1,0 +1,95 @@
+{
+  "id": "champions",
+  "name": "Champions League",
+  "subtitle": "Fantasy Liga",
+  "description": "Dobrodošli u najprestižniju Champions League fantasy ligu! Registrujte se, kreirajte svoj evropski tim i takmičite se za fantastične nagrade u najjačem takmičenju.",
+  "logoPath": "/images/logos/cl-logo.png",
+  "primaryColor": "blue",
+  "secondaryColor": "indigo",
+  "stats": [
+    {
+      "label": "Ukupan nagradni fond",
+      "value": "5.200 KM",
+      "icon": "DollarSign"
+    },
+    {
+      "label": "Broj liga",
+      "value": "3",
+      "icon": "Trophy"
+    },
+    {
+      "label": "Mjesečne nagrade",
+      "value": "9x",
+      "icon": "Calendar"
+    },
+    {
+      "label": "Finalne nagrade",
+      "value": "4x",
+      "icon": "Medal"
+    }
+  ],
+  "navigation": [
+    {
+      "title": "Registracija",
+      "description": "Registruj se za Champions League",
+      "href": "/champions-league/registracija",
+      "icon": "PenTool",
+      "color": "blue"
+    },
+    {
+      "title": "Nagrade",
+      "description": "Pogledaj sve dostupne nagrade",
+      "href": "/champions-league/nagrade",
+      "icon": "Trophy",
+      "color": "yellow"
+    },
+    {
+      "title": "Galerija",
+      "description": "Slike i memorije prethodnih sezona",
+      "href": "/champions-league/galerija",
+      "icon": "Camera",
+      "color": "purple"
+    },
+    {
+      "title": "Tabele",
+      "description": "Trenutni rezultati i tabele",
+      "href": "/champions-league/tabele",
+      "icon": "BarChart3",
+      "color": "green"
+    }
+  ],
+  "pageContent": {
+    "hero": {
+      "title": "Champions League",
+      "subtitle": "Fantasy Liga",
+      "description": "Dobrodošli u najprestižniju Champions League fantasy ligu! Registrujte se, kreirajte svoj evropski tim i takmičite se za fantastične nagrade u najjačem takmičenju.",
+      "ctaButtons": {
+        "primary": {
+          "text": "Registruj se sada",
+          "href": "/champions-league/registracija"
+        },
+        "secondary": {
+          "text": "Pogledaj nagrade",
+          "href": "/champions-league/nagrade"
+        }
+      }
+    },
+    "sections": {
+      "navigation": {
+        "title": "Istraži Champions League Fantasy"
+      },
+      "prizes": {
+        "title": "Champions League Nagrade",
+        "subtitle": "Osvajaj prestižne nagrade u najjačem evropskom takmičenju!"
+      },
+      "gallery": {
+        "title": "Champions League Galerija",
+        "description": "Uskoro ćete ovdje moći pregledati slike i uspomene iz prethodnih sezona Champions League Fantasy lige. Najveći evropski momenti čekaju vas!"
+      },
+      "tables": {
+        "title": "Champions League Tabele",
+        "description": "Ovdje ćete moći pratiti trenutne rezultate i tabele svih Champions League Fantasy liga. Rezultati se ažuriraju u realnom vremenu!"
+      }
+    }
+  }
+}

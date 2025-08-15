@@ -12,120 +12,24 @@ import {
 } from "lucide-react";
 import PrizeModal from "./PrizeModal";
 
-interface Prize {
+export interface Prize {
   id: number;
   title: string;
   subtitle: string;
   image: string;
   description: string;
-  tier: "intro" | "free" | "standard" | "premium" | "h2h" | "arsenal";
+  tier: "intro" | "free" | "standard" | "premium" | "h2h" | "arsenal" | "champions" | "f1";
+  league?: "premier" | "champions" | "f1";
   price?: string;
   features: string[];
 }
 
-const prizes: Prize[] = [
-  {
-    id: 1,
-    title: "Dobrodošli u novu sezonu",
-    subtitle: "REMIS Fantasy 2025/26",
-    image: "/images/new-season/Intro.png",
-    description:
-      "Spremite se za najuzbudljiviju sezonu fantasy footballa! Nove lige, veće nagrade, bolje iskustvo.",
-    tier: "intro",
-    features: [
-      "Nova sezona kreće",
-      "Povećane nagrade",
-      "4 različite lige",
-      "Najbolja i najzabavnija sezona ikad",
-    ],
-  },
-  {
-    id: 2,
-    title: "Free Liga",
-    subtitle: "Sezona 25/26 - Besplatno!",
-    image: "/images/new-season/free.png",
-    description:
-      "Prošlogodišnji učesnici automatski ubačeni. Najbolji dobija originalni dres!",
-    tier: "free",
-    price: "Besplatno",
-    features: ["1. mesto: Originalni dres", "Kod za ulazak: 51kkl0"],
-  },
-  {
-    id: 3,
-    title: "H2H Liga",
-    subtitle: "40 učesnika - Head-to-Head",
-    image: "/images/new-season/h2h.png",
-    description:
-      "Najnepredvidivija liga sa bogatim nagradnim fondom od 720 KM / 368 €.",
-    tier: "h2h",
-    price: "20 KM / 10 €",
-    features: [
-      "1. mesto: 300 KM / 155 € + pehar + medalja + plaketa",
-      "2. mesto: 200 KM / 102 € + medalja + plaketa",
-      "3. mesto: 130 KM / 67 € + medalja + plaketa",
-      "4. mesto: 90 KM / 46 €",
-    ],
-  },
-  {
-    id: 4,
-    title: "Standard Liga",
-    subtitle: "100 učesnika - Klasa i tradicija",
-    image: "/images/new-season/standard.png",
-    description:
-      "Standardna liga s mjesečnim i kup nagradama. Nagradni fond 2.400 KM / 1.228 €.",
-    tier: "standard",
-    price: "30 KM / 15 €",
-    features: [
-      "1. mesto: 500 KM / 255 € + pehar + medalja + plaketa",
-      "2. mesto: 350 KM / 179 € + medalja + plaketa",
-      "3. mesto: 250 KM / 128 € + medalja + plaketa",
-      "4. mesto: 200 KM / 103 €",
-      "5. mesto: 150 KM / 77 €",
-      "6. mesto: 100 KM / 52 €",
-      "7. mesto: 80 KM / 41 €",
-      "8.-10. mesto: Besplatno učešće naredne sezone",
-      "Mjesečne nagrade: 75 KM / 38 € (*10)",
-      "Kup nagrade: 100 KM / 52 €",
-    ],
-  },
-  {
-    id: 5,
-    title: "Premium Liga",
-    subtitle: "50 učesnika - Vrhunsko iskustvo",
-    image: "/images/new-season/premium.png",
-    description:
-      "Najekskluzivnija liga s najvećim nagradama i posebnim privilegijama. Fond 4.000 KM / 2.050 €.",
-    tier: "premium",
-    price: "100 KM / 52 €",
-    features: [
-      "1. mesto: 1.200 KM / 615 € + pehar + medalja + plaketa",
-      "2. mesto: 700 KM / 358 € + medalja + plaketa",
-      "3. mesto: 400 KM / 205 € + medalja + plaketa",
-      "4. mesto: Originalni dres PL 25/26",
-      "5. mesto: Besplatno učešće naredne sezone",
-      "Mjesečne nagrade: 150 KM / 75 € (*10)",
-      "Kup nagrade: 200 KM / 100 €",
-    ],
-  },
-  {
-    id: 6,
-    title: "Specijalna nagrada",
-    subtitle: "AUTENTIČNI DRES ARSENALA IZ SEZONE 2003/2004",
-    image: "/images/form/arsenal.png",
-    description:
-      'Original! Ovo je sveti gral svakog fudbalskog fanatika. Dres iz legendarne "Invincibles" sezone - kada su Thierry Henry i Arsenal bez poraza osvojili Premier ligu.',
-    tier: "arsenal",
-    price: "Dres Thierry Henry 03/04",
-    features: [
-      "Hall of Fame Premier lige",
-      "Henry - ikona igre, genije napada, umjetnik na terenu. Ovaj dres nosi DNK nepobjedivosti. Na aukcijama dostiže vrijednost preko 1.000€, rijetkost koja se ne pušta iz ruku.",
-      "Igrač sa najviše poena u jednom kolu (PREMIUM liga) odnosi ovu istorijsku relikviju, zajedno sa certifikatom autentičnosti.",
-      "OVO NIJE SAMO NAGRADA. OVO JE LEGENDA.",
-      "Ovo je dres kojim ispisujete svoju stranicu u istoriji REMIS Fantasy lige",
-      "Budi najbolji. Uđi u legendu. Osvoji dres nepobjedivih.",
-    ],
-  },
-];
+interface PrizesGalleryProps {
+  prizes: Prize[];
+  leagueFilter?: "premier" | "champions" | "f1";
+  title?: string;
+  subtitle?: string;
+}
 
 const tierColors = {
   intro: {
@@ -184,9 +88,32 @@ const tierColors = {
     icon: "text-[#DC143C]",
     glow: "shadow-[#DC143C]/25",
   },
+  champions: {
+    primary: "#003366",
+    gradient: "from-[#003366] via-gray-600 to-black",
+    accent: "text-[#003366]",
+    bg: "from-[#003366]/10 via-gray-500/5 to-black/20",
+    border: "border-[#003366]/40",
+    icon: "text-[#003366]",
+    glow: "shadow-[#003366]/25",
+  },
+  f1: {
+    primary: "#E10600",
+    gradient: "from-[#E10600] via-gray-600 to-black",
+    accent: "text-[#E10600]",
+    bg: "from-[#E10600]/10 via-gray-500/5 to-black/20",
+    border: "border-[#E10600]/40",
+    icon: "text-[#E10600]",
+    glow: "shadow-[#E10600]/25",
+  },
 };
 
-export default function PrizesGallery() {
+export default function PrizesGallery({ 
+  prizes, 
+  leagueFilter, 
+  title = "Nagrade", 
+  subtitle = "Osvajaj nevjerovatne nagrade tokom sezone!" 
+}: PrizesGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null);
@@ -194,14 +121,19 @@ export default function PrizesGallery() {
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Filter prizes based on league
+  const filteredPrizes = leagueFilter 
+    ? prizes.filter(prize => prize.league === leagueFilter || !prize.league)
+    : prizes;
+
   // Auto-play functionality with synchronized timing
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || filteredPrizes.length <= 1) return;
 
     const interval = setInterval(() => {
       setIsTransitioning(true);
       setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % prizes.length);
+        setCurrentIndex((prev) => (prev + 1) % filteredPrizes.length);
         setIsAccordionOpen(false);
         setTimeout(() => {
           setIsTransitioning(false);
@@ -210,7 +142,12 @@ export default function PrizesGallery() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, filteredPrizes.length]);
+
+  // Reset current index when prizes change
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [leagueFilter, prizes]);
 
   // Smooth slide transition helper
   const performSlideTransition = (newIndex: number) => {
@@ -224,25 +161,25 @@ export default function PrizesGallery() {
   };
 
   const nextSlide = () => {
-    if (isTransitioning) return;
+    if (isTransitioning || filteredPrizes.length <= 1) return;
     setIsAutoPlaying(false);
-    const newIndex = (currentIndex + 1) % prizes.length;
+    const newIndex = (currentIndex + 1) % filteredPrizes.length;
     performSlideTransition(newIndex);
     setIsAccordionOpen(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const prevSlide = () => {
-    if (isTransitioning) return;
+    if (isTransitioning || filteredPrizes.length <= 1) return;
     setIsAutoPlaying(false);
-    const newIndex = (currentIndex - 1 + prizes.length) % prizes.length;
+    const newIndex = (currentIndex - 1 + filteredPrizes.length) % filteredPrizes.length;
     performSlideTransition(newIndex);
     setIsAccordionOpen(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const goToSlide = (index: number) => {
-    if (isTransitioning || index === currentIndex) return;
+    if (isTransitioning || index === currentIndex || filteredPrizes.length <= 1) return;
     setIsAutoPlaying(false);
     performSlideTransition(index);
     setIsAccordionOpen(false);
@@ -261,21 +198,29 @@ export default function PrizesGallery() {
     setTimeout(() => setIsAutoPlaying(true), 1000);
   };
 
-  const currentPrize = prizes[currentIndex];
+  if (filteredPrizes.length === 0) {
+    return (
+      <section className="relative w-full min-h-[400px] bg-theme-background py-20 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-theme-heading-primary mb-4">{title}</h2>
+          <p className="text-theme-text-secondary">Nema dostupnih nagrada za ovu ligu.</p>
+        </div>
+      </section>
+    );
+  }
+
+  const currentPrize = filteredPrizes[currentIndex];
   const colors = tierColors[currentPrize.tier];
 
   return (
     <section
-      id="prizes"
       className="relative w-full min-h-screen bg-theme-background py-20 overflow-hidden theme-transition"
     >
       {/* Optimized Background Effects */}
       <div className="absolute inset-0 particles-bg">
-        {/* Lightweight animated orbs */}
         <div className={`absolute top-20 left-20 w-96 h-96 bg-gradient-to-r ${colors.gradient} minimal-radius blur-3xl opacity-15 animate-pulse-gentle gpu-accelerated`} />
         <div className={`absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-l ${colors.gradient} minimal-radius blur-3xl opacity-10 animate-float-slow gpu-accelerated`} />
 
-        {/* Simplified grid pattern */}
         <div className="absolute inset-0 opacity-5">
           <div
             className="absolute inset-0 bg-repeat"
@@ -291,39 +236,40 @@ export default function PrizesGallery() {
         <div className="text-center mb-12 mt-8 animate-fade-in-up">
           <h2 className="text-3xl md:text-6xl font-black mb-4 leading-none font-russo animate-scale-in animate-delay-200">
             <span className="text-theme-heading-primary drop-shadow-2xl theme-transition">
-              Nagrade za 25/26 sezonu!
+              {title}
             </span>
           </h2>
 
           <p className="text-theme-text-secondary text-base md:text-lg w-full max-w-4xl mx-auto leading-relaxed font-medium theme-transition animate-fade-in animate-delay-500">
-            Svaka mjesec donosi pobjednika, a možete osvojiti i vrijednu nagradu
-            osvajanjem kupa.
-            <br />
-            Detalje potražite u sekciji ispod!
+            {subtitle}
           </p>
         </div>
 
         {/* Main Carousel Container */}
         <div className="relative w-full max-w-7xl mx-auto">
-          {/* Navigation Buttons */}
-          <button
-            onClick={prevSlide}
-            disabled={isTransitioning}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-theme-secondary/70 backdrop-blur-xl minimal-radius flex items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-500 ease-in-out border border-theme-border shadow-2xl theme-transition hover:scale-105 focus-ring disabled:opacity-50"
-          >
-            <ChevronLeft className="w-8 h-8" />
-          </button>
+          {/* Navigation Buttons - only show if more than 1 prize */}
+          {filteredPrizes.length > 1 && (
+            <>
+              <button
+                onClick={prevSlide}
+                disabled={isTransitioning}
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 sm:w-16 sm:h-16 bg-theme-secondary/70 backdrop-blur-xl minimal-radius flex items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-500 ease-in-out border border-theme-border shadow-2xl theme-transition hover:scale-105 focus-ring disabled:opacity-50"
+              >
+                <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+              </button>
 
-          <button
-            onClick={nextSlide}
-            disabled={isTransitioning}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-theme-secondary/70 backdrop-blur-xl minimal-radius flex items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-500 ease-in-out border border-theme-border shadow-2xl theme-transition hover:scale-105 focus-ring disabled:opacity-50"
-          >
-            <ChevronRight className="w-8 h-8" />
-          </button>
+              <button
+                onClick={nextSlide}
+                disabled={isTransitioning}
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 sm:w-16 sm:h-16 bg-theme-secondary/70 backdrop-blur-xl minimal-radius flex items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-500 ease-in-out border border-theme-border shadow-2xl theme-transition hover:scale-105 focus-ring disabled:opacity-50"
+              >
+                <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+              </button>
+            </>
+          )}
 
           {/* Carousel Container */}
-          <div className="relative h-[500px] md:h-[580px] overflow-hidden border border-gray-800/50">
+          <div className="relative h-[400px] sm:h-[450px] md:h-[500px] lg:h-[580px] overflow-hidden border border-gray-800/50">
             <div className={`absolute inset-0 transition-all duration-300 ease-in-out ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
               {/* Main Prize Card */}
               <div
@@ -340,7 +286,7 @@ export default function PrizesGallery() {
                 {/* Content Grid */}
                 <div className="relative z-10 grid grid-cols-1 lg:grid-cols-5 h-full">
                   {/* Left Side - Image */}
-                  <div className="hidden lg:block lg:col-span-2 relative overflow-hidden">
+                  <div className="hidden md:block md:col-span-2 lg:col-span-2 relative overflow-hidden">
                     <div className="relative w-full h-full">
                       <Image
                         src={currentPrize.image}
@@ -358,7 +304,7 @@ export default function PrizesGallery() {
                   </div>
 
                   {/* Right Side - Content */}
-                  <div className="col-span-1 lg:col-span-3 p-4 lg:p-8 flex flex-col justify-between min-h-full">
+                  <div className="col-span-1 md:col-span-3 lg:col-span-3 p-3 sm:p-4 lg:p-8 flex flex-col justify-between min-h-full">
                     {/* Top Content */}
                     <div className="flex-1">
                       {/* Price Badge */}
@@ -376,11 +322,11 @@ export default function PrizesGallery() {
                         </div>
                       )}
 
-                      <h3 className="text-xl lg:text-3xl font-black text-theme-heading-primary mb-2 leading-tight theme-transition animate-slide-in-left">
+                      <h3 className="text-lg sm:text-xl lg:text-3xl font-black text-theme-heading-primary mb-2 leading-tight theme-transition animate-slide-in-left">
                         {currentPrize.title}
                       </h3>
 
-                      <h4 className={`text-base lg:text-xl ${colors.accent} font-semibold mb-3 animate-slide-in-left animate-delay-100`}>
+                      <h4 className={`text-sm sm:text-base lg:text-xl ${colors.accent} font-semibold mb-3 animate-slide-in-left animate-delay-100`}>
                         {currentPrize.subtitle}
                       </h4>
 
@@ -390,22 +336,6 @@ export default function PrizesGallery() {
 
                       {/* Features Preview/Accordion */}
                       <div className="mb-4 animate-fade-in animate-delay-300">
-                        {/* Quick Summary */}
-                        <div className="text-theme-text-muted text-sm mb-3 theme-transition">
-                          {currentPrize.tier === "h2h" &&
-                            "Turnirski format sa direktnim sukobima"}
-                          {currentPrize.tier === "standard" &&
-                            "Klasična liga sa mjesečnim nagradama"}
-                          {currentPrize.tier === "premium" &&
-                            "VIP liga sa najvećim nagradama"}
-                          {currentPrize.tier === "free" &&
-                            "Besplatno učešće za veterane"}
-                          {currentPrize.tier === "intro" &&
-                            "Dobrodošli u novu sezonu"}
-                          {currentPrize.tier === "arsenal" &&
-                            "Legendarna nagrada za najbolje"}
-                        </div>
-
                         {/* Accordion Toggle */}
                         <button
                           onClick={() => setIsAccordionOpen(!isAccordionOpen)}
@@ -414,12 +344,12 @@ export default function PrizesGallery() {
                           {isAccordionOpen ? (
                             <>
                               <ChevronUp className="w-4 h-4" />
-                              Sakrij nagrade
+                              Sakrij detalje
                             </>
                           ) : (
                             <>
                               <ChevronDown className="w-4 h-4" />
-                              Prikaži nagrade ({currentPrize.features.length})
+                              Prikaži detalje ({currentPrize.features.length})
                             </>
                           )}
                         </button>
@@ -455,7 +385,7 @@ export default function PrizesGallery() {
                     <div className="flex-shrink-0 pt-2 animate-fade-in animate-delay-400">
                       <button
                         onClick={() => openModal(currentPrize)}
-                        className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 minimal-radius font-bold text-sm transition-all duration-300 shadow-lg border hover-scale focus-ring"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 minimal-radius font-bold text-xs sm:text-sm transition-all duration-300 shadow-lg border hover-scale focus-ring"
                         style={{
                           background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
                           borderColor: `${colors.primary}40`,
@@ -487,47 +417,51 @@ export default function PrizesGallery() {
             </div>
           </div>
 
-          {/* Indicators */}
-          <div className="flex justify-center space-x-3 mt-8">
-            {prizes.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`relative overflow-hidden minimal-radius transition-all duration-500 ease-in-out hover:scale-110 focus-ring ${
-                  index === currentIndex
-                    ? "w-12 h-4"
-                    : "w-4 h-4 bg-gray-600 hover:bg-gray-500"
-                }`}
-                style={
-                  index === currentIndex
-                    ? {
-                        background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80, #000000)`,
-                      }
-                    : {}
-                }
-              >
-                {index === currentIndex && (
-                  <div
-                    className="absolute inset-0 bg-white/20 minimal-radius animate-slide-x"
-                  />
-                )}
-              </button>
-            ))}
-          </div>
+          {/* Indicators - only show if more than 1 prize */}
+          {filteredPrizes.length > 1 && (
+            <div className="flex justify-center space-x-3 mt-8">
+              {filteredPrizes.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`relative overflow-hidden minimal-radius transition-all duration-500 ease-in-out hover:scale-110 focus-ring ${
+                    index === currentIndex
+                      ? "w-12 h-4"
+                      : "w-4 h-4 bg-gray-600 hover:bg-gray-500"
+                  }`}
+                  style={
+                    index === currentIndex
+                      ? {
+                          background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80, #000000)`,
+                        }
+                      : {}
+                  }
+                >
+                  {index === currentIndex && (
+                    <div
+                      className="absolute inset-0 bg-white/20 minimal-radius animate-slide-x"
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
 
-          {/* Progress Bar */}
-          <div className="w-full bg-gray-800 minimal-radius h-1 mt-4 overflow-hidden">
-            <div
-              className={`h-full minimal-radius transition-all ease-linear ${
-                isAutoPlaying ? 'duration-[5000ms]' : 'duration-300'
-              }`}
-              style={{
-                background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80, #000000)`,
-                width: isAutoPlaying ? '100%' : '0%',
-                animation: isAutoPlaying ? 'progressFill 5s linear infinite' : 'none',
-              }}
-            />
-          </div>
+          {/* Progress Bar - only show if auto-playing and more than 1 prize */}
+          {filteredPrizes.length > 1 && (
+            <div className="w-full bg-gray-800 minimal-radius h-1 mt-4 overflow-hidden">
+              <div
+                className={`h-full minimal-radius transition-all ease-linear ${
+                  isAutoPlaying ? 'duration-[5000ms]' : 'duration-300'
+                }`}
+                style={{
+                  background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80, #000000)`,
+                  width: isAutoPlaying ? '100%' : '0%',
+                  animation: isAutoPlaying ? 'progressFill 5s linear infinite' : 'none',
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Prize Details Modal */}

@@ -4,12 +4,13 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
+import ThemeToggle from "../ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const navItems = [
-  { name: "Registracija", href: "#registration" },
-  { name: "Nagrade", href: "#prizes" },
+  { name: "Premier League", href: "/premier-league" },
+  { name: "Champions League", href: "/champions-league" },
+  { name: "F1 Fantasy", href: "/f1-fantasy" },
 ];
 
 export default function Navbar() {
@@ -17,15 +18,6 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
   const { theme } = useTheme();
-
-  const backgroundColor = useTransform(
-    scrollY,
-    [0, 100],
-    [
-      "transparent",
-      theme === "dark" ? "rgba(0, 0, 0, 0.95)" : "rgba(245, 245, 220, 0.95)",
-    ]
-  );
 
   const backdropBlur = useTransform(
     scrollY,
@@ -42,17 +34,24 @@ export default function Navbar() {
 
   const handleNavClick = (href: string) => {
     setIsOpen(false);
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+    // Navigate to the route
+    window.location.href = href;
   };
 
   return (
     <motion.nav
       className="fixed top-0 left-0 right-0 transition-all duration-700 theme-transition"
+      animate={{
+        backgroundColor: isScrolled
+          ? theme === "dark"
+            ? "rgba(0, 0, 0, 0.95)"
+            : "rgba(245, 245, 220, 0.95)"
+          : theme === "dark"
+          ? "rgba(0, 0, 0, 0.90)"
+          : "transparent",
+      }}
+      transition={{ duration: 0.3 }}
       style={{
-        backgroundColor,
         backdropFilter: backdropBlur,
         WebkitBackdropFilter: backdropBlur,
         zIndex: 9999,
@@ -92,7 +91,7 @@ export default function Navbar() {
       </motion.div>
 
       <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo - Left */}
           <motion.div
             className="flex items-center"
@@ -101,9 +100,7 @@ export default function Navbar() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <motion.div
-              className={`relative transition-all duration-500 ${
-                isScrolled ? "w-14 h-14" : "w-18 h-18"
-              }`}
+              className="relative w-16 h-16 transition-all duration-500"
               whileHover={{
                 scale: 1.15,
                 transition: { duration: 0.3, ease: "easeOut" },
@@ -130,9 +127,7 @@ export default function Navbar() {
                   alt="Remis Fantasy Logo"
                   width={60}
                   height={60}
-                  className={`transition-all duration-500 ${
-                    isScrolled ? "w-12 h-12" : "w-16 h-16"
-                  } object-contain filter drop-shadow-2xl`}
+                  className="w-14 h-14 object-contain filter drop-shadow-2xl transition-all duration-500"
                   priority
                 />
               </div>
@@ -158,7 +153,7 @@ export default function Navbar() {
           </motion.div>
 
           {/* Navigation Links - Right */}
-          <div className="hidden lg:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-4 lg:space-x-6">
             {navItems.map((item, index) => (
               <motion.button
                 key={item.name}
@@ -173,9 +168,9 @@ export default function Navbar() {
                 {/* Dynamic background on hover - adapts to theme */}
                 <motion.div
                   className={`absolute inset-0 minimal-radius backdrop-blur-sm ${
-                    theme === 'light' 
-                      ? 'bg-gradient-to-r from-blue-100/60 via-slate-100/80 to-blue-100/60 shadow-lg' 
-                      : 'bg-gradient-to-r from-red-900/30 via-gray-800/40 to-red-900/30'
+                    theme === "light"
+                      ? "bg-gradient-to-r from-blue-100/60 via-slate-100/80 to-blue-100/60 shadow-lg"
+                      : "bg-gradient-to-r from-red-900/30 via-gray-800/40 to-red-900/30"
                   }`}
                   initial={{ opacity: 0, scale: 0.85 }}
                   whileHover={{ opacity: 1, scale: 1 }}
@@ -185,9 +180,9 @@ export default function Navbar() {
                 {/* Subtle inner glow */}
                 <motion.div
                   className={`absolute inset-0 minimal-radius ${
-                    theme === 'light'
-                      ? 'bg-gradient-to-r from-transparent via-blue-200/20 to-transparent'
-                      : 'bg-gradient-to-r from-transparent via-red-500/10 to-transparent'
+                    theme === "light"
+                      ? "bg-gradient-to-r from-transparent via-blue-200/20 to-transparent"
+                      : "bg-gradient-to-r from-transparent via-red-500/10 to-transparent"
                   }`}
                   initial={{ opacity: 0 }}
                   whileHover={{ opacity: 1 }}
@@ -201,9 +196,9 @@ export default function Navbar() {
                 {/* Sophisticated underline - theme adaptive */}
                 <motion.div
                   className={`absolute -bottom-1 left-2 right-2 h-0.5 ${
-                    theme === 'light'
-                      ? 'bg-gradient-to-r from-transparent via-blue-600 to-transparent'
-                      : 'bg-gradient-to-r from-transparent via-red-500 to-transparent'
+                    theme === "light"
+                      ? "bg-gradient-to-r from-transparent via-blue-600 to-transparent"
+                      : "bg-gradient-to-r from-transparent via-red-500 to-transparent"
                   } origin-center`}
                   initial={{ scaleX: 0, opacity: 0 }}
                   whileHover={{ scaleX: 1, opacity: 1 }}
@@ -213,9 +208,9 @@ export default function Navbar() {
                 {/* Top accent line */}
                 <motion.div
                   className={`absolute -top-1 left-2 right-2 h-0.5 ${
-                    theme === 'light'
-                      ? 'bg-gradient-to-r from-transparent via-slate-400/60 to-transparent'
-                      : 'bg-gradient-to-r from-transparent via-gray-400/40 to-transparent'
+                    theme === "light"
+                      ? "bg-gradient-to-r from-transparent via-slate-400/60 to-transparent"
+                      : "bg-gradient-to-r from-transparent via-gray-400/40 to-transparent"
                   }`}
                   initial={{ scaleX: 0, opacity: 0 }}
                   whileHover={{ scaleX: 1, opacity: 1 }}
@@ -225,7 +220,7 @@ export default function Navbar() {
                 {/* Corner accents */}
                 <motion.div
                   className={`absolute top-0 left-0 w-1 h-1 ${
-                    theme === 'light' ? 'bg-blue-500' : 'bg-red-500'
+                    theme === "light" ? "bg-blue-500" : "bg-red-500"
                   } minimal-radius`}
                   initial={{ scale: 0, opacity: 0 }}
                   whileHover={{ scale: 1, opacity: 1 }}
@@ -233,7 +228,7 @@ export default function Navbar() {
                 />
                 <motion.div
                   className={`absolute top-0 right-0 w-1 h-1 ${
-                    theme === 'light' ? 'bg-blue-500' : 'bg-red-500'
+                    theme === "light" ? "bg-blue-500" : "bg-red-500"
                   } minimal-radius`}
                   initial={{ scale: 0, opacity: 0 }}
                   whileHover={{ scale: 1, opacity: 1 }}
@@ -241,7 +236,7 @@ export default function Navbar() {
                 />
                 <motion.div
                   className={`absolute bottom-0 left-0 w-1 h-1 ${
-                    theme === 'light' ? 'bg-blue-500' : 'bg-red-500'
+                    theme === "light" ? "bg-blue-500" : "bg-red-500"
                   } minimal-radius`}
                   initial={{ scale: 0, opacity: 0 }}
                   whileHover={{ scale: 1, opacity: 1 }}
@@ -249,7 +244,7 @@ export default function Navbar() {
                 />
                 <motion.div
                   className={`absolute bottom-0 right-0 w-1 h-1 ${
-                    theme === 'light' ? 'bg-blue-500' : 'bg-red-500'
+                    theme === "light" ? "bg-blue-500" : "bg-red-500"
                   } minimal-radius`}
                   initial={{ scale: 0, opacity: 0 }}
                   whileHover={{ scale: 1, opacity: 1 }}
@@ -263,7 +258,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button and Theme Toggle */}
-          <div className="lg:hidden flex items-center space-x-3">
+          <div className="md:hidden flex items-center space-x-3">
             <ThemeToggle />
             <motion.button
               onClick={() => setIsOpen(!isOpen)}
@@ -284,7 +279,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       <motion.div
-        className="lg:hidden overflow-hidden relative"
+        className="md:hidden overflow-hidden relative"
         initial={false}
         animate={{
           height: isOpen ? "auto" : 0,
@@ -293,20 +288,22 @@ export default function Navbar() {
         transition={{ duration: 0.4, ease: "easeInOut" }}
         style={{ zIndex: 9999 }}
       >
-        <div className="backdrop-blur-xl border-t border-theme-border theme-transition shadow-2xl"
-             style={{
-               background: `var(--theme-background)`,
-               backdropFilter: 'blur(20px)',
-               WebkitBackdropFilter: 'blur(20px)',
-               boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-             }}>
+        <div
+          className="backdrop-blur-xl border-t border-theme-border theme-transition shadow-2xl"
+          style={{
+            background: `var(--theme-background)`,
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.3)",
+          }}
+        >
           <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
             <div className="space-y-4">
               {navItems.map((item, index) => (
                 <motion.button
                   key={item.name}
                   onClick={() => handleNavClick(item.href)}
-                  className="block w-full text-left text-theme-text-secondary hover:text-theme-foreground font-semibold py-4 px-6 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border border-theme-border hover:border-theme-border-strong transition-all duration-400 text-base uppercase tracking-wider backdrop-blur-sm font-russo theme-transition"
+                  className="block w-full text-left text-theme-text-secondary hover:text-theme-foreground font-semibold py-3 px-4 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border border-theme-border hover:border-theme-border-strong transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{
                     opacity: isOpen ? 1 : 0,
