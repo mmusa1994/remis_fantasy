@@ -26,7 +26,7 @@ export default function PremierLeaguePage() {
       }`}
     >
       {/* Background Image with Blurred Edges */}
-      <div className="absolute top-0 left-50 h-96 overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-96 overflow-hidden">
         <div className="relative w-full h-full">
           {/* Main background image */}
           <Image

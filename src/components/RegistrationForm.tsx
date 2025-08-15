@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import Toast from "./Toast";
+import Toast from "./shared/Toast";
 import { supabase } from "@/lib/supabase";
 import ReCAPTCHA from "react-google-recaptcha";
 import {
@@ -682,7 +682,9 @@ export default function RegistrationForm() {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
                           {/* Price Badge */}
-                          <div className={`absolute top-3 right-3 md:top-4 md:right-4 ${option.colors.badge} text-white px-3 py-1.5 md:px-4 md:py-2 minimal-radius font-bold text-sm md:text-lg shadow-2xl ring-2 ${option.colors.badgeRing} animate-pulse-gentle hover-scale`}>
+                          <div
+                            className={`absolute top-3 right-3 md:top-4 md:right-4 ${option.colors.badge} text-white px-3 py-1.5 md:px-4 md:py-2 minimal-radius font-bold text-sm md:text-lg shadow-2xl ring-2 ${option.colors.badgeRing} animate-pulse-gentle hover-scale`}
+                          >
                             {option.price}
                           </div>
                         </div>
@@ -700,7 +702,9 @@ export default function RegistrationForm() {
                         </div>
 
                         {formData.league_type === option.id && (
-                          <div className={`absolute top-4 left-4 w-10 h-10 ${option.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${option.colors.badgeRing} animate-scale-in hover-scale`}>
+                          <div
+                            className={`absolute top-4 left-4 w-10 h-10 ${option.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${option.colors.badgeRing} animate-scale-in hover-scale`}
+                          >
                             <CheckCircle className="w-6 h-6 text-white" />
                           </div>
                         )}
@@ -708,70 +712,74 @@ export default function RegistrationForm() {
                     ))}
                   </div>
 
-              {/* H2H League as additional option */}
-              <div className="mb-6">
-                <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
-                  <span className="text-theme-heading-primary theme-transition">
-                    H2H Liga - dodatno (*samo 40 mjesta)
-                  </span>
-                </h3>
-                <div
-                  className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
-                    formData.h2h_league
-                      ? `${h2hOption.colors.border} ${h2hOption.colors.bg} shadow-lg ring-4 ${h2hOption.colors.badgeRing}`
-                      : `border-gray-600/50 ${h2hOption.colors.hover} hover:shadow-xl`
-                  }`}
-                  onClick={() => {
-                    handleInputChange("h2h_league", !formData.h2h_league);
-                  }}
-                >
-                    <input
-                      type="checkbox"
-                      name="h2h_league"
-                      checked={formData.h2h_league}
-                      onChange={(e) => {
-                        handleInputChange("h2h_league", e.target.checked);
+                  {/* H2H League as additional option */}
+                  <div className="mb-6">
+                    <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
+                      <span className="text-theme-heading-primary theme-transition">
+                        H2H Liga - dodatno (*samo 40 mjesta)
+                      </span>
+                    </h3>
+                    <div
+                      className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
+                        formData.h2h_league
+                          ? `${h2hOption.colors.border} ${h2hOption.colors.bg} shadow-lg ring-4 ${h2hOption.colors.badgeRing}`
+                          : `border-gray-600/50 ${h2hOption.colors.hover} hover:shadow-xl`
+                      }`}
+                      onClick={() => {
+                        handleInputChange("h2h_league", !formData.h2h_league);
                       }}
-                      className="sr-only"
-                    />
-
-                    {/* H2H Image - Full width like other cards */}
-                    <div className="relative h-48 bg-black/50">
-                      <Image
-                        src={h2hOption.image}
-                        alt={h2hOption.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
-                        className="object-cover opacity-90"
+                    >
+                      <input
+                        type="checkbox"
+                        name="h2h_league"
+                        checked={formData.h2h_league}
+                        onChange={(e) => {
+                          handleInputChange("h2h_league", e.target.checked);
+                        }}
+                        className="sr-only"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
-                      {/* Price Badge */}
-                      <div className={`absolute top-4 right-4 ${h2hOption.colors.badge} text-white px-4 py-2 minimal-radius font-bold text-lg shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-pulse-gentle hover-scale`}>
-                        {h2hOption.price}
+                      {/* H2H Image - Full width like other cards */}
+                      <div className="relative h-48 bg-black/50">
+                        <Image
+                          src={h2hOption.image}
+                          alt={h2hOption.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
+                          className="object-cover opacity-90"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+
+                        {/* Price Badge */}
+                        <div
+                          className={`absolute top-4 right-4 ${h2hOption.colors.badge} text-white px-4 py-2 minimal-radius font-bold text-lg shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-pulse-gentle hover-scale`}
+                        >
+                          {h2hOption.price}
+                        </div>
+
+                        {/* Selected indicator */}
+                        {formData.h2h_league && (
+                          <div
+                            className={`absolute top-4 left-4 w-10 h-10 ${h2hOption.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-scale-in hover-scale`}
+                          >
+                            <CheckCircle className="w-6 h-6 text-white" />
+                          </div>
+                        )}
                       </div>
 
-                      {/* Selected indicator */}
-                      {formData.h2h_league && (
-                        <div className={`absolute top-4 left-4 w-10 h-10 ${h2hOption.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-scale-in hover-scale`}>
-                          <CheckCircle className="w-6 h-6 text-white" />
-                        </div>
-                      )}
+                      {/* Content */}
+                      <div className="p-6 bg-black/60">
+                        <h4
+                          className={`text-lg md:text-xl font-bold ${h2hOption.colors.text} mb-2`}
+                        >
+                          {h2hOption.name}
+                        </h4>
+                        <p className="text-gray-300 text-xs md:text-sm leading-tight">
+                          {h2hOption.description}
+                        </p>
+                      </div>
                     </div>
-
-                    {/* Content */}
-                    <div className="p-6 bg-black/60">
-                      <h4
-                        className={`text-lg md:text-xl font-bold ${h2hOption.colors.text} mb-2`}
-                      >
-                        {h2hOption.name}
-                      </h4>
-                      <p className="text-gray-300 text-xs md:text-sm leading-tight">
-                        {h2hOption.description}
-                      </p>
-                    </div>
-                </div>
-              </div>
+                  </div>
 
                   {errors.league_type && (
                     <p className="text-red-400 text-xs md:text-sm mt-4 flex items-center gap-1 font-medium theme-transition animate-fade-in">
@@ -869,18 +877,20 @@ export default function RegistrationForm() {
                           let leagueType = selectedLeague
                             ? selectedLeague.name
                             : "Fantasy Football Liga";
-                          
+
                           if (formData.h2h_league) {
                             leagueType += " + H2H Liga";
                           }
-                          
+
                           try {
                             await downloadPaymentInstructions(leagueType);
                           } catch (err: any) {
                             // Show error toast if download fails
                             setToast({
                               show: true,
-                              message: err.message || "Problem sa preuzimanjem PDF-a. Molimo kontaktirajte nas na muhamed.musa1994@gmail.com",
+                              message:
+                                err.message ||
+                                "Problem sa preuzimanjem PDF-a. Molimo kontaktirajte nas na muhamed.musa1994@gmail.com",
                               type: "error",
                             });
                           }
@@ -912,8 +922,8 @@ export default function RegistrationForm() {
                         </div>
 
                         <p className="text-theme-text-secondary text-xs mb-4 leading-relaxed theme-transition">
-                          Za Wise uplatu, pronađite korisnika putem email
-                          adrese i pošaljite novac:
+                          Za Wise uplatu, pronađite korisnika putem email adrese
+                          i pošaljite novac:
                         </p>
 
                         <div className="bg-theme-card-secondary/40 minimal-radius p-3 border border-theme-border theme-transition">
