@@ -3,13 +3,13 @@
   "name": "Premier League",
   "subtitle": "Fantasy Liga",
   "description": "Dobrodošli u najuzbudljiviju Premier League fantasy ligu! Registrujte se, osvojite nevjerovatne nagrade i pokažite svoje znanje fudbala.",
-  "logoPath": "/images/logos/pl-logo.jpg",
+  "logoPath": "/images/logos/pl-logo.png",
   "primaryColor": "purple",
   "secondaryColor": "orange",
   "stats": [
     {
       "label": "Ukupan nagradni fond",
-      "value": "6.400 KM",
+      "value": "8.000 KM",
       "icon": "DollarSign"
     },
     {
@@ -24,7 +24,7 @@
     },
     {
       "label": "Kup nagrade",
-      "value": "3x",
+      "value": "2x",
       "icon": "Medal"
     }
   ],

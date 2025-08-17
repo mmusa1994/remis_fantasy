@@ -42,10 +42,10 @@ export const appConfig: AppConfig = {
     },
   ],
   globalStats: [
-    { label: "Ukupan nagradni fond", value: "6.400 KM", icon: "DollarSign" },
-    { label: "Dostupne lige", value: "3", icon: "Trophy" },
-    { label: "Registrovanih igrača", value: "150+", icon: "Users" },
-    { label: "Godina iskustva", value: "2+", icon: "Calendar" },
+    { label: "Ukupan nagradni fond", value: "8000 KM", icon: "DollarSign" },
+    { label: "Dostupne lige", value: "5", icon: "Trophy" },
+    { label: "Registrovanih igrača", value: "160+", icon: "Users" },
+    { label: "Godina iskustva", value: "9+", icon: "Calendar" },
   ],
 };
 

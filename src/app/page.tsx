@@ -4,22 +4,95 @@ import { useTheme } from "@/contexts/ThemeContext";
 import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
-import {
-  Gamepad2,
-  Trophy,
-  Zap,
-  DollarSign,
-  Calendar,
-  Users,
-} from "lucide-react";
+import StatsGrid from "@/components/shared/StatsGrid";
+import { useHomepageData } from "@/data/hooks/useLeagueData";
+import { Gamepad2, Trophy, Zap, type LucideIcon } from "lucide-react";
 import Image from "next/image";
+
+// Icon mapping for league cards
+const iconMap: Record<string, LucideIcon> = {
+  premier: Gamepad2,
+  champions: Trophy,
+  f1: Zap,
+};
 
 export default function Home() {
   const { theme } = useTheme();
+  const { data, loading, error } = useHomepageData();
+
+  if (loading) {
+    return (
+      <main
+        className={`w-full min-h-screen overflow-x-hidden ${
+          theme === "dark"
+            ? "bg-black"
+            : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
+        }`}
+      >
+        <Navbar />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-theme-text-secondary">Učitava se...</p>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main
+        className={`w-full min-h-screen overflow-x-hidden ${
+          theme === "dark"
+            ? "bg-black"
+            : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
+        }`}
+      >
+        <Navbar />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-red-500 mb-4">Greška pri učitavanju podataka</p>
+            <p className="text-theme-text-secondary">{error}</p>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
+  const { leagues, globalStats } = data;
+
+  const getLeagueGradient = (leagueId: string) => {
+    switch (leagueId) {
+      case "premier":
+        return "from-purple-600 to-purple-800";
+      case "champions":
+        return "from-blue-600 to-blue-800";
+      case "f1":
+        return "from-red-600 to-red-800";
+      default:
+        return "from-gray-600 to-gray-800";
+    }
+  };
+
+  const getLeagueTextColor = (leagueId: string) => {
+    switch (leagueId) {
+      case "premier":
+        return "text-purple-500";
+      case "champions":
+        return "text-blue-500";
+      case "f1":
+        return "text-red-500";
+      default:
+        return "text-gray-500";
+    }
+  };
 
   return (
     <main
-      className={`w-full min-h-screen overflow-x-hidden ${
+      className={`w-full min-h-screen overflow-x-hidden mt-10 ${
         theme === "dark"
           ? "bg-black"
           : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
@@ -36,7 +109,7 @@ export default function Home() {
           >
             <Image
               src="/images/rf-logo.svg"
-              alt="Premier League Logo"
+              alt="REMIS Fantasy Logo"
               width={1000}
               height={1000}
               className="object-cover"
@@ -67,58 +140,30 @@ export default function Home() {
             pokažite svoje znanje sporta.
           </p>
 
-          {/* League Selection Cards */}
+          {/* Dynamic League Selection Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
-            {[
-              {
-                title: "Premier League",
-                description:
-                  "Najpopularnija fantasy liga sa 4 različite kategorije",
-                href: "/premier-league",
-                icon: Gamepad2,
-                gradient: "from-purple-600 to-purple-800",
-                available: true,
-              },
-              {
-                title: "Champions League",
-                description: "Evropska elita fantasy fudbala",
-                href: "/champions-league",
-                icon: Trophy,
-                gradient: "from-blue-600 to-blue-800",
-                available: true,
-              },
-              {
-                title: "F1 Fantasy",
-                description: "Brzina, strategija i adrenalin na stazi",
-                href: "/f1-fantasy",
-                icon: Zap,
-                gradient: "from-red-600 to-red-800",
-                available: true,
-              },
-            ].map((league, index) => (
-              <div
-                key={index}
-                className={`group relative p-6 md:p-8 rounded-2xl md:rounded-3xl backdrop-blur-lg border transition-all duration-500 hover:scale-105 ${
-                  league.available
-                    ? theme === "dark"
+            {leagues.map((league, index) => {
+              const IconComponent = iconMap[league.id] || Gamepad2;
+
+              return (
+                <div
+                  key={league.id}
+                  className={`group relative p-6 md:p-8 rounded-2xl md:rounded-3xl backdrop-blur-lg border transition-all duration-500 hover:scale-105 ${
+                    theme === "dark"
                       ? "bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 cursor-pointer"
                       : "bg-white/60 border-orange-200 hover:bg-white/80 cursor-pointer"
-                    : theme === "dark"
-                    ? "bg-gray-800/30 border-gray-700/50 opacity-60"
-                    : "bg-white/40 border-orange-200/50 opacity-60"
-                } hover:shadow-2xl`}
-              >
-                {league.available ? (
+                  } hover:shadow-2xl`}
+                >
                   <Link href={league.href} className="block">
                     <div className="mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
-                      <league.icon className="w-12 h-12 md:w-16 md:h-16 text-white" />
+                      <IconComponent className="w-12 h-12 md:w-16 md:h-16 text-white" />
                     </div>
                     <h3
                       className={`text-2xl font-bold mb-4 ${
                         theme === "dark" ? "text-white" : "text-gray-800"
                       }`}
                     >
-                      {league.title}
+                      {league.name}
                     </h3>
                     <p
                       className={`text-base leading-relaxed mb-6 ${
@@ -128,13 +173,9 @@ export default function Home() {
                       {league.description}
                     </p>
                     <div
-                      className={`inline-flex items-center text-sm font-semibold ${
-                        league.title === "Premier League"
-                          ? "text-purple-500"
-                          : league.title === "Champions League"
-                          ? "text-blue-500"
-                          : "text-red-500"
-                      } group-hover:translate-x-1 transition-transform duration-300`}
+                      className={`inline-flex items-center text-sm font-semibold ${getLeagueTextColor(
+                        league.id
+                      )} group-hover:translate-x-1 transition-transform duration-300`}
                     >
                       Otvori ligu
                       <svg
@@ -152,81 +193,17 @@ export default function Home() {
                       </svg>
                     </div>
                   </Link>
-                ) : (
-                  <div>
-                    <div className="mb-6 opacity-50 flex justify-center">
-                      <league.icon className="w-16 h-16 text-gray-500" />
-                    </div>
-                    <h3
-                      className={`text-2xl font-bold mb-4 ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      {league.title}
-                    </h3>
-                    <p
-                      className={`text-base leading-relaxed mb-6 ${
-                        theme === "dark" ? "text-gray-500" : "text-gray-400"
-                      }`}
-                    >
-                      {league.description}
-                    </p>
-                    <div
-                      className={`inline-flex items-center text-sm font-semibold ${
-                        theme === "dark" ? "text-gray-500" : "text-gray-400"
-                      }`}
-                    >
-                      Uskoro dostupno
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
 
-          {/* Stats Section */}
-          <div className="mt-12 md:mt-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto">
-            {[
-              {
-                label: "Ukupan nagradni fond",
-                value: "6.400 KM",
-                icon: DollarSign,
-              },
-              { label: "Dostupne lige", value: "3", icon: Trophy },
-              { label: "Registrovanih igrača", value: "150+", icon: Users },
-              { label: "Godina iskustva", value: "2+", icon: Calendar },
-            ].map((stat, index) => (
-              <div
-                key={index}
-                className={`p-4 md:p-6 rounded-2xl backdrop-blur-lg border transition-all duration-300 hover:scale-105 ${
-                  theme === "dark"
-                    ? "bg-gray-800/50 border-gray-700 hover:bg-gray-800/70"
-                    : "bg-white/60 border-orange-200 hover:bg-white/80"
-                }`}
-              >
-                <div className="mb-2 flex justify-center">
-                  <stat.icon
-                    className={`w-8 h-8 ${
-                      theme === "dark" ? "text-orange-400" : "text-orange-600"
-                    }`}
-                  />
-                </div>
-                <div
-                  className={`text-xl font-bold mb-1 ${
-                    theme === "dark" ? "text-white" : "text-gray-800"
-                  }`}
-                >
-                  {stat.value}
-                </div>
-                <div
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  {stat.label}
-                </div>
-              </div>
-            ))}
+          {/* Dynamic Stats Section */}
+          <div className="mt-12 md:mt-20 max-w-4xl mx-auto">
+            <StatsGrid
+              stats={globalStats}
+              className="transition-all duration-300"
+            />
           </div>
         </div>
 

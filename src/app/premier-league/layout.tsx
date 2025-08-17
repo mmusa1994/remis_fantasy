@@ -1,5 +1,5 @@
-import Navbar from '@/components/shared/Navbar'
-import SubNavigation from '@/components/shared/SubNavigation'
+import Navbar from "@/components/shared/Navbar";
+import SubNavigation from "@/components/shared/SubNavigation";
 
 const premierLeagueNavItems = [
   { name: "Registracija", href: "/premier-league/registracija" },
@@ -11,19 +11,17 @@ const premierLeagueNavItems = [
 export default function PremierLeagueLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <SubNavigation 
-        items={premierLeagueNavItems} 
-        baseColor="orange" 
+      <SubNavigation
+        items={premierLeagueNavItems}
+        baseColor="purple"
         leagueBasePath="/premier-league"
       />
-      <main className="relative">
-        {children}
-      </main>
+      <main className="relative">{children}</main>
     </div>
-  )
+  );
 }

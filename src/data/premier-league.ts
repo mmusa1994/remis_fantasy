@@ -1,4 +1,4 @@
-import { LeagueConfig, Prize, RegistrationFormConfig } from './types';
+import { LeagueConfig, Prize, RegistrationFormConfig } from "./types";
 
 // Premier League configuration
 export const premierLeagueConfig: LeagueConfig = {
@@ -6,16 +6,17 @@ export const premierLeagueConfig: LeagueConfig = {
   name: "Premier League",
   title: "Premier League",
   subtitle: "Fantasy Liga",
-  description: "Dobrodošli u najuzbudljiviju Premier League fantasy ligu! Registrujte se, osvojite nevjerovatne nagrade i pokažite svoje znanje fudbala.",
+  description:
+    "Dobrodošli u najuzbudljiviju Premier League fantasy ligu! Registrujte se, osvojite nevjerovatne nagrade i pokažite svoje znanje fudbala.",
   logo: "/images/logos/pl-logo.jpg",
-  baseColor: "orange",
+  baseColor: "purple",
   basePath: "/premier-league",
   available: true,
   stats: [
-    { label: "Ukupan nagradni fond", value: "6.400 KM", icon: "DollarSign" },
+    { label: "Ukupan nagradni fond", value: "8000 KM", icon: "DollarSign" },
     { label: "Broj liga", value: "4", icon: "Trophy" },
     { label: "Mjesečne nagrade", value: "10x", icon: "Calendar" },
-    { label: "Kup nagrade", value: "3x", icon: "Medal" },
+    { label: "Kup nagrade", value: "2x", icon: "Medal" },
   ],
   navigation: [
     { name: "Registracija", href: "/premier-league/registracija" },
@@ -30,7 +31,7 @@ export const premierLeagueConfig: LeagueConfig = {
       href: "/premier-league/registracija",
       icon: "PenTool",
       color: "purple",
-      name: "Registracija"
+      name: "Registracija",
     },
     {
       title: "Nagrade",
@@ -38,7 +39,7 @@ export const premierLeagueConfig: LeagueConfig = {
       href: "/premier-league/nagrade",
       icon: "Trophy",
       color: "yellow",
-      name: "Nagrade"
+      name: "Nagrade",
     },
     {
       title: "Galerija",
@@ -46,7 +47,7 @@ export const premierLeagueConfig: LeagueConfig = {
       href: "/premier-league/galerija",
       icon: "Camera",
       color: "blue",
-      name: "Galerija"
+      name: "Galerija",
     },
     {
       title: "Tabele",
@@ -54,9 +55,9 @@ export const premierLeagueConfig: LeagueConfig = {
       href: "/premier-league/tabele",
       icon: "BarChart3",
       color: "green",
-      name: "Tabele"
+      name: "Tabele",
     },
-  ]
+  ],
 };
 
 // Premier League prizes
@@ -66,7 +67,8 @@ export const premierLeaguePrizes: Prize[] = [
     title: "Dobrodošli u novu sezonu",
     subtitle: "REMIS Fantasy 2025/26",
     image: "/images/new-season/Intro.png",
-    description: "Spremite se za najuzbudljiviju sezonu fantasy footballa! Nove lige, veće nagrade, bolje iskustvo.",
+    description:
+      "Spremite se za najuzbudljiviju sezonu fantasy footballa! Nove lige, veće nagrade, bolje iskustvo.",
     tier: "intro",
     league: "premier",
     features: [
@@ -81,7 +83,8 @@ export const premierLeaguePrizes: Prize[] = [
     title: "Free Liga",
     subtitle: "Sezona 25/26 - Besplatno!",
     image: "/images/new-season/free.png",
-    description: "Prošlogodišnji učesnici automatski ubačeni. Najbolji dobija originalni dres!",
+    description:
+      "Prošlogodišnji učesnici automatski ubačeni. Najbolji dobija originalni dres!",
     tier: "free",
     league: "premier",
     price: "Besplatno",
@@ -92,7 +95,8 @@ export const premierLeaguePrizes: Prize[] = [
     title: "H2H Liga",
     subtitle: "40 učesnika - Head-to-Head",
     image: "/images/new-season/h2h.png",
-    description: "Najnepredvidivija liga sa bogatim nagradnim fondom od 720 KM / 368 €.",
+    description:
+      "Najnepredvidivija liga sa bogatim nagradnim fondom od 720 KM / 368 €.",
     tier: "h2h",
     league: "premier",
     price: "20 KM / 10 €",
@@ -108,7 +112,8 @@ export const premierLeaguePrizes: Prize[] = [
     title: "Standard Liga",
     subtitle: "100 učesnika - Klasa i tradicija",
     image: "/images/new-season/standard.png",
-    description: "Standardna liga s mjesečnim i kup nagradama. Nagradni fond 2.400 KM / 1.228 €.",
+    description:
+      "Standardna liga s mjesečnim i kup nagradama. Nagradni fond 2.400 KM / 1.228 €.",
     tier: "standard",
     league: "premier",
     price: "30 KM / 15 €",
@@ -130,7 +135,8 @@ export const premierLeaguePrizes: Prize[] = [
     title: "Premium Liga",
     subtitle: "50 učesnika - Vrhunsko iskustvo",
     image: "/images/new-season/premium.png",
-    description: "Najekskluzivnija liga s najvećim nagradama i posebnim privilegijama. Fond 4.000 KM / 2.050 €.",
+    description:
+      "Najekskluzivnija liga s najvećim nagradama i posebnim privilegijama. Fond 4.000 KM / 2.050 €.",
     tier: "premium",
     league: "premier",
     price: "100 KM / 52 €",
@@ -149,7 +155,8 @@ export const premierLeaguePrizes: Prize[] = [
     title: "Specijalna nagrada",
     subtitle: "AUTENTIČNI DRES ARSENALA IZ SEZONE 2003/2004",
     image: "/images/form/arsenal.png",
-    description: 'Original! Ovo je sveti gral svakog fudbalskog fanatika. Dres iz legendarne "Invincibles" sezone - kada su Thierry Henry i Arsenal bez poraza osvojili Premier ligu.',
+    description:
+      'Original! Ovo je sveti gral svakog fudbalskog fanatika. Dres iz legendarne "Invincibles" sezone - kada su Thierry Henry i Arsenal bez poraza osvojili Premier ligu.',
     tier: "arsenal",
     league: "premier",
     price: "Dres Thierry Henry 03/04",
@@ -242,19 +249,20 @@ export const premierLeagueRegistrationConfig: RegistrationFormConfig = {
   paymentInstructions: {
     wise: {
       title: "Wise Uplata",
-      description: "Za Wise uplatu, pronađite korisnika putem email adrese i pošaljite novac:",
+      description:
+        "Za Wise uplatu, pronađite korisnika putem email adrese i pošaljite novac:",
       details: {
         email: "muhamed.musa1994@gmail.com",
-        note: "U opis uplate navedite vaše ime i tip lige koje se prijavljujete."
-      }
+        note: "U opis uplate navedite vaše ime i tip lige koje se prijavljujete.",
+      },
     },
     paypal: {
       title: "PayPal Uplata",
       description: "Za PayPal uplatu, pošaljite novac na:",
       details: {
-        username: "@Majda598 (Majda Ahmečković)"
+        username: "@Majda598 (Majda Ahmečković)",
       },
-      note: "Dodajte proviziju za PayPal od 3€. U opis uplate navedite vaše ime i tip lige."
-    }
-  }
+      note: "Dodajte proviziju za PayPal od 3€. U opis uplate navedite vaše ime i tip lige.",
+    },
+  },
 };
