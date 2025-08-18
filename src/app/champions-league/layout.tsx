@@ -1,5 +1,4 @@
-import Navbar from '@/components/shared/Navbar'
-import SubNavigation from '@/components/shared/SubNavigation'
+import SubNavigation from "@/components/shared/SubNavigation";
 
 const championsLeagueNavItems = [
   { name: "Registracija", href: "/champions-league/registracija" },
@@ -11,19 +10,16 @@ const championsLeagueNavItems = [
 export default function ChampionsLeagueLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <div className="min-h-screen">
-      <Navbar />
-      <SubNavigation 
-        items={championsLeagueNavItems} 
-        baseColor="blue" 
+      <SubNavigation
+        items={championsLeagueNavItems}
+        baseColor="blue"
         leagueBasePath="/champions-league"
       />
-      <main className="relative">
-        {children}
-      </main>
+      <main className="relative">{children}</main>
     </div>
-  )
+  );
 }

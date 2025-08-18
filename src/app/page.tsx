@@ -6,8 +6,6 @@ import StatsGrid from "@/components/shared/StatsGrid";
 import { useHomepageData } from "@/data/hooks/useLeagueData";
 import { Gamepad2, Trophy, Zap, type LucideIcon } from "lucide-react";
 import Image from "next/image";
-import Navbar from "@/components/shared/Navbar";
-import Footer from "@/components/shared/Footer";
 
 // Icon mapping for league cards
 const iconMap: Record<string, LucideIcon> = {
@@ -75,13 +73,12 @@ export default function Home() {
 
   return (
     <main
-      className={`w-full min-h-screen overflow-x-hidden pt-16 md:pt-20 ${
+      className={`w-full min-h-screen overflow-x-hidden ${
         theme === "dark"
           ? "bg-black"
           : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
       }`}
     >
-      <Navbar />
       {/* Hero Section */}
       <section className="relative overflow-hidden pb-20 px-4 mt-10">
         <div className="max-w-6xl mx-auto text-center">
@@ -196,7 +193,6 @@ export default function Home() {
           style={{ animationDelay: "1s" }}
         ></div>
       </section>
-      <Footer />
     </main>
   );
 }

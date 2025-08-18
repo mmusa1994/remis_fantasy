@@ -1,4 +1,3 @@
-import Navbar from "@/components/shared/Navbar";
 import SubNavigation from "@/components/shared/SubNavigation";
 
 const premierLeagueNavItems = [
@@ -15,7 +14,6 @@ export default function PremierLeagueLayout({
 }) {
   return (
     <div className="min-h-screen">
-      <Navbar />
       <SubNavigation
         items={premierLeagueNavItems}
         baseColor="purple"
