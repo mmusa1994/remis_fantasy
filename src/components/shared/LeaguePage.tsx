@@ -116,11 +116,11 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
         content={config.pageContent.hero}
         logoPath={config.logoPath}
         primaryColor={config.primaryColor}
-        className="mobile-nav-adjust"
+        className=""
       />
 
       {/* Stats Section */}
-      <section className="py-12 md:py-20 px-4">
+      <section className="py-8 md:py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <StatsGrid
             stats={config.stats}
@@ -131,7 +131,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
       </section>
 
       {/* Navigation Cards Section */}
-      <section className="py-12 md:py-20 px-4">
+      <section className="py-8 md:py-16 px-4 pb-16">
         <div className="max-w-6xl mx-auto">
           <motion.h2
             className="text-2xl md:text-3xl lg:text-4xl font-bold text-center text-theme-foreground mb-8 md:mb-12"
@@ -142,7 +142,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
             {config.pageContent.sections.navigation.title}
           </motion.h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             {config.navigation.map((item, index) => {
               const IconComponent = iconMap[item.icon] || PenTool;
               const colorClasses = getColorClasses(item.color);
@@ -150,7 +150,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
               return (
                 <Link key={item.title} href={item.href}>
                   <motion.div
-                    className={`group p-6 md:p-8 rounded-2xl border transition-all duration-300 hover:scale-105 cursor-pointer ${colorClasses.bg} ${colorClasses.border} ${colorClasses.hover} backdrop-blur-sm shadow-lg hover:shadow-xl`}
+                    className={`group p-4 sm:p-6 md:p-8 rounded-2xl border transition-all duration-300 hover:scale-105 cursor-pointer ${colorClasses.bg} ${colorClasses.border} ${colorClasses.hover} backdrop-blur-sm shadow-lg hover:shadow-xl`}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}

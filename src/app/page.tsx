@@ -2,12 +2,12 @@
 
 import { useTheme } from "@/contexts/ThemeContext";
 import Link from "next/link";
-import Navbar from "@/components/shared/Navbar";
-import Footer from "@/components/shared/Footer";
 import StatsGrid from "@/components/shared/StatsGrid";
 import { useHomepageData } from "@/data/hooks/useLeagueData";
 import { Gamepad2, Trophy, Zap, type LucideIcon } from "lucide-react";
 import Image from "next/image";
+import Navbar from "@/components/shared/Navbar";
+import Footer from "@/components/shared/Footer";
 
 // Icon mapping for league cards
 const iconMap: Record<string, LucideIcon> = {
@@ -29,14 +29,12 @@ export default function Home() {
             : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
         }`}
       >
-        <Navbar />
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto mb-4"></div>
             <p className="text-theme-text-secondary">Učitava se...</p>
           </div>
         </div>
-        <Footer />
       </main>
     );
   }
@@ -50,32 +48,17 @@ export default function Home() {
             : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
         }`}
       >
-        <Navbar />
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <p className="text-red-500 mb-4">Greška pri učitavanju podataka</p>
             <p className="text-theme-text-secondary">{error}</p>
           </div>
         </div>
-        <Footer />
       </main>
     );
   }
 
   const { leagues, globalStats } = data;
-
-  const getLeagueGradient = (leagueId: string) => {
-    switch (leagueId) {
-      case "premier":
-        return "from-purple-600 to-purple-800";
-      case "champions":
-        return "from-blue-600 to-blue-800";
-      case "f1":
-        return "from-red-600 to-red-800";
-      default:
-        return "from-gray-600 to-gray-800";
-    }
-  };
 
   const getLeagueTextColor = (leagueId: string) => {
     switch (leagueId) {
@@ -92,16 +75,15 @@ export default function Home() {
 
   return (
     <main
-      className={`w-full min-h-screen overflow-x-hidden mt-10 ${
+      className={`w-full min-h-screen overflow-x-hidden pt-16 md:pt-20 ${
         theme === "dark"
           ? "bg-black"
           : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
       }`}
     >
       <Navbar />
-
       {/* Hero Section */}
-      <section className="relative overflow-hidden mobile-nav-adjust pb-20 px-4">
+      <section className="relative overflow-hidden pb-20 px-4 mt-10">
         <div className="max-w-6xl mx-auto text-center">
           {/* Logo */}
           <div
@@ -142,7 +124,7 @@ export default function Home() {
 
           {/* Dynamic League Selection Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
-            {leagues.map((league, index) => {
+            {leagues.map((league) => {
               const IconComponent = iconMap[league.id] || Gamepad2;
 
               return (
@@ -214,7 +196,6 @@ export default function Home() {
           style={{ animationDelay: "1s" }}
         ></div>
       </section>
-
       <Footer />
     </main>
   );

@@ -123,7 +123,7 @@ export default function HeroSection({
 
   return (
     <div
-      className={`relative min-h-[70vh] flex items-center justify-center overflow-hidden pb-5 ${className}`}
+      className={`relative min-h-[60vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden py-8 md:py-12 ${className}`}
     >
       {/* Background Image */}
       {backgroundImage && (

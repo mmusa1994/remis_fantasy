@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X, Home, Crown, CircleDot, Car } from "lucide-react";
 import ThemeToggle from "../ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -20,6 +21,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
   const { theme } = useTheme();
+  const pathname = usePathname();
 
   const backdropBlur = useTransform(
     scrollY,
@@ -36,6 +38,10 @@ export default function Navbar() {
 
   const handleMobileNavClick = () => {
     setIsOpen(false);
+  };
+
+  const isActiveLink = (href: string) => {
+    return pathname === href;
   };
 
   return (
@@ -154,110 +160,133 @@ export default function Navbar() {
 
           {/* Navigation Links - Right */}
           <div className="hidden md:flex items-center space-x-4 lg:space-x-6">
-            {navItems.map((item, index) => (
-              <Link key={item.name} href={item.href}>
-                <motion.div
-                  className="relative group text-theme-text-secondary hover:text-theme-foreground font-semibold transition-all duration-500 text-sm uppercase tracking-widest font-russo theme-transition px-4 py-2 cursor-pointer"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {/* Dynamic background on hover - adapts to theme */}
+            {navItems.map((item, index) => {
+              const isActive = isActiveLink(item.href);
+              return (
+                <Link key={item.name} href={item.href}>
                   <motion.div
-                    className={`absolute inset-0 minimal-radius backdrop-blur-sm ${
-                      theme === "light"
-                        ? "bg-gradient-to-r from-blue-100/60 via-slate-100/80 to-blue-100/60 shadow-lg"
-                        : "bg-gradient-to-r from-red-900/30 via-gray-800/40 to-red-900/30"
+                    className={`relative group font-semibold transition-all duration-500 text-sm uppercase tracking-widest font-russo theme-transition px-4 py-2 cursor-pointer ${
+                      isActive
+                        ? "text-theme-foreground"
+                        : "text-theme-text-secondary hover:text-theme-foreground"
                     }`}
-                    initial={{ opacity: 0, scale: 0.85 }}
-                    whileHover={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  />
-
-                  {/* Subtle inner glow */}
-                  <motion.div
-                    className={`absolute inset-0 minimal-radius ${
-                      theme === "light"
-                        ? "bg-gradient-to-r from-transparent via-blue-200/20 to-transparent"
-                        : "bg-gradient-to-r from-transparent via-red-500/10 to-transparent"
-                    }`}
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                  />
-
-                  <span className="relative z-10 drop-shadow-sm flex items-center gap-2">
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {/* Dynamic background on hover - adapts to theme */}
                     <motion.div
-                      whileHover={{ scale: 1.2, rotate: 5 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <item.icon className="w-4 h-4" />
-                    </motion.div>
-                    {item.name}
-                  </span>
+                      className={`absolute inset-0 minimal-radius backdrop-blur-sm ${
+                        theme === "light"
+                          ? "bg-gradient-to-r from-blue-100/60 via-slate-100/80 to-blue-100/60 shadow-lg"
+                          : "bg-gradient-to-r from-red-900/30 via-gray-800/40 to-red-900/30"
+                      }`}
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      whileHover={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    />
 
-                  {/* Sophisticated underline - theme adaptive */}
-                  <motion.div
-                    className={`absolute -bottom-1 left-2 right-2 h-0.5 ${
-                      theme === "light"
-                        ? "bg-gradient-to-r from-transparent via-blue-600 to-transparent"
-                        : "bg-gradient-to-r from-transparent via-red-500 to-transparent"
-                    } origin-center`}
-                    initial={{ scaleX: 0, opacity: 0 }}
-                    whileHover={{ scaleX: 1, opacity: 1 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                  />
+                    {/* Subtle inner glow */}
+                    <motion.div
+                      className={`absolute inset-0 minimal-radius ${
+                        theme === "light"
+                          ? "bg-gradient-to-r from-transparent via-blue-200/20 to-transparent"
+                          : "bg-gradient-to-r from-transparent via-red-500/10 to-transparent"
+                      }`}
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 1 }}
+                      transition={{ duration: 0.4, delay: 0.1 }}
+                    />
 
-                  {/* Top accent line */}
-                  <motion.div
-                    className={`absolute -top-1 left-2 right-2 h-0.5 ${
-                      theme === "light"
-                        ? "bg-gradient-to-r from-transparent via-slate-400/60 to-transparent"
-                        : "bg-gradient-to-r from-transparent via-gray-400/40 to-transparent"
-                    }`}
-                    initial={{ scaleX: 0, opacity: 0 }}
-                    whileHover={{ scaleX: 1, opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-                  />
+                    <span className="relative z-10 drop-shadow-sm flex items-center gap-2">
+                      <motion.div
+                        whileHover={{ scale: 1.2, rotate: 5 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <item.icon className="w-4 h-4" />
+                      </motion.div>
+                      {item.name}
+                    </span>
 
-                  {/* Corner accents */}
-                  <motion.div
-                    className={`absolute top-0 left-0 w-1 h-1 ${
-                      theme === "light" ? "bg-blue-500" : "bg-red-500"
-                    } minimal-radius`}
-                    initial={{ scale: 0, opacity: 0 }}
-                    whileHover={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.2, delay: 0.2 }}
-                  />
-                  <motion.div
-                    className={`absolute top-0 right-0 w-1 h-1 ${
-                      theme === "light" ? "bg-blue-500" : "bg-red-500"
-                    } minimal-radius`}
-                    initial={{ scale: 0, opacity: 0 }}
-                    whileHover={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.2, delay: 0.25 }}
-                  />
-                  <motion.div
-                    className={`absolute bottom-0 left-0 w-1 h-1 ${
-                      theme === "light" ? "bg-blue-500" : "bg-red-500"
-                    } minimal-radius`}
-                    initial={{ scale: 0, opacity: 0 }}
-                    whileHover={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.2, delay: 0.3 }}
-                  />
-                  <motion.div
-                    className={`absolute bottom-0 right-0 w-1 h-1 ${
-                      theme === "light" ? "bg-blue-500" : "bg-red-500"
-                    } minimal-radius`}
-                    initial={{ scale: 0, opacity: 0 }}
-                    whileHover={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.2, delay: 0.35 }}
-                  />
-                </motion.div>
-              </Link>
-            ))}
+                    {/* Active page indicator - sophisticated burgundy line */}
+                    {isActive && (
+                      <motion.div
+                        className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-red-900 to-transparent origin-center"
+                        initial={{ scaleX: 0, opacity: 0 }}
+                        animate={{ scaleX: 1, opacity: 1 }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                      />
+                    )}
+
+                    {/* Sophisticated underline - theme adaptive */}
+                    {!isActive && (
+                      <motion.div
+                        className={`absolute -bottom-1 left-2 right-2 h-0.5 ${
+                          theme === "light"
+                            ? "bg-gradient-to-r from-transparent via-blue-600 to-transparent"
+                            : "bg-gradient-to-r from-transparent via-red-500 to-transparent"
+                        } origin-center`}
+                        initial={{ scaleX: 0, opacity: 0 }}
+                        whileHover={{ scaleX: 1, opacity: 1 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                      />
+                    )}
+
+                    {/* Top accent line */}
+                    <motion.div
+                      className={`absolute -top-1 left-2 right-2 h-0.5 ${
+                        theme === "light"
+                          ? "bg-gradient-to-r from-transparent via-slate-400/60 to-transparent"
+                          : "bg-gradient-to-r from-transparent via-gray-400/40 to-transparent"
+                      }`}
+                      initial={{ scaleX: 0, opacity: 0 }}
+                      whileHover={{ scaleX: 1, opacity: 1 }}
+                      transition={{
+                        duration: 0.3,
+                        delay: 0.1,
+                        ease: "easeOut",
+                      }}
+                    />
+
+                    {/* Corner accents */}
+                    <motion.div
+                      className={`absolute top-0 left-0 w-1 h-1 ${
+                        theme === "light" ? "bg-blue-500" : "bg-red-500"
+                      } minimal-radius`}
+                      initial={{ scale: 0, opacity: 0 }}
+                      whileHover={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.2, delay: 0.2 }}
+                    />
+                    <motion.div
+                      className={`absolute top-0 right-0 w-1 h-1 ${
+                        theme === "light" ? "bg-blue-500" : "bg-red-500"
+                      } minimal-radius`}
+                      initial={{ scale: 0, opacity: 0 }}
+                      whileHover={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.2, delay: 0.25 }}
+                    />
+                    <motion.div
+                      className={`absolute bottom-0 left-0 w-1 h-1 ${
+                        theme === "light" ? "bg-blue-500" : "bg-red-500"
+                      } minimal-radius`}
+                      initial={{ scale: 0, opacity: 0 }}
+                      whileHover={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.2, delay: 0.3 }}
+                    />
+                    <motion.div
+                      className={`absolute bottom-0 right-0 w-1 h-1 ${
+                        theme === "light" ? "bg-blue-500" : "bg-red-500"
+                      } minimal-radius`}
+                      initial={{ scale: 0, opacity: 0 }}
+                      whileHover={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.2, delay: 0.35 }}
+                    />
+                  </motion.div>
+                </Link>
+              );
+            })}
 
             {/* Theme Toggle */}
             <ThemeToggle />
@@ -305,41 +334,42 @@ export default function Navbar() {
         >
           <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex flex-col space-y-3">
-              {navItems.map((item, index) => (
-                <Link key={item.name} href={item.href}>
-                  <motion.div
-                    onClick={handleMobileNavClick}
-                    className="w-full text-center text-theme-text-secondary hover:text-theme-foreground font-semibold py-4 px-4 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border border-theme-border hover:border-theme-border-strong transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{
-                      opacity: isOpen ? 1 : 0,
-                      y: isOpen ? 0 : 20,
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      delay: isOpen ? index * 0.1 : 0,
-                    }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="relative flex items-center justify-center gap-3">
-                      <motion.div
-                        whileHover={{ scale: 1.3, rotate: 10 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <item.icon className="w-5 h-5" />
-                      </motion.div>
-                      <span>{item.name}</span>
-                      <motion.div
-                        className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-transparent via-red-600 to-transparent origin-center"
-                        initial={{ scaleX: 0 }}
-                        whileHover={{ scaleX: 1 }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
+              {navItems.map((item, index) => {
+                const isActive = isActiveLink(item.href);
+                return (
+                  <Link key={item.name} href={item.href}>
+                    <motion.div
+                      onClick={handleMobileNavClick}
+                      className={`w-full text-center font-semibold py-4 px-4 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative ${
+                        isActive
+                          ? "text-theme-foreground border-red-600"
+                          : "text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-border-strong"
+                      }`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{
+                        opacity: isOpen ? 1 : 0,
+                        y: isOpen ? 0 : 20,
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        delay: isOpen ? index * 0.1 : 0,
+                      }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="relative flex items-center justify-center gap-3">
+                        <motion.div
+                          whileHover={{ scale: 1.3, rotate: 10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <item.icon className="w-5 h-5" />
+                        </motion.div>
+                        <span>{item.name}</span>
+                      </div>
+                    </motion.div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>
