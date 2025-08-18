@@ -18,7 +18,15 @@ export interface Prize {
   subtitle: string;
   image: string;
   description: string;
-  tier: "intro" | "free" | "standard" | "premium" | "h2h" | "arsenal" | "champions" | "f1";
+  tier:
+    | "intro"
+    | "free"
+    | "standard"
+    | "premium"
+    | "h2h"
+    | "arsenal"
+    | "champions"
+    | "f1";
   league?: "premier" | "champions" | "f1";
   price?: string;
   features: string[];
@@ -108,11 +116,11 @@ const tierColors = {
   },
 };
 
-export default function PrizesGallery({ 
-  prizes, 
-  leagueFilter, 
-  title = "Nagrade", 
-  subtitle = "Osvajaj nevjerovatne nagrade tokom sezone!" 
+export default function PrizesGallery({
+  prizes,
+  leagueFilter,
+  title = "Nagrade",
+  subtitle = "Osvajaj nevjerovatne nagrade tokom sezone!",
 }: PrizesGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -122,8 +130,8 @@ export default function PrizesGallery({
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Filter prizes based on league
-  const filteredPrizes = leagueFilter 
-    ? prizes.filter(prize => prize.league === leagueFilter || !prize.league)
+  const filteredPrizes = leagueFilter
+    ? prizes.filter((prize) => prize.league === leagueFilter || !prize.league)
     : prizes;
 
   // Auto-play functionality with synchronized timing
@@ -172,14 +180,16 @@ export default function PrizesGallery({
   const prevSlide = () => {
     if (isTransitioning || filteredPrizes.length <= 1) return;
     setIsAutoPlaying(false);
-    const newIndex = (currentIndex - 1 + filteredPrizes.length) % filteredPrizes.length;
+    const newIndex =
+      (currentIndex - 1 + filteredPrizes.length) % filteredPrizes.length;
     performSlideTransition(newIndex);
     setIsAccordionOpen(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const goToSlide = (index: number) => {
-    if (isTransitioning || index === currentIndex || filteredPrizes.length <= 1) return;
+    if (isTransitioning || index === currentIndex || filteredPrizes.length <= 1)
+      return;
     setIsAutoPlaying(false);
     performSlideTransition(index);
     setIsAccordionOpen(false);
@@ -202,8 +212,12 @@ export default function PrizesGallery({
     return (
       <section className="relative w-full min-h-[400px] bg-theme-background py-20 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-theme-heading-primary mb-4">{title}</h2>
-          <p className="text-theme-text-secondary">Nema dostupnih nagrada za ovu ligu.</p>
+          <h2 className="text-2xl font-bold text-theme-heading-primary mb-4">
+            {title}
+          </h2>
+          <p className="text-theme-text-secondary">
+            Nema dostupnih nagrada za ovu ligu.
+          </p>
         </div>
       </section>
     );
@@ -213,13 +227,15 @@ export default function PrizesGallery({
   const colors = tierColors[currentPrize.tier];
 
   return (
-    <section
-      className="relative w-full min-h-screen bg-theme-background py-20 overflow-hidden theme-transition"
-    >
+    <section className="relative w-full min-h-screen bg-theme-background overflow-hidden theme-transition">
       {/* Optimized Background Effects */}
       <div className="absolute inset-0 particles-bg">
-        <div className={`absolute top-20 left-20 w-96 h-96 bg-gradient-to-r ${colors.gradient} minimal-radius blur-3xl opacity-15 animate-pulse-gentle gpu-accelerated`} />
-        <div className={`absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-l ${colors.gradient} minimal-radius blur-3xl opacity-10 animate-float-slow gpu-accelerated`} />
+        <div
+          className={`absolute top-20 left-20 w-96 h-96 bg-gradient-to-r ${colors.gradient} minimal-radius blur-3xl opacity-15 animate-pulse-gentle gpu-accelerated`}
+        />
+        <div
+          className={`absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-l ${colors.gradient} minimal-radius blur-3xl opacity-10 animate-float-slow gpu-accelerated`}
+        />
 
         <div className="absolute inset-0 opacity-5">
           <div
@@ -270,7 +286,11 @@ export default function PrizesGallery({
 
           {/* Carousel Container */}
           <div className="relative h-[400px] sm:h-[450px] md:h-[500px] lg:h-[580px] overflow-hidden border border-gray-800/50">
-            <div className={`absolute inset-0 transition-all duration-300 ease-in-out ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+            <div
+              className={`absolute inset-0 transition-all duration-300 ease-in-out ${
+                isTransitioning ? "opacity-0 scale-95" : "opacity-100 scale-100"
+              }`}
+            >
               {/* Main Prize Card */}
               <div
                 className="relative w-full h-full bg-black/98 shadow-2xl overflow-hidden hover-glow gpu-accelerated"
@@ -326,7 +346,9 @@ export default function PrizesGallery({
                         {currentPrize.title}
                       </h3>
 
-                      <h4 className={`text-sm sm:text-base lg:text-xl ${colors.accent} font-semibold mb-3 animate-slide-in-left animate-delay-100`}>
+                      <h4
+                        className={`text-sm sm:text-base lg:text-xl ${colors.accent} font-semibold mb-3 animate-slide-in-left animate-delay-100`}
+                      >
                         {currentPrize.subtitle}
                       </h4>
 
@@ -355,9 +377,13 @@ export default function PrizesGallery({
                         </button>
 
                         {/* Accordion Content */}
-                        <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                          isAccordionOpen ? 'max-h-96 opacity-100 transform translate-y-0' : 'max-h-0 opacity-0 transform -translate-y-2'
-                        }`}>
+                        <div
+                          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                            isAccordionOpen
+                              ? "max-h-96 opacity-100 transform translate-y-0"
+                              : "max-h-0 opacity-0 transform -translate-y-2"
+                          }`}
+                        >
                           <div className="space-y-2 max-h-32 lg:max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
                             {currentPrize.features.map((feature, index) => (
                               <div
@@ -438,9 +464,7 @@ export default function PrizesGallery({
                   }
                 >
                   {index === currentIndex && (
-                    <div
-                      className="absolute inset-0 bg-white/20 minimal-radius animate-slide-x"
-                    />
+                    <div className="absolute inset-0 bg-white/20 minimal-radius animate-slide-x" />
                   )}
                 </button>
               ))}
@@ -452,12 +476,14 @@ export default function PrizesGallery({
             <div className="w-full bg-gray-800 minimal-radius h-1 mt-4 overflow-hidden">
               <div
                 className={`h-full minimal-radius transition-all ease-linear ${
-                  isAutoPlaying ? 'duration-[5000ms]' : 'duration-300'
+                  isAutoPlaying ? "duration-[5000ms]" : "duration-300"
                 }`}
                 style={{
                   background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80, #000000)`,
-                  width: isAutoPlaying ? '100%' : '0%',
-                  animation: isAutoPlaying ? 'progressFill 5s linear infinite' : 'none',
+                  width: isAutoPlaying ? "100%" : "0%",
+                  animation: isAutoPlaying
+                    ? "progressFill 5s linear infinite"
+                    : "none",
                 }}
               />
             </div>

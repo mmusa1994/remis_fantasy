@@ -4,14 +4,17 @@ import { useTheme } from "@/contexts/ThemeContext";
 import Link from "next/link";
 import StatsGrid from "@/components/shared/StatsGrid";
 import { useHomepageData } from "@/data/hooks/useLeagueData";
-import { Crown, CircleDot, CarIcon, type LucideIcon } from "lucide-react";
+import { SiPremierleague } from "react-icons/si";
+import { GiF1Car } from "react-icons/gi";
+import { PiSoccerBall } from "react-icons/pi";
+import { IconType } from "react-icons";
 import Image from "next/image";
 
 // Icon mapping for league cards
-const iconMap: Record<string, LucideIcon> = {
-  premier: Crown,
-  champions: CircleDot,
-  f1: CarIcon,
+const iconMap: Record<string, IconType> = {
+  premier: SiPremierleague,
+  champions: PiSoccerBall,
+  f1: GiF1Car,
 };
 
 export default function Home() {
@@ -80,7 +83,7 @@ export default function Home() {
       }`}
     >
       {/* Hero Section */}
-      <section className="relative overflow-hidden pb-20 px-4 mt-10">
+      <section className="relative overflow-hidden pb-20 px-4 pt-24">
         <div className="max-w-6xl mx-auto text-center">
           {/* Logo */}
           <div
@@ -122,7 +125,7 @@ export default function Home() {
           {/* Dynamic League Selection Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
             {leagues.map((league) => {
-              const IconComponent = iconMap[league.id] || Crown;
+              const IconComponent = iconMap[league.id] || SiPremierleague;
 
               return (
                 <div

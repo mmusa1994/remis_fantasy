@@ -13,10 +13,10 @@ export const championsLeagueConfig: LeagueConfig = {
   basePath: "/champions-league",
   available: true,
   stats: [
-    { label: "Ukupan nagradni fond", value: "5.200 KM", icon: "DollarSign" },
-    { label: "Broj liga", value: "3", icon: "Trophy" },
-    { label: "Mjesečne nagrade", value: "9x", icon: "Calendar" },
-    { label: "Finalne nagrade", value: "4x", icon: "Medal" },
+    { label: "Ukupan nagradni fond", value: "0 KM", icon: "DollarSign" },
+    { label: "Broj liga", value: "0", icon: "Trophy" },
+    { label: "Mjesečne nagrade", value: "0x", icon: "Calendar" },
+    { label: "Finalne nagrade", value: "0x", icon: "Medal" },
   ],
   navigation: [
     { name: "Registracija", href: "/champions-league/registracija" },

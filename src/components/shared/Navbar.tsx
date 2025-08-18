@@ -5,15 +5,18 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, Crown, CircleDot, Car } from "lucide-react";
+import { Menu, X, Home } from "lucide-react";
+import { SiPremierleague } from "react-icons/si";
+import { GiF1Car } from "react-icons/gi";
+import { PiSoccerBall } from "react-icons/pi";
 import ThemeToggle from "../ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const navItems = [
   { name: "Početna", href: "/", icon: Home },
-  { name: "Premier League", href: "/premier-league", icon: Crown },
-  { name: "Champions League", href: "/champions-league", icon: CircleDot },
-  { name: "F1 Fantasy", href: "/f1-fantasy", icon: Car },
+  { name: "Premier League", href: "/premier-league", icon: SiPremierleague },
+  { name: "Champions League", href: "/champions-league", icon: PiSoccerBall },
+  { name: "F1 Fantasy", href: "/f1-fantasy", icon: GiF1Car },
 ];
 
 export default function Navbar() {
@@ -46,7 +49,7 @@ export default function Navbar() {
 
   return (
     <motion.nav
-      className="sticky top-0 w-full transition-all duration-700 theme-transition"
+      className="sticky top-0 z-40 w-full transition-all duration-700 theme-transition"
       animate={{
         backgroundColor: isScrolled
           ? theme === "dark"
@@ -61,6 +64,8 @@ export default function Navbar() {
         backdropFilter: backdropBlur,
         WebkitBackdropFilter: backdropBlur,
         zIndex: 9999,
+        position: "sticky",
+        top: 0,
       }}
     >
       {/* Animated border-bottom */}

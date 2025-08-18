@@ -9,22 +9,22 @@
   "stats": [
     {
       "label": "Ukupan nagradni fond",
-      "value": "4.800 KM",
+      "value": "0",
       "icon": "DollarSign"
     },
     {
       "label": "Broj liga",
-      "value": "2",
+      "value": "0",
       "icon": "Trophy"
     },
     {
       "label": "Mjesečne nagrade",
-      "value": "12x",
+      "value": "0x",
       "icon": "Calendar"
     },
     {
       "label": "Grand Prix nagrade",
-      "value": "6x",
+      "value": "0x",
       "icon": "Medal"
     }
   ],
