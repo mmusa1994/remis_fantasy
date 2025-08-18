@@ -13,7 +13,9 @@ export default function ThemeToggle() {
       className="relative p-2 minimal-radius bg-theme-secondary border border-theme-border text-theme-foreground hover:bg-theme-accent transition-all duration-300"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={
+        theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+      }
     >
       <motion.div
         initial={false}

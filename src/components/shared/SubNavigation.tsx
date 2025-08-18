@@ -138,7 +138,7 @@ export default function SubNavigation({
     },
   };
 
-  const colors = colorConfig[baseColor] || colorConfig['purple'];
+  const colors = colorConfig[baseColor] || colorConfig["purple"];
 
   // Filter visible items for desktop (first 3)
   const visibleItems = allItems.slice(0, 3);
@@ -147,7 +147,7 @@ export default function SubNavigation({
 
   return (
     <nav
-      className={`sticky top-20 md:top-24 z-40 backdrop-blur-lg border-b -mt-px ${
+      className={`sticky top-20 md:top-24 z-40 backdrop-blur-lg border-b w-full ${
         theme === "dark"
           ? `bg-black/90 ${colors.border.dark}`
           : `bg-white/90 ${colors.border.light}`

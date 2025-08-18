@@ -7,6 +7,11 @@ import Navbar from "@/components/shared/Navbar";
 export const metadata: Metadata = {
   title: "REMIS Fantasy",
   description: "Fantasy mini leagues",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({
@@ -16,10 +21,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="bs">
-      <body className="font-russo antialiased" suppressHydrationWarning={true}>
+      <body
+        className="font-russo antialiased w-full"
+        suppressHydrationWarning={true}
+      >
         <Providers>
           <Navbar />
-          {children}
+          <main>{children}</main>
           <Footer />
         </Providers>
       </body>

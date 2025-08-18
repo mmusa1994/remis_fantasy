@@ -46,7 +46,7 @@ export default function Navbar() {
 
   return (
     <motion.nav
-      className="fixed top-0 left-0 right-0 transition-all duration-700 theme-transition"
+      className="sticky top-0 w-full transition-all duration-700 theme-transition"
       animate={{
         backgroundColor: isScrolled
           ? theme === "dark"

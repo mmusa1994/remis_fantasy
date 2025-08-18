@@ -4,14 +4,14 @@ import { useTheme } from "@/contexts/ThemeContext";
 import Link from "next/link";
 import StatsGrid from "@/components/shared/StatsGrid";
 import { useHomepageData } from "@/data/hooks/useLeagueData";
-import { Gamepad2, Trophy, Zap, type LucideIcon } from "lucide-react";
+import { Crown, CircleDot, CarIcon, type LucideIcon } from "lucide-react";
 import Image from "next/image";
 
 // Icon mapping for league cards
 const iconMap: Record<string, LucideIcon> = {
-  premier: Gamepad2,
-  champions: Trophy,
-  f1: Zap,
+  premier: Crown,
+  champions: CircleDot,
+  f1: CarIcon,
 };
 
 export default function Home() {
@@ -122,7 +122,7 @@ export default function Home() {
           {/* Dynamic League Selection Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
             {leagues.map((league) => {
-              const IconComponent = iconMap[league.id] || Gamepad2;
+              const IconComponent = iconMap[league.id] || Crown;
 
               return (
                 <div

@@ -13,7 +13,7 @@ export default function PremierLeagueLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen w-full">
       <SubNavigation
         items={premierLeagueNavItems}
         baseColor="purple"

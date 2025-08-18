@@ -139,6 +139,14 @@ body {
 
 html {
   scroll-behavior: smooth;
+  width: 100%;
+}
+
+/* Ensure full width on mobile */
+html, body {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden;
 }
 
 /* Custom utilities */
