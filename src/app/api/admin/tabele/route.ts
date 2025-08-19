@@ -43,6 +43,7 @@ interface LeagueTables {
   standardLeague: LeaguePlayer[];
   h2hLeague: LeaguePlayer[];
   h2h2League: LeaguePlayer[];
+  freeLeague: LeaguePlayer[];
 }
 
 // GET - Fetch premier league tables from clean table
@@ -75,6 +76,7 @@ export async function GET() {
       standardLeague: [],
       h2hLeague: [],
       h2h2League: [],
+      freeLeague: [],
     };
 
     players?.forEach((player: PremierLeaguePlayer) => {
@@ -100,7 +102,7 @@ export async function GET() {
       if (player.league_type === "standard") {
         tables.standardLeague.push(leaguePlayer);
       }
-      
+
       // H2H players show in H2H leagues (they can also be premium/standard)
       if (player.h2h_category === "h2h") {
         tables.h2hLeague.push(leaguePlayer);
@@ -108,23 +110,28 @@ export async function GET() {
       if (player.h2h_category === "h2h2") {
         tables.h2h2League.push(leaguePlayer);
       }
+
+      // Free league - just one player updated weekly
+      if (player.league_type === "free") {
+        tables.freeLeague.push(leaguePlayer);
+      }
     });
 
     // Sort each league by points and assign positions
     Object.keys(tables).forEach((leagueKey) => {
       const league = tables[leagueKey as keyof LeagueTables];
-      
+
       // H2H leagues sort by H2H points first, then by overall points
-      if (leagueKey === 'h2hLeague' || leagueKey === 'h2h2League') {
+      if (leagueKey === "h2hLeague" || leagueKey === "h2h2League") {
         league.sort((a, b) => {
           const aH2HPoints = a.h2h_points || 0;
           const bH2HPoints = b.h2h_points || 0;
-          
+
           // First sort by H2H points
           if (bH2HPoints !== aH2HPoints) {
             return bH2HPoints - aH2HPoints;
           }
-          
+
           // If H2H points are equal, sort by overall points
           return b.points - a.points;
         });
@@ -132,7 +139,7 @@ export async function GET() {
         // Regular leagues sort by overall points only
         league.sort((a, b) => b.points - a.points);
       }
-      
+
       league.forEach((player, index) => {
         player.position = index + 1;
       });
@@ -162,7 +169,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { playerId, points, h2h_category } = await request.json();
+    const {
+      playerId,
+      points,
+      h2h_category,
+      firstName,
+      lastName,
+      teamName,
+      league_type,
+    } = await request.json();
 
     if (!playerId) {
       return NextResponse.json(
@@ -181,6 +196,23 @@ export async function POST(request: NextRequest) {
 
     if (h2h_category !== undefined) {
       updateData.h2h_category = h2h_category;
+    }
+
+    // For Free Liga players, allow updating name and team
+    if (firstName !== undefined) {
+      updateData.first_name = firstName;
+    }
+
+    if (lastName !== undefined) {
+      updateData.last_name = lastName;
+    }
+
+    if (teamName !== undefined) {
+      updateData.team_name = teamName;
+    }
+
+    if (league_type !== undefined) {
+      updateData.league_type = league_type;
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -250,11 +282,18 @@ export async function PATCH(request: NextRequest) {
           { status: 400 }
         );
       }
-      
+
       // Check if it's a points update, H2H category update, or H2H stats update
-      if (typeof update.total !== "number" && !update.h2h_category && typeof update.h2h_pts !== "number") {
+      if (
+        typeof update.total !== "number" &&
+        !update.h2h_category &&
+        typeof update.h2h_pts !== "number"
+      ) {
         return NextResponse.json(
-          { error: "Each update must have either total (number), h2h_category, or h2h_pts field" },
+          {
+            error:
+              "Each update must have either total (number), h2h_category, or h2h_pts field",
+          },
           { status: 400 }
         );
       }
@@ -298,15 +337,20 @@ export async function PATCH(request: NextRequest) {
           players = playersByName;
         } else {
           // Third try: find by partial name matching (case insensitive)
-          const { data: playersByPartialName, error: partialError } = await supabase
-            .from("premier_league_25_26")
-            .select("id, team_name, first_name, last_name")
-            .ilike("first_name", `%${firstName}%`)
-            .ilike("last_name", `%${lastName}%`)
-            .is("deleted_at", null)
-            .limit(1);
+          const { data: playersByPartialName, error: partialError } =
+            await supabase
+              .from("premier_league_25_26")
+              .select("id, team_name, first_name, last_name")
+              .ilike("first_name", `%${firstName}%`)
+              .ilike("last_name", `%${lastName}%`)
+              .is("deleted_at", null)
+              .limit(1);
 
-          if (!partialError && playersByPartialName && playersByPartialName.length > 0) {
+          if (
+            !partialError &&
+            playersByPartialName &&
+            playersByPartialName.length > 0
+          ) {
             players = playersByPartialName;
           } else {
             findError = partialError || nameError || teamError;
@@ -321,25 +365,29 @@ export async function PATCH(request: NextRequest) {
 
       // Prepare update data
       const updateData: any = {};
-      
+
       if (typeof update.total === "number") {
         updateData.points = update.total;
         updateData.last_points_update = new Date().toISOString();
       }
-      
+
       if (update.h2h_category !== undefined) {
         updateData.h2h_category = update.h2h_category;
       }
-      
+
       if (typeof update.h2h_pts === "number") {
         updateData.h2h_points = update.h2h_pts;
       }
-      
-      if (update.w !== undefined && update.d !== undefined && update.l !== undefined) {
+
+      if (
+        update.w !== undefined &&
+        update.d !== undefined &&
+        update.l !== undefined
+      ) {
         updateData.h2h_stats = {
           w: update.w || 0,
           d: update.d || 0,
-          l: update.l || 0
+          l: update.l || 0,
         };
       }
 
@@ -370,4 +418,3 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
-

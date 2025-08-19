@@ -36,6 +36,7 @@ interface LeagueTables {
   standardLeague: LeaguePlayer[];
   h2hLeague: LeaguePlayer[];
   h2h2League: LeaguePlayer[];
+  freeLeague: LeaguePlayer[];
 }
 
 // GET - Public endpoint to fetch premier league tables
@@ -78,6 +79,7 @@ export async function GET() {
       standardLeague: [],
       h2hLeague: [],
       h2h2League: [],
+      freeLeague: [],
     };
 
     players?.forEach((player: PremierLeaguePlayer) => {
@@ -109,6 +111,11 @@ export async function GET() {
       }
       if (player.h2h_category === "h2h2") {
         tables.h2h2League.push(leaguePlayer);
+      }
+      
+      // Free league - just one player updated weekly
+      if (player.league_type === "free") {
+        tables.freeLeague.push(leaguePlayer);
       }
     });
 

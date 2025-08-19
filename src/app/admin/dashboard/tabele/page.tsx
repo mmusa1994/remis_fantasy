@@ -14,6 +14,8 @@ import {
   Server,
   Upload,
   FileText,
+  Check,
+  X,
 } from "lucide-react";
 import Toast from "@/components/shared/Toast";
 
@@ -36,6 +38,7 @@ interface LeagueTables {
   standardLeague: LeaguePlayer[];
   h2hLeague: LeaguePlayer[];
   h2h2League: LeaguePlayer[];
+  freeLeague: LeaguePlayer[];
 }
 
 interface PremierLeagueResponse {
@@ -50,6 +53,7 @@ const leagueTypes = [
   { key: "standardLeague", name: "Standard Liga", color: "blue" },
   { key: "h2hLeague", name: "H2H Liga", color: "red" },
   { key: "h2h2League", name: "H2H2 Liga", color: "red" },
+  { key: "freeLeague", name: "Free Liga", color: "purple" },
 ];
 
 // Function to get indicator color based on league color
@@ -61,6 +65,8 @@ const getIndicatorColor = (color: string) => {
       return "bg-blue-400";
     case "red":
       return "bg-red-400";
+    case "purple":
+      return "bg-purple-400";
     default:
       return "bg-yellow-400";
   }
@@ -73,6 +79,15 @@ export default function AdminTablesCleanPage() {
   const [selectedLeague, setSelectedLeague] =
     useState<keyof LeagueTables>("premiumLeague");
   const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
+  const [editingFreePlayer, setEditingFreePlayer] = useState<string | null>(
+    null
+  );
+  const [freeEditData, setFreeEditData] = useState({
+    firstName: "",
+    lastName: "",
+    teamName: "",
+    points: "",
+  });
   const [loading, setLoading] = useState(true);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [bulkUpdateData, setBulkUpdateData] = useState<string>("");
@@ -145,6 +160,50 @@ export default function AdminTablesCleanPage() {
       });
     } catch (error) {
       console.error("Error updating player:", error);
+      setToast({
+        show: true,
+        message: "Greška pri ažuriranju igrača",
+        type: "error",
+      });
+    }
+  };
+
+  const handleSaveFreePlayer = async (playerId: string) => {
+    try {
+      const response = await fetch("/api/admin/tabele", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          playerId,
+          firstName: freeEditData.firstName,
+          lastName: freeEditData.lastName,
+          teamName: freeEditData.teamName,
+          points: parseInt(freeEditData.points) || 0,
+          league_type: "free", // Explicitly set league_type for Free Liga
+        }),
+      });
+
+      if (response.ok) {
+        setToast({
+          show: true,
+          message: "Free Liga igrač uspešno ažuriran!",
+          type: "success",
+        });
+        setEditingFreePlayer(null);
+        setFreeEditData({
+          firstName: "",
+          lastName: "",
+          teamName: "",
+          points: "",
+        });
+        loadTables();
+      } else {
+        throw new Error("Failed to update player");
+      }
+    } catch (error) {
+      console.error("Error updating free player:", error);
       setToast({
         show: true,
         message: "Greška pri ažuriranju igrača",
@@ -231,15 +290,15 @@ export default function AdminTablesCleanPage() {
   const currentPlayers = (tables?.[selectedLeague] || [])
     .sort((a, b) => {
       // H2H leagues sort by H2H points first, then by overall points
-      if (selectedLeague === 'h2hLeague' || selectedLeague === 'h2h2League') {
+      if (selectedLeague === "h2hLeague" || selectedLeague === "h2h2League") {
         const aH2HPoints = a.h2h_points || 0;
         const bH2HPoints = b.h2h_points || 0;
-        
+
         // First sort by H2H points
         if (bH2HPoints !== aH2HPoints) {
           return bH2HPoints - aH2HPoints;
         }
-        
+
         // If H2H points are equal, sort by overall points
         return b.points - a.points;
       } else {
@@ -249,7 +308,7 @@ export default function AdminTablesCleanPage() {
     })
     .map((player, index) => ({
       ...player,
-      position: index + 1 // Recalculate positions based on sorted order
+      position: index + 1, // Recalculate positions based on sorted order
     }));
 
   // Function to get row background color based on league and position
@@ -258,7 +317,7 @@ export default function AdminTablesCleanPage() {
       // First place is always gold for all leagues
       return "bg-gradient-to-r from-yellow-100 to-amber-100 border-l-4 border-yellow-500";
     }
-    
+
     switch (leagueKey) {
       case "premiumLeague":
         if (position >= 2 && position <= 5) {
@@ -277,7 +336,7 @@ export default function AdminTablesCleanPage() {
         }
         break;
     }
-    
+
     return ""; // Default - no special background
   };
 
@@ -417,7 +476,7 @@ export default function AdminTablesCleanPage() {
                     }}
                     className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
                       isSelected
-                        ? `bg-gradient-to-r from-${league.color}-500 to-${league.color}-600 text-white shadow-lg transform scale-105`
+                        ? `bg-${league.color}-500 text-white shadow-lg transform scale-105`
                         : `bg-${league.color}-100 text-${league.color}-800 hover:bg-${league.color}-200 border-2 border-${league.color}-300 hover:border-${league.color}-400`
                     }`}
                   >
@@ -437,7 +496,11 @@ export default function AdminTablesCleanPage() {
                       {playerCount}
                     </span>
                     {isSelected && (
-                      <div className={`absolute -top-1 -right-1 w-3 h-3 ${getIndicatorColor(league.color)} rounded-full border-2 border-white`}></div>
+                      <div
+                        className={`absolute -top-1 -right-1 w-3 h-3 ${getIndicatorColor(
+                          league.color
+                        )} rounded-full border-2 border-white`}
+                      ></div>
                     )}
                   </button>
                 );
@@ -482,13 +545,16 @@ export default function AdminTablesCleanPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Ime i prezime
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
+                    {selectedLeague !== "freeLeague" && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Tim
                     </th>
-                    {(selectedLeague === 'h2hLeague' || selectedLeague === 'h2h2League') ? (
+                    {selectedLeague === "h2hLeague" ||
+                    selectedLeague === "h2h2League" ? (
                       <>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           W/D/L
@@ -514,7 +580,14 @@ export default function AdminTablesCleanPage() {
                   {currentPlayers.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={(selectedLeague === 'h2hLeague' || selectedLeague === 'h2h2League') ? 8 : 6}
+                        colSpan={
+                          selectedLeague === "h2hLeague" ||
+                          selectedLeague === "h2h2League"
+                            ? 8
+                            : selectedLeague === "freeLeague"
+                            ? 5 // Free Liga has one less column (no email)
+                            : 6
+                        }
                         className="px-6 py-8 text-center text-gray-500"
                       >
                         <div className="flex flex-col items-center">
@@ -527,7 +600,10 @@ export default function AdminTablesCleanPage() {
                     currentPlayers.map((player, index) => (
                       <tr
                         key={player.id}
-                        className={`hover:bg-gray-100 transition-colors ${getRowBackgroundColor(player.position, selectedLeague)}`}
+                        className={`hover:bg-gray-100 transition-colors ${getRowBackgroundColor(
+                          player.position,
+                          selectedLeague
+                        )}`}
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div
@@ -548,28 +624,79 @@ export default function AdminTablesCleanPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <span className="text-sm font-medium text-gray-900">
-                              {player.firstName} {player.lastName}
-                            </span>
-                            <div className="text-xs text-gray-500">
-                              {player.league_type}{" "}
-                              {player.h2h_category &&
-                                `+ ${player.h2h_category.toUpperCase()}`}
-                            </div>
+                            {selectedLeague === "freeLeague" &&
+                            editingFreePlayer === player.id ? (
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={freeEditData.firstName}
+                                  onChange={(e) =>
+                                    setFreeEditData({
+                                      ...freeEditData,
+                                      firstName: e.target.value,
+                                    })
+                                  }
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                                  placeholder="Ime"
+                                />
+                                <input
+                                  type="text"
+                                  value={freeEditData.lastName}
+                                  onChange={(e) =>
+                                    setFreeEditData({
+                                      ...freeEditData,
+                                      lastName: e.target.value,
+                                    })
+                                  }
+                                  className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                                  placeholder="Prezime"
+                                />
+                              </div>
+                            ) : (
+                              <span className="text-sm font-medium text-gray-900">
+                                {player.firstName} {player.lastName}
+                              </span>
+                            )}
+                            {selectedLeague !== "freeLeague" && (
+                              <div className="text-xs text-gray-500">
+                                {player.league_type}{" "}
+                                {player.h2h_category &&
+                                  `+ ${player.h2h_category.toUpperCase()}`}
+                              </div>
+                            )}
                           </div>
                         </td>
+                        {selectedLeague !== "freeLeague" && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-500 flex items-center gap-1">
+                              <Mail className="w-3 h-3" />
+                              {player.email}
+                            </span>
+                          </td>
+                        )}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-500 flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {player.email}
-                          </span>
+                          {selectedLeague === "freeLeague" &&
+                          editingFreePlayer === player.id ? (
+                            <input
+                              type="text"
+                              value={freeEditData.teamName}
+                              onChange={(e) =>
+                                setFreeEditData({
+                                  ...freeEditData,
+                                  teamName: e.target.value,
+                                })
+                              }
+                              className="w-32 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                              placeholder="Naziv tima"
+                            />
+                          ) : (
+                            <span className="text-sm text-gray-500">
+                              {player.teamName}
+                            </span>
+                          )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-500">
-                            {player.teamName}
-                          </span>
-                        </td>
-                        {(selectedLeague === 'h2hLeague' || selectedLeague === 'h2h2League') ? (
+                        {selectedLeague === "h2hLeague" ||
+                        selectedLeague === "h2h2League" ? (
                           <>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-1">
@@ -597,15 +724,29 @@ export default function AdminTablesCleanPage() {
                           </>
                         ) : (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {editingPlayer === player.id ? (
+                            {(editingPlayer === player.id &&
+                              selectedLeague !== "freeLeague") ||
+                            (editingFreePlayer === player.id &&
+                              selectedLeague === "freeLeague") ? (
                               <input
                                 type="number"
-                                value={player.points}
-                                onChange={(e) =>
-                                  updatePlayer(player.id, {
-                                    points: parseInt(e.target.value) || 0,
-                                  })
+                                value={
+                                  selectedLeague === "freeLeague"
+                                    ? freeEditData.points
+                                    : player.points
                                 }
+                                onChange={(e) => {
+                                  if (selectedLeague === "freeLeague") {
+                                    setFreeEditData({
+                                      ...freeEditData,
+                                      points: e.target.value,
+                                    });
+                                  } else {
+                                    updatePlayer(player.id, {
+                                      points: parseInt(e.target.value) || 0,
+                                    });
+                                  }
+                                }}
                                 className="px-2 py-1 border border-gray-300 rounded text-sm w-20 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-gray-900 font-semibold"
                               />
                             ) : (
@@ -616,23 +757,72 @@ export default function AdminTablesCleanPage() {
                           </td>
                         )}
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button
-                            onClick={() =>
-                              setEditingPlayer(
-                                editingPlayer === player.id ? null : player.id
-                              )
-                            }
-                            className={`inline-flex items-center px-4 py-2 text-xs font-medium rounded-md transition-colors ${
-                              editingPlayer === player.id
-                                ? "bg-green-500 text-white hover:bg-green-600"
-                                : "bg-blue-500 text-white hover:bg-blue-600"
-                            }`}
-                          >
-                            <Edit3 className="w-3 h-3 mr-1" />
-                            {editingPlayer === player.id
-                              ? "Završi"
-                              : "Uredi poene"}
-                          </button>
+                          {selectedLeague === "freeLeague" ? (
+                            <div className="flex gap-2">
+                              {editingFreePlayer === player.id ? (
+                                <>
+                                  <button
+                                    onClick={() =>
+                                      handleSaveFreePlayer(player.id)
+                                    }
+                                    className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md bg-green-500 text-white hover:bg-green-600 transition-colors"
+                                  >
+                                    <Check className="w-3 h-3 mr-1" />
+                                    Sačuvaj
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingFreePlayer(null);
+                                      setFreeEditData({
+                                        firstName: "",
+                                        lastName: "",
+                                        teamName: "",
+                                        points: "",
+                                      });
+                                    }}
+                                    className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md bg-gray-500 text-white hover:bg-gray-600 transition-colors"
+                                  >
+                                    <X className="w-3 h-3 mr-1" />
+                                    Otkaži
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setEditingFreePlayer(player.id);
+                                    setFreeEditData({
+                                      firstName: player.firstName,
+                                      lastName: player.lastName,
+                                      teamName: player.teamName,
+                                      points: player.points.toString(),
+                                    });
+                                  }}
+                                  className="inline-flex items-center px-4 py-2 text-xs font-medium rounded-md bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+                                >
+                                  <Edit3 className="w-3 h-3 mr-1" />
+                                  Uredi sve
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                setEditingPlayer(
+                                  editingPlayer === player.id ? null : player.id
+                                )
+                              }
+                              className={`inline-flex items-center px-4 py-2 text-xs font-medium rounded-md transition-colors ${
+                                editingPlayer === player.id
+                                  ? "bg-green-500 text-white hover:bg-green-600"
+                                  : "bg-blue-500 text-white hover:bg-blue-600"
+                              }`}
+                            >
+                              <Edit3 className="w-3 h-3 mr-1" />
+                              {editingPlayer === player.id
+                                ? "Završi"
+                                : "Uredi poene"}
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -713,7 +903,6 @@ export default function AdminTablesCleanPage() {
   ]
 }`}</pre>
 
-
                     <h5 className="font-semibold mb-2 text-gray-800">
                       Za ažuriranje H2H statistika (W/D/L i H2H poeni):
                     </h5>
@@ -755,8 +944,13 @@ export default function AdminTablesCleanPage() {
                   <div className="text-xs text-gray-500 mt-2 space-y-1">
                     <p>• Sistem traži igrače po nazivu tima i menadžera</p>
                     <p>• Za poene koristite total field</p>
-                    <p>• Za H2H statistike koristite w, d, l (win/draw/loss) i h2h_pts</p>
-                    <p>• score predstavlja overall poene, a h2h_pts H2H poene</p>
+                    <p>
+                      • Za H2H statistike koristite w, d, l (win/draw/loss) i
+                      h2h_pts
+                    </p>
+                    <p>
+                      • score predstavlja overall poene, a h2h_pts H2H poene
+                    </p>
                     <p>• Možete kombinovati različite tipove u istom zahtev</p>
                   </div>
                 </div>

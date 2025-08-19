@@ -5,6 +5,7 @@ import { Trophy, Medal, Award, Shirt, Gift } from "lucide-react";
 import { BsCash } from "react-icons/bs";
 import { GiDiamondTrophy } from "react-icons/gi";
 import { LuGift } from "react-icons/lu";
+import { FaTshirt } from "react-icons/fa";
 import { useTheme } from "@/contexts/ThemeContext";
 
 export interface TablePlayer {
@@ -28,7 +29,7 @@ export interface TablePrize {
 
 export interface ReusableLeagueTableProps {
   leagueName: string;
-  leagueType: "premium" | "standard" | "h2h" | "h2h2";
+  leagueType: "premium" | "standard" | "h2h" | "h2h2" | "free";
   players: TablePlayer[];
   prizes: TablePrize[];
   totalPrizeFundKM: number;
@@ -57,6 +58,7 @@ export default function ReusableLeagueTable({
   const { theme } = useTheme();
 
   const getLeagueColors = (leagueType: string) => {
+    console.log('ReusableLeagueTable leagueType:', leagueType); // Debug
     switch (leagueType) {
       case "premium":
         return {
@@ -94,6 +96,18 @@ export default function ReusableLeagueTable({
             theme === "dark"
               ? "bg-gradient-to-r from-red-600/20 to-red-700/10"
               : "bg-gradient-to-r from-red-100 to-red-50",
+        };
+      case "free":
+        return {
+          primary: theme === "dark" ? "#a855f7" : "#8b5cf6", // purple
+          secondary: theme === "dark" ? "#c084fc" : "#a78bfa",
+          light: theme === "dark" ? "purple-600/20" : "purple-100",
+          border: theme === "dark" ? "purple-600/30" : "purple-400",
+          text: theme === "dark" ? "purple-400" : "purple-800",
+          headerBg:
+            theme === "dark"
+              ? "bg-gradient-to-r from-purple-600/20 to-purple-700/10"
+              : "bg-gradient-to-r from-purple-100 to-purple-50",
         };
       default:
         return {
@@ -158,7 +172,16 @@ export default function ReusableLeagueTable({
         }
       }
 
-      // Za ostale lige (H2H, H2H2) - prvo pokazuj trofeje/medalje za top 3
+      // Za ostale lige (H2H, H2H2, Free) - prvo pokazuj trofeje/medalje za top 3
+      if (leagueType === "free") {
+        // Za Free Liga samo dres za prvo mesto
+        if (position === 1) {
+          return <FaTshirt className="w-5 h-5" style={{ color: colors.primary }} />;
+        }
+        return null;
+      }
+      
+      // Za H2H lige
       switch (position) {
         case 1:
           return <Trophy className="w-5 h-5" style={{ color: "#FFD700" }} />;
@@ -236,6 +259,13 @@ export default function ReusableLeagueTable({
               "100",
               "50"
             )} border-${colors.border}`;
+      }
+    } else if (leagueType === "free") {
+      // Free liga - jednostavno ljubičasto pozadinsko osencavanje
+      if (position === 1) {
+        return theme === "dark"
+          ? "bg-gradient-to-r from-purple-500/40 to-violet-600/30 border-l-4 border-purple-500"
+          : "bg-gradient-to-r from-purple-100 to-violet-100 border-l-4 border-purple-500";
       }
     }
 
@@ -398,6 +428,17 @@ export default function ReusableLeagueTable({
                       />
                     );
                 }
+              } else if (leagueType === "free") {
+                // Za Free Liga samo dres za prvo mesto
+                if (position === 1) {
+                  return (
+                    <FaTshirt
+                      className="w-4 h-4 md:w-6 md:h-6"
+                      style={{ color: colors.primary }}
+                    />
+                  );
+                }
+                return null;
               }
             };
 

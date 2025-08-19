@@ -8,7 +8,7 @@ export interface Prize {
 
 export interface LeagueData {
   name: string;
-  type: "premium" | "standard" | "h2h" | "h2h2";
+  type: "premium" | "standard" | "h2h" | "h2h2" | "free";
   totalPrizeFundKM: number;
   totalPrizeFundEUR: number;
   entryFeeKM: number;
@@ -23,7 +23,7 @@ export interface LeagueData {
 
 export interface LeagueTableData {
   leagueName: string;
-  leagueType: "premium" | "standard" | "h2h" | "h2h2";
+  leagueType: "premium" | "standard" | "h2h" | "h2h2" | "free";
 }
 
 export const leagueData: LeagueData[] = [
@@ -252,6 +252,28 @@ export const leagueData: LeagueData[] = [
         amountKM: 90,
         amountEUR: 46,
         percentage: 12.5,
+      },
+    ],
+  },
+  {
+    name: "Free Liga",
+    type: "free",
+    totalPrizeFundKM: 0,
+    totalPrizeFundEUR: 0,
+    entryFeeKM: 0,
+    entryFeeEUR: 0,
+    monthlyPrizeKM: 0,
+    monthlyPrizeEUR: 0,
+    cupPrizeKM: 0,
+    cupPrizeEUR: 0,
+    maxParticipants: 1,
+    prizes: [
+      {
+        position: 1,
+        description: "ORIGINAL DRES Premier Liga 25/26",
+        amountKM: 0,
+        amountEUR: 0,
+        percentage: 0,
       },
     ],
   },

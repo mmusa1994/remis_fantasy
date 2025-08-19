@@ -24,6 +24,7 @@ interface LeagueTables {
   standardLeague: LeaguePlayer[];
   h2hLeague: LeaguePlayer[];
   h2h2League: LeaguePlayer[];
+  freeLeague: LeaguePlayer[];
 }
 
 const tabs = [
@@ -31,6 +32,7 @@ const tabs = [
   { id: "standard", label: "Standard Liga", color: "blue" },
   { id: "h2h", label: "H2H Liga", color: "red" },
   { id: "h2h2", label: "H2H2 Liga", color: "red" },
+  { id: "free", label: "Free Liga", color: "purple" },
 ];
 
 export default function LeagueTableTabs() {
@@ -59,6 +61,12 @@ export default function LeagueTableTabs() {
         hover: theme === "dark" ? "hover:bg-red-600" : "hover:bg-red-500",
         text: theme === "dark" ? "text-red-300" : "text-red-800",
         border: theme === "dark" ? "border-red-500" : "border-red-400",
+      },
+      purple: {
+        active: theme === "dark" ? "bg-purple-500" : "bg-purple-400",
+        hover: theme === "dark" ? "hover:bg-purple-600" : "hover:bg-purple-500",
+        text: theme === "dark" ? "text-purple-300" : "text-purple-800",
+        border: theme === "dark" ? "border-purple-500" : "border-purple-400",
       },
     };
     return colors[color as keyof typeof colors] || colors.yellow;
@@ -91,6 +99,59 @@ export default function LeagueTableTabs() {
   const getLeagueData = (leagueType: string) => {
     // Get static league configuration (prizes, fees, etc.) from original data
     const staticLeagueData = getLeagueDataForReusableTable(leagueType);
+
+    // Special handling for free league if no static data found
+    if (leagueType === "free") {
+      const freeFallbackData = {
+        name: "Free Liga",
+        type: "free" as const,
+        totalPrizeFundKM: 0,
+        totalPrizeFundEUR: 0,
+        entryFeeKM: 0,
+        entryFeeEUR: 0,
+        monthlyPrizeKM: 0,
+        monthlyPrizeEUR: 0,
+        cupPrizeKM: 0,
+        cupPrizeEUR: 0,
+        maxParticipants: 1,
+        prizes: [
+          {
+            position: 1,
+            description: "ORIGINAL DRES Premier Liga 25/26",
+            amountKM: 0,
+            amountEUR: 0,
+            percentage: 0,
+          },
+        ],
+      };
+
+      if (!tables) return null;
+
+      let dynamicPlayers = [...tables.freeLeague].sort(
+        (a, b) => b.points - a.points
+      );
+      dynamicPlayers = dynamicPlayers.map((player, index) => ({
+        ...player,
+        position: index + 1,
+      }));
+
+      return {
+        ...freeFallbackData,
+        leagueName: freeFallbackData.name,
+        leagueType: freeFallbackData.type,
+        players: dynamicPlayers.map((player) => ({
+          id: player.id,
+          firstName: player.firstName,
+          lastName: player.lastName,
+          teamName: player.teamName,
+          points: player.points,
+          position: player.position,
+          h2h_points: player.h2h_points,
+          h2h_stats: player.h2h_stats,
+        })),
+      };
+    }
+
     if (!staticLeagueData || !tables) return null;
 
     // Get dynamic players from database and sort them properly
@@ -98,21 +159,25 @@ export default function LeagueTableTabs() {
 
     switch (leagueType) {
       case "premium":
-        dynamicPlayers = [...tables.premiumLeague].sort((a, b) => b.points - a.points);
+        dynamicPlayers = [...tables.premiumLeague].sort(
+          (a, b) => b.points - a.points
+        );
         break;
       case "standard":
-        dynamicPlayers = [...tables.standardLeague].sort((a, b) => b.points - a.points);
+        dynamicPlayers = [...tables.standardLeague].sort(
+          (a, b) => b.points - a.points
+        );
         break;
       case "h2h":
         dynamicPlayers = [...tables.h2hLeague].sort((a, b) => {
           const aH2HPoints = a.h2h_points || 0;
           const bH2HPoints = b.h2h_points || 0;
-          
+
           // First sort by H2H points
           if (bH2HPoints !== aH2HPoints) {
             return bH2HPoints - aH2HPoints;
           }
-          
+
           // If H2H points are equal, sort by overall points
           return b.points - a.points;
         });
@@ -121,15 +186,20 @@ export default function LeagueTableTabs() {
         dynamicPlayers = [...tables.h2h2League].sort((a, b) => {
           const aH2HPoints = a.h2h_points || 0;
           const bH2HPoints = b.h2h_points || 0;
-          
+
           // First sort by H2H points
           if (bH2HPoints !== aH2HPoints) {
             return bH2HPoints - aH2HPoints;
           }
-          
+
           // If H2H points are equal, sort by overall points
           return b.points - a.points;
         });
+        break;
+      case "free":
+        dynamicPlayers = [...tables.freeLeague].sort(
+          (a, b) => b.points - a.points
+        );
         break;
       default:
         return null;
@@ -138,7 +208,7 @@ export default function LeagueTableTabs() {
     // Recalculate positions based on sorted order
     dynamicPlayers = dynamicPlayers.map((player, index) => ({
       ...player,
-      position: index + 1
+      position: index + 1,
     }));
 
     // Combine static configuration with dynamic players
