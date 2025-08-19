@@ -20,6 +20,8 @@ interface PremierLeaguePlayer {
   migrated_from_registration_id: string | null;
   last_points_update: string | null;
   admin_notes: string | null;
+  h2h_points: number | null;
+  h2h_stats: { w: number; d: number; l: number } | null;
 }
 
 interface LeaguePlayer {
@@ -32,6 +34,8 @@ interface LeaguePlayer {
   position: number;
   league_type: string;
   h2h_category: "h2h" | "h2h2" | null;
+  h2h_points: number | null;
+  h2h_stats: { w: number; d: number; l: number } | null;
 }
 
 interface LeagueTables {
@@ -84,16 +88,24 @@ export async function GET() {
         position: 0, // Will be calculated after sorting
         league_type: player.league_type,
         h2h_category: player.h2h_category as "h2h" | "h2h2" | null,
+        h2h_points: player.h2h_points || null,
+        h2h_stats: player.h2h_stats || null,
       };
 
       // Categorize players based on league type and H2H category
-      if (player.league_type === "premium" && !player.h2h_category) {
+      // Premium and Standard players show in their main leagues regardless of H2H
+      if (player.league_type === "premium") {
         tables.premiumLeague.push(leaguePlayer);
-      } else if (player.league_type === "standard" && !player.h2h_category) {
+      }
+      if (player.league_type === "standard") {
         tables.standardLeague.push(leaguePlayer);
-      } else if (player.h2h_category === "h2h") {
+      }
+      
+      // H2H players show in H2H leagues (they can also be premium/standard)
+      if (player.h2h_category === "h2h") {
         tables.h2hLeague.push(leaguePlayer);
-      } else if (player.h2h_category === "h2h2") {
+      }
+      if (player.h2h_category === "h2h2") {
         tables.h2h2League.push(leaguePlayer);
       }
     });
@@ -101,7 +113,26 @@ export async function GET() {
     // Sort each league by points and assign positions
     Object.keys(tables).forEach((leagueKey) => {
       const league = tables[leagueKey as keyof LeagueTables];
-      league.sort((a, b) => b.points - a.points);
+      
+      // H2H leagues sort by H2H points first, then by overall points
+      if (leagueKey === 'h2hLeague' || leagueKey === 'h2h2League') {
+        league.sort((a, b) => {
+          const aH2HPoints = a.h2h_points || 0;
+          const bH2HPoints = b.h2h_points || 0;
+          
+          // First sort by H2H points
+          if (bH2HPoints !== aH2HPoints) {
+            return bH2HPoints - aH2HPoints;
+          }
+          
+          // If H2H points are equal, sort by overall points
+          return b.points - a.points;
+        });
+      } else {
+        // Regular leagues sort by overall points only
+        league.sort((a, b) => b.points - a.points);
+      }
+      
       league.forEach((player, index) => {
         player.position = index + 1;
       });
@@ -213,9 +244,17 @@ export async function PATCH(request: NextRequest) {
 
     // Validate update structure
     for (const update of updates) {
-      if (!update.team || !update.manager || typeof update.total !== "number") {
+      if (!update.team || !update.manager) {
         return NextResponse.json(
-          { error: "Each update must have team, manager, and total fields" },
+          { error: "Each update must have team and manager fields" },
+          { status: 400 }
+        );
+      }
+      
+      // Check if it's a points update, H2H category update, or H2H stats update
+      if (typeof update.total !== "number" && !update.h2h_category && typeof update.h2h_pts !== "number") {
+        return NextResponse.json(
+          { error: "Each update must have either total (number), h2h_category, or h2h_pts field" },
           { status: 400 }
         );
       }
@@ -231,34 +270,47 @@ export async function PATCH(request: NextRequest) {
       const firstName = managerParts[0];
       const lastName = managerParts.slice(1).join(" "); // Handle multiple last names
 
-      // Try to find player by manager name first, then by team name
+      // Try to find player - prioritize team name search for better accuracy
       let players = null;
       let findError = null;
 
-      // First try: find by first_name and last_name
-      const { data: playersByName, error: nameError } = await supabase
+      // First try: find by team name (more reliable)
+      const { data: playersByTeam, error: teamError } = await supabase
         .from("premier_league_25_26")
         .select("id, team_name, first_name, last_name")
-        .eq("first_name", firstName)
-        .eq("last_name", lastName)
+        .eq("team_name", update.team)
         .is("deleted_at", null)
         .limit(1);
 
-      if (!nameError && playersByName && playersByName.length > 0) {
-        players = playersByName;
+      if (!teamError && playersByTeam && playersByTeam.length > 0) {
+        players = playersByTeam;
       } else {
-        // Second try: find by team name
-        const { data: playersByTeam, error: teamError } = await supabase
+        // Second try: find by manager name (first_name and last_name)
+        const { data: playersByName, error: nameError } = await supabase
           .from("premier_league_25_26")
           .select("id, team_name, first_name, last_name")
-          .eq("team_name", update.team)
+          .eq("first_name", firstName)
+          .eq("last_name", lastName)
           .is("deleted_at", null)
           .limit(1);
 
-        if (!teamError && playersByTeam && playersByTeam.length > 0) {
-          players = playersByTeam;
+        if (!nameError && playersByName && playersByName.length > 0) {
+          players = playersByName;
         } else {
-          findError = teamError || nameError;
+          // Third try: find by partial name matching (case insensitive)
+          const { data: playersByPartialName, error: partialError } = await supabase
+            .from("premier_league_25_26")
+            .select("id, team_name, first_name, last_name")
+            .ilike("first_name", `%${firstName}%`)
+            .ilike("last_name", `%${lastName}%`)
+            .is("deleted_at", null)
+            .limit(1);
+
+          if (!partialError && playersByPartialName && playersByPartialName.length > 0) {
+            players = playersByPartialName;
+          } else {
+            findError = partialError || nameError || teamError;
+          }
         }
       }
 
@@ -267,13 +319,34 @@ export async function PATCH(request: NextRequest) {
         continue;
       }
 
-      // Update player points
+      // Prepare update data
+      const updateData: any = {};
+      
+      if (typeof update.total === "number") {
+        updateData.points = update.total;
+        updateData.last_points_update = new Date().toISOString();
+      }
+      
+      if (update.h2h_category !== undefined) {
+        updateData.h2h_category = update.h2h_category;
+      }
+      
+      if (typeof update.h2h_pts === "number") {
+        updateData.h2h_points = update.h2h_pts;
+      }
+      
+      if (update.w !== undefined && update.d !== undefined && update.l !== undefined) {
+        updateData.h2h_stats = {
+          w: update.w || 0,
+          d: update.d || 0,
+          l: update.l || 0
+        };
+      }
+
+      // Update player
       const { error: updateError } = await supabase
         .from("premier_league_25_26")
-        .update({
-          points: update.total,
-          last_points_update: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq("id", players[0].id);
 
       if (updateError) {
@@ -298,102 +371,3 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// PUT - Migrate data from registration table to clean table
-export async function PUT() {
-  try {
-    const session = await getServerSession();
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Manual migration since stored function might not exist
-    // First, clear existing data
-    const { error: deleteError } = await supabase
-      .from("premier_league_25_26")
-      .delete()
-      .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all records
-
-    if (deleteError) {
-      console.error("Delete error:", deleteError);
-    }
-
-    // Fetch data from registration table
-    const { data: registrations, error: fetchError } = await supabase
-      .from("registration_25_26")
-      .select(
-        `
-        id,
-        first_name,
-        last_name,
-        team_name,
-        league_type,
-        h2h_category,
-        points,
-        email,
-        phone,
-        created_at,
-        updated_at
-      `
-      )
-      .is("deleted_at", null)
-      .in("league_type", ["premium", "standard"])
-      .not("first_name", "is", null)
-      .not("last_name", "is", null)
-      .not("team_name", "is", null)
-      .not("email", "is", null);
-
-    if (fetchError) {
-      console.error("Fetch error:", fetchError);
-      return NextResponse.json(
-        { error: "Failed to fetch registration data" },
-        { status: 500 }
-      );
-    }
-
-    if (!registrations || registrations.length === 0) {
-      return NextResponse.json({
-        message: "No data to migrate",
-        migratedRecords: 0,
-      });
-    }
-
-    // Insert data into premier league table
-    const { data: insertedData, error: insertError } = await supabase
-      .from("premier_league_25_26")
-      .insert(
-        registrations.map((reg) => ({
-          first_name: reg.first_name,
-          last_name: reg.last_name,
-          team_name: reg.team_name,
-          league_type: reg.league_type,
-          h2h_category: reg.h2h_category,
-          points: reg.points || 0,
-          email: reg.email,
-          phone: reg.phone,
-          migrated_from_registration_id: reg.id,
-          created_at: reg.created_at,
-          updated_at: reg.updated_at || new Date().toISOString(),
-        }))
-      );
-
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      return NextResponse.json(
-        { error: "Failed to insert data into premier league table" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      message: "Migration completed successfully",
-      migratedRecords: registrations.length,
-    });
-  } catch (error) {
-    console.error("Error during migration:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
