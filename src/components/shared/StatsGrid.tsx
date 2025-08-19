@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { ComponentType } from "react";
 
 // Icon mapping for dynamic icon rendering
 const iconMap: Record<string, LucideIcon> = {
@@ -29,7 +30,8 @@ const iconMap: Record<string, LucideIcon> = {
 interface Stat {
   label: string;
   value: string;
-  icon: string;
+  icon: string | ComponentType<any>;
+  color?: string;
 }
 
 interface StatsGridProps {
@@ -45,8 +47,40 @@ export default function StatsGrid({
 }: StatsGridProps) {
   const { theme } = useTheme();
 
-  const getIconComponent = (iconName: string) => {
-    return iconMap[iconName] || DollarSign;
+  const getIconComponent = (icon: string | ComponentType<any>) => {
+    if (typeof icon === "string") {
+      return iconMap[icon] || DollarSign;
+    }
+    return icon;
+  };
+
+  const getDynamicColors = (colorClass?: string) => {
+    if (!colorClass) return null;
+
+    // Parse Tailwind color classes like "text-orange-500"
+    const colorMatch = colorClass.match(/text-(\w+)-(\d+)/);
+    if (!colorMatch) return null;
+
+    const [, colorName, shade] = colorMatch;
+
+    return {
+      light: {
+        bg: `bg-${colorName}-50`,
+        border: `border-${colorName}-200`,
+        icon: `text-${colorName}-600`,
+        value: `text-${colorName}-800`,
+        label: `text-${colorName}-600`,
+        shadow: `shadow-${colorName}-100`,
+      },
+      dark: {
+        bg: `bg-${colorName}-500/10`,
+        border: `border-${colorName}-500/20`,
+        icon: `text-${colorName}-400`,
+        value: `text-${colorName}-300`,
+        label: `text-${colorName}-400`,
+        shadow: `shadow-${colorName}-500/10`,
+      },
+    };
   };
 
   const getThemeColors = (statTheme?: string) => {
@@ -133,7 +167,7 @@ export default function StatsGrid({
   };
 
   const colors = getThemeColors();
-  const themeColors = theme === "dark" ? colors.dark : colors.light;
+  const defaultThemeColors = theme === "dark" ? colors.dark : colors.light;
 
   return (
     <div
@@ -141,6 +175,12 @@ export default function StatsGrid({
     >
       {stats.map((stat, index) => {
         const IconComponent = getIconComponent(stat.icon);
+        const dynamicColors = getDynamicColors(stat.color);
+        const themeColors = dynamicColors
+          ? theme === "dark"
+            ? dynamicColors.dark
+            : dynamicColors.light
+          : defaultThemeColors;
 
         return (
           <motion.div

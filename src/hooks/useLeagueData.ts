@@ -9,6 +9,10 @@ import {
   championsLeaguePrizes,
 } from "@/data/champions-league";
 import { f1FantasyConfig, f1FantasyPrizes } from "@/data/f1-fantasy";
+import { FaUser } from "react-icons/fa";
+import { VscRunCoverage } from "react-icons/vsc";
+import { BsCash } from "react-icons/bs";
+import { GrGroup } from "react-icons/gr";
 
 export const useLeagueData = (leagueType: string) => {
   const [leagueData, setLeagueData] = useState<any>(null);
@@ -218,17 +222,29 @@ export const useHomepageData = () => {
 
         // Create global stats (static for now)
         const globalStats = [
-          { label: "Ukupno igrača", value: "500+", color: "text-orange-500" },
-          { label: "Aktivne lige", value: "3", color: "text-blue-500" },
+          {
+            label: "Ukupno igrača",
+            value: "160+",
+            color: "text-orange-500",
+            icon: FaUser,
+          },
+          {
+            label: "Aktivne lige",
+            value: "5",
+            color: "text-blue-500",
+            icon: VscRunCoverage,
+          },
           {
             label: "Nagradni fond",
-            value: "15,000+ KM",
+            value: "8.OOO+ KM / 4.200+ €",
             color: "text-green-500",
+            icon: BsCash,
           },
           {
             label: "Zadovoljnih igrača",
-            value: "98%",
+            value: "100%",
             color: "text-purple-500",
+            icon: GrGroup,
           },
         ];
 
