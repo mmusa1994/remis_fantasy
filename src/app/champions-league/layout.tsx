@@ -1,10 +1,10 @@
 import SubNavigation from "@/components/shared/SubNavigation";
 
 const championsLeagueNavItems = [
-  { name: "Registracija", href: "/champions-league/registracija" },
-  { name: "Nagrade", href: "/champions-league/nagrade" },
-  { name: "Galerija", href: "/champions-league/galerija" },
   { name: "Tabele", href: "/champions-league/tabele" },
+  { name: "Nagrade", href: "/champions-league/nagrade" },
+  { name: "Registracija", href: "/champions-league/registracija" },
+  { name: "Galerija", href: "/champions-league/galerija" },
 ];
 
 export default function ChampionsLeagueLayout({

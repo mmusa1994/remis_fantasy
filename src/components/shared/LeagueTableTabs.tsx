@@ -1,10 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import ReusableLeagueTable from "./ReusableLeagueTable";
 import { getLeagueDataForReusableTable } from "@/data/leagueTableData";
+
+interface LeaguePlayer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  teamName: string;
+  points: number;
+  position: number;
+  league_type: string;
+  h2h_category: "h2h" | "h2h2" | null;
+}
+
+interface LeagueTables {
+  premiumLeague: LeaguePlayer[];
+  standardLeague: LeaguePlayer[];
+  h2hLeague: LeaguePlayer[];
+  h2h2League: LeaguePlayer[];
+}
 
 const tabs = [
   { id: "premium", label: "Premium Liga", color: "yellow" },
@@ -15,6 +33,9 @@ const tabs = [
 
 export default function LeagueTableTabs() {
   const [activeTab, setActiveTab] = useState("premium");
+  const [tables, setTables] = useState<LeagueTables | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { theme } = useTheme();
 
   const getTabColors = (color: string) => {
@@ -41,8 +62,69 @@ export default function LeagueTableTabs() {
     return colors[color as keyof typeof colors] || colors.yellow;
   };
 
+  useEffect(() => {
+    const loadTables = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch("/api/premier-league-tables");
+        if (!response.ok) {
+          throw new Error("Failed to fetch tables");
+        }
+
+        const data = await response.json();
+        setTables(data.tables);
+      } catch (error) {
+        console.error("Error loading tables:", error);
+        setError("Greška pri učitavanju tabela");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTables();
+  }, []);
+
   const getLeagueData = (leagueType: string) => {
-    return getLeagueDataForReusableTable(leagueType);
+    // Get static league configuration (prizes, fees, etc.) from original data
+    const staticLeagueData = getLeagueDataForReusableTable(leagueType);
+    if (!staticLeagueData || !tables) return null;
+
+    // Get dynamic players from database
+    let dynamicPlayers: LeaguePlayer[] = [];
+
+    switch (leagueType) {
+      case "premium":
+        dynamicPlayers = tables.premiumLeague;
+        break;
+      case "standard":
+        dynamicPlayers = tables.standardLeague;
+        break;
+      case "h2h":
+        dynamicPlayers = tables.h2hLeague;
+        break;
+      case "h2h2":
+        dynamicPlayers = tables.h2h2League;
+        break;
+      default:
+        return null;
+    }
+
+    // Combine static configuration with dynamic players
+    return {
+      ...staticLeagueData,
+      leagueName: staticLeagueData.name,
+      leagueType: staticLeagueData.type,
+      players: dynamicPlayers.map((player) => ({
+        id: player.id,
+        firstName: player.firstName,
+        lastName: player.lastName,
+        teamName: player.teamName,
+        points: player.points,
+        position: player.position,
+      })),
+    };
   };
 
   return (
@@ -81,12 +163,45 @@ export default function LeagueTableTabs() {
           transition={{ duration: 0.3 }}
         >
           {(() => {
-            const leagueData = getLeagueData(activeTab);
-            if (!leagueData) {
+            if (loading) {
               return (
                 <div className="text-center py-12">
-                  <p className="text-theme-text-muted">
-                    Podaci za {activeTab} ligu nisu dostupni.
+                  <p
+                    className={
+                      theme === "dark" ? "text-white" : "text-gray-600"
+                    }
+                  >
+                    Učitavam tabele...
+                  </p>
+                </div>
+              );
+            }
+
+            if (error) {
+              return (
+                <div className="text-center py-12">
+                  <p
+                    className={
+                      theme === "dark" ? "text-red-400" : "text-red-600"
+                    }
+                  >
+                    {error}
+                  </p>
+                </div>
+              );
+            }
+
+            const leagueData = getLeagueData(activeTab);
+            if (!leagueData || leagueData.players.length === 0) {
+              return (
+                <div className="text-center py-12">
+                  <p
+                    className={
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }
+                  >
+                    Nema podataka za{" "}
+                    {tabs.find((t) => t.id === activeTab)?.label}.
                   </p>
                 </div>
               );

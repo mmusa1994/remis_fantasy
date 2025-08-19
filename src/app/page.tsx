@@ -3,7 +3,7 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import Link from "next/link";
 import StatsGrid from "@/components/shared/StatsGrid";
-import { useHomepageData } from "@/data/hooks/useLeagueData";
+import { useHomepageData } from "@/hooks/useLeagueData";
 import { SiPremierleague } from "react-icons/si";
 import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
@@ -32,7 +32,6 @@ export default function Home() {
       >
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto mb-4"></div>
             <p className="text-theme-text-secondary">Učitava se...</p>
           </div>
         </div>
@@ -124,7 +123,7 @@ export default function Home() {
 
           {/* Dynamic League Selection Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
-            {leagues.map((league) => {
+            {leagues.map((league: any) => {
               const IconComponent = iconMap[league.id] || SiPremierleague;
 
               return (

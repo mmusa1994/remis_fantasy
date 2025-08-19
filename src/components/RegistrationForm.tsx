@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { downloadPaymentInstructions } from "@/utils/downloadPDF";
+import { useRegistrationConfig } from "@/hooks/useLeagueData";
 
 interface FormData {
   first_name: string;
@@ -34,8 +35,20 @@ interface FormData {
   notes: string;
 }
 
-export default function RegistrationForm() {
+interface RegistrationFormProps {
+  leagueType: string;
+}
+
+export default function RegistrationForm({
+  leagueType,
+}: RegistrationFormProps) {
   const { theme } = useTheme();
+  const {
+    data: registrationConfig,
+    loading: configLoading,
+    error: configError,
+  } = useRegistrationConfig(leagueType);
+
   const [formData, setFormData] = useState<FormData>({
     first_name: "",
     last_name: "",
@@ -68,6 +81,29 @@ export default function RegistrationForm() {
   });
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  // Show loading state while config is loading
+  if (configLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-theme-text-secondary">Učitava se...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if config failed to load
+  if (configError || !registrationConfig) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Greška pri učitavanju podataka</p>
+          <p className="text-theme-text-secondary">{configError}</p>
+        </div>
+      </div>
+    );
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -328,53 +364,8 @@ export default function RegistrationForm() {
     }
   };
 
-  const leagueOptions = [
-    {
-      id: "standard",
-      name: "Standard Liga",
-      price: "15€ / 30KM",
-      image: "/images/form/standard-form.png",
-      description: "Klasična liga sa osnovnim nagradama",
-      colors: {
-        border: "border-sky-400",
-        bg: "bg-sky-400/10",
-        hover: "hover:border-sky-400/50",
-        text: "text-sky-300",
-        badge: "bg-gradient-to-r from-sky-400 to-gray-600",
-        badgeRing: "ring-sky-400/50",
-      },
-    },
-    {
-      id: "premium",
-      name: "Premium Liga",
-      price: "50€ / 100KM",
-      image: "/images/form/premium-form.png",
-      description: "VIP liga sa ekskluzivnim nagradama",
-      colors: {
-        border: "border-yellow-400",
-        bg: "bg-yellow-400/10",
-        hover: "hover:border-yellow-400/50",
-        text: "text-yellow-300",
-        badge: "bg-gradient-to-r from-yellow-400 to-gray-600",
-        badgeRing: "ring-yellow-400/50",
-      },
-    },
-  ];
-
-  const h2hOption = {
-    name: "H2H Liga",
-    price: "10€ / 20KM",
-    image: "/images/form/h2h-form.png",
-    description: "Head-to-Head dodatna liga sa posebnim nagradama",
-    colors: {
-      border: "border-red-500",
-      bg: "bg-red-500/10",
-      hover: "hover:border-red-500/50",
-      text: "text-white",
-      badge: "bg-gradient-to-r from-red-500 to-gray-600",
-      badgeRing: "ring-red-500/50",
-    },
-  };
+  const leagueOptions = registrationConfig.leagueOptions;
+  const h2hOption = registrationConfig.h2hOption;
 
   return (
     <>
@@ -647,7 +638,7 @@ export default function RegistrationForm() {
                   </h3>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6">
-                    {leagueOptions.map((option) => (
+                    {leagueOptions.map((option: any) => (
                       <div
                         key={option.id}
                         className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
@@ -798,71 +789,58 @@ export default function RegistrationForm() {
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-                    {[
-                      {
-                        id: "bank",
-                        name: "Bankovni Račun",
-                        Icon: Building2,
-                        color: "purple",
-                      },
-                      {
-                        id: "wise",
-                        name: "Wise",
-                        Icon: CreditCardIcon,
-                        color: "green",
-                      },
-                      {
-                        id: "paypal",
-                        name: "PayPal",
-                        Icon: CreditCardIcon,
-                        color: "blue",
-                      },
-                      {
-                        id: "cash",
-                        name: "Keš",
-                        Icon: Banknote,
-                        color: "yellow",
-                      },
-                    ].map((method) => (
-                      <div
-                        key={method.id}
-                        className={`relative cursor-pointer minimal-radius border-2 p-3 md:p-4 text-center transition-all duration-300 hover-scale ${
-                          formData.payment_method === method.id
-                            ? "border-red-500 bg-red-500/10 shadow-lg ring-2 ring-red-500/50"
-                            : "border-gray-600/50 hover:border-red-500/50 hover:bg-red-500/5"
-                        }`}
-                        onClick={() => {
-                          handleInputChange("payment_method", method.id);
-                          if (method.id !== "cash") {
-                            handleInputChange("cash_status", undefined);
-                          }
-                        }}
-                      >
-                        <div className="flex flex-col items-center space-y-2">
-                          <method.Icon
-                            className={`w-6 h-6 md:w-8 md:h-8 ${
-                              formData.payment_method === method.id
-                                ? "text-white"
-                                : method.color === "blue"
-                                ? "text-blue-400"
-                                : method.color === "purple"
-                                ? "text-purple-400"
-                                : method.color === "green"
-                                ? "text-green-400"
-                                : "text-yellow-400"
-                            }`}
-                          />
-                          <div className="text-theme-foreground text-xs md:text-sm font-bold leading-tight theme-transition">
-                            {method.name}
+                    {registrationConfig.paymentMethods.map((method: any) => {
+                      // Map icon names to components
+                      const IconComponent =
+                        method.icon === "Building2"
+                          ? Building2
+                          : method.icon === "CreditCard"
+                          ? CreditCardIcon
+                          : method.icon === "Banknote"
+                          ? Banknote
+                          : Building2;
+
+                      return (
+                        <div
+                          key={method.id}
+                          className={`relative cursor-pointer minimal-radius border-2 p-3 md:p-4 text-center transition-all duration-300 hover-scale ${
+                            formData.payment_method === method.id
+                              ? "border-red-500 bg-red-500/10 shadow-lg ring-2 ring-red-500/50"
+                              : "border-gray-600/50 hover:border-red-500/50 hover:bg-red-500/5"
+                          }`}
+                          onClick={() => {
+                            handleInputChange("payment_method", method.id);
+                            if (method.id !== "cash") {
+                              handleInputChange("cash_status", undefined);
+                            }
+                          }}
+                        >
+                          <div className="flex flex-col items-center space-y-2">
+                            <IconComponent
+                              className={`w-6 h-6 md:w-8 md:h-8 ${
+                                formData.payment_method === method.id
+                                  ? "text-white"
+                                  : method.color === "blue"
+                                  ? "text-blue-400"
+                                  : method.color === "purple"
+                                  ? "text-purple-400"
+                                  : method.color === "green"
+                                  ? "text-green-400"
+                                  : "text-yellow-400"
+                              }`}
+                            />
+                            <div className="text-theme-foreground text-xs md:text-sm font-bold leading-tight theme-transition">
+                              {method.name}
+                            </div>
                           </div>
+                          {formData.payment_method === method.id && (
+                            <div className="absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 bg-red-500 minimal-radius flex items-center justify-center animate-scale-in">
+                              <CheckCircle className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                            </div>
+                          )}
                         </div>
-                        {formData.payment_method === method.id && (
-                          <div className="absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 bg-red-500 minimal-radius flex items-center justify-center animate-scale-in">
-                            <CheckCircle className="w-3 h-3 md:w-4 md:h-4 text-white" />
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Bank Account Download Instructions */}
@@ -872,7 +850,7 @@ export default function RegistrationForm() {
                         type="button"
                         onClick={async () => {
                           const selectedLeague = leagueOptions.find(
-                            (option) => option.id === formData.league_type
+                            (option: any) => option.id === formData.league_type
                           );
                           let leagueType = selectedLeague
                             ? selectedLeague.name

@@ -2,9 +2,8 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useLeagueData } from "@/data/hooks/useLeagueData";
+import { useLeagueData } from "@/hooks/useLeagueData";
 import HeroSection from "./HeroSection";
 import StatsGrid from "./StatsGrid";
 import {
@@ -29,13 +28,12 @@ interface LeaguePageProps {
 
 export default function LeaguePage({ leagueId }: LeaguePageProps) {
   const { theme } = useTheme();
-  const { data, loading, error } = useLeagueData(leagueId);
+  const { leagueData: data, loading, error } = useLeagueData(leagueId);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <p className="text-theme-text-secondary">Učitava se...</p>
         </div>
       </div>
@@ -53,7 +51,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
     );
   }
 
-  const { config } = data;
+  const config = data;
 
   const getColorClasses = (color: string) => {
     switch (color) {
@@ -110,7 +108,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
   };
 
   return (
-    <div className="min-h-screen md:mt-0">
+    <div className="min-h-screen">
       {/* Hero Section */}
       <HeroSection
         content={config.pageContent.hero}
@@ -143,7 +141,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
           </motion.h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-            {config.navigation.map((item, index) => {
+            {config?.navigation?.map((item: any, index: number) => {
               const IconComponent = iconMap[item.icon] || PenTool;
               const colorClasses = getColorClasses(item.color);
 

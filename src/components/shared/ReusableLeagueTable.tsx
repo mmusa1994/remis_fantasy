@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Trophy, Medal, Award, FileText, Shirt, Gift } from "lucide-react";
+import { Trophy, Medal, Award, Shirt, Gift } from "lucide-react";
 import { BsCash } from "react-icons/bs";
 import { GiDiamondTrophy } from "react-icons/gi";
 import { LuGift } from "react-icons/lu";
@@ -50,11 +50,6 @@ export default function ReusableLeagueTable({
   totalPrizeFundEUR,
   entryFeeKM,
   entryFeeEUR,
-  monthlyPrizeKM,
-  monthlyPrizeEUR,
-  cupPrizeKM,
-  cupPrizeEUR,
-  maxParticipants,
   className = "",
 }: ReusableLeagueTableProps) {
   const { theme } = useTheme();
@@ -249,10 +244,6 @@ export default function ReusableLeagueTable({
     return theme === "dark"
       ? "bg-theme-card hover:bg-theme-accent border-theme-border"
       : "bg-white hover:bg-gray-50 border-gray-200";
-  };
-
-  const getPrizeForPosition = (position: number) => {
-    return prizes.find((prize) => prize.position === position);
   };
 
   return (
@@ -582,7 +573,6 @@ export default function ReusableLeagueTable({
         {/* Table Body */}
         <div className="max-h-96 md:max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
           {players.map((player, index) => {
-            const prize = getPrizeForPosition(player.position);
             return (
               <motion.div
                 key={player.id}

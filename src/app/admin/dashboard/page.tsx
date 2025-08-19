@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import { LogOut, Mail, CheckCircle, Send, Edit, Trash2 } from "lucide-react";
+import { LogOut, Mail, CheckCircle, Send, Edit, Trash2, Table2 } from "lucide-react";
 import Toast from "@/components/shared/Toast";
 
 interface Registration {
@@ -415,14 +415,24 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
-              title="Sign Out"
-            >
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push('/admin/dashboard/tabele')}
+                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                title="Upravljanje tabelama"
+              >
+                <Table2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Tabele</span>
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>

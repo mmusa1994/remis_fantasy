@@ -1,10 +1,10 @@
 import SubNavigation from "@/components/shared/SubNavigation";
 
 const premierLeagueNavItems = [
-  { name: "Registracija", href: "/premier-league/registracija" },
-  { name: "Nagrade", href: "/premier-league/nagrade" },
-  { name: "Galerija", href: "/premier-league/galerija" },
   { name: "Tabele", href: "/premier-league/tabele" },
+  { name: "Nagrade", href: "/premier-league/nagrade" },
+  { name: "Registracija", href: "/premier-league/registracija" },
+  { name: "Galerija", href: "/premier-league/galerija" },
 ];
 
 export default function PremierLeagueLayout({

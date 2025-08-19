@@ -8,7 +8,7 @@ export const premierLeagueConfig: LeagueConfig = {
   subtitle: "Fantasy Liga",
   description:
     "Dobrodošli u najuzbudljiviju Premier League fantasy ligu! Registrujte se, osvojite nevjerovatne nagrade i pokažite svoje znanje fudbala.",
-  logo: "/images/logos/pl-logo.jpg",
+  logo: "/images/logos/pl-logo.png",
   baseColor: "purple",
   basePath: "/premier-league",
   available: true,
