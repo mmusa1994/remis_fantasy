@@ -52,6 +52,20 @@ const leagueTypes = [
   { key: "h2h2League", name: "H2H2 Liga", color: "red" },
 ];
 
+// Function to get indicator color based on league color
+const getIndicatorColor = (color: string) => {
+  switch (color) {
+    case "yellow":
+      return "bg-yellow-400";
+    case "blue":
+      return "bg-blue-400";
+    case "red":
+      return "bg-red-400";
+    default:
+      return "bg-yellow-400";
+  }
+};
+
 export default function AdminTablesCleanPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -423,7 +437,7 @@ export default function AdminTablesCleanPage() {
                       {playerCount}
                     </span>
                     {isSelected && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white"></div>
+                      <div className={`absolute -top-1 -right-1 w-3 h-3 ${getIndicatorColor(league.color)} rounded-full border-2 border-white`}></div>
                     )}
                   </button>
                 );
