@@ -1,0 +1,30 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
+
+const isAdminPath = (path: string) => {
+  return path.includes("admin") || path.includes("dashboard");
+};
+
+export default function LayoutContent({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const isAdmin = isAdminPath(pathname);
+
+  if (isAdmin) {
+    return <main>{children}</main>;
+  }
+
+  return (
+    <>
+      <Navbar />
+      <main>{children}</main>
+      <Footer />
+    </>
+  );
+}

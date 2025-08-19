@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import Footer from "@/components/shared/Footer";
-import Navbar from "@/components/shared/Navbar";
+import LayoutContent from "../components/shared/LayoutContent";
 
 export const metadata: Metadata = {
   title: "REMIS Fantasy",
@@ -26,9 +25,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <Providers>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
+          <LayoutContent>{children}</LayoutContent>
         </Providers>
       </body>
     </html>
