@@ -9,7 +9,7 @@ export default function TabelePage() {
 
   return (
     <div
-      className={`min-h-screen py-20 px-4 ${
+      className={`min-h-screen pb-20 pt-10 px-4 ${
         theme === "dark"
           ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
           : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"

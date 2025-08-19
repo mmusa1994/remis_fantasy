@@ -300,30 +300,36 @@ export default function ReusableLeagueTable({
                   case 1:
                     return (
                       <GiDiamondTrophy
-                        className="w-6 h-6"
+                        className="w-4 h-4 md:w-6 md:h-6"
                         style={{ color: "#FFD700" }}
                       />
                     );
                   case 2:
                     return (
-                      <Medal className="w-6 h-6" style={{ color: "#C0C0C0" }} />
+                      <Medal
+                        className="w-4 h-4 md:w-6 md:h-6"
+                        style={{ color: "#C0C0C0" }}
+                      />
                     );
                   case 3:
                     return (
-                      <Medal className="w-6 h-6" style={{ color: "#CD7F32" }} />
+                      <Medal
+                        className="w-4 h-4 md:w-6 md:h-6"
+                        style={{ color: "#CD7F32" }}
+                      />
                     );
                   case 4:
                     return (
-                      <Shirt className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                      <Shirt className="w-4 h-4 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
                     );
                   case 5:
                     return (
-                      <Gift className="w-6 h-6 text-green-600 dark:text-green-400" />
+                      <Gift className="w-4 h-4 md:w-6 md:h-6 text-green-600 dark:text-green-400" />
                     );
                   default:
                     return (
                       <Award
-                        className="w-6 h-6"
+                        className="w-4 h-4 md:w-6 md:h-6"
                         style={{ color: colors.primary }}
                       />
                     );
@@ -333,31 +339,37 @@ export default function ReusableLeagueTable({
                   case 1:
                     return (
                       <Trophy
-                        className="w-6 h-6"
+                        className="w-4 h-4 md:w-6 md:h-6"
                         style={{ color: colors.primary }}
                       />
                     );
                   case 2:
                     return (
-                      <Medal className="w-6 h-6" style={{ color: "#C0C0C0" }} />
+                      <Medal
+                        className="w-4 h-4 md:w-6 md:h-6"
+                        style={{ color: "#C0C0C0" }}
+                      />
                     );
                   case 3:
                     return (
-                      <Medal className="w-6 h-6" style={{ color: "#CD7F32" }} />
+                      <Medal
+                        className="w-4 h-4 md:w-6 md:h-6"
+                        style={{ color: "#CD7F32" }}
+                      />
                     );
                   case 4:
                   case 5:
                   case 6:
                   case 7:
                     return (
-                      <BsCash className="w-6 h-6 text-green-600 dark:text-green-400" />
+                      <BsCash className="w-4 h-4 md:w-6 md:h-6 text-green-600 dark:text-green-400" />
                     );
                   case 8:
                   case 9:
                   case 10:
                   case 11:
                     return (
-                      <LuGift className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                      <LuGift className="w-4 h-4 md:w-6 md:h-6 text-orange-600 dark:text-orange-400" />
                     );
                   default:
                     return null;
@@ -367,26 +379,32 @@ export default function ReusableLeagueTable({
                   case 1:
                     return (
                       <Trophy
-                        className="w-6 h-6"
+                        className="w-4 h-4 md:w-6 md:h-6"
                         style={{ color: colors.primary }}
                       />
                     );
                   case 2:
                     return (
-                      <Medal className="w-6 h-6" style={{ color: "#C0C0C0" }} />
+                      <Medal
+                        className="w-4 h-4 md:w-6 md:h-6"
+                        style={{ color: "#C0C0C0" }}
+                      />
                     );
                   case 3:
                     return (
-                      <Medal className="w-6 h-6" style={{ color: "#CD7F32" }} />
+                      <Medal
+                        className="w-4 h-4 md:w-6 md:h-6"
+                        style={{ color: "#CD7F32" }}
+                      />
                     );
                   case 4:
                     return (
-                      <BsCash className="w-6 h-6 text-green-600 dark:text-green-400" />
+                      <BsCash className="w-4 h-4 md:w-6 md:h-6 text-green-600 dark:text-green-400" />
                     );
                   default:
                     return (
                       <Award
-                        className="w-6 h-6"
+                        className="w-4 h-4 md:w-6 md:h-6"
                         style={{ color: colors.primary }}
                       />
                     );
@@ -405,11 +423,26 @@ export default function ReusableLeagueTable({
                   case 2:
                     return "bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-800/30 dark:to-slate-800/30 border border-gray-300 dark:border-gray-600";
                   case 3:
-                    return "bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-800/30 dark:to-orange-800/30 border border-amber-300 dark:border-amber-500";
+                    return "bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-700/40 dark:to-orange-700/40 border border-amber-400 dark:border-amber-600";
                   case 4:
                     return "bg-gradient-to-r from-blue-100 to-sky-100 dark:from-blue-800/30 dark:to-sky-800/30 border border-blue-300 dark:border-blue-500";
                   case 5:
                     return "bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-800/30 dark:to-emerald-800/30 border border-green-300 dark:border-green-500";
+                  default:
+                    return `bg-gradient-to-r from-${
+                      colors.light
+                    } to-${colors.light.replace("100", "50")} border border-${
+                      colors.border
+                    }`;
+                }
+              } else if (leagueType === "standard") {
+                switch (position) {
+                  case 1:
+                    return "bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-800/30 dark:to-amber-800/30 border border-yellow-400 dark:border-yellow-500";
+                  case 2:
+                    return "bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-800/30 dark:to-slate-800/30 border border-gray-300 dark:border-gray-600";
+                  case 3:
+                    return "bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-700/40 dark:to-orange-700/40 border border-amber-400 dark:border-amber-600";
                   default:
                     return `bg-gradient-to-r from-${
                       colors.light
@@ -428,7 +461,7 @@ export default function ReusableLeagueTable({
                   case 2:
                     return "bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-800/30 dark:to-slate-800/30 border border-gray-300 dark:border-gray-600";
                   case 3:
-                    return "bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-800/30 dark:to-orange-800/30 border border-amber-300 dark:border-amber-500";
+                    return "bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-700/40 dark:to-orange-700/40 border border-amber-400 dark:border-amber-600";
                   default:
                     return `bg-gradient-to-r from-${
                       colors.light
@@ -450,11 +483,22 @@ export default function ReusableLeagueTable({
                   case 2:
                     return "text-gray-700 dark:text-gray-300";
                   case 3:
-                    return "text-amber-700 dark:text-amber-300";
+                    return "text-amber-800 dark:text-amber-400";
                   case 4:
                     return "text-blue-700 dark:text-blue-300";
                   case 5:
                     return "text-green-700 dark:text-green-300";
+                  default:
+                    return `text-${colors.text}`;
+                }
+              } else if (leagueType === "standard") {
+                switch (position) {
+                  case 1:
+                    return "text-yellow-800 dark:text-yellow-300";
+                  case 2:
+                    return "text-gray-700 dark:text-gray-300";
+                  case 3:
+                    return "text-amber-800 dark:text-amber-400";
                   default:
                     return `text-${colors.text}`;
                 }
@@ -465,7 +509,7 @@ export default function ReusableLeagueTable({
                   case 2:
                     return "text-gray-700 dark:text-gray-300";
                   case 3:
-                    return "text-amber-700 dark:text-amber-300";
+                    return "text-amber-800 dark:text-amber-400";
                   default:
                     return `text-${colors.text}`;
                 }
@@ -527,7 +571,7 @@ export default function ReusableLeagueTable({
       >
         {/* Table Header */}
         <div
-          className={`grid grid-cols-12 gap-2 md:gap-4 p-4 border-b-2 font-bold text-sm md:text-base ${colors.headerBg} border-${colors.border} text-${colors.text}`}
+          className={`grid grid-cols-12 gap-1 md:gap-2 lg:gap-4 p-2 md:p-4 border-b-2 font-bold text-xs md:text-sm lg:text-base ${colors.headerBg} border-${colors.border} text-${colors.text}`}
         >
           <div className="col-span-1 text-center">#</div>
           <div className="col-span-4 md:col-span-3">Ime i Prezime</div>
@@ -542,7 +586,7 @@ export default function ReusableLeagueTable({
             return (
               <motion.div
                 key={player.id}
-                className={`grid grid-cols-12 gap-2 md:gap-4 p-4 border-b transition-all duration-300 hover:scale-[1.01] ${getPositionRowStyle(
+                className={`grid grid-cols-12 gap-1 md:gap-2 lg:gap-4 p-2 md:p-4 border-b transition-all duration-300 hover:scale-[1.01] ${getPositionRowStyle(
                   player.position,
                   leagueType
                 )}`}
@@ -556,9 +600,9 @@ export default function ReusableLeagueTable({
               >
                 {/* Position */}
                 <div className="col-span-1 flex items-center justify-center">
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center space-x-0.5 md:space-x-1">
                     {getPositionIcon(player.position, leagueType)}
-                    <span className="font-bold text-theme-foreground text-lg">
+                    <span className="font-bold text-theme-foreground text-xs md:text-sm lg:text-lg">
                       {player.position}
                     </span>
                   </div>
@@ -566,14 +610,14 @@ export default function ReusableLeagueTable({
 
                 {/* Full Name */}
                 <div className="col-span-4 md:col-span-3 flex items-center">
-                  <span className="font-semibold text-theme-foreground truncate">
+                  <span className="font-semibold text-theme-foreground truncate text-xs md:text-sm lg:text-base">
                     {player.firstName} {player.lastName}
                   </span>
                 </div>
 
                 {/* Team Name */}
                 <div className="col-span-4 md:col-span-5 flex items-center">
-                  <span className="text-theme-text-secondary truncate text-sm md:text-base">
+                  <span className="text-theme-text-secondary truncate text-xs md:text-sm lg:text-base">
                     {player.teamName}
                   </span>
                 </div>
@@ -581,7 +625,7 @@ export default function ReusableLeagueTable({
                 {/* Points */}
                 <div className="col-span-3 flex items-center justify-center">
                   <motion.span
-                    className={`font-bold text-lg px-4 py-2 rounded-lg ${
+                    className={`font-bold text-sm md:text-lg px-2 md:px-4 py-1 md:py-2 rounded-lg ${
                       leagueType === "premium" && player.position === 1
                         ? "text-yellow-800"
                         : leagueType === "premium" && player.position <= 5
@@ -632,7 +676,7 @@ export default function ReusableLeagueTable({
 
         {/* Footer */}
         <div
-          className={`p-4 text-center text-sm border-t-2 bg-theme-secondary border-${colors.border} text-theme-text-muted`}
+          className={`p-2 md:p-4 text-center text-xs md:text-sm border-t-2 bg-theme-secondary border-${colors.border} text-theme-text-muted`}
         >
           Poslednje ažurirano: {new Date().toLocaleDateString("sr-RS")}
         </div>

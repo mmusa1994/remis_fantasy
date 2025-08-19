@@ -386,7 +386,7 @@ export default function RegistrationForm() {
         onClose={() => setToast({ ...toast, show: false })}
       />
 
-      <section className="relative w-full py-32 bg-theme-background overflow-hidden theme-transition">
+      <section className="relative w-full bg-theme-background overflow-hidden theme-transition">
         {/* Optimized Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-900/10 via-gray-800/5 to-red-800/10 minimal-radius blur-3xl animate-pulse-gentle gpu-accelerated"></div>

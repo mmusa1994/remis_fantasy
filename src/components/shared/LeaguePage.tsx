@@ -110,7 +110,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
   };
 
   return (
-    <div className="min-h-screen mt-10 md:mt-0">
+    <div className="min-h-screen md:mt-0">
       {/* Hero Section */}
       <HeroSection
         content={config.pageContent.hero}
