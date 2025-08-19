@@ -19,7 +19,7 @@ export default function F1FantasyLayout({
         baseColor="red"
         leagueBasePath="/f1-fantasy"
       />
-      <main className="relative">{children}</main>
+      <main className="relative pt-14 md:pt-16">{children}</main>
     </div>
   );
 }

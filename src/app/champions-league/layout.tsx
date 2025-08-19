@@ -19,7 +19,7 @@ export default function ChampionsLeagueLayout({
         baseColor="blue"
         leagueBasePath="/champions-league"
       />
-      <main className="relative">{children}</main>
+      <main className="relative pt-14 md:pt-16">{children}</main>
     </div>
   );
 }
