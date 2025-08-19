@@ -14,6 +14,8 @@ interface PremierLeaguePlayer {
   phone: string | null;
   created_at: string;
   updated_at: string;
+  h2h_points: number | null;
+  h2h_stats: { w: number; d: number; l: number } | null;
 }
 
 interface LeaguePlayer {
@@ -25,6 +27,8 @@ interface LeaguePlayer {
   position: number;
   league_type: string;
   h2h_category: "h2h" | "h2h2" | null;
+  h2h_points: number | null;
+  h2h_stats: { w: number; d: number; l: number } | null;
 }
 
 interface LeagueTables {
@@ -52,7 +56,9 @@ export async function GET() {
         email,
         phone,
         created_at,
-        updated_at
+        updated_at,
+        h2h_points,
+        h2h_stats
       `
       )
       .is("deleted_at", null)
@@ -84,16 +90,24 @@ export async function GET() {
         position: 0, // Will be calculated after sorting
         league_type: player.league_type,
         h2h_category: player.h2h_category as "h2h" | "h2h2" | null,
+        h2h_points: player.h2h_points || null,
+        h2h_stats: player.h2h_stats || null,
       };
 
       // Categorize players based on league type and H2H category
-      if (player.league_type === "premium" && !player.h2h_category) {
+      // Premium and Standard players show in their main leagues regardless of H2H
+      if (player.league_type === "premium") {
         tables.premiumLeague.push(leaguePlayer);
-      } else if (player.league_type === "standard" && !player.h2h_category) {
+      }
+      if (player.league_type === "standard") {
         tables.standardLeague.push(leaguePlayer);
-      } else if (player.h2h_category === "h2h") {
+      }
+      
+      // H2H players show in H2H leagues (they can also be premium/standard)
+      if (player.h2h_category === "h2h") {
         tables.h2hLeague.push(leaguePlayer);
-      } else if (player.h2h_category === "h2h2") {
+      }
+      if (player.h2h_category === "h2h2") {
         tables.h2h2League.push(leaguePlayer);
       }
     });
@@ -101,7 +115,26 @@ export async function GET() {
     // Sort each league by points and assign positions
     Object.keys(tables).forEach((leagueKey) => {
       const league = tables[leagueKey as keyof LeagueTables];
-      league.sort((a, b) => b.points - a.points);
+      
+      // H2H leagues sort by H2H points first, then by overall points
+      if (leagueKey === 'h2hLeague' || leagueKey === 'h2h2League') {
+        league.sort((a, b) => {
+          const aH2HPoints = a.h2h_points || 0;
+          const bH2HPoints = b.h2h_points || 0;
+          
+          // First sort by H2H points
+          if (bH2HPoints !== aH2HPoints) {
+            return bH2HPoints - aH2HPoints;
+          }
+          
+          // If H2H points are equal, sort by overall points
+          return b.points - a.points;
+        });
+      } else {
+        // Regular leagues sort by overall points only
+        league.sort((a, b) => b.points - a.points);
+      }
+      
       league.forEach((player, index) => {
         player.position = index + 1;
       });

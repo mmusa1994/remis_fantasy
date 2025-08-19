@@ -15,6 +15,8 @@ interface LeaguePlayer {
   position: number;
   league_type: string;
   h2h_category: "h2h" | "h2h2" | null;
+  h2h_points: number | null;
+  h2h_stats: { w: number; d: number; l: number } | null;
 }
 
 interface LeagueTables {
@@ -91,25 +93,53 @@ export default function LeagueTableTabs() {
     const staticLeagueData = getLeagueDataForReusableTable(leagueType);
     if (!staticLeagueData || !tables) return null;
 
-    // Get dynamic players from database
+    // Get dynamic players from database and sort them properly
     let dynamicPlayers: LeaguePlayer[] = [];
 
     switch (leagueType) {
       case "premium":
-        dynamicPlayers = tables.premiumLeague;
+        dynamicPlayers = [...tables.premiumLeague].sort((a, b) => b.points - a.points);
         break;
       case "standard":
-        dynamicPlayers = tables.standardLeague;
+        dynamicPlayers = [...tables.standardLeague].sort((a, b) => b.points - a.points);
         break;
       case "h2h":
-        dynamicPlayers = tables.h2hLeague;
+        dynamicPlayers = [...tables.h2hLeague].sort((a, b) => {
+          const aH2HPoints = a.h2h_points || 0;
+          const bH2HPoints = b.h2h_points || 0;
+          
+          // First sort by H2H points
+          if (bH2HPoints !== aH2HPoints) {
+            return bH2HPoints - aH2HPoints;
+          }
+          
+          // If H2H points are equal, sort by overall points
+          return b.points - a.points;
+        });
         break;
       case "h2h2":
-        dynamicPlayers = tables.h2h2League;
+        dynamicPlayers = [...tables.h2h2League].sort((a, b) => {
+          const aH2HPoints = a.h2h_points || 0;
+          const bH2HPoints = b.h2h_points || 0;
+          
+          // First sort by H2H points
+          if (bH2HPoints !== aH2HPoints) {
+            return bH2HPoints - aH2HPoints;
+          }
+          
+          // If H2H points are equal, sort by overall points
+          return b.points - a.points;
+        });
         break;
       default:
         return null;
     }
+
+    // Recalculate positions based on sorted order
+    dynamicPlayers = dynamicPlayers.map((player, index) => ({
+      ...player,
+      position: index + 1
+    }));
 
     // Combine static configuration with dynamic players
     return {
@@ -123,6 +153,8 @@ export default function LeagueTableTabs() {
         teamName: player.teamName,
         points: player.points,
         position: player.position,
+        h2h_points: player.h2h_points,
+        h2h_stats: player.h2h_stats,
       })),
     };
   };

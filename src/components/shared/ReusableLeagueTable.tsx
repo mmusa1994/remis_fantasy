@@ -14,6 +14,8 @@ export interface TablePlayer {
   teamName: string;
   points: number;
   position: number;
+  h2h_points?: number | null;
+  h2h_stats?: { w: number; d: number; l: number } | null;
 }
 
 export interface TablePrize {
@@ -156,25 +158,21 @@ export default function ReusableLeagueTable({
         }
       }
 
-      // Za ostale lige (H2H, H2H2)
-      const prize = prizes.find((p) => p.position === position);
-
-      if (prize && prize.amountKM > 0) {
-        // Pozicije sa novčanim nagradama
-        return <BsCash className="w-5 h-5 text-green-500" />;
-      }
-
+      // Za ostale lige (H2H, H2H2) - prvo pokazuj trofeje/medalje za top 3
       switch (position) {
         case 1:
-          return (
-            <Trophy className="w-5 h-5" style={{ color: colors.primary }} />
-          );
+          return <Trophy className="w-5 h-5" style={{ color: "#FFD700" }} />;
         case 2:
           return <Medal className="w-5 h-5" style={{ color: "#C0C0C0" }} />;
         case 3:
           return <Medal className="w-5 h-5" style={{ color: "#CD7F32" }} />;
         default:
-          return <BsCash className="w-5 h-5 text-green-500" />;
+          // Za pozicije 4+ proverava da li ima novčanu nagradu
+          const prize = prizes.find((p) => p.position === position);
+          if (prize && prize.amountKM > 0) {
+            return <BsCash className="w-5 h-5 text-green-500" />;
+          }
+          return null;
       }
     }
   };
@@ -217,16 +215,16 @@ export default function ReusableLeagueTable({
             )} border-${colors.border}`;
       }
     } else if (leagueType === "h2h" || leagueType === "h2h2") {
-      // H2H i H2H2 lige - osenčene prve 4 pozicije sa crvenom bojom
+      // H2H i H2H2 lige - zlatno pozadina za 1. mesto, crveno za 2-4
       if (position === 1) {
         return theme === "dark"
-          ? "bg-gradient-to-r from-red-500/40 to-red-600/30 border-red-500/50"
-          : "bg-gradient-to-r from-red-200 to-red-300 border-red-500";
+          ? "bg-gradient-to-r from-yellow-500/40 to-amber-600/30 border-l-4 border-yellow-500"
+          : "bg-gradient-to-r from-yellow-100 to-amber-100 border-l-4 border-yellow-500";
       }
-      if (position <= 4) {
+      if (position >= 2 && position <= 4) {
         return theme === "dark"
-          ? `bg-gradient-to-r from-red-600/20 to-red-700/10 border-red-600/30`
-          : `bg-gradient-to-r from-red-100 to-red-200 border-red-400`;
+          ? `bg-gradient-to-r from-red-500/20 to-rose-500/10`
+          : `bg-gradient-to-r from-red-50 to-rose-50`;
       }
       if (position <= 11) {
         return theme === "dark"
@@ -562,12 +560,44 @@ export default function ReusableLeagueTable({
       >
         {/* Table Header */}
         <div
-          className={`grid grid-cols-12 gap-1 md:gap-2 lg:gap-4 p-2 md:p-4 border-b-2 font-bold text-xs md:text-sm lg:text-base ${colors.headerBg} border-${colors.border} text-${colors.text}`}
+          className={`${
+            leagueType === "h2h" || leagueType === "h2h2"
+              ? "grid grid-cols-9 gap-1 md:gap-2 lg:gap-4"
+              : "grid grid-cols-12 gap-1 md:gap-2 lg:gap-4"
+          } p-2 md:p-4 border-b-2 font-bold text-xs md:text-sm lg:text-base ${
+            colors.headerBg
+          } border-${colors.border} text-${colors.text}`}
         >
           <div className="col-span-1 text-center">#</div>
-          <div className="col-span-4 md:col-span-3">Ime i Prezime</div>
-          <div className="col-span-4 md:col-span-5 truncate">Tim</div>
-          <div className="col-span-3 text-center">Poeni</div>
+          <div
+            className={
+              leagueType === "h2h" || leagueType === "h2h2"
+                ? "col-span-2"
+                : "col-span-4 md:col-span-3"
+            }
+          >
+            Ime i Prezime
+          </div>
+          <div
+            className={
+              leagueType === "h2h" || leagueType === "h2h2"
+                ? "col-span-2"
+                : "col-span-4 md:col-span-5"
+            }
+          >
+            Tim
+          </div>
+          {leagueType === "h2h" || leagueType === "h2h2" ? (
+            <>
+              <div className="col-span-1 text-center text-xs">W/D/L</div>
+              <div className="col-span-2 text-center text-xs">
+                Overall Poeni
+              </div>
+              <div className="col-span-1 text-center text-xs">H2H Poeni</div>
+            </>
+          ) : (
+            <div className="col-span-3 text-center">Poeni</div>
+          )}
         </div>
 
         {/* Table Body */}
@@ -576,7 +606,11 @@ export default function ReusableLeagueTable({
             return (
               <motion.div
                 key={player.id}
-                className={`grid grid-cols-12 gap-1 md:gap-2 lg:gap-4 p-2 md:p-4 border-b transition-all duration-300 hover:scale-[1.01] ${getPositionRowStyle(
+                className={`${
+                  leagueType === "h2h" || leagueType === "h2h2"
+                    ? "grid grid-cols-9 gap-1 md:gap-2 lg:gap-4"
+                    : "grid grid-cols-12 gap-1 md:gap-2 lg:gap-4"
+                } p-2 md:p-4 border-b transition-all duration-300 hover:scale-[1.01] ${getPositionRowStyle(
                   player.position,
                   leagueType
                 )}`}
@@ -590,75 +624,137 @@ export default function ReusableLeagueTable({
               >
                 {/* Position */}
                 <div className="col-span-1 flex items-center justify-center">
-                  <div className="flex items-center space-x-0.5 md:space-x-1">
+                  <div className="flex items-center space-x-0.5 md:space-x-2">
                     {getPositionIcon(player.position, leagueType)}
-                    <span className="font-bold text-theme-foreground text-xs md:text-sm lg:text-lg">
+                    <span className="font-bold text-theme-foreground pr-1 md:pr-0 text-xs md:text-sm lg:text-lg">
                       {player.position}
                     </span>
                   </div>
                 </div>
 
                 {/* Full Name */}
-                <div className="col-span-4 md:col-span-3 flex items-center">
+                <div
+                  className={
+                    leagueType === "h2h" || leagueType === "h2h2"
+                      ? "col-span-2 flex items-center"
+                      : "col-span-4 md:col-span-3 flex items-center"
+                  }
+                >
                   <span className="font-semibold text-theme-foreground truncate text-xs md:text-sm lg:text-base">
                     {player.firstName} {player.lastName}
                   </span>
                 </div>
 
                 {/* Team Name */}
-                <div className="col-span-4 md:col-span-5 flex items-center">
+                <div
+                  className={
+                    leagueType === "h2h" || leagueType === "h2h2"
+                      ? "col-span-2 flex items-center"
+                      : "col-span-4 md:col-span-5 flex items-center"
+                  }
+                >
                   <span className="text-theme-text-secondary truncate text-xs md:text-sm lg:text-base">
                     {player.teamName}
                   </span>
                 </div>
 
                 {/* Points */}
-                <div className="col-span-3 flex items-center justify-center">
-                  <motion.span
-                    className={`font-bold text-sm md:text-lg px-2 md:px-4 py-1 md:py-2 rounded-lg ${
-                      leagueType === "premium" && player.position === 1
-                        ? "text-yellow-800"
-                        : leagueType === "premium" && player.position <= 5
-                        ? `text-${colors.text}`
-                        : player.position === 1
-                        ? `text-${colors.text}`
-                        : player.position <= 3
-                        ? theme === "dark"
-                          ? "bg-gray-500/20 text-gray-300"
-                          : "bg-gray-200 text-gray-700"
-                        : "text-theme-foreground"
-                    }`}
-                    style={
-                      leagueType === "premium" && player.position === 1
-                        ? {
-                            backgroundColor: "#FFD700",
-                            color: "#B8860B",
-                            boxShadow: "0 2px 8px rgba(255, 215, 0, 0.3)",
-                          }
-                        : leagueType === "premium" && player.position <= 5
-                        ? {
-                            backgroundColor:
-                              theme === "dark"
-                                ? `${colors.primary}30`
-                                : `${colors.primary}40`,
-                            color: colors.primary,
-                          }
-                        : player.position === 1
-                        ? {
-                            backgroundColor:
-                              theme === "dark"
-                                ? `${colors.primary}30`
-                                : `${colors.primary}40`,
-                            color: colors.primary,
-                          }
-                        : {}
-                    }
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {player.points}
-                  </motion.span>
-                </div>
+                {leagueType === "h2h" || leagueType === "h2h2" ? (
+                  <>
+                    {/* W/D/L */}
+                    <div className="col-span-1 flex items-center justify-center">
+                      <span className="text-xs text-theme-foreground">
+                        {player.h2h_stats
+                          ? `${player.h2h_stats.w}/${player.h2h_stats.d}/${player.h2h_stats.l}`
+                          : "-"}
+                      </span>
+                    </div>
+
+                    {/* Overall Points */}
+                    <div className="col-span-2 flex items-center justify-center">
+                      <span className="font-semibold text-xs md:text-sm text-theme-foreground">
+                        {player.points}
+                      </span>
+                    </div>
+
+                    {/* H2H Points */}
+                    <div className="col-span-1 flex items-center justify-center">
+                      <motion.span
+                        className={`font-bold text-sm md:text-lg px-1 md:px-2 py-1 md:py-2 rounded-lg ${
+                          player.position === 1
+                            ? `text-${colors.text}`
+                            : player.position <= 3
+                            ? theme === "dark"
+                              ? "bg-gray-500/20 text-gray-300"
+                              : "bg-gray-200 text-gray-700"
+                            : "text-theme-foreground"
+                        }`}
+                        style={
+                          player.position === 1
+                            ? {
+                                backgroundColor:
+                                  theme === "dark"
+                                    ? `${colors.primary}30`
+                                    : `${colors.primary}40`,
+                                color: colors.primary,
+                              }
+                            : {}
+                        }
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {player.h2h_points || 0}
+                      </motion.span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="col-span-3 flex items-center justify-center">
+                    <motion.span
+                      className={`font-bold text-sm md:text-lg px-2 md:px-4 py-1 md:py-2 rounded-lg ${
+                        leagueType === "premium" && player.position === 1
+                          ? "text-yellow-800"
+                          : leagueType === "premium" && player.position <= 5
+                          ? `text-${colors.text}`
+                          : player.position === 1
+                          ? `text-${colors.text}`
+                          : player.position <= 3
+                          ? theme === "dark"
+                            ? "bg-gray-500/20 text-gray-300"
+                            : "bg-gray-200 text-gray-700"
+                          : "text-theme-foreground"
+                      }`}
+                      style={
+                        leagueType === "premium" && player.position === 1
+                          ? {
+                              backgroundColor: "#FFD700",
+                              color: "#B8860B",
+                              boxShadow: "0 2px 8px rgba(255, 215, 0, 0.3)",
+                            }
+                          : leagueType === "premium" && player.position <= 5
+                          ? {
+                              backgroundColor:
+                                theme === "dark"
+                                  ? `${colors.primary}30`
+                                  : `${colors.primary}40`,
+                              color: colors.primary,
+                            }
+                          : player.position === 1
+                          ? {
+                              backgroundColor:
+                                theme === "dark"
+                                  ? `${colors.primary}30`
+                                  : `${colors.primary}40`,
+                              color: colors.primary,
+                            }
+                          : {}
+                      }
+                      whileHover={{ scale: 1.1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {player.points}
+                    </motion.span>
+                  </div>
+                )}
               </motion.div>
             );
           })}
