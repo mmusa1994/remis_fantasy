@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import {
   sendConfirmationEmail,
   sendAdminNotificationEmail,
@@ -48,11 +49,11 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Get current session for authorization checks
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
     // Authorization guard: codes email requires admin session
     if (emailType === "codes") {
-      if (!session?.user) {
+      if (!session) {
         return NextResponse.json(
           { error: "Unauthorized: Admin session required for codes email" },
           { status: 401 }
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     // For public registration flows, require reCAPTCHA if no admin session
-    if (emailType === "registration" && !session?.user && !recaptchaToken) {
+    if (emailType === "registration" && !session && !recaptchaToken) {
       return NextResponse.json(
         { error: "reCAPTCHA token required for public registration" },
         { status: 400 }

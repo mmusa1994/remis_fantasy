@@ -24,13 +24,21 @@ if (!emailPass) {
   throw new Error("Missing env var EMAIL_PASS");
 }
 
-// Email transporter configuration
+// Email transporter configuration with SMTP pooling for better performance
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: emailUser,
     pass: emailPass,
   },
+  pool: true, // Enable connection pooling
+  maxConnections: 5, // Maximum number of connections in the pool
+  maxMessages: 100, // Maximum number of messages per connection
+  rateDelta: 1000, // Minimum time between messages (1 second)
+  rateLimit: 5, // Maximum messages per rateDelta (5 messages per second)
+  socketTimeout: 30000, // Socket timeout in milliseconds (30 seconds)
+  connectionTimeout: 30000, // Connection timeout in milliseconds (30 seconds)
+  greetingTimeout: 30000, // SMTP greeting timeout in milliseconds (30 seconds)
 });
 
 // Email templates

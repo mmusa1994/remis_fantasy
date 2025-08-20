@@ -236,7 +236,7 @@ export const useHomepageData = () => {
           },
           {
             label: "Nagradni fond",
-            value: "8.OOO+ KM / 4.200+ €",
+            value: "8.000+ KM / 4.200+ €",
             color: "text-green-500",
             icon: BsCash,
           },

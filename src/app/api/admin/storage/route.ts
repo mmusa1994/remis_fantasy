@@ -1,21 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { supabaseServer } from "@/lib/supabase-server";
 
 export async function POST(request: NextRequest) {
   try {
     // Verify admin session
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
     const { filePath } = body;
 
-    if (!filePath) {
-      return NextResponse.json({ error: "Missing file path" }, { status: 400 });
+    // Comprehensive file path validation
+    if (!filePath || typeof filePath !== "string") {
+      return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
+    }
+
+    // Check for empty string
+    if (filePath.trim() === "") {
+      return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
+    }
+
+    // Prevent path traversal attacks
+    if (filePath.startsWith("/") || filePath.includes("..")) {
+      return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
+    }
+
+    // Validate safe key pattern: alphanumerics, dashes, underscores, slashes, dots
+    const safeKeyPattern = /^[a-zA-Z0-9\-_\/.]+$/;
+    if (!safeKeyPattern.test(filePath)) {
+      return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
     }
 
     // Get signed URL using server-side client (5 minutes expiry)
