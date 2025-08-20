@@ -4,39 +4,49 @@ import {
   sendAdminNotificationEmail,
   sendRegistrationConfirmationEmail,
 } from "@/lib/email";
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 import { registrationLimiter } from "@/lib/rate-limiter";
 
 export async function POST(request: NextRequest) {
   try {
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    const clientIP =
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
 
     const rateLimitResult = registrationLimiter.isAllowed(clientIP);
-    
+
     if (!rateLimitResult.allowed) {
-      const resetTimeMinutes = Math.ceil((rateLimitResult.resetTime! - Date.now()) / 60000);
+      const resetTimeMinutes = Math.ceil(
+        (rateLimitResult.resetTime! - Date.now()) / 60000
+      );
       return NextResponse.json(
-        { error: `Previše zahtjeva. Pokušajte ponovo za ${resetTimeMinutes} minuta.` }, 
+        {
+          error: `Previše zahtjeva. Pokušajte ponovo za ${resetTimeMinutes} minuta.`,
+        },
         { status: 429 }
       );
     }
 
     const body = await request.json();
-    const { userData, emailType = "codes", registrationId, recaptchaToken } = body;
+    const {
+      userData,
+      emailType = "codes",
+      registrationId,
+      recaptchaToken,
+    } = body;
 
     if (recaptchaToken) {
       const recaptchaResponse = await fetch(
         `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
-        { method: 'POST' }
+        { method: "POST" }
       );
-      
+
       const recaptchaData = await recaptchaResponse.json();
-      
+
       if (!recaptchaData.success) {
         return NextResponse.json(
-          { error: "reCAPTCHA verifikacija neuspešna" }, 
+          { error: "reCAPTCHA verifikacija neuspešna" },
           { status: 400 }
         );
       }
@@ -63,7 +73,7 @@ export async function POST(request: NextRequest) {
 
         // Update database to mark registration email as sent
         if (registrationId) {
-          await supabase
+          await supabaseServer
             .from("registration_25_26")
             .update({
               registration_email_sent: true,
@@ -88,7 +98,7 @@ export async function POST(request: NextRequest) {
               ? "standard_h2h"
               : "standard";
 
-          await supabase
+          await supabaseServer
             .from("registration_25_26")
             .update({
               codes_email_sent: true,
