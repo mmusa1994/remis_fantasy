@@ -215,7 +215,11 @@ export default function AdminDashboard() {
     }
   };
 
-  const getSignedUrl = async (filePath: string) => {
+  const getSignedUrl = async (filePath?: string): Promise<string | null> => {
+    if (!filePath) {
+      return null;
+    }
+
     try {
       const response = await fetch("/api/admin/storage", {
         method: "POST",
