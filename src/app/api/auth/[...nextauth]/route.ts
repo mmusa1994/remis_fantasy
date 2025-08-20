@@ -3,10 +3,24 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Validate required environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+
+if (!supabaseUrl) {
+  throw new Error("Missing env var NEXT_PUBLIC_SUPABASE_URL");
+}
+
+if (!supabaseServiceKey) {
+  throw new Error("Missing env var SUPABASE_SERVICE_ROLE_KEY");
+}
+
+if (!nextAuthSecret) {
+  throw new Error("Missing env var NEXTAUTH_SECRET");
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const handler = NextAuth({
   providers: [
@@ -85,7 +99,7 @@ const handler = NextAuth({
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: nextAuthSecret,
   debug: true, // Enable debug for production troubleshooting
 });
 

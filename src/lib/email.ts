@@ -11,12 +11,25 @@ interface UserData {
   h2h_league: boolean;
 }
 
+// Validate required email environment variables
+const emailUser = process.env.EMAIL_USER;
+const emailPass = process.env.EMAIL_PASS;
+const adminEmail = process.env.ADMIN_EMAIL || "admin@remisfantasy.com";
+
+if (!emailUser) {
+  throw new Error("Missing env var EMAIL_USER");
+}
+
+if (!emailPass) {
+  throw new Error("Missing env var EMAIL_PASS");
+}
+
 // Email transporter configuration
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: emailUser,
+    pass: emailPass,
   },
 });
 
@@ -1280,7 +1293,7 @@ export const sendConfirmationEmail = async (userData: UserData) => {
     }
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: emailUser,
       to: userData.email,
       subject: subject,
       html: emailTemplate,
@@ -1298,7 +1311,7 @@ export const sendConfirmationEmail = async (userData: UserData) => {
 // Function to send admin notification email
 export const sendAdminNotificationEmail = async (
   userData: UserData,
-  adminEmail: string = process.env.ADMIN_EMAIL || "admin@remisfantasy.com"
+  adminEmailParam: string = adminEmail
 ) => {
   try {
     const emailTemplate = createAdminConfirmationTemplate(userData);
@@ -1307,8 +1320,8 @@ export const sendAdminNotificationEmail = async (
     } (${userData.league_type.toUpperCase()})`;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: adminEmail,
+      from: emailUser,
+      to: adminEmailParam,
       subject: subject,
       html: emailTemplate,
     };
@@ -1329,7 +1342,7 @@ export const sendRegistrationConfirmationEmail = async (userData: UserData) => {
     const subject = `✅ REMIS Fantasy - Registracija Potvrđena`;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: emailUser,
       to: userData.email,
       subject: subject,
       html: emailTemplate,

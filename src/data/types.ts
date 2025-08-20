@@ -1,3 +1,7 @@
+import * as LucideIcons from "lucide-react";
+
+export type IconName = keyof typeof LucideIcons;
+
 export interface Prize {
   id: number;
   title: string;
@@ -21,7 +25,7 @@ export interface Prize {
 export interface LeagueStats {
   label: string;
   value: string;
-  icon: string; // Icon name from lucide-react
+  icon: IconName;
 }
 
 export interface NavigationItem {
@@ -29,7 +33,7 @@ export interface NavigationItem {
   title: string;
   description: string;
   href: string;
-  icon: string; // Icon name from lucide-react
+  icon: IconName;
   color: "purple" | "yellow" | "blue" | "green" | "red";
 }
 
@@ -69,7 +73,7 @@ export interface HomeLeague {
   title: string;
   description: string;
   href: string;
-  icon: string;
+  icon: IconName;
   gradient: string;
   available: boolean;
 }
@@ -77,7 +81,7 @@ export interface HomeLeague {
 export interface GlobalStat {
   label: string;
   value: string;
-  icon: string;
+  icon: IconName;
 }
 
 export interface AppConfig {
@@ -113,7 +117,7 @@ export interface LeagueOption {
 export interface PaymentMethod {
   id: string;
   name: string;
-  icon: string;
+  icon: IconName;
   color: string;
 }
 

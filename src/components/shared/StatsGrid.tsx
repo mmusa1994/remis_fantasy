@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ComponentType } from "react";
+import type { IconName } from "@/data/types";
 
 // Icon mapping for dynamic icon rendering
 const iconMap: Record<string, LucideIcon> = {
@@ -30,7 +31,7 @@ const iconMap: Record<string, LucideIcon> = {
 interface Stat {
   label: string;
   value: string;
-  icon: string | ComponentType<any>;
+  icon: IconName | ComponentType<any>;
   color?: string;
 }
 
@@ -47,7 +48,7 @@ export default function StatsGrid({
 }: StatsGridProps) {
   const { theme } = useTheme();
 
-  const getIconComponent = (icon: string | ComponentType<any>) => {
+  const getIconComponent = (icon: IconName | ComponentType<any>) => {
     if (typeof icon === "string") {
       return iconMap[icon] || DollarSign;
     }
@@ -61,7 +62,7 @@ export default function StatsGrid({
     const colorMatch = colorClass.match(/text-(\w+)-(\d+)/);
     if (!colorMatch) return null;
 
-    const [, colorName, shade] = colorMatch;
+    const [, colorName] = colorMatch;
 
     return {
       light: {

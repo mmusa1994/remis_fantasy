@@ -861,13 +861,14 @@ export default function RegistrationForm({
                           const selectedLeague = leagueOptions.find(
                             (option: any) => option.id === formData.league_type
                           );
-                          let leagueType = selectedLeague
+                          const baseLeagueType = selectedLeague
                             ? selectedLeague.name
                             : "Fantasy Football Liga";
 
-                          if (formData.h2h_league) {
-                            leagueType += " + H2H Liga";
-                          }
+                          const leagueType =
+                            formData.h2h_league === true
+                              ? `${baseLeagueType} + H2H Liga`
+                              : baseLeagueType;
 
                           try {
                             await downloadPaymentInstructions(leagueType);

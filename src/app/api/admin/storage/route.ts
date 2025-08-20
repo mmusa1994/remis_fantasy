@@ -18,13 +18,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing file path" }, { status: 400 });
     }
 
-    // Get signed URL using server-side client
+    // Get signed URL using server-side client (5 minutes expiry)
     const { data, error } = await supabaseServer.storage
       .from("payment-proofs")
-      .createSignedUrl(filePath, 3600); // 1 hour expiry
+      .createSignedUrl(filePath, 300);
 
     if (error) {
       console.error("Error getting signed URL:", error);
+      return NextResponse.json({ error: "Storage error" }, { status: 500 });
+    }
+
+    // Validate that signed URL is present
+    if (!data?.signedUrl) {
+      console.error("Error: Signed URL is missing from response");
       return NextResponse.json({ error: "Storage error" }, { status: 500 });
     }
 

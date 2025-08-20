@@ -22,6 +22,7 @@ interface Prize {
     | "arsenal"
     | "champions"
     | "f1";
+  league?: "premier" | "champions" | "f1";
   price?: string;
   features: string[];
 }
@@ -145,6 +146,19 @@ export default function PrizeModal({
     }
   };
 
+  const handleBackdropKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleClose();
+    }
+  };
+
+  const handleModalKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      handleClose();
+    }
+  };
+
   if (!prize || !mounted) return null;
 
   const colors = tierColors[prize.tier];
@@ -174,6 +188,10 @@ export default function PrizeModal({
           <div
             className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300"
             onClick={handleBackdropClick}
+            onKeyDown={handleBackdropKeyDown}
+            role="button"
+            tabIndex={0}
+            aria-label="Close prize modal"
             style={{ zIndex: 1 }}
           />
 
@@ -199,6 +217,8 @@ export default function PrizeModal({
                 className={`${
                   theme === "light" ? "bg-theme-background" : "bg-black"
                 } rounded-2xl sm:rounded-3xl overflow-hidden relative w-full h-full theme-transition`}
+                onKeyDown={handleModalKeyDown}
+                tabIndex={-1}
               >
                 {/* Background Effects */}
                 <div className="absolute inset-0">

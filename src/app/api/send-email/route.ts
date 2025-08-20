@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import {
   sendConfirmationEmail,
   sendAdminNotificationEmail,
@@ -6,6 +7,13 @@ import {
 } from "@/lib/email";
 import { supabaseServer } from "@/lib/supabase-server";
 import { registrationLimiter } from "@/lib/rate-limiter";
+
+// Validate required environment variables
+const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
+
+if (!recaptchaSecretKey) {
+  throw new Error("Missing env var RECAPTCHA_SECRET_KEY");
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,9 +25,12 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = registrationLimiter.isAllowed(clientIP);
 
     if (!rateLimitResult.allowed) {
-      const resetTimeMinutes = Math.ceil(
-        (rateLimitResult.resetTime! - Date.now()) / 60000
-      );
+      // Robust reset time calculation with fallback
+      const resetTime = rateLimitResult.resetTime || Date.now();
+      const timeDifferenceMs = resetTime - Date.now();
+      const computedMinutes = Math.ceil(timeDifferenceMs / 60000);
+      const resetTimeMinutes = Math.max(computedMinutes, 0);
+
       return NextResponse.json(
         {
           error: `Previše zahtjeva. Pokušajte ponovo za ${resetTimeMinutes} minuta.`,
@@ -36,9 +47,30 @@ export async function POST(request: NextRequest) {
       recaptchaToken,
     } = body;
 
+    // Get current session for authorization checks
+    const session = await getServerSession();
+
+    // Authorization guard: codes email requires admin session
+    if (emailType === "codes") {
+      if (!session?.user) {
+        return NextResponse.json(
+          { error: "Unauthorized: Admin session required for codes email" },
+          { status: 401 }
+        );
+      }
+    }
+
+    // For public registration flows, require reCAPTCHA if no admin session
+    if (emailType === "registration" && !session?.user && !recaptchaToken) {
+      return NextResponse.json(
+        { error: "reCAPTCHA token required for public registration" },
+        { status: 400 }
+      );
+    }
+
     if (recaptchaToken) {
       const recaptchaResponse = await fetch(
-        `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
+        `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${recaptchaToken}`,
         { method: "POST" }
       );
 
@@ -58,6 +90,7 @@ export async function POST(request: NextRequest) {
 
     let result;
     let adminResult;
+    let updatedRegistration = null;
 
     // Send different email types based on the emailType parameter
     switch (emailType) {
@@ -109,7 +142,6 @@ export async function POST(request: NextRequest) {
         result = await sendConfirmationEmail(userData);
 
         // Update database to mark codes email as sent
-        let updatedRegistration = null;
         if (registrationId) {
           const packageType =
             userData.league_type === "premium" && userData.h2h_league
