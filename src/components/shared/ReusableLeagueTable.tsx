@@ -58,7 +58,7 @@ export default function ReusableLeagueTable({
   const { theme } = useTheme();
 
   const getLeagueColors = (leagueType: string) => {
-    console.log('ReusableLeagueTable leagueType:', leagueType); // Debug
+    console.log("ReusableLeagueTable leagueType:", leagueType); // Debug
     switch (leagueType) {
       case "premium":
         return {
@@ -176,11 +176,13 @@ export default function ReusableLeagueTable({
       if (leagueType === "free") {
         // Za Free Liga samo dres za prvo mesto
         if (position === 1) {
-          return <FaTshirt className="w-5 h-5" style={{ color: colors.primary }} />;
+          return (
+            <FaTshirt className="w-5 h-5" style={{ color: colors.primary }} />
+          );
         }
         return null;
       }
-      
+
       // Za H2H lige
       switch (position) {
         case 1:
@@ -238,7 +240,7 @@ export default function ReusableLeagueTable({
             )} border-${colors.border}`;
       }
     } else if (leagueType === "h2h" || leagueType === "h2h2") {
-      // H2H i H2H2 lige - zlatno pozadina za 1. mesto, crveno za 2-4
+      // H2H i H2H2 lige - zlatno pozadina za 1. mjesto, crveno za 2-4
       if (position === 1) {
         return theme === "dark"
           ? "bg-gradient-to-r from-yellow-500/40 to-amber-600/30 border-l-4 border-yellow-500"
@@ -574,7 +576,7 @@ export default function ReusableLeagueTable({
                       leagueType
                     )}`}
                   >
-                    {prize.position}. mesto
+                    {prize.position}. mjesto
                   </div>
                   <div className="text-xs text-theme-text-secondary truncate">
                     {getPrizeDescription(prize)}
