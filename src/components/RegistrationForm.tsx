@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import Toast from "./Toast";
+import Toast from "./shared/Toast";
 import { supabase } from "@/lib/supabase";
 import ReCAPTCHA from "react-google-recaptcha";
 import {
@@ -15,9 +15,11 @@ import {
   Download,
   Mail,
   Copy,
+  Lightbulb,
 } from "lucide-react";
 import Image from "next/image";
 import { downloadPaymentInstructions } from "@/utils/downloadPDF";
+import { useRegistrationConfig } from "@/hooks/useLeagueData";
 
 interface FormData {
   first_name: string;
@@ -33,8 +35,20 @@ interface FormData {
   notes: string;
 }
 
-export default function RegistrationForm() {
+interface RegistrationFormProps {
+  leagueType: string;
+}
+
+export default function RegistrationForm({
+  leagueType,
+}: RegistrationFormProps) {
   const { theme } = useTheme();
+  const {
+    data: registrationConfig,
+    loading: configLoading,
+    error: configError,
+  } = useRegistrationConfig(leagueType);
+
   const [formData, setFormData] = useState<FormData>({
     first_name: "",
     last_name: "",
@@ -67,6 +81,29 @@ export default function RegistrationForm() {
   });
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  // Show loading state while config is loading
+  if (configLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-theme-text-secondary">Učitava se...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if config failed to load
+  if (configError || !registrationConfig) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Greška pri učitavanju podataka</p>
+          <p className="text-theme-text-secondary">{configError}</p>
+        </div>
+      </div>
+    );
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -327,53 +364,8 @@ export default function RegistrationForm() {
     }
   };
 
-  const leagueOptions = [
-    {
-      id: "standard",
-      name: "Standard Liga",
-      price: "15€ / 30KM",
-      image: "/images/form/standard-form.png",
-      description: "Klasična liga sa osnovnim nagradama",
-      colors: {
-        border: "border-sky-400",
-        bg: "bg-sky-400/10",
-        hover: "hover:border-sky-400/50",
-        text: "text-sky-300",
-        badge: "bg-gradient-to-r from-sky-400 to-gray-600",
-        badgeRing: "ring-sky-400/50",
-      },
-    },
-    {
-      id: "premium",
-      name: "Premium Liga",
-      price: "50€ / 100KM",
-      image: "/images/form/premium-form.png",
-      description: "VIP liga sa ekskluzivnim nagradama",
-      colors: {
-        border: "border-yellow-400",
-        bg: "bg-yellow-400/10",
-        hover: "hover:border-yellow-400/50",
-        text: "text-yellow-300",
-        badge: "bg-gradient-to-r from-yellow-400 to-gray-600",
-        badgeRing: "ring-yellow-400/50",
-      },
-    },
-  ];
-
-  const h2hOption = {
-    name: "H2H Liga",
-    price: "10€ / 20KM",
-    image: "/images/form/h2h-form.png",
-    description: "Head-to-Head dodatna liga sa posebnim nagradama",
-    colors: {
-      border: "border-red-500",
-      bg: "bg-red-500/10",
-      hover: "hover:border-red-500/50",
-      text: "text-white",
-      badge: "bg-gradient-to-r from-red-500 to-gray-600",
-      badgeRing: "ring-red-500/50",
-    },
-  };
+  const leagueOptions = registrationConfig.leagueOptions;
+  const h2hOption = registrationConfig.h2hOption;
 
   return (
     <>
@@ -385,7 +377,7 @@ export default function RegistrationForm() {
         onClose={() => setToast({ ...toast, show: false })}
       />
 
-      <section className="relative w-full py-32 bg-theme-background overflow-hidden theme-transition">
+      <section className="relative w-full bg-theme-background overflow-hidden theme-transition">
         {/* Optimized Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-900/10 via-gray-800/5 to-red-800/10 minimal-radius blur-3xl animate-pulse-gentle gpu-accelerated"></div>
@@ -646,7 +638,7 @@ export default function RegistrationForm() {
                   </h3>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6">
-                    {leagueOptions.map((option) => (
+                    {leagueOptions.map((option: any) => (
                       <div
                         key={option.id}
                         className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
@@ -681,7 +673,9 @@ export default function RegistrationForm() {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
                           {/* Price Badge */}
-                          <div className={`absolute top-3 right-3 md:top-4 md:right-4 ${option.colors.badge} text-white px-3 py-1.5 md:px-4 md:py-2 minimal-radius font-bold text-sm md:text-lg shadow-2xl ring-2 ${option.colors.badgeRing} animate-pulse-gentle hover-scale`}>
+                          <div
+                            className={`absolute top-3 right-3 md:top-4 md:right-4 ${option.colors.badge} text-white px-3 py-1.5 md:px-4 md:py-2 minimal-radius font-bold text-sm md:text-lg shadow-2xl ring-2 ${option.colors.badgeRing} animate-pulse-gentle hover-scale`}
+                          >
                             {option.price}
                           </div>
                         </div>
@@ -699,7 +693,9 @@ export default function RegistrationForm() {
                         </div>
 
                         {formData.league_type === option.id && (
-                          <div className={`absolute top-4 left-4 w-10 h-10 ${option.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${option.colors.badgeRing} animate-scale-in hover-scale`}>
+                          <div
+                            className={`absolute top-4 left-4 w-10 h-10 ${option.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${option.colors.badgeRing} animate-scale-in hover-scale`}
+                          >
                             <CheckCircle className="w-6 h-6 text-white" />
                           </div>
                         )}
@@ -707,70 +703,83 @@ export default function RegistrationForm() {
                     ))}
                   </div>
 
-              {/* H2H League as additional option */}
-              <div className="mb-6">
-                <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
-                  <span className="text-theme-heading-primary theme-transition">
-                    H2H Liga - dodatno (*samo 40 mjesta)
-                  </span>
-                </h3>
-                <div
-                  className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
-                    formData.h2h_league
-                      ? `${h2hOption.colors.border} ${h2hOption.colors.bg} shadow-lg ring-4 ${h2hOption.colors.badgeRing}`
-                      : `border-gray-600/50 ${h2hOption.colors.hover} hover:shadow-xl`
-                  }`}
-                  onClick={() => {
-                    handleInputChange("h2h_league", !formData.h2h_league);
-                  }}
-                >
-                    <input
-                      type="checkbox"
-                      name="h2h_league"
-                      checked={formData.h2h_league}
-                      onChange={(e) => {
-                        handleInputChange("h2h_league", e.target.checked);
+                  {/* H2H League as additional option */}
+                  <div className="mb-6">
+                    <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
+                      <span className="text-theme-heading-primary theme-transition">
+                        H2H Liga - dodatno (*samo 40 mjesta)
+                      </span>
+                    </h3>
+                    <div
+                      className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent ${
+                        formData.h2h_league
+                          ? `${h2hOption.colors.border} ${h2hOption.colors.bg} shadow-lg ring-4 ${h2hOption.colors.badgeRing}`
+                          : `border-gray-600/50 ${h2hOption.colors.hover} hover:shadow-xl`
+                      }`}
+                      tabIndex={0}
+                      role="button"
+                      aria-pressed={formData.h2h_league}
+                      onClick={() => {
+                        handleInputChange("h2h_league", !formData.h2h_league);
                       }}
-                      className="sr-only"
-                    />
-
-                    {/* H2H Image - Full width like other cards */}
-                    <div className="relative h-48 bg-black/50">
-                      <Image
-                        src={h2hOption.image}
-                        alt={h2hOption.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
-                        className="object-cover opacity-90"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleInputChange("h2h_league", !formData.h2h_league);
+                        }
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        name="h2h_league"
+                        checked={formData.h2h_league}
+                        onChange={(e) => {
+                          handleInputChange("h2h_league", e.target.checked);
+                        }}
+                        className="sr-only"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
-                      {/* Price Badge */}
-                      <div className={`absolute top-4 right-4 ${h2hOption.colors.badge} text-white px-4 py-2 minimal-radius font-bold text-lg shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-pulse-gentle hover-scale`}>
-                        {h2hOption.price}
+                      {/* H2H Image - Full width like other cards */}
+                      <div className="relative h-48 bg-black/50">
+                        <Image
+                          src={h2hOption.image}
+                          alt={h2hOption.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
+                          className="object-cover opacity-90"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+
+                        {/* Price Badge */}
+                        <div
+                          className={`absolute top-4 right-4 ${h2hOption.colors.badge} text-white px-4 py-2 minimal-radius font-bold text-lg shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-pulse-gentle hover-scale`}
+                        >
+                          {h2hOption.price}
+                        </div>
+
+                        {/* Selected indicator */}
+                        {formData.h2h_league && (
+                          <div
+                            className={`absolute top-4 left-4 w-10 h-10 ${h2hOption.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-scale-in hover-scale`}
+                          >
+                            <CheckCircle className="w-6 h-6 text-white" />
+                          </div>
+                        )}
                       </div>
 
-                      {/* Selected indicator */}
-                      {formData.h2h_league && (
-                        <div className={`absolute top-4 left-4 w-10 h-10 ${h2hOption.colors.badge} minimal-radius flex items-center justify-center border-2 border-white shadow-2xl ring-2 ${h2hOption.colors.badgeRing} animate-scale-in hover-scale`}>
-                          <CheckCircle className="w-6 h-6 text-white" />
-                        </div>
-                      )}
+                      {/* Content */}
+                      <div className="p-6 bg-black/60">
+                        <h4
+                          className={`text-lg md:text-xl font-bold ${h2hOption.colors.text} mb-2`}
+                        >
+                          {h2hOption.name}
+                        </h4>
+                        <p className="text-gray-300 text-xs md:text-sm leading-tight">
+                          {h2hOption.description}
+                        </p>
+                      </div>
                     </div>
-
-                    {/* Content */}
-                    <div className="p-6 bg-black/60">
-                      <h4
-                        className={`text-lg md:text-xl font-bold ${h2hOption.colors.text} mb-2`}
-                      >
-                        {h2hOption.name}
-                      </h4>
-                      <p className="text-gray-300 text-xs md:text-sm leading-tight">
-                        {h2hOption.description}
-                      </p>
-                    </div>
-                </div>
-              </div>
+                  </div>
 
                   {errors.league_type && (
                     <p className="text-red-400 text-xs md:text-sm mt-4 flex items-center gap-1 font-medium theme-transition animate-fade-in">
@@ -789,71 +798,58 @@ export default function RegistrationForm() {
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-                    {[
-                      {
-                        id: "bank",
-                        name: "Bankovni Račun",
-                        Icon: Building2,
-                        color: "purple",
-                      },
-                      {
-                        id: "wise",
-                        name: "Wise",
-                        Icon: CreditCardIcon,
-                        color: "green",
-                      },
-                      {
-                        id: "paypal",
-                        name: "PayPal",
-                        Icon: CreditCardIcon,
-                        color: "blue",
-                      },
-                      {
-                        id: "cash",
-                        name: "Keš",
-                        Icon: Banknote,
-                        color: "yellow",
-                      },
-                    ].map((method) => (
-                      <div
-                        key={method.id}
-                        className={`relative cursor-pointer minimal-radius border-2 p-3 md:p-4 text-center transition-all duration-300 hover-scale ${
-                          formData.payment_method === method.id
-                            ? "border-red-500 bg-red-500/10 shadow-lg ring-2 ring-red-500/50"
-                            : "border-gray-600/50 hover:border-red-500/50 hover:bg-red-500/5"
-                        }`}
-                        onClick={() => {
-                          handleInputChange("payment_method", method.id);
-                          if (method.id !== "cash") {
-                            handleInputChange("cash_status", undefined);
-                          }
-                        }}
-                      >
-                        <div className="flex flex-col items-center space-y-2">
-                          <method.Icon
-                            className={`w-6 h-6 md:w-8 md:h-8 ${
-                              formData.payment_method === method.id
-                                ? "text-white"
-                                : method.color === "blue"
-                                ? "text-blue-400"
-                                : method.color === "purple"
-                                ? "text-purple-400"
-                                : method.color === "green"
-                                ? "text-green-400"
-                                : "text-yellow-400"
-                            }`}
-                          />
-                          <div className="text-theme-foreground text-xs md:text-sm font-bold leading-tight theme-transition">
-                            {method.name}
+                    {registrationConfig.paymentMethods.map((method: any) => {
+                      // Map icon names to components
+                      const IconComponent =
+                        method.icon === "Building2"
+                          ? Building2
+                          : method.icon === "CreditCard"
+                          ? CreditCardIcon
+                          : method.icon === "Banknote"
+                          ? Banknote
+                          : Building2;
+
+                      return (
+                        <div
+                          key={method.id}
+                          className={`relative cursor-pointer minimal-radius border-2 p-3 md:p-4 text-center transition-all duration-300 hover-scale ${
+                            formData.payment_method === method.id
+                              ? "border-red-500 bg-red-500/10 shadow-lg ring-2 ring-red-500/50"
+                              : "border-gray-600/50 hover:border-red-500/50 hover:bg-red-500/5"
+                          }`}
+                          onClick={() => {
+                            handleInputChange("payment_method", method.id);
+                            if (method.id !== "cash") {
+                              handleInputChange("cash_status", undefined);
+                            }
+                          }}
+                        >
+                          <div className="flex flex-col items-center space-y-2">
+                            <IconComponent
+                              className={`w-6 h-6 md:w-8 md:h-8 ${
+                                formData.payment_method === method.id
+                                  ? "text-white"
+                                  : method.color === "blue"
+                                  ? "text-blue-400"
+                                  : method.color === "purple"
+                                  ? "text-purple-400"
+                                  : method.color === "green"
+                                  ? "text-green-400"
+                                  : "text-yellow-400"
+                              }`}
+                            />
+                            <div className="text-theme-foreground text-xs md:text-sm font-bold leading-tight theme-transition">
+                              {method.name}
+                            </div>
                           </div>
+                          {formData.payment_method === method.id && (
+                            <div className="absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 bg-red-500 minimal-radius flex items-center justify-center animate-scale-in">
+                              <CheckCircle className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                            </div>
+                          )}
                         </div>
-                        {formData.payment_method === method.id && (
-                          <div className="absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 bg-red-500 minimal-radius flex items-center justify-center animate-scale-in">
-                            <CheckCircle className="w-3 h-3 md:w-4 md:h-4 text-white" />
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Bank Account Download Instructions */}
@@ -863,23 +859,26 @@ export default function RegistrationForm() {
                         type="button"
                         onClick={async () => {
                           const selectedLeague = leagueOptions.find(
-                            (option) => option.id === formData.league_type
+                            (option: any) => option.id === formData.league_type
                           );
-                          let leagueType = selectedLeague
+                          const baseLeagueType = selectedLeague
                             ? selectedLeague.name
                             : "Fantasy Football Liga";
-                          
-                          if (formData.h2h_league) {
-                            leagueType += " + H2H Liga";
-                          }
-                          
+
+                          const leagueType =
+                            formData.h2h_league === true
+                              ? `${baseLeagueType} + H2H Liga`
+                              : baseLeagueType;
+
                           try {
                             await downloadPaymentInstructions(leagueType);
                           } catch (err: any) {
                             // Show error toast if download fails
                             setToast({
                               show: true,
-                              message: err.message || "Problem sa preuzimanjem PDF-a. Molimo kontaktirajte nas na muhamed.musa1994@gmail.com",
+                              message:
+                                err.message ||
+                                "Problem sa preuzimanjem PDF-a. Molimo kontaktirajte nas na muhamed.musa1994@gmail.com",
                               type: "error",
                             });
                           }
@@ -911,8 +910,8 @@ export default function RegistrationForm() {
                         </div>
 
                         <p className="text-theme-text-secondary text-xs mb-4 leading-relaxed theme-transition">
-                          Za Wise uplatu, pronađite korisnika putem email
-                          adrese i pošaljite novac:
+                          Za Wise uplatu, pronađite korisnika putem email adrese
+                          i pošaljite novac:
                         </p>
 
                         <div className="bg-theme-card-secondary/40 minimal-radius p-3 border border-theme-border theme-transition">
@@ -943,8 +942,11 @@ export default function RegistrationForm() {
 
                         <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 minimal-radius">
                           <p className="text-blue-300 text-xs font-medium">
-                            💡 Napomena: U opis uplate navedite vaše ime i tip
-                            lige koje se prijavljujete.
+                            <span className="inline-flex items-center gap-1">
+                              <Lightbulb className="w-3 h-3" />
+                              Napomena: U opis uplate navedite vaše ime i tip
+                              lige koje se prijavljujete.
+                            </span>
                           </p>
                         </div>
                       </div>
@@ -985,8 +987,11 @@ export default function RegistrationForm() {
                                 : "text-yellow-300"
                             } text-xs font-medium`}
                           >
-                            💡 Napomena: Dodajte proviziju za PayPal od 3€. U
-                            opis uplate navedite vaše ime i tip lige.
+                            <span className="inline-flex items-center gap-1">
+                              <Lightbulb className="w-3 h-3" />
+                              Napomena: Dodajte proviziju za PayPal od 3€. U
+                              opis uplate navedite vaše ime i tip lige.
+                            </span>
                           </p>
                         </div>
                       </div>

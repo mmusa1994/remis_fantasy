@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+
 import Image from "next/image";
-import { LogOut, Mail, CheckCircle, Send, Edit, Trash2 } from "lucide-react";
-import Toast from "@/components/Toast";
+import {
+  LogOut,
+  Mail,
+  CheckCircle,
+  Send,
+  Edit,
+  Trash2,
+  Table2,
+} from "lucide-react";
+import Toast from "@/components/shared/Toast";
 
 interface Registration {
   id: string;
@@ -87,102 +95,7 @@ export default function AdminDashboard() {
     }
   }, [status, session, router]);
 
-  useEffect(() => {
-    fetchRegistrations();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [registrations, filters]);
-
-  const fetchRegistrations = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("registration_25_26")
-        .select("*")
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setRegistrations(data || []);
-    } catch (error) {
-      console.error("Error fetching registrations:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const getSignedUrl = async (filePath: string) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from("payment-proofs")
-        .createSignedUrl(filePath, 3600); // 1 hour expiry
-
-      if (error) throw error;
-      return data.signedUrl;
-    } catch (error) {
-      console.error("Error getting signed URL:", error);
-      return null;
-    }
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchRegistrations();
-  };
-
-  const sendCodesEmail = async (registration: Registration) => {
-    try {
-      setSendingEmail(registration.id);
-
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          emailType: "codes",
-          registrationId: registration.id,
-          userData: {
-            first_name: registration.first_name,
-            last_name: registration.last_name,
-            email: registration.email,
-            phone: registration.phone,
-            team_name: registration.team_name,
-            league_type: registration.league_type,
-            h2h_league: registration.h2h_league,
-            payment_method: registration.payment_method,
-            cash_status: registration.cash_status,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to send email");
-      }
-
-      // Refresh registrations to update email status
-      await fetchRegistrations();
-
-      setToast({
-        show: true,
-        message: "Email sa kodovima je uspešno poslat!",
-        type: "success",
-      });
-    } catch (error) {
-      console.error("Error sending email:", error);
-      setToast({
-        show: true,
-        message: "Greška pri slanju emaila. Pokušajte ponovo.",
-        type: "error",
-      });
-    } finally {
-      setSendingEmail(null);
-    }
-  };
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...registrations];
 
     // Search filter
@@ -211,8 +124,6 @@ export default function AdminDashboard() {
         (reg) => reg.h2h_league === (filters.h2h_league === "yes")
       );
     }
-
-    // Payment status filter - now handled by cash status
 
     // Payment method filter
     if (filters.payment_method !== "all") {
@@ -276,6 +187,147 @@ export default function AdminDashboard() {
 
     setFilteredRegistrations(filtered);
     setCurrentPage(1); // Reset to first page when filters change
+  }, [registrations, filters]);
+
+  useEffect(() => {
+    fetchRegistrations();
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const fetchRegistrations = async () => {
+    try {
+      const response = await fetch("/api/admin/registrations");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch registrations");
+      }
+
+      const { registrations } = await response.json();
+      setRegistrations(registrations || []);
+    } catch (error) {
+      console.error("Error fetching registrations:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const getSignedUrl = async (filePath?: string): Promise<string | null> => {
+    if (!filePath) {
+      return null;
+    }
+
+    try {
+      const response = await fetch("/api/admin/storage", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ filePath }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get signed URL");
+      }
+
+      const { signedUrl } = await response.json();
+      return signedUrl;
+    } catch (error) {
+      console.error("Error getting signed URL:", error);
+      return null;
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchRegistrations();
+  };
+
+  const sendCodesEmail = async (registration: Registration) => {
+    try {
+      setSendingEmail(registration.id);
+
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailType: "codes",
+          registrationId: registration.id,
+          userData: {
+            first_name: registration.first_name,
+            last_name: registration.last_name,
+            email: registration.email,
+            phone: registration.phone,
+            team_name: registration.team_name,
+            league_type: registration.league_type,
+            h2h_league: registration.h2h_league,
+            payment_method: registration.payment_method,
+            cash_status: registration.cash_status,
+          },
+        }),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        // Parse server error details
+        const errorMessage =
+          responseData.error || responseData.details || "Failed to send email";
+        const errorDetails = responseData.details
+          ? ` (${responseData.details})`
+          : "";
+
+        console.error("Error sending email:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: responseData.error,
+          details: responseData.details,
+          fullResponse: responseData,
+        });
+
+        throw new Error(`${errorMessage}${errorDetails}`);
+      }
+
+      // Update local state with the returned registration data
+      if (responseData.registration) {
+        setRegistrations((prevRegistrations) =>
+          prevRegistrations.map((reg) =>
+            reg.id === registration.id ? responseData.registration : reg
+          )
+        );
+      }
+
+      // Show appropriate message based on whether email was already sent
+      const message = responseData.alreadySent
+        ? "Email sa kodovima je već poslat ranije."
+        : "Email sa kodovima je uspešno poslat!";
+
+      setToast({
+        show: true,
+        message,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error sending email:", error);
+
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Greška pri slanju emaila. Pokušajte ponovo.";
+
+      setToast({
+        show: true,
+        message: errorMessage,
+        type: "error",
+      });
+    } finally {
+      setSendingEmail(null);
+    }
   };
 
   const handleSignOut = () => {
@@ -291,27 +343,35 @@ export default function AdminDashboard() {
     if (!editingRecord) return;
 
     try {
-      const { error } = await supabase
-        .from("registration_25_26")
-        .update({
-          first_name: editFormData.first_name,
-          last_name: editFormData.last_name,
-          email: editFormData.email,
-          phone: editFormData.phone,
-          team_name: editFormData.team_name,
-          league_type: editFormData.league_type,
-          h2h_league: editFormData.h2h_league,
-          payment_method: editFormData.payment_method,
-          payment_status: editFormData.payment_status,
-          cash_status: editFormData.cash_status,
-          admin_notes: editFormData.admin_notes,
-          email_template_type: editFormData.email_template_type,
-          codes_email_sent: editFormData.codes_email_sent,
-          codes_email_sent_at: editFormData.codes_email_sent_at || null,
-        })
-        .eq("id", editingRecord.id);
+      const response = await fetch("/api/admin/registrations", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: editingRecord.id,
+          updates: {
+            first_name: editFormData.first_name,
+            last_name: editFormData.last_name,
+            email: editFormData.email,
+            phone: editFormData.phone,
+            team_name: editFormData.team_name,
+            league_type: editFormData.league_type,
+            h2h_league: editFormData.h2h_league,
+            payment_method: editFormData.payment_method,
+            payment_status: editFormData.payment_status,
+            cash_status: editFormData.cash_status,
+            admin_notes: editFormData.admin_notes,
+            email_template_type: editFormData.email_template_type,
+            codes_email_sent: editFormData.codes_email_sent,
+            codes_email_sent_at: editFormData.codes_email_sent_at || null,
+          },
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error("Failed to update registration");
+      }
 
       setEditingRecord(null);
       setEditFormData({});
@@ -337,12 +397,13 @@ export default function AdminDashboard() {
     }
 
     try {
-      const { error } = await supabase
-        .from("registration_25_26")
-        .update({ deleted_at: new Date().toISOString() })
-        .eq("id", id);
+      const response = await fetch(`/api/admin/registrations?id=${id}`, {
+        method: "DELETE",
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error("Failed to delete registration");
+      }
 
       await fetchRegistrations();
       setToast({
@@ -417,14 +478,24 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
-              title="Sign Out"
-            >
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push("/admin/dashboard/tabele")}
+                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                title="Upravljanje tabelama"
+              >
+                <Table2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Tabele</span>
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -1090,12 +1161,24 @@ export default function AdminDashboard() {
                               <button
                                 onClick={async () => {
                                   try {
-                                    const { error } = await supabase
-                                      .from("registration_25_26")
-                                      .update({ admin_notes: notesValue })
-                                      .eq("id", reg.id);
+                                    const response = await fetch(
+                                      "/api/admin/registrations",
+                                      {
+                                        method: "PATCH",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                          id: reg.id,
+                                          field: "admin_notes",
+                                          value: notesValue,
+                                        }),
+                                      }
+                                    );
 
-                                    if (error) throw error;
+                                    if (!response.ok) {
+                                      throw new Error("Failed to update notes");
+                                    }
 
                                     setEditingNotes(null);
                                     setNotesValue("");
@@ -1159,12 +1242,26 @@ export default function AdminDashboard() {
                               onChange={async (e) => {
                                 const newStatus = e.target.value || null;
                                 try {
-                                  const { error } = await supabase
-                                    .from("registration_25_26")
-                                    .update({ league_entry_status: newStatus })
-                                    .eq("id", reg.id);
+                                  const response = await fetch(
+                                    "/api/admin/registrations",
+                                    {
+                                      method: "PATCH",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        id: reg.id,
+                                        field: "league_entry_status",
+                                        value: newStatus,
+                                      }),
+                                    }
+                                  );
 
-                                  if (error) throw error;
+                                  if (!response.ok) {
+                                    throw new Error(
+                                      "Failed to update league status"
+                                    );
+                                  }
 
                                   setEditingLeagueStatus(null);
                                   await fetchRegistrations();

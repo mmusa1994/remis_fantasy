@@ -11,13 +11,34 @@ interface UserData {
   h2h_league: boolean;
 }
 
-// Email transporter configuration
+// Validate required email environment variables
+const emailUser = process.env.EMAIL_USER;
+const emailPass = process.env.EMAIL_PASS;
+const adminEmail = process.env.ADMIN_EMAIL || "admin@remisfantasy.com";
+
+if (!emailUser) {
+  throw new Error("Missing env var EMAIL_USER");
+}
+
+if (!emailPass) {
+  throw new Error("Missing env var EMAIL_PASS");
+}
+
+// Email transporter configuration with SMTP pooling for better performance
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: emailUser,
+    pass: emailPass,
   },
+  pool: true, // Enable connection pooling
+  maxConnections: 5, // Maximum number of connections in the pool
+  maxMessages: 100, // Maximum number of messages per connection
+  rateDelta: 1000, // Minimum time between messages (1 second)
+  rateLimit: 5, // Maximum messages per rateDelta (5 messages per second)
+  socketTimeout: 30000, // Socket timeout in milliseconds (30 seconds)
+  connectionTimeout: 30000, // Connection timeout in milliseconds (30 seconds)
+  greetingTimeout: 30000, // SMTP greeting timeout in milliseconds (30 seconds)
 });
 
 // Email templates
@@ -1031,8 +1052,8 @@ const createAdminConfirmationTemplate = (userData: UserData) => `
             <div class="league-info">
                 <h4>${
                   userData.league_type === "premium"
-                    ? "🏆 Premium Liga"
-                    : "⚽ Standard Liga"
+                    ? "Premium Liga"
+                    : "Standard Liga"
                 }</h4>
                 <div class="league-price">
                     ${
@@ -1251,7 +1272,7 @@ const createRegistrationConfirmationTemplate = (userData: UserData) => `
         <div class="footer">
             <p><strong>REMIS Fantasy 2025/26</strong></p>
             <p>Kontakt: info@remisfantasy.com</p>
-            <p>Hvala ti što si dio naše zajednice! 🎉</p>
+            <p>Hvala ti što si dio naše zajednice!</p>
         </div>
     </div>
 </body>
@@ -1267,20 +1288,20 @@ export const sendConfirmationEmail = async (userData: UserData) => {
     // Determine which template to use based on user selections
     if (userData.league_type === "premium" && userData.h2h_league) {
       emailTemplate = createPremiumH2HTemplate(userData);
-      subject = "🏆 REMIS Fantasy - Potvrda Premium + H2H Lige";
+      subject = "REMIS Fantasy - Potvrda Premium + H2H Lige";
     } else if (userData.league_type === "premium") {
       emailTemplate = createPremiumTemplate(userData);
-      subject = "🏆 REMIS Fantasy - Potvrda Premium Lige";
+      subject = "REMIS Fantasy - Potvrda Premium Lige";
     } else if (userData.league_type === "standard" && userData.h2h_league) {
       emailTemplate = createStandardH2HTemplate(userData);
-      subject = "⚽ REMIS Fantasy - Potvrda Standard + H2H Lige";
+      subject = "REMIS Fantasy - Potvrda Standard + H2H Lige";
     } else {
       emailTemplate = createStandardTemplate(userData);
-      subject = "⚽ REMIS Fantasy - Potvrda Standard Lige";
+      subject = "REMIS Fantasy - Potvrda Standard Lige";
     }
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: emailUser,
       to: userData.email,
       subject: subject,
       html: emailTemplate,
@@ -1298,7 +1319,7 @@ export const sendConfirmationEmail = async (userData: UserData) => {
 // Function to send admin notification email
 export const sendAdminNotificationEmail = async (
   userData: UserData,
-  adminEmail: string = process.env.ADMIN_EMAIL || "admin@remisfantasy.com"
+  adminEmailParam: string = adminEmail
 ) => {
   try {
     const emailTemplate = createAdminConfirmationTemplate(userData);
@@ -1307,8 +1328,8 @@ export const sendAdminNotificationEmail = async (
     } (${userData.league_type.toUpperCase()})`;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: adminEmail,
+      from: emailUser,
+      to: adminEmailParam,
       subject: subject,
       html: emailTemplate,
     };
@@ -1329,7 +1350,7 @@ export const sendRegistrationConfirmationEmail = async (userData: UserData) => {
     const subject = `✅ REMIS Fantasy - Registracija Potvrđena`;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: emailUser,
       to: userData.email,
       subject: subject,
       html: emailTemplate,

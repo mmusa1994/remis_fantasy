@@ -1,42 +1,85 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import {
   sendConfirmationEmail,
   sendAdminNotificationEmail,
   sendRegistrationConfirmationEmail,
 } from "@/lib/email";
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 import { registrationLimiter } from "@/lib/rate-limiter";
+
+// Validate required environment variables
+const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
+
+if (!recaptchaSecretKey) {
+  throw new Error("Missing env var RECAPTCHA_SECRET_KEY");
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    const clientIP =
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
 
     const rateLimitResult = registrationLimiter.isAllowed(clientIP);
-    
+
     if (!rateLimitResult.allowed) {
-      const resetTimeMinutes = Math.ceil((rateLimitResult.resetTime! - Date.now()) / 60000);
+      // Robust reset time calculation with fallback
+      const resetTime = rateLimitResult.resetTime || Date.now();
+      const timeDifferenceMs = resetTime - Date.now();
+      const computedMinutes = Math.ceil(timeDifferenceMs / 60000);
+      const resetTimeMinutes = Math.max(computedMinutes, 0);
+
       return NextResponse.json(
-        { error: `Previše zahtjeva. Pokušajte ponovo za ${resetTimeMinutes} minuta.` }, 
+        {
+          error: `Previše zahtjeva. Pokušajte ponovo za ${resetTimeMinutes} minuta.`,
+        },
         { status: 429 }
       );
     }
 
     const body = await request.json();
-    const { userData, emailType = "codes", registrationId, recaptchaToken } = body;
+    const {
+      userData,
+      emailType = "codes",
+      registrationId,
+      recaptchaToken,
+    } = body;
+
+    // Get current session for authorization checks
+    const session = await getServerSession(authOptions);
+
+    // Authorization guard: codes email requires admin session
+    if (emailType === "codes") {
+      if (!session) {
+        return NextResponse.json(
+          { error: "Unauthorized: Admin session required for codes email" },
+          { status: 401 }
+        );
+      }
+    }
+
+    // For public registration flows, require reCAPTCHA if no admin session
+    if (emailType === "registration" && !session && !recaptchaToken) {
+      return NextResponse.json(
+        { error: "reCAPTCHA token required for public registration" },
+        { status: 400 }
+      );
+    }
 
     if (recaptchaToken) {
       const recaptchaResponse = await fetch(
-        `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
-        { method: 'POST' }
+        `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${recaptchaToken}`,
+        { method: "POST" }
       );
-      
+
       const recaptchaData = await recaptchaResponse.json();
-      
+
       if (!recaptchaData.success) {
         return NextResponse.json(
-          { error: "reCAPTCHA verifikacija neuspešna" }, 
+          { error: "reCAPTCHA verifikacija neuspešna" },
           { status: 400 }
         );
       }
@@ -48,6 +91,7 @@ export async function POST(request: NextRequest) {
 
     let result;
     let adminResult;
+    let updatedRegistration = null;
 
     // Send different email types based on the emailType parameter
     switch (emailType) {
@@ -63,7 +107,7 @@ export async function POST(request: NextRequest) {
 
         // Update database to mark registration email as sent
         if (registrationId) {
-          await supabase
+          await supabaseServer
             .from("registration_25_26")
             .update({
               registration_email_sent: true,
@@ -74,6 +118,27 @@ export async function POST(request: NextRequest) {
         break;
 
       case "codes":
+        // Check if codes email was already sent (idempotency check)
+        if (registrationId) {
+          const { data: existingRegistration } = await supabaseServer
+            .from("registration_25_26")
+            .select("codes_email_sent, codes_email_sent_at")
+            .eq("id", registrationId)
+            .single();
+
+          if (existingRegistration?.codes_email_sent) {
+            return NextResponse.json(
+              {
+                success: true,
+                message: "Codes email was already sent",
+                alreadySent: true,
+                sentAt: existingRegistration.codes_email_sent_at,
+              },
+              { status: 200 }
+            );
+          }
+        }
+
         // Send confirmation email with access codes
         result = await sendConfirmationEmail(userData);
 
@@ -88,14 +153,23 @@ export async function POST(request: NextRequest) {
               ? "standard_h2h"
               : "standard";
 
-          await supabase
+          const { data, error } = await supabaseServer
             .from("registration_25_26")
             .update({
               codes_email_sent: true,
               codes_email_sent_at: new Date().toISOString(),
               email_template_type: packageType,
             })
-            .eq("id", registrationId);
+            .eq("id", registrationId)
+            .select()
+            .single();
+
+          if (error) {
+            console.error("Error updating registration:", error);
+            throw new Error("Failed to update registration status");
+          }
+
+          updatedRegistration = data;
         }
         break;
 
@@ -110,6 +184,7 @@ export async function POST(request: NextRequest) {
         message: "Email sent successfully",
         messageId: result.messageId,
         adminMessageId: adminResult?.messageId,
+        registration: updatedRegistration,
       },
       { status: 200 }
     );

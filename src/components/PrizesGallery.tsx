@@ -10,7 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import PrizeModal from "./PrizeModal";
+import PrizeModal from "./shared/PrizeModal";
 
 interface Prize {
   id: number;
@@ -33,10 +33,10 @@ const prizes: Prize[] = [
       "Spremite se za najuzbudljiviju sezonu fantasy footballa! Nove lige, veće nagrade, bolje iskustvo.",
     tier: "intro",
     features: [
-      "🚀 Nova sezona kreće",
-      "💎 Povećane nagrade",
-      "🏆 4 različite lige",
-      "⚡ Najbolja i najzabavnija sezona ikad",
+      "Nova sezona kreće",
+      "Povećane nagrade",
+      "4 različite lige",
+      "Najbolja i najzabavnija sezona ikad",
     ],
   },
   {
@@ -48,7 +48,7 @@ const prizes: Prize[] = [
       "Prošlogodišnji učesnici automatski ubačeni. Najbolji dobija originalni dres!",
     tier: "free",
     price: "Besplatno",
-    features: ["🥇 1. mesto: Originalni dres", "Kod za ulazak: 51kkl0"],
+    features: ["1. mjesto: Originalni dres", "Kod za ulazak: 51kkl0"],
   },
   {
     id: 3,
@@ -60,10 +60,10 @@ const prizes: Prize[] = [
     tier: "h2h",
     price: "20 KM / 10 €",
     features: [
-      "🥇🏆 1. mesto: 300 KM / 155 € + pehar + medalja + plaketa",
-      "🥈 2. mesto: 200 KM / 102 € + medalja + plaketa",
-      "🥉 3. mesto: 130 KM / 67 € + medalja + plaketa",
-      "4. mesto: 90 KM / 46 €",
+      "1. mjesto: 300 KM / 155 € + pehar + medalja + plaketa",
+      "2. mjesto: 200 KM / 102 € + medalja + plaketa",
+      "3. mjesto: 130 KM / 67 € + medalja + plaketa",
+      "4. mjesto: 90 KM / 46 €",
     ],
   },
   {
@@ -76,14 +76,14 @@ const prizes: Prize[] = [
     tier: "standard",
     price: "30 KM / 15 €",
     features: [
-      "🥇🏆 1. mesto: 500 KM / 255 € + pehar + medalja + plaketa",
-      "🥈 2. mesto: 350 KM / 179 € + medalja + plaketa",
-      "🥉 3. mesto: 250 KM / 128 € + medalja + plaketa",
-      "4. mesto: 200 KM / 103 €",
-      "5. mesto: 150 KM / 77 €",
-      "6. mesto: 100 KM / 52 €",
-      "7. mesto: 80 KM / 41 €",
-      "8.-10. mesto: Besplatno učešće naredne sezone",
+      "1. mjesto: 500 KM / 255 € + pehar + medalja + plaketa",
+      "2. mjesto: 350 KM / 179 € + medalja + plaketa",
+      "3. mjesto: 250 KM / 128 € + medalja + plaketa",
+      "4. mjesto: 200 KM / 103 €",
+      "5. mjesto: 150 KM / 77 €",
+      "6. mjesto: 100 KM / 52 €",
+      "7. mjesto: 80 KM / 41 €",
+      "8.-10. mjesto: Besplatno učešće naredne sezone",
       "Mjesečne nagrade: 75 KM / 38 € (*10)",
       "Kup nagrade: 100 KM / 52 €",
     ],
@@ -98,11 +98,11 @@ const prizes: Prize[] = [
     tier: "premium",
     price: "100 KM / 52 €",
     features: [
-      "🥇🏆 1. mesto: 1.200 KM / 615 € + pehar + medalja + plaketa",
-      "🥈 2. mesto: 700 KM / 358 € + medalja + plaketa",
-      "🥉 3. mesto: 400 KM / 205 € + medalja + plaketa",
-      "4. mesto: Originalni dres PL 25/26",
-      "5. mesto: Besplatno učešće naredne sezone",
+      "1. mjesto: 1.200 KM / 615 € + pehar + medalja + plaketa",
+      "2. mjesto: 700 KM / 358 € + medalja + plaketa",
+      "3. mjesto: 400 KM / 205 € + medalja + plaketa",
+      "4. mjesto: Originalni dres PL 25/26",
+      "5. mjesto: Besplatno učešće naredne sezone",
       "Mjesečne nagrade: 150 KM / 75 € (*10)",
       "Kup nagrade: 200 KM / 100 €",
     ],
@@ -110,19 +110,19 @@ const prizes: Prize[] = [
   {
     id: 6,
     title: "Specijalna nagrada",
-    subtitle: "🏆 AUTENTIČNI DRES ARSENALA IZ SEZONE 2003/2004 🏆",
+    subtitle: "AUTENTIČNI DRES ARSENALA IZ SEZONE 2003/2004",
     image: "/images/form/arsenal.png",
     description:
       'Original! Ovo je sveti gral svakog fudbalskog fanatika. Dres iz legendarne "Invincibles" sezone - kada su Thierry Henry i Arsenal bez poraza osvojili Premier ligu.',
     tier: "arsenal",
     price: "Dres Thierry Henry 03/04",
     features: [
-      "👑 Hall of Fame Premier lige",
+      "Hall of Fame Premier lige",
       "Henry - ikona igre, genije napada, umjetnik na terenu. Ovaj dres nosi DNK nepobjedivosti. Na aukcijama dostiže vrijednost preko 1.000€, rijetkost koja se ne pušta iz ruku.",
       "Igrač sa najviše poena u jednom kolu (PREMIUM liga) odnosi ovu istorijsku relikviju, zajedno sa certifikatom autentičnosti.",
-      "📜 OVO NIJE SAMO NAGRADA. OVO JE LEGENDA.",
+      "OVO NIJE SAMO NAGRADA. OVO JE LEGENDA.",
       "Ovo je dres kojim ispisujete svoju stranicu u istoriji REMIS Fantasy lige",
-      "⚔️ Budi najbolji. Uđi u legendu. Osvoji dres nepobjedivih.",
+      "Budi najbolji. Uđi u legendu. Osvoji dres nepobjedivih.",
     ],
   },
 ];
@@ -272,8 +272,12 @@ export default function PrizesGallery() {
       {/* Optimized Background Effects */}
       <div className="absolute inset-0 particles-bg">
         {/* Lightweight animated orbs */}
-        <div className={`absolute top-20 left-20 w-96 h-96 bg-gradient-to-r ${colors.gradient} minimal-radius blur-3xl opacity-15 animate-pulse-gentle gpu-accelerated`} />
-        <div className={`absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-l ${colors.gradient} minimal-radius blur-3xl opacity-10 animate-float-slow gpu-accelerated`} />
+        <div
+          className={`absolute top-20 left-20 w-96 h-96 bg-gradient-to-r ${colors.gradient} minimal-radius blur-3xl opacity-15 animate-pulse-gentle gpu-accelerated`}
+        />
+        <div
+          className={`absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-l ${colors.gradient} minimal-radius blur-3xl opacity-10 animate-float-slow gpu-accelerated`}
+        />
 
         {/* Simplified grid pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -324,7 +328,11 @@ export default function PrizesGallery() {
 
           {/* Carousel Container */}
           <div className="relative h-[500px] md:h-[580px] overflow-hidden border border-gray-800/50">
-            <div className={`absolute inset-0 transition-all duration-300 ease-in-out ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+            <div
+              className={`absolute inset-0 transition-all duration-300 ease-in-out ${
+                isTransitioning ? "opacity-0 scale-95" : "opacity-100 scale-100"
+              }`}
+            >
               {/* Main Prize Card */}
               <div
                 className="relative w-full h-full bg-black/98 shadow-2xl overflow-hidden hover-glow gpu-accelerated"
@@ -380,7 +388,9 @@ export default function PrizesGallery() {
                         {currentPrize.title}
                       </h3>
 
-                      <h4 className={`text-base lg:text-xl ${colors.accent} font-semibold mb-3 animate-slide-in-left animate-delay-100`}>
+                      <h4
+                        className={`text-base lg:text-xl ${colors.accent} font-semibold mb-3 animate-slide-in-left animate-delay-100`}
+                      >
                         {currentPrize.subtitle}
                       </h4>
 
@@ -425,9 +435,13 @@ export default function PrizesGallery() {
                         </button>
 
                         {/* Accordion Content */}
-                        <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                          isAccordionOpen ? 'max-h-96 opacity-100 transform translate-y-0' : 'max-h-0 opacity-0 transform -translate-y-2'
-                        }`}>
+                        <div
+                          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                            isAccordionOpen
+                              ? "max-h-96 opacity-100 transform translate-y-0"
+                              : "max-h-0 opacity-0 transform -translate-y-2"
+                          }`}
+                        >
                           <div className="space-y-2 max-h-32 lg:max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
                             {currentPrize.features.map((feature, index) => (
                               <div
@@ -507,9 +521,7 @@ export default function PrizesGallery() {
                 }
               >
                 {index === currentIndex && (
-                  <div
-                    className="absolute inset-0 bg-white/20 minimal-radius animate-slide-x"
-                  />
+                  <div className="absolute inset-0 bg-white/20 minimal-radius animate-slide-x" />
                 )}
               </button>
             ))}
@@ -519,12 +531,14 @@ export default function PrizesGallery() {
           <div className="w-full bg-gray-800 minimal-radius h-1 mt-4 overflow-hidden">
             <div
               className={`h-full minimal-radius transition-all ease-linear ${
-                isAutoPlaying ? 'duration-[5000ms]' : 'duration-300'
+                isAutoPlaying ? "duration-[5000ms]" : "duration-300"
               }`}
               style={{
                 background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80, #000000)`,
-                width: isAutoPlaying ? '100%' : '0%',
-                animation: isAutoPlaying ? 'progressFill 5s linear infinite' : 'none',
+                width: isAutoPlaying ? "100%" : "0%",
+                animation: isAutoPlaying
+                  ? "progressFill 5s linear infinite"
+                  : "none",
               }}
             />
           </div>

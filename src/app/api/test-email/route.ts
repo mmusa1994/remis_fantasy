@@ -1,14 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import * as nodemailer from "nodemailer";
 
-export async function POST(request: NextRequest) {
+// Validate required environment variables
+const emailUser = process.env.EMAIL_USER;
+const emailPass = process.env.EMAIL_PASS;
+
+if (!emailUser) {
+  throw new Error("Missing env var EMAIL_USER");
+}
+
+if (!emailPass) {
+  throw new Error("Missing env var EMAIL_PASS");
+}
+
+export async function POST() {
   try {
     // Test transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: emailUser,
+        pass: emailPass,
       },
     });
 
@@ -17,15 +29,15 @@ export async function POST(request: NextRequest) {
 
     // Send test email
     const testEmail = {
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, // Send to yourself for testing
+      from: emailUser,
+      to: emailUser, // Send to yourself for testing
       subject: "REMIS Fantasy - Email Test",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <h2 style="color: #333;">✅ Email Configuration Test</h2>
           <p>If you received this email, your email configuration is working correctly!</p>
           <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
-          <p><strong>From:</strong> ${process.env.EMAIL_USER}</p>
+          <p><strong>From:</strong> ${emailUser}</p>
         </div>
       `,
     };

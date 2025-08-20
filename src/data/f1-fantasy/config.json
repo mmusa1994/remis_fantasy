@@ -1,0 +1,95 @@
+{
+  "id": "f1",
+  "name": "F1 Fantasy",
+  "subtitle": "Racing Liga",
+  "description": "Dobrodošli u najbržu F1 Fantasy ligu! Kreirajte svoj tim, pratite utrke i osvojite adrenalinske nagrade u svijetu Formule 1.",
+  "logoPath": "/images/logos/f1.png",
+  "primaryColor": "red",
+  "secondaryColor": "orange",
+  "stats": [
+    {
+      "label": "Ukupan nagradni fond",
+      "value": "0",
+      "icon": "DollarSign"
+    },
+    {
+      "label": "Broj liga",
+      "value": "0",
+      "icon": "Trophy"
+    },
+    {
+      "label": "Mjesečne nagrade",
+      "value": "0x",
+      "icon": "Calendar"
+    },
+    {
+      "label": "Grand Prix nagrade",
+      "value": "0x",
+      "icon": "Medal"
+    }
+  ],
+  "navigation": [
+    {
+      "title": "Registracija",
+      "description": "Registruj se za F1 Fantasy",
+      "href": "/f1-fantasy/registracija",
+      "icon": "PenTool",
+      "color": "red"
+    },
+    {
+      "title": "Nagrade",
+      "description": "Pogledaj sve dostupne nagrade",
+      "href": "/f1-fantasy/nagrade",
+      "icon": "Trophy",
+      "color": "yellow"
+    },
+    {
+      "title": "Galerija",
+      "description": "Slike i memorije sa staza",
+      "href": "/f1-fantasy/galerija",
+      "icon": "Camera",
+      "color": "blue"
+    },
+    {
+      "title": "Tabele",
+      "description": "Trenutni rezultati i tabele",
+      "href": "/f1-fantasy/tabele",
+      "icon": "BarChart3",
+      "color": "green"
+    }
+  ],
+  "pageContent": {
+    "hero": {
+      "title": "F1 Fantasy",
+      "subtitle": "Racing Liga",
+      "description": "Dobrodošli u najbržu F1 Fantasy ligu! Kreirajte svoj tim, pratite utrke i osvojite adrenalinske nagrade u svijetu Formule 1.",
+      "ctaButtons": {
+        "primary": {
+          "text": "Registruj se sada",
+          "href": "/f1-fantasy/registracija"
+        },
+        "secondary": {
+          "text": "Pogledaj nagrade",
+          "href": "/f1-fantasy/nagrade"
+        }
+      }
+    },
+    "sections": {
+      "navigation": {
+        "title": "Istraži F1 Fantasy Racing"
+      },
+      "prizes": {
+        "title": "F1 Fantasy Nagrade",
+        "subtitle": "Osvojite brzinske nagrade u najuzbudljivijoj racing ligi!"
+      },
+      "gallery": {
+        "title": "F1 Fantasy Galerija",
+        "description": "Uskoro ćete ovdje moći pregledati slike i uspomene sa najprestižnijih F1 staza. Najbrži momenti i najveće pobjede čekaju vas!"
+      },
+      "tables": {
+        "title": "F1 Fantasy Tabele",
+        "description": "Ovdje ćete moći pratiti trenutne rezultate i tabele svih F1 Fantasy liga. Rezultati se ažuriraju nakon svakih utrka!"
+      }
+    }
+  }
+}
