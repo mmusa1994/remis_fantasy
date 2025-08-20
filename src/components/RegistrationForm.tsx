@@ -711,13 +711,22 @@ export default function RegistrationForm({
                       </span>
                     </h3>
                     <div
-                      className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale ${
+                      className={`relative cursor-pointer minimal-radius border-2 overflow-hidden transition-all duration-500 shadow-2xl hover-lift hover-scale focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent ${
                         formData.h2h_league
                           ? `${h2hOption.colors.border} ${h2hOption.colors.bg} shadow-lg ring-4 ${h2hOption.colors.badgeRing}`
                           : `border-gray-600/50 ${h2hOption.colors.hover} hover:shadow-xl`
                       }`}
+                      tabIndex={0}
+                      role="button"
+                      aria-pressed={formData.h2h_league}
                       onClick={() => {
                         handleInputChange("h2h_league", !formData.h2h_league);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleInputChange("h2h_league", !formData.h2h_league);
+                        }
                       }}
                     >
                       <input

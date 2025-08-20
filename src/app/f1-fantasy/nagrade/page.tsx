@@ -3,6 +3,12 @@
 import PrizesGallery from "@/components/shared/PrizesGallery";
 import { useLeaguePrizes, usePageContent } from "@/hooks/useLeagueData";
 
+export const metadata = {
+  title: "F1 Fantasy — Nagrade",
+  description:
+    "Otkrijte F1 Fantasy Nagrade — nagrade, pravila i kako učestvovati u najbržoj racing ligi na svijetu.",
+};
+
 export default function F1FantasyNagradePage() {
   const {
     data: prizes,

@@ -9,6 +9,24 @@ import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
 import { IconType } from "react-icons";
 import Image from "next/image";
+// TypeScript types for league and stat data
+interface LeagueCard {
+  id: string;
+  name: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  href: string;
+  registrationOpen: boolean;
+  icon: IconType;
+}
+
+interface StatCard {
+  label: string;
+  value: string;
+  color: string;
+  icon: IconType;
+}
 
 // Icon mapping for league cards
 const iconMap: Record<string, IconType> = {
@@ -23,13 +41,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <main
-        className={`w-full min-h-screen overflow-x-hidden ${
-          theme === "dark"
-            ? "bg-black"
-            : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
-        }`}
-      >
+      <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <p className="text-theme-text-secondary">Učitava se...</p>
@@ -41,13 +53,7 @@ export default function Home() {
 
   if (error) {
     return (
-      <main
-        className={`w-full min-h-screen overflow-x-hidden ${
-          theme === "dark"
-            ? "bg-black"
-            : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
-        }`}
-      >
+      <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <p className="text-red-500 mb-4">Greška pri učitavanju podataka</p>
@@ -59,6 +65,14 @@ export default function Home() {
   }
 
   const { leagues, globalStats } = data;
+
+  // Type the data from the hook
+  const typedLeagues: LeagueCard[] = leagues.map((league: any) => ({
+    ...league,
+    icon: iconMap[league.id] || SiPremierleague,
+  }));
+
+  const typedStats: StatCard[] = globalStats;
 
   const getLeagueTextColor = (leagueId: string) => {
     switch (leagueId) {
@@ -74,13 +88,7 @@ export default function Home() {
   };
 
   return (
-    <main
-      className={`w-full min-h-screen overflow-x-hidden ${
-        theme === "dark"
-          ? "bg-black"
-          : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
-      }`}
-    >
+    <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
       {/* Hero Section */}
       <section className="relative overflow-hidden pb-20 px-4 pt-24">
         <div className="max-w-6xl mx-auto text-center">
@@ -123,8 +131,8 @@ export default function Home() {
 
           {/* Dynamic League Selection Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
-            {leagues.map((league: any) => {
-              const IconComponent = iconMap[league.id] || SiPremierleague;
+            {typedLeagues.map((league: LeagueCard) => {
+              const IconComponent = league.icon;
 
               return (
                 <div
@@ -164,7 +172,10 @@ export default function Home() {
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+                        role="img"
+                        aria-labelledby="hero-icon-title"
                       >
+                        <title id="hero-icon-title">Arrow pointing right</title>
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -182,7 +193,7 @@ export default function Home() {
           {/* Dynamic Stats Section */}
           <div className="mt-12 md:mt-20 max-w-4xl mx-auto">
             <StatsGrid
-              stats={globalStats}
+              stats={typedStats}
               className="transition-all duration-300"
             />
           </div>

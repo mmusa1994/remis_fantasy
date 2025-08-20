@@ -84,10 +84,32 @@ export async function POST(request: NextRequest) {
         break;
 
       case "codes":
+        // Check if codes email was already sent (idempotency check)
+        if (registrationId) {
+          const { data: existingRegistration } = await supabaseServer
+            .from("registration_25_26")
+            .select("codes_email_sent, codes_email_sent_at")
+            .eq("id", registrationId)
+            .single();
+
+          if (existingRegistration?.codes_email_sent) {
+            return NextResponse.json(
+              {
+                success: true,
+                message: "Codes email was already sent",
+                alreadySent: true,
+                sentAt: existingRegistration.codes_email_sent_at,
+              },
+              { status: 200 }
+            );
+          }
+        }
+
         // Send confirmation email with access codes
         result = await sendConfirmationEmail(userData);
 
         // Update database to mark codes email as sent
+        let updatedRegistration = null;
         if (registrationId) {
           const packageType =
             userData.league_type === "premium" && userData.h2h_league
@@ -98,14 +120,23 @@ export async function POST(request: NextRequest) {
               ? "standard_h2h"
               : "standard";
 
-          await supabaseServer
+          const { data, error } = await supabaseServer
             .from("registration_25_26")
             .update({
               codes_email_sent: true,
               codes_email_sent_at: new Date().toISOString(),
               email_template_type: packageType,
             })
-            .eq("id", registrationId);
+            .eq("id", registrationId)
+            .select()
+            .single();
+
+          if (error) {
+            console.error("Error updating registration:", error);
+            throw new Error("Failed to update registration status");
+          }
+
+          updatedRegistration = data;
         }
         break;
 
@@ -120,6 +151,7 @@ export async function POST(request: NextRequest) {
         message: "Email sent successfully",
         messageId: result.messageId,
         adminMessageId: adminResult?.messageId,
+        registration: updatedRegistration,
       },
       { status: 200 }
     );

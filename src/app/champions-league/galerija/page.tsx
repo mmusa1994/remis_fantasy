@@ -1,10 +1,10 @@
-import ConstructionPage from '@/components/shared/ConstructionPage'
+import ConstructionPage from "@/components/shared/ConstructionPage";
 
 export default function ChampionsLeagueGalerijaPage() {
   return (
-    <ConstructionPage 
+    <ConstructionPage
       title="Champions League Galerija"
-      description="Galerija Champions League Fantasy lige je u pripremi. Uskoro ćete moći videti slike i spomenike sa prethodnih sezona najjačeg evropskog takmičenja!"
+      description="Galerija Champions League Fantasy lige je u pripremi. Uskoro ćete moći videti slike i uspomene sa prethodnih sezona najjačeg evropskog takmičenja!"
     />
-  )
+  );
 }

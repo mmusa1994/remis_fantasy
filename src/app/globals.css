@@ -14,7 +14,12 @@
 /* Light Theme Colors - BEIGE PALETTE */
 :root[data-theme="light"] {
   /* Basic colors - BEIGE */
-  --theme-background: #f5f5dc;
+  --theme-background: linear-gradient(
+    to bottom right,
+    #fef3c7,
+    #fed7aa,
+    #fde68a
+  );
   --theme-foreground: #2d2d2d;
   --theme-muted: #8b7355;
 
@@ -143,7 +148,8 @@ html {
 }
 
 /* Ensure full width on mobile */
-html, body {
+html,
+body {
   width: 100% !important;
   max-width: 100% !important;
   overflow-x: hidden;
@@ -173,7 +179,7 @@ html, body {
 
 /* Theme-aware utility classes */
 .bg-theme-background {
-  background-color: var(--theme-background);
+  background: var(--theme-background);
 }
 
 .bg-theme-card {
@@ -621,6 +627,9 @@ html, body {
 }
 
 /* Scrollbar utilities */
+/* Browser compatibility: Firefox supports scrollbar-width, IE/Edge use -ms-overflow-style, 
+   WebKit browsers (Chrome, Safari, Edge) use ::-webkit-scrollbar. Full cross-browser 
+   scrollbar hiding may not be possible without JavaScript. */
 .scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;

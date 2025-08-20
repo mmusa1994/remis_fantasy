@@ -272,23 +272,57 @@ export default function AdminDashboard() {
         }),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to send email");
+        // Parse server error details
+        const errorMessage =
+          responseData.error || responseData.details || "Failed to send email";
+        const errorDetails = responseData.details
+          ? ` (${responseData.details})`
+          : "";
+
+        console.error("Error sending email:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: responseData.error,
+          details: responseData.details,
+          fullResponse: responseData,
+        });
+
+        throw new Error(`${errorMessage}${errorDetails}`);
       }
 
-      // Refresh registrations to update email status
-      await fetchRegistrations();
+      // Update local state with the returned registration data
+      if (responseData.registration) {
+        setRegistrations((prevRegistrations) =>
+          prevRegistrations.map((reg) =>
+            reg.id === registration.id ? responseData.registration : reg
+          )
+        );
+      }
+
+      // Show appropriate message based on whether email was already sent
+      const message = responseData.alreadySent
+        ? "Email sa kodovima je već poslat ranije."
+        : "Email sa kodovima je uspešno poslat!";
 
       setToast({
         show: true,
-        message: "Email sa kodovima je uspešno poslat!",
+        message,
         type: "success",
       });
     } catch (error) {
       console.error("Error sending email:", error);
+
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Greška pri slanju emaila. Pokušajte ponovo.";
+
       setToast({
         show: true,
-        message: "Greška pri slanju emaila. Pokušajte ponovo.",
+        message: errorMessage,
         type: "error",
       });
     } finally {

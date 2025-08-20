@@ -14,13 +14,7 @@ export default function ConstructionPage({
   const { theme } = useTheme();
 
   return (
-    <div
-      className={`min-h-screen flex items-start justify-center px-4 mobile-nav-adjust ${
-        theme === "dark"
-          ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
-          : "bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"
-      }`}
-    >
+    <div className="min-h-screen flex items-start justify-center px-4 mobile-nav-adjust bg-theme-background">
       <div
         className={`max-w-2xl mx-auto text-center p-6 md:p-8 rounded-2xl shadow-xl ${
           theme === "dark"
