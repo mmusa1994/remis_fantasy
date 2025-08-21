@@ -3,10 +3,14 @@ import { fplApi } from "@/lib/fpl-api";
 import { fplDb } from "@/lib/fpl-db";
 import { bonusPredictor } from "@/lib/fpl-bonus";
 
+// Cache for bootstrap data to avoid DB calls on every request
+let bootstrapCache: { data: any; timestamp: number } | null = null;
+const BOOTSTRAP_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { managerId, gameweek } = body;
+    const { managerId, gameweek, skeleton = false } = body;
 
     if (!managerId || !gameweek) {
       return NextResponse.json(
@@ -31,32 +35,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update players and teams data from bootstrap (only essential data)
-    await fplDb.upsertBootstrapData(await fplApi.getBootstrapStatic());
+    // If skeleton mode requested, return minimal manager data quickly
+    if (skeleton) {
+      try {
+        const managerEntry = await fplApi.getManagerEntry(managerIdNum);
+        return NextResponse.json({
+          success: true,
+          data: {
+            manager: managerEntry,
+            team_with_stats: [],
+            team_totals: null,
+            fixtures: [],
+            predicted_bonuses: [],
+            bonus_added: false,
+            entry_history: null,
+            automatic_subs: [],
+            active_chip: null,
+            captain: { player_id: null, multiplier: null, stats: null },
+            vice_captain: { player_id: null, multiplier: null, stats: null },
+          },
+          gameweek: gw,
+          manager_id: managerIdNum,
+          timestamp: new Date().toISOString(),
+          skeleton: true,
+        });
+      } catch (error) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: error instanceof Error ? error.message : "Manager not found",
+          },
+          { status: 404 }
+        );
+      }
+    }
 
-    // Fetch all live data from FPL API - no database storage
-    let managerEntry,
-      managerPicks,
-      liveData,
-      fixtures,
-      eventStatus;
+    // Priority 1: Get critical data first (manager picks + live data)
+    let managerPicks, liveData;
 
     try {
-      [
-        managerEntry,
-        managerPicks,
-        liveData,
-        fixtures,
-        eventStatus,
-      ] = await Promise.all([
-        fplApi.getManagerEntry(managerIdNum),
+      [managerPicks, liveData] = await Promise.all([
         fplApi.getManagerPicks(managerIdNum, gw),
         fplApi.getLiveData(gw),
-        fplApi.getFixtures(gw),
-        fplApi.getEventStatus(),
       ]);
     } catch (apiError) {
-      // If FPL API returns 404, gameweek data doesn't exist
       if (apiError instanceof Error && apiError.message.includes("404")) {
         return NextResponse.json(
           {
@@ -66,21 +88,52 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
-      throw apiError; // Re-throw other errors
+      throw apiError;
     }
 
-    // Get player data from database for names/teams (static data)
+    // Priority 2: Get player data from cache or DB
     const playerIds = managerPicks.picks.map((pick) => pick.element);
-    const playersData = await fplDb.getPlayersData(playerIds);
+    let playersData;
 
-    // Build team with live stats - all from live API data
+    // Use cached bootstrap data if available and fresh
+    if (
+      bootstrapCache &&
+      Date.now() - bootstrapCache.timestamp < BOOTSTRAP_CACHE_TTL
+    ) {
+      playersData = bootstrapCache.data.elements.filter((p: any) =>
+        playerIds.includes(p.id)
+      );
+    } else {
+      playersData = await fplDb.getPlayersData(playerIds);
+    }
+
+    // Priority 3: Get remaining data in background (non-blocking)
+    let managerEntry: any = null;
+    let fixtures: any[] = [];
+    let eventStatus: any = { status: [] };
+
+    try {
+      [managerEntry, fixtures, eventStatus] = await Promise.all([
+        fplApi.getManagerEntry(managerIdNum),
+        fplApi.getFixtures(gw),
+        fplApi.getEventStatus(),
+      ]);
+    } catch (error) {
+      // Return partial data if secondary requests fail
+      console.warn("Secondary API calls failed:", error);
+      managerEntry = null;
+      fixtures = [];
+      eventStatus = { status: [] };
+    }
+
+    // Create lookup maps for O(1) access
+    const liveDataMap = new Map(liveData.elements.map((el) => [el.id, el]));
+    const playersDataMap = new Map(playersData.map((p: any) => [p.id, p]));
+
+    // Build team with live stats - optimized with maps
     const teamWithStats = managerPicks.picks.map((pick) => {
-      const livePlayerData = liveData.elements.find(
-        (element) => element.id === pick.element
-      );
-      const dbPlayerData = playersData.find(
-        (player) => player.id === pick.element
-      );
+      const livePlayerData = liveDataMap.get(pick.element);
+      const dbPlayerData = playersDataMap.get(pick.element);
 
       return {
         gw,
@@ -108,10 +161,10 @@ export async function POST(request: NextRequest) {
               saves: livePlayerData.stats.saves,
               bonus: livePlayerData.stats.bonus,
               bps: livePlayerData.stats.bps,
-              influence: parseFloat(livePlayerData.stats.influence),
-              creativity: parseFloat(livePlayerData.stats.creativity),
-              threat: parseFloat(livePlayerData.stats.threat),
-              ict_index: parseFloat(livePlayerData.stats.ict_index),
+              influence: parseFloat(livePlayerData.stats.influence || "0"),
+              creativity: parseFloat(livePlayerData.stats.creativity || "0"),
+              threat: parseFloat(livePlayerData.stats.threat || "0"),
+              ict_index: parseFloat(livePlayerData.stats.ict_index || "0"),
               total_points: livePlayerData.stats.total_points,
               in_dreamteam: livePlayerData.stats.in_dreamteam,
             }
@@ -119,59 +172,69 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    const bonusStatus = eventStatus.status.find((s) => s.event === gw);
+    const bonusStatus = eventStatus?.status?.find((s: any) => s.event === gw);
     const bonusAdded = bonusStatus?.bonus_added || false;
 
-    // Extract live stats for calculations
+    // Extract live stats for calculations - optimized filtering
     const liveStats = teamWithStats
       .map((team) => team.live_stats)
-      .filter((stats) => stats !== null);
+      .filter((stats): stats is NonNullable<typeof stats> => stats !== null);
 
     let predictedBonuses: any[] = [];
     let totalPredictedBonus = 0;
 
-    if (!bonusAdded) {
-      const fixturesWithBPS = liveStats.map((stat) => ({
-        player_id: stat.player_id,
-        bps: stat.bps,
-        minutes: stat.minutes,
-        player: teamWithStats.find((p) => p.player_id === stat.player_id)
-          ?.player,
-      }));
+    // Only calculate bonus predictions if needed and data is available
+    if (!bonusAdded && fixtures && fixtures.length > 0) {
+      try {
+        const fixturesWithBPS = liveStats.map((stat) => ({
+          player_id: stat.player_id,
+          bps: stat.bps,
+          minutes: stat.minutes,
+          player: playersDataMap.get(stat.player_id) as
+            | { web_name: string; team: number }
+            | undefined,
+        }));
 
-      predictedBonuses = bonusPredictor.calculateAllFixturesBonuses(
-        fixtures,
-        fixturesWithBPS
-      );
+        predictedBonuses = bonusPredictor.calculateAllFixturesBonuses(
+          fixtures,
+          fixturesWithBPS
+        );
 
-      totalPredictedBonus = bonusPredictor.getTotalPredictedBonus(
-        managerPicks.picks.map((pick) => ({
-          player_id: pick.element,
-          multiplier: pick.multiplier,
-          is_captain: pick.is_captain,
-        })),
-        predictedBonuses
-      );
+        totalPredictedBonus = bonusPredictor.getTotalPredictedBonus(
+          managerPicks.picks.map((pick) => ({
+            player_id: pick.element,
+            multiplier: pick.multiplier,
+            is_captain: pick.is_captain,
+          })),
+          predictedBonuses
+        );
+      } catch (error) {
+        console.warn("Bonus prediction failed:", error);
+      }
     }
+
+    // Create pick position map for O(1) lookups
+    const pickPositionMap = new Map(
+      managerPicks.picks.map((p) => [p.element, p])
+    );
+    const liveStatsMap = new Map(liveStats.map((s: any) => [s.player_id, s]));
 
     const captain = managerPicks.picks.find((p) => p.is_captain);
     const viceCaptain = managerPicks.picks.find((p) => p.is_vice_captain);
 
-    const captainStats = captain
-      ? liveStats.find((s) => s.player_id === captain.element)
-      : null;
+    const captainStats = captain ? liveStatsMap.get(captain.element) : null;
     const viceCaptainStats = viceCaptain
-      ? liveStats.find((s) => s.player_id === viceCaptain.element)
+      ? liveStatsMap.get(viceCaptain.element)
       : null;
 
-    // Calculate active (starters 1-11) and bench (12-15) points separately
+    // Pre-calculate active and bench stats using position map
     const activeStats = liveStats.filter((stat) => {
-      const pick = managerPicks.picks.find((p) => p.element === stat.player_id);
+      const pick = pickPositionMap.get(stat.player_id);
       return pick && pick.position <= 11;
     });
 
     const benchStats = liveStats.filter((stat) => {
-      const pick = managerPicks.picks.find((p) => p.element === stat.player_id);
+      const pick = pickPositionMap.get(stat.player_id);
       return pick && pick.position > 11;
     });
 
@@ -185,16 +248,12 @@ export async function POST(request: NextRequest) {
 
       // Active team points (positions 1-11 with multipliers)
       active_points_no_bonus: activeStats.reduce((sum, stat) => {
-        const pick = managerPicks.picks.find(
-          (p) => p.element === stat.player_id
-        );
+        const pick = pickPositionMap.get(stat.player_id);
         const points = stat.total_points - stat.bonus;
         return sum + points * (pick?.multiplier || 1);
       }, 0),
       active_points_final: activeStats.reduce((sum, stat) => {
-        const pick = managerPicks.picks.find(
-          (p) => p.element === stat.player_id
-        );
+        const pick = pickPositionMap.get(stat.player_id);
         return sum + stat.total_points * (pick?.multiplier || 1);
       }, 0),
 
@@ -206,20 +265,16 @@ export async function POST(request: NextRequest) {
         return sum + stat.total_points;
       }, 0),
 
-      // Total points (for compatibility)
+      // Total points (for compatibility) - optimized with position map
       total_points_no_bonus: liveStats.reduce((sum, stat) => {
-        const pick = managerPicks.picks.find(
-          (p) => p.element === stat.player_id
-        );
+        const pick = pickPositionMap.get(stat.player_id);
         const points = stat.total_points - stat.bonus;
         const multiplier =
           pick && pick.position <= 11 ? pick.multiplier || 1 : 0;
         return sum + points * multiplier;
       }, 0),
       total_points_final: liveStats.reduce((sum, stat) => {
-        const pick = managerPicks.picks.find(
-          (p) => p.element === stat.player_id
-        );
+        const pick = pickPositionMap.get(stat.player_id);
         const multiplier =
           pick && pick.position <= 11 ? pick.multiplier || 1 : 0;
         return sum + stat.total_points * multiplier;
@@ -228,13 +283,33 @@ export async function POST(request: NextRequest) {
       predicted_bonus: totalPredictedBonus,
       final_bonus: bonusAdded
         ? activeStats.reduce((sum, stat) => {
-            const pick = managerPicks.picks.find(
-              (p) => p.element === stat.player_id
-            );
+            const pick = pickPositionMap.get(stat.player_id);
             return sum + stat.bonus * (pick?.multiplier || 1);
           }, 0)
         : 0,
     };
+
+    // Background update of bootstrap data (non-blocking)
+    const updateBootstrapInBackground = async () => {
+      try {
+        const bootstrap = await fplApi.getBootstrapStatic();
+        bootstrapCache = {
+          data: bootstrap,
+          timestamp: Date.now(),
+        };
+        await fplDb.upsertBootstrapData(bootstrap);
+      } catch (error) {
+        console.warn("Background bootstrap update failed:", error);
+      }
+    };
+
+    // Only update if cache is stale
+    if (
+      !bootstrapCache ||
+      Date.now() - bootstrapCache.timestamp > BOOTSTRAP_CACHE_TTL
+    ) {
+      setImmediate(updateBootstrapInBackground);
+    }
 
     return NextResponse.json({
       success: true,
@@ -242,7 +317,7 @@ export async function POST(request: NextRequest) {
         manager: managerEntry,
         team_with_stats: teamWithStats,
         team_totals: teamTotals,
-        fixtures: fixtures,
+        fixtures: fixtures || [],
         predicted_bonuses: predictedBonuses,
         bonus_added: bonusAdded,
         entry_history: managerPicks.entry_history,

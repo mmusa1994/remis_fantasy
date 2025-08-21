@@ -2,7 +2,11 @@ import SubNavigation from "@/components/shared/SubNavigation";
 
 const premierLeagueNavItems = [
   { name: "Tabele", href: "/premier-league/tabele" },
-  { name: "FPL Live", href: "/premier-league/fpl-live" },
+  {
+    name: "FPL Live",
+    href: "/premier-league/fpl-live",
+    badge: { color: "red" as const, pulse: true },
+  },
   { name: "Nagrade", href: "/premier-league/nagrade" },
   { name: "Registracija", href: "/premier-league/registracija" },
   { name: "Galerija", href: "/premier-league/galerija" },

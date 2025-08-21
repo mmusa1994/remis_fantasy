@@ -71,60 +71,6 @@ export default function FPLLivePage() {
     console.log("Success:", message);
   };
 
-  const loadManagerInfo = useCallback(async () => {
-    if (!managerId) {
-      showError("Please enter a Manager ID first");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Save to localStorage when user manually loads team
-      if (managerId !== null) {
-        localStorage.setItem("fpl-manager-id", managerId.toString());
-      }
-      localStorage.setItem("fpl-gameweek", gameweek.toString());
-
-      // First, get basic manager info immediately through our API
-      const managerResponse = await fetch(`/api/fpl/manager-info?managerId=${managerId}`);
-      
-      if (managerResponse.ok) {
-        const result = await managerResponse.json();
-        const managerData = result.success ? result.data : null;
-        
-        if (managerData) {
-          // Show manager info immediately
-          setData(prev => ({
-            ...prev,
-            manager: managerData
-          }));
-          
-          showSuccess("Manager info loaded");
-          setLoading(false);
-          
-          // Now load full team data in background
-          setTeamDataLoading(true);
-          loadFullTeamData();
-          
-          // Load leagues in separate background service
-          setLeaguesLoading(true);
-          loadLeaguesData();
-        } else {
-          throw new Error("Manager not found");
-        }
-      } else {
-        throw new Error(`Failed to fetch manager info: ${managerResponse.status}`);
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      showError(message);
-      console.error("Error loading manager:", err);
-      setLoading(false);
-    }
-  }, [managerId, gameweek]);
-
   const loadFullTeamData = useCallback(async () => {
     if (!managerId) return;
 
@@ -174,9 +120,69 @@ export default function FPLLivePage() {
     }
   }, [managerId]);
 
+  const loadManagerInfo = useCallback(async () => {
+    if (!managerId) {
+      showError("Please enter a Manager ID first");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Save to localStorage when user manually loads team
+      if (managerId !== null) {
+        localStorage.setItem("fpl-manager-id", managerId.toString());
+      }
+      localStorage.setItem("fpl-gameweek", gameweek.toString());
+
+      // First, get skeleton data with manager info immediately
+      const skeletonResponse = await fetch("/api/fpl/load-team", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          managerId,
+          gameweek,
+          skeleton: true,
+        }),
+      });
+
+      if (skeletonResponse.ok) {
+        const result = await skeletonResponse.json();
+
+        if (result.success) {
+          // Show skeleton data immediately
+          setData(result.data);
+          showSuccess("Manager info loaded");
+          setLoading(false);
+
+          // Now load full team data in background
+          setTeamDataLoading(true);
+          loadFullTeamData();
+
+          // Load leagues in separate background service
+          setLeaguesLoading(true);
+          loadLeaguesData();
+        } else {
+          throw new Error(result.error || "Manager not found");
+        }
+      } else {
+        throw new Error(
+          `Failed to fetch manager info: ${skeletonResponse.status}`
+        );
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      showError(message);
+      console.error("Error loading manager:", err);
+      setLoading(false);
+    }
+  }, [managerId, gameweek, loadFullTeamData, loadLeaguesData]);
+
   // Keep loadTeam for compatibility with polling
   const loadTeam = loadManagerInfo;
-
 
   const startPolling = useCallback(() => {
     if (!managerId) {
@@ -208,7 +214,9 @@ export default function FPLLivePage() {
           const result = await response.json();
           if (result.success && result.data.new_events > 0) {
             // Trigger loadTeam without awaiting to avoid blocking polling
-            loadTeam().catch(err => console.error("Polling load team error:", err));
+            loadTeam().catch((err) =>
+              console.error("Polling load team error:", err)
+            );
           }
         }
       } catch (err) {
@@ -304,18 +312,59 @@ export default function FPLLivePage() {
                 />
                 {teamDataLoading ? (
                   <div className="space-y-6">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                      <h3 className="text-lg font-semibold mb-4">Squad</h3>
-                      <div className="text-center text-gray-500 dark:text-gray-400">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                        Loading team data...
+                    {/* Squad Skeleton */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-24 animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-48 mt-2 animate-pulse"></div>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                              {Array.from({ length: 14 }, (_, i) => (
+                                <th key={i} className="px-3 py-3">
+                                  <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-12 animate-pulse"></div>
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {Array.from({ length: 15 }, (_, i) => (
+                              <tr key={i}>
+                                {Array.from({ length: 14 }, (_, j) => (
+                                  <td key={j} className="px-3 py-2">
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded animate-pulse"></div>
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
+
+                    {/* Scoreboard Skeleton */}
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                      <h3 className="text-lg font-semibold mb-4">Scoreboard</h3>
-                      <div className="text-center text-gray-500 dark:text-gray-400">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                        Loading fixtures...
+                      <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-32 mb-4 animate-pulse"></div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {Array.from({ length: 6 }, (_, i) => (
+                          <div
+                            key={i}
+                            className="border dark:border-gray-600 rounded-lg p-4"
+                          >
+                            <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-24 mb-2 animate-pulse"></div>
+                            <div className="h-6 bg-gray-200 dark:bg-gray-500 rounded w-16 mb-3 animate-pulse"></div>
+                            <div className="space-y-2">
+                              {Array.from({ length: 3 }, (_, j) => (
+                                <div
+                                  key={j}
+                                  className="h-4 bg-gray-200 dark:bg-gray-500 rounded animate-pulse"
+                                ></div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -339,15 +388,27 @@ export default function FPLLivePage() {
           <div className="space-y-6">
             <LiveTicker gameweek={gameweek} isPolling={isPolling} />
             {leaguesLoading ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Leagues</h3>
-                <div className="text-center text-gray-500 dark:text-gray-400">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                  Loading leagues...
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                  <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-20 animate-pulse"></div>
+                </div>
+                <div className="p-6 space-y-3">
+                  {Array.from({ length: 3 }, (_, i) => (
+                    <div
+                      key={i}
+                      className="border dark:border-gray-700 rounded-lg overflow-hidden"
+                    >
+                      <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b dark:border-gray-600">
+                        <div className="h-5 bg-gray-200 dark:bg-gray-500 rounded w-32 animate-pulse"></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ) : leagueData && (
-              <LeagueTables leagueData={leagueData} managerId={managerId!} />
+            ) : (
+              leagueData && (
+                <LeagueTables leagueData={leagueData} managerId={managerId!} />
+              )
             )}
           </div>
         </div>

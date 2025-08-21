@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  MdPerson,
-  MdGroup,
-  MdExpandMore,
-  MdExpandLess,
-  MdNavigateNext,
-  MdNavigateBefore,
-  MdFirstPage,
-  MdLastPage,
-} from "react-icons/md";
+import { MdPerson, MdGroup, MdExpandMore, MdExpandLess } from "react-icons/md";
 import { GiTrophy } from "react-icons/gi";
 
 interface LeagueTablesProps {
@@ -30,18 +21,16 @@ export default function LeagueTables({
     [key: number]: any;
   }>({});
   const [loadingLeagues, setLoadingLeagues] = useState<Set<string>>(new Set());
-  const [currentPages, setCurrentPages] = useState<{ [key: number]: number }>(
+  const [totalEntries, setTotalEntries] = useState<{ [key: number]: number }>(
     {}
   );
-  const [totalPages, setTotalPages] = useState<{ [key: number]: number }>({});
-  const itemsPerPage = 10;
+  const maxPositions = 50; // Limit to top 50
 
   const fetchLeagueStandings = async (
     leagueId: number,
-    isH2H: boolean = false,
-    page: number = 1
+    isH2H: boolean = false
   ) => {
-    const loadingKey = `${leagueId}_${page}_${isH2H}`;
+    const loadingKey = `${leagueId}_top50_${isH2H}`;
     if (loadingLeagues.has(loadingKey)) return;
 
     setLoadingLeagues((prev) => new Set([...prev, loadingKey]));
@@ -49,52 +38,69 @@ export default function LeagueTables({
     try {
       const endpoint = isH2H ? "h2h" : "classic";
       const response = await fetch(
-        `/api/fpl/leagues/${endpoint}?leagueId=${leagueId}&managerId=${managerId}&page=${page}&pageSize=${itemsPerPage}`
+        `/api/fpl/leagues/${endpoint}?leagueId=${leagueId}&managerId=${managerId}&page=1&pageSize=${maxPositions}`
       );
 
       if (response.ok) {
         const result = await response.json();
-        if (result.success) {
+
+        if (result.success && result.data) {
+          const standingsData = result.data.standings || [];
+
+          // Check if user is found on this page
+          const userFound = standingsData.some(
+            (entry: any) => entry.entry === managerId
+          );
+
+          // Set league standings data (top 50 only)
           setLeagueStandings((prev) => ({
             ...prev,
             [leagueId]: {
-              ...prev[leagueId],
-              standings: result.data.standings,
+              standings: standingsData,
               manager_position: result.data.manager_position,
-              total_entries: result.data.total_entries,
-              current_page: page,
+              total_entries: result.data.total_entries || 0,
+              user_found: userFound,
+              has_data: true,
+              error: null,
             },
           }));
 
-          const totalPagesCount = Math.ceil(
-            result.data.total_entries / itemsPerPage
-          );
-          setTotalPages((prev) => ({
+          setTotalEntries((prev) => ({
             ...prev,
-            [leagueId]: totalPagesCount,
-          }));
-
-          setCurrentPages((prev) => ({
-            ...prev,
-            [leagueId]: page,
+            [leagueId]: result.data.total_entries || 0,
           }));
         } else {
           setLeagueStandings((prev) => ({
             ...prev,
-            [leagueId]: { error: result.error || "Failed to load standings" },
+            [leagueId]: {
+              error: result.error || "Failed to load standings",
+              has_data: false,
+              standings: [],
+              total_entries: 0,
+            },
           }));
         }
       } else {
         setLeagueStandings((prev) => ({
           ...prev,
-          [leagueId]: { error: "Failed to fetch data" },
+          [leagueId]: {
+            error: "Failed to fetch data",
+            has_data: false,
+            standings: [],
+            total_entries: 0,
+          },
         }));
       }
     } catch (error) {
       console.error("Error fetching league standings:", error);
       setLeagueStandings((prev) => ({
         ...prev,
-        [leagueId]: { error: "Network error" },
+        [leagueId]: {
+          error: "Network error",
+          has_data: false,
+          standings: [],
+          total_entries: 0,
+        },
       }));
     } finally {
       setLoadingLeagues((prev) => {
@@ -104,6 +110,8 @@ export default function LeagueTables({
       });
     }
   };
+
+  // Removed pagination search - now only loads top 50
 
   const toggleLeague = (leagueId: number, isH2H: boolean = false) => {
     const isExpanded = expandedLeagues.has(leagueId);
@@ -116,27 +124,15 @@ export default function LeagueTables({
       });
     } else {
       setExpandedLeagues((prev) => new Set([...prev, leagueId]));
+
+      // Only fetch if we don't have any data for this league
       if (!leagueStandings[leagueId]) {
-        fetchLeagueStandings(leagueId, isH2H, 1);
+        fetchLeagueStandings(leagueId, isH2H);
       }
     }
   };
 
-  const changePage = (
-    leagueId: number,
-    newPage: number,
-    isH2H: boolean = false
-  ) => {
-    fetchLeagueStandings(leagueId, isH2H, newPage);
-  };
-
-  const goToUserPage = async (leagueId: number, isH2H: boolean = false) => {
-    const standings = leagueStandings[leagueId];
-    if (!standings?.manager_position) return;
-
-    const userPage = Math.ceil(standings.manager_position / itemsPerPage);
-    await fetchLeagueStandings(leagueId, isH2H, userPage);
-  };
+  // Removed pagination functions - showing top 50 only
 
   if (!leagueData || (!leagueData.classic?.length && !leagueData.h2h?.length)) {
     return (
@@ -152,7 +148,7 @@ export default function LeagueTables({
     );
   }
 
-  // Get all leagues (not limited to first 5/3)
+  // Get leagues user actually participates in
   const allClassicLeagues = leagueData.classic || [];
   const allH2HLeagues = leagueData.h2h || [];
   const hasClassic = allClassicLeagues.length > 0;
@@ -167,32 +163,54 @@ export default function LeagueTables({
         </h3>
       </div>
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation - Show tabs only when user has both types */}
       {hasClassic && hasH2H && (
         <div className="px-6 pt-4">
           <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-            <button
-              onClick={() => setActiveTab("classic")}
-              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === "classic"
-                  ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
-            >
-              <MdGroup className="inline mr-1" />
-              Classic ({allClassicLeagues.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("h2h")}
-              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === "h2h"
-                  ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
-            >
-              <MdPerson className="inline mr-1" />
-              Head-to-Head ({allH2HLeagues.length})
-            </button>
+            {hasClassic && (
+              <button
+                onClick={() => setActiveTab("classic")}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === "classic"
+                    ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+              >
+                <MdGroup className="inline mr-1" />
+                Classic ({allClassicLeagues.length})
+              </button>
+            )}
+            {hasH2H && (
+              <button
+                onClick={() => setActiveTab("h2h")}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === "h2h"
+                    ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+              >
+                <MdPerson className="inline mr-1" />
+                Head-to-Head ({allH2HLeagues.length})
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* League Type Header when only one type exists */}
+      {hasClassic && !hasH2H && (
+        <div className="px-6 pt-4">
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
+            <MdGroup className="inline mr-1" />
+            Classic Leagues ({allClassicLeagues.length})
+          </div>
+        </div>
+      )}
+      {!hasClassic && hasH2H && (
+        <div className="px-6 pt-4">
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
+            <MdPerson className="inline mr-1" />
+            Head-to-Head Leagues ({allH2HLeagues.length})
           </div>
         </div>
       )}
@@ -203,8 +221,7 @@ export default function LeagueTables({
           <div className="space-y-3">
             {allClassicLeagues.map((league: any) => {
               const isExpanded = expandedLeagues.has(league.id);
-              const currentPage = currentPages[league.id] || 1;
-              const loadingKey = `${league.id}_${currentPage}_false`;
+              const loadingKey = `${league.id}_top50_false`;
               const isLoading = loadingLeagues.has(loadingKey);
               const standings = leagueStandings[league.id];
 
@@ -269,21 +286,10 @@ export default function LeagueTables({
                             </tbody>
                           </table>
 
-                          {/* Pagination skeleton */}
-                          <div className="p-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center space-x-3">
-                                <div className="h-6 bg-gray-200 dark:bg-gray-500 rounded w-24 animate-pulse"></div>
-                                <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-20 animate-pulse"></div>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                {Array.from({ length: 4 }, (_, i) => (
-                                  <div
-                                    key={i}
-                                    className="h-6 w-6 bg-gray-200 dark:bg-gray-500 rounded animate-pulse"
-                                  ></div>
-                                ))}
-                              </div>
+                          {/* Simple footer skeleton */}
+                          <div className="p-4 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
+                            <div className="flex justify-center">
+                              <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-32 animate-pulse"></div>
                             </div>
                           </div>
                         </div>
@@ -291,7 +297,8 @@ export default function LeagueTables({
                         <div className="p-4 text-sm text-red-500">
                           {standings.error}
                         </div>
-                      ) : standings?.standings &&
+                      ) : standings?.has_data &&
+                        standings?.standings &&
                         standings.standings.length > 0 ? (
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
@@ -336,100 +343,36 @@ export default function LeagueTables({
                             </tbody>
                           </table>
 
-                          {/* Pagination and User Position */}
-                          <div className="p-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center space-x-3">
-                                {standings.manager_position && (
-                                  <button
-                                    onClick={() => goToUserPage(league.id)}
-                                    className="flex items-center gap-1 text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md font-medium transition-colors shadow-sm"
-                                  >
-                                    <MdPerson className="w-3 h-3" />
-                                    Find Me (#{standings.manager_position})
-                                  </button>
-                                )}
-                                <span className="text-xs text-gray-600 dark:text-gray-400">
-                                  First 50 places
-                                </span>
+                          {/* Simple Footer */}
+                          <div className="p-4 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
+                            <div className="flex flex-col items-center space-y-3">
+                              {/* Position indicator */}
+                              {standings.has_data && (
+                                <>
+                                  {standings.user_found &&
+                                  standings.manager_position ? (
+                                    <div className="flex items-center gap-2 text-sm bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg">
+                                      <MdPerson className="w-4 h-4" />
+                                      <span className="font-medium">
+                                        You are #{standings.manager_position}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 px-4 py-2 rounded-lg">
+                                      <span className="font-medium">
+                                        You are not in top 50
+                                      </span>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+
+                              {/* Showing info */}
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Showing top {maxPositions} positions •{" "}
+                                {totalEntries[league.id] || 0} total entries
                               </div>
-
-                              {totalPages[league.id] > 1 && (
-                                <div className="flex items-center space-x-1">
-                                  <button
-                                    onClick={() => changePage(league.id, 1)}
-                                    disabled={currentPages[league.id] === 1}
-                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
-                                  >
-                                    <MdFirstPage />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      changePage(
-                                        league.id,
-                                        Math.max(1, currentPages[league.id] - 1)
-                                      )
-                                    }
-                                    disabled={currentPages[league.id] === 1}
-                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
-                                  >
-                                    <MdNavigateBefore />
-                                  </button>
-                                  <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-600 rounded">
-                                    {currentPages[league.id] || 1} /{" "}
-                                    {totalPages[league.id]}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      changePage(
-                                        league.id,
-                                        Math.min(
-                                          totalPages[league.id],
-                                          currentPages[league.id] + 1
-                                        )
-                                      )
-                                    }
-                                    disabled={
-                                      currentPages[league.id] ===
-                                      totalPages[league.id]
-                                    }
-                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
-                                  >
-                                    <MdNavigateNext />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      changePage(
-                                        league.id,
-                                        totalPages[league.id]
-                                      )
-                                    }
-                                    disabled={
-                                      currentPages[league.id] ===
-                                      totalPages[league.id]
-                                    }
-                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
-                                  >
-                                    <MdLastPage />
-                                  </button>
-                                </div>
-                              )}
                             </div>
-
-                            {/* User Position Indicator when not visible */}
-                            {standings.manager_position &&
-                              !standings.standings.some(
-                                (entry: any) => entry.entry === managerId
-                              ) && (
-                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded">
-                                  <div className="flex items-center justify-center">
-                                    <span className="text-xs font-medium text-red-700 dark:text-red-300">
-                                      You are out of first 50 places (#
-                                      {standings.manager_position})
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
                           </div>
                         </div>
                       ) : (
@@ -450,8 +393,7 @@ export default function LeagueTables({
           <div className="space-y-3">
             {allH2HLeagues.map((league: any) => {
               const isExpanded = expandedLeagues.has(league.id);
-              const currentPage = currentPages[league.id] || 1;
-              const loadingKey = `${league.id}_${currentPage}_true`;
+              const loadingKey = `${league.id}_top50_true`;
               const isLoading = loadingLeagues.has(loadingKey);
               const standings = leagueStandings[league.id];
 
@@ -522,21 +464,10 @@ export default function LeagueTables({
                             </tbody>
                           </table>
 
-                          {/* H2H Pagination skeleton */}
-                          <div className="p-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center space-x-3">
-                                <div className="h-6 bg-gray-200 dark:bg-gray-500 rounded w-24 animate-pulse"></div>
-                                <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-20 animate-pulse"></div>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                {Array.from({ length: 4 }, (_, i) => (
-                                  <div
-                                    key={i}
-                                    className="h-6 w-6 bg-gray-200 dark:bg-gray-500 rounded animate-pulse"
-                                  ></div>
-                                ))}
-                              </div>
+                          {/* Simple H2H footer skeleton */}
+                          <div className="p-4 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
+                            <div className="flex justify-center">
+                              <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-32 animate-pulse"></div>
                             </div>
                           </div>
                         </div>
@@ -544,7 +475,8 @@ export default function LeagueTables({
                         <div className="p-4 text-sm text-red-500">
                           {standings.error}
                         </div>
-                      ) : standings?.standings &&
+                      ) : standings?.has_data &&
+                        standings?.standings &&
                         standings.standings.length > 0 ? (
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
@@ -594,110 +526,36 @@ export default function LeagueTables({
                             </tbody>
                           </table>
 
-                          {/* H2H Pagination and User Position */}
-                          <div className="p-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center space-x-3">
-                                {standings.manager_position && (
-                                  <button
-                                    onClick={() =>
-                                      goToUserPage(league.id, true)
-                                    }
-                                    className="flex items-center gap-1 text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md font-medium transition-colors shadow-sm"
-                                  >
-                                    <MdPerson className="w-3 h-3" />
-                                    Find Me (#{standings.manager_position})
-                                  </button>
-                                )}
-                                <span className="text-xs text-gray-600 dark:text-gray-400">
-                                  First 50 places
-                                </span>
+                          {/* Simple H2H Footer */}
+                          <div className="p-4 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
+                            <div className="flex flex-col items-center space-y-3">
+                              {/* Position indicator */}
+                              {standings.has_data && (
+                                <>
+                                  {standings.user_found &&
+                                  standings.manager_position ? (
+                                    <div className="flex items-center gap-2 text-sm bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg">
+                                      <MdPerson className="w-4 h-4" />
+                                      <span className="font-medium">
+                                        You are #{standings.manager_position}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 px-4 py-2 rounded-lg">
+                                      <span className="font-medium">
+                                        You are not in top 50
+                                      </span>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+
+                              {/* Showing info */}
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Showing top {maxPositions} positions •{" "}
+                                {totalEntries[league.id] || 0} total entries
                               </div>
-
-                              {totalPages[league.id] > 1 && (
-                                <div className="flex items-center space-x-1">
-                                  <button
-                                    onClick={() =>
-                                      changePage(league.id, 1, true)
-                                    }
-                                    disabled={currentPages[league.id] === 1}
-                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
-                                  >
-                                    <MdFirstPage />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      changePage(
-                                        league.id,
-                                        Math.max(
-                                          1,
-                                          currentPages[league.id] - 1
-                                        ),
-                                        true
-                                      )
-                                    }
-                                    disabled={currentPages[league.id] === 1}
-                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
-                                  >
-                                    <MdNavigateBefore />
-                                  </button>
-                                  <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-600 rounded">
-                                    {currentPages[league.id] || 1} /{" "}
-                                    {totalPages[league.id]}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      changePage(
-                                        league.id,
-                                        Math.min(
-                                          totalPages[league.id],
-                                          currentPages[league.id] + 1
-                                        ),
-                                        true
-                                      )
-                                    }
-                                    disabled={
-                                      currentPages[league.id] ===
-                                      totalPages[league.id]
-                                    }
-                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
-                                  >
-                                    <MdNavigateNext />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      changePage(
-                                        league.id,
-                                        totalPages[league.id],
-                                        true
-                                      )
-                                    }
-                                    disabled={
-                                      currentPages[league.id] ===
-                                      totalPages[league.id]
-                                    }
-                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
-                                  >
-                                    <MdLastPage />
-                                  </button>
-                                </div>
-                              )}
                             </div>
-
-                            {/* User Position Indicator when not visible in H2H */}
-                            {standings.manager_position &&
-                              !standings.standings.some(
-                                (entry: any) => entry.entry === managerId
-                              ) && (
-                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded">
-                                  <div className="flex items-center justify-center">
-                                    <span className="text-xs font-medium text-red-700 dark:text-red-300">
-                                      You are out of first 50 places (#
-                                      {standings.manager_position})
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
                           </div>
                         </div>
                       ) : (

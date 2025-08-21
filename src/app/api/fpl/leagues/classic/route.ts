@@ -56,11 +56,28 @@ export async function GET(request: NextRequest) {
 
     // Fetch classic league standings with FPL native pagination
     const leagueStandings = await fplApi.getLeagueStandings(leagueId, page);
-    
+
     const standings = leagueStandings.standings?.results || [];
-    const managerPosition = leagueStandings.standings?.results?.findIndex(
+
+    // Calculate manager position correctly
+    let managerPosition = null;
+    const managerIndex = standings.findIndex(
       (entry: any) => entry.entry === managerId
-    ) + 1 + ((page - 1) * pageSize) || null;
+    );
+
+    if (managerIndex !== -1) {
+      // Manager found on this page - calculate actual position
+      managerPosition = managerIndex + 1 + (page - 1) * pageSize;
+    } else {
+      // Manager not on this page - try to get position from league data
+      // The FPL API sometimes includes overall position data in the league response
+      const overallPosition = leagueStandings.standings?.results?.find(
+        (entry: any) => entry.entry === managerId
+      )?.rank;
+      if (overallPosition) {
+        managerPosition = overallPosition;
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -75,6 +92,7 @@ export async function GET(request: NextRequest) {
           id: leagueId,
           name: leagueStandings.league?.name || "Unknown League",
         },
+        user_found: managerIndex !== -1, // Indicate if user was found on this page
       },
       league_id: leagueId,
       manager_id: managerId,

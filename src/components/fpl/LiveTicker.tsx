@@ -217,7 +217,7 @@ const LiveTicker = React.memo(function LiveTicker({ gameweek, isPolling }: LiveT
       <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Live Ticker
+            LIVE BPS Tracker
           </h3>
           <div className="flex items-center space-x-2">
             {loading && (
