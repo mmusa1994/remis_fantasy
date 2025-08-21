@@ -209,7 +209,7 @@ export default function FPLLivePage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <ControlsBar
               managerId={managerId}
               gameweek={gameweek}
@@ -222,25 +222,20 @@ export default function FPLLivePage() {
               onStopPolling={stopPolling}
               loading={loading}
             />
+            {data.manager && (
+              <ManagerSummary
+                manager={data.manager}
+                teamTotals={data.team_totals}
+                captain={data.captain}
+                viceCaptain={data.vice_captain}
+                bonusAdded={data.bonus_added || false}
+                gameweek={gameweek}
+                lastUpdated={lastUpdated || undefined}
+              />
+            )}
           </div>
-          <div>
+          <div className="space-y-6">
             <SettingsCard onSettingsSaved={handleSettingsSaved} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
-          <div className="xl:col-span-2">
-            <ManagerSummary
-              manager={data.manager}
-              teamTotals={data.team_totals}
-              captain={data.captain}
-              viceCaptain={data.vice_captain}
-              bonusAdded={data.bonus_added || false}
-              gameweek={gameweek}
-              lastUpdated={lastUpdated || undefined}
-            />
-          </div>
-          <div>
             <LiveTicker gameweek={gameweek} isPolling={isPolling} />
           </div>
         </div>

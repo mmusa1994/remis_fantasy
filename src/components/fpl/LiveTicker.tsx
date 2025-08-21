@@ -17,8 +17,8 @@ interface Event {
     second_name: string;
   };
   fixture?: {
-    team_h: { short_name: string };
-    team_a: { short_name: string };
+    team_h_data: { short_name: string };
+    team_a_data: { short_name: string };
   };
 }
 
@@ -129,8 +129,8 @@ export default function LiveTicker({ gameweek, isPolling }: LiveTickerProps) {
     const playerName = event.player?.web_name || `Player ${event.player_id}`;
     const eventLabel = EVENT_LABELS[event.event_type as keyof typeof EVENT_LABELS] || event.event_type;
     const team = event.side === 'H' 
-      ? event.fixture?.team_h?.short_name 
-      : event.fixture?.team_a?.short_name;
+      ? event.fixture?.team_h_data?.short_name 
+      : event.fixture?.team_a_data?.short_name;
     
     let description = `${playerName} - ${eventLabel}`;
     if (team) {

@@ -27,13 +27,27 @@ export async function POST(request: NextRequest) {
 
     await fplDb.upsertBootstrapData(await fplApi.getBootstrapStatic());
 
-    const [managerEntry, managerPicks, liveData, fixtures, eventStatus] = await Promise.all([
-      fplApi.getManagerEntry(managerIdNum),
-      fplApi.getManagerPicks(managerIdNum, gw),
-      fplApi.getLiveData(gw),
-      fplApi.getFixtures(gw),
-      fplApi.getEventStatus(),
-    ]);
+    // Check if gameweek data exists first
+    let managerEntry, managerPicks, liveData, fixtures, eventStatus;
+    
+    try {
+      [managerEntry, managerPicks, liveData, fixtures, eventStatus] = await Promise.all([
+        fplApi.getManagerEntry(managerIdNum),
+        fplApi.getManagerPicks(managerIdNum, gw),
+        fplApi.getLiveData(gw),
+        fplApi.getFixtures(gw),
+        fplApi.getEventStatus(),
+      ]);
+    } catch (apiError) {
+      // If FPL API returns 404, gameweek data doesn't exist
+      if (apiError instanceof Error && apiError.message.includes('404')) {
+        return NextResponse.json({
+          success: false,
+          error: `Gameweek ${gw} data not available yet`
+        }, { status: 404 });
+      }
+      throw apiError; // Re-throw other errors
+    }
 
     await Promise.all([
       fplDb.upsertManagerPicks(gw, managerIdNum, managerPicks),

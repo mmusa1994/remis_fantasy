@@ -504,7 +504,22 @@ class FPLDatabaseService {
   async getRecentEvents(gw: number, limit: number = 50) {
     const { data, error } = await supabaseAdmin
       .from('fpl_events_stream')
-      .select('*')
+      .select(`
+        *,
+        player:fpl_players!fpl_events_stream_player_id_fkey (
+          web_name,
+          first_name,
+          second_name
+        ),
+        fixture:fpl_fixtures!fpl_events_stream_fixture_id_fkey (
+          team_h_data:fpl_teams!fpl_fixtures_team_h_fkey (
+            short_name
+          ),
+          team_a_data:fpl_teams!fpl_fixtures_team_a_fkey (
+            short_name
+          )
+        )
+      `)
       .eq('gw', gw)
       .order('occurred_at', { ascending: false })
       .limit(limit);
