@@ -39,8 +39,7 @@ export async function POST(request: NextRequest) {
       managerPicks,
       liveData,
       fixtures,
-      eventStatus,
-      bootstrapData;
+      eventStatus;
 
     try {
       [
@@ -49,14 +48,12 @@ export async function POST(request: NextRequest) {
         liveData,
         fixtures,
         eventStatus,
-        bootstrapData,
       ] = await Promise.all([
         fplApi.getManagerEntry(managerIdNum),
         fplApi.getManagerPicks(managerIdNum, gw),
         fplApi.getLiveData(gw),
         fplApi.getFixtures(gw),
         fplApi.getEventStatus(),
-        fplApi.getBootstrapStatic(),
       ]);
     } catch (apiError) {
       // If FPL API returns 404, gameweek data doesn't exist

@@ -213,41 +213,51 @@ export interface FPLManagerPicks {
 }
 
 class FPLAPIError extends Error {
-  constructor(message: string, public status?: number, public endpoint?: string) {
+  constructor(
+    message: string,
+    public status?: number,
+    public endpoint?: string
+  ) {
     super(message);
-    this.name = 'FPLAPIError';
+    this.name = "FPLAPIError";
   }
 }
 
 class FPLAPIService {
-  private readonly baseUrl = 'https://fantasy.premierleague.com/api';
+  private readonly baseUrl = "https://fantasy.premierleague.com/api";
   private readonly maxRetries = 3;
   private readonly baseDelay = 1000;
 
   private async sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private async fetchWithRetry<T>(endpoint: string, retryCount = 0): Promise<T> {
+  private async fetchWithRetry<T>(
+    endpoint: string,
+    retryCount = 0
+  ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
-        cache: 'no-store',
+        cache: "no-store",
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json',
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          Accept: "application/json",
         },
       });
 
       if (!response.ok) {
         if (response.status === 429 && retryCount < this.maxRetries) {
           const delay = this.baseDelay * Math.pow(2, retryCount);
-          console.warn(`Rate limited on ${endpoint}, retrying in ${delay}ms...`);
+          console.warn(
+            `Rate limited on ${endpoint}, retrying in ${delay}ms...`
+          );
           await this.sleep(delay);
           return this.fetchWithRetry(endpoint, retryCount + 1);
         }
-        
+
         throw new FPLAPIError(
           `HTTP ${response.status}: ${response.statusText}`,
           response.status,
@@ -264,13 +274,18 @@ class FPLAPIService {
 
       if (retryCount < this.maxRetries) {
         const delay = this.baseDelay * Math.pow(2, retryCount);
-        console.warn(`Network error on ${endpoint}, retrying in ${delay}ms...`, error);
+        console.warn(
+          `Network error on ${endpoint}, retrying in ${delay}ms...`,
+          error
+        );
         await this.sleep(delay);
         return this.fetchWithRetry(endpoint, retryCount + 1);
       }
 
       throw new FPLAPIError(
-        `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Network error: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         undefined,
         endpoint
       );
@@ -278,11 +293,11 @@ class FPLAPIService {
   }
 
   async getBootstrapStatic(): Promise<FPLBootstrapResponse> {
-    return this.fetchWithRetry<FPLBootstrapResponse>('/bootstrap-static/');
+    return this.fetchWithRetry<FPLBootstrapResponse>("/bootstrap-static/");
   }
 
   async getFixtures(gameweek?: number): Promise<FPLFixture[]> {
-    const endpoint = gameweek ? `/fixtures/?event=${gameweek}` : '/fixtures/';
+    const endpoint = gameweek ? `/fixtures/?event=${gameweek}` : "/fixtures/";
     return this.fetchWithRetry<FPLFixture[]>(endpoint);
   }
 
@@ -291,38 +306,51 @@ class FPLAPIService {
   }
 
   async getEventStatus(): Promise<FPLEventStatus> {
-    return this.fetchWithRetry<FPLEventStatus>('/event-status/');
+    return this.fetchWithRetry<FPLEventStatus>("/event-status/");
   }
 
   async getManagerEntry(managerId: number): Promise<FPLManagerEntry> {
     return this.fetchWithRetry<FPLManagerEntry>(`/entry/${managerId}/`);
   }
 
-  async getManagerPicks(managerId: number, gameweek: number): Promise<FPLManagerPicks> {
-    return this.fetchWithRetry<FPLManagerPicks>(`/entry/${managerId}/event/${gameweek}/picks/`);
+  async getManagerPicks(
+    managerId: number,
+    gameweek: number
+  ): Promise<FPLManagerPicks> {
+    return this.fetchWithRetry<FPLManagerPicks>(
+      `/entry/${managerId}/event/${gameweek}/picks/`
+    );
   }
 
   async getCurrentGameweek(): Promise<number> {
     const bootstrap = await this.getBootstrapStatic();
-    const currentEvent = bootstrap.events.find(event => event.is_current);
+    const currentEvent = bootstrap.events.find((event) => event.is_current);
     return currentEvent?.id || 1;
   }
 
   async getActiveFixtures(gameweek: number): Promise<FPLFixture[]> {
     const fixtures = await this.getFixtures(gameweek);
-    return fixtures.filter(fixture => fixture.started && !fixture.finished);
+    return fixtures.filter((fixture) => fixture.started && !fixture.finished);
   }
 
   async isGameweekFinished(gameweek: number): Promise<boolean> {
     const fixtures = await this.getFixtures(gameweek);
-    return fixtures.every(fixture => fixture.finished);
+    return fixtures.every((fixture) => fixture.finished);
   }
 
   async getBonusAddedStatus(gameweek?: number): Promise<boolean> {
     const eventStatus = await this.getEventStatus();
-    const currentGW = gameweek || await this.getCurrentGameweek();
-    const status = eventStatus.status.find(s => s.event === currentGW);
+    const currentGW = gameweek || (await this.getCurrentGameweek());
+    const status = eventStatus.status.find((s) => s.event === currentGW);
     return status?.bonus_added || false;
+  }
+
+  async getLeagueStandings(leagueId: number): Promise<any> {
+    return await this.fetchWithRetry(`/leagues-classic/${leagueId}/standings/`);
+  }
+
+  async getH2HLeague(leagueId: number): Promise<any> {
+    return await this.fetchWithRetry(`/leagues-h2h/${leagueId}/standings/`);
   }
 }
 
