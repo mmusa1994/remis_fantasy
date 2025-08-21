@@ -4,11 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import SettingsCard from "@/components/fpl/SettingsCard";
 import ControlsBar from "@/components/fpl/ControlsBar";
 import ManagerSummary from "@/components/fpl/ManagerSummary";
+import GameweekStatus from "@/components/fpl/GameweekStatus";
 import SquadTable from "@/components/fpl/SquadTable";
 import ScoreboardGrid from "@/components/fpl/ScoreboardGrid";
 import LiveTicker from "@/components/fpl/LiveTicker";
 import LeagueTables from "@/components/fpl/LeagueTables";
 import { MdInfo, MdSettings, MdCancel } from "react-icons/md";
+import type { GameweekStatus as GameweekStatusType } from "@/lib/fpl-api";
 
 interface FPLData {
   manager?: any;
@@ -31,6 +33,9 @@ export default function FPLLivePage() {
   const [teamDataLoading, setTeamDataLoading] = useState(false);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [data, setData] = useState<FPLData>({});
+  const [gameweekStatus, setGameweekStatus] =
+    useState<GameweekStatusType | null>(null);
+  const [gameweekStatusLoading, setGameweekStatusLoading] = useState(false);
   const [leagueData, setLeagueData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -120,6 +125,27 @@ export default function FPLLivePage() {
     }
   }, [managerId]);
 
+  const loadGameweekStatus = useCallback(async () => {
+    if (!managerId) return;
+
+    setGameweekStatusLoading(true);
+    try {
+      const response = await fetch(
+        `/api/fpl/gameweek-status?managerId=${managerId}&gameweek=${gameweek}`
+      );
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setGameweekStatus(result.data);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load gameweek status:", err);
+    } finally {
+      setGameweekStatusLoading(false);
+    }
+  }, [managerId, gameweek]);
+
   const loadManagerInfo = useCallback(async () => {
     if (!managerId) {
       showError("Please enter a Manager ID first");
@@ -165,6 +191,9 @@ export default function FPLLivePage() {
           // Load leagues in separate background service
           setLeaguesLoading(true);
           loadLeaguesData();
+
+          // Load gameweek status in background
+          loadGameweekStatus();
         } else {
           throw new Error(result.error || "Manager not found");
         }
@@ -179,7 +208,13 @@ export default function FPLLivePage() {
       console.error("Error loading manager:", err);
       setLoading(false);
     }
-  }, [managerId, gameweek, loadFullTeamData, loadLeaguesData]);
+  }, [
+    managerId,
+    gameweek,
+    loadFullTeamData,
+    loadLeaguesData,
+    loadGameweekStatus,
+  ]);
 
   // Keep loadTeam for compatibility with polling
   const loadTeam = loadManagerInfo;
@@ -217,6 +252,10 @@ export default function FPLLivePage() {
             loadTeam().catch((err) =>
               console.error("Polling load team error:", err)
             );
+            // Also refresh gameweek status
+            loadGameweekStatus().catch((err) =>
+              console.error("Polling gameweek status error:", err)
+            );
           }
         }
       } catch (err) {
@@ -226,7 +265,7 @@ export default function FPLLivePage() {
 
     setPollingInterval(interval);
     showSuccess("Live polling started (15s interval)");
-  }, [gameweek, data.manager, loadTeam, managerId]);
+  }, [managerId, data.manager, gameweek, loadTeam, loadGameweekStatus]);
 
   const stopPolling = useCallback(() => {
     if (pollingInterval) {
@@ -309,6 +348,11 @@ export default function FPLLivePage() {
                   bonusAdded={data.bonus_added || false}
                   gameweek={gameweek}
                   lastUpdated={lastUpdated || undefined}
+                />
+                <GameweekStatus
+                  gameweekStatus={gameweekStatus || undefined}
+                  gameweek={gameweek}
+                  loading={gameweekStatusLoading}
                 />
                 {teamDataLoading ? (
                   <div className="space-y-6">

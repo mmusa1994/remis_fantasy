@@ -16,6 +16,27 @@ export interface FPLPlayer {
   total_points: number;
   status: string;
   photo: string;
+  selected_by_percent: string;
+  ep_this: string;
+  ep_next: string;
+  form: string;
+  points_per_game: string;
+  news: string;
+  news_added: string;
+  chance_of_playing_this_round: number | null;
+  chance_of_playing_next_round: number | null;
+  value_form: string;
+  value_season: string;
+  cost_change_event: number;
+  cost_change_event_fall: number;
+  cost_change_start: number;
+  cost_change_start_fall: number;
+  dreamteam_count: number;
+  event_points: number;
+  transfers_in: number;
+  transfers_out: number;
+  transfers_in_event: number;
+  transfers_out_event: number;
 }
 
 export interface FPLTeam {
@@ -85,6 +106,7 @@ export interface FPLGameweek {
   transfers_made: number;
   most_captained: number | null;
   most_vice_captained: number | null;
+  average_entry_score: number;
 }
 
 export interface FPLFixture {
@@ -212,6 +234,63 @@ export interface FPLManagerPicks {
   }>;
 }
 
+// Enhanced gameweek status interfaces
+export interface DifferentialPlayer {
+  player_id: number;
+  web_name: string;
+  points: number;
+  ownership_percentage: number;
+  impact_percentage: number;
+  is_positive: boolean;
+  team: number;
+}
+
+export interface CaptainAnalysis {
+  player_id: number;
+  web_name: string;
+  points: number;
+  average_captain_points: number;
+  points_above_average: number;
+  is_above_average: boolean;
+}
+
+export interface GameweekStatus {
+  arrow_direction: "green" | "red" | "neutral";
+  rank_change: number;
+  gameweek_points: number;
+  safety_score: number;
+  differentials: DifferentialPlayer[];
+  threats: DifferentialPlayer[];
+  captain_analysis: CaptainAnalysis | null;
+  clone_count: number;
+}
+
+export interface FPLManagerHistory {
+  current: Array<{
+    event: number;
+    points: number;
+    total_points: number;
+    rank: number;
+    rank_sort: number;
+    overall_rank: number;
+    bank: number;
+    value: number;
+    event_transfers: number;
+    event_transfers_cost: number;
+    points_on_bench: number;
+  }>;
+  past: Array<{
+    season_name: string;
+    total_points: number;
+    rank: number;
+  }>;
+  chips: Array<{
+    name: string;
+    time: string;
+    event: number;
+  }>;
+}
+
 class FPLAPIError extends Error {
   constructor(
     message: string,
@@ -246,7 +325,7 @@ class FPLAPIService {
       if (!response.ok) {
         if (response.status === 429 && retryCount < this.maxRetries) {
           const delay = this.baseDelay;
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
           return this.fetchWithRetry(endpoint, retryCount + 1);
         }
 
@@ -265,7 +344,7 @@ class FPLAPIService {
       }
 
       if (retryCount < this.maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, this.baseDelay));
+        await new Promise((resolve) => setTimeout(resolve, this.baseDelay));
         return this.fetchWithRetry(endpoint, retryCount + 1);
       }
 
@@ -333,11 +412,21 @@ class FPLAPIService {
   }
 
   async getLeagueStandings(leagueId: number, page: number = 1): Promise<any> {
-    return await this.fetchWithRetry(`/leagues-classic/${leagueId}/standings/?page_standings=${page}&page_new_entries=1`);
+    return await this.fetchWithRetry(
+      `/leagues-classic/${leagueId}/standings/?page_standings=${page}&page_new_entries=1`
+    );
   }
 
   async getH2HLeague(leagueId: number, page: number = 1): Promise<any> {
-    return await this.fetchWithRetry(`/leagues-h2h/${leagueId}/standings/?page_standings=${page}&page_new_entries=1`);
+    return await this.fetchWithRetry(
+      `/leagues-h2h/${leagueId}/standings/?page_standings=${page}&page_new_entries=1`
+    );
+  }
+
+  async getManagerHistory(managerId: number): Promise<FPLManagerHistory> {
+    return this.fetchWithRetry<FPLManagerHistory>(
+      `/entry/${managerId}/history/`
+    );
   }
 }
 
