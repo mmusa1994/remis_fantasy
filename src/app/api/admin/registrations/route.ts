@@ -86,7 +86,7 @@ function validateField(
   return true;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Verify admin session
     const session = await getServerSession(authOptions);

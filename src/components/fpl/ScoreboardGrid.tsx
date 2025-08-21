@@ -3,12 +3,6 @@
 import { PiTShirtLight, PiTShirtFill } from "react-icons/pi";
 import { getTeamColors } from '@/lib/team-colors';
 
-interface Team {
-  id: number;
-  name: string;
-  short_name: string;
-}
-
 interface Fixture {
   id: number;
   gw: number;
@@ -139,7 +133,7 @@ export default function ScoreboardGrid({ fixtures, predictedBonuses, bonusAdded 
                   .filter(bonus => bonus.predicted_bonus > 0)
                   .sort((a, b) => b.predicted_bonus - a.predicted_bonus)
                   .slice(0, 3)
-                  .map((bonus, index) => (
+                  .map((bonus) => (
                     <div key={bonus.player_id} className="flex justify-between items-center text-xs">
                       <span className="text-gray-700 dark:text-gray-300 truncate mr-2">
                         {bonus.web_name}

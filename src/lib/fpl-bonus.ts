@@ -63,14 +63,13 @@ class BonusPredictionService {
 
     const results: BonusResult[] = [];
     let rank = 1;
-    let bonusPoints = [3, 2, 1];
+    const bonusPoints = [3, 2, 1];
     let currentBonusIndex = 0;
 
     for (let i = 0; i < sortedPlayers.length; i++) {
       const currentPlayer = sortedPlayers[i];
-      const nextPlayer = i + 1 < sortedPlayers.length ? sortedPlayers[i + 1] : null;
       
-      let tiedPlayers = [currentPlayer];
+      const tiedPlayers = [currentPlayer];
       let j = i + 1;
       
       while (j < sortedPlayers.length && sortedPlayers[j].bps === currentPlayer.bps) {

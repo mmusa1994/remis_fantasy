@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Event {
   id: number;
@@ -55,7 +55,7 @@ export default function LiveTicker({ gameweek, isPolling }: LiveTickerProps) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastEventIdRef = useRef<number>(0);
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     if (!gameweek) return;
     
     try {
@@ -82,7 +82,7 @@ export default function LiveTicker({ gameweek, isPolling }: LiveTickerProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [gameweek]);
 
   useEffect(() => {
     if (isPolling) {
@@ -100,13 +100,13 @@ export default function LiveTicker({ gameweek, isPolling }: LiveTickerProps) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isPolling, gameweek]);
+  }, [isPolling, gameweek, fetchEvents]);
 
   useEffect(() => {
     if (!isPolling) {
       fetchEvents();
     }
-  }, [gameweek]);
+  }, [gameweek, fetchEvents, isPolling]);
 
   const formatTimeAgo = (dateString: string) => {
     const now = new Date();

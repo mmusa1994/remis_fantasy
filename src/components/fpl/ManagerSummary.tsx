@@ -44,7 +44,6 @@ export default function ManagerSummary({
   manager,
   teamTotals,
   captain,
-  viceCaptain,
   bonusAdded,
   gameweek,
   lastUpdated,

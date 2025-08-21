@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { fplDb } from '@/lib/fpl-db';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

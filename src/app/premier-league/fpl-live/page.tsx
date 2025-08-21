@@ -269,8 +269,8 @@ export default function FPLLivePage() {
                 <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
                   <ol className="list-decimal list-inside space-y-1">
                     <li>Unesite Manager ID i odaberite trenutni Gameweek</li>
-                    <li>Kliknite "Load Team" da učitate svoj tim i stats</li>
-                    <li>"Fetch Now" za manuelno ažuriranje ili "Start Live" za auto-polling</li>
+                    <li>Kliknite &quot;Load Team&quot; da učitate svoj tim i stats</li>
+                    <li>&quot;Fetch Now&quot; za manuelno ažuriranje ili &quot;Start Live&quot; za auto-polling</li>
                     <li>Pratite Live Ticker za golove/asiste/kartone u real-time</li>
                     <li>Bonus poeni se predviđaju dok ne budu finalni post-match</li>
                   </ol>
