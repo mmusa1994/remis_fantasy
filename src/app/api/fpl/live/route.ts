@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { fplApi } from '@/lib/fpl-api';
+import { fplDb } from '@/lib/fpl-db';
+
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const gw = searchParams.get('gw');
+
+    if (!gw) {
+      return NextResponse.json({
+        success: false,
+        error: 'Gameweek parameter is required'
+      }, { status: 400 });
+    }
+
+    const gameweek = parseInt(gw, 10);
+    
+    if (isNaN(gameweek)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid gameweek parameter'
+      }, { status: 400 });
+    }
+
+    const liveData = await fplApi.getLiveData(gameweek);
+    
+    await fplDb.upsertLivePlayers(gameweek, liveData.elements);
+
+    const eventStatus = await fplApi.getEventStatus();
+    const currentGWStatus = eventStatus.status.find(s => s.event === gameweek);
+    
+    if (currentGWStatus) {
+      await fplDb.setGameweekStatus(
+        gameweek, 
+        currentGWStatus.bonus_added,
+        true
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        elements: liveData.elements,
+        bonus_added: currentGWStatus?.bonus_added || false,
+        total_players: liveData.elements.length,
+        active_players: liveData.elements.filter(e => e.stats.minutes > 0).length,
+      },
+      gameweek,
+    });
+  } catch (error) {
+    console.error('Error fetching live data:', error);
+    
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
+}
