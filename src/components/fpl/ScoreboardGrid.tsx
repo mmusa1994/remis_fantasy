@@ -1,5 +1,8 @@
 'use client';
 
+import { PiTShirtLight, PiTShirtFill } from "react-icons/pi";
+import { getTeamColors } from '@/lib/team-colors';
+
 interface Team {
   id: number;
   name: string;
@@ -17,8 +20,6 @@ interface Fixture {
   finished: boolean;
   minutes?: number;
   kickoff_time?: string;
-  team_h_data?: Team;
-  team_a_data?: Team;
 }
 
 interface BonusResult {
@@ -72,30 +73,47 @@ export default function ScoreboardGrid({ fixtures, predictedBonuses, bonusAdded 
   };
 
   const getScoreDisplay = (fixture: Fixture) => {
-    if (fixture.team_h_score !== null && fixture.team_a_score !== null) {
-      return `${fixture.team_h_score} - ${fixture.team_a_score}`;
+    // If match is started or finished, show scores (treat null as 0)
+    if (fixture.started || fixture.finished) {
+      const homeScore = fixture.team_h_score ?? 0;
+      const awayScore = fixture.team_a_score ?? 0;
+      return `${homeScore} - ${awayScore}`;
     }
     return 'v';
   };
 
+  const TeamDisplay = ({ teamId }: { teamId: number }) => {
+    const teamColors = getTeamColors(teamId);
+    const hasSecondaryColor = teamColors.primary !== teamColors.secondary;
+    
+    return (
+      <div className="flex items-center space-x-1">
+        <div style={{ color: teamColors.primary }}>
+          {hasSecondaryColor ? (
+            <PiTShirtFill size={18} />
+          ) : (
+            <PiTShirtLight size={18} />
+          )}
+        </div>
+        <span className="text-sm font-medium text-gray-900 dark:text-white">
+          {teamColors.shortName}
+        </span>
+      </div>
+    );
+  };
+
   const FixtureCard = ({ fixture }: { fixture: Fixture }) => {
     const fixtureBonus = getFixtureBonus(fixture.id);
-    const homeTeam = fixture.team_h_data?.short_name || `Team ${fixture.team_h}`;
-    const awayTeam = fixture.team_a_data?.short_name || `Team ${fixture.team_a}`;
 
     return (
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
         <div className="text-center">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
-              {homeTeam}
-            </div>
+            <TeamDisplay teamId={fixture.team_h} />
             <div className="text-xs text-gray-500 dark:text-gray-400">
               {getMatchStatus(fixture)}
             </div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
-              {awayTeam}
-            </div>
+            <TeamDisplay teamId={fixture.team_a} />
           </div>
 
           <div className="text-lg font-bold text-gray-900 dark:text-white mb-3">

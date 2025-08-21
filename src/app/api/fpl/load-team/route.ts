@@ -92,6 +92,17 @@ export async function POST(request: NextRequest) {
     const captainStats = captain ? liveStats.find(s => s.player_id === captain.element) : null;
     const viceCaptainStats = viceCaptain ? liveStats.find(s => s.player_id === viceCaptain.element) : null;
 
+    // Calculate active (starters 1-11) and bench (12-15) points separately
+    const activeStats = liveStats.filter(stat => {
+      const pick = managerPicks.picks.find(p => p.element === stat.player_id);
+      return pick && pick.position <= 11;
+    });
+    
+    const benchStats = liveStats.filter(stat => {
+      const pick = managerPicks.picks.find(p => p.element === stat.player_id);
+      return pick && pick.position > 11;
+    });
+
     const teamTotals = {
       goals: liveStats.reduce((sum, stat) => sum + stat.goals_scored, 0),
       assists: liveStats.reduce((sum, stat) => sum + stat.assists, 0),
@@ -99,17 +110,41 @@ export async function POST(request: NextRequest) {
       yellow_cards: liveStats.reduce((sum, stat) => sum + stat.yellow_cards, 0),
       red_cards: liveStats.reduce((sum, stat) => sum + stat.red_cards, 0),
       saves: liveStats.reduce((sum, stat) => sum + stat.saves, 0),
-      total_points_no_bonus: liveStats.reduce((sum, stat) => {
+      
+      // Active team points (positions 1-11 with multipliers)
+      active_points_no_bonus: activeStats.reduce((sum, stat) => {
         const pick = managerPicks.picks.find(p => p.element === stat.player_id);
         const points = stat.total_points - stat.bonus;
         return sum + (points * (pick?.multiplier || 1));
       }, 0),
-      total_points_final: liveStats.reduce((sum, stat) => {
+      active_points_final: activeStats.reduce((sum, stat) => {
         const pick = managerPicks.picks.find(p => p.element === stat.player_id);
         return sum + (stat.total_points * (pick?.multiplier || 1));
       }, 0),
+      
+      // Bench points (positions 12-15, no multipliers)
+      bench_points_no_bonus: benchStats.reduce((sum, stat) => {
+        return sum + (stat.total_points - stat.bonus);
+      }, 0),
+      bench_points_final: benchStats.reduce((sum, stat) => {
+        return sum + stat.total_points;
+      }, 0),
+      
+      // Total points (for compatibility)
+      total_points_no_bonus: liveStats.reduce((sum, stat) => {
+        const pick = managerPicks.picks.find(p => p.element === stat.player_id);
+        const points = stat.total_points - stat.bonus;
+        const multiplier = pick && pick.position <= 11 ? (pick.multiplier || 1) : 0;
+        return sum + (points * multiplier);
+      }, 0),
+      total_points_final: liveStats.reduce((sum, stat) => {
+        const pick = managerPicks.picks.find(p => p.element === stat.player_id);
+        const multiplier = pick && pick.position <= 11 ? (pick.multiplier || 1) : 0;
+        return sum + (stat.total_points * multiplier);
+      }, 0),
+      
       predicted_bonus: totalPredictedBonus,
-      final_bonus: bonusAdded ? liveStats.reduce((sum, stat) => {
+      final_bonus: bonusAdded ? activeStats.reduce((sum, stat) => {
         const pick = managerPicks.picks.find(p => p.element === stat.player_id);
         return sum + (stat.bonus * (pick?.multiplier || 1));
       }, 0) : 0,
@@ -120,6 +155,10 @@ export async function POST(request: NextRequest) {
       manager_id: managerIdNum,
       team_points_no_bonus: teamTotals.total_points_no_bonus,
       team_points_final: teamTotals.total_points_final,
+      active_points_no_bonus: teamTotals.active_points_no_bonus,
+      active_points_final: teamTotals.active_points_final,
+      bench_points_no_bonus: teamTotals.bench_points_no_bonus,
+      bench_points_final: teamTotals.bench_points_final,
       captain_id: captain?.element,
       captain_points: captainStats?.total_points || 0,
       vice_captain_id: viceCaptain?.element,

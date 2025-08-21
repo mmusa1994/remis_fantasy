@@ -261,23 +261,52 @@ export default function FPLLivePage() {
           />
         </div>
 
-        <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <span className="text-blue-500">ℹ️</span>
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <span className="text-blue-500">ℹ️</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                  Kako koristiti FPL Live
+                </h3>
+                <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Unesite Manager ID i odaberite trenutni Gameweek</li>
+                    <li>Kliknite "Load Team" da učitate svoj tim i stats</li>
+                    <li>"Fetch Now" za manuelno ažuriranje ili "Start Live" za auto-polling</li>
+                    <li>Pratite Live Ticker za golove/asiste/kartone u real-time</li>
+                    <li>Bonus poeni se predviđaju dok ne budu finalni post-match</li>
+                  </ol>
+                </div>
+              </div>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                How to use FPL Live
-              </h3>
-              <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                <ol className="list-decimal list-inside space-y-1">
-                  <li>Enter your Manager ID and select the current Gameweek</li>
-                  <li>Click "Load Team" to fetch your squad and current stats</li>
-                  <li>Use "Fetch Now" for manual updates or "Start Live" for auto-polling</li>
-                  <li>Monitor the Live Ticker for real-time goal/assist/card updates</li>
-                  <li>Track predicted bonus points until they become final post-match</li>
-                </ol>
+          </div>
+
+          <div className="p-4 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <span className="text-yellow-500">⚙️</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  Settings objašnjenja
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300 space-y-2">
+                  <div>
+                    <strong>FPL Proxy URL:</strong> Opcionalno za zaobilaženje CORS problema
+                  </div>
+                  <div>
+                    <strong>CRON Secret:</strong> Sigurnosni ključ za server-side automatizaciju
+                  </div>
+                  <div>
+                    <strong>Live Bonus:</strong> DA! Bonus se računa uživo tokom mečeva
+                  </div>
+                  <div>
+                    <strong>Points:</strong> Active = starter tim (1-11), Bench = klupa (12-15)
+                  </div>
+                </div>
               </div>
             </div>
           </div>

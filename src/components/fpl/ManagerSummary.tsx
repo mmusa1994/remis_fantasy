@@ -22,6 +22,10 @@ interface ManagerSummaryProps {
     total_points_final: number;
     predicted_bonus: number;
     final_bonus: number;
+    active_points_no_bonus: number;
+    active_points_final: number;
+    bench_points_no_bonus: number;
+    bench_points_final: number;
   };
   captain?: {
     player_id?: number;
@@ -62,7 +66,8 @@ export default function ManagerSummary({
     return `#${formatNumber(rank)}`;
   };
 
-  const currentPoints = bonusAdded ? teamTotals.total_points_final : teamTotals.total_points_no_bonus;
+  const activePoints = bonusAdded ? teamTotals.active_points_final : teamTotals.active_points_no_bonus;
+  const benchPoints = bonusAdded ? teamTotals.bench_points_final : teamTotals.bench_points_no_bonus;
   const bonusPoints = bonusAdded ? teamTotals.final_bonus : teamTotals.predicted_bonus;
   const bonusLabel = bonusAdded ? 'Final Bonus' : 'Predicted Bonus';
 
@@ -112,10 +117,10 @@ export default function ManagerSummary({
           <h4 className="font-medium text-gray-900 dark:text-white mb-3">GW{gameweek} Performance</h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Team Points:</span>
+              <span className="text-gray-600 dark:text-gray-400">Active Points:</span>
               <div className="text-right">
                 <span className="font-bold text-lg text-green-600 dark:text-green-400">
-                  {currentPoints}
+                  {activePoints}
                 </span>
                 {!bonusAdded && (
                   <span className="text-xs text-gray-500 dark:text-gray-400 block">
@@ -123,6 +128,12 @@ export default function ManagerSummary({
                   </span>
                 )}
               </div>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Bench Points:</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                {benchPoints}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">{bonusLabel}:</span>

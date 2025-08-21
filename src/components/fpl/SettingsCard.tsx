@@ -131,6 +131,9 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
             placeholder="https://your-proxy.com"
           />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Proxy server za FPL API pozive ako imaš problema sa CORS-om
+          </p>
         </div>
 
         <div>
@@ -144,6 +147,9 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
             placeholder="Your secret key"
           />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Sigurnosni ključ za automatsko ažuriranje (server-side CRON jobs)
+          </p>
         </div>
       </div>
 

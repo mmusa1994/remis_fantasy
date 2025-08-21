@@ -95,6 +95,10 @@ export interface DBManagerMetrics {
   manager_id: number;
   team_points_no_bonus: number;
   team_points_final: number;
+  active_points_no_bonus: number;
+  active_points_final: number;
+  bench_points_no_bonus: number;
+  bench_points_final: number;
   captain_id?: number;
   captain_points: number;
   vice_captain_id?: number;
@@ -407,19 +411,7 @@ class FPLDatabaseService {
   async getFixturesForGameweek(gw: number) {
     const { data, error } = await supabaseAdmin
       .from('fpl_fixtures')
-      .select(`
-        *,
-        team_h:fpl_teams!fpl_fixtures_team_h_fkey (
-          id,
-          name,
-          short_name
-        ),
-        team_a:fpl_teams!fpl_fixtures_team_a_fkey (
-          id,
-          name,
-          short_name
-        )
-      `)
+      .select('*')
       .eq('gw', gw)
       .order('kickoff_time');
 
