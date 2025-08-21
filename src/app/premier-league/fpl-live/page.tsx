@@ -7,6 +7,7 @@ import ManagerSummary from "@/components/fpl/ManagerSummary";
 import GameweekStatus from "@/components/fpl/GameweekStatus";
 import SquadTable from "@/components/fpl/SquadTable";
 import ScoreboardGrid from "@/components/fpl/ScoreboardGrid";
+import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
 import LiveTicker from "@/components/fpl/LiveTicker";
 import LeagueTables from "@/components/fpl/LeagueTables";
 import { MdInfo, MdSettings, MdCancel } from "react-icons/md";
@@ -419,10 +420,11 @@ export default function FPLLivePage() {
                       predictedBonuses={data.predicted_bonuses || []}
                       bonusAdded={data.bonus_added || false}
                     />
-                    <ScoreboardGrid
-                      fixtures={data.fixtures || []}
-                      predictedBonuses={data.predicted_bonuses || []}
-                      bonusAdded={data.bonus_added || false}
+                    <AdvancedStatistics
+                      managerId={managerId || undefined}
+                      gameweek={gameweek}
+                      loading={teamDataLoading}
+                      managerData={data}
                     />
                   </>
                 )}
@@ -453,6 +455,16 @@ export default function FPLLivePage() {
               leagueData && (
                 <LeagueTables leagueData={leagueData} managerId={managerId!} />
               )
+            )}
+            {/* Move Scoreboard below Leagues on desktop */}
+            {managerId && data.manager && (
+              <div className="block">
+                <ScoreboardGrid
+                  fixtures={data.fixtures || []}
+                  predictedBonuses={data.predicted_bonuses || []}
+                  bonusAdded={data.bonus_added || false}
+                />
+              </div>
             )}
           </div>
         </div>
