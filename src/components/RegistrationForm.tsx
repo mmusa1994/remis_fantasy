@@ -20,6 +20,7 @@ import {
 import Image from "next/image";
 import { downloadPaymentInstructions } from "@/utils/downloadPDF";
 import { useRegistrationConfig } from "@/hooks/useLeagueData";
+import { SkeletonForm } from "@/components/skeletons";
 
 interface FormData {
   first_name: string;
@@ -85,11 +86,17 @@ export default function RegistrationForm({
   // Show loading state while config is loading
   if (configLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-theme-text-secondary">Učitava se...</p>
+      <section className="relative w-full bg-theme-background overflow-hidden theme-transition min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-4xl mx-auto px-4">
+          <SkeletonForm
+            variant="registration"
+            fields={8}
+            showSections
+            showTitle
+            className="animate-fade-in-up"
+          />
         </div>
-      </div>
+      </section>
     );
   }
 

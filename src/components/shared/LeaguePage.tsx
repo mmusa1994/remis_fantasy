@@ -13,6 +13,7 @@ import {
   BarChart3,
   type LucideIcon,
 } from "lucide-react";
+import { SkeletonPage } from "@/components/skeletons";
 
 // Icon mapping for navigation cards
 const iconMap: Record<string, LucideIcon> = {
@@ -31,13 +32,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
   const { leagueData: data, loading, error } = useLeagueData(leagueId);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-theme-text-secondary">Učitava se...</p>
-        </div>
-      </div>
-    );
+    return <SkeletonPage variant="league" />;
   }
 
   if (error || !data.config) {

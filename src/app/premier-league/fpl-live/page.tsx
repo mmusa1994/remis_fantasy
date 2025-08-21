@@ -8,6 +8,7 @@ import SquadTable from "@/components/fpl/SquadTable";
 import ScoreboardGrid from "@/components/fpl/ScoreboardGrid";
 import LiveTicker from "@/components/fpl/LiveTicker";
 import LeagueTables from "@/components/fpl/LeagueTables";
+import { MdInfo, MdSettings, MdCancel } from "react-icons/md";
 
 interface FPLData {
   manager?: any;
@@ -27,6 +28,8 @@ export default function FPLLivePage() {
   const [gameweek, setGameweek] = useState(1);
   const [isPolling, setIsPolling] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [teamDataLoading, setTeamDataLoading] = useState(false);
+  const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [data, setData] = useState<FPLData>({});
   const [leagueData, setLeagueData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,17 +62,6 @@ export default function FPLLivePage() {
     }
   }, []);
 
-  // Save manager ID and gameweek to localStorage when they change
-  useEffect(() => {
-    if (managerId !== null) {
-      localStorage.setItem("fpl-manager-id", managerId.toString());
-    }
-  }, [managerId]);
-
-  useEffect(() => {
-    localStorage.setItem("fpl-gameweek", gameweek.toString());
-  }, [gameweek]);
-
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => setError(null), 5000);
@@ -79,25 +71,7 @@ export default function FPLLivePage() {
     console.log("Success:", message);
   };
 
-  const loadLeagues = useCallback(async () => {
-    if (!managerId) return;
-
-    try {
-      const response = await fetch(`/api/fpl/leagues?managerId=${managerId}`);
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          setLeagueData(result.data);
-        }
-      }
-    } catch (err) {
-      console.error("Error loading leagues:", err);
-      // Don't show error for leagues as it's not critical
-    }
-  }, [managerId]);
-
-  const loadTeam = useCallback(async () => {
+  const loadManagerInfo = useCallback(async () => {
     if (!managerId) {
       showError("Please enter a Manager ID first");
       return;
@@ -107,7 +81,55 @@ export default function FPLLivePage() {
     setError(null);
 
     try {
-      const response = await fetch("/api/fpl/load-team", {
+      // Save to localStorage when user manually loads team
+      if (managerId !== null) {
+        localStorage.setItem("fpl-manager-id", managerId.toString());
+      }
+      localStorage.setItem("fpl-gameweek", gameweek.toString());
+
+      // First, get basic manager info immediately through our API
+      const managerResponse = await fetch(`/api/fpl/manager-info?managerId=${managerId}`);
+      
+      if (managerResponse.ok) {
+        const result = await managerResponse.json();
+        const managerData = result.success ? result.data : null;
+        
+        if (managerData) {
+          // Show manager info immediately
+          setData(prev => ({
+            ...prev,
+            manager: managerData
+          }));
+          
+          showSuccess("Manager info loaded");
+          setLoading(false);
+          
+          // Now load full team data in background
+          setTeamDataLoading(true);
+          loadFullTeamData();
+          
+          // Load leagues in separate background service
+          setLeaguesLoading(true);
+          loadLeaguesData();
+        } else {
+          throw new Error("Manager not found");
+        }
+      } else {
+        throw new Error(`Failed to fetch manager info: ${managerResponse.status}`);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      showError(message);
+      console.error("Error loading manager:", err);
+      setLoading(false);
+    }
+  }, [managerId, gameweek]);
+
+  const loadFullTeamData = useCallback(async () => {
+    if (!managerId) return;
+
+    try {
+      const teamResponse = await fetch("/api/fpl/load-team", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -118,76 +140,43 @@ export default function FPLLivePage() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        setData(result.data);
-        setLastUpdated(new Date().toISOString());
-        showSuccess("Team loaded successfully");
-        // Load leagues after successful team load
-        loadLeagues();
-      } else {
-        throw new Error(result.error || "Failed to load team");
+      if (teamResponse.ok) {
+        const teamResult = await teamResponse.json();
+        if (teamResult.success) {
+          // Update with full team data
+          setData(teamResult.data);
+          setLastUpdated(new Date().toISOString());
+          setTeamDataLoading(false);
+          showSuccess("Full team data loaded");
+        }
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      showError(message);
-      console.error("Error loading team:", err);
-    } finally {
-      setLoading(false);
+      console.warn("Failed to load full team data:", err);
+      setTeamDataLoading(false);
     }
-  }, [managerId, gameweek, loadLeagues]);
+  }, [managerId, gameweek]);
 
-  const fetchNow = useCallback(async () => {
-    if (!managerId) {
-      showError("Please enter a Manager ID first");
-      return;
-    }
-
-    if (!data.manager) {
-      showError("Load a team first");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
+  const loadLeaguesData = useCallback(async () => {
+    if (!managerId) return;
 
     try {
-      const response = await fetch("/api/fpl/poll", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          gameweek,
-          secret: "manual-fetch",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        await loadTeam();
-        showSuccess(`Updated: ${result.data.new_events} new events`);
-      } else {
-        throw new Error(result.error || "Failed to fetch data");
+      const response = await fetch(`/api/fpl/leagues?managerId=${managerId}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setLeagueData(result.data);
+          setLeaguesLoading(false);
+        }
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      showError(message);
-      console.error("Error fetching now:", err);
-    } finally {
-      setLoading(false);
+      console.warn("Failed to load leagues:", err);
+      setLeaguesLoading(false);
     }
-  }, [gameweek, data.manager, loadTeam, managerId]);
+  }, [managerId]);
+
+  // Keep loadTeam for compatibility with polling
+  const loadTeam = loadManagerInfo;
+
 
   const startPolling = useCallback(() => {
     if (!managerId) {
@@ -218,7 +207,8 @@ export default function FPLLivePage() {
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.data.new_events > 0) {
-            await loadTeam();
+            // Trigger loadTeam without awaiting to avoid blocking polling
+            loadTeam().catch(err => console.error("Polling load team error:", err));
           }
         }
       } catch (err) {
@@ -274,7 +264,7 @@ export default function FPLLivePage() {
           <div className="mb-6 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg">
             <div className="flex">
               <div className="flex-shrink-0">
-                <span className="text-red-500">❌</span>
+                <MdCancel className="text-red-500 w-5 h-5" />
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium">{error}</p>
@@ -283,66 +273,95 @@ export default function FPLLivePage() {
           </div>
         )}
 
+        {/* Controls - Full Width */}
+        <div className="mb-6">
+          <ControlsBar
+            managerId={managerId}
+            gameweek={gameweek}
+            isPolling={isPolling}
+            onManagerIdChange={setManagerId}
+            onGameweekChange={setGameweek}
+            onLoadTeam={loadManagerInfo}
+            onStartPolling={startPolling}
+            onStopPolling={stopPolling}
+            loading={loading}
+          />
+        </div>
+
+        {/* Manager Overview + Squad alongside League Tables */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2 space-y-6">
-            <ControlsBar
-              managerId={managerId}
-              gameweek={gameweek}
-              isPolling={isPolling}
-              onManagerIdChange={setManagerId}
-              onGameweekChange={setGameweek}
-              onLoadTeam={loadTeam}
-              onFetchNow={fetchNow}
-              onStartPolling={startPolling}
-              onStopPolling={stopPolling}
-              loading={loading}
-            />
             {managerId && data.manager && (
-              <ManagerSummary
-                manager={data.manager}
-                teamTotals={data.team_totals}
-                captain={data.captain}
-                viceCaptain={data.vice_captain}
-                bonusAdded={data.bonus_added || false}
-                gameweek={gameweek}
-                lastUpdated={lastUpdated || undefined}
-              />
+              <>
+                <ManagerSummary
+                  manager={data.manager}
+                  teamTotals={data.team_totals}
+                  captain={data.captain}
+                  viceCaptain={data.vice_captain}
+                  bonusAdded={data.bonus_added || false}
+                  gameweek={gameweek}
+                  lastUpdated={lastUpdated || undefined}
+                />
+                {teamDataLoading ? (
+                  <div className="space-y-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                      <h3 className="text-lg font-semibold mb-4">Squad</h3>
+                      <div className="text-center text-gray-500 dark:text-gray-400">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        Loading team data...
+                      </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                      <h3 className="text-lg font-semibold mb-4">Scoreboard</h3>
+                      <div className="text-center text-gray-500 dark:text-gray-400">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        Loading fixtures...
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <SquadTable
+                      teamData={data.team_with_stats || []}
+                      predictedBonuses={data.predicted_bonuses || []}
+                      bonusAdded={data.bonus_added || false}
+                    />
+                    <ScoreboardGrid
+                      fixtures={data.fixtures || []}
+                      predictedBonuses={data.predicted_bonuses || []}
+                      bonusAdded={data.bonus_added || false}
+                    />
+                  </>
+                )}
+              </>
             )}
           </div>
           <div className="space-y-6">
-            <SettingsCard onSettingsSaved={handleSettingsSaved} />
             <LiveTicker gameweek={gameweek} isPolling={isPolling} />
-            {leagueData && (
+            {leaguesLoading ? (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-4">Leagues</h3>
+                <div className="text-center text-gray-500 dark:text-gray-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                  Loading leagues...
+                </div>
+              </div>
+            ) : leagueData && (
               <LeagueTables leagueData={leagueData} managerId={managerId!} />
             )}
           </div>
         </div>
 
-        {managerId && (
-          <>
-            <div className="mb-8">
-              <SquadTable
-                teamData={data.team_with_stats || []}
-                predictedBonuses={data.predicted_bonuses || []}
-                bonusAdded={data.bonus_added || false}
-              />
-            </div>
-
-            <div>
-              <ScoreboardGrid
-                fixtures={data.fixtures || []}
-                predictedBonuses={data.predicted_bonuses || []}
-                bonusAdded={data.bonus_added || false}
-              />
-            </div>
-          </>
-        )}
+        {/* FPL Settings at the bottom */}
+        <div className="mt-8">
+          <SettingsCard onSettingsSaved={handleSettingsSaved} />
+        </div>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div className="flex">
               <div className="flex-shrink-0">
-                <span className="text-blue-500">ℹ️</span>
+                <MdInfo className="text-blue-500 w-5 h-5" />
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
@@ -376,7 +395,7 @@ export default function FPLLivePage() {
           <div className="p-4 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-800 rounded-lg">
             <div className="flex">
               <div className="flex-shrink-0">
-                <span className="text-yellow-500">⚙️</span>
+                <MdSettings className="text-yellow-500 w-5 h-5" />
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">

@@ -9,6 +9,7 @@ import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
 import { IconType } from "react-icons";
 import Image from "next/image";
+import { SkeletonPage } from "@/components/skeletons";
 // TypeScript types for league and stat data
 interface LeagueCard {
   id: string;
@@ -40,15 +41,7 @@ export default function Home() {
   const { data, loading, error } = useHomepageData();
 
   if (loading) {
-    return (
-      <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <p className="text-theme-text-secondary">Učitava se...</p>
-          </div>
-        </div>
-      </main>
-    );
+    return <SkeletonPage variant="homepage" />;
   }
 
   if (error) {

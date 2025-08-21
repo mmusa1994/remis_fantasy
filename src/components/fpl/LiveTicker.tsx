@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   MdAnalytics,
   MdRefresh,
@@ -18,6 +18,7 @@ import {
   TbArrowBack,
 } from "react-icons/tb";
 import { RiShieldLine } from "react-icons/ri";
+import { SkeletonList } from "@/components/skeletons";
 
 interface Event {
   id: number;
@@ -80,7 +81,7 @@ const EVENT_LABELS = {
   clearances: "Clearance",
 };
 
-export default function LiveTicker({ gameweek, isPolling }: LiveTickerProps) {
+const LiveTicker = React.memo(function LiveTicker({ gameweek, isPolling }: LiveTickerProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -241,13 +242,24 @@ export default function LiveTicker({ gameweek, isPolling }: LiveTickerProps) {
               <EventItem key={event.id} event={event} />
             ))}
           </div>
+        ) : loading ? (
+          <div className="px-6">
+            <SkeletonList
+              items={6}
+              showIcons
+              showSecondaryText
+              showActions
+              variant="events"
+              className="border-none shadow-none"
+            />
+          </div>
         ) : (
           <div className="px-6 py-8 text-center">
             <div className="text-4xl mb-2 flex justify-center">
               <MdAnalytics className="text-gray-400" />
             </div>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              {loading ? "Loading events..." : "No events yet"}
+              No events yet
             </p>
             {!isPolling && (
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
@@ -270,4 +282,6 @@ export default function LiveTicker({ gameweek, isPolling }: LiveTickerProps) {
       )}
     </div>
   );
-}
+});
+
+export default LiveTicker;

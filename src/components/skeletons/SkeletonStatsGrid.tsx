@@ -1,0 +1,58 @@
+import React from 'react';
+import SkeletonBase from './SkeletonBase';
+
+interface SkeletonStatsGridProps {
+  /** Number of stat cards to show */
+  count?: number;
+  /** Custom className for the container */
+  className?: string;
+  /** Whether to show icons in stats */
+  showIcons?: boolean;
+}
+
+/**
+ * Skeleton component for stats grid sections
+ * Matches the StatsGrid component structure
+ */
+export default function SkeletonStatsGrid({
+  count = 4,
+  className = '',
+  showIcons = true,
+}: SkeletonStatsGridProps) {
+  return (
+    <div className={`grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 ${className}`}>
+      {Array.from({ length: count }, (_, index) => (
+        <div
+          key={index}
+          className="text-center p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+        >
+          {/* Icon Skeleton */}
+          {showIcons && (
+            <div className="flex justify-center mb-3">
+              <SkeletonBase
+                width="2.5rem"
+                height="2.5rem"
+                rounded="md"
+                className="md:w-12 md:h-12"
+              />
+            </div>
+          )}
+
+          {/* Value Skeleton */}
+          <SkeletonBase
+            height="2rem"
+            className="mb-2 mx-auto max-w-16 md:max-w-20"
+            rounded="md"
+          />
+
+          {/* Label Skeleton */}
+          <SkeletonBase
+            height="1rem"
+            className="mx-auto max-w-20 md:max-w-24"
+            rounded="sm"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}

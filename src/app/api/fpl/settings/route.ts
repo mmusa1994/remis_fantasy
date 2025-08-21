@@ -1,31 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fplDb } from '@/lib/fpl-db';
 
+// In-memory cache for settings
+let settingsCache: any = null;
+let settingsCacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export async function GET() {
   try {
+    const now = Date.now();
+    
+    // Return cached settings if still fresh
+    if (settingsCache && (now - settingsCacheTime) < CACHE_TTL) {
+      return NextResponse.json({
+        success: true,
+        data: settingsCache,
+      });
+    }
+    
     const settings = await fplDb.getSettings();
+    const result = settings || {
+      fpl_proxy_url: null,
+      cron_secret: null,
+      default_gw: 1,
+      default_manager_id: 133790,
+    };
+    
+    // Cache the result
+    settingsCache = result;
+    settingsCacheTime = now;
 
     return NextResponse.json({
       success: true,
-      data: settings || {
-        fpl_proxy_url: null,
-        cron_secret: null,
-        default_gw: 1,
-        default_manager_id: 133790,
-      },
+      data: result,
     });
   } catch (error) {
     console.error('Error fetching settings:', error);
     
     // Return default settings if table doesn't exist
+    const defaultSettings = {
+      fpl_proxy_url: null,
+      cron_secret: null,
+      default_gw: 1,
+      default_manager_id: 133790,
+    };
+    
+    // Cache defaults too
+    settingsCache = defaultSettings;
+    settingsCacheTime = Date.now();
+    
     return NextResponse.json({
       success: true,
-      data: {
-        fpl_proxy_url: null,
-        cron_secret: null,
-        default_gw: 1,
-        default_manager_id: 133790,
-      },
+      data: defaultSettings,
       warning: 'Database tables not initialized. Using default settings.'
     });
   }
@@ -71,6 +97,10 @@ export async function POST(request: NextRequest) {
     await fplDb.updateSettings(updateData);
 
     const updatedSettings = await fplDb.getSettings();
+    
+    // Clear cache so next GET will fetch fresh data
+    settingsCache = null;
+    settingsCacheTime = 0;
 
     return NextResponse.json({
       success: true,

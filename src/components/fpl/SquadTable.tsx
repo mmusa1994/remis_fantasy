@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react';
 import { PiTShirtLight, PiTShirtFill } from "react-icons/pi";
 import { getTeamColors } from "@/lib/team-colors";
 
@@ -58,7 +59,7 @@ const POSITION_NAMES = {
   4: "FWD",
 };
 
-export default function SquadTable({
+const SquadTable = React.memo(function SquadTable({
   teamData,
   predictedBonuses,
   bonusAdded,
@@ -308,4 +309,6 @@ export default function SquadTable({
       </div>
     </div>
   );
-}
+});
+
+export default SquadTable;

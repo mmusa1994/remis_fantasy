@@ -22,8 +22,11 @@ interface LiveEvent {
   };
 }
 
-// In-memory cache for previous fixture stats
+// In-memory caches
 const fixtureStatsCache: { [key: string]: any } = {};
+const playersCache: { [key: number]: any } = {};
+let playersCacheTime = 0;
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -54,11 +57,29 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch live data from API
-    const [fixtures, playersData] = await Promise.all([
-      fplApi.getFixtures(gameweek),
-      fplDb.getAllPlayers(), // Get player names from DB
-    ]);
+    // Only fetch fixtures 
+    const fixtures = await fplApi.getFixtures(gameweek);
+    
+    // Get unique player IDs from active fixtures
+    const activeFixtures = fixtures.filter(f => f.started);
+    const playerIds = new Set<number>();
+    
+    activeFixtures.forEach(fixture => {
+      fixture.stats.forEach(stat => {
+        stat.h.forEach((p: any) => playerIds.add(p.element));
+        stat.a.forEach((p: any) => playerIds.add(p.element));
+      });
+    });
+
+    // Refresh player cache if needed
+    const now = Date.now();
+    if (now - playersCacheTime > CACHE_TTL) {
+      const playersData = await fplDb.getAllPlayers();
+      playersData.forEach(player => {
+        playersCache[player.id] = player;
+      });
+      playersCacheTime = now;
+    }
 
     const events: LiveEvent[] = [];
     const cacheKey = `gw_${gameweek}`;
@@ -85,7 +106,7 @@ export async function GET(request: NextRequest) {
           currentStats[fixtureKey][playerKey] = currentValue;
 
           if (delta > 0) {
-            const player = playersData.find((p) => p.id === playerStat.element);
+            const player = playersCache[playerStat.element];
             const event: LiveEvent = {
               id: `${fixture.id}_${
                 playerStat.element
@@ -123,7 +144,7 @@ export async function GET(request: NextRequest) {
           currentStats[fixtureKey][playerKey] = currentValue;
 
           if (delta > 0) {
-            const player = playersData.find((p) => p.id === playerStat.element);
+            const player = playersCache[playerStat.element];
             const event: LiveEvent = {
               id: `${fixture.id}_${
                 playerStat.element

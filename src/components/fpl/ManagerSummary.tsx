@@ -1,5 +1,7 @@
 'use client';
 
+import React from 'react';
+
 interface ManagerSummaryProps {
   manager?: {
     id: number;
@@ -40,7 +42,7 @@ interface ManagerSummaryProps {
   lastUpdated?: string;
 }
 
-export default function ManagerSummary({
+const ManagerSummary = React.memo(function ManagerSummary({
   manager,
   teamTotals,
   captain,
@@ -201,4 +203,6 @@ export default function ManagerSummary({
       </div>
     </div>
   );
-}
+});
+
+export default ManagerSummary;

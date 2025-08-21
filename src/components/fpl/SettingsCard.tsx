@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { MdExpandMore, MdExpandLess, MdSettings } from 'react-icons/md';
 
 interface SettingsCardProps {
   onSettingsSaved: (settings: FPLSettings) => void;
@@ -22,6 +23,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -77,91 +79,108 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Settings</h3>
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-2/3"></div>
-        </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <button className="w-full p-3 text-left flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <MdSettings className="text-gray-400 w-4 h-4" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-20 animate-pulse"></div>
+          </div>
+          <div className="w-4 h-4 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-6 text-gray-900 dark:text-white">FPL Settings</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      <button 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full p-3 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+      >
+        <div className="flex items-center space-x-2">
+          <MdSettings className="text-gray-500 w-4 h-4" />
+          <span className="text-sm font-medium text-gray-900 dark:text-white">FPL Settings</span>
+        </div>
+        {isExpanded ? (
+          <MdExpandLess className="text-gray-500 w-4 h-4" />
+        ) : (
+          <MdExpandMore className="text-gray-500 w-4 h-4" />
+        )}
+      </button>
       
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Default Manager ID
-          </label>
-          <input
-            type="number"
-            value={settings.default_manager_id}
-            onChange={(e) => handleInputChange('default_manager_id', parseInt(e.target.value, 10))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="133790"
-          />
-        </div>
+      {isExpanded && (
+        <div className="px-3 pb-3 space-y-3 border-t border-gray-200 dark:border-gray-700 pt-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Manager ID
+              </label>
+              <input
+                type="number"
+                value={settings.default_manager_id}
+                onChange={(e) => handleInputChange('default_manager_id', parseInt(e.target.value, 10))}
+                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="133790"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Default Gameweek
-          </label>
-          <input
-            type="number"
-            min="1"
-            max="38"
-            value={settings.default_gw}
-            onChange={(e) => handleInputChange('default_gw', parseInt(e.target.value, 10))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-          />
-        </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Gameweek
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="38"
+                value={settings.default_gw}
+                onChange={(e) => handleInputChange('default_gw', parseInt(e.target.value, 10))}
+                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            FPL Proxy URL (Optional)
-          </label>
-          <input
-            type="url"
-            value={settings.fpl_proxy_url || ''}
-            onChange={(e) => handleInputChange('fpl_proxy_url', e.target.value || null)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="https://your-proxy.com"
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Proxy server za FPL API pozive ako imaš problema sa CORS-om
-          </p>
-        </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+              Proxy URL
+            </label>
+            <input
+              type="url"
+              value={settings.fpl_proxy_url || ''}
+              onChange={(e) => handleInputChange('fpl_proxy_url', e.target.value || null)}
+              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              placeholder="https://proxy.com"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            CRON Secret (Optional)
-          </label>
-          <input
-            type="password"
-            value={settings.cron_secret || ''}
-            onChange={(e) => handleInputChange('cron_secret', e.target.value || null)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Your secret key"
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Sigurnosni ključ za automatsko ažuriranje (server-side CRON jobs)
-          </p>
-        </div>
-      </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+              CRON Secret
+            </label>
+            <input
+              type="password"
+              value={settings.cron_secret || ''}
+              onChange={(e) => handleInputChange('cron_secret', e.target.value || null)}
+              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              placeholder="Secret key"
+            />
+          </div>
 
-      <div className="mt-6">
-        <button
-          onClick={saveSettings}
-          disabled={saving}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
-        >
-          {saving ? 'Saving...' : 'Save Settings'}
-        </button>
-      </div>
+          <button
+            onClick={saveSettings}
+            disabled={saving}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-1.5 px-3 text-sm rounded transition-colors duration-200"
+          >
+            {saving ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Saving...
+              </span>
+            ) : (
+              'Save Settings'
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

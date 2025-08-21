@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { MdPerson, MdGroup, MdExpandMore, MdExpandLess } from "react-icons/md";
+import {
+  MdPerson,
+  MdGroup,
+  MdExpandMore,
+  MdExpandLess,
+  MdNavigateNext,
+  MdNavigateBefore,
+  MdFirstPage,
+  MdLastPage,
+} from "react-icons/md";
 import { GiTrophy } from "react-icons/gi";
 
 interface LeagueTablesProps {
@@ -20,20 +29,27 @@ export default function LeagueTables({
   const [leagueStandings, setLeagueStandings] = useState<{
     [key: number]: any;
   }>({});
-  const [loadingLeagues, setLoadingLeagues] = useState<Set<number>>(new Set());
+  const [loadingLeagues, setLoadingLeagues] = useState<Set<string>>(new Set());
+  const [currentPages, setCurrentPages] = useState<{ [key: number]: number }>(
+    {}
+  );
+  const [totalPages, setTotalPages] = useState<{ [key: number]: number }>({});
+  const itemsPerPage = 10;
 
   const fetchLeagueStandings = async (
     leagueId: number,
-    isH2H: boolean = false
+    isH2H: boolean = false,
+    page: number = 1
   ) => {
-    if (leagueStandings[leagueId] || loadingLeagues.has(leagueId)) return;
+    const loadingKey = `${leagueId}_${page}_${isH2H}`;
+    if (loadingLeagues.has(loadingKey)) return;
 
-    setLoadingLeagues((prev) => new Set([...prev, leagueId]));
+    setLoadingLeagues((prev) => new Set([...prev, loadingKey]));
 
     try {
       const endpoint = isH2H ? "h2h" : "classic";
       const response = await fetch(
-        `/api/fpl/leagues/${endpoint}?leagueId=${leagueId}&managerId=${managerId}`
+        `/api/fpl/leagues/${endpoint}?leagueId=${leagueId}&managerId=${managerId}&page=${page}&pageSize=${itemsPerPage}`
       );
 
       if (response.ok) {
@@ -41,7 +57,26 @@ export default function LeagueTables({
         if (result.success) {
           setLeagueStandings((prev) => ({
             ...prev,
-            [leagueId]: result.data,
+            [leagueId]: {
+              ...prev[leagueId],
+              standings: result.data.standings,
+              manager_position: result.data.manager_position,
+              total_entries: result.data.total_entries,
+              current_page: page,
+            },
+          }));
+
+          const totalPagesCount = Math.ceil(
+            result.data.total_entries / itemsPerPage
+          );
+          setTotalPages((prev) => ({
+            ...prev,
+            [leagueId]: totalPagesCount,
+          }));
+
+          setCurrentPages((prev) => ({
+            ...prev,
+            [leagueId]: page,
           }));
         } else {
           setLeagueStandings((prev) => ({
@@ -64,7 +99,7 @@ export default function LeagueTables({
     } finally {
       setLoadingLeagues((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(leagueId);
+        newSet.delete(loadingKey);
         return newSet;
       });
     }
@@ -81,8 +116,26 @@ export default function LeagueTables({
       });
     } else {
       setExpandedLeagues((prev) => new Set([...prev, leagueId]));
-      fetchLeagueStandings(leagueId, isH2H);
+      if (!leagueStandings[leagueId]) {
+        fetchLeagueStandings(leagueId, isH2H, 1);
+      }
     }
+  };
+
+  const changePage = (
+    leagueId: number,
+    newPage: number,
+    isH2H: boolean = false
+  ) => {
+    fetchLeagueStandings(leagueId, isH2H, newPage);
+  };
+
+  const goToUserPage = async (leagueId: number, isH2H: boolean = false) => {
+    const standings = leagueStandings[leagueId];
+    if (!standings?.manager_position) return;
+
+    const userPage = Math.ceil(standings.manager_position / itemsPerPage);
+    await fetchLeagueStandings(leagueId, isH2H, userPage);
   };
 
   if (!leagueData || (!leagueData.classic?.length && !leagueData.h2h?.length)) {
@@ -127,7 +180,7 @@ export default function LeagueTables({
               }`}
             >
               <MdGroup className="inline mr-1" />
-              Classic
+              Classic ({allClassicLeagues.length})
             </button>
             <button
               onClick={() => setActiveTab("h2h")}
@@ -138,7 +191,7 @@ export default function LeagueTables({
               }`}
             >
               <MdPerson className="inline mr-1" />
-              Head-to-Head
+              Head-to-Head ({allH2HLeagues.length})
             </button>
           </div>
         </div>
@@ -150,7 +203,9 @@ export default function LeagueTables({
           <div className="space-y-3">
             {allClassicLeagues.map((league: any) => {
               const isExpanded = expandedLeagues.has(league.id);
-              const isLoading = loadingLeagues.has(league.id);
+              const currentPage = currentPages[league.id] || 1;
+              const loadingKey = `${league.id}_${currentPage}_false`;
+              const isLoading = loadingLeagues.has(loadingKey);
               const standings = leagueStandings[league.id];
 
               return (
@@ -167,10 +222,6 @@ export default function LeagueTables({
                         {league.name}
                       </h4>
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {allClassicLeagues.length} liga
-                          {allClassicLeagues.length !== 1 ? "e" : ""}
-                        </span>
                         {isExpanded ? (
                           <MdExpandLess className="text-gray-500" />
                         ) : (
@@ -183,11 +234,58 @@ export default function LeagueTables({
                   {isExpanded && (
                     <div>
                       {isLoading ? (
-                        <div className="p-6 text-center">
-                          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            Loading standings...
-                          </p>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead className="bg-gray-100 dark:bg-gray-600">
+                              <tr>
+                                <th className="px-4 py-2 text-left">
+                                  <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-4 animate-pulse"></div>
+                                </th>
+                                <th className="px-4 py-2 text-left">
+                                  <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-16 animate-pulse"></div>
+                                </th>
+                                <th className="px-4 py-2 text-right">
+                                  <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-12 animate-pulse ml-auto"></div>
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Array.from({ length: 10 }, (_, i) => (
+                                <tr
+                                  key={i}
+                                  className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                >
+                                  <td className="px-4 py-2">
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-6 animate-pulse"></div>
+                                  </td>
+                                  <td className="px-4 py-2">
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-32 animate-pulse"></div>
+                                  </td>
+                                  <td className="px-4 py-2 text-right">
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-12 animate-pulse ml-auto"></div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+
+                          {/* Pagination skeleton */}
+                          <div className="p-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center space-x-3">
+                                <div className="h-6 bg-gray-200 dark:bg-gray-500 rounded w-24 animate-pulse"></div>
+                                <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-20 animate-pulse"></div>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                {Array.from({ length: 4 }, (_, i) => (
+                                  <div
+                                    key={i}
+                                    className="h-6 w-6 bg-gray-200 dark:bg-gray-500 rounded animate-pulse"
+                                  ></div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       ) : standings?.error ? (
                         <div className="p-4 text-sm text-red-500">
@@ -205,45 +303,134 @@ export default function LeagueTables({
                               </tr>
                             </thead>
                             <tbody>
-                              {standings.standings
-                                .slice(0, 20)
-                                .map((entry: any) => (
-                                  <tr
-                                    key={entry.id}
-                                    className={`border-b dark:border-gray-700 ${
-                                      entry.entry === managerId
-                                        ? "bg-blue-50 dark:bg-blue-900"
-                                        : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                    }`}
-                                  >
-                                    <td className="px-4 py-2 font-medium">
-                                      {entry.rank}
-                                      {entry.entry === managerId && (
-                                        <span className="ml-1 text-blue-500">
-                                          ←
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td className="px-4 py-2">
-                                      {entry.player_name || entry.entry_name}
-                                      {entry.entry === managerId && (
-                                        <span className="ml-1 text-xs text-blue-500 font-medium">
-                                          You
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td className="px-4 py-2 text-right font-medium">
-                                      {entry.total.toLocaleString()}
-                                    </td>
-                                  </tr>
-                                ))}
+                              {standings.standings.map((entry: any) => (
+                                <tr
+                                  key={entry.id}
+                                  className={`border-b dark:border-gray-700 ${
+                                    entry.entry === managerId
+                                      ? "bg-blue-50 dark:bg-blue-900"
+                                      : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                                  }`}
+                                >
+                                  <td className="px-4 py-2 font-medium">
+                                    {entry.rank}
+                                    {entry.entry === managerId && (
+                                      <span className="ml-1 text-blue-500">
+                                        ←
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-2">
+                                    {entry.player_name || entry.entry_name}
+                                    {entry.entry === managerId && (
+                                      <span className="ml-1 text-xs text-blue-500 font-medium">
+                                        You
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-2 text-right font-medium">
+                                    {entry.total.toLocaleString()}
+                                  </td>
+                                </tr>
+                              ))}
                             </tbody>
                           </table>
-                          {standings.manager_position && (
-                            <div className="p-3 bg-blue-50 dark:bg-blue-900 text-sm text-blue-700 dark:text-blue-200">
-                              Your position: #{standings.manager_position}
+
+                          {/* Pagination and User Position */}
+                          <div className="p-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center space-x-3">
+                                {standings.manager_position && (
+                                  <button
+                                    onClick={() => goToUserPage(league.id)}
+                                    className="flex items-center gap-1 text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md font-medium transition-colors shadow-sm"
+                                  >
+                                    <MdPerson className="w-3 h-3" />
+                                    Find Me (#{standings.manager_position})
+                                  </button>
+                                )}
+                                <span className="text-xs text-gray-600 dark:text-gray-400">
+                                  First 50 places
+                                </span>
+                              </div>
+
+                              {totalPages[league.id] > 1 && (
+                                <div className="flex items-center space-x-1">
+                                  <button
+                                    onClick={() => changePage(league.id, 1)}
+                                    disabled={currentPages[league.id] === 1}
+                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
+                                  >
+                                    <MdFirstPage />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      changePage(
+                                        league.id,
+                                        Math.max(1, currentPages[league.id] - 1)
+                                      )
+                                    }
+                                    disabled={currentPages[league.id] === 1}
+                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
+                                  >
+                                    <MdNavigateBefore />
+                                  </button>
+                                  <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-600 rounded">
+                                    {currentPages[league.id] || 1} /{" "}
+                                    {totalPages[league.id]}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      changePage(
+                                        league.id,
+                                        Math.min(
+                                          totalPages[league.id],
+                                          currentPages[league.id] + 1
+                                        )
+                                      )
+                                    }
+                                    disabled={
+                                      currentPages[league.id] ===
+                                      totalPages[league.id]
+                                    }
+                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
+                                  >
+                                    <MdNavigateNext />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      changePage(
+                                        league.id,
+                                        totalPages[league.id]
+                                      )
+                                    }
+                                    disabled={
+                                      currentPages[league.id] ===
+                                      totalPages[league.id]
+                                    }
+                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
+                                  >
+                                    <MdLastPage />
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          )}
+
+                            {/* User Position Indicator when not visible */}
+                            {standings.manager_position &&
+                              !standings.standings.some(
+                                (entry: any) => entry.entry === managerId
+                              ) && (
+                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded">
+                                  <div className="flex items-center justify-center">
+                                    <span className="text-xs font-medium text-red-700 dark:text-red-300">
+                                      You are out of first 50 places (#
+                                      {standings.manager_position})
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                          </div>
                         </div>
                       ) : (
                         <div className="p-4 text-sm text-gray-500 dark:text-gray-400">
@@ -263,7 +450,9 @@ export default function LeagueTables({
           <div className="space-y-3">
             {allH2HLeagues.map((league: any) => {
               const isExpanded = expandedLeagues.has(league.id);
-              const isLoading = loadingLeagues.has(league.id);
+              const currentPage = currentPages[league.id] || 1;
+              const loadingKey = `${league.id}_${currentPage}_true`;
+              const isLoading = loadingLeagues.has(loadingKey);
               const standings = leagueStandings[league.id];
 
               return (
@@ -280,9 +469,6 @@ export default function LeagueTables({
                         {league.name}
                       </h4>
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          H2H
-                        </span>
                         {isExpanded ? (
                           <MdExpandLess className="text-gray-500" />
                         ) : (
@@ -295,11 +481,64 @@ export default function LeagueTables({
                   {isExpanded && (
                     <div>
                       {isLoading ? (
-                        <div className="p-6 text-center">
-                          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            Loading H2H standings...
-                          </p>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead className="bg-gray-100 dark:bg-gray-600">
+                              <tr>
+                                <th className="px-4 py-2 text-left">
+                                  <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-4 animate-pulse"></div>
+                                </th>
+                                <th className="px-4 py-2 text-left">
+                                  <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-16 animate-pulse"></div>
+                                </th>
+                                <th className="px-4 py-2 text-right">
+                                  <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-12 animate-pulse ml-auto"></div>
+                                </th>
+                                <th className="px-4 py-2 text-right">
+                                  <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-12 animate-pulse ml-auto"></div>
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Array.from({ length: 10 }, (_, i) => (
+                                <tr
+                                  key={i}
+                                  className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                >
+                                  <td className="px-4 py-2">
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-6 animate-pulse"></div>
+                                  </td>
+                                  <td className="px-4 py-2">
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-32 animate-pulse"></div>
+                                  </td>
+                                  <td className="px-4 py-2 text-right">
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-16 animate-pulse ml-auto"></div>
+                                  </td>
+                                  <td className="px-4 py-2 text-right">
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-12 animate-pulse ml-auto"></div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+
+                          {/* H2H Pagination skeleton */}
+                          <div className="p-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center space-x-3">
+                                <div className="h-6 bg-gray-200 dark:bg-gray-500 rounded w-24 animate-pulse"></div>
+                                <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-20 animate-pulse"></div>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                {Array.from({ length: 4 }, (_, i) => (
+                                  <div
+                                    key={i}
+                                    className="h-6 w-6 bg-gray-200 dark:bg-gray-500 rounded animate-pulse"
+                                  ></div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       ) : standings?.error ? (
                         <div className="p-4 text-sm text-red-500">
@@ -318,49 +557,148 @@ export default function LeagueTables({
                               </tr>
                             </thead>
                             <tbody>
-                              {standings.standings
-                                .slice(0, 15)
-                                .map((entry: any) => (
-                                  <tr
-                                    key={entry.id}
-                                    className={`border-b dark:border-gray-700 ${
-                                      entry.entry === managerId
-                                        ? "bg-blue-50 dark:bg-blue-900"
-                                        : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                    }`}
-                                  >
-                                    <td className="px-4 py-2 font-medium">
-                                      {entry.rank}
-                                      {entry.entry === managerId && (
-                                        <span className="ml-1 text-blue-500">
-                                          ←
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td className="px-4 py-2">
-                                      {entry.player_name || entry.entry_name}
-                                      {entry.entry === managerId && (
-                                        <span className="ml-1 text-xs text-blue-500 font-medium">
-                                          You
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td className="px-4 py-2 text-right text-xs">
-                                      {entry.matches_won}-{entry.matches_drawn}-
-                                      {entry.matches_lost}
-                                    </td>
-                                    <td className="px-4 py-2 text-right font-medium">
-                                      {entry.total}
-                                    </td>
-                                  </tr>
-                                ))}
+                              {standings.standings.map((entry: any) => (
+                                <tr
+                                  key={entry.id}
+                                  className={`border-b dark:border-gray-700 ${
+                                    entry.entry === managerId
+                                      ? "bg-blue-50 dark:bg-blue-900"
+                                      : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                                  }`}
+                                >
+                                  <td className="px-4 py-2 font-medium">
+                                    {entry.rank}
+                                    {entry.entry === managerId && (
+                                      <span className="ml-1 text-blue-500">
+                                        ←
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-2">
+                                    {entry.player_name || entry.entry_name}
+                                    {entry.entry === managerId && (
+                                      <span className="ml-1 text-xs text-blue-500 font-medium">
+                                        You
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-2 text-right text-xs">
+                                    {entry.matches_won}-{entry.matches_drawn}-
+                                    {entry.matches_lost}
+                                  </td>
+                                  <td className="px-4 py-2 text-right font-medium">
+                                    {entry.total}
+                                  </td>
+                                </tr>
+                              ))}
                             </tbody>
                           </table>
-                          {standings.manager_position && (
-                            <div className="p-3 bg-blue-50 dark:bg-blue-900 text-sm text-blue-700 dark:text-blue-200">
-                              Your position: #{standings.manager_position}
+
+                          {/* H2H Pagination and User Position */}
+                          <div className="p-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center space-x-3">
+                                {standings.manager_position && (
+                                  <button
+                                    onClick={() =>
+                                      goToUserPage(league.id, true)
+                                    }
+                                    className="flex items-center gap-1 text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md font-medium transition-colors shadow-sm"
+                                  >
+                                    <MdPerson className="w-3 h-3" />
+                                    Find Me (#{standings.manager_position})
+                                  </button>
+                                )}
+                                <span className="text-xs text-gray-600 dark:text-gray-400">
+                                  First 50 places
+                                </span>
+                              </div>
+
+                              {totalPages[league.id] > 1 && (
+                                <div className="flex items-center space-x-1">
+                                  <button
+                                    onClick={() =>
+                                      changePage(league.id, 1, true)
+                                    }
+                                    disabled={currentPages[league.id] === 1}
+                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
+                                  >
+                                    <MdFirstPage />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      changePage(
+                                        league.id,
+                                        Math.max(
+                                          1,
+                                          currentPages[league.id] - 1
+                                        ),
+                                        true
+                                      )
+                                    }
+                                    disabled={currentPages[league.id] === 1}
+                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
+                                  >
+                                    <MdNavigateBefore />
+                                  </button>
+                                  <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-600 rounded">
+                                    {currentPages[league.id] || 1} /{" "}
+                                    {totalPages[league.id]}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      changePage(
+                                        league.id,
+                                        Math.min(
+                                          totalPages[league.id],
+                                          currentPages[league.id] + 1
+                                        ),
+                                        true
+                                      )
+                                    }
+                                    disabled={
+                                      currentPages[league.id] ===
+                                      totalPages[league.id]
+                                    }
+                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
+                                  >
+                                    <MdNavigateNext />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      changePage(
+                                        league.id,
+                                        totalPages[league.id],
+                                        true
+                                      )
+                                    }
+                                    disabled={
+                                      currentPages[league.id] ===
+                                      totalPages[league.id]
+                                    }
+                                    className="p-1 text-xs bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 rounded"
+                                  >
+                                    <MdLastPage />
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          )}
+
+                            {/* User Position Indicator when not visible in H2H */}
+                            {standings.manager_position &&
+                              !standings.standings.some(
+                                (entry: any) => entry.entry === managerId
+                              ) && (
+                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded">
+                                  <div className="flex items-center justify-center">
+                                    <span className="text-xs font-medium text-red-700 dark:text-red-300">
+                                      You are out of first 50 places (#
+                                      {standings.manager_position})
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                          </div>
                         </div>
                       ) : (
                         <div className="p-4 text-sm text-gray-500 dark:text-gray-400">

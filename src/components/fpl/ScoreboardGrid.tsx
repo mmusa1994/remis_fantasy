@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { PiTShirtLight, PiTShirtFill } from "react-icons/pi";
 import { getTeamColors } from '@/lib/team-colors';
 
@@ -37,7 +38,7 @@ interface ScoreboardGridProps {
   bonusAdded: boolean;
 }
 
-export default function ScoreboardGrid({ fixtures, predictedBonuses, bonusAdded }: ScoreboardGridProps) {
+const ScoreboardGrid = React.memo(function ScoreboardGrid({ fixtures, predictedBonuses, bonusAdded }: ScoreboardGridProps) {
   if (!fixtures || fixtures.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -203,4 +204,6 @@ export default function ScoreboardGrid({ fixtures, predictedBonuses, bonusAdded 
       </div>
     </div>
   );
-}
+});
+
+export default ScoreboardGrid;

@@ -225,12 +225,8 @@ class FPLAPIError extends Error {
 
 class FPLAPIService {
   private readonly baseUrl = "https://fantasy.premierleague.com/api";
-  private readonly maxRetries = 3;
-  private readonly baseDelay = 1000;
-
-  private async sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+  private readonly maxRetries = 2;
+  private readonly baseDelay = 100;
 
   private async fetchWithRetry<T>(
     endpoint: string,
@@ -240,7 +236,6 @@ class FPLAPIService {
 
     try {
       const response = await fetch(url, {
-        cache: "no-store",
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -250,11 +245,8 @@ class FPLAPIService {
 
       if (!response.ok) {
         if (response.status === 429 && retryCount < this.maxRetries) {
-          const delay = this.baseDelay * Math.pow(2, retryCount);
-          console.warn(
-            `Rate limited on ${endpoint}, retrying in ${delay}ms...`
-          );
-          await this.sleep(delay);
+          const delay = this.baseDelay;
+          await new Promise(resolve => setTimeout(resolve, delay));
           return this.fetchWithRetry(endpoint, retryCount + 1);
         }
 
@@ -273,12 +265,7 @@ class FPLAPIService {
       }
 
       if (retryCount < this.maxRetries) {
-        const delay = this.baseDelay * Math.pow(2, retryCount);
-        console.warn(
-          `Network error on ${endpoint}, retrying in ${delay}ms...`,
-          error
-        );
-        await this.sleep(delay);
+        await new Promise(resolve => setTimeout(resolve, this.baseDelay));
         return this.fetchWithRetry(endpoint, retryCount + 1);
       }
 
@@ -345,12 +332,12 @@ class FPLAPIService {
     return status?.bonus_added || false;
   }
 
-  async getLeagueStandings(leagueId: number): Promise<any> {
-    return await this.fetchWithRetry(`/leagues-classic/${leagueId}/standings/`);
+  async getLeagueStandings(leagueId: number, page: number = 1): Promise<any> {
+    return await this.fetchWithRetry(`/leagues-classic/${leagueId}/standings/?page_standings=${page}&page_new_entries=1`);
   }
 
-  async getH2HLeague(leagueId: number): Promise<any> {
-    return await this.fetchWithRetry(`/leagues-h2h/${leagueId}/standings/`);
+  async getH2HLeague(leagueId: number, page: number = 1): Promise<any> {
+    return await this.fetchWithRetry(`/leagues-h2h/${leagueId}/standings/?page_standings=${page}&page_new_entries=1`);
   }
 }
 

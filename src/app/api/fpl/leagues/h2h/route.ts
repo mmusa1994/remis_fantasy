@@ -6,6 +6,8 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const leagueIdParam = searchParams.get("leagueId");
     const managerIdParam = searchParams.get("managerId");
+    const pageParam = searchParams.get("page") || "1";
+    const pageSizeParam = searchParams.get("pageSize") || "10";
 
     if (!leagueIdParam) {
       return NextResponse.json(
@@ -29,6 +31,8 @@ export async function GET(request: NextRequest) {
 
     const leagueId = parseInt(leagueIdParam, 10);
     const managerId = parseInt(managerIdParam, 10);
+    const page = parseInt(pageParam, 10);
+    const pageSize = parseInt(pageSizeParam, 10);
 
     if (isNaN(leagueId)) {
       return NextResponse.json(
@@ -50,19 +54,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch H2H league standings
-    const h2hStandings = await fplApi.getH2HLeague(leagueId);
+    // Fetch H2H league standings with FPL native pagination
+    const h2hStandings = await fplApi.getH2HLeague(leagueId, page);
     
-    // Find manager position
+    const standings = h2hStandings.standings?.results || [];
     const managerPosition = h2hStandings.standings?.results?.findIndex(
       (entry: any) => entry.entry === managerId
-    ) + 1 || null;
+    ) + 1 + ((page - 1) * pageSize) || null;
 
     return NextResponse.json({
       success: true,
       data: {
-        standings: h2hStandings.standings?.results || [],
+        standings: standings,
         manager_position: managerPosition,
+        total_entries: h2hStandings.league?.size || 0,
+        current_page: page,
+        page_size: pageSize,
+        total_pages: Math.ceil((h2hStandings.league?.size || 0) / pageSize),
         league_info: {
           id: leagueId,
           name: h2hStandings.league?.name || "Unknown H2H League",
