@@ -1,5 +1,5 @@
-import React from 'react';
-import SkeletonBase from './SkeletonBase';
+import React from "react";
+import SkeletonBase from "./SkeletonBase";
 
 interface SkeletonTableProps {
   /** Number of rows to show */
@@ -17,7 +17,7 @@ interface SkeletonTableProps {
   /** Custom className for the container */
   className?: string;
   /** Variant for different table types */
-  variant?: 'default' | 'standings' | 'admin' | 'compact';
+  variant?: "default" | "standings" | "admin" | "compact";
 }
 
 /**
@@ -30,19 +30,19 @@ export default function SkeletonTable({
   showPagination = false,
   showActions = false,
   title,
-  className = '',
-  variant = 'default',
+  className = "",
+  variant = "default",
 }: SkeletonTableProps) {
   const getTableClasses = () => {
     switch (variant) {
-      case 'standings':
-        return 'bg-white dark:bg-gray-800 rounded-lg shadow';
-      case 'admin':
-        return 'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700';
-      case 'compact':
-        return 'bg-gray-50 dark:bg-gray-700 rounded-md';
+      case "standings":
+        return "bg-white dark:bg-gray-800 rounded-lg shadow";
+      case "admin":
+        return "bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700";
+      case "compact":
+        return "bg-gray-50 dark:bg-gray-700 rounded-md";
       default:
-        return 'bg-white dark:bg-gray-800 rounded-lg shadow-sm';
+        return "bg-white dark:bg-gray-800 rounded-lg shadow-sm";
     }
   };
 
@@ -53,27 +53,15 @@ export default function SkeletonTable({
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             {title ? (
-              <SkeletonBase
-                width="8rem"
-                height="1.5rem"
-                rounded="md"
-              />
+              <SkeletonBase width="8rem" height="1.5rem" rounded="md" />
             ) : (
               <div></div>
             )}
-            
+
             {showActions && (
               <div className="flex items-center space-x-2">
-                <SkeletonBase
-                  width="1.5rem"
-                  height="1.5rem"
-                  rounded="sm"
-                />
-                <SkeletonBase
-                  width="4rem"
-                  height="1rem"
-                  rounded="sm"
-                />
+                <SkeletonBase width="1.5rem" height="1.5rem" rounded="sm" />
+                <SkeletonBase width="4rem" height="1rem" rounded="sm" />
               </div>
             )}
           </div>
@@ -90,7 +78,13 @@ export default function SkeletonTable({
                 {Array.from({ length: cols }, (_, colIndex) => (
                   <th key={colIndex} className="px-4 py-3 text-left">
                     <SkeletonBase
-                      width={colIndex === 0 ? '2rem' : colIndex === cols - 1 ? '4rem' : '6rem'}
+                      width={
+                        colIndex === 0
+                          ? "2rem"
+                          : colIndex === cols - 1
+                          ? "4rem"
+                          : "6rem"
+                      }
                       height="1rem"
                       rounded="sm"
                     />
@@ -111,13 +105,13 @@ export default function SkeletonTable({
                   <td key={colIndex} className="px-4 py-3">
                     <SkeletonBase
                       width={
-                        colIndex === 0 
-                          ? '2rem' 
-                          : colIndex === cols - 1 
-                          ? '3rem' 
-                          : colIndex === 1 
-                          ? '8rem' 
-                          : '5rem'
+                        colIndex === 0
+                          ? "2rem"
+                          : colIndex === cols - 1
+                          ? "3rem"
+                          : colIndex === 1
+                          ? "8rem"
+                          : "5rem"
                       }
                       height="1rem"
                       rounded="sm"
@@ -135,13 +129,9 @@ export default function SkeletonTable({
         <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
-              <SkeletonBase
-                width="6rem"
-                height="1rem"
-                rounded="sm"
-              />
+              <SkeletonBase width="6rem" height="1rem" rounded="sm" />
             </div>
-            
+
             <div className="flex items-center space-x-1">
               {[1, 2, 3, 4].map((_, index) => (
                 <SkeletonBase

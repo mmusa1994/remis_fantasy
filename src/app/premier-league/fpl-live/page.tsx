@@ -10,7 +10,8 @@ import ScoreboardGrid from "@/components/fpl/ScoreboardGrid";
 import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
 import LiveTicker from "@/components/fpl/LiveTicker";
 import LeagueTables from "@/components/fpl/LeagueTables";
-import { MdInfo, MdSettings, MdCancel } from "react-icons/md";
+import { MdCancel, MdInfo, MdSettings } from "react-icons/md";
+import Image from "next/image";
 import type { GameweekStatus as GameweekStatusType } from "@/lib/fpl-api";
 
 interface FPLData {
@@ -298,7 +299,7 @@ export default function FPLLivePage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             FPL Live Dashboard
           </h1>
@@ -306,6 +307,108 @@ export default function FPLLivePage() {
             Real-time Fantasy Premier League tracking with live bonus
             predictions
           </p>
+        </div>
+
+        {/* Enhanced Info Accordions - Moved to Top */}
+        <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* How to Use - Enhanced Version */}
+          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-lg overflow-hidden">
+            <details className="group">
+              <summary className="flex items-center gap-3 p-4 text-sm font-medium text-blue-800 dark:text-blue-200 cursor-pointer hover:bg-blue-100/50 dark:hover:bg-blue-800/30 transition-colors">
+                <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-lg flex items-center justify-center">
+                  <MdInfo className="text-white w-4 h-4" />
+                </div>
+                <span className="font-semibold">Kako koristiti FPL Live</span>
+                <span className="ml-auto text-blue-600 dark:text-blue-400 group-open:rotate-180 transition-transform text-lg">
+                  ▼
+                </span>
+              </summary>
+
+              <div className="px-4 pb-4 space-y-4 text-sm text-blue-800 dark:text-blue-200 bg-white/50 dark:bg-blue-900/20">
+                {/* Manager ID - Detailed */}
+                <div className="p-3 bg-white dark:bg-blue-800/50 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+                    📋 Kako pronaći Manager ID
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <ol className="list-decimal list-inside space-y-1 text-blue-700 dark:text-blue-300">
+                      <li>Otvorite web browser (Chrome, Firefox, Safari)</li>
+                      <li>
+                        Idite na <strong>fantasy.premierleague.com</strong>
+                      </li>
+                      <li>
+                        Ulogujte se sa vašim Fantasy Premier League nalogom
+                      </li>
+                      <li>
+                        Kliknite na <strong>&quot;Points&quot;</strong> tab u
+                        glavnoj navigaciji
+                      </li>
+                      <li>
+                        Kopirajte brojeve iz URL-a (npr. entry/133790/event/1)
+                      </li>
+                    </ol>
+
+                    <div className="mt-3 p-2 bg-blue-100 dark:bg-blue-800 rounded border">
+                      <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 mb-2">
+                        <span>💡</span>
+                        <span className="font-medium">Primer URL-a:</span>
+                      </div>
+                      <code className="text-sm bg-blue-200 dark:bg-blue-700 text-blue-900 dark:text-blue-100 px-2 py-1 rounded font-mono block">
+                        fantasy.premierleague.com/entry/133790/event/1
+                      </code>
+                      <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                        Vaš Manager ID je: <strong>133790</strong>
+                      </p>
+
+                      <div className="mt-3">
+                        <Image
+                          src="/images/path.png"
+                          alt="FPL Manager ID u URL-u - primer iz browser-a"
+                          width={400}
+                          height={200}
+                          className="w-full max-w-md mx-auto rounded border border-blue-300 dark:border-blue-600"
+                        />
+                        <p className="text-xs text-center text-blue-600 dark:text-blue-400 mt-2 italic">
+                          Ovako izgleda URL u browser-u kada kliknete na
+                          &quot;Points&quot;
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Usage Steps - Detailed */}
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                    🎯 Detaljni koraci za korišćenje
+                  </h4>
+                  <ol className="list-decimal list-inside space-y-2 text-blue-700 dark:text-blue-300">
+                    <li>
+                      <strong>Unesite Manager ID</strong> (npr. 133790) i
+                      odaberite trenutni Gameweek
+                    </li>
+                    <li>
+                      <strong>Kliknite &quot;Load Team&quot;</strong> da učitate
+                      svoj tim i osnovne statistike
+                    </li>
+                    <li>
+                      <strong>&quot;Fetch Now&quot;</strong> za manuelno
+                      ažuriranje ili <strong>&quot;Start Live&quot;</strong> za
+                      automatsko praćenje
+                    </li>
+                    <li>
+                      Pratite <strong>LIVE BPS Tracker</strong> za golove,
+                      asiste i kartone u real-time
+                    </li>
+                    <li>
+                      <strong>Bonus poeni</strong> se predviđaju u realnom
+                      vremenu dok ne budu finalni post-match
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            </details>
+          </div>
         </div>
 
         {error && (
@@ -473,72 +576,63 @@ export default function FPLLivePage() {
         <div className="mt-8">
           <SettingsCard onSettingsSaved={handleSettingsSaved} />
         </div>
-
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <MdInfo className="text-blue-500 w-5 h-5" />
+        {/* Settings - Enhanced Version */}
+        <div className="mt-5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-lg overflow-hidden">
+          <details className="group">
+            <summary className="flex items-center gap-3 p-4 text-sm font-medium text-yellow-800 dark:text-yellow-200 cursor-pointer hover:bg-yellow-100/50 dark:hover:bg-yellow-800/30 transition-colors">
+              <div className="w-8 h-8 bg-yellow-500 dark:bg-yellow-600 rounded-lg flex items-center justify-center">
+                <MdSettings className="text-white w-4 h-4" />
               </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  Kako koristiti FPL Live
-                </h3>
-                <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                  <ol className="list-decimal list-inside space-y-1">
-                    <li>
-                      Unesite Manager ID (npr. 133790) i odaberite trenutni
-                      Gameweek
-                    </li>
-                    <li>
-                      Kliknite &quot;Load Team&quot; da učitate svoj tim i stats
-                    </li>
-                    <li>
-                      &quot;Fetch Now&quot; za manuelno ažuriranje ili
-                      &quot;Start Live&quot; za auto-polling
-                    </li>
-                    <li>
-                      Pratite Live Ticker za golove/asiste/kartone u real-time
-                    </li>
-                    <li>
-                      Bonus poeni se predviđaju dok ne budu finalni post-match
-                    </li>
-                  </ol>
+              <span className="font-semibold">Settings objašnjenja</span>
+              <span className="ml-auto text-yellow-600 dark:text-yellow-400 group-open:rotate-180 transition-transform text-lg">
+                ▼
+              </span>
+            </summary>
+
+            <div className="px-4 pb-4 space-y-3 text-sm text-yellow-800 dark:text-yellow-200 bg-white/50 dark:bg-yellow-900/20">
+              <div className="space-y-3">
+                <div className="p-2 bg-white dark:bg-yellow-800/30 rounded border border-yellow-200 dark:border-yellow-700">
+                  <p className="font-semibold text-yellow-900 dark:text-yellow-100">
+                    FPL Proxy URL:
+                  </p>
+                  <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                    Opcionalno polje za zaobilaženje CORS problema. Koristite
+                    samo ako imate problema sa pristupom FPL API-ju.
+                  </p>
+                </div>
+
+                <div className="p-2 bg-white dark:bg-yellow-800/30 rounded border border-yellow-200 dark:border-yellow-700">
+                  <p className="font-semibold text-yellow-900 dark:text-yellow-100">
+                    CRON Secret:
+                  </p>
+                  <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                    Sigurnosni ključ za server-side automatizaciju i scheduled
+                    taskove. Potreban za backend operacije.
+                  </p>
+                </div>
+
+                <div className="p-2 bg-white dark:bg-yellow-800/30 rounded border border-yellow-200 dark:border-yellow-700">
+                  <p className="font-semibold text-yellow-900 dark:text-yellow-100">
+                    Live Bonus:
+                  </p>
+                  <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                    DA! Bonus poeni se računaju uživo tokom mečeva na osnovu BPS
+                    (Bonus Points System) statistika.
+                  </p>
+                </div>
+
+                <div className="p-2 bg-white dark:bg-yellow-800/30 rounded border border-yellow-200 dark:border-yellow-700">
+                  <p className="font-semibold text-yellow-900 dark:text-yellow-100">
+                    Points System:
+                  </p>
+                  <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                    <strong>Active</strong> = starter tim (pozicije 1-11),{" "}
+                    <strong>Bench</strong> = rezerve (pozicije 12-15)
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="p-4 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <MdSettings className="text-yellow-500 w-5 h-5" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  Settings objašnjenja
-                </h3>
-                <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300 space-y-2">
-                  <div>
-                    <strong>FPL Proxy URL:</strong> Opcionalno za zaobilaženje
-                    CORS problema
-                  </div>
-                  <div>
-                    <strong>CRON Secret:</strong> Sigurnosni ključ za
-                    server-side automatizaciju
-                  </div>
-                  <div>
-                    <strong>Live Bonus:</strong> DA! Bonus se računa uživo tokom
-                    mečeva
-                  </div>
-                  <div>
-                    <strong>Points:</strong> Active = starter tim (1-11), Bench
-                    = klupa (12-15)
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          </details>
         </div>
       </div>
     </div>

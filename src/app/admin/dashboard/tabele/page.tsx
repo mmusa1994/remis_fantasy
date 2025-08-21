@@ -99,6 +99,7 @@ export default function AdminTablesCleanPage() {
     message: string;
     type: "success" | "error";
   }>({ show: false, message: "", type: "success" });
+  const [updatingFromFPL, setUpdatingFromFPL] = useState<string | null>(null);
 
   // Load tables when component mounts and session is ready
   useEffect(() => {
@@ -280,6 +281,85 @@ export default function AdminTablesCleanPage() {
     await loadTables();
   };
 
+  // FPL League configurations with hardcoded IDs
+  const fplLeagues = [
+    {
+      key: "premium",
+      name: "Premium",
+      id: 277005,
+      color: "yellow",
+      url: "https://fantasy.premierleague.com/leagues/277005/standings/c",
+    },
+    {
+      key: "standard",
+      name: "Standard",
+      id: 277449,
+      color: "blue",
+      url: "https://fantasy.premierleague.com/leagues/277449/standings/c",
+    },
+    {
+      key: "h2h",
+      name: "H2H",
+      id: 277479,
+      color: "red",
+      url: "https://fantasy.premierleague.com/leagues/277479/matches/h",
+    },
+    {
+      key: "h2h2",
+      name: "H2H2",
+      id: 451227,
+      color: "red",
+      url: "https://fantasy.premierleague.com/leagues/451227/matches/h",
+    },
+  ];
+
+  const updateFromFPL = async (leagueType: string) => {
+    try {
+      setUpdatingFromFPL(leagueType);
+
+      const response = await fetch("/api/admin/update-from-fpl", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ leagueType }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update from FPL");
+      }
+
+      const result = await response.json();
+
+      // Refresh the tables after update
+      await loadTables();
+
+      let message = `${result.leagueType.toUpperCase()} liga ažurirana! Ažurirano ${
+        result.updatedCount
+      } igrača iz FPL API-ja.`;
+      if (result.notFoundPlayers && result.notFoundPlayers.length > 0) {
+        message += ` Nisu pronađeni: ${result.notFoundPlayers
+          .slice(0, 3)
+          .join(", ")}${result.notFoundPlayers.length > 3 ? "..." : ""}`;
+      }
+
+      setToast({
+        show: true,
+        message,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error updating from FPL:", error);
+      setToast({
+        show: true,
+        message: `Greška pri ažuriranju ${leagueType} lige iz FPL API-ja`,
+        type: "error",
+      });
+    } finally {
+      setUpdatingFromFPL(null);
+    }
+  };
+
   const handleSignOut = () => {
     signOut({ callbackUrl: "/admin" });
   };
@@ -359,70 +439,72 @@ export default function AdminTablesCleanPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
+      <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white shadow-lg sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-3 sm:py-4">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <button
                 onClick={() => router.push("/admin/dashboard")}
-                className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors flex-shrink-0"
-                title="Back to Dashboard"
+                className="bg-white/20 hover:bg-white/30 p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation"
+                title="Nazad na dashboard"
+                aria-label="Nazad na dashboard"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               <Image
                 src="/images/rf-logo.svg"
                 alt="REMIS Fantasy Logo"
-                width={40}
-                height={40}
-                className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
+                width={32}
+                height={32}
+                className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 flex-shrink-0"
                 priority
               />
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                <h1 className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate">
                   Premier League Tabele
                 </h1>
-                <p className="text-xs sm:text-sm opacity-75 truncate">
+                <p className="text-xs sm:text-sm opacity-75 truncate hidden sm:block">
                   Upravljanje ligama i rangiranjem
                 </p>
               </div>
             </div>
             <button
               onClick={handleSignOut}
-              className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
-              title="Sign Out"
+              className="bg-white/20 hover:bg-white/30 p-1.5 sm:p-2 lg:px-4 lg:py-2 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 flex-shrink-0 touch-manipulation"
+              title="Odjavi se"
+              aria-label="Odjavi se"
             >
               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Sign Out</span>
+              <span className="hidden lg:inline text-sm">Odjavi se</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
         {/* Control Panel */}
-        <div className="bg-white rounded-xl shadow-lg mb-8 border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg mb-4 sm:mb-6 lg:mb-8 border border-gray-100 overflow-hidden">
           {/* Header Info */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-red-600 rounded-lg flex items-center justify-center">
-                  <Server className="w-5 h-5 text-white" />
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200">
+            <div className="space-y-3 lg:space-y-0 lg:flex lg:items-center lg:justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Server className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-800">
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-lg font-bold text-gray-800 truncate">
                     Premier League Tabele
                   </h2>
                   {source && (
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                      <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium whitespace-nowrap">
                         {source === "clean_table"
                           ? "Ažurirana Tabela"
                           : "Registraciona Tabela"}
                       </span>
                       {lastUpdated && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 hidden sm:inline truncate">
                           • {new Date(lastUpdated).toLocaleString("sr-RS")}
                         </span>
                       )}
@@ -432,37 +514,85 @@ export default function AdminTablesCleanPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowBulkUpdate(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow transition-all duration-200 text-sm font-medium"
-                >
-                  <Upload className="w-4 h-4" />
-                  Bulk Update
-                </button>
-                <button
-                  onClick={refreshTables}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-                  />
-                  {loading ? "Učitavam" : "Osveži"}
-                </button>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                {/* Main Actions */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowBulkUpdate(true)}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow transition-all duration-200 text-xs sm:text-sm font-medium touch-manipulation"
+                    aria-label="Grupno ažuriranje"
+                  >
+                    <Upload className="w-4 h-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">Grupno ažuriranje</span>
+                    <span className="sm:hidden">Grupno</span>
+                  </button>
+                  <button
+                    onClick={refreshTables}
+                    disabled={loading}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium touch-manipulation"
+                    aria-label={loading ? "Učitavam tabele" : "Osveži tabele"}
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 flex-shrink-0 ${
+                        loading ? "animate-spin" : ""
+                      }`}
+                    />
+                    <span>{loading ? "Učitavam" : "Osveži"}</span>
+                  </button>
+                </div>
+
+                {/* FPL Sync Buttons */}
+                <div className="flex items-center gap-1 sm:gap-2 p-2 sm:p-0 bg-gray-50 sm:bg-transparent rounded-lg sm:rounded-none sm:ml-2 sm:pl-3 sm:border-l sm:border-gray-300">
+                  <span className="text-xs text-gray-600 font-medium whitespace-nowrap">
+                    FPL:
+                  </span>
+                  <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0">
+                    {fplLeagues.map((league) => (
+                      <button
+                        key={league.key}
+                        onClick={() => updateFromFPL(league.key)}
+                        disabled={updatingFromFPL === league.key || loading}
+                        className={`relative flex items-center gap-1 px-2 py-1 rounded font-medium transition-all duration-150 whitespace-nowrap touch-manipulation ${
+                          updatingFromFPL === league.key
+                            ? "bg-gray-300 cursor-not-allowed text-gray-500"
+                            : `bg-${league.color}-100 hover:bg-${league.color}-200 text-${league.color}-700 hover:text-${league.color}-800 active:bg-${league.color}-300`
+                        } text-xs border border-${
+                          league.color
+                        }-200 hover:border-${league.color}-300`}
+                        title={`Ažuriraj ${league.name} ligu (ID: ${league.id})`}
+                        aria-label={`Ažuriraj ${league.name} ligu`}
+                      >
+                        <RefreshCw
+                          className={`w-3 h-3 flex-shrink-0 ${
+                            updatingFromFPL === league.key ? "animate-spin" : ""
+                          }`}
+                        />
+                        <span className="font-semibold">
+                          {updatingFromFPL === league.key ? "..." : league.name}
+                        </span>
+                        {updatingFromFPL !== league.key && (
+                          <div
+                            className="w-1.5 h-1.5 bg-green-500 rounded-full opacity-60 flex-shrink-0"
+                            aria-hidden="true"
+                          ></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* League Filters */}
-          <div className="px-6 py-4">
+          <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide">
                 Filteri Liga
               </h3>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
               {leagueTypes.map((league) => {
                 const isSelected = selectedLeague === league.key;
                 const playerCount =
@@ -474,20 +604,23 @@ export default function AdminTablesCleanPage() {
                       setSelectedLeague(league.key as keyof LeagueTables);
                       setEditingPlayer(null);
                     }}
-                    className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+                    className={`group relative flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 touch-manipulation ${
                       isSelected
-                        ? `bg-${league.color}-500 text-white shadow-lg transform scale-105`
-                        : `bg-${league.color}-100 text-${league.color}-800 hover:bg-${league.color}-200 border-2 border-${league.color}-300 hover:border-${league.color}-400`
+                        ? `bg-${league.color}-500 text-white shadow-lg scale-105`
+                        : `bg-${league.color}-100 text-${league.color}-800 hover:bg-${league.color}-200 active:bg-${league.color}-300 border-2 border-${league.color}-300 hover:border-${league.color}-400`
                     }`}
+                    aria-label={`Prikaži ${league.name} tabelu`}
                   >
                     <div
                       className={`w-2 h-2 rounded-full ${
                         isSelected ? "bg-white" : `bg-${league.color}-600`
                       }`}
                     ></div>
-                    <span className="text-sm font-bold">{league.name}</span>
+                    <span className="text-xs sm:text-sm font-bold text-center sm:text-left">
+                      {league.name}
+                    </span>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                      className={`text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-bold ${
                         isSelected
                           ? "bg-white/20 text-white"
                           : `bg-${league.color}-300 text-${league.color}-900`
@@ -511,67 +644,114 @@ export default function AdminTablesCleanPage() {
 
         {/* Current League Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex justify-between items-center">
+          <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800">
                   {currentLeague?.name}
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Ukupno igrača: {currentPlayers.length}
-                </p>
-                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  Automatsko sortiranje i pozicioniranje
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1">
+                  <p className="text-sm text-gray-600">
+                    Ukupno igrača:{" "}
+                    <span className="font-semibold">
+                      {currentPlayers.length}
+                    </span>
+                  </p>
+                  <p className="text-xs text-green-600 flex items-center gap-1">
+                    <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></span>
+                    <span className="hidden sm:inline">
+                      Automatsko sortiranje i pozicioniranje
+                    </span>
+                    <span className="sm:hidden">Auto sort</span>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
+              <div className="flex items-center justify-center py-8 sm:py-12">
                 <div className="text-center">
-                  <p className="text-gray-600">Učitavam tabele...</p>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    Učitavam tabele...
+                  </p>
                 </div>
               </div>
             ) : (
-              <table className="min-w-full divide-y divide-gray-200">
+              <table
+                className="min-w-full divide-y divide-gray-200"
+                role="table"
+                aria-label={`${currentLeague?.name} tabela`}
+              >
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Pozicija
+                    <th
+                      className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      scope="col"
+                    >
+                      <span className="hidden sm:inline">Pozicija</span>
+                      <span className="sm:hidden">Poz.</span>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ime i prezime
+                    <th
+                      className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      scope="col"
+                    >
+                      <span className="hidden sm:inline">Ime i prezime</span>
+                      <span className="sm:hidden">Ime</span>
                     </th>
                     {selectedLeague !== "freeLeague" && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell"
+                        scope="col"
+                      >
                         Email
                       </th>
                     )}
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      scope="col"
+                    >
                       Tim
                     </th>
                     {selectedLeague === "h2hLeague" ||
                     selectedLeague === "h2h2League" ? (
                       <>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th
+                          className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
+                          scope="col"
+                        >
                           W/D/L
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Overall Poeni
+                        <th
+                          className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          scope="col"
+                        >
+                          <span className="hidden sm:inline">
+                            Overall Poeni
+                          </span>
+                          <span className="sm:hidden">Overall</span>
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          H2H Poeni
+                        <th
+                          className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          scope="col"
+                        >
+                          <span className="hidden sm:inline">H2H Poeni</span>
+                          <span className="sm:hidden">H2H</span>
                         </th>
                       </>
                     ) : (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        scope="col"
+                      >
                         Poeni
                       </th>
                     )}
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      scope="col"
+                    >
                       Akcije
                     </th>
                   </tr>
@@ -588,11 +768,13 @@ export default function AdminTablesCleanPage() {
                             ? 5 // Free Liga has one less column (no email)
                             : 6
                         }
-                        className="px-6 py-8 text-center text-gray-500"
+                        className="px-3 sm:px-6 py-6 sm:py-8 text-center text-gray-500"
                       >
                         <div className="flex flex-col items-center">
-                          <Users className="w-12 h-12 text-gray-400 mb-2" />
-                          <p>Nema igrača u ovoj ligi</p>
+                          <Users className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mb-2" />
+                          <p className="text-sm sm:text-base">
+                            Nema igrača u ovoj ligi
+                          </p>
                         </div>
                       </td>
                     </tr>
@@ -842,7 +1024,7 @@ export default function AdminTablesCleanPage() {
                   <div>
                     <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                       <Upload className="w-6 h-6 text-green-600" />
-                      Bulk Update
+                      Grupno ažuriranje
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
                       Ažurirajte poene ili H2H kategorije za više igrača
