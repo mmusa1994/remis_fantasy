@@ -25,7 +25,9 @@ interface LiveEvent {
 // In-memory caches
 const fixtureStatsCache: { [key: string]: any } = {};
 const playersCache: { [key: number]: any } = {};
+const teamsCache: { [key: number]: any } = {};
 let playersCacheTime = 0;
+let teamsCacheTime = 0;
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 export async function GET(request: NextRequest) {
@@ -57,28 +59,36 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Only fetch fixtures 
+    // Only fetch fixtures
     const fixtures = await fplApi.getFixtures(gameweek);
-    
+
     // Get unique player IDs from active fixtures
-    const activeFixtures = fixtures.filter(f => f.started);
+    const activeFixtures = fixtures.filter((f) => f.started);
     const playerIds = new Set<number>();
-    
-    activeFixtures.forEach(fixture => {
-      fixture.stats.forEach(stat => {
+
+    activeFixtures.forEach((fixture) => {
+      fixture.stats.forEach((stat) => {
         stat.h.forEach((p: any) => playerIds.add(p.element));
         stat.a.forEach((p: any) => playerIds.add(p.element));
       });
     });
 
-    // Refresh player cache if needed
+    // Refresh player and team caches if needed
     const now = Date.now();
     if (now - playersCacheTime > CACHE_TTL) {
       const playersData = await fplDb.getAllPlayers();
-      playersData.forEach(player => {
+      playersData.forEach((player) => {
         playersCache[player.id] = player;
       });
       playersCacheTime = now;
+    }
+
+    if (now - teamsCacheTime > CACHE_TTL) {
+      const teamsData = await fplDb.getTeamsData();
+      teamsData.forEach((team) => {
+        teamsCache[team.id] = team;
+      });
+      teamsCacheTime = now;
     }
 
     const events: LiveEvent[] = [];
@@ -126,8 +136,16 @@ export async function GET(request: NextRequest) {
                   }
                 : undefined,
               fixture: {
-                team_h_data: { short_name: `Team${fixture.team_h}` },
-                team_a_data: { short_name: `Team${fixture.team_a}` },
+                team_h_data: {
+                  short_name:
+                    teamsCache[fixture.team_h]?.short_name ||
+                    `Team${fixture.team_h}`,
+                },
+                team_a_data: {
+                  short_name:
+                    teamsCache[fixture.team_a]?.short_name ||
+                    `Team${fixture.team_a}`,
+                },
               },
             };
             events.push(event);
@@ -164,8 +182,16 @@ export async function GET(request: NextRequest) {
                   }
                 : undefined,
               fixture: {
-                team_h_data: { short_name: `Team${fixture.team_h}` },
-                team_a_data: { short_name: `Team${fixture.team_a}` },
+                team_h_data: {
+                  short_name:
+                    teamsCache[fixture.team_h]?.short_name ||
+                    `Team${fixture.team_h}`,
+                },
+                team_a_data: {
+                  short_name:
+                    teamsCache[fixture.team_a]?.short_name ||
+                    `Team${fixture.team_a}`,
+                },
               },
             };
             events.push(event);
