@@ -1,17 +1,22 @@
-import SubNavigation from "@/components/shared/SubNavigation";
+"use client";
 
-const f1FantasyNavItems = [
-  { name: "Tabele", href: "/f1-fantasy/tabele" },
-  { name: "Nagrade", href: "/f1-fantasy/nagrade" },
-  { name: "Registracija", href: "/f1-fantasy/registracija" },
-  { name: "Galerija", href: "/f1-fantasy/galerija" },
-];
+import SubNavigation from "@/components/shared/SubNavigation";
+import { useTranslation } from "react-i18next";
 
 export default function F1FantasyLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
+
+  const f1FantasyNavItems = [
+    { name: t("navigation.tables"), href: "/f1-fantasy/tabele" },
+    { name: t("navigation.prizes"), href: "/f1-fantasy/nagrade" },
+    { name: t("navigation.registration"), href: "/f1-fantasy/registracija" },
+    { name: t("navigation.gallery"), href: "/f1-fantasy/galerija" },
+  ];
+
   return (
     <div className="min-h-screen">
       <SubNavigation

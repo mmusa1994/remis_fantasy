@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MdGroups,
   MdStar,
@@ -28,6 +29,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   loading = false,
   managerData,
 }: AdvancedStatisticsProps) {
+  const { t } = useTranslation();
   const [advancedData, setAdvancedData] = useState<any>(null);
   const [advancedLoading, setAdvancedLoading] = useState(false);
 
@@ -76,10 +78,10 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-          Napredne statistike
+          {t("fplLive.advancedStats")}
         </h3>
         <div className="text-center text-gray-500 dark:text-gray-400">
-          Učitavam napredne statistike...
+          {t("fplLive.loadingAdvancedStats")}
         </div>
       </div>
     );
@@ -89,10 +91,10 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-          Napredne statistike
+          {t("fplLive.advancedStats")}
         </h3>
         <div className="text-center text-gray-500 dark:text-gray-400">
-          Učitajte tim da vidite napredne statistike
+          {t("fplLive.loadTeamForAdvancedStats")}
         </div>
       </div>
     );

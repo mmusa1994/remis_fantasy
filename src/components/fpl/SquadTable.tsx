@@ -3,6 +3,7 @@
 import React from "react";
 import { PiTShirtLight, PiTShirtFill } from "react-icons/pi";
 import { getTeamColors } from "@/lib/team-colors";
+import { useTranslation } from "react-i18next";
 
 interface Player {
   id: number;
@@ -64,12 +65,13 @@ const SquadTable = React.memo(function SquadTable({
   predictedBonuses,
   bonusAdded,
 }: SquadTableProps) {
+  const { t } = useTranslation();
   if (!teamData || teamData.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 shadow border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold mb-4">Squad</h3>
+        <h3 className="text-lg font-semibold mb-4">{t("fplLive.squad")}</h3>
         <div className="text-center text-gray-500 dark:text-gray-400">
-          Load a team to see squad details
+          {t("fplLive.loadTeamToSeeSquad")}
         </div>
       </div>
     );
@@ -143,7 +145,7 @@ const SquadTable = React.memo(function SquadTable({
               }
             </span>
             {!isStarter && (
-              <span className="text-xs text-gray-500">(BENCH)</span>
+              <span className="text-xs text-gray-500">({t("fplLive.benchShort").toUpperCase()})</span>
             )}
           </div>
         </td>
@@ -206,12 +208,12 @@ const SquadTable = React.memo(function SquadTable({
     <div className="bg-white dark:bg-gray-800 shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Squad (XI + Bench)
+          {t("fplLive.squadTitle")}
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           {bonusAdded
-            ? "Showing final bonus points"
-            : "Showing predicted bonus points"}
+            ? t("fplLive.showingFinalBonus")
+            : t("fplLive.showingFinalBonus")}
         </p>
       </div>
 
@@ -220,46 +222,46 @@ const SquadTable = React.memo(function SquadTable({
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Pos
+                {t("fplLive.position")}
               </th>
               <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider sticky left-0 bg-gray-50 dark:bg-gray-700 z-20 border-r border-gray-200 dark:border-gray-700">
-                Player
+                {t("fplLive.player")}
               </th>
               <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Team
+                {t("fplLive.teamColumn")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Min
+                {t("fplLive.minutes")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                G
+                {t("fplLive.goalsShort")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                A
+                {t("fplLive.assistsShort")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                CS
+                {t("fplLive.cleanSheetsShort")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                YC
+                {t("fplLive.yellowCardsShort")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                RC
+                {t("fplLive.redCardsShort")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Saves
+                {t("fplLive.savesShort")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                BPS
+                {t("fplLive.bpsShort")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Bonus
+                {t("fplLive.bonusShort")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Total
+                {t("fplLive.totalShort")}
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                ICT
+                {t("fplLive.ictShort")}
               </th>
             </tr>
           </thead>
@@ -274,7 +276,7 @@ const SquadTable = React.memo(function SquadTable({
                     colSpan={11}
                     className="px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 text-left"
                   >
-                    Bench
+                    {t("fplLive.benchShort")}
                   </td>
                   <td className="px-3 py-3 text-sm text-center bg-gray-100 dark:bg-gray-600"></td>
                   <td className="px-3 py-3 text-sm text-center font-bold text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-600">

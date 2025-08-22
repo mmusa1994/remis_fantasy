@@ -13,6 +13,7 @@ import {
   Edit,
   Trash2,
   Table2,
+  Users,
 } from "lucide-react";
 import Toast from "@/components/shared/Toast";
 import { SkeletonDashboard } from "@/components/skeletons";
@@ -476,6 +477,14 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push("/admin/visitors")}
+                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                title="Visitor Analytics"
+              >
+                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Visitors</span>
+              </button>
               <button
                 onClick={() => router.push("/admin/dashboard/tabele")}
                 className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"

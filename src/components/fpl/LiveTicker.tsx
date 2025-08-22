@@ -81,7 +81,10 @@ const EVENT_LABELS = {
   clearances: "Clearance",
 };
 
-const LiveTicker = React.memo(function LiveTicker({ gameweek, isPolling }: LiveTickerProps) {
+const LiveTicker = React.memo(function LiveTicker({
+  gameweek,
+  isPolling,
+}: LiveTickerProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
