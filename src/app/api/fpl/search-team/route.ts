@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fplApi } from "@/lib/fpl-api";
 
 export async function GET(request: NextRequest) {
   try {

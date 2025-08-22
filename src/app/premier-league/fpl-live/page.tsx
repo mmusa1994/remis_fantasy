@@ -103,6 +103,7 @@ export default function FPLLivePage() {
     } catch (error) {
       console.warn("Error loading from localStorage:", error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showError = (message: string) => {
