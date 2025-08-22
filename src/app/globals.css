@@ -56,7 +56,7 @@
 
   /* Form colors - BEIGE */
   --theme-input-bg: rgba(250, 248, 243, 0.9);
-  --theme-input-border: #8b7355;
+  --theme-input-border: #6b5b47;
   --theme-input-focus: #8b4513;
   --theme-placeholder: #666666;
 
@@ -106,7 +106,7 @@
 
   /* Form colors - BLACK */
   --theme-input-bg: rgba(17, 17, 17, 0.9);
-  --theme-input-border: #333333;
+  --theme-input-border: #cccccc;
   --theme-input-focus: #ffffff;
   --theme-placeholder: #bbbbbb;
 
@@ -225,7 +225,7 @@ body {
 /* Theme-aware form styles */
 .input-theme {
   background-color: var(--theme-input-bg);
-  border-color: var(--theme-input-border);
+  border: 2px solid var(--theme-input-border);
   color: var(--theme-foreground);
   backdrop-filter: blur(10px);
 }

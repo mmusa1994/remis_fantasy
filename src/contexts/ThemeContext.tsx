@@ -47,6 +47,14 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     
     const root = document.documentElement;
     root.setAttribute("data-theme", theme);
+    
+    // Also handle Tailwind CSS dark mode class
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    
     localStorage.setItem("theme", theme);
   }, [theme, mounted]);
 

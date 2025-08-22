@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { MdSearch, MdInfo, MdHelp, MdClose } from "react-icons/md";
+import { useTranslation } from "react-i18next";
 
 interface TeamSearchHelperProps {
   onManagerIdFound: (managerId: number) => void;
@@ -12,6 +13,7 @@ export default function TeamSearchHelper({
   onManagerIdFound,
   currentManagerId,
 }: TeamSearchHelperProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
@@ -50,29 +52,28 @@ export default function TeamSearchHelper({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-theme-card rounded-lg shadow-sm border border-theme-border">
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+          <h3 className="text-lg font-semibold text-theme-primary flex items-center">
             <MdSearch className="mr-2" />
-            Pomoćnik za traženje Manager ID-ja
+            {t("fplLive.searchHelper")}
           </h3>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-theme-muted hover:text-theme-primary"
           >
             {isOpen ? <MdClose size={20} /> : <MdHelp size={20} />}
           </button>
         </div>
 
         {/* Direct Team Name Search - Always Visible */}
-        <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-            🔍 Search by Team Name
+        <div className="mb-4 bg-theme-accent border border-theme-border rounded-lg p-4">
+          <h4 className="font-medium text-theme-primary mb-2">
+            🔍{t("fplLive.searchPlaceholder")}
           </h4>
-          <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
-            Enter your team name (e.g., &quot;FT Fantasy Team&quot;) to get
-            personalized search suggestions
+          <p className="text-sm text-theme-secondary mb-3">
+            {t("fplLive.searchDescription")}
           </p>
           <div className="flex gap-2">
             <input
@@ -80,15 +81,15 @@ export default function TeamSearchHelper({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="e.g., FT Warriors, My Team Name..."
-              className="flex-1 px-3 py-2 border border-blue-300 dark:border-blue-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder={t("fplLive.teamNamePlaceholder")}
+              className="flex-1 px-3 py-2 input-theme rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <button
               onClick={handleSearch}
               disabled={isSearching || !searchQuery.trim()}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm font-medium transition-colors"
             >
-              {isSearching ? "Searching..." : "Find Team"}
+              {isSearching ? t("fplLive.searching") : t("fplLive.findTeam")}
             </button>
           </div>
         </div>
@@ -96,15 +97,15 @@ export default function TeamSearchHelper({
         {/* Search Results - Always Visible if Available */}
         {searchResults && (
           <div className="mb-4 space-y-4">
-            <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+            <p className="text-sm text-theme-secondary font-medium">
               {searchResults.message}
             </p>
 
             {/* Search Suggestions with Direct Links */}
             {searchResults.searchSuggestions && (
               <div className="space-y-3">
-                <h5 className="font-semibold text-gray-900 dark:text-white text-sm">
-                  🔍 Try These Search Methods:
+                <h5 className="font-semibold text-theme-primary text-sm">
+                  🔍 {t("fplLive.tryTheseSearchMethods")}
                 </h5>
                 {searchResults.searchSuggestions.map(
                   (suggestion: any, index: number) => (
@@ -123,7 +124,7 @@ export default function TeamSearchHelper({
                             rel="noopener noreferrer"
                             className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors"
                           >
-                            Search Now
+                            {t("fplLive.searchNow")}
                           </a>
                         )}
                       </div>
@@ -147,7 +148,7 @@ export default function TeamSearchHelper({
             {searchResults.specificTips && (
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                 <h6 className="font-medium text-green-900 dark:text-green-100 mb-2">
-                  💡 Tips for &quot;{searchResults.query}&quot;:
+                  💡 {t("fplLive.tipsFor")} &quot;{searchResults.query}&quot;:
                 </h6>
                 <ul className="space-y-1 text-sm text-green-800 dark:text-green-200">
                   {searchResults.specificTips.map(
@@ -169,7 +170,8 @@ export default function TeamSearchHelper({
             <div className="flex items-center">
               <MdInfo className="text-green-600 dark:text-green-400 mr-2" />
               <span className="text-green-800 dark:text-green-200 text-sm">
-                Current Manager ID: <strong>{currentManagerId}</strong>
+                {t("fplLive.currentManagerId")}{" "}
+                <strong>{currentManagerId}</strong>
               </span>
             </div>
           </div>
@@ -180,32 +182,32 @@ export default function TeamSearchHelper({
             {/* Quick Manager ID Input */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                Quick Load by Manager ID
+                {t("fplLive.quickLoadByManagerId")}
               </h4>
               <form onSubmit={handleManagerIdSubmit} className="flex gap-2">
                 <input
                   type="number"
                   name="managerId"
                   placeholder="e.g., 133444"
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 input-theme rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
                 <button
                   type="submit"
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
                 >
-                  Load Team
+                  {t("fplLive.loadTeam")}
                 </button>
               </form>
             </div>
 
             {/* Additional Help Section */}
-            <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                📚 Additional Help & Methods
+            <div className="bg-theme-secondary border border-theme-border rounded-lg p-4">
+              <h4 className="font-medium text-theme-primary mb-2">
+                📚 {t("fplLive.additionalHelp")}
               </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                More traditional methods if team name search doesn&apos;t work
+              <p className="text-sm text-theme-muted mb-3">
+                {t("fplLive.moreTraditionalMethods")}
               </p>
 
               {/* Show Traditional Methods and Emergency Methods from Search Results */}
@@ -214,19 +216,19 @@ export default function TeamSearchHelper({
                   {/* Traditional Methods */}
                   {searchResults.traditionalMethods && (
                     <div className="space-y-3">
-                      <h5 className="font-semibold text-gray-900 dark:text-white text-sm">
-                        📋 Traditional Methods:
+                      <h5 className="font-semibold text-theme-primary text-sm">
+                        📋 {t("fplLive.traditionalMethods")}
                       </h5>
                       {searchResults.traditionalMethods.map(
                         (method: any, index: number) => (
                           <div
                             key={index}
-                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3"
+                            className="bg-theme-card border border-theme-border rounded-lg p-3"
                           >
-                            <h6 className="font-medium text-gray-900 dark:text-white mb-2">
+                            <h6 className="font-medium text-theme-primary mb-2">
                               {method.title}
                             </h6>
-                            <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                            <ol className="list-decimal list-inside space-y-1 text-sm text-theme-muted">
                               {method.steps?.map(
                                 (step: string, stepIndex: number) => (
                                   <li key={stepIndex}>{step}</li>
@@ -264,16 +266,13 @@ export default function TeamSearchHelper({
             {/* Quick Tips */}
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
               <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
-                Quick Tips
+                {t("fplLive.quickTips")}
               </h4>
               <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
-                <li>• Manager ID is a number (e.g., 133444)</li>
-                <li>• You can find it in your FPL profile URL</li>
-                <li>
-                  • It&apos;s visible in league standings when you click your
-                  team
-                </li>
-                <li>• Once loaded, your team will be saved for quick access</li>
+                <li>• {t("fplLive.managerIdIsNumber")}</li>
+                <li>• {t("fplLive.findInProfileURL")}</li>
+                <li>• {t("fplLive.visibleInLeagueStandings")}</li>
+                <li>• {t("fplLive.teamWillBeSaved")}</li>
               </ul>
             </div>
           </div>

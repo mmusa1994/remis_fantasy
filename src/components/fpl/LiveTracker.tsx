@@ -19,6 +19,7 @@ import {
 } from "react-icons/tb";
 import { RiShieldLine } from "react-icons/ri";
 import { SkeletonList } from "@/components/skeletons";
+import { useTranslation } from "react-i18next";
 
 interface Event {
   id: number;
@@ -40,7 +41,7 @@ interface Event {
   };
 }
 
-interface LiveTickerProps {
+interface LiveTrackerProps {
   gameweek: number;
   isPolling: boolean;
 }
@@ -63,32 +64,51 @@ const EVENT_ICONS = {
   clearances: <GiPlayerPrevious className="text-gray-600" />,
 };
 
-const EVENT_LABELS = {
-  goals_scored: "Goal",
-  assists: "Assist",
-  yellow_cards: "Yellow Card",
-  red_cards: "Red Card",
-  penalties_missed: "Penalty Missed",
-  penalties_saved: "Penalty Saved",
-  own_goals: "Own Goal",
-  saves: "Save",
-  clean_sheets: "Clean Sheet",
-  goals_conceded: "Goal Conceded",
-  bonus: "Bonus Points",
-  // Defensive actions
-  tackles: "Tackle",
-  interceptions: "Interception",
-  clearances: "Clearance",
-};
 
-const LiveTicker = React.memo(function LiveTicker({
+const LiveTracker = React.memo(function LiveTracker({
   gameweek,
   isPolling,
-}: LiveTickerProps) {
+}: LiveTrackerProps) {
+  const { t } = useTranslation();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastEventIdRef = useRef<number>(0);
+
+  const getEventLabel = (eventType: string) => {
+    switch (eventType) {
+      case 'goals_scored':
+        return t('fplLive.eventGoal');
+      case 'assists':
+        return t('fplLive.eventAssist');
+      case 'yellow_cards':
+        return t('fplLive.eventYellowCard');
+      case 'red_cards':
+        return t('fplLive.eventRedCard');
+      case 'penalties_missed':
+        return t('fplLive.eventPenaltyMissed');
+      case 'penalties_saved':
+        return t('fplLive.eventPenaltySaved');
+      case 'own_goals':
+        return t('fplLive.eventOwnGoal');
+      case 'saves':
+        return t('fplLive.eventSave');
+      case 'clean_sheets':
+        return t('fplLive.eventCleanSheet');
+      case 'goals_conceded':
+        return t('fplLive.eventGoalConceded');
+      case 'bonus':
+        return t('fplLive.eventBonusPoints');
+      case 'tackles':
+        return t('fplLive.eventTackle');
+      case 'interceptions':
+        return t('fplLive.eventInterception');
+      case 'clearances':
+        return t('fplLive.eventClearance');
+      default:
+        return eventType;
+    }
+  };
 
   const fetchEvents = useCallback(async () => {
     if (!gameweek) return;
@@ -157,22 +177,20 @@ const LiveTicker = React.memo(function LiveTicker({
     const diffMs = now.getTime() - eventTime.getTime();
     const diffMins = Math.floor(diffMs / 60000);
 
-    if (diffMins < 1) return "Just now";
-    if (diffMins === 1) return "1 min ago";
-    if (diffMins < 60) return `${diffMins} mins ago`;
+    if (diffMins < 1) return t('fplLive.liveTrackerJustNow');
+    if (diffMins === 1) return `1 ${t('fplLive.liveTrackerMinAgo')}`;
+    if (diffMins < 60) return `${diffMins} ${t('fplLive.liveTrackerMinsAgo')}`;
 
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours === 1) return "1 hour ago";
-    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffHours === 1) return `1 ${t('fplLive.liveTrackerHourAgo')}`;
+    if (diffHours < 24) return `${diffHours} ${t('fplLive.liveTrackerHoursAgo')}`;
 
     return eventTime.toLocaleDateString();
   };
 
   const getEventDescription = (event: Event) => {
     const playerName = event.player?.web_name || `Player ${event.player_id}`;
-    const eventLabel =
-      EVENT_LABELS[event.event_type as keyof typeof EVENT_LABELS] ||
-      event.event_type;
+    const eventLabel = getEventLabel(event.event_type);
     const team =
       event.side === "H"
         ? event.fixture?.team_h_data?.short_name
@@ -196,18 +214,18 @@ const LiveTicker = React.memo(function LiveTicker({
     );
 
     return (
-      <div className="flex items-start space-x-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+      <div className="flex items-start space-x-3 py-3 border-b border-theme-border last:border-b-0 hover:bg-theme-accent transition-colors">
         <div className="text-lg flex items-center">{icon}</div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+          <p className="text-sm font-medium text-theme-primary truncate">
             {getEventDescription(event)}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-theme-muted mt-1">
             {formatTimeAgo(event.occurred_at)}
           </p>
         </div>
         {event.delta_value > 1 && (
-          <div className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 px-2 py-1 rounded">
+          <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
             +{event.delta_value}
           </div>
         )}
@@ -216,11 +234,11 @@ const LiveTicker = React.memo(function LiveTicker({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="bg-theme-card rounded-lg shadow">
+      <div className="px-6 py-4 border-b border-theme-border">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            LIVE BPS Tracker
+          <h3 className="text-lg font-semibold text-theme-primary">
+            {t('fplLive.liveTrackerTitle')}
           </h3>
           <div className="flex items-center space-x-2">
             {loading && (
@@ -231,8 +249,8 @@ const LiveTicker = React.memo(function LiveTicker({
             ) : (
               <MdWifiOff className="w-4 h-4 text-gray-400" />
             )}
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {isPolling ? "Live — polling" : "Offline — not polling"}
+            <span className="text-xs text-theme-muted">
+              {isPolling ? t('fplLive.liveTrackerLivePolling') : t('fplLive.liveTrackerOfflinePolling')}
             </span>
           </div>
         </div>
@@ -261,11 +279,9 @@ const LiveTicker = React.memo(function LiveTicker({
             <div className="text-4xl mb-2 flex justify-center">
               <MdAnalytics className="text-gray-400" />
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
-              No events yet
-            </p>
+            <p className="text-theme-muted text-sm">No events yet</p>
             {!isPolling && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+              <p className="text-xs text-theme-muted mt-2">
                 Start live polling to see real-time updates
               </p>
             )}
@@ -274,8 +290,8 @@ const LiveTicker = React.memo(function LiveTicker({
       </div>
 
       {events.length > 0 && (
-        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-          <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+        <div className="px-6 py-3 bg-theme-secondary border-t border-theme-border">
+          <div className="flex justify-between items-center text-xs text-theme-muted">
             <span>
               {events.length} event{events.length !== 1 ? "s" : ""}
             </span>
@@ -287,4 +303,4 @@ const LiveTicker = React.memo(function LiveTicker({
   );
 });
 
-export default LiveTicker;
+export default LiveTracker;

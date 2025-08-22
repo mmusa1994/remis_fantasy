@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MdDownload, MdPlayArrow, MdStop } from "react-icons/md";
+import { useTranslation } from "react-i18next";
 
 interface ControlsBarProps {
   managerId: number | null;
@@ -26,6 +27,7 @@ export default function ControlsBar({
   onStopPolling,
   loading,
 }: ControlsBarProps) {
+  const { t } = useTranslation();
   const [localManagerId, setLocalManagerId] = useState(
     managerId?.toString() || ""
   );
@@ -66,15 +68,27 @@ export default function ControlsBar({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-      <div className="flex flex-wrap items-center gap-4">
+    <div className="bg-gradient-to-r from-blue-500/90 to-purple-600/90 rounded-xl shadow-lg p-4 md:p-6 border border-blue-300/30 backdrop-blur-sm">
+      {/* Elegant header */}
+      <div className="text-center mb-4">
+        <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
+          {t("fplLive.enterManagerId")}
+        </h2>
+        <p className="text-blue-100 text-sm">
+          {managerId
+            ? `${t("fplLive.currentManagerId")} ${managerId}`
+            : t("fplLive.pleaseEnterManagerId")}
+        </p>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-center bg-white/10 rounded-lg p-3 md:p-4 backdrop-blur">
         {/* Manager ID Input */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col md:flex-row gap-2 items-center justify-center">
           <label
             htmlFor="manager-id-input"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap"
+            className="text-sm font-medium text-white/90 text-center w-full"
           >
-            Manager ID:
+            {t("fplLive.managerId")}
           </label>
           <input
             id="manager-id-input"
@@ -82,19 +96,19 @@ export default function ControlsBar({
             value={localManagerId}
             onChange={(e) => handleManagerIdChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="133444"
+            className="w-full px-3 py-2 text-center border-2 border-white/30 bg-white/20 text-white rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 placeholder-white/60 backdrop-blur transition-all duration-200"
+            placeholder="133790"
             title="Press Enter to load team"
           />
         </div>
 
         {/* Gameweek Input */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col md:flex-row gap-2 items-center justify-center">
           <label
             htmlFor="gameweek-input"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap"
+            className="text-sm font-medium text-white/90 text-center w-full"
           >
-            GW:
+            {t("fplLive.gameweek")}
           </label>
           <input
             id="gameweek-input"
@@ -107,7 +121,7 @@ export default function ControlsBar({
             value={localGameweek}
             onChange={(e) => handleGameweekChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-16 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 text-center border-2 border-white/30 bg-white/20 text-white rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 backdrop-blur transition-all duration-200"
           />
         </div>
 
@@ -122,17 +136,17 @@ export default function ControlsBar({
             parseInt(localGameweek, 10) < 1 ||
             parseInt(localGameweek, 10) > 38
           }
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+          className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
         >
           {loading ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Loading...
+              <span className="text-sm">{t("common.loading")}</span>
             </>
           ) : (
             <>
-              <MdDownload className="text-base" />
-              Load Team
+              <MdDownload className="text-lg" />
+              <span className="text-sm">{t("fplLive.loadTeam")}</span>
             </>
           )}
         </button>
@@ -142,47 +156,51 @@ export default function ControlsBar({
           type="button"
           onClick={isPolling ? onStopPolling : onStartPolling}
           disabled={loading}
-          className={`flex items-center gap-1 text-sm font-medium py-1.5 px-3 rounded transition-colors duration-200 ${
+          className={`flex items-center justify-center gap-2 font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 text-white ${
             isPolling
-              ? "bg-red-600 hover:bg-red-700 disabled:bg-red-300"
-              : "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300"
-          } text-white`}
+              ? "bg-red-600 hover:bg-red-700 disabled:bg-gray-500"
+              : "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500"
+          }`}
         >
           {isPolling ? (
             <>
-              <MdStop className="text-sm" />
-              Stop Live
+              <MdStop className="text-lg" />
+              <span className="text-sm">{t("fplLive.stopLive")}</span>
             </>
           ) : (
             <>
-              <MdPlayArrow className="text-sm" />
-              Start Live
+              <MdPlayArrow className="text-lg" />
+              <span className="text-sm">{t("fplLive.startLive")}</span>
             </>
           )}
         </button>
 
         {/* Status Indicator */}
         <div
-          className="flex items-center gap-2"
+          className="md:col-span-4 flex items-center justify-center gap-2 mt-2 md:mt-0"
           aria-live="polite"
           aria-atomic="true"
         >
           <div
-            className={`w-2 h-2 rounded-full ${
-              isPolling ? "bg-green-500 animate-pulse" : "bg-gray-400"
+            className={`w-3 h-3 rounded-full ${
+              isPolling ? "bg-green-400" : "bg-gray-400"
             }`}
             aria-hidden="true"
           ></div>
-          <span className="text-xs text-gray-600 dark:text-gray-400">
-            {isPolling ? "Live — polling active" : "Offline — not polling"}
+          <span
+            className={`text-sm ${
+              isPolling ? "text-green-200" : "text-white/70"
+            }`}
+          >
+            {isPolling ? t("fplLive.livePollingActive") : t("fplLive.offline")}
           </span>
         </div>
       </div>
 
       {isPolling && (
-        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded">
-          <p className="text-xs text-yellow-800 dark:text-yellow-200">
-            🔴 Live polling active - updating every 15 seconds
+        <div className="mt-4 p-3 bg-green-500/20 border border-green-400/30 rounded-lg backdrop-blur">
+          <p className="text-center text-sm font-medium text-green-200">
+            🔴 {t("fplLive.livePollingActive")}
           </p>
         </div>
       )}

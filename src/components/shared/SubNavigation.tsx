@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 // Using inline SVG instead of heroicons to avoid dependency
 const ChevronDownIcon = ({ className }: { className?: string }) => (
   <svg
@@ -41,6 +42,7 @@ export default function SubNavigation({
   baseColor = "orange",
   leagueBasePath,
 }: SubNavigationProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const { theme } = useTheme();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -64,7 +66,7 @@ export default function SubNavigation({
 
   // Add "Početna" item at the beginning if leagueBasePath is provided
   const allItems = leagueBasePath
-    ? [{ name: "Početna", href: leagueBasePath }, ...items]
+    ? [{ name: t("nav.home"), href: leagueBasePath }, ...items]
     : items;
 
   const colorConfig = {
@@ -273,7 +275,7 @@ export default function SubNavigation({
                       : `text-gray-600 ${colors.hover.light}`
                   }`}
                 >
-                  Više
+                  More
                   <ChevronDownIcon
                     className={`ml-1 h-3 w-3 transition-transform ${
                       isDropdownOpen ? "rotate-180" : ""

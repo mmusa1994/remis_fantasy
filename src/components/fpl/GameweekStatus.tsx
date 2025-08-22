@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslation } from "react-i18next";
 import type { GameweekStatus } from "@/lib/fpl-api";
 import {
   MdTrendingUp,
@@ -31,14 +32,15 @@ const GameweekStatus = React.memo(function GameweekStatus({
   gameweek,
   loading = false,
 }: GameweekStatusProps) {
+  const { t } = useTranslation();
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-          Status vašeg Gameweek {gameweek}
+      <div className="bg-theme-card rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4 text-theme-primary">
+          {t("fplLive.gameweekStatusTitle", { gw: gameweek || 1 })}
         </h3>
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          Učitavam status gameweek-a...
+        <div className="text-center text-theme-muted">
+          {t("fplLive.loadingGameweekStatus")}
         </div>
       </div>
     );
@@ -46,12 +48,12 @@ const GameweekStatus = React.memo(function GameweekStatus({
 
   if (!gameweekStatus) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-          Status vašeg Gameweek {gameweek}
+      <div className="bg-theme-card rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4 text-theme-primary">
+          {t("fplLive.gameweekStatusTitle", { gw: gameweek || 1 })}
         </h3>
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          Učitajte tim da vidite status gameweek-a
+        <div className="text-center text-theme-muted">
+          {t("fplLive.loadTeamToSeeGameweekStatus")}
         </div>
       </div>
     );
@@ -74,15 +76,15 @@ const GameweekStatus = React.memo(function GameweekStatus({
   ) => {
     switch (direction) {
       case "green":
-        return `Zelena strelica sa marginom od ${Math.abs(
-          rankChange
-        ).toLocaleString()} bodova 👏`;
+        return t("fplLive.greenArrowWithMargin", {
+          points: Math.abs(rankChange).toLocaleString(),
+        });
       case "red":
-        return `Crvena strelica sa marginom od ${Math.abs(
-          rankChange
-        ).toLocaleString()} bodova 😔`;
+        return t("fplLive.redArrowWithMargin", {
+          points: Math.abs(rankChange).toLocaleString(),
+        });
       default:
-        return "Nema promjene ranga u ovom gameweek-u";
+        return t("fplLive.noRankChangeThisGameweek");
     }
   };
 
@@ -99,27 +101,27 @@ const GameweekStatus = React.memo(function GameweekStatus({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-6 text-gray-900 dark:text-white">
-        Status vašeg Gameweek {gameweek}
+    <div className="bg-theme-card rounded-lg shadow p-6">
+      <h3 className="text-lg font-semibold mb-6 text-theme-primary">
+        {t("fplLive.gameweekStatusTitle", { gw: gameweek || 1 })}
       </h3>
 
       {/* Arrow Status */}
       <div className="mb-6">
         <div className="flex items-center mb-2">
-          <span className="text-sm text-gray-600 dark:text-gray-400 mr-2">
-            Nalazite se na
+          <span className="text-sm text-theme-muted mr-2">
+            {t("fplLive.youAreOn")}
           </span>
           {getArrowIcon(gameweekStatus.arrow_direction)}
-          <span className="ml-2 font-semibold text-gray-900 dark:text-white">
+          <span className="ml-2 font-semibold text-theme-primary">
             {gameweekStatus.arrow_direction === "green"
-              ? "Zelenoj strelici"
+              ? t("fplLive.greenArrow")
               : gameweekStatus.arrow_direction === "red"
-              ? "Crvenoj strelici"
-              : "Bez promjene"}
+              ? t("fplLive.redArrow")
+              : t("fplLive.noChange")}
           </span>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-theme-muted">
           {getArrowText(
             gameweekStatus.arrow_direction,
             gameweekStatus.rank_change
@@ -128,27 +130,29 @@ const GameweekStatus = React.memo(function GameweekStatus({
       </div>
 
       {/* Points Breakdown */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex-1 text-center p-4 bg-theme-accent rounded-lg">
           <div className="flex items-center justify-center mb-2">
             <MdScoreboard className="text-blue-600 text-2xl mr-2" />
-            <span className="font-medium text-gray-900 dark:text-white">
-              Gameweek bodovi
+            <span className="font-medium text-theme-primary">
+              {t("fplLive.gameweekPoints")}
             </span>
           </div>
           <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-            {gameweekStatus.gameweek_points} points
+            {gameweekStatus.gameweek_points} {t("fplLive.points")}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Prosjecan rezultat: {gameweekStatus.safety_score} bodova
+          <div className="text-sm text-theme-muted mt-1">
+            {t("fplLive.averageResult", {
+              points: gameweekStatus.safety_score,
+            })}
           </div>
         </div>
 
         <div
-          className={`text-center p-4 rounded-lg ${
+          className={`flex-1 text-center p-4 rounded-lg ${
             gameweekStatus.gameweek_points >= gameweekStatus.safety_score
-              ? "bg-green-50 dark:bg-green-900/20"
-              : "bg-orange-50 dark:bg-orange-900/20"
+              ? "bg-theme-accent"
+              : "bg-theme-accent"
           }`}
         >
           <div className="flex items-center justify-center mb-2">
@@ -159,8 +163,8 @@ const GameweekStatus = React.memo(function GameweekStatus({
                   : "text-orange-600"
               }`}
             />
-            <span className="font-medium text-gray-900 dark:text-white">
-              Performanse
+            <span className="font-medium text-theme-primary">
+              {t("fplLive.performance")}
             </span>
           </div>
           <div
@@ -171,11 +175,11 @@ const GameweekStatus = React.memo(function GameweekStatus({
             }`}
           >
             {gameweekStatus.gameweek_points >= gameweekStatus.safety_score
-              ? "Iznad"
-              : "Ispod"}
+              ? t("fplLive.above")
+              : t("fplLive.below")}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Sigurnosnog praga
+          <div className="text-sm text-theme-muted mt-1">
+            {t("fplLive.safetyThreshold")}
           </div>
         </div>
       </div>
@@ -183,30 +187,29 @@ const GameweekStatus = React.memo(function GameweekStatus({
       {/* Differentials */}
       {gameweekStatus.differentials.length > 0 && (
         <div className="mb-6">
-          <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+          <h4 className="font-medium text-theme-primary mb-3 flex items-center">
             <MdCasino className="text-purple-600 text-xl mr-2" />
-            Diferencijali
+            {t("fplLive.differentials")}
           </h4>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            % predstavlja uticaj. Primjer uticaja: +80% znači da za svaki 1 bod,
-            dobijate 0.8 bodova
+          <div className="text-xs text-theme-muted mb-3">
+            {t("fplLive.differentialsExplanation")}
           </div>
           <div className="space-y-2">
             {gameweekStatus.differentials.map((differential) => (
               <div
                 key={differential.player_id}
-                className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/10 rounded-lg"
+                className="flex items-center justify-between p-3 bg-theme-accent rounded-lg"
               >
                 <div className="flex items-center">
                   <div className="w-6 h-6 bg-blue-600 rounded-sm mr-3 text-xs text-white flex items-center justify-center">
                     <MdSports className="text-white text-sm" />
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-white">
+                    <div className="font-medium text-theme-primary">
                       {differential.web_name}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {differential.points} bodova
+                    <div className="text-sm text-theme-muted">
+                      {differential.points} {t("fplLive.points")}
                     </div>
                   </div>
                 </div>
@@ -232,9 +235,9 @@ const GameweekStatus = React.memo(function GameweekStatus({
       {/* Threats */}
       {gameweekStatus.threats.length > 0 && (
         <div className="mb-6">
-          <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+          <h4 className="font-medium text-theme-primary mb-3 flex items-center">
             <MdWarning className="text-red-500 text-xl mr-2" />
-            Igrači koji ne čine razliku
+            {t("fplLive.playersNotMakingDifference")}
           </h4>
           <div className="space-y-2">
             {gameweekStatus.threats.map((threat) => (
@@ -247,11 +250,11 @@ const GameweekStatus = React.memo(function GameweekStatus({
                     <MdSports className="text-white text-sm" />
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-white">
+                    <div className="font-medium text-theme-primary">
                       {threat.web_name}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {threat.points} bodova
+                    <div className="text-sm text-theme-muted">
+                      {threat.points} {t("fplLive.points")}
                     </div>
                   </div>
                 </div>
@@ -277,26 +280,27 @@ const GameweekStatus = React.memo(function GameweekStatus({
       {/* Captain Analysis */}
       {gameweekStatus.captain_analysis && (
         <div className="mb-6">
-          <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+          <h4 className="font-medium text-theme-primary mb-3 flex items-center">
             <MdStars className="text-yellow-500 text-xl mr-2" />
-            Kapiten
+            {t("fplLive.captainLong")}
           </h4>
-          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
+          <div className="p-4 bg-theme-accent rounded-lg">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-gray-900 dark:text-white">
-                  {gameweekStatus.captain_analysis.web_name} završio sa{" "}
-                  {gameweekStatus.captain_analysis.points} bodova
+                <div className="font-medium text-theme-primary">
+                  {gameweekStatus.captain_analysis.web_name}{" "}
+                  {t("fplLive.finishedWith")}{" "}
+                  {gameweekStatus.captain_analysis.points} {t("fplLive.points")}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {Math.abs(
-                    gameweekStatus.captain_analysis.points_above_average
-                  ).toFixed(1)}{" "}
-                  bodova{" "}
-                  {gameweekStatus.captain_analysis.is_above_average
-                    ? "više"
-                    : "manje"}{" "}
-                  od prosječnog elite kapitena
+                <div className="text-sm text-theme-muted mt-1">
+                  {t("fplLive.pointsAboveAverage", {
+                    points: Math.abs(
+                      gameweekStatus.captain_analysis.points_above_average
+                    ).toFixed(1),
+                    direction: gameweekStatus.captain_analysis.is_above_average
+                      ? t("fplLive.higher")
+                      : t("fplLive.lower"),
+                  })}
                 </div>
               </div>
               <div className="text-2xl">
@@ -313,15 +317,15 @@ const GameweekStatus = React.memo(function GameweekStatus({
 
       {/* Clone Information */}
       <div>
-        <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+        <h4 className="font-medium text-theme-primary mb-3 flex items-center">
           <MdGroups className="text-blue-500 text-xl mr-2" />
-          Vaši klonovi u Top 1 milion
+          {t("fplLive.yourClonesInTop1Million")}
           <button className="ml-2 text-xs text-blue-600 dark:text-blue-400 hover:underline">
-            Sakrij info o klonovima
+            {t("fplLive.hideClonesInfo")}
           </button>
         </h4>
-        <div className="text-center text-gray-500 dark:text-gray-400 py-4">
-          {gameweekStatus.clone_count} Igrača
+        <div className="text-center text-theme-muted py-4">
+          {gameweekStatus.clone_count} {t("fplLive.players")}
         </div>
       </div>
     </div>

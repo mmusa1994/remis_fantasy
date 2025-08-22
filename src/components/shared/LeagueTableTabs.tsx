@@ -6,6 +6,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import ReusableLeagueTable from "./ReusableLeagueTable";
 import { getLeagueDataForReusableTable } from "@/data/leagueTableData";
 import { SkeletonTable } from "@/components/skeletons";
+import { useTranslation } from "react-i18next";
 
 interface LeaguePlayer {
   id: string;
@@ -28,15 +29,16 @@ interface LeagueTables {
   freeLeague: LeaguePlayer[];
 }
 
-const tabs = [
-  { id: "premium", label: "Premium Liga", color: "yellow" },
-  { id: "standard", label: "Standard Liga", color: "blue" },
-  { id: "h2h", label: "H2H Liga", color: "red" },
-  { id: "h2h2", label: "H2H2 Liga", color: "red" },
-  { id: "free", label: "Free Liga", color: "purple" },
-];
-
 export default function LeagueTableTabs() {
+  const { t } = useTranslation();
+
+  const tabs = [
+    { id: "premium", label: t("fplLive.premiumLeague"), color: "yellow" },
+    { id: "standard", label: t("fplLive.standardLeague"), color: "blue" },
+    { id: "h2h", label: t("fplLive.h2hLeague"), color: "red" },
+    { id: "h2h2", label: t("fplLive.h2h2League"), color: "red" },
+    { id: "free", label: t("fplLive.freeLeague"), color: "purple" },
+  ];
   const [activeTab, setActiveTab] = useState("premium");
   const [tables, setTables] = useState<LeagueTables | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,7 +90,7 @@ export default function LeagueTableTabs() {
         setTables(data.tables);
       } catch (error) {
         console.error("Error loading tables:", error);
-        setError("Greška pri učitavanju tabela");
+        setError(t("fplLive.leagueTableErrorLoading"));
       } finally {
         setLoading(false);
       }

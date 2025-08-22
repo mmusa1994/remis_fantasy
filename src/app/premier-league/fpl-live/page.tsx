@@ -8,12 +8,13 @@ import GameweekStatus from "@/components/fpl/GameweekStatus";
 import SquadTable from "@/components/fpl/SquadTable";
 import ScoreboardGrid from "@/components/fpl/ScoreboardGrid";
 import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
-import LiveTicker from "@/components/fpl/LiveTicker";
+import LiveTracker from "@/components/fpl/LiveTracker";
 import LeagueTables from "@/components/fpl/LeagueTables";
 import { MdCancel, MdInfo, MdSettings, MdExpandMore } from "react-icons/md";
 import Image from "next/image";
 import TeamSearchHelper from "@/components/fpl/TeamSearchHelper";
 import type { GameweekStatus as GameweekStatusType } from "@/lib/fpl-api";
+import { useTranslation } from "react-i18next";
 
 interface FPLData {
   manager?: any;
@@ -29,6 +30,7 @@ interface FPLData {
 }
 
 export default function FPLLivePage() {
+  const { t } = useTranslation();
   const [managerId, setManagerId] = useState<number | null>(null);
   const [gameweek, setGameweek] = useState(1);
   const [isPolling, setIsPolling] = useState(false);
@@ -84,7 +86,7 @@ export default function FPLLivePage() {
             const parsedData = JSON.parse(savedData);
             setData(parsedData);
             setLastUpdated(savedLastUpdated);
-            showSuccess("Restored cached team data");
+            showSuccess(t("fplLive.restoredCachedData"));
 
             // Auto-load leagues if we have cached team data
             if (parsedData.manager && savedManagerId) {
@@ -98,6 +100,7 @@ export default function FPLLivePage() {
           // Clear old cached data
           localStorage.removeItem("fpl-team-data");
           localStorage.removeItem("fpl-last-updated");
+          
         }
       }
     } catch (error) {
@@ -105,6 +108,7 @@ export default function FPLLivePage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const showError = (message: string) => {
     setError(message);
@@ -155,14 +159,14 @@ export default function FPLLivePage() {
           saveToLocalStorage("fpl-last-updated", timestamp);
 
           setTeamDataLoading(false);
-          showSuccess("Full team data loaded");
+          showSuccess(t("fplLive.fullTeamDataLoaded"));
         }
       }
     } catch (err) {
       console.warn("Failed to load full team data:", err);
       setTeamDataLoading(false);
     }
-  }, [managerId, gameweek, saveToLocalStorage]);
+  }, [managerId, gameweek, saveToLocalStorage, t]);
 
   const loadLeaguesData = useCallback(async () => {
     if (!managerId) return;
@@ -205,7 +209,7 @@ export default function FPLLivePage() {
 
   const loadManagerInfo = useCallback(async () => {
     if (!managerId) {
-      showError("Please enter a Manager ID first");
+      showError(t("fplLive.pleaseEnterManagerId"));
       return;
     }
 
@@ -244,7 +248,7 @@ export default function FPLLivePage() {
           saveToLocalStorage("fpl-team-data", result.data);
           saveToLocalStorage("fpl-last-updated", timestamp);
 
-          showSuccess("Manager info loaded");
+          showSuccess(t("fplLive.managerInfoLoaded"));
           setLoading(false);
 
           // Now load full team data in background
@@ -296,12 +300,12 @@ export default function FPLLivePage() {
 
   const startPolling = useCallback(() => {
     if (!managerId) {
-      showError("Please enter a Manager ID first");
+      showError(t("fplLive.pleaseEnterManagerId"));
       return;
     }
 
     if (!data.manager) {
-      showError("Load a team first");
+      showError(t("fplLive.loadTeamFirst"));
       return;
     }
 
@@ -339,7 +343,7 @@ export default function FPLLivePage() {
     }, 15000);
 
     setPollingInterval(interval);
-    showSuccess("Live polling started (15s interval)");
+    showSuccess(t("fplLive.livePollingStarted"));
   }, [managerId, data.manager, gameweek, loadTeam, loadGameweekStatus]);
 
   const stopPolling = useCallback(() => {
@@ -348,8 +352,26 @@ export default function FPLLivePage() {
       setPollingInterval(null);
     }
     setIsPolling(false);
-    showSuccess("Live polling stopped");
+    showSuccess(t("fplLive.livePollingStopped"));
   }, [pollingInterval]);
+
+  // Auto-load team data if manager ID is available but no team data is loaded
+  useEffect(() => {
+    const autoLoadTeam = async () => {
+      if (managerId && !data && !loading) {
+        console.log("Auto-loading team data for manager ID:", managerId);
+        try {
+          await loadFullTeamData();
+        } catch (error) {
+          console.warn("Auto-load failed:", error);
+        }
+      }
+    };
+
+    // Small delay to ensure all state is properly set
+    const timeoutId = setTimeout(autoLoadTeam, 500);
+    return () => clearTimeout(timeoutId);
+  }, [managerId, data, loading, loadFullTeamData]);
 
   useEffect(() => {
     return () => {
@@ -366,61 +388,60 @@ export default function FPLLivePage() {
     if (settings.default_gw !== gameweek) {
       setGameweek(settings.default_gw);
     }
-    showSuccess("Settings saved successfully");
+    showSuccess(t("fplLive.settingsSavedSuccessfully"));
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          FPL Live Dashboard
+          {t("fplLive.title")}
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Real-time Fantasy Premier League praćenje sa live bonus predviđanjima
+          {t("fplLive.subtitle")}
         </p>
       </div>
 
       {/* Enhanced Info Accordions - Moved to Top */}
-      <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="mb-6 flex flex-col lg:flex-row gap-4">
         {/* How to Use - Enhanced Version */}
-        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-lg overflow-hidden">
+        <div className="bg-theme-accent border border-theme-border rounded-lg overflow-hidden">
           <details className="group">
-            <summary className="flex items-center gap-3 p-4 text-sm font-medium text-blue-800 dark:text-blue-200 cursor-pointer hover:bg-blue-100/50 dark:hover:bg-blue-800/30 transition-colors">
+            <summary className="flex items-center gap-3 p-4 text-sm font-medium text-theme-secondary cursor-pointer hover:bg-theme-secondary transition-colors">
               <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-lg flex items-center justify-center">
                 <MdInfo className="text-white w-4 h-4" />
               </div>
-              <span className="font-semibold">Kako koristiti FPL Live</span>
-              <MdExpandMore className="ml-auto text-blue-600 dark:text-blue-400 group-open:rotate-180 transition-transform duration-200 w-5 h-5" />
+              <span className="font-semibold">{t("fplLive.howToUse")}</span>
+              <MdExpandMore className="ml-auto text-theme-primary group-open:rotate-180 transition-transform duration-200 w-5 h-5" />
             </summary>
 
-            <div className="px-4 pb-4 space-y-4 text-sm text-blue-800 dark:text-blue-200 bg-white/50 dark:bg-blue-900/20">
+            <div className="px-4 pb-4 space-y-4 text-sm text-theme-secondary bg-theme-card">
               {/* Manager ID - Detailed - Mobile Optimized */}
-              <div className="p-3 bg-white dark:bg-blue-800/50 rounded-lg border border-blue-200 dark:border-blue-700">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2 text-sm md:text-base">
-                  📋 Kako pronaći Manager ID
+              <div className="p-3 bg-theme-card rounded-lg border border-theme-border">
+                <h4 className="font-semibold text-theme-primary mb-3 flex items-center gap-2 text-sm md:text-base">
+                  📋 {t("fplLive.howToFindManagerIdDetailed")}
                 </h4>
                 <div className="space-y-3 text-xs md:text-sm">
-                  <ol className="list-decimal list-inside space-y-2 text-blue-700 dark:text-blue-300 leading-relaxed">
+                  <ol className="list-decimal list-inside space-y-2 text-theme-secondary leading-relaxed">
                     <li className="break-words">
-                      Otvorite web browser (Chrome, Firefox, Safari)
+                      {t("fplLive.openWebBrowser")}
                     </li>
                     <li className="break-words">
-                      Idite na{" "}
+                      {t("fplLive.goToFPLWebsite")}{" "}
                       <strong className="break-all">
                         fantasy.premierleague.com
                       </strong>
                     </li>
                     <li className="break-words">
-                      Ulogujte se sa vašim Fantasy Premier League nalogom
+                      {t("fplLive.loginToAccount")}
                     </li>
                     <li className="break-words">
-                      Kliknite na <strong>&quot;Points&quot;</strong> tab u
-                      glavnoj navigaciji
+                      {t("fplLive.clickPointsTab")}
                     </li>
                     <li className="break-words">
-                      Kopirajte brojeve iz URL-a{" "}
+                      {t("fplLive.copyNumbersFromURL")}{" "}
                       <span className="text-xs">
-                        (npr. entry/133444/event/1)
+                        (e.g. entry/133444/event/1)
                       </span>
                     </li>
                   </ol>
@@ -428,13 +449,15 @@ export default function FPLLivePage() {
                   <div className="mt-4 p-3 bg-blue-100 dark:bg-blue-800 rounded border">
                     <div className="flex items-start gap-2 text-xs md:text-sm text-blue-700 dark:text-blue-300 mb-2">
                       <span className="flex-shrink-0">💡</span>
-                      <span className="font-medium">Primer URL-a:</span>
+                      <span className="font-medium">
+                        {t("fplLive.exampleURL")}
+                      </span>
                     </div>
                     <div className="bg-blue-200 dark:bg-blue-700 text-blue-900 dark:text-blue-100 p-2 rounded font-mono text-xs break-all overflow-hidden">
                       fantasy.premierleague.com/entry/133444/event/1
                     </div>
                     <p className="text-xs md:text-sm text-blue-600 dark:text-blue-400 mt-2 text-center">
-                      Vaš Manager ID je:{" "}
+                      {t("fplLive.yourManagerIdIs2")}{" "}
                       <strong className="text-base md:text-lg">133444</strong>
                     </p>
 
@@ -449,8 +472,7 @@ export default function FPLLivePage() {
                         />
                       </div>
                       <p className="text-xs text-center text-blue-600 dark:text-blue-400 mt-2 italic leading-relaxed px-2">
-                        Ovako izgleda URL u browser-u kada kliknete na
-                        &quot;Points&quot;
+                        {t("fplLive.browserURLExample")}
                       </p>
                     </div>
                   </div>
@@ -460,30 +482,21 @@ export default function FPLLivePage() {
               {/* Usage Steps - Detailed - Mobile Optimized */}
               <div className="space-y-3">
                 <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2 text-sm md:text-base">
-                  🎯 Detaljni koraci za korišćenje
+                  🎯 {t("fplLive.detailedUsageSteps")}
                 </h4>
                 <ol className="list-decimal list-inside space-y-3 text-blue-700 dark:text-blue-300 text-xs md:text-sm leading-relaxed">
                   <li className="break-words">
-                    <strong>Unesite Manager ID</strong>{" "}
-                    <span className="text-xs">(npr. 133444 )</span> i odaberite
-                    trenutni Gameweek
+                    {t("fplLive.enterManagerIdStep")}
                   </li>
                   <li className="break-words">
-                    <strong>Kliknite &quot;Load Team&quot;</strong> da učitate
-                    svoj tim i osnovne statistike
+                    {t("fplLive.clickLoadTeamStep")}
                   </li>
                   <li className="break-words">
-                    <strong>&quot;Fetch Now&quot;</strong> za manuelno
-                    ažuriranje ili <strong>&quot;Start Live&quot;</strong> za
-                    automatsko praćenje
+                    {t("fplLive.fetchNowOrStartLive")}
                   </li>
+                  <li className="break-words">{t("fplLive.followLiveBPS")}</li>
                   <li className="break-words">
-                    Pratite <strong>LIVE BPS Tracker</strong> za golove, asiste
-                    i kartone u real-time
-                  </li>
-                  <li className="break-words">
-                    <strong>Bonus poeni</strong> se predviđaju u realnom vremenu
-                    dok ne budu finalni post-match
+                    {t("fplLive.bonusPointsPredicted")}
                   </li>
                 </ol>
               </div>
@@ -493,7 +506,7 @@ export default function FPLLivePage() {
       </div>
 
       {error && (
-        <div className="mb-6 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg">
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
           <div className="flex">
             <div className="flex-shrink-0">
               <MdCancel className="text-red-500 w-5 h-5" />
@@ -529,7 +542,7 @@ export default function FPLLivePage() {
       </div>
 
       {/* Manager Overview + Squad alongside League Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2 space-y-6">
           {managerId && data.manager && (
             <>
@@ -550,14 +563,14 @@ export default function FPLLivePage() {
               {teamDataLoading ? (
                 <div className="space-y-6">
                   {/* Squad Skeleton */}
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                      <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-24 animate-pulse"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-48 mt-2 animate-pulse"></div>
+                  <div className="bg-theme-card rounded-lg shadow overflow-hidden">
+                    <div className="px-6 py-4 border-b border-theme-border">
+                      <div className="h-6 bg-theme-accent rounded w-24 animate-pulse"></div>
+                      <div className="h-4 bg-theme-accent rounded w-48 mt-2 animate-pulse"></div>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-700">
+                        <thead className="bg-theme-secondary">
                           <tr>
                             {Array.from({ length: 14 }, (_, i) => (
                               <th key={i} className="px-3 py-3">
@@ -584,7 +597,7 @@ export default function FPLLivePage() {
                   {/* Scoreboard Skeleton */}
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-32 mb-4 animate-pulse"></div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
                       {Array.from({ length: 6 }, (_, i) => (
                         <div
                           key={i}
@@ -624,20 +637,20 @@ export default function FPLLivePage() {
           )}
         </div>
         <div className="space-y-6">
-          <LiveTicker gameweek={gameweek} isPolling={isPolling} />
+          <LiveTracker gameweek={gameweek} isPolling={isPolling} />
           {leaguesLoading ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-20 animate-pulse"></div>
+            <div className="bg-theme-card rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-theme-border">
+                <div className="h-6 bg-theme-accent rounded w-20 animate-pulse"></div>
               </div>
               <div className="p-6 space-y-3">
                 {Array.from({ length: 3 }, (_, i) => (
                   <div
                     key={i}
-                    className="border dark:border-gray-700 rounded-lg overflow-hidden"
+                    className="border border-theme-border rounded-lg overflow-hidden"
                   >
-                    <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b dark:border-gray-600">
-                      <div className="h-5 bg-gray-200 dark:bg-gray-500 rounded w-32 animate-pulse"></div>
+                    <div className="bg-theme-secondary px-4 py-3 border-b border-theme-border">
+                      <div className="h-5 bg-theme-accent rounded w-32 animate-pulse"></div>
                     </div>
                   </div>
                 ))}
@@ -666,55 +679,53 @@ export default function FPLLivePage() {
         <SettingsCard onSettingsSaved={handleSettingsSaved} />
       </div>
       {/* Settings - Enhanced Version */}
-      <div className="mt-5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-lg overflow-hidden">
+      <div className="mt-5 bg-theme-accent border border-theme-border rounded-lg overflow-hidden">
         <details className="group">
-          <summary className="flex items-center gap-3 p-4 text-sm font-medium text-yellow-800 dark:text-yellow-200 cursor-pointer hover:bg-yellow-100/50 dark:hover:bg-yellow-800/30 transition-colors">
+          <summary className="flex items-center gap-3 p-4 text-sm font-medium text-theme-secondary cursor-pointer hover:bg-theme-secondary transition-colors">
             <div className="w-8 h-8 bg-yellow-500 dark:bg-yellow-600 rounded-lg flex items-center justify-center">
               <MdSettings className="text-white w-4 h-4" />
             </div>
-            <span className="font-semibold">Settings objašnjenja</span>
-            <MdExpandMore className="ml-auto text-yellow-600 dark:text-yellow-400 group-open:rotate-180 transition-transform duration-200 w-5 h-5" />
+            <span className="font-semibold">
+              {t("fplLive.settingsExplanation")}
+            </span>
+            <MdExpandMore className="ml-auto text-theme-primary group-open:rotate-180 transition-transform duration-200 w-5 h-5" />
           </summary>
 
-          <div className="px-4 pb-4 space-y-3 text-sm text-yellow-800 dark:text-yellow-200 bg-white/50 dark:bg-yellow-900/20">
+          <div className="px-4 pb-4 space-y-3 text-sm text-theme-secondary bg-theme-card">
             <div className="space-y-3">
-              <div className="p-2 bg-white dark:bg-yellow-800/30 rounded border border-yellow-200 dark:border-yellow-700">
-                <p className="font-semibold text-yellow-900 dark:text-yellow-100">
-                  FPL Proxy URL:
+              <div className="p-2 bg-theme-card rounded border border-theme-border">
+                <p className="font-semibold text-theme-primary">
+                  {t("fplLive.fplProxyURL")}
                 </p>
-                <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                  Opcionalno polje za zaobilaženje CORS problema. Koristite samo
-                  ako imate problema sa pristupom FPL API-ju.
-                </p>
-              </div>
-
-              <div className="p-2 bg-white dark:bg-yellow-800/30 rounded border border-yellow-200 dark:border-yellow-700">
-                <p className="font-semibold text-yellow-900 dark:text-yellow-100">
-                  CRON Secret:
-                </p>
-                <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                  Sigurnosni ključ za server-side automatizaciju i scheduled
-                  taskove. Potreban za backend operacije.
+                <p className="text-theme-secondary text-sm">
+                  {t("fplLive.fplProxyDescription")}
                 </p>
               </div>
 
-              <div className="p-2 bg-white dark:bg-yellow-800/30 rounded border border-yellow-200 dark:border-yellow-700">
-                <p className="font-semibold text-yellow-900 dark:text-yellow-100">
-                  Live Bonus:
+              <div className="p-2 bg-theme-card rounded border border-theme-border">
+                <p className="font-semibold text-theme-primary">
+                  {t("fplLive.cronSecret")}
                 </p>
-                <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                  DA! Bonus poeni se računaju uživo tokom mečeva na osnovu BPS
-                  (Bonus Points System) statistika.
+                <p className="text-theme-secondary text-sm">
+                  {t("fplLive.cronSecretDescription")}
                 </p>
               </div>
 
-              <div className="p-2 bg-white dark:bg-yellow-800/30 rounded border border-yellow-200 dark:border-yellow-700">
-                <p className="font-semibold text-yellow-900 dark:text-yellow-100">
-                  Points System:
+              <div className="p-2 bg-theme-card rounded border border-theme-border">
+                <p className="font-semibold text-theme-primary">
+                  {t("fplLive.liveBonus")}
                 </p>
-                <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                  <strong>Active</strong> = starter tim (pozicije 1-11),{" "}
-                  <strong>Bench</strong> = rezerve (pozicije 12-15)
+                <p className="text-theme-secondary text-sm">
+                  {t("fplLive.liveBonusDescription")}
+                </p>
+              </div>
+
+              <div className="p-2 bg-theme-card rounded border border-theme-border">
+                <p className="font-semibold text-theme-primary">
+                  {t("fplLive.pointsSystem")}
+                </p>
+                <p className="text-theme-secondary text-sm">
+                  {t("fplLive.pointsSystemDescription")}
                 </p>
               </div>
             </div>

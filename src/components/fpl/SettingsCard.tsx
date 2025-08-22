@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MdExpandMore, MdExpandLess, MdSettings } from "react-icons/md";
+import { useTranslation } from "react-i18next";
 
 interface SettingsCardProps {
   onSettingsSaved: (settings: FPLSettings) => void;
@@ -15,6 +16,7 @@ interface FPLSettings {
 }
 
 export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<FPLSettings>({
     fpl_proxy_url: null,
     cron_secret: null,
@@ -103,7 +105,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
         <div className="flex items-center space-x-2">
           <MdSettings className="text-gray-500 w-4 h-4" />
           <span className="text-sm font-medium text-gray-900 dark:text-white">
-            FPL Settings
+            {t("fplLive.settingsCardTitle")}
           </span>
         </div>
         {isExpanded ? (
@@ -118,7 +120,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Manager ID
+                {t("fplLive.settingsCardManagerId")}
               </label>
               <input
                 type="number"
@@ -129,14 +131,14 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
                     parseInt(e.target.value, 10)
                   )
                 }
-                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-2 py-1 text-sm border-2 border-gray-300 dark:border-gray-500 rounded shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white bg-white"
                 placeholder="133444"
               />
             </div>
 
             <div>
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Gameweek
+                {t("fplLive.settingsCardGameweek")}
               </label>
               <input
                 type="number"
@@ -146,14 +148,14 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
                 onChange={(e) =>
                   handleInputChange("default_gw", parseInt(e.target.value, 10))
                 }
-                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-2 py-1 text-sm border-2 border-gray-300 dark:border-gray-500 rounded shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white bg-white"
               />
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-              Proxy URL
+              {t("fplLive.settingsCardProxyUrl")}
             </label>
             <input
               type="url"
@@ -168,7 +170,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
 
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-              CRON Secret
+              {t("fplLive.settingsCardCronSecret")}
             </label>
             <input
               type="password"
@@ -189,10 +191,10 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
             {saving ? (
               <span className="flex items-center justify-center gap-2">
                 <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Saving...
+                {t("fplLive.settingsCardSaving")}
               </span>
             ) : (
-              "Save Settings"
+              t("fplLive.settingsCardSaveSettings")
             )}
           </button>
         </div>

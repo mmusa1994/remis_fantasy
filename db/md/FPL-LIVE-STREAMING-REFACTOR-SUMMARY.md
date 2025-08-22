@@ -57,7 +57,7 @@ const newEvents = detectStatChanges(currentStats, previousStats);
 
 ### Komponente Ažurirane:
 
-- **`LiveTicker.tsx`** ✅ - React-icons, modern design
+- **`LiveTracker.tsx`** ✅ - React-icons, modern design
 - **`ControlsBar.tsx`** ✅ - Wifi ikone za live status
 - **`LeagueTables.tsx`** 🆕 - Kompletno nova komponenta
 - **`FPLLivePage.tsx`** ✅ - LocalStorage, leagues integration

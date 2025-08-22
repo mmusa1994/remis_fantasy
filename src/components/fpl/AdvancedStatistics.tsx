@@ -14,6 +14,7 @@ import {
   MdSentimentNeutral,
   MdThumbDown,
   MdDangerous,
+  MdCelebration,
 } from "react-icons/md";
 
 interface AdvancedStatisticsProps {
@@ -76,11 +77,11 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
 
   if (loading || advancedLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+      <div className="bg-theme-card rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4 text-theme-primary">
           {t("fplLive.advancedStats")}
         </h3>
-        <div className="text-center text-gray-500 dark:text-gray-400">
+        <div className="text-center text-theme-muted">
           {t("fplLive.loadingAdvancedStats")}
         </div>
       </div>
@@ -89,11 +90,11 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
 
   if (!managerId) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+      <div className="bg-theme-card rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4 text-theme-primary">
           {t("fplLive.advancedStats")}
         </h3>
-        <div className="text-center text-gray-500 dark:text-gray-400">
+        <div className="text-center text-theme-muted">
           {t("fplLive.loadTeamForAdvancedStats")}
         </div>
       </div>
@@ -174,74 +175,75 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   return (
     <div className="space-y-6">
       {/* Clone Analysis */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-theme-card rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+          <h3 className="text-lg font-semibold text-theme-primary flex items-center">
             <MdGroups className="text-blue-500 text-xl mr-2" />
-            Analiza klonova
+            {t("fplLive.cloneAnalysis")}
           </h3>
           {advancedLoading && (
             <div className="flex items-center text-sm text-blue-600 dark:text-blue-400">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              Ažuriram podatke...
+              {t("fplLive.updatingData")}
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col md:flex-row gap-6">
           <div className="text-center p-8 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-dashed border-purple-300 dark:border-purple-600">
             <div className="mb-4">
-              <div className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Našli smo tačno
+              <div className="text-lg font-medium text-theme-secondary mb-2">
+                {t("fplLive.foundExactly")}
               </div>
               <div className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-2">
                 {cloneData.count}
               </div>
-              <div className="text-base text-gray-600 dark:text-gray-400 mb-6">
-                klonova vašeg tima u top 1 milion!
+              <div className="text-base text-theme-muted mb-6">
+                {t("fplLive.clonesOfYourTeam")}
               </div>
             </div>
 
             <div className="mb-4">
               <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full text-lg font-bold shadow-xl transform hover:scale-105 transition-transform">
                 <MdStar className="mr-2 text-xl" />
-                Bukvalno ste jedan u milion!
+                {t("fplLive.literallyOneInMillion")}
               </div>
             </div>
 
-            <div className="text-sm text-purple-700 dark:text-purple-300 font-medium">
-              🎆 Jedinstveni tim • Kreativna selekcija • Originalan pristup
+            <div className="text-sm text-purple-700 dark:text-purple-300 font-medium flex items-center justify-center">
+              <MdCelebration className="mr-2 text-lg" />
+              {t("fplLive.uniqueTeam")} • {t("fplLive.creativeSelection")} • {t("fplLive.originalApproach")}
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <span className="text-gray-600 dark:text-gray-400">
-                Prosječno klonova po menadžeru:
+            <div className="flex justify-between items-center p-3 bg-theme-secondary rounded-lg">
+              <span className="text-theme-muted">
+                {t("fplLive.averageClonesPerManager")}
               </span>
-              <span className="font-bold text-gray-900 dark:text-white">
+              <span className="font-bold text-theme-primary">
                 {cloneData.averageClones}
               </span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <span className="text-gray-600 dark:text-gray-400">
-                Najviše dupliciran tim:
+            <div className="flex justify-between items-center p-3 bg-theme-secondary rounded-lg">
+              <span className="text-theme-muted">
+                {t("fplLive.mostDuplicatedTeam")}
               </span>
-              <span className="font-bold text-gray-900 dark:text-white">
+              <span className="font-bold text-theme-primary">
                 {cloneData.mostDuplicated}
               </span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <span className="text-gray-600 dark:text-gray-400">
-                Dijeli igrače sa aktivnim menadžerima:
+            <div className="flex justify-between items-center p-3 bg-theme-secondary rounded-lg">
+              <span className="text-theme-muted">
+                {t("fplLive.sharesPlayersWithActiveManagers")}
               </span>
-              <span className="font-bold text-gray-900 dark:text-white">
+              <span className="font-bold text-theme-primary">
                 {cloneData.commonPlayers}/11
               </span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="flex justify-between items-center p-3 bg-theme-accent rounded-lg">
               <span className="text-blue-600 dark:text-blue-400">
-                Rejting klonova:
+                {t("fplLive.cloneRating")}
               </span>
               <span className="font-bold text-blue-600 dark:text-blue-400">
                 {cloneData.rating}%
@@ -252,93 +254,93 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
       </div>
 
       {/* Rank Details */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
+      <div className="bg-theme-card rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4 text-theme-primary flex items-center">
           <MdTrendingUp className="text-green-500 text-xl mr-2" />
-          Detalji ranga
+          {t("fplLive.rankDetails")}
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 mb-6">
+          <div className="text-center p-4 bg-theme-accent rounded-lg">
             <MdScoreboard className="text-blue-600 text-2xl mx-auto mb-2" />
             <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
               {rankData.points}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Gameweek bodovi
+            <div className="text-sm text-theme-muted">
+              {t("fplLive.gameweekPoints")}
             </div>
           </div>
 
-          <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+          <div className="text-center p-4 bg-theme-accent rounded-lg">
             <MdTrendingUp className="text-green-600 text-2xl mx-auto mb-2" />
             <div className="text-3xl font-bold text-green-600 dark:text-green-400">
               +{rankData.rankChange.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Poboljšanje ranga
+            <div className="text-sm text-theme-muted">
+              {t("fplLive.rankImprovement")}
             </div>
           </div>
 
-          <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+          <div className="text-center p-4 bg-theme-accent rounded-lg">
             <MdStar className="text-purple-600 text-2xl mx-auto mb-2" />
             <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
               {rankData.rankPercent}%
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Top procenat
+            <div className="text-sm text-theme-muted">
+              {t("fplLive.topPercentile")}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="font-bold text-gray-900 dark:text-white">
+        <div className="flex flex-col xs:flex-row xs:flex-wrap gap-4">
+          <div className="text-center p-3 bg-theme-secondary rounded-lg">
+            <div className="font-bold text-theme-primary">
               {rankData.currentRank.toLocaleString()}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">
-              Trenutni rang
+            <div className="text-xs text-theme-muted">
+              {t("fplLive.currentRank")}
             </div>
           </div>
-          <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="font-bold text-gray-900 dark:text-white">
+          <div className="text-center p-3 bg-theme-secondary rounded-lg">
+            <div className="font-bold text-theme-primary">
               +{rankData.pointsGained}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">
-              Dobijeni bodovi
+            <div className="text-xs text-theme-muted">
+              {t("fplLive.pointsGained")}
             </div>
           </div>
-          <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="font-bold text-gray-900 dark:text-white">
+          <div className="text-center p-3 bg-theme-secondary rounded-lg">
+            <div className="font-bold text-theme-primary">
               {rankData.benchedPoints}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">
-              Bodovi na klupi
+            <div className="text-xs text-theme-muted">
+              {t("fplLive.benchPoints")}
             </div>
           </div>
-          <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="font-bold text-gray-900 dark:text-white">
+          <div className="text-center p-3 bg-theme-secondary rounded-lg">
+            <div className="font-bold text-theme-primary">
               {rankData.safetyScore}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">
-              Prosjecan rezultat U GW
+            <div className="text-xs text-theme-muted">
+              {t("fplLive.averageResultInGW")}
             </div>
           </div>
         </div>
       </div>
 
       {/* Player Performance Analysis */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
+      <div className="bg-theme-card rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4 text-theme-primary flex items-center">
           <MdSports className="text-orange-500 text-xl mr-2" />
-          Analiza performansi igrača
+          {t("fplLive.playerPerformanceAnalysis")}
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex flex-col md:flex-row gap-6">
           {/* Stars */}
-          <div>
+          <div className="flex-1">
             <h4 className="font-medium text-yellow-600 dark:text-yellow-400 mb-3 flex items-center">
               <MdStar className="mr-2" />
-              Zvijezde
+              {t("fplLive.stars")}
             </h4>
             {teamAnalysis.stars.map((player, index) => (
               <div
@@ -347,13 +349,13 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               >
                 <div className="flex items-center">
                   <MdStar className="text-yellow-600 mr-2" />
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="font-medium text-theme-primary">
                     {player.name}
                   </span>
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-yellow-600 dark:text-yellow-400">
-                    {player.points} bodova
+                    {player.points} {t("fplLive.points")}
                   </div>
                   <div className="text-sm text-green-600 dark:text-green-400">
                     +{player.gain}
@@ -364,25 +366,25 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </div>
 
           {/* Flops */}
-          <div>
+          <div className="flex-1">
             <h4 className="font-medium text-gray-600 dark:text-gray-400 mb-3 flex items-center">
               <MdSentimentNeutral className="mr-2" />
-              Neuspjesi
+              {t("fplLive.flops")}
             </h4>
             {teamAnalysis.flops.map((player, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2"
+                className="flex items-center justify-between p-3 bg-theme-secondary rounded-lg mb-2"
               >
                 <div className="flex items-center">
                   <MdThumbDown className="text-gray-600 mr-2" />
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="font-medium text-theme-primary">
                     {player.name}
                   </span>
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-gray-600 dark:text-gray-400">
-                    {player.points} bodova
+                    {player.points} {t("fplLive.points")}
                   </div>
                   <div className="text-sm text-orange-600 dark:text-orange-400">
                     +{player.gain}
@@ -393,10 +395,10 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </div>
 
           {/* Killers */}
-          <div>
+          <div className="flex-1">
             <h4 className="font-medium text-red-600 dark:text-red-400 mb-3 flex items-center">
               <MdMoodBad className="mr-2" />
-              Ubice
+              {t("fplLive.killers")}
             </h4>
             {teamAnalysis.killers.map((player, index) => (
               <div
@@ -405,13 +407,13 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               >
                 <div className="flex items-center">
                   <MdDangerous className="text-red-600 mr-2" />
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="font-medium text-theme-primary">
                     {player.name}
                   </span>
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-red-600 dark:text-red-400">
-                    {player.points} bodova
+                    {player.points} {t("fplLive.points")}
                   </div>
                   <div className="text-sm text-red-600 dark:text-red-400">
                     {player.loss}
@@ -424,37 +426,37 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
       </div>
 
       {/* Team Comparison */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
+      <div className="bg-theme-card rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4 text-theme-primary flex items-center">
           <MdCompare className="text-indigo-500 text-xl mr-2" />
-          Poređenje sa Top 10k, Ukupno i Elite menadžerima
+          {t("fplLive.teamComparison")}
         </h3>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 text-gray-900 dark:text-white">
-                  Statistika
+              <tr className="border-b border-theme-border">
+                <th className="text-left py-3 px-4 text-theme-primary">
+                  {t("fplLive.statistics")}
                 </th>
                 <th className="text-center py-3 px-4 text-blue-600 dark:text-blue-400">
-                  Vaš tim
+                  {t("fplLive.yourTeam")}
                 </th>
                 <th className="text-center py-3 px-4 text-purple-600 dark:text-purple-400">
-                  Top 10k
+                  {t("fplLive.top10k")}
                 </th>
                 <th className="text-center py-3 px-4 text-green-600 dark:text-green-400">
-                  Ukupno
+                  {t("fplLive.overall")}
                 </th>
                 <th className="text-center py-3 px-4 text-yellow-600 dark:text-yellow-400">
-                  Elite
+                  {t("fplLive.elite")}
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-gray-100 dark:border-gray-800">
-                <td className="py-3 px-4 text-gray-900 dark:text-white">
-                  Finalni rezultat
+              <tr className="border-b border-theme-border">
+                <td className="py-3 px-4 text-theme-primary">
+                  {t("fplLive.finalResult")}
                 </td>
                 <td className="text-center py-3 px-4 font-bold text-blue-600 dark:text-blue-400">
                   {comparison.yourTeam}
@@ -469,9 +471,9 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                   {comparison.elite}
                 </td>
               </tr>
-              <tr className="border-b border-gray-100 dark:border-gray-800">
-                <td className="py-3 px-4 text-gray-900 dark:text-white">
-                  Bodovi kapitena
+              <tr className="border-b border-theme-border">
+                <td className="py-3 px-4 text-theme-primary">
+                  {t("fplLive.captainPoints")}
                 </td>
                 <td className="text-center py-3 px-4 font-bold text-blue-600 dark:text-blue-400">
                   {comparison.captainPoints}
@@ -492,10 +494,10 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
       </div>
 
       {/* Captain Analysis Enhancement */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
+      <div className="bg-theme-card rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4 text-theme-primary flex items-center">
           <MdStar className="text-yellow-500 text-xl mr-2" />
-          Detaljana analiza kapitena
+          {t("fplLive.detailedCaptainAnalysis")}
         </h3>
 
         <div className="relative p-6 bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 dark:from-yellow-900/20 dark:via-orange-900/20 dark:to-red-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
@@ -510,7 +512,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center mr-3">
                 <MdSports className="text-white text-sm" />
               </div>
-              <div className="text-xl font-bold text-gray-900 dark:text-white">
+              <div className="text-xl font-bold text-theme-primary">
                 {captain?.stats
                   ? teamWithStats.find(
                       (p: any) => p.player_id === captain.player_id
@@ -520,19 +522,19 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
             </div>
 
             <div className="mb-4">
-              <div className="text-lg text-gray-800 dark:text-gray-200 mb-2">
-                završio sa{" "}
+              <div className="text-lg text-theme-secondary mb-2">
+                {t("fplLive.finishedWith")}{" "}
                 <span className="font-bold text-blue-600 dark:text-blue-400 text-2xl">
                   {captain?.stats?.total_points
                     ? captain.stats.total_points * 2
                     : 0}{" "}
-                  bodova
+                  {t("fplLive.points")}
                 </span>
               </div>
 
               <div className="flex items-center mb-2">
                 <MdTrendingUp className="text-green-500 mr-2" />
-                <span className="text-base text-gray-700 dark:text-gray-300">
+                <span className="text-base text-theme-secondary">
                   <span className="font-semibold text-green-600 dark:text-green-400 text-lg">
                     {captain?.stats
                       ? (
@@ -540,23 +542,23 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                           comparison.captainElite
                         ).toFixed(1)
                       : "0.0"}{" "}
-                    bodova više
+                    {t("fplLive.pointsHigher")}
                   </span>{" "}
-                  od prosječnog elite kapitena
+                  {t("fplLive.thanAverageEliteCaptain")}
                 </span>
               </div>
 
               <div className="flex items-center">
                 <MdCheckCircle className="text-green-500 mr-2" />
-                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                  Odličan izbor kapitena za ovaj gameweek!
+                <span className="text-sm text-theme-muted font-medium">
+                  {t("fplLive.excellentCaptainChoice")}
                 </span>
               </div>
             </div>
 
             <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full text-sm font-medium shadow-lg">
               <MdStar className="mr-2" />
-              Elite kapiten performanse
+              {t("fplLive.eliteCaptainPerformance")}
             </div>
           </div>
         </div>
