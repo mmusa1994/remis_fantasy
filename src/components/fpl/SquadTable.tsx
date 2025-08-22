@@ -66,7 +66,7 @@ const SquadTable = React.memo(function SquadTable({
 }: SquadTableProps) {
   if (!teamData || teamData.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 shadow border border-gray-200 dark:border-gray-700 p-6">
         <h3 className="text-lg font-semibold mb-4">Squad</h3>
         <div className="text-center text-gray-500 dark:text-gray-400">
           Load a team to see squad details
@@ -130,7 +130,7 @@ const SquadTable = React.memo(function SquadTable({
         <td className="px-3 py-2 text-sm">
           <div className="flex items-center space-x-2">
             <span
-              className={`text-xs px-2 py-1 rounded ${
+              className={`text-xs px-2 py-1 no-radius ${
                 pick.is_captain || pick.is_vice_captain
                   ? "bg-yellow-200 dark:bg-yellow-700 text-yellow-800 dark:text-yellow-200"
                   : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
@@ -203,7 +203,7 @@ const SquadTable = React.memo(function SquadTable({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Squad (XI + Bench)
@@ -269,26 +269,18 @@ const SquadTable = React.memo(function SquadTable({
             ))}
             {bench.length > 0 && (
               <>
-                <tr className="bg-gray-100 dark:bg-gray-600">
+                <tr className="bg-gray-100 dark:bg-gray-600 border-t-2 border-gray-300 dark:border-gray-500">
                   <td
-                    colSpan={2}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 text-center sticky left-0 bg-gray-100 dark:bg-gray-600 z-10 border-r border-gray-200 dark:border-gray-700"
+                    colSpan={11}
+                    className="px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 text-left"
                   >
                     Bench
                   </td>
-                  <td className="px-3 py-2 text-sm text-center"></td>
-                  <td className="px-3 py-2 text-sm text-center"></td>
-                  <td className="px-3 py-2 text-sm text-center"></td>
-                  <td className="px-3 py-2 text-sm text-center"></td>
-                  <td className="px-3 py-2 text-sm text-center"></td>
-                  <td className="px-3 py-2 text-sm text-center"></td>
-                  <td className="px-3 py-2 text-sm text-center"></td>
-                  <td className="px-3 py-2 text-sm text-center"></td>
-                  <td className="px-3 py-2 text-sm text-center"></td>
-                  <td className="px-3 py-2 text-sm text-center font-bold text-blue-600 dark:text-blue-400">
+                  <td className="px-3 py-3 text-sm text-center bg-gray-100 dark:bg-gray-600"></td>
+                  <td className="px-3 py-3 text-sm text-center font-bold text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-600">
                     {benchTotalPoints}
                   </td>
-                  <td className="px-3 py-2 text-sm text-center"></td>
+                  <td className="px-3 py-3 text-sm text-center bg-gray-100 dark:bg-gray-600"></td>
                 </tr>
                 {bench.map((pick) => (
                   <PlayerRow

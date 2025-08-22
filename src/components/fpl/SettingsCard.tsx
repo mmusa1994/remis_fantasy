@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { MdExpandMore, MdExpandLess, MdSettings } from 'react-icons/md';
+import { useState, useEffect } from "react";
+import { MdExpandMore, MdExpandLess, MdSettings } from "react-icons/md";
 
 interface SettingsCardProps {
   onSettingsSaved: (settings: FPLSettings) => void;
@@ -19,7 +19,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
     fpl_proxy_url: null,
     cron_secret: null,
     default_gw: 1,
-    default_manager_id: 133790,
+    default_manager_id: 133444,
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -32,7 +32,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/fpl/settings');
+      const response = await fetch("/api/fpl/settings");
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
@@ -40,7 +40,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
         }
       }
     } catch (error) {
-      console.error('Error loading settings:', error);
+      console.error("Error loading settings:", error);
     } finally {
       setLoading(false);
     }
@@ -49,10 +49,10 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      const response = await fetch('/api/fpl/settings', {
-        method: 'POST',
+      const response = await fetch("/api/fpl/settings", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(settings),
       });
@@ -64,14 +64,17 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
         }
       }
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error("Error saving settings:", error);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleInputChange = (field: keyof FPLSettings, value: string | number | null) => {
-    setSettings(prev => ({
+  const handleInputChange = (
+    field: keyof FPLSettings,
+    value: string | number | null
+  ) => {
+    setSettings((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -93,13 +96,15 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-      <button 
+      <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full p-3 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
         <div className="flex items-center space-x-2">
           <MdSettings className="text-gray-500 w-4 h-4" />
-          <span className="text-sm font-medium text-gray-900 dark:text-white">FPL Settings</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-white">
+            FPL Settings
+          </span>
         </div>
         {isExpanded ? (
           <MdExpandLess className="text-gray-500 w-4 h-4" />
@@ -107,7 +112,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
           <MdExpandMore className="text-gray-500 w-4 h-4" />
         )}
       </button>
-      
+
       {isExpanded && (
         <div className="px-3 pb-3 space-y-3 border-t border-gray-200 dark:border-gray-700 pt-3">
           <div className="grid grid-cols-2 gap-3">
@@ -118,9 +123,14 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
               <input
                 type="number"
                 value={settings.default_manager_id}
-                onChange={(e) => handleInputChange('default_manager_id', parseInt(e.target.value, 10))}
+                onChange={(e) =>
+                  handleInputChange(
+                    "default_manager_id",
+                    parseInt(e.target.value, 10)
+                  )
+                }
                 className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="133790"
+                placeholder="133444"
               />
             </div>
 
@@ -133,7 +143,9 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
                 min="1"
                 max="38"
                 value={settings.default_gw}
-                onChange={(e) => handleInputChange('default_gw', parseInt(e.target.value, 10))}
+                onChange={(e) =>
+                  handleInputChange("default_gw", parseInt(e.target.value, 10))
+                }
                 className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -145,8 +157,10 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
             </label>
             <input
               type="url"
-              value={settings.fpl_proxy_url || ''}
-              onChange={(e) => handleInputChange('fpl_proxy_url', e.target.value || null)}
+              value={settings.fpl_proxy_url || ""}
+              onChange={(e) =>
+                handleInputChange("fpl_proxy_url", e.target.value || null)
+              }
               className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="https://proxy.com"
             />
@@ -158,8 +172,10 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
             </label>
             <input
               type="password"
-              value={settings.cron_secret || ''}
-              onChange={(e) => handleInputChange('cron_secret', e.target.value || null)}
+              value={settings.cron_secret || ""}
+              onChange={(e) =>
+                handleInputChange("cron_secret", e.target.value || null)
+              }
               className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="Secret key"
             />
@@ -176,7 +192,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
                 Saving...
               </span>
             ) : (
-              'Save Settings'
+              "Save Settings"
             )}
           </button>
         </div>

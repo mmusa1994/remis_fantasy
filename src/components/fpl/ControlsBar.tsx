@@ -83,7 +83,7 @@ export default function ControlsBar({
             onChange={(e) => handleManagerIdChange(e.target.value)}
             onKeyDown={handleKeyDown}
             className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="133790"
+            placeholder="133444"
             title="Press Enter to load team"
           />
         </div>

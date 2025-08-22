@@ -140,7 +140,7 @@ const GameweekStatus = React.memo(function GameweekStatus({
             {gameweekStatus.gameweek_points} points
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Sigurnosni rezultat: {gameweekStatus.safety_score} bodova
+            Prosjecan rezultat: {gameweekStatus.safety_score} bodova
           </div>
         </div>
 
@@ -234,7 +234,7 @@ const GameweekStatus = React.memo(function GameweekStatus({
         <div className="mb-6">
           <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
             <MdWarning className="text-red-500 text-xl mr-2" />
-            Propušteni igrači
+            Igrači koji ne čine razliku
           </h4>
           <div className="space-y-2">
             {gameweekStatus.threats.map((threat) => (

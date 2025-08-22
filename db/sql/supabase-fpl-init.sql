@@ -164,7 +164,7 @@ CREATE INDEX IF NOT EXISTS idx_fpl_manager_picks_gw_manager ON public.fpl_manage
 
 -- Insert default settings
 INSERT INTO public.fpl_settings (fpl_proxy_url, default_gw, default_manager_id) 
-VALUES (null, 1, 133790) 
+VALUES (null, 1, 133444) 
 ON CONFLICT (id) DO NOTHING;
 
 -- Create updated_at trigger function

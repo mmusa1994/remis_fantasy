@@ -10,8 +10,9 @@ import ScoreboardGrid from "@/components/fpl/ScoreboardGrid";
 import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
 import LiveTicker from "@/components/fpl/LiveTicker";
 import LeagueTables from "@/components/fpl/LeagueTables";
-import { MdCancel, MdInfo, MdSettings } from "react-icons/md";
+import { MdCancel, MdInfo, MdSettings, MdExpandMore } from "react-icons/md";
 import Image from "next/image";
+import TeamSearchHelper from "@/components/fpl/TeamSearchHelper";
 import type { GameweekStatus as GameweekStatusType } from "@/lib/fpl-api";
 
 interface FPLData {
@@ -84,6 +85,12 @@ export default function FPLLivePage() {
             setData(parsedData);
             setLastUpdated(savedLastUpdated);
             showSuccess("Restored cached team data");
+
+            // Auto-load leagues if we have cached team data
+            if (parsedData.manager && savedManagerId) {
+              setLeaguesLoading(true);
+              loadLeaguesData();
+            }
           } catch (parseError) {
             console.warn("Failed to parse cached data:", parseError);
           }
@@ -275,6 +282,17 @@ export default function FPLLivePage() {
   // Keep loadTeam for compatibility with polling
   const loadTeam = loadManagerInfo;
 
+  const handleManagerIdFound = useCallback(
+    (newManagerId: number) => {
+      setManagerId(newManagerId);
+      // Automatically load the team when a new Manager ID is provided
+      setTimeout(() => {
+        loadManagerInfo();
+      }, 100);
+    },
+    [loadManagerInfo]
+  );
+
   const startPolling = useCallback(() => {
     if (!managerId) {
       showError("Please enter a Manager ID first");
@@ -357,7 +375,7 @@ export default function FPLLivePage() {
           FPL Live Dashboard
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Real-time Fantasy Premier League tracking with live bonus predictions
+          Real-time Fantasy Premier League praćenje sa live bonus predviđanjima
         </p>
       </div>
 
@@ -371,54 +389,65 @@ export default function FPLLivePage() {
                 <MdInfo className="text-white w-4 h-4" />
               </div>
               <span className="font-semibold">Kako koristiti FPL Live</span>
-              <span className="ml-auto text-blue-600 dark:text-blue-400 group-open:rotate-180 transition-transform text-lg">
-                ▼
-              </span>
+              <MdExpandMore className="ml-auto text-blue-600 dark:text-blue-400 group-open:rotate-180 transition-transform duration-200 w-5 h-5" />
             </summary>
 
             <div className="px-4 pb-4 space-y-4 text-sm text-blue-800 dark:text-blue-200 bg-white/50 dark:bg-blue-900/20">
-              {/* Manager ID - Detailed */}
+              {/* Manager ID - Detailed - Mobile Optimized */}
               <div className="p-3 bg-white dark:bg-blue-800/50 rounded-lg border border-blue-200 dark:border-blue-700">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2 text-sm md:text-base">
                   📋 Kako pronaći Manager ID
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <ol className="list-decimal list-inside space-y-1 text-blue-700 dark:text-blue-300">
-                    <li>Otvorite web browser (Chrome, Firefox, Safari)</li>
-                    <li>
-                      Idite na <strong>fantasy.premierleague.com</strong>
+                <div className="space-y-3 text-xs md:text-sm">
+                  <ol className="list-decimal list-inside space-y-2 text-blue-700 dark:text-blue-300 leading-relaxed">
+                    <li className="break-words">
+                      Otvorite web browser (Chrome, Firefox, Safari)
                     </li>
-                    <li>Ulogujte se sa vašim Fantasy Premier League nalogom</li>
-                    <li>
+                    <li className="break-words">
+                      Idite na{" "}
+                      <strong className="break-all">
+                        fantasy.premierleague.com
+                      </strong>
+                    </li>
+                    <li className="break-words">
+                      Ulogujte se sa vašim Fantasy Premier League nalogom
+                    </li>
+                    <li className="break-words">
                       Kliknite na <strong>&quot;Points&quot;</strong> tab u
                       glavnoj navigaciji
                     </li>
-                    <li>
-                      Kopirajte brojeve iz URL-a (npr. entry/133790/event/1)
+                    <li className="break-words">
+                      Kopirajte brojeve iz URL-a{" "}
+                      <span className="text-xs">
+                        (npr. entry/133444/event/1)
+                      </span>
                     </li>
                   </ol>
 
-                  <div className="mt-3 p-2 bg-blue-100 dark:bg-blue-800 rounded border">
-                    <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 mb-2">
-                      <span>💡</span>
+                  <div className="mt-4 p-3 bg-blue-100 dark:bg-blue-800 rounded border">
+                    <div className="flex items-start gap-2 text-xs md:text-sm text-blue-700 dark:text-blue-300 mb-2">
+                      <span className="flex-shrink-0">💡</span>
                       <span className="font-medium">Primer URL-a:</span>
                     </div>
-                    <code className="text-sm bg-blue-200 dark:bg-blue-700 text-blue-900 dark:text-blue-100 px-2 py-1 rounded font-mono block">
-                      fantasy.premierleague.com/entry/133790/event/1
-                    </code>
-                    <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                      Vaš Manager ID je: <strong>133790</strong>
+                    <div className="bg-blue-200 dark:bg-blue-700 text-blue-900 dark:text-blue-100 p-2 rounded font-mono text-xs break-all overflow-hidden">
+                      fantasy.premierleague.com/entry/133444/event/1
+                    </div>
+                    <p className="text-xs md:text-sm text-blue-600 dark:text-blue-400 mt-2 text-center">
+                      Vaš Manager ID je:{" "}
+                      <strong className="text-base md:text-lg">133444</strong>
                     </p>
 
-                    <div className="mt-3">
-                      <Image
-                        src="/images/path.png"
-                        alt="FPL Manager ID u URL-u - primer iz browser-a"
-                        width={400}
-                        height={200}
-                        className="w-full max-w-md mx-auto rounded border border-blue-300 dark:border-blue-600"
-                      />
-                      <p className="text-xs text-center text-blue-600 dark:text-blue-400 mt-2 italic">
+                    <div className="mt-4">
+                      <div className="relative overflow-hidden rounded border border-blue-300 dark:border-blue-600">
+                        <Image
+                          src="/images/path.png"
+                          alt="FPL Manager ID u URL-u - primer iz browser-a"
+                          width={400}
+                          height={200}
+                          className="w-full h-auto object-contain max-h-32 md:max-h-48"
+                        />
+                      </div>
+                      <p className="text-xs text-center text-blue-600 dark:text-blue-400 mt-2 italic leading-relaxed px-2">
                         Ovako izgleda URL u browser-u kada kliknete na
                         &quot;Points&quot;
                       </p>
@@ -427,30 +456,31 @@ export default function FPLLivePage() {
                 </div>
               </div>
 
-              {/* Usage Steps - Detailed */}
-              <div className="space-y-2">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+              {/* Usage Steps - Detailed - Mobile Optimized */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2 text-sm md:text-base">
                   🎯 Detaljni koraci za korišćenje
                 </h4>
-                <ol className="list-decimal list-inside space-y-2 text-blue-700 dark:text-blue-300">
-                  <li>
-                    <strong>Unesite Manager ID</strong> (npr. 133790) i
-                    odaberite trenutni Gameweek
+                <ol className="list-decimal list-inside space-y-3 text-blue-700 dark:text-blue-300 text-xs md:text-sm leading-relaxed">
+                  <li className="break-words">
+                    <strong>Unesite Manager ID</strong>{" "}
+                    <span className="text-xs">(npr. 133444 )</span> i odaberite
+                    trenutni Gameweek
                   </li>
-                  <li>
+                  <li className="break-words">
                     <strong>Kliknite &quot;Load Team&quot;</strong> da učitate
                     svoj tim i osnovne statistike
                   </li>
-                  <li>
+                  <li className="break-words">
                     <strong>&quot;Fetch Now&quot;</strong> za manuelno
                     ažuriranje ili <strong>&quot;Start Live&quot;</strong> za
                     automatsko praćenje
                   </li>
-                  <li>
+                  <li className="break-words">
                     Pratite <strong>LIVE BPS Tracker</strong> za golove, asiste
                     i kartone u real-time
                   </li>
-                  <li>
+                  <li className="break-words">
                     <strong>Bonus poeni</strong> se predviđaju u realnom vremenu
                     dok ne budu finalni post-match
                   </li>
@@ -475,6 +505,14 @@ export default function FPLLivePage() {
       )}
 
       {/* Controls - Full Width */}
+      {/* Team Search Helper */}
+      <div className="mb-6">
+        <TeamSearchHelper
+          onManagerIdFound={handleManagerIdFound}
+          currentManagerId={managerId}
+        />
+      </div>
+
       <div className="mb-6">
         <ControlsBar
           managerId={managerId}
@@ -634,9 +672,7 @@ export default function FPLLivePage() {
               <MdSettings className="text-white w-4 h-4" />
             </div>
             <span className="font-semibold">Settings objašnjenja</span>
-            <span className="ml-auto text-yellow-600 dark:text-yellow-400 group-open:rotate-180 transition-transform text-lg">
-              ▼
-            </span>
+            <MdExpandMore className="ml-auto text-yellow-600 dark:text-yellow-400 group-open:rotate-180 transition-transform duration-200 w-5 h-5" />
           </summary>
 
           <div className="px-4 pb-4 space-y-3 text-sm text-yellow-800 dark:text-yellow-200 bg-white/50 dark:bg-yellow-900/20">

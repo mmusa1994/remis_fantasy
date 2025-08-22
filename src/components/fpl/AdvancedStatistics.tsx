@@ -11,7 +11,6 @@ import {
   MdSports,
   MdMoodBad,
   MdSentimentNeutral,
-  MdThumbUp,
   MdThumbDown,
   MdDangerous,
 } from "react-icons/md";

@@ -284,7 +284,7 @@ body {
 
 /* Global border-radius override - MINIMAL RADIUS */
 * {
-  border-radius: 2px !important;
+  border-radius: 0px !important;
 }
 
 /* Specific overrides for components that need even less radius */
