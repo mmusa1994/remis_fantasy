@@ -2,6 +2,7 @@
 
 import PrizesGallery from "@/components/shared/PrizesGallery";
 import { useLeaguePrizes, usePageContent } from "@/hooks/useLeagueData";
+import { SkeletonPage } from "@/components/skeletons";
 
 export default function ChampionsLeagueNagradePage() {
   const {
@@ -16,13 +17,7 @@ export default function ChampionsLeagueNagradePage() {
   } = usePageContent("champions");
 
   if (prizesLoading || contentLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-theme-text-secondary">Učitava se...</p>
-        </div>
-      </div>
-    );
+    return <SkeletonPage variant="league" />;
   }
 
   if (prizesError || contentError) {

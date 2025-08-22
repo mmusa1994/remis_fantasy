@@ -10,13 +10,23 @@ import { SiPremierleague } from "react-icons/si";
 import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
 import ThemeToggle from "../ThemeToggle";
+import LanguageSelector from "./LanguageSelector";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
-const navItems = [
-  { name: "Početna", href: "/", icon: Home },
-  { name: "Premier League", href: "/premier-league", icon: SiPremierleague },
-  { name: "Champions League", href: "/champions-league", icon: PiSoccerBall },
-  { name: "F1 Fantasy", href: "/f1-fantasy", icon: GiF1Car },
+const getNavItems = (t: any) => [
+  { name: t("nav.home"), href: "/", icon: Home },
+  {
+    name: t("nav.premierLeague"),
+    href: "/premier-league",
+    icon: SiPremierleague,
+  },
+  {
+    name: t("nav.championsLeague"),
+    href: "/champions-league",
+    icon: PiSoccerBall,
+  },
+  { name: t("nav.f1Fantasy"), href: "/f1-fantasy", icon: GiF1Car },
 ];
 
 export default function Navbar() {
@@ -24,7 +34,10 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const pathname = usePathname();
+
+  const navItems = getNavItems(t);
 
   const backdropBlur = useTransform(
     scrollY,
@@ -295,12 +308,16 @@ export default function Navbar() {
               );
             })}
 
+            {/* Language Selector */}
+            <LanguageSelector />
+
             {/* Theme Toggle */}
             <ThemeToggle />
           </div>
 
-          {/* Mobile Menu Button and Theme Toggle */}
+          {/* Mobile Menu Button, Language Selector and Theme Toggle */}
           <div className="md:hidden flex items-center space-x-3">
+            <LanguageSelector />
             <ThemeToggle />
             <motion.button
               onClick={() => setIsOpen(!isOpen)}

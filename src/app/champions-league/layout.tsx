@@ -1,17 +1,25 @@
-import SubNavigation from "@/components/shared/SubNavigation";
+"use client";
 
-const championsLeagueNavItems = [
-  { name: "Tabele", href: "/champions-league/tabele" },
-  { name: "Nagrade", href: "/champions-league/nagrade" },
-  { name: "Registracija", href: "/champions-league/registracija" },
-  { name: "Galerija", href: "/champions-league/galerija" },
-];
+import SubNavigation from "@/components/shared/SubNavigation";
+import { useTranslation } from "react-i18next";
 
 export default function ChampionsLeagueLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
+
+  const championsLeagueNavItems = [
+    { name: t("navigation.tables"), href: "/champions-league/tabele" },
+    { name: t("navigation.prizes"), href: "/champions-league/nagrade" },
+    {
+      name: t("navigation.registration"),
+      href: "/champions-league/registracija",
+    },
+    { name: t("navigation.gallery"), href: "/champions-league/galerija" },
+  ];
+
   return (
     <div className="min-h-screen">
       <SubNavigation

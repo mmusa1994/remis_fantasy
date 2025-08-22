@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import ReusableLeagueTable from "./ReusableLeagueTable";
 import { getLeagueDataForReusableTable } from "@/data/leagueTableData";
+import { SkeletonTable } from "@/components/skeletons";
 
 interface LeaguePlayer {
   id: string;
@@ -267,14 +268,14 @@ export default function LeagueTableTabs() {
           {(() => {
             if (loading) {
               return (
-                <div className="text-center py-12">
-                  <p
-                    className={
-                      theme === "dark" ? "text-white" : "text-gray-600"
-                    }
-                  >
-                    Učitavam tabele...
-                  </p>
+                <div className="py-4">
+                  <SkeletonTable
+                    rows={10}
+                    cols={6}
+                    showHeader
+                    variant="default"
+                    title="League Table"
+                  />
                 </div>
               );
             }

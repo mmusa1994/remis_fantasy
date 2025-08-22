@@ -4,8 +4,10 @@ import { motion } from "framer-motion";
 import { Settings } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
+  const { t } = useTranslation();
   return (
     <footer className="relative bg-theme-card-secondary py-16 theme-transition">
       {/* Animated border-top */}
@@ -68,7 +70,7 @@ export default function Footer() {
                   ease: "easeInOut",
                 }}
               />
-              
+
               <div className="relative w-full h-full flex items-center justify-center">
                 <Image
                   src="/images/rf-no-bg.png"
@@ -117,16 +119,16 @@ export default function Footer() {
                 REMIS Fantasy
               </motion.span>
             </motion.h3>
-            
+
             <motion.p
               className="text-theme-text-secondary text-lg md:text-xl leading-relaxed font-medium max-w-2xl mx-auto theme-transition"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              Godinama gradimo tradiciju i povjerenje u fantasy football zajednici.
+              {t("footer.tagline")}
               <br />
-              Vaša strast, naše iskustvo - savršena kombinacija za nezaboravnu sezonu.
+              {t("footer.subtitle")}
             </motion.p>
           </motion.div>
 
@@ -138,8 +140,8 @@ export default function Footer() {
             transition={{ duration: 0.8, delay: 0.5 }}
           >
             {[
-              { number: "9+", label: "Godina" },
-              { number: "100%", label: "Povjerenje" },
+              { number: "9+", label: t("footer.years") },
+              { number: "100%", label: t("footer.trust") },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -166,27 +168,22 @@ export default function Footer() {
             transition={{ duration: 0.8, delay: 0.7 }}
           >
             <div className="text-theme-text-muted text-sm md:text-base font-medium theme-transition">
-              © 2025{" "}
-              <span className="font-bold text-theme-foreground theme-transition">
-                REMIS Fantasy
-              </span>{" "}
-              by{" "}
-              <span className="font-semibold text-theme-text-secondary hover:text-theme-foreground transition-colors cursor-default theme-transition">
-                Muhamed Musa
-              </span>
+              {t("footer.copyright")}
             </div>
 
             <Link href="/admin" className="group">
               <motion.button
                 className="flex items-center gap-2 px-4 py-2 minimal-radius bg-theme-secondary border border-theme-border text-theme-text-muted hover:text-theme-text-secondary hover:bg-theme-accent hover:border-theme-border-strong transition-all duration-300 text-sm opacity-40 hover:opacity-100 backdrop-blur-sm theme-transition"
-                whileHover={{ 
+                whileHover={{
                   scale: 1.05,
-                  boxShadow: "0 8px 25px rgba(0, 0, 0, 0.2)"
+                  boxShadow: "0 8px 25px rgba(0, 0, 0, 0.2)",
                 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
-                <span className="hidden md:inline font-medium">Admin Panel</span>
+                <span className="hidden md:inline font-medium">
+                  {t("common.adminPanel")}
+                </span>
               </motion.button>
             </Link>
           </motion.div>

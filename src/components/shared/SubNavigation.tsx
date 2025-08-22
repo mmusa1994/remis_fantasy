@@ -24,6 +24,10 @@ const ChevronDownIcon = ({ className }: { className?: string }) => (
 interface NavItem {
   name: string;
   href: string;
+  badge?: {
+    color: "red" | "green" | "blue" | "orange" | "purple";
+    pulse?: boolean;
+  };
 }
 
 interface SubNavigationProps {
@@ -174,7 +178,24 @@ export default function SubNavigation({
                       : `text-gray-600 ${colors.hover.light}`
                   }`}
                 >
-                  {item.name}
+                  <div className="flex items-center space-x-1">
+                    <span>{item.name}</span>
+                    {item.badge && (
+                      <span
+                        className={`inline-block w-2 h-2 rounded-full ${
+                          item.badge.color === "red"
+                            ? "bg-red-500"
+                            : item.badge.color === "green"
+                            ? "bg-green-500"
+                            : item.badge.color === "blue"
+                            ? "bg-blue-500"
+                            : item.badge.color === "orange"
+                            ? "bg-orange-500"
+                            : "bg-purple-500"
+                        } ${item.badge.pulse ? "animate-pulse" : ""}`}
+                      />
+                    )}
+                  </div>
                   {isActive && (
                     <div
                       className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 rounded-full ${
@@ -209,7 +230,24 @@ export default function SubNavigation({
                         : `text-gray-600 ${colors.hover.light}`
                     }`}
                   >
-                    {item.name}
+                    <div className="flex items-center space-x-1">
+                      <span>{item.name}</span>
+                      {item.badge && (
+                        <span
+                          className={`inline-block w-2 h-2 rounded-full ${
+                            item.badge.color === "red"
+                              ? "bg-red-500"
+                              : item.badge.color === "green"
+                              ? "bg-green-500"
+                              : item.badge.color === "blue"
+                              ? "bg-blue-500"
+                              : item.badge.color === "orange"
+                              ? "bg-orange-500"
+                              : "bg-purple-500"
+                          } ${item.badge.pulse ? "animate-pulse" : ""}`}
+                        />
+                      )}
+                    </div>
                     {isActive && (
                       <div
                         className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 rounded-full ${
@@ -269,7 +307,24 @@ export default function SubNavigation({
                               : `text-gray-600 ${colors.hover.light}`
                           }`}
                         >
-                          {item.name}
+                          <div className="flex items-center space-x-1">
+                            <span>{item.name}</span>
+                            {item.badge && (
+                              <span
+                                className={`inline-block w-2 h-2 rounded-full ${
+                                  item.badge.color === "red"
+                                    ? "bg-red-500"
+                                    : item.badge.color === "green"
+                                    ? "bg-green-500"
+                                    : item.badge.color === "blue"
+                                    ? "bg-blue-500"
+                                    : item.badge.color === "orange"
+                                    ? "bg-orange-500"
+                                    : "bg-purple-500"
+                                } ${item.badge.pulse ? "animate-pulse" : ""}`}
+                              />
+                            )}
+                          </div>
                         </Link>
                       );
                     })}
