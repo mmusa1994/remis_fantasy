@@ -1,13 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
     // Get IP address from headers
-    const ip = 
-      request.headers.get('x-forwarded-for') ||
-      request.headers.get('x-real-ip') ||
-      request.ip ||
-      '127.0.0.1';
+    const ip =
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip") ||
+      "127.0.0.1";
 
     // Use a free IP geolocation service
     const response = await fetch(`http://ip-api.com/json/${ip}`);
@@ -15,14 +14,14 @@ export async function GET(request: NextRequest) {
 
     // Map countries to languages
     const countryToLanguage: Record<string, string> = {
-      'RS': 'sr', // Serbia
-      'BA': 'bs', // Bosnia and Herzegovina 
-      'HR': 'hr', // Croatia
-      'ME': 'bs', // Montenegro (use Bosnian)
-      'MK': 'bs', // North Macedonia (use Bosnian)
+      RS: "sr", // Serbia
+      BA: "bs", // Bosnia and Herzegovina
+      HR: "hr", // Croatia
+      ME: "bs", // Montenegro (use Bosnian)
+      MK: "bs", // North Macedonia (use Bosnian)
     };
 
-    const detectedLanguage = countryToLanguage[data.countryCode] || 'en';
+    const detectedLanguage = countryToLanguage[data.countryCode] || "en";
 
     return NextResponse.json({
       success: true,
@@ -36,8 +35,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return NextResponse.json({
       success: false,
-      language: 'en', // fallback to English
-      error: 'Failed to detect country',
+      language: "en", // fallback to English
+      error: "Failed to detect country",
     });
   }
 }

@@ -402,7 +402,6 @@ const resources = {
         tablesSelectLeagueAndStart:
           'Select your league above and click "Start Live" to begin tracking live standings with real-time bonus points and captain updates.',
         autoRefresh: "Auto-refresh every 30 seconds when active",
-        gameweekPoints: "Gameweek Points",
         players: "Players",
         totalPlayers: "Total Players",
       },
@@ -737,7 +736,6 @@ const resources = {
         selectLeagueAndStart:
           'Odaberite vašu ligu iznad i kliknite "Pokreni Uživo" da počnete praćenje uživo tabela sa bonus bodovima u realnom vremenu i ažuriranjima kapitena.',
         autoRefresh: "Auto-osvježavanje svakih 30 sekundi kada je aktivno",
-        gameweekPoints: "Gameweek bodovi",
         players: "Igrači",
         totalPlayers: "Ukupno igrača",
         points: "poena",
@@ -747,12 +745,6 @@ const resources = {
         bonusPredicted: "Bonus predviđen",
         finalBonusShort: "Finalni Bonus",
         predictedBonusShort: "Predviđeni Bonus",
-        loadingLiveData: "Učitavanje uživo podataka...",
-        loadingLeagueStandings: "Učitavanje tabele lige...",
-        loadingH2HLeague: "Učitavanje H2H lige...",
-        noStandingsAvailable: "Nema dostupnih tabela",
-        noH2HStandingsAvailable: "Nema dostupnih H2H tabela",
-        wdl: "P-N-I",
       },
       // Footer
       footer: {
