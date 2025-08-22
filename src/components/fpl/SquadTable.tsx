@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 import { PiTShirtLight, PiTShirtFill } from "react-icons/pi";
 import { getTeamColors } from "@/lib/team-colors";
 
@@ -117,7 +117,9 @@ const SquadTable = React.memo(function SquadTable({
     const displayBonus = bonusAdded ? stats?.bonus || 0 : predictedBonus;
     const totalPoints = stats?.total_points || 0;
     // For table display: show actual points for bench, multiplied for starters
-    const displayPoints = isStarter ? totalPoints * pick.multiplier : totalPoints;
+    const displayPoints = isStarter
+      ? totalPoints * pick.multiplier
+      : totalPoints;
 
     return (
       <tr
@@ -145,7 +147,7 @@ const SquadTable = React.memo(function SquadTable({
             )}
           </div>
         </td>
-        <td className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-white">
+        <td className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-white sticky left-0 bg-white dark:bg-gray-800 z-10 border-r border-gray-200 dark:border-gray-700">
           <div>
             {pick.player.web_name} {getMultiplierDisplay(pick)}
           </div>
@@ -220,7 +222,7 @@ const SquadTable = React.memo(function SquadTable({
               <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Pos
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider sticky left-0 bg-gray-50 dark:bg-gray-700 z-20 border-r border-gray-200 dark:border-gray-700">
                 Player
               </th>
               <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -269,11 +271,20 @@ const SquadTable = React.memo(function SquadTable({
               <>
                 <tr className="bg-gray-100 dark:bg-gray-600">
                   <td
-                    colSpan={12}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 text-center"
+                    colSpan={2}
+                    className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 text-center sticky left-0 bg-gray-100 dark:bg-gray-600 z-10 border-r border-gray-200 dark:border-gray-700"
                   >
                     Bench
                   </td>
+                  <td className="px-3 py-2 text-sm text-center"></td>
+                  <td className="px-3 py-2 text-sm text-center"></td>
+                  <td className="px-3 py-2 text-sm text-center"></td>
+                  <td className="px-3 py-2 text-sm text-center"></td>
+                  <td className="px-3 py-2 text-sm text-center"></td>
+                  <td className="px-3 py-2 text-sm text-center"></td>
+                  <td className="px-3 py-2 text-sm text-center"></td>
+                  <td className="px-3 py-2 text-sm text-center"></td>
+                  <td className="px-3 py-2 text-sm text-center"></td>
                   <td className="px-3 py-2 text-sm text-center font-bold text-blue-600 dark:text-blue-400">
                     {benchTotalPoints}
                   </td>

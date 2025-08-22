@@ -11,6 +11,9 @@ import {
   MdSports,
   MdMoodBad,
   MdSentimentNeutral,
+  MdThumbUp,
+  MdThumbDown,
+  MdDangerous,
 } from "react-icons/md";
 
 interface AdvancedStatisticsProps {
@@ -316,7 +319,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               {rankData.safetyScore}
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              Sigurnosni rezultat
+              Prosjecan rezultat U GW
             </div>
           </div>
         </div>
@@ -334,7 +337,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           <div>
             <h4 className="font-medium text-yellow-600 dark:text-yellow-400 mb-3 flex items-center">
               <MdStar className="mr-2" />
-              Zvijezde ⭐
+              Zvijezde
             </h4>
             {teamAnalysis.stars.map((player, index) => (
               <div
@@ -342,7 +345,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                 className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg mb-2"
               >
                 <div className="flex items-center">
-                  <MdSports className="text-yellow-600 mr-2" />
+                  <MdStar className="text-yellow-600 mr-2" />
                   <span className="font-medium text-gray-900 dark:text-white">
                     {player.name}
                   </span>
@@ -363,7 +366,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           <div>
             <h4 className="font-medium text-gray-600 dark:text-gray-400 mb-3 flex items-center">
               <MdSentimentNeutral className="mr-2" />
-              Neuspjesi 😞
+              Neuspjesi
             </h4>
             {teamAnalysis.flops.map((player, index) => (
               <div
@@ -371,7 +374,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                 className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2"
               >
                 <div className="flex items-center">
-                  <MdSports className="text-gray-600 mr-2" />
+                  <MdThumbDown className="text-gray-600 mr-2" />
                   <span className="font-medium text-gray-900 dark:text-white">
                     {player.name}
                   </span>
@@ -392,7 +395,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           <div>
             <h4 className="font-medium text-red-600 dark:text-red-400 mb-3 flex items-center">
               <MdMoodBad className="mr-2" />
-              Ubice 😈
+              Ubice
             </h4>
             {teamAnalysis.killers.map((player, index) => (
               <div
@@ -400,7 +403,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                 className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/10 rounded-lg mb-2"
               >
                 <div className="flex items-center">
-                  <MdSports className="text-red-600 mr-2" />
+                  <MdDangerous className="text-red-600 mr-2" />
                   <span className="font-medium text-gray-900 dark:text-white">
                     {player.name}
                   </span>

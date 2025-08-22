@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { 
   MdPerson, 
   MdGroup, 
@@ -11,7 +11,9 @@ import {
   MdRefresh,
   MdSports,
   MdTrendingUp,
-  MdStars
+  MdStars,
+  MdBarChart,
+  MdFlashOn
 } from "react-icons/md";
 import { GiTrophy, GiArmBandage } from "react-icons/gi";
 import { BsLightningCharge } from "react-icons/bs";
@@ -21,12 +23,6 @@ interface LeagueTablesProps {
   managerId: number;
 }
 
-// Liga configs for live mode
-const LEAGUE_CONFIGS = {
-  premium: { id: 277005, name: "REMIS - Premium Liga" },
-  h2h: { id: 277479, name: "REMIS - H2H" }, 
-  standard: { id: 277449, name: "REMIS - Standard Liga" },
-};
 
 interface LivePlayer {
   id: string;
@@ -55,7 +51,7 @@ export default function LeagueTables({
   
   // Live mode state
   const [isLiveMode, setIsLiveMode] = useState(false);
-  const [selectedLiveLeague, setSelectedLiveLeague] = useState<string>("premium");
+  const [selectedLiveLeague, setSelectedLiveLeague] = useState<number | null>(null);
   const [liveData, setLiveData] = useState<LivePlayer[]>([]);
   const [isPolling, setIsPolling] = useState(false);
   const [liveStats, setLiveStats] = useState<any>(null);
@@ -75,9 +71,22 @@ export default function LeagueTables({
     };
   }, []);
 
+  // Get available leagues for live mode
+  const availableLeagues = useMemo(() => [
+    ...(leagueData?.classic || []).map((league: any) => ({ ...league, type: 'classic' })),
+    ...(leagueData?.h2h || []).map((league: any) => ({ ...league, type: 'h2h' }))
+  ], [leagueData]);
+
+  // Set initial selected league when available leagues change
+  useEffect(() => {
+    if (availableLeagues.length > 0 && selectedLiveLeague === null) {
+      setSelectedLiveLeague(availableLeagues[0].id);
+    }
+  }, [availableLeagues, selectedLiveLeague]);
+
   // Live polling effect
   useEffect(() => {
-    if (isPolling && isLiveMode) {
+    if (isPolling && isLiveMode && selectedLiveLeague) {
       const poll = () => fetchLiveData();
       
       // Initial fetch
@@ -98,47 +107,51 @@ export default function LeagueTables({
     if (!isLiveMode || !selectedLiveLeague) return;
     
     try {
-      // Get league players first
-      const playersResponse = await fetch(`/api/admin/fpl-sync`, {
+      const selectedLeague = availableLeagues.find(league => league.id === selectedLiveLeague);
+      if (!selectedLeague) return;
+      
+      const isH2H = selectedLeague.type === 'h2h';
+      
+      // Get league standings with regular API
+      const standingsResponse = await fetch(
+        `/api/fpl/leagues/${isH2H ? 'h2h' : 'classic'}?leagueId=${selectedLiveLeague}&managerId=${managerId}&page=1&pageSize=50`
+      );
+      
+      if (!standingsResponse.ok) return;
+      
+      const standingsResult = await standingsResponse.json();
+      if (!standingsResult.success || !standingsResult.data?.standings) return;
+      
+      // Get live bonus data from poll endpoint
+      const liveResponse = await fetch('/api/fpl/poll', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leagueType: selectedLiveLeague })
+        body: JSON.stringify({ gameweek: 1, secret: 'auto-poll' })
       });
       
-      if (!playersResponse.ok) return;
+      const liveBonus = liveResponse.ok ? await liveResponse.json() : { data: { new_events: 0 } };
       
-      const playersData = await playersResponse.json();
-      
-      // Get live bonus data
-      const liveResponse = await fetch('/api/fpl/live-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameweek: 1, limit: 50 })
-      });
-      
-      const liveBonus = liveResponse.ok ? await liveResponse.json() : { data: [] };
-      
-      // Combine data
-      const combinedPlayers: LivePlayer[] = (playersData.matches || []).map((match: any, index: number) => ({
-        id: match.dbId,
-        name: match.dbName,
-        team: match.dbTeam,
-        overall_points: match.fplPoints,
-        live_points: match.fplPoints + (liveBonus.data?.find((bonus: any) => 
-          bonus.player_id === match.fplPlayer?.entry)?.points || 0),
-        captain_multiplier: 2, // Default
-        vice_captain_multiplier: 1,
-        bonus_points: liveBonus.data?.find((bonus: any) => 
-          bonus.player_id === match.fplPlayer?.entry)?.points || 0,
-        rank: index + 1,
-        is_captain: false, // Would need team data to determine
-        is_vice_captain: false,
-      })).sort((a: LivePlayer, b: LivePlayer) => b.live_points - a.live_points);
+      // Combine standings with live data - currently no live bonus system active
+      const combinedPlayers: LivePlayer[] = standingsResult.data.standings.map((entry: any) => {        
+        return {
+          id: entry.entry.toString(),
+          name: entry.player_name || entry.entry_name,
+          team: entry.entry_name,
+          overall_points: entry.total,
+          live_points: entry.total, // No live bonus for now
+          captain_multiplier: 2,
+          vice_captain_multiplier: 1,
+          bonus_points: 0, // No live bonus for now
+          rank: entry.rank,
+          is_captain: false,
+          is_vice_captain: false,
+        };
+      }).sort((a: LivePlayer, b: LivePlayer) => b.live_points - a.live_points);
       
       setLiveData(combinedPlayers);
       setLiveStats({
         total_players: combinedPlayers.length,
-        live_events: liveBonus.data?.length || 0,
+        live_events: liveBonus.data?.new_events || 0,
         gameweek: liveBonus.gameweek || 1
       });
       setLastLiveUpdate(new Date().toLocaleTimeString());
@@ -279,14 +292,15 @@ export default function LeagueTables({
           {/* Live mode toggle */}
           <button
             onClick={toggleLiveMode}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               isLiveMode 
                 ? "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-300" 
                 : "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300"
             }`}
           >
             {isLiveMode ? <MdStop /> : <MdPlayArrow />}
-            {isLiveMode ? "Exit Live" : "Start Live"}
+            <span className="hidden xs:inline">{isLiveMode ? "Exit Live" : "Start Live"}</span>
+            <span className="xs:hidden">{isLiveMode ? "Exit" : "Live"}</span>
           </button>
         </div>
       </div>
@@ -302,21 +316,21 @@ export default function LeagueTables({
               <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Live Tracking Controls</h4>
             </div>
             
-            {/* Controls Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* League Selection */}
+            {/* League Selection */}
+            <div className="space-y-4">
               <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  📊 League Selection
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <MdBarChart className="w-4 h-4" />
+                  League Selection
                 </label>
                 <select
-                  value={selectedLiveLeague}
-                  onChange={(e) => setSelectedLiveLeague(e.target.value)}
+                  value={selectedLiveLeague || ''}
+                  onChange={(e) => setSelectedLiveLeague(Number(e.target.value))}
                   className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-medium shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
-                  {Object.entries(LEAGUE_CONFIGS).map(([key, config]) => (
-                    <option key={key} value={key}>
-                      🏆 {config.name}
+                  {availableLeagues.map((league: any) => (
+                    <option key={`${league.id}-${league.type}`} value={league.id}>
+                      {league.name} ({league.type === 'h2h' ? 'H2H' : 'Classic'})
                     </option>
                   ))}
                 </select>
@@ -324,17 +338,18 @@ export default function LeagueTables({
               
               {/* Control Buttons */}
               <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  ⚡ Live Actions
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <MdFlashOn className="w-4 h-4" />
+                  Live Actions
                 </label>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={togglePolling}
                     disabled={!selectedLiveLeague}
-                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg ${
+                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${
                       isPolling
-                        ? "bg-gradient-to-r from-red-500 to-orange-500 text-white hover:from-red-600 hover:to-orange-600"
-                        : "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600"
+                        ? "bg-red-500 text-white hover:bg-red-600"
+                        : "bg-green-500 text-white hover:bg-green-600"
                     }`}
                   >
                     {isPolling ? <MdStop className="w-5 h-5" /> : <MdPlayArrow className="w-5 h-5" />}
@@ -344,7 +359,7 @@ export default function LeagueTables({
                   <button
                     onClick={fetchLiveData}
                     disabled={!selectedLiveLeague}
-                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-sm bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-blue-500 dark:hover:border-blue-400 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-md"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium text-sm bg-blue-500 text-white hover:bg-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                   >
                     <MdRefresh className="w-4 h-4" />
                     Refresh
@@ -356,7 +371,7 @@ export default function LeagueTables({
             {/* Live Stats */}
             {liveStats && (
               <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center shadow-sm border border-gray-200 dark:border-gray-700">
                     <MdPerson className="w-6 h-6 text-blue-500 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-gray-900 dark:text-white">{liveStats.total_players}</div>
@@ -391,11 +406,12 @@ export default function LeagueTables({
           {liveData.length > 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-green-500 to-blue-500 px-6 py-4">
-                <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                <h3 className="text-white font-bold text-base sm:text-lg flex items-center gap-2">
                   <BsLightningCharge className="w-5 h-5" />
-                  Live League Standings
-                  <span className="ml-auto bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
-                    {LEAGUE_CONFIGS[selectedLiveLeague as keyof typeof LEAGUE_CONFIGS]?.name}
+                  <span className="hidden sm:inline">Live League Standings</span>
+                  <span className="sm:hidden">Live Standings</span>
+                  <span className="ml-auto bg-white/20 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+                    {availableLeagues.find(league => league.id === selectedLiveLeague)?.name}
                   </span>
                 </h3>
               </div>
@@ -404,10 +420,10 @@ export default function LeagueTables({
                 <table className="w-full">
                   <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider sticky left-0 z-10 bg-gray-50 dark:bg-gray-700">
                         Rank
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider sticky z-10 bg-gray-50 dark:bg-gray-700" style={{left: '100px'}}>
                         Manager
                       </th>
                       <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
@@ -446,7 +462,7 @@ export default function LeagueTables({
                             : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
                         }`}
                       >
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 sticky left-0 z-10 bg-white dark:bg-gray-800">
                           <div className="flex items-center gap-2">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                               index < 3 
@@ -464,7 +480,7 @@ export default function LeagueTables({
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 sticky z-10 bg-white dark:bg-gray-800" style={{left: '100px'}}>
                           <div>
                             <div className="font-semibold text-gray-900 dark:text-white text-sm">{player.name}</div>
                             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{player.team}</div>
@@ -493,7 +509,7 @@ export default function LeagueTables({
                               +{player.bonus_points}
                             </span>
                           ) : (
-                            <span className="text-gray-400 text-sm">–</span>
+                            <span className="text-gray-400 text-sm">—</span>
                           )}
                         </td>
                         <td className="px-6 py-4 text-center">
@@ -506,7 +522,7 @@ export default function LeagueTables({
                               VC
                             </span>
                           ) : (
-                            <span className="text-gray-400 text-sm">–</span>
+                            <span className="text-gray-400 text-sm">—</span>
                           )}
                         </td>
                       </tr>
@@ -543,7 +559,7 @@ export default function LeagueTables({
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Loading Live Data...</h3>
                       <p className="text-gray-500 dark:text-gray-400">
-                        Fetching latest standings from {LEAGUE_CONFIGS[selectedLiveLeague as keyof typeof LEAGUE_CONFIGS]?.name}
+                        Fetching latest standings from {availableLeagues.find(league => league.id === selectedLiveLeague)?.name}
                       </p>
                     </div>
                   </>

@@ -229,7 +229,7 @@ const LiveTicker = React.memo(function LiveTicker({ gameweek, isPolling }: LiveT
               <MdWifiOff className="w-4 h-4 text-gray-400" />
             )}
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {isPolling ? "Live" : "Offline"}
+              {isPolling ? "Live — polling" : "Offline — not polling"}
             </span>
           </div>
         </div>

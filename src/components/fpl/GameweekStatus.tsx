@@ -234,7 +234,7 @@ const GameweekStatus = React.memo(function GameweekStatus({
         <div className="mb-6">
           <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
             <MdWarning className="text-red-500 text-xl mr-2" />
-            Prijetnje
+            Propušteni igrači
           </h4>
           <div className="space-y-2">
             {gameweekStatus.threats.map((threat) => (
