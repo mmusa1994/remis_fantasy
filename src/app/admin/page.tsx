@@ -32,7 +32,8 @@ export default function AdminLogin() {
       } else {
         setError("An error occurred. Please try again.");
       }
-    } catch {
+    } catch (error) {
+      console.error("Admin login error:", error);
       setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);

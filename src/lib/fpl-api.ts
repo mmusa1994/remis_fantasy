@@ -417,6 +417,53 @@ class FPLAPIService {
     );
   }
 
+  async getAllLeagueStandings(
+    leagueId: number,
+    maxTeams: number = 110
+  ): Promise<any> {
+    const firstPage = await this.getLeagueStandings(leagueId, 1);
+    const pageSize = 120; // FPL default page size
+    const totalTeams = Math.min(firstPage.league?.size || 0, maxTeams);
+    const totalPages = Math.ceil(totalTeams / pageSize);
+
+    if (totalPages <= 1) {
+      return {
+        ...firstPage,
+        standings: {
+          ...firstPage.standings,
+          results: firstPage.standings?.results?.slice(0, maxTeams) || [],
+        },
+      };
+    }
+
+    const allResults = [...(firstPage.standings?.results || [])];
+    const pagePromises = [];
+
+    for (
+      let page = 2;
+      page <= totalPages && allResults.length < maxTeams;
+      page++
+    ) {
+      pagePromises.push(this.getLeagueStandings(leagueId, page));
+    }
+
+    const additionalPages = await Promise.all(pagePromises);
+
+    for (const pageData of additionalPages) {
+      if (pageData.standings?.results) {
+        allResults.push(...pageData.standings.results);
+      }
+    }
+
+    return {
+      ...firstPage,
+      standings: {
+        ...firstPage.standings,
+        results: allResults.slice(0, maxTeams),
+      },
+    };
+  }
+
   async getH2HLeague(leagueId: number, page: number = 1): Promise<any> {
     return await this.fetchWithRetry(
       `/leagues-h2h/${leagueId}/standings/?page_standings=${page}&page_new_entries=1`

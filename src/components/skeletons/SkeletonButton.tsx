@@ -53,7 +53,7 @@ export default function SkeletonButton({
       case "secondary":
         return "border border-gray-300 dark:border-gray-600";
       case "icon":
-        return "rounded-full";
+        return "";
       default:
         return "";
     }
@@ -66,9 +66,8 @@ export default function SkeletonButton({
   if (showIcon) {
     return (
       <div
-        className={`flex items-center gap-2 ${
-          fullWidth ? "w-full" : ""
-        } ${className}`}
+        className={`flex items-center gap-2 ${className}`}
+        style={{ width: fullWidth ? "100%" : buttonWidth }}
       >
         <SkeletonBase
           width="1.5rem"
@@ -79,7 +78,7 @@ export default function SkeletonButton({
           <SkeletonBase
             width={
               typeof buttonWidth === "string" && buttonWidth !== "100%"
-                ? "calc(100% - 2.5rem)"
+                ? "calc(100% - 2rem)"
                 : "4rem"
             }
             height={buttonHeight}

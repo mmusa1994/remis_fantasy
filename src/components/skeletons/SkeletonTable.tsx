@@ -33,6 +33,10 @@ export default function SkeletonTable({
   className = "",
   variant = "default",
 }: SkeletonTableProps) {
+  // Clamp rows and cols to safe minimum values
+  const safeRows = Math.max(1, rows);
+  const safeCols = Math.max(1, cols);
+
   const getTableClasses = () => {
     switch (variant) {
       case "standings":
@@ -52,10 +56,8 @@ export default function SkeletonTable({
       {(title || showActions) && (
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            {title ? (
+            {title && (
               <SkeletonBase width="8rem" height="1.5rem" rounded="md" />
-            ) : (
-              <div></div>
             )}
 
             {showActions && (
@@ -75,13 +77,13 @@ export default function SkeletonTable({
           {showHeader && (
             <thead className="bg-gray-100 dark:bg-gray-600">
               <tr>
-                {Array.from({ length: cols }, (_, colIndex) => (
-                  <th key={colIndex} className="px-4 py-3 text-left">
+                {Array.from({ length: safeCols }, (_, colIndex) => (
+                  <th key={colIndex} scope="col" className="px-4 py-3 text-left">
                     <SkeletonBase
                       width={
                         colIndex === 0
                           ? "2rem"
-                          : colIndex === cols - 1
+                          : colIndex === safeCols - 1
                           ? "4rem"
                           : "6rem"
                       }
@@ -96,18 +98,18 @@ export default function SkeletonTable({
 
           {/* Table Body */}
           <tbody>
-            {Array.from({ length: rows }, (_, rowIndex) => (
+            {Array.from({ length: safeRows }, (_, rowIndex) => (
               <tr
                 key={rowIndex}
                 className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                {Array.from({ length: cols }, (_, colIndex) => (
+                {Array.from({ length: safeCols }, (_, colIndex) => (
                   <td key={colIndex} className="px-4 py-3">
                     <SkeletonBase
                       width={
                         colIndex === 0
                           ? "2rem"
-                          : colIndex === cols - 1
+                          : colIndex === safeCols - 1
                           ? "3rem"
                           : colIndex === 1
                           ? "8rem"

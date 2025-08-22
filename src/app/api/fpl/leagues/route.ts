@@ -16,9 +16,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const managerId = parseInt(managerIdParam, 10);
+    // Validate managerId is a positive integer
+    if (!/^\d+$/.test(managerIdParam)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid managerId parameter",
+        },
+        { status: 400 }
+      );
+    }
 
-    if (isNaN(managerId)) {
+    const managerId = Number(managerIdParam);
+
+    if (!Number.isSafeInteger(managerId) || managerId <= 0) {
       return NextResponse.json(
         {
           success: false,

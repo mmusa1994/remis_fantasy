@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import Toast from "@/components/shared/Toast";
+import { SkeletonDashboard } from "@/components/skeletons";
 
 interface LeaguePlayer {
   id: string;
@@ -334,11 +335,12 @@ export default function AdminTablesCleanPage() {
       // Refresh the tables after update
       await loadTables();
 
+      const totalInLeague = result.totalFPLPlayers || (result.updatedCount + (result.notFoundPlayers?.length || 0));
       let message = `${result.leagueType.toUpperCase()} liga ažurirana! Ažurirano ${
         result.updatedCount
-      } igrača iz FPL API-ja.`;
+      } od ukupno ${totalInLeague} igrača u ligi.`;
       if (result.notFoundPlayers && result.notFoundPlayers.length > 0) {
-        message += ` Nisu pronađeni: ${result.notFoundPlayers
+        message += ` Nisu pronađeni u bazi: ${result.notFoundPlayers
           .slice(0, 3)
           .join(", ")}${result.notFoundPlayers.length > 3 ? "..." : ""}`;
       }
@@ -422,13 +424,7 @@ export default function AdminTablesCleanPage() {
 
   // Show loading state while checking authentication
   if (status === "loading") {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">Učitavam...</p>
-        </div>
-      </div>
-    );
+    return <SkeletonDashboard variant="admin" />;
   }
 
   // Redirect if not authenticated (this shouldn't render due to useEffect redirect)

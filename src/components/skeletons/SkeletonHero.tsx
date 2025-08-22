@@ -27,7 +27,11 @@ export default function SkeletonHero({
       <div className="max-w-6xl mx-auto text-center">
         {/* Logo Skeleton */}
         {showLogo && (
-          <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 mx-auto mb-8 flex items-center justify-center">
+          <div 
+            className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 mx-auto mb-8 flex items-center justify-center"
+            aria-hidden="true"
+            role="presentation"
+          >
             <SkeletonBase
               width="100%"
               height="100%"

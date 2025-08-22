@@ -2,7 +2,7 @@
 
 import PrizesGallery from "@/components/shared/PrizesGallery";
 import { useLeaguePrizes, usePageContent } from "@/hooks/useLeagueData";
-import SkeletonPage from "@/components/skeletons/SkeletonPage";
+import { SkeletonPage } from "@/components/skeletons";
 
 export default function PremierLeagueNagradePage() {
   const {

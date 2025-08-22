@@ -12,25 +12,89 @@ const LEAGUE_CONFIGS = {
 
 type LeagueType = keyof typeof LEAGUE_CONFIGS;
 
-async function fetchFPLData(leagueId: number, type: string): Promise<any> {
+async function fetchFPLData(leagueId: number, type: string, maxRecords: number = 50): Promise<any> {
   const baseUrl = `https://fantasy.premierleague.com/api/leagues-classic/${leagueId}/standings/`;
   const h2hUrl = `https://fantasy.premierleague.com/api/leagues-h2h/${leagueId}/standings/`;
 
   const url = type === "matches" ? h2hUrl : baseUrl;
 
   try {
-    const response = await fetch(url, {
+    // Fetch first page to get total size
+    const firstResponse = await fetch(url + "?page_standings=1", {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`FPL API returned ${response.status}`);
+    if (!firstResponse.ok) {
+      throw new Error(`FPL API returned ${firstResponse.status}`);
     }
 
-    return await response.json();
+    const firstPageData = await firstResponse.json();
+    let allResults = [...(type === "matches" ? firstPageData.results || [] : firstPageData.standings?.results || [])];
+    
+    console.log(`[FETCH FPL] League ${leagueId}, MaxRecords: ${maxRecords}, FirstPageResults: ${allResults.length}`);
+    
+    // If we need more records and there are more pages, fetch additional pages
+    if (maxRecords > 50) {
+      const totalEntries = type === "matches" ? firstPageData.league?.size || 0 : firstPageData.league?.size || 0;
+      const totalPages = Math.ceil(Math.min(totalEntries, maxRecords) / 50);
+      
+      console.log(`[FETCH FPL] TotalEntries: ${totalEntries}, TotalPages: ${totalPages}`);
+      
+      if (totalPages > 1) {
+        const additionalPages = [];
+        
+        for (let page = 2; page <= totalPages && allResults.length < maxRecords; page++) {
+          additionalPages.push(
+            fetch(url + `?page_standings=${page}`, {
+              headers: {
+                "User-Agent":
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+              },
+            }).then(response => {
+              if (!response.ok) {
+                throw new Error(`FPL API returned ${response.status} for page ${page}`);
+              }
+              return response.json();
+            })
+          );
+        }
+        
+        console.log(`[FETCH FPL] Fetching ${additionalPages.length} additional pages...`);
+        const additionalPagesData = await Promise.all(additionalPages);
+        
+        for (const pageData of additionalPagesData) {
+          const pageResults = type === "matches" ? pageData.results || [] : pageData.standings?.results || [];
+          console.log(`[FETCH FPL] Additional page results: ${pageResults.length}`);
+          allResults.push(...pageResults);
+        }
+      }
+    }
+    
+    // Limit to maxRecords
+    allResults = allResults.slice(0, maxRecords);
+    
+    console.log(`[FETCH FPL] Final results count: ${allResults.length}, MaxRecords: ${maxRecords}`);
+    
+    // Return data in the same format as original
+    if (type === "matches") {
+      return {
+        ...firstPageData,
+        results: allResults,
+        totalFetched: allResults.length
+      };
+    } else {
+      return {
+        ...firstPageData,
+        standings: {
+          ...firstPageData.standings,
+          results: allResults
+        },
+        totalFetched: allResults.length
+      };
+    }
   } catch (error) {
     console.error(`Error fetching FPL data for league ${leagueId}:`, error);
     throw error;
@@ -72,6 +136,8 @@ function normalizeTeamName(name: string): string {
 async function updatePlayersFromFPL(leagueType: LeagueType, fplData: any) {
   let updatedCount = 0;
   const notFoundPlayers: string[] = [];
+  const allFPLPlayers: any[] = [];
+  const foundPlayers: any[] = [];
 
   // Get all players from database
   const { data: dbPlayers, error: fetchError } = await supabase
@@ -88,6 +154,7 @@ async function updatePlayersFromFPL(leagueType: LeagueType, fplData: any) {
   if (leagueType === "h2h" || leagueType === "h2h2") {
     // Process H2H data
     const results = fplData.results || [];
+    allFPLPlayers.push(...results);
 
     for (const fplPlayer of results) {
       const normalizedFPLName = normalizePlayerName(fplPlayer.player_name);
@@ -133,6 +200,28 @@ async function updatePlayersFromFPL(leagueType: LeagueType, fplData: any) {
           data: updateData,
         });
 
+        foundPlayers.push({
+          fpl: {
+            rank: fplPlayer.rank,
+            name: fplPlayer.player_name,
+            team: fplPlayer.entry_name,
+            total: fplPlayer.total,
+            h2h_points: fplPlayer.points_for || 0
+          },
+          db: {
+            id: dbPlayer.id,
+            name: `${dbPlayer.first_name} ${dbPlayer.last_name}`,
+            team: dbPlayer.team_name,
+            email: dbPlayer.email,
+            current_points: dbPlayer.points,
+            current_h2h_points: dbPlayer.h2h_points || 0,
+            new_points: fplPlayer.total,
+            new_h2h_points: fplPlayer.points_for || 0,
+            points_difference: fplPlayer.total - (dbPlayer.points || 0),
+            h2h_points_difference: (fplPlayer.points_for || 0) - (dbPlayer.h2h_points || 0)
+          }
+        });
+
         updatedCount++;
       } else {
         notFoundPlayers.push(
@@ -143,6 +232,7 @@ async function updatePlayersFromFPL(leagueType: LeagueType, fplData: any) {
   } else {
     // Process standings data (premium/standard leagues)
     const results = fplData.standings?.results || [];
+    allFPLPlayers.push(...results);
 
     for (const fplPlayer of results) {
       const normalizedFPLName = normalizePlayerName(fplPlayer.player_name);
@@ -178,6 +268,24 @@ async function updatePlayersFromFPL(leagueType: LeagueType, fplData: any) {
             },
           });
 
+          foundPlayers.push({
+            fpl: {
+              rank: fplPlayer.rank,
+              name: fplPlayer.player_name,
+              team: fplPlayer.entry_name,
+              total: fplPlayer.total
+            },
+            db: {
+              id: dbPlayer.id,
+              name: `${dbPlayer.first_name} ${dbPlayer.last_name}`,
+              team: dbPlayer.team_name,
+              email: dbPlayer.email,
+              current_points: dbPlayer.points, // postojeći poeni u bazi
+              new_points: fplPlayer.total, // novi poeni iz FPL-a
+              points_difference: fplPlayer.total - (dbPlayer.points || 0)
+            }
+          });
+
           updatedCount++;
         }
       } else {
@@ -200,7 +308,13 @@ async function updatePlayersFromFPL(leagueType: LeagueType, fplData: any) {
     }
   }
 
-  return { updatedCount, notFoundPlayers };
+  return { 
+    updatedCount, 
+    notFoundPlayers, 
+    allFPLPlayers,
+    foundPlayers,
+    totalFPLPlayers: allFPLPlayers.length
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -225,11 +339,18 @@ export async function POST(request: NextRequest) {
 
     const config = LEAGUE_CONFIGS[leagueType as LeagueType];
 
+    // Determine max records based on league type
+    const maxRecords = leagueType === 'standard' ? 120 : 50;
+    
+    console.log(`[FPL UPDATE] League: ${leagueType}, ID: ${config.id}, MaxRecords: ${maxRecords}`);
+    
     // Fetch data from FPL API
-    const fplData = await fetchFPLData(config.id, config.type);
+    const fplData = await fetchFPLData(config.id, config.type, maxRecords);
+    
+    console.log(`[FPL UPDATE] Fetched records: ${fplData.totalFetched || 'unknown'}`);
 
     // Update players in database
-    const { updatedCount, notFoundPlayers } = await updatePlayersFromFPL(
+    const { updatedCount, notFoundPlayers, allFPLPlayers, foundPlayers, totalFPLPlayers } = await updatePlayersFromFPL(
       leagueType as LeagueType,
       fplData
     );
@@ -239,8 +360,40 @@ export async function POST(request: NextRequest) {
       leagueType,
       leagueId: config.id,
       updatedCount,
+      totalFPLPlayers,
       notFoundPlayers,
+      maxRecords,
       message: `Successfully updated ${updatedCount} players from ${leagueType} league`,
+      // Summary overview
+      summary: {
+        fpl_players_fetched: totalFPLPlayers,
+        db_players_matched: updatedCount,
+        db_players_not_found: notFoundPlayers.length,
+        match_percentage: Math.round((updatedCount / totalFPLPlayers) * 100),
+        requested_max: maxRecords
+      },
+      // Complete list of all FPL players fetched
+      allFPLPlayers: allFPLPlayers.map((p: any, index: number) => ({
+        rank: p.rank || (index + 1),
+        name: p.player_name,
+        team: p.entry_name,
+        total: p.total,
+        entry_id: p.entry,
+        ...(leagueType === "h2h" || leagueType === "h2h2" ? {
+          h2h_points: p.points_for || 0,
+          matches_won: p.matches_won || 0,
+          matches_drawn: p.matches_drawn || 0,
+          matches_lost: p.matches_lost || 0
+        } : {})
+      })),
+      // Players that were found and updated in database
+      foundPlayers,
+      fplData: {
+        leagueSize: fplData.league?.size || 0,
+        fetchedRecords: totalFPLPlayers,
+        actualDataLength: allFPLPlayers.length,
+        requestedMaxRecords: maxRecords
+      }
     });
   } catch (error) {
     console.error("Error updating from FPL:", error);

@@ -24,7 +24,9 @@ export default function LeagueTables({
   const [totalEntries, setTotalEntries] = useState<{ [key: number]: number }>(
     {}
   );
+  const [lastFetched, setLastFetched] = useState<{ [key: number]: number }>({});
   const maxPositions = 50; // Limit to top 50
+  const DATA_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
   const fetchLeagueStandings = async (
     leagueId: number,
@@ -68,6 +70,12 @@ export default function LeagueTables({
           setTotalEntries((prev) => ({
             ...prev,
             [leagueId]: result.data.total_entries || 0,
+          }));
+
+          // Record the timestamp when data was successfully fetched
+          setLastFetched((prev) => ({
+            ...prev,
+            [leagueId]: Date.now(),
           }));
         } else {
           setLeagueStandings((prev) => ({
@@ -125,8 +133,13 @@ export default function LeagueTables({
     } else {
       setExpandedLeagues((prev) => new Set([...prev, leagueId]));
 
-      // Only fetch if we don't have any data for this league
-      if (!leagueStandings[leagueId]) {
+      // Check if we need to fetch or refresh data
+      const hasData = leagueStandings[leagueId];
+      const lastFetchedTime = lastFetched[leagueId];
+      const isDataStale =
+        lastFetchedTime && Date.now() - lastFetchedTime > DATA_TTL;
+
+      if (!hasData || isDataStale) {
         fetchLeagueStandings(leagueId, isH2H);
       }
     }

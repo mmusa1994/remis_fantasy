@@ -1,5 +1,5 @@
-import React from 'react';
-import SkeletonBase from './SkeletonBase';
+import React from "react";
+import SkeletonBase from "./SkeletonBase";
 
 interface SkeletonStatsGridProps {
   /** Number of stat cards to show */
@@ -16,11 +16,13 @@ interface SkeletonStatsGridProps {
  */
 export default function SkeletonStatsGrid({
   count = 4,
-  className = '',
+  className = "",
   showIcons = true,
 }: SkeletonStatsGridProps) {
   return (
-    <div className={`grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 ${className}`}>
+    <div
+      className={`grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 ${className}`}
+    >
       {Array.from({ length: count }, (_, index) => (
         <div
           key={index}
@@ -41,14 +43,14 @@ export default function SkeletonStatsGrid({
           {/* Value Skeleton */}
           <SkeletonBase
             height="2rem"
-            className="mb-2 mx-auto max-w-16 md:max-w-20"
+            className="mb-2 mx-auto max-w-[4rem] md:max-w-[5rem]"
             rounded="md"
           />
 
           {/* Label Skeleton */}
           <SkeletonBase
             height="1rem"
-            className="mx-auto max-w-20 md:max-w-24"
+            className="mx-auto max-w-[5rem] md:max-w-[6rem]"
             rounded="sm"
           />
         </div>

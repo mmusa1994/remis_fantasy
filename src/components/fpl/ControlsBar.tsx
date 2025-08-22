@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MdDownload, MdPlayArrow, MdStop } from "react-icons/md";
 
 interface ControlsBarProps {
@@ -31,6 +31,14 @@ export default function ControlsBar({
   );
   const [localGameweek, setLocalGameweek] = useState(gameweek.toString());
 
+  // Keep inputs in sync when parent props change
+  useEffect(() => {
+    setLocalManagerId(managerId?.toString() || "");
+  }, [managerId]);
+  useEffect(() => {
+    setLocalGameweek(gameweek.toString());
+  }, [gameweek]);
+
   const handleManagerIdChange = (value: string) => {
     setLocalManagerId(value);
     const id = parseInt(value, 10);
@@ -47,8 +55,8 @@ export default function ControlsBar({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
       e.preventDefault();
       e.stopPropagation();
       if (!loading) {
@@ -62,14 +70,18 @@ export default function ControlsBar({
       <div className="flex flex-wrap items-center gap-4">
         {/* Manager ID Input */}
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+          <label
+            htmlFor="manager-id-input"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap"
+          >
             Manager ID:
           </label>
           <input
+            id="manager-id-input"
             type="number"
             value={localManagerId}
             onChange={(e) => handleManagerIdChange(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
             placeholder="133790"
             title="Press Enter to load team"
@@ -78,16 +90,23 @@ export default function ControlsBar({
 
         {/* Gameweek Input */}
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+          <label
+            htmlFor="gameweek-input"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap"
+          >
             GW:
           </label>
           <input
+            id="gameweek-input"
             type="number"
             min="1"
             max="38"
+            step="1"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={localGameweek}
             onChange={(e) => handleGameweekChange(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             className="w-16 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
           />
         </div>
@@ -95,7 +114,14 @@ export default function ControlsBar({
         {/* Load Team Button */}
         <button
           onClick={onLoadTeam}
-          disabled={loading}
+          disabled={
+            loading ||
+            isNaN(parseInt(localManagerId, 10)) ||
+            parseInt(localManagerId, 10) <= 0 ||
+            isNaN(parseInt(localGameweek, 10)) ||
+            parseInt(localGameweek, 10) < 1 ||
+            parseInt(localGameweek, 10) > 38
+          }
           className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
         >
           {loading ? (
@@ -113,6 +139,7 @@ export default function ControlsBar({
 
         {/* Start/Stop Live Button */}
         <button
+          type="button"
           onClick={isPolling ? onStopPolling : onStartPolling}
           disabled={loading}
           className={`flex items-center gap-1 text-sm font-medium py-1.5 px-3 rounded transition-colors duration-200 ${
@@ -122,21 +149,32 @@ export default function ControlsBar({
           } text-white`}
         >
           {isPolling ? (
-            <><MdStop className="text-sm" />Stop Live</>
+            <>
+              <MdStop className="text-sm" />
+              Stop Live
+            </>
           ) : (
-            <><MdPlayArrow className="text-sm" />Start Live</>
+            <>
+              <MdPlayArrow className="text-sm" />
+              Start Live
+            </>
           )}
         </button>
 
         {/* Status Indicator */}
-        <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-2"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <div
             className={`w-2 h-2 rounded-full ${
               isPolling ? "bg-green-500 animate-pulse" : "bg-gray-400"
             }`}
+            aria-hidden="true"
           ></div>
           <span className="text-xs text-gray-600 dark:text-gray-400">
-            {isPolling ? "Live" : "Offline"}
+            {isPolling ? "Live — polling active" : "Offline — not polling"}
           </span>
         </div>
       </div>

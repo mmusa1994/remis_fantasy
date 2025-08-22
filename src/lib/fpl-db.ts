@@ -137,6 +137,10 @@ class FPLDatabaseService {
       cron_secret: string | null;
       default_gw: number;
       default_manager_id: number;
+      premium_league_id: number | null;
+      standard_league_id: number | null;
+      h2h_league_id: number | null;
+      h2h2_league_id: number | null;
     }>
   ) {
     const { error } = await supabaseAdmin
@@ -145,6 +149,37 @@ class FPLDatabaseService {
 
     if (error) {
       throw new Error(`Error updating settings: ${error.message}`);
+    }
+  }
+
+  async updateLeagueStandings(standings: Array<{
+    entry_id: number;
+    entry_name: string;
+    player_name: string;
+    total: number;
+    rank: number;
+  }>, leagueType: "premium" | "standard" | "h2h" | "h2h2") {
+    const updates = standings.map((standing, index) => ({
+      fpl_manager_id: standing.entry_id,
+      team_name: standing.entry_name,
+      player_name: standing.player_name,
+      points: standing.total,
+      position: index + 1,
+      league_type: leagueType === "h2h" || leagueType === "h2h2" ? null : leagueType,
+      h2h_category: leagueType === "h2h" || leagueType === "h2h2" ? leagueType : null,
+    }));
+
+    for (const update of updates) {
+      const { error } = await supabaseAdmin
+        .from("premier_league_25_26")
+        .upsert(update, {
+          onConflict: "fpl_manager_id",
+          ignoreDuplicates: false,
+        });
+
+      if (error) {
+        console.error(`Error updating standing for manager ${update.fpl_manager_id}:`, error);
+      }
     }
   }
 }
