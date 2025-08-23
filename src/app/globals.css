@@ -868,6 +868,28 @@ body {
   background-color: transparent;
 }
 
+/* FPL Live specific utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Enhanced tab navigation */
+.tab-scroll {
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Touch-friendly buttons */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
 /* Mobile-specific optimizations */
 @media (max-width: 768px) {
   .animate-fade-in-up,

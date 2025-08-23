@@ -125,7 +125,7 @@ const SquadTable = React.memo(function SquadTable({
 
     return (
       <tr
-        className={`${
+        className={`group ${
           !isStarter ? "bg-theme-accent" : ""
         } hover:bg-theme-accent transition-colors`}
       >
@@ -151,7 +151,11 @@ const SquadTable = React.memo(function SquadTable({
             )}
           </div>
         </td>
-        <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-theme-primary">
+        <td
+          className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-theme-primary sticky left-0 z-10 group-hover:bg-theme-accent transition-colors ${
+            !isStarter ? "bg-theme-accent" : "bg-theme-card"
+          }`}
+        >
           <div className="truncate max-w-[120px] sm:max-w-none">
             <span className="font-semibold">{pick.player.web_name}</span>
             {getMultiplierDisplay(pick) && (
@@ -176,11 +180,15 @@ const SquadTable = React.memo(function SquadTable({
             </span>
           </div>
         </td>
-        <td className="px-1 sm:px-2 py-2 text-xs text-center">{stats?.minutes || 0}</td>
+        <td className="px-1 sm:px-2 py-2 text-xs text-center">
+          {stats?.minutes || 0}
+        </td>
         <td className="px-1 py-2 text-xs text-center font-medium">
           {stats?.goals_scored || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center font-medium">{stats?.assists || 0}</td>
+        <td className="px-1 py-2 text-xs text-center font-medium">
+          {stats?.assists || 0}
+        </td>
         <td className="px-1 py-2 text-xs text-center font-medium">
           {stats?.clean_sheets || 0}
         </td>
@@ -191,7 +199,9 @@ const SquadTable = React.memo(function SquadTable({
           {stats?.red_cards || 0}
         </td>
         <td className="px-1 py-2 text-xs text-center">{stats?.saves || 0}</td>
-        <td className="px-1 py-2 text-xs text-center font-medium">{stats?.bps || 0}</td>
+        <td className="px-1 py-2 text-xs text-center font-medium">
+          {stats?.bps || 0}
+        </td>
         <td
           className={`px-1 py-2 text-xs text-center font-medium ${
             bonusAdded
@@ -231,11 +241,13 @@ const SquadTable = React.memo(function SquadTable({
               <th className="px-1 sm:px-2 py-2 text-left text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.position")}
               </th>
-              <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-theme-muted uppercase">
+              <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-theme-muted uppercase sticky left-0 bg-theme-card z-10">
                 {t("fplLive.player")}
               </th>
               <th className="px-1 sm:px-2 py-2 text-left text-xs font-medium text-theme-muted uppercase">
-                <span className="hidden sm:inline">{t("fplLive.teamColumn")}</span>
+                <span className="hidden sm:inline">
+                  {t("fplLive.teamColumn")}
+                </span>
                 <span className="sm:hidden">Team</span>
               </th>
               <th className="px-1 sm:px-2 py-2 text-center text-xs font-medium text-theme-muted uppercase">
@@ -258,18 +270,24 @@ const SquadTable = React.memo(function SquadTable({
                 {t("fplLive.redCardsShort")}
               </th>
               <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
-                <span className="hidden sm:inline">{t("fplLive.savesShort")}</span>
+                <span className="hidden sm:inline">
+                  {t("fplLive.savesShort")}
+                </span>
                 <span className="sm:hidden">Sv</span>
               </th>
               <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.bpsShort")}
               </th>
               <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
-                <span className="hidden sm:inline">{t("fplLive.bonusShort")}</span>
+                <span className="hidden sm:inline">
+                  {t("fplLive.bonusShort")}
+                </span>
                 <span className="sm:hidden">B</span>
               </th>
               <th className="px-1 sm:px-2 py-2 text-center text-xs font-medium text-theme-muted uppercase font-bold">
-                <span className="hidden sm:inline">{t("fplLive.totalShort")}</span>
+                <span className="hidden sm:inline">
+                  {t("fplLive.totalShort")}
+                </span>
                 <span className="sm:hidden">Pts</span>
               </th>
               <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">

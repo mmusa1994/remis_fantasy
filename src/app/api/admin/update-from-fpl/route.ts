@@ -6,7 +6,7 @@ const LEAGUE_CONFIGS = {
   premium: { id: 277005, type: "standings", url_suffix: "standings/c" },
   h2h: { id: 277479, type: "h2h", url_suffix: "standings/h" },
   standard: { id: 277449, type: "standings", url_suffix: "standings/c" },
-  // h2h2: { id: 451227, type: "h2h", url_suffix: "standings/h" }, // Liga ne postoji
+  h2h2: { id: 451227, type: "h2h", url_suffix: "standings/h" },
 } as const;
 
 type LeagueType = keyof typeof LEAGUE_CONFIGS;
@@ -199,7 +199,7 @@ async function syncPlayersToDatabase(
       };
 
       // Add H2H data if applicable
-      if (leagueType === "h2h") {
+      if (leagueType === "h2h" || leagueType === "h2h2") {
         // Za H2H: 
         // - points = overall FPL points (total) -> 83
         // - h2h_points = H2H league points (total from H2H standings) -> 3
@@ -218,6 +218,7 @@ async function syncPlayersToDatabase(
       // League type filter for standings leagues
       const shouldUpdate =
         leagueType === "h2h" ||
+        leagueType === "h2h2" ||
         (leagueType === "premium" && dbPlayer.league_type === "premium") ||
         (leagueType === "standard" && dbPlayer.league_type === "standard");
 
@@ -280,7 +281,7 @@ async function syncPlayersToDatabase(
     notFoundPlayers: notFound,
     matches: matches.map((m) => {
       // Pravilno mapiranje poena za različite tipove liga
-      const isH2HLeague = leagueType === "h2h";
+      const isH2HLeague = leagueType === "h2h" || leagueType === "h2h2";
       
       return {
         rank: m.fpl.rank,

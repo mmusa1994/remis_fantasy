@@ -1,6 +1,30 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  MdDashboard,
+  MdGroup,
+  MdBarChart,
+  MdInfo,
+  MdSettings,
+  MdExpandMore,
+  MdCancel,
+  MdTrendingUp,
+  MdTrendingDown,
+  MdPlayArrow,
+  MdStop,
+  MdRefresh,
+} from "react-icons/md";
+import { IoIosFootball } from "react-icons/io";
+
+import {
+  FaChartLine,
+  FaTrophy,
+  FaFootballBall,
+  FaExchangeAlt,
+} from "react-icons/fa";
+
 import SettingsCard from "@/components/fpl/SettingsCard";
 import ControlsBar from "@/components/fpl/ControlsBar";
 import ManagerSummary from "@/components/fpl/ManagerSummary";
@@ -10,11 +34,8 @@ import ScoreboardGrid from "@/components/fpl/ScoreboardGrid";
 import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
 import LiveTracker from "@/components/fpl/LiveTracker";
 import LeagueTables from "@/components/fpl/LeagueTables";
-import { MdCancel, MdInfo, MdSettings, MdExpandMore } from "react-icons/md";
-import Image from "next/image";
 import TeamSearchHelper from "@/components/fpl/TeamSearchHelper";
 import type { GameweekStatus as GameweekStatusType } from "@/lib/fpl-api";
-import { useTranslation } from "react-i18next";
 
 interface FPLData {
   manager?: any;
@@ -29,8 +50,20 @@ interface FPLData {
   timestamp?: string;
 }
 
+type TabType = "overview" | "squad" | "leagues" | "analytics" | "transfers";
+
+interface TabConfig {
+  id: TabType;
+  label: string;
+  icon: React.ComponentType<any>;
+  description: string;
+  color: string;
+}
+
 export default function FPLLivePage() {
   const { t } = useTranslation();
+
+  // Core state
   const [managerId, setManagerId] = useState<number | null>(null);
   const [gameweek, setGameweek] = useState(1);
   const [isPolling, setIsPolling] = useState(false);
@@ -48,7 +81,51 @@ export default function FPLLivePage() {
     null
   );
 
-  // Load manager ID, gameweek, and cached data from localStorage on mount
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const [showSettings, setShowSettings] = useState(false);
+  const [teamLoaded, setTeamLoaded] = useState(false);
+
+  // Tab configuration
+  const tabs: TabConfig[] = [
+    {
+      id: "overview",
+      label: t("fplLive.tabs.overview"),
+      icon: MdDashboard,
+      description: t("fplLive.tabs.overviewDesc"),
+      color: "blue",
+    },
+    {
+      id: "squad",
+      label: t("fplLive.tabs.squad"),
+      icon: MdGroup,
+      description: t("fplLive.tabs.squadDesc"),
+      color: "green",
+    },
+    {
+      id: "leagues",
+      label: t("fplLive.tabs.leagues"),
+      icon: FaTrophy,
+      description: t("fplLive.tabs.leaguesDesc"),
+      color: "yellow",
+    },
+    {
+      id: "analytics",
+      label: t("fplLive.tabs.analytics"),
+      icon: FaChartLine,
+      description: t("fplLive.tabs.analyticsDesc"),
+      color: "purple",
+    },
+    {
+      id: "transfers",
+      label: t("fplLive.tabs.transfers"),
+      icon: FaExchangeAlt,
+      description: t("fplLive.tabs.transfersDesc"),
+      color: "red",
+    },
+  ];
+
+  // Load manager ID and cached data on mount
   useEffect(() => {
     try {
       const savedManagerId = localStorage.getItem("fpl-manager-id");
@@ -60,11 +137,7 @@ export default function FPLLivePage() {
         const parsedId = parseInt(savedManagerId, 10);
         if (!isNaN(parsedId)) {
           setManagerId(parsedId);
-        } else {
-          setManagerId(null);
         }
-      } else {
-        setManagerId(null);
       }
 
       if (savedGameweek) {
@@ -74,8 +147,7 @@ export default function FPLLivePage() {
         }
       }
 
-      // Don't auto-restore cached data - user must click Load Team
-      // Just clear old cached data if it exists and is stale
+      // Clear stale cached data
       if (savedData && savedLastUpdated) {
         const lastUpdated = new Date(savedLastUpdated);
         const now = new Date();
@@ -83,7 +155,6 @@ export default function FPLLivePage() {
           (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60);
 
         if (hoursDiff >= 24) {
-          // Clear old cached data
           localStorage.removeItem("fpl-team-data");
           localStorage.removeItem("fpl-last-updated");
         }
@@ -91,9 +162,7 @@ export default function FPLLivePage() {
     } catch (error) {
       console.warn("Error loading from localStorage:", error);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
 
   const showError = (message: string) => {
     setError(message);
@@ -104,7 +173,6 @@ export default function FPLLivePage() {
     console.log("Success:", message);
   };
 
-  // Save data to localStorage with error handling
   const saveToLocalStorage = useCallback((key: string, value: any) => {
     try {
       localStorage.setItem(
@@ -134,12 +202,10 @@ export default function FPLLivePage() {
       if (teamResponse.ok) {
         const teamResult = await teamResponse.json();
         if (teamResult.success) {
-          // Update with full team data
           setData(teamResult.data);
           const timestamp = new Date().toISOString();
           setLastUpdated(timestamp);
 
-          // Save to localStorage
           saveToLocalStorage("fpl-team-data", teamResult.data);
           saveToLocalStorage("fpl-last-updated", timestamp);
 
@@ -202,13 +268,12 @@ export default function FPLLivePage() {
     setError(null);
 
     try {
-      // Save to localStorage when user manually loads team
       if (managerId !== null) {
         saveToLocalStorage("fpl-manager-id", managerId.toString());
       }
       saveToLocalStorage("fpl-gameweek", gameweek.toString());
 
-      // First, get skeleton data with manager info immediately
+      // Get skeleton data first
       const skeletonResponse = await fetch("/api/fpl/load-team", {
         method: "POST",
         headers: {
@@ -225,26 +290,22 @@ export default function FPLLivePage() {
         const result = await skeletonResponse.json();
 
         if (result.success) {
-          // Show skeleton data immediately
           setData(result.data);
-
-          // Save skeleton data to localStorage
           const timestamp = new Date().toISOString();
           saveToLocalStorage("fpl-team-data", result.data);
           saveToLocalStorage("fpl-last-updated", timestamp);
 
+          setTeamLoaded(true);
           showSuccess(t("fplLive.managerInfoLoaded"));
           setLoading(false);
 
-          // Now load full team data in background
+          // Load additional data in background
           setTeamDataLoading(true);
           loadFullTeamData();
 
-          // Load leagues in separate background service
           setLeaguesLoading(true);
           loadLeaguesData();
 
-          // Load gameweek status in background
           loadGameweekStatus();
         } else {
           throw new Error(result.error || "Manager not found");
@@ -267,15 +328,12 @@ export default function FPLLivePage() {
     loadLeaguesData,
     loadGameweekStatus,
     saveToLocalStorage,
+    t,
   ]);
-
-  // Keep loadTeam for compatibility with polling
-  const loadTeam = loadManagerInfo;
 
   const handleManagerIdFound = useCallback(
     (newManagerId: number) => {
       setManagerId(newManagerId);
-      // Save to localStorage but don't auto-load
       saveToLocalStorage("fpl-manager-id", newManagerId.toString());
     },
     [saveToLocalStorage]
@@ -310,11 +368,9 @@ export default function FPLLivePage() {
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.data.new_events > 0) {
-            // Trigger loadTeam without awaiting to avoid blocking polling
-            loadTeam().catch((err) =>
+            loadManagerInfo().catch((err) =>
               console.error("Polling load team error:", err)
             );
-            // Also refresh gameweek status
             loadGameweekStatus().catch((err) =>
               console.error("Polling gameweek status error:", err)
             );
@@ -327,7 +383,14 @@ export default function FPLLivePage() {
 
     setPollingInterval(interval);
     showSuccess(t("fplLive.livePollingStarted"));
-  }, [managerId, data.manager, gameweek, loadTeam, loadGameweekStatus]);
+  }, [
+    managerId,
+    data.manager,
+    gameweek,
+    loadManagerInfo,
+    loadGameweekStatus,
+    t,
+  ]);
 
   const stopPolling = useCallback(() => {
     if (pollingInterval) {
@@ -336,9 +399,7 @@ export default function FPLLivePage() {
     }
     setIsPolling(false);
     showSuccess(t("fplLive.livePollingStopped"));
-  }, [pollingInterval]);
-
-  // Removed auto-load - user must manually click "Load Team"
+  }, [pollingInterval, t]);
 
   useEffect(() => {
     return () => {
@@ -358,346 +419,446 @@ export default function FPLLivePage() {
     showSuccess(t("fplLive.settingsSavedSuccessfully"));
   };
 
-  return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          {t("fplLive.title")}
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-          {t("fplLive.subtitle")}
-        </p>
-      </div>
+  const getTabColorClasses = (color: string, isActive: boolean) => {
+    const colorMap = {
+      blue: isActive
+        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+        : "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30",
+      green: isActive
+        ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg"
+        : "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30",
+      yellow: isActive
+        ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg"
+        : "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/30",
+      purple: isActive
+        ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg"
+        : "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/30",
+      red: isActive
+        ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
+        : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30",
+    };
+    return colorMap[color as keyof typeof colorMap] || colorMap.blue;
+  };
 
-      {/* Enhanced Info Accordions - Moved to Top */}
-      <div className="mb-4 sm:mb-6 flex flex-col lg:flex-row gap-2 sm:gap-4">
-        {/* How to Use - Enhanced Version */}
-        <div className="bg-theme-accent border border-theme-border rounded-lg overflow-hidden">
-          <details className="group">
-            <summary className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 text-xs sm:text-sm font-medium text-theme-secondary cursor-pointer hover:bg-theme-secondary transition-colors">
-              <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-lg flex items-center justify-center">
-                <MdInfo className="text-white w-4 h-4" />
-              </div>
-              <span className="font-semibold">{t("fplLive.howToUse")}</span>
-              <MdExpandMore className="ml-auto text-theme-primary group-open:rotate-180 transition-transform duration-200 w-5 h-5" />
-            </summary>
+  // Transfer Analysis Component (placeholder for now)
+  const TransferAnalysis = () => (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 border border-amber-200 dark:border-gray-700">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+            <FaExchangeAlt className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              {t("fplLive.transferAnalysis.title")}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {t("fplLive.transferAnalysis.subtitle")}
+            </p>
+          </div>
+        </div>
 
-            <div className="px-4 pb-4 space-y-4 text-sm text-theme-secondary bg-theme-card">
-              {/* Manager ID - Detailed - Mobile Optimized */}
-              <div className="p-3 bg-theme-card rounded-lg border border-theme-border">
-                <h4 className="font-semibold text-theme-primary mb-3 flex items-center gap-2 text-sm md:text-base">
-                  📋 {t("fplLive.howToFindManagerIdDetailed")}
-                </h4>
-                <div className="space-y-3 text-xs md:text-sm">
-                  <ol className="list-decimal list-inside space-y-2 text-theme-secondary leading-relaxed">
-                    <li className="break-words">
-                      {t("fplLive.openWebBrowser")}
-                    </li>
-                    <li className="break-words">
-                      {t("fplLive.goToFPLWebsite")}{" "}
-                      <strong className="break-all">
-                        fantasy.premierleague.com
-                      </strong>
-                    </li>
-                    <li className="break-words">
-                      {t("fplLive.loginToAccount")}
-                    </li>
-                    <li className="break-words">
-                      {t("fplLive.clickPointsTab")}
-                    </li>
-                    <li className="break-words">
-                      {t("fplLive.copyNumbersFromURL")}{" "}
-                      <span className="text-xs">
-                        (e.g. entry/133444/event/1)
-                      </span>
-                    </li>
-                  </ol>
-
-                  <div className="mt-4 p-3 bg-blue-100 dark:bg-blue-800 rounded border">
-                    <div className="flex items-start gap-2 text-xs md:text-sm text-blue-700 dark:text-blue-300 mb-2">
-                      <span className="flex-shrink-0">💡</span>
-                      <span className="font-medium">
-                        {t("fplLive.exampleURL")}
-                      </span>
-                    </div>
-                    <div className="bg-blue-200 dark:bg-blue-700 text-blue-900 dark:text-blue-100 p-2 rounded font-mono text-xs break-all overflow-hidden">
-                      fantasy.premierleague.com/entry/133444/event/1
-                    </div>
-                    <p className="text-xs md:text-sm text-blue-600 dark:text-blue-400 mt-2 text-center">
-                      {t("fplLive.yourManagerIdIs2")}{" "}
-                      <strong className="text-base md:text-lg">133444</strong>
-                    </p>
-
-                    <div className="mt-4">
-                      <div className="relative overflow-hidden rounded border border-blue-300 dark:border-blue-600">
-                        <Image
-                          src="/images/path.png"
-                          alt="FPL Manager ID u URL-u - primer iz browser-a"
-                          width={400}
-                          height={200}
-                          className="w-full h-auto object-contain max-h-32 md:max-h-48"
-                        />
-                      </div>
-                      <p className="text-xs text-center text-blue-600 dark:text-blue-400 mt-2 italic leading-relaxed px-2">
-                        {t("fplLive.browserURLExample")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Usage Steps - Detailed - Mobile Optimized */}
-              <div className="space-y-3">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2 text-sm md:text-base">
-                  🎯 {t("fplLive.detailedUsageSteps")}
-                </h4>
-                <ol className="list-decimal list-inside space-y-3 text-blue-700 dark:text-blue-300 text-xs md:text-sm leading-relaxed">
-                  <li className="break-words">
-                    {t("fplLive.enterManagerIdStep")}
-                  </li>
-                  <li className="break-words">
-                    {t("fplLive.clickLoadTeamStep")}
-                  </li>
-                  <li className="break-words">
-                    {t("fplLive.fetchNowOrStartLive")}
-                  </li>
-                  <li className="break-words">{t("fplLive.followLiveBPS")}</li>
-                  <li className="break-words">
-                    {t("fplLive.bonusPointsPredicted")}
-                  </li>
-                </ol>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-2">
+              <MdTrendingUp className="w-5 h-5 text-green-500" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t("fplLive.transferAnalysis.transfersIn")}
+              </span>
             </div>
-          </details>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              -
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t("fplLive.transferAnalysis.thisGameweek")}
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-2">
+              <MdTrendingDown className="w-5 h-5 text-red-500" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t("fplLive.transferAnalysis.transfersOut")}
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              -
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t("fplLive.transferAnalysis.thisGameweek")}
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-2">
+              <MdBarChart className="w-5 h-5 text-blue-500" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t("fplLive.transferAnalysis.netTransfers")}
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              -
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t("fplLive.transferAnalysis.thisGameweek")}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+          <div className="flex items-start gap-3">
+            <MdInfo className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                {t("fplLive.transferAnalysis.comingSoon")}
+              </p>
+              <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                {t("fplLive.transferAnalysis.comingSoonDesc")}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  );
 
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <MdCancel className="text-red-500 w-5 h-5" />
+  const renderTabContent = () => {
+    if (!teamLoaded || !data.manager) {
+      return null;
+    }
+
+    switch (activeTab) {
+      case "overview":
+        return (
+          <div className="space-y-6">
+            <ManagerSummary
+              manager={data.manager}
+              teamTotals={data.team_totals}
+              captain={data.captain}
+              viceCaptain={data.vice_captain}
+              bonusAdded={data.bonus_added || false}
+              gameweek={gameweek}
+              lastUpdated={lastUpdated || undefined}
+            />
+            <GameweekStatus
+              gameweekStatus={gameweekStatus || undefined}
+              gameweek={gameweek}
+              loading={gameweekStatusLoading}
+            />
+            <LiveTracker gameweek={gameweek} isPolling={isPolling} />
+          </div>
+        );
+      case "squad":
+        return teamDataLoading ? (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow border border-amber-200 dark:border-gray-700 overflow-hidden">
+              <div className="px-6 py-4 border-b border-amber-200 dark:border-gray-700 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-gray-700 dark:to-gray-800">
+                <div className="h-6 bg-amber-200 dark:bg-gray-600 rounded w-24 animate-pulse"></div>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {Array.from({ length: 8 }, (_, i) => (
+                    <div
+                      key={i}
+                      className="h-12 bg-amber-100 dark:bg-gray-700 rounded animate-pulse"
+                    ></div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="ml-3">
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <SquadTable
+              teamData={data.team_with_stats || []}
+              predictedBonuses={data.predicted_bonuses || []}
+              bonusAdded={data.bonus_added || false}
+            />
+            <ScoreboardGrid
+              fixtures={data.fixtures || []}
+              predictedBonuses={data.predicted_bonuses || []}
+              bonusAdded={data.bonus_added || false}
+            />
+          </div>
+        );
+      case "leagues":
+        return leaguesLoading ? (
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow border border-amber-200 dark:border-gray-700">
+            <div className="px-6 py-4 border-b border-amber-200 dark:border-gray-700 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-gray-700 dark:to-gray-800">
+              <div className="h-6 bg-amber-200 dark:bg-gray-600 rounded w-20 animate-pulse"></div>
+            </div>
+            <div className="p-6 space-y-3">
+              {Array.from({ length: 3 }, (_, i) => (
+                <div
+                  key={i}
+                  className="border border-amber-200 dark:border-gray-700 rounded-lg overflow-hidden"
+                >
+                  <div className="bg-amber-100 dark:bg-gray-700 px-4 py-3 border-b border-amber-200 dark:border-gray-600">
+                    <div className="h-5 bg-amber-200 dark:bg-gray-600 rounded w-32 animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          leagueData && (
+            <LeagueTables
+              leagueData={leagueData}
+              managerId={managerId!}
+              gameweek={gameweek}
+            />
+          )
+        );
+      case "analytics":
+        return (
+          <AdvancedStatistics
+            managerId={managerId || undefined}
+            gameweek={gameweek}
+            loading={teamDataLoading}
+            managerData={data}
+          />
+        );
+      case "transfers":
+        return <TransferAnalysis />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-amber-25 via-orange-25 to-amber-50 dark:bg-black">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="text-center mb-4">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              {t("fplLive.title")}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              {t("fplLive.subtitle")}
+            </p>
+          </div>
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
+            <div className="flex items-center">
+              <MdCancel className="text-red-500 w-5 h-5 mr-3" />
               <p className="text-sm font-medium">{error}</p>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Controls - Full Width */}
-      {/* Team Search Helper */}
-      <div className="mb-6">
-        <TeamSearchHelper
-          onManagerIdFound={handleManagerIdFound}
-          currentManagerId={managerId}
-        />
-      </div>
-
-      <div className="mb-6">
-        <ControlsBar
-          managerId={managerId}
-          gameweek={gameweek}
-          isPolling={isPolling}
-          onManagerIdChange={setManagerId}
-          onGameweekChange={setGameweek}
-          onLoadTeam={loadManagerInfo}
-          onStartPolling={startPolling}
-          onStopPolling={stopPolling}
-          loading={loading}
-        />
-      </div>
-
-      {/* Manager Overview + Squad alongside League Tables */}
-      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2 space-y-6">
-          {managerId && data.manager && (
-            <>
-              <ManagerSummary
-                manager={data.manager}
-                teamTotals={data.team_totals}
-                captain={data.captain}
-                viceCaptain={data.vice_captain}
-                bonusAdded={data.bonus_added || false}
-                gameweek={gameweek}
-                lastUpdated={lastUpdated || undefined}
-              />
-              <GameweekStatus
-                gameweekStatus={gameweekStatus || undefined}
-                gameweek={gameweek}
-                loading={gameweekStatusLoading}
-              />
-              {teamDataLoading ? (
-                <div className="space-y-6">
-                  {/* Squad Skeleton */}
-                  <div className="bg-theme-card rounded-lg shadow overflow-hidden">
-                    <div className="px-6 py-4 border-b border-theme-border">
-                      <div className="h-6 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-theme-accent rounded w-24 animate-pulse"></div>
-                      <div className="h-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:bg-theme-accent rounded w-48 mt-2 animate-pulse"></div>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-theme-secondary">
-                          <tr>
-                            {Array.from({ length: 14 }, (_, i) => (
-                              <th key={i} className="px-3 py-3">
-                                <div className="h-4 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-500 rounded w-12 animate-pulse"></div>
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                          {Array.from({ length: 15 }, (_, i) => (
-                            <tr key={i}>
-                              {Array.from({ length: 14 }, (_, j) => (
-                                <td key={j} className="px-3 py-2">
-                                  <div className="h-4 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-500 rounded animate-pulse"></div>
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+        {/* Mandatory Manager ID Entry */}
+        {!teamLoaded && (
+          <div className="space-y-6">
+            {/* How to Use Guide */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 border border-amber-200 dark:border-gray-700 rounded-xl overflow-hidden">
+              <details className="group">
+                <summary className="flex items-center gap-3 p-4 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-amber-100 dark:hover:bg-gray-700 transition-colors">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <MdInfo className="text-white w-4 h-4" />
                   </div>
+                  <span className="font-semibold">{t("fplLive.howToUse")}</span>
+                  <MdExpandMore className="ml-auto text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform duration-200 w-5 h-5" />
+                </summary>
 
-                  {/* Scoreboard Skeleton */}
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div className="h-6 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-600 rounded w-32 mb-4 animate-pulse"></div>
-                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
-                      {Array.from({ length: 6 }, (_, i) => (
-                        <div
-                          key={i}
-                          className="border dark:border-gray-600 rounded-lg p-4"
-                        >
-                          <div className="h-4 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-500 rounded w-24 mb-2 animate-pulse"></div>
-                          <div className="h-6 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-500 rounded w-16 mb-3 animate-pulse"></div>
-                          <div className="space-y-2">
-                            {Array.from({ length: 3 }, (_, j) => (
-                              <div
-                                key={j}
-                                className="h-4 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-500 rounded animate-pulse"
-                              ></div>
-                            ))}
-                          </div>
+                <div className="px-4 pb-4 space-y-4 text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800">
+                  <div className="p-4 bg-gradient-to-br from-amber-25 to-orange-25 dark:from-gray-700 dark:to-gray-800 rounded-lg border border-amber-200 dark:border-gray-600">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                      📋 {t("fplLive.howToFindManagerIdDetailed")}
+                    </h4>
+                    <div className="space-y-3">
+                      <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300 leading-relaxed">
+                        <li>{t("fplLive.openWebBrowser")}</li>
+                        <li>
+                          {t("fplLive.goToFPLWebsite")}{" "}
+                          <strong>fantasy.premierleague.com</strong>
+                        </li>
+                        <li>{t("fplLive.loginToAccount")}</li>
+                        <li>{t("fplLive.clickPointsTab")}</li>
+                        <li>
+                          {t("fplLive.copyNumbersFromURL")}{" "}
+                          <span className="text-xs">
+                            (e.g. entry/133444/event/1)
+                          </span>
+                        </li>
+                      </ol>
+
+                      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-start gap-2 text-sm text-blue-700 dark:text-blue-300 mb-2">
+                          <span>💡</span>
+                          <span className="font-medium">
+                            {t("fplLive.exampleURL")}
+                          </span>
                         </div>
-                      ))}
+                        <div className="bg-blue-100 dark:bg-blue-800/30 text-blue-900 dark:text-blue-100 p-2 rounded font-mono text-xs break-all">
+                          fantasy.premierleague.com/entry/133444/event/1
+                        </div>
+                        <p className="text-sm text-blue-600 dark:text-blue-400 mt-2 text-center">
+                          {t("fplLive.yourManagerIdIs2")}{" "}
+                          <strong className="text-lg">133444</strong>
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <SquadTable
-                    teamData={data.team_with_stats || []}
-                    predictedBonuses={data.predicted_bonuses || []}
-                    bonusAdded={data.bonus_added || false}
-                  />
-                  <AdvancedStatistics
-                    managerId={managerId || undefined}
-                    gameweek={gameweek}
-                    loading={teamDataLoading}
-                    managerData={data}
-                  />
-                </>
-              )}
-            </>
-          )}
-        </div>
-        <div className="space-y-6">
-          <LiveTracker gameweek={gameweek} isPolling={isPolling} />
-          {leaguesLoading ? (
-            <div className="bg-theme-card rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-theme-border">
-                <div className="h-6 bg-theme-accent rounded w-20 animate-pulse"></div>
-              </div>
-              <div className="p-6 space-y-3">
-                {Array.from({ length: 3 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="border border-theme-border rounded-lg overflow-hidden"
+              </details>
+            </div>
+
+            {/* Team Search Helper */}
+            <TeamSearchHelper
+              onManagerIdFound={handleManagerIdFound}
+              currentManagerId={managerId}
+            />
+
+            {/* Controls */}
+            <ControlsBar
+              managerId={managerId}
+              gameweek={gameweek}
+              isPolling={false}
+              onManagerIdChange={setManagerId}
+              onGameweekChange={setGameweek}
+              onLoadTeam={loadManagerInfo}
+              onStartPolling={() => {}}
+              onStopPolling={() => {}}
+              loading={loading}
+            />
+
+            {/* Call to Action */}
+            <div className="text-center py-8">
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-8 border border-amber-200 dark:border-gray-700">
+                <IoIosFootball className="w-16 h-16 text-amber-600 dark:text-amber-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  {t("fplLive.readyToStart")}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+                  {t("fplLive.enterManagerIdToStart")}
+                </p>
+                {!managerId ? (
+                  <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+                    {t("fplLive.enterManagerIdFirst")}
+                  </p>
+                ) : (
+                  <button
+                    onClick={loadManagerInfo}
+                    disabled={loading}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all shadow-lg"
                   >
-                    <div className="bg-theme-secondary px-4 py-3 border-b border-theme-border">
-                      <div className="h-5 bg-theme-accent rounded w-32 animate-pulse"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            leagueData && (
-              <LeagueTables leagueData={leagueData} managerId={managerId!} gameweek={gameweek} />
-            )
-          )}
-          {/* Move Scoreboard below Leagues on desktop */}
-          {managerId && data.manager && (
-            <div className="block">
-              <ScoreboardGrid
-                fixtures={data.fixtures || []}
-                predictedBonuses={data.predicted_bonuses || []}
-                bonusAdded={data.bonus_added || false}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* FPL Settings at the bottom */}
-      <div className="mt-8">
-        <SettingsCard onSettingsSaved={handleSettingsSaved} />
-      </div>
-      {/* Settings - Enhanced Version */}
-      <div className="mt-5 bg-theme-accent border border-theme-border rounded-lg overflow-hidden">
-        <details className="group">
-          <summary className="flex items-center gap-3 p-4 text-sm font-medium text-theme-secondary cursor-pointer hover:bg-theme-secondary transition-colors">
-            <div className="w-8 h-8 bg-yellow-500 dark:bg-yellow-600 rounded-lg flex items-center justify-center">
-              <MdSettings className="text-white w-4 h-4" />
-            </div>
-            <span className="font-semibold">
-              {t("fplLive.settingsExplanation")}
-            </span>
-            <MdExpandMore className="ml-auto text-theme-primary group-open:rotate-180 transition-transform duration-200 w-5 h-5" />
-          </summary>
-
-          <div className="px-4 pb-4 space-y-3 text-sm text-theme-secondary bg-theme-card">
-            <div className="space-y-3">
-              <div className="p-2 bg-theme-card rounded border border-theme-border">
-                <p className="font-semibold text-theme-primary">
-                  {t("fplLive.fplProxyURL")}
-                </p>
-                <p className="text-theme-secondary text-sm">
-                  {t("fplLive.fplProxyDescription")}
-                </p>
-              </div>
-
-              <div className="p-2 bg-theme-card rounded border border-theme-border">
-                <p className="font-semibold text-theme-primary">
-                  {t("fplLive.cronSecret")}
-                </p>
-                <p className="text-theme-secondary text-sm">
-                  {t("fplLive.cronSecretDescription")}
-                </p>
-              </div>
-
-              <div className="p-2 bg-theme-card rounded border border-theme-border">
-                <p className="font-semibold text-theme-primary">
-                  {t("fplLive.liveBonus")}
-                </p>
-                <p className="text-theme-secondary text-sm">
-                  {t("fplLive.liveBonusDescription")}
-                </p>
-              </div>
-
-              <div className="p-2 bg-theme-card rounded border border-theme-border">
-                <p className="font-semibold text-theme-primary">
-                  {t("fplLive.pointsSystem")}
-                </p>
-                <p className="text-theme-secondary text-sm">
-                  {t("fplLive.pointsSystemDescription")}
-                </p>
+                    {loading ? t("fplLive.loading") : t("fplLive.loadTeam")}
+                  </button>
+                )}
               </div>
             </div>
           </div>
-        </details>
+        )}
+
+        {/* Tabbed Interface - Only shown after team is loaded */}
+        {teamLoaded && data.manager && (
+          <div className="space-y-6">
+            {/* Quick Controls Bar */}
+            <div className="bg-gradient-to-r from-amber-100 to-orange-100 dark:from-gray-800 dark:to-gray-700 rounded-xl p-4 border border-amber-200 dark:border-gray-600">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FaFootballBall className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 dark:text-white truncate">
+                      {data.manager?.player_first_name}{" "}
+                      {data.manager?.player_last_name}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      GW{gameweek} • ID: {managerId}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={isPolling ? stopPolling : startPolling}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      isPolling
+                        ? "bg-red-500 hover:bg-red-600 text-white"
+                        : "bg-green-500 hover:bg-green-600 text-white"
+                    }`}
+                  >
+                    {isPolling ? (
+                      <MdStop className="w-4 h-4" />
+                    ) : (
+                      <MdPlayArrow className="w-4 h-4" />
+                    )}
+                    <span className="hidden sm:inline">
+                      {isPolling
+                        ? t("fplLive.stopLive")
+                        : t("fplLive.startLive")}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={loadManagerInfo}
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-all"
+                  >
+                    <MdRefresh className="w-4 h-4" />
+                    <span className="hidden sm:inline">
+                      {t("fplLive.refresh")}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowSettings(!showSettings)}
+                    className="flex items-center gap-2 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-all"
+                  >
+                    <MdSettings className="w-4 h-4" />
+                    <span className="hidden sm:inline">
+                      {t("fplLive.settings")}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
+                <div className="flex overflow-x-auto scrollbar-hide">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all border-b-2 min-w-max ${
+                          isActive
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                            : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Tab Content */}
+              <div className="p-6 bg-gradient-to-br from-amber-25 via-orange-25 to-amber-50 dark:bg-gray-900">
+                {renderTabContent()}
+              </div>
+            </div>
+
+            {/* Settings Panel */}
+            {showSettings && (
+              <div className="mt-6">
+                <SettingsCard onSettingsSaved={handleSettingsSaved} />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

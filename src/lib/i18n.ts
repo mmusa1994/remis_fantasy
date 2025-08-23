@@ -131,7 +131,7 @@ const resources = {
         settingsCardSaving: "Saving...",
         // Live Events
         eventGoal: "Goal",
-        eventAssist: "Assist", 
+        eventAssist: "Assist",
         eventYellowCard: "Yellow Card",
         eventRedCard: "Red Card",
         eventPenaltyMissed: "Penalty Miss",
@@ -142,7 +142,7 @@ const resources = {
         eventGoalConceded: "Goals Conceded",
         eventBonusPoints: "Bonus Points",
         eventTackle: "Tackle",
-        eventInterception: "Interception", 
+        eventInterception: "Interception",
         eventClearance: "Clearance",
         // Live Tracker
         liveTrackerTitle: "LIVE BPS Tracker",
@@ -392,7 +392,6 @@ const resources = {
         totalShort: "Total",
         ictShort: "ICT",
         benchShort: "Bench",
-        squadCaptain: "(C)",
         captain: "(C)",
         viceCaptain: "(VC)",
         tripleCaptain: "(TC)",
@@ -401,6 +400,38 @@ const resources = {
         advancedStats: "Advanced Statistics",
         loadingAdvancedStats: "Loading advanced statistics...",
         loadTeamForAdvancedStats: "Load team to see advanced statistics",
+        // Tab system
+        tabs: {
+          overview: "Overview",
+          overviewDesc: "Manager summary, gameweek status, and match results",
+          squad: "Squad",
+          squadDesc: "Complete squad breakdown with live statistics",
+          leagues: "Leagues",
+          leaguesDesc: "League standings and live tracking",
+          analytics: "Analytics",
+          analyticsDesc: "Performance insights and clone analysis",
+          transfers: "Transfers",
+          transfersDesc: "Transfer trends and market movements"
+        },
+        // New translation keys
+        readyToStart: "Ready to Start!",
+        enterManagerIdToStart: "Enter Manager ID to start analyzing your FPL team",
+        enterManagerIdFirst: "Enter Manager ID first",
+        loading: "Loading...",
+        settings: "Settings",
+        // Transfer Analysis
+        transferAnalysis: {
+          title: "Transfer Analysis",
+          subtitle: "Transfer trends and market analysis",
+          transfersIn: "Transfers In",
+          transfersOut: "Transfers Out",
+          netTransfers: "Net Transfers",
+          thisGameweek: "This Gameweek",
+          comingSoon: "Coming Soon",
+          comingSoonDesc: "Comprehensive transfer analysis including price changes, popular transfers, and market trends."
+        },
+        transferAnalysisComingSoon: "Transfer Analysis Coming Soon",
+        transferAnalysisDescription: "Comprehensive transfer insights including price changes, popular transfers, and market trends will be available here soon.",
         // League tables
         tablesReadyToGoLive: "Ready to Go Live!",
         tablesSelectLeagueAndStart:
@@ -662,6 +693,38 @@ const resources = {
         advancedStats: "Napredne Statistike",
         loadingAdvancedStats: "Učitavam napredne statistike...",
         loadTeamForAdvancedStats: "Učitajte tim da vidite napredne statistike",
+        // Tab system
+        tabs: {
+          overview: "Pregled",
+          overviewDesc: "Sažetak menadžera, status gameweek-a i rezultati utakmica",
+          squad: "Postava",
+          squadDesc: "Kompletna analiza postave sa uživo statistikama",
+          leagues: "Lige",
+          leaguesDesc: "Tabele liga i uživo praćenje",
+          analytics: "Analitika",
+          analyticsDesc: "Uvidi u performanse i analiza klonova",
+          transfers: "Transferi",
+          transfersDesc: "Trendovi transfera i kretanja na tržištu"
+        },
+        // New translation keys
+        readyToStart: "Spremni za početak!",
+        enterManagerIdToStart: "Unesite Manager ID da počnete sa analizom vašeg FPL tima",
+        enterManagerIdFirst: "Prvo unesite Manager ID",
+        loading: "Učitavanje...",
+        settings: "Postavke",
+        // Transfer Analysis
+        transferAnalysis: {
+          title: "Analiza Transfera",
+          subtitle: "Trendovi transfera i analiza tržišta",
+          transfersIn: "Transferi u tim",
+          transfersOut: "Transferi iz tima", 
+          netTransfers: "Net transferi",
+          thisGameweek: "Ovaj gameweek",
+          comingSoon: "Uskoro dostupno",
+          comingSoonDesc: "Sveobuhvatna analiza transfera uključujući promjene cijena, popularne transfere i trendove na tržištu."
+        },
+        transferAnalysisComingSoon: "Analiza Transfera Uskoro",
+        transferAnalysisDescription: "Sveobuhvatni uvidi u transfere uključujući promjene cijena, popularne transfere i trendove na tržištu će uskoro biti dostupni ovdje.",
         cloneAnalysis: "Analiza Klonova",
         updatingData: "Ažuriram podatke...",
         foundExactly: "Našli smo tačno",
@@ -815,14 +878,15 @@ const resources = {
       // FPL Live page - Serbian
       fplLive: {
         title: "FPL Live Dashboard",
-        subtitle: "Праћење Fantasy Premier League-а у реалном времену са предвиђањима бонус бодова",
+        subtitle:
+          "Праћење Fantasy Premier League-а у реалном времену са предвиђањима бонус бодова",
         howToUse: "Како користити FPL Live",
         manager: "Менаџер",
-        rank: "Ранг", 
+        rank: "Ранг",
         overall: "Укупно",
         live: "Уживо",
         bonus: "Бонус",
-        captain: "Капитен",
+        captainLong: "Капитен",
         you: "ТИ",
         points: "Бодови",
         leaguesManager: "Менаџер",
@@ -857,14 +921,47 @@ const resources = {
         classic: "Класична",
         headToHead: "Глава против главе",
         leaguesTables: "Лиге",
-        noLeagueDataAvailable: "Нема података о лигама. Прво учитајте тим да видите лиге.",
+        noLeagueDataAvailable:
+          "Нема података о лигама. Прво учитајте тим да видите лиге.",
         liveLeagueTracking: "Праћење лига уживо",
         exitLive: "Изађи из уживо",
-        startLive: "Покрени уживо",
+
         exit: "Изађи",
         liveTrackerTitle: "УЖИВО БПС Праћење",
-        liveTrackerLivePolling: "Уживо — прати",
+        liveTrackerLivePolling: "Уживо — прати", 
         liveTrackerOfflinePolling: "Офлајн — не прати",
+        // Tab system
+        tabs: {
+          overview: "Преглед",
+          overviewDesc: "Сажетак менаџера, статус gameweek-а и резултати утакмица",
+          squad: "Постава",
+          squadDesc: "Комплетна анализа поставе са уживо статистикама",
+          leagues: "Лиге",
+          leaguesDesc: "Табеле лига и уживо праћење",
+          analytics: "Аналитика",
+          analyticsDesc: "Увиди у перформансе и анализа клонова",
+          transfers: "Трансфери",
+          transfersDesc: "Трендови трансфера и кретања на тржишту"
+        },
+        // New translation keys
+        readyToStart: "Спремни за почетак!",
+        enterManagerIdToStart: "Унесите Manager ID да почнете са анализом вашег FPL тима",
+        enterManagerIdFirst: "Прво унесите Manager ID",
+        loading: "Учитавање...",
+        settings: "Подешавања",
+        // Transfer Analysis
+        transferAnalysis: {
+          title: "Анализа Трансфера",
+          subtitle: "Трендови трансфера и анализа тржишта",
+          transfersIn: "Трансфери у тим",
+          transfersOut: "Трансфери из тима",
+          netTransfers: "Нет трансфери",
+          thisGameweek: "Овај gameweek",
+          comingSoon: "Ускоро доступно",
+          comingSoonDesc: "Свеобухватна анализа трансфера укључујући промене цена, популарне трансфере и трендове на тржишту."
+        },
+        transferAnalysisComingSoon: "Анализа Трансфера Ускоро",
+        transferAnalysisDescription: "Свеобухватни увиди у трансфере укључујући промене цена, популарне трансфере и трендове на тржишту ће ускоро бити доступни овде.",
       },
       common: {
         loading: "Учитавање...",
@@ -916,10 +1013,11 @@ const resources = {
       // FPL Live page - Croatian
       fplLive: {
         title: "FPL Live Dashboard",
-        subtitle: "Praćenje Fantasy Premier League-a u stvarnom vremenu s prognozama bonus bodova",
+        subtitle:
+          "Praćenje Fantasy Premier League-a u stvarnom vremenu s prognozama bonus bodova",
         howToUse: "Kako koristiti FPL Live",
         manager: "Menadžer",
-        rank: "Rang", 
+        rank: "Rang",
         overall: "Ukupno",
         live: "Uživo",
         bonus: "Bonus",
@@ -948,7 +1046,6 @@ const resources = {
         totalShort: "Ukupno",
         ictShort: "ICT",
         benchShort: "Klupa",
-        captain: "(K)",
         viceCaptain: "(ZK)",
         tripleCaptain: "(TK)",
         squad: "Postava",
@@ -958,14 +1055,46 @@ const resources = {
         classic: "Klasična",
         headToHead: "Glava protiv glave",
         leaguesTables: "Lige",
-        noLeagueDataAvailable: "Nema podataka o ligama. Prvo učitajte tim da vidite lige.",
+        noLeagueDataAvailable:
+          "Nema podataka o ligama. Prvo učitajte tim da vidite lige.",
         liveLeagueTracking: "Praćenje liga uživo",
         exitLive: "Izađi iz uživo",
-        startLive: "Pokreni uživo",
         exit: "Izađi",
         liveTrackerTitle: "UŽIVO BPS Praćenje",
         liveTrackerLivePolling: "Uživo — prati",
         liveTrackerOfflinePolling: "Offline — ne prati",
+        // Tab system
+        tabs: {
+          overview: "Pregled",
+          overviewDesc: "Sažetak menadžera, status gameweek-a i rezultati utakmica",
+          squad: "Postava",
+          squadDesc: "Kompletna analiza postave s live statistikama",
+          leagues: "Lige",
+          leaguesDesc: "Tabele liga i live praćenje",
+          analytics: "Analitika",
+          analyticsDesc: "Uvidi u performanse i analiza klonova",
+          transfers: "Transferi",
+          transfersDesc: "Trendovi transfera i kretanja na tržištu"
+        },
+        // New translation keys
+        readyToStart: "Spremni za početak!",
+        enterManagerIdToStart: "Unesite Manager ID da počnete sa analizom vašeg FPL tima",
+        enterManagerIdFirst: "Prvo unesite Manager ID",
+        loading: "Učitavanje...",
+        settings: "Postavke",
+        // Transfer Analysis
+        transferAnalysis: {
+          title: "Analiza Transfera",
+          subtitle: "Trendovi transfera i analiza tržišta",
+          transfersIn: "Transferi u tim",
+          transfersOut: "Transferi iz tima",
+          netTransfers: "Net transferi",
+          thisGameweek: "Ovaj gameweek",
+          comingSoon: "Uskoro dostupno",
+          comingSoonDesc: "Sveobuhvatna analiza transfera uključujući promjene cijena, popularne transfere i trendove na tržištu."
+        },
+        transferAnalysisComingSoon: "Analiza Transfera Uskoro",
+        transferAnalysisDescription: "Sveobuhvatni uvidi u transfere uključujući promjene cijena, popularne transfere i trendove na tržištu će uskoro biti dostupni ovdje.",
       },
       common: {
         loading: "Učitavanje...",

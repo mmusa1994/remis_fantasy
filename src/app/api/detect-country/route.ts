@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    console.error("Error detecting country:", error);
     return NextResponse.json({
       success: false,
       language: "en", // fallback to English

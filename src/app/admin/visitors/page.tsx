@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   Users,
   Globe,
@@ -14,8 +17,11 @@ import {
   Smartphone,
   ChevronLeft,
   ChevronRight,
+  LogOut,
+  Table2,
 } from "lucide-react";
 import { getCountryFlag } from "@/lib/country-flags";
+import { SkeletonVisitorAnalytics } from "@/components/skeletons";
 
 interface Visitor {
   id: number;
@@ -56,6 +62,8 @@ interface VisitorData {
 }
 
 export default function VisitorsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [data, setData] = useState<VisitorData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,9 +88,17 @@ export default function VisitorsPage() {
   };
 
   useEffect(() => {
-    fetchVisitorData(currentPage);
+    if (status === "unauthenticated") {
+      router.push("/admin");
+    } else if (status === "authenticated" && session) {
+      fetchVisitorData(currentPage);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
+  }, [currentPage, status, session, router]);
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: "/admin" });
+  };
 
   const formatDate = (timestamp: string) => {
     return new Date(timestamp).toLocaleString("bs-BA", {
@@ -105,15 +121,8 @@ export default function VisitorsPage() {
     }
   };
 
-  if (loading && !data) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-300">Učitavanje visitor podataka...</p>
-        </div>
-      </div>
-    );
+  if (status === "loading" || loading) {
+    return <SkeletonVisitorAnalytics />;
   }
 
   if (error) {
@@ -134,6 +143,58 @@ export default function VisitorsPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      {/* Admin Header */}
+      <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <Image
+                src="/images/rf-logo.svg"
+                alt="REMIS Fantasy Logo"
+                width={40}
+                height={40}
+                className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
+                priority
+              />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                  REMIS Fantasy Admin - Visitor Analytics
+                </h1>
+                <p className="text-xs sm:text-sm opacity-75 truncate">
+                  Welcome, {session?.user?.email}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push("/admin/dashboard")}
+                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                title="Admin Dashboard"
+              >
+                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </button>
+              <button
+                onClick={() => router.push("/admin/dashboard/tabele")}
+                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                title="Upravljanje tabelama"
+              >
+                <Table2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Tabele</span>
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">

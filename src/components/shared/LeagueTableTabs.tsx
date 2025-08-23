@@ -97,7 +97,7 @@ export default function LeagueTableTabs() {
     };
 
     loadTables();
-  }, []);
+  }, [t]);
 
   const getLeagueData = (leagueType: string) => {
     // Get static league configuration (prizes, fees, etc.) from original data

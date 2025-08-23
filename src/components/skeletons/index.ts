@@ -9,3 +9,4 @@ export { default as SkeletonButton } from './SkeletonButton';
 export { default as SkeletonList } from './SkeletonList';
 export { default as SkeletonDashboard } from './SkeletonDashboard';
 export { default as SkeletonPage } from './SkeletonPage';
+export { default as SkeletonVisitorAnalytics } from './SkeletonVisitorAnalytics';

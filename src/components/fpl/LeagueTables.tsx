@@ -15,6 +15,7 @@ import {
   MdStars,
   MdBarChart,
   MdFlashOn,
+  MdAccessTime,
 } from "react-icons/md";
 import { GiTrophy, GiArmBandage } from "react-icons/gi";
 import { BsLightningCharge } from "react-icons/bs";
@@ -76,19 +77,19 @@ export default function LeagueTables({
   // Get current gameweek from FPL API
   const getCurrentGameweek = async () => {
     try {
-      const response = await fetch('/api/fpl/bootstrap-static');
+      const response = await fetch("/api/fpl/bootstrap-static");
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data.events) {
           // Find current gameweek (first event that hasn't finished)
-          const currentGW = data.data.events.find((event: any) => 
-            !event.finished && event.is_current
+          const currentGW = data.data.events.find(
+            (event: any) => !event.finished && event.is_current
           );
           return currentGW ? currentGW.id : gameweek;
         }
       }
     } catch (error) {
-      console.warn('Failed to get current gameweek:', error);
+      console.warn("Failed to get current gameweek:", error);
     }
     return gameweek; // fallback to passed gameweek
   };
@@ -154,7 +155,7 @@ export default function LeagueTables({
 
       // Get current gameweek
       const currentGW = await getCurrentGameweek();
-      
+
       const isH2H = selectedLeague.type === "h2h";
 
       // Get league standings with regular API
@@ -170,65 +171,72 @@ export default function LeagueTables({
       if (!standingsResult.success || !standingsResult.data?.standings) return;
 
       // Get live data for each manager in the league
-      const livePlayersPromises = standingsResult.data.standings.map(async (entry: any) => {
-        try {
-          // Get live team data for each manager
-          const liveTeamResponse = await fetch("/api/fpl/load-team", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              managerId: entry.entry,
-              gameweek: currentGW,
-              skeleton: false
-            }),
-          });
+      const livePlayersPromises = standingsResult.data.standings.map(
+        async (entry: any) => {
+          try {
+            // Get live team data for each manager
+            const liveTeamResponse = await fetch("/api/fpl/load-team", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                managerId: entry.entry,
+                gameweek: currentGW,
+                skeleton: false,
+              }),
+            });
 
-          if (liveTeamResponse.ok) {
-            const liveTeamData = await liveTeamResponse.json();
-            if (liveTeamData.success && liveTeamData.data) {
-              const teamTotals = liveTeamData.data.team_totals || {};
-              const livePoints = teamTotals.total_points || entry.total;
-              const bonusPoints = teamTotals.bonus_points || 0;
-              
-              return {
-                id: entry.entry.toString(),
-                name: entry.player_name || entry.entry_name,
-                team: entry.entry_name,
-                overall_points: entry.total,
-                live_points: livePoints,
-                captain_multiplier: 2,
-                vice_captain_multiplier: 1,
-                bonus_points: bonusPoints,
-                rank: entry.rank,
-                is_captain: false,
-                is_vice_captain: false,
-              };
+            if (liveTeamResponse.ok) {
+              const liveTeamData = await liveTeamResponse.json();
+              if (liveTeamData.success && liveTeamData.data) {
+                const teamTotals = liveTeamData.data.team_totals || {};
+                const livePoints = teamTotals.total_points || entry.total;
+                const bonusPoints = teamTotals.bonus_points || 0;
+
+                return {
+                  id: entry.entry.toString(),
+                  name: entry.player_name || entry.entry_name,
+                  team: entry.entry_name,
+                  overall_points: entry.total,
+                  live_points: livePoints,
+                  captain_multiplier: 2,
+                  vice_captain_multiplier: 1,
+                  bonus_points: bonusPoints,
+                  rank: entry.rank,
+                  is_captain: false,
+                  is_vice_captain: false,
+                };
+              }
             }
+          } catch (err) {
+            console.warn(
+              `Failed to get live data for manager ${entry.entry}:`,
+              err
+            );
           }
-        } catch (err) {
-          console.warn(`Failed to get live data for manager ${entry.entry}:`, err);
+
+          // Fallback to regular data
+          return {
+            id: entry.entry.toString(),
+            name: entry.player_name || entry.entry_name,
+            team: entry.entry_name,
+            overall_points: entry.total,
+            live_points: entry.total,
+            captain_multiplier: 2,
+            vice_captain_multiplier: 1,
+            bonus_points: 0,
+            rank: entry.rank,
+            is_captain: false,
+            is_vice_captain: false,
+          };
         }
-        
-        // Fallback to regular data
-        return {
-          id: entry.entry.toString(),
-          name: entry.player_name || entry.entry_name,
-          team: entry.entry_name,
-          overall_points: entry.total,
-          live_points: entry.total,
-          captain_multiplier: 2,
-          vice_captain_multiplier: 1,
-          bonus_points: 0,
-          rank: entry.rank,
-          is_captain: false,
-          is_vice_captain: false,
-        };
-      });
+      );
 
       const combinedPlayers = await Promise.all(livePlayersPromises);
-      
+
       // Sort by live points
-      combinedPlayers.sort((a: LivePlayer, b: LivePlayer) => b.live_points - a.live_points);
+      combinedPlayers.sort(
+        (a: LivePlayer, b: LivePlayer) => b.live_points - a.live_points
+      );
 
       // Get live events count
       const liveResponse = await fetch("/api/fpl/poll", {
@@ -548,10 +556,16 @@ export default function LeagueTables({
                   </span>
                   <span className="ml-auto bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full text-xs font-medium border border-white/30">
                     <span className="hidden sm:inline">
-                      {availableLeagues.find(league => league.id === selectedLiveLeague)?.name}
+                      {
+                        availableLeagues.find(
+                          (league) => league.id === selectedLiveLeague
+                        )?.name
+                      }
                     </span>
                     <span className="sm:hidden">
-                      {availableLeagues.find(league => league.id === selectedLiveLeague)?.name?.substring(0, 15) + "..."}
+                      {availableLeagues
+                        .find((league) => league.id === selectedLiveLeague)
+                        ?.name?.substring(0, 15) + "..."}
                     </span>
                   </span>
                 </h3>
@@ -573,28 +587,38 @@ export default function LeagueTables({
                       <th className="px-1 sm:px-2 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                         <div className="flex items-center justify-center gap-1">
                           <MdTrendingUp className="w-3 h-3 text-blue-500" />
-                          <span className="hidden sm:inline">{t("fplLive.overall")}</span>
+                          <span className="hidden sm:inline">
+                            {t("fplLive.overall")}
+                          </span>
                           <span className="sm:hidden">Pts</span>
                         </div>
                       </th>
                       <th className="px-1 sm:px-2 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                         <div className="flex items-center justify-center gap-1">
                           <BsLightningCharge className="w-3 h-3 text-green-500 animate-pulse" />
-                          <span className="hidden sm:inline text-green-600 dark:text-green-400">{t("fplLive.live")}</span>
-                          <span className="sm:hidden text-green-600 dark:text-green-400">Live</span>
+                          <span className="hidden sm:inline text-green-600 dark:text-green-400">
+                            {t("fplLive.live")}
+                          </span>
+                          <span className="sm:hidden text-green-600 dark:text-green-400">
+                            Live
+                          </span>
                         </div>
                       </th>
                       <th className="px-1 sm:px-2 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                         <div className="flex items-center justify-center gap-1">
                           <MdStars className="w-3 h-3 text-yellow-500" />
-                          <span className="hidden sm:inline">{t("fplLive.bonus")}</span>
+                          <span className="hidden sm:inline">
+                            {t("fplLive.bonus")}
+                          </span>
                           <span className="sm:hidden">B</span>
                         </div>
                       </th>
                       <th className="px-1 sm:px-2 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                         <div className="flex items-center justify-center gap-1">
                           <GiArmBandage className="w-3 h-3 text-purple-500" />
-                          <span className="hidden sm:inline">{t("fplLive.captain")}</span>
+                          <span className="hidden sm:inline">
+                            {t("fplLive.captain")}
+                          </span>
                           <span className="sm:hidden">C</span>
                         </div>
                       </th>
@@ -612,7 +636,7 @@ export default function LeagueTables({
                       const previousPosition = player.rank;
                       const currentPosition = index + 1;
                       const positionChange = previousPosition - currentPosition;
-                      
+
                       return (
                         <tr
                           key={player.id}
@@ -683,7 +707,9 @@ export default function LeagueTables({
                                 +{player.bonus_points}
                               </span>
                             ) : (
-                              <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">—</span>
+                              <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">
+                                —
+                              </span>
                             )}
                           </td>
                           <td className="px-1 sm:px-2 py-3 text-center">
@@ -696,26 +722,34 @@ export default function LeagueTables({
                                 VC
                               </span>
                             ) : (
-                              <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">—</span>
+                              <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">
+                                —
+                              </span>
                             )}
                           </td>
                           <td className="px-1 sm:px-2 py-3 text-center">
                             {positionChange !== 0 ? (
                               <div className="flex items-center justify-center">
                                 {positionChange > 0 ? (
-                                  <div className="flex items-center bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-lg border border-green-200 dark:border-green-800">
-                                    <MdTrendingUp className="w-3 h-3 text-green-600 dark:text-green-400" />
-                                    <span className="text-xs ml-1 font-bold text-green-700 dark:text-green-300">+{positionChange}</span>
-                                  </div>
-                                ) : (
                                   <div className="flex items-center bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg border border-red-200 dark:border-red-800">
                                     <MdTrendingUp className="w-3 h-3 rotate-180 text-red-600 dark:text-red-400" />
-                                    <span className="text-xs ml-1 font-bold text-red-700 dark:text-red-300">{positionChange}</span>
+                                    <span className="text-xs ml-1 font-bold text-red-700 dark:text-red-300">
+                                      -{positionChange}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-lg border border-green-200 dark:border-green-800">
+                                    <MdTrendingUp className="w-3 h-3 text-green-600 dark:text-green-400" />
+                                    <span className="text-xs ml-1 font-bold text-green-700 dark:text-green-300">
+                                      +{Math.abs(positionChange)}
+                                    </span>
                                   </div>
                                 )}
                               </div>
                             ) : (
-                              <span className="text-gray-400 dark:text-gray-500 text-xs font-medium bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-lg">—</span>
+                              <span className="text-gray-400 dark:text-gray-500 text-xs font-medium bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-lg">
+                                —
+                              </span>
                             )}
                           </td>
                         </tr>
@@ -944,60 +978,77 @@ export default function LeagueTables({
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {standings.standings.map((entry: any, index: number) => {
-                                    const positionChange = entry.last_rank ? entry.rank - entry.last_rank : 0;
-                                    return (
-                                      <tr
-                                        key={entry.id}
-                                        className={`border-b dark:border-gray-700 ${
-                                          entry.entry === managerId
-                                            ? "bg-blue-50 dark:bg-blue-900"
-                                            : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                        }`}
-                                      >
-                                        <td className="px-2 sm:px-4 py-2 font-medium text-xs">
-                                          <div className="flex items-center gap-1">
-                                            <span className={index < 3 ? "font-bold" : ""}>
-                                              {entry.rank}
-                                            </span>
-                                            {entry.entry === managerId && (
-                                              <span className="text-blue-500 text-xs">←</span>
-                                            )}
-                                          </div>
-                                        </td>
-                                        <td className="px-2 sm:px-4 py-2">
-                                          <div className="truncate">
-                                            <div className="text-xs sm:text-sm font-medium">
-                                              {entry.player_name || entry.entry_name}
+                                  {standings.standings.map(
+                                    (entry: any, index: number) => {
+                                      const positionChange = entry.last_rank
+                                        ? entry.rank - entry.last_rank
+                                        : 0;
+                                      return (
+                                        <tr
+                                          key={entry.id}
+                                          className={`border-b dark:border-gray-700 ${
+                                            entry.entry === managerId
+                                              ? "bg-blue-50 dark:bg-blue-900"
+                                              : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                                          }`}
+                                        >
+                                          <td className="px-2 sm:px-4 py-2 font-medium text-xs">
+                                            <div className="flex items-center gap-1">
+                                              <span
+                                                className={
+                                                  index < 3 ? "font-bold" : ""
+                                                }
+                                              >
+                                                {entry.rank}
+                                              </span>
+                                              {entry.entry === managerId && (
+                                                <span className="text-blue-500 text-xs">
+                                                  ←
+                                                </span>
+                                              )}
                                             </div>
-                                            {entry.entry === managerId && (
-                                              <span className="text-xs text-blue-500 font-medium">
-                                                {t("fplLive.you")}
+                                          </td>
+                                          <td className="px-2 sm:px-4 py-2">
+                                            <div className="truncate">
+                                              <div className="text-xs sm:text-sm font-medium">
+                                                {entry.player_name ||
+                                                  entry.entry_name}
+                                              </div>
+                                              {entry.entry === managerId && (
+                                                <span className="text-xs text-blue-500 font-medium">
+                                                  {t("fplLive.you")}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </td>
+                                          <td className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm">
+                                            {entry.total.toLocaleString()}
+                                          </td>
+                                          <td className="px-2 sm:px-4 py-2 text-center">
+                                            {positionChange > 0 ? (
+                                              <div className="flex items-center justify-center text-red-600">
+                                                <MdTrendingUp className="w-3 h-3 rotate-180" />
+                                                <span className="text-xs ml-1">
+                                                  -{Math.abs(positionChange)}
+                                                </span>
+                                              </div>
+                                            ) : positionChange < 0 ? (
+                                              <div className="flex items-center justify-center text-green-600">
+                                                <MdTrendingUp className="w-3 h-3" />
+                                                <span className="text-xs ml-1">
+                                                  +{Math.abs(positionChange)}
+                                                </span>
+                                              </div>
+                                            ) : (
+                                              <span className="text-gray-400 text-xs">
+                                                —
                                               </span>
                                             )}
-                                          </div>
-                                        </td>
-                                        <td className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm">
-                                          {entry.total.toLocaleString()}
-                                        </td>
-                                        <td className="px-2 sm:px-4 py-2 text-center">
-                                          {positionChange > 0 ? (
-                                            <div className="flex items-center justify-center text-green-600">
-                                              <MdTrendingUp className="w-3 h-3" />
-                                              <span className="text-xs ml-1">+{Math.abs(positionChange)}</span>
-                                            </div>
-                                          ) : positionChange < 0 ? (
-                                            <div className="flex items-center justify-center text-red-600">
-                                              <MdTrendingUp className="w-3 h-3 rotate-180" />
-                                              <span className="text-xs ml-1">-{Math.abs(positionChange)}</span>
-                                            </div>
-                                          ) : (
-                                            <span className="text-gray-400 text-xs">—</span>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
+                                          </td>
+                                        </tr>
+                                      );
+                                    }
+                                  )}
                                 </tbody>
                               </table>
 
@@ -1121,7 +1172,9 @@ export default function LeagueTables({
                               <table className="w-full text-xs sm:text-sm">
                                 <thead className="bg-gray-100 dark:bg-gray-600">
                                   <tr>
-                                    <th className="px-2 sm:px-4 py-2 text-left text-xs">#</th>
+                                    <th className="px-2 sm:px-4 py-2 text-left text-xs">
+                                      #
+                                    </th>
                                     <th className="px-2 sm:px-4 py-2 text-left text-xs">
                                       {t("fplLive.leaguesManager")}
                                     </th>
@@ -1137,65 +1190,84 @@ export default function LeagueTables({
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {standings.standings.map((entry: any, index: number) => {
-                                    const positionChange = entry.last_rank ? entry.rank - entry.last_rank : 0;
-                                    return (
-                                      <tr
-                                        key={entry.id}
-                                        className={`border-b dark:border-gray-700 ${
-                                          entry.entry === managerId
-                                            ? "bg-blue-50 dark:bg-blue-900"
-                                            : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                        }`}
-                                      >
-                                        <td className="px-2 sm:px-4 py-2 font-medium text-xs">
-                                          <div className="flex items-center gap-1">
-                                            <span className={index < 3 ? "font-bold" : ""}>
-                                              {entry.rank}
-                                            </span>
-                                            {entry.entry === managerId && (
-                                              <span className="text-blue-500 text-xs">←</span>
-                                            )}
-                                          </div>
-                                        </td>
-                                        <td className="px-2 sm:px-4 py-2">
-                                          <div className="truncate">
-                                            <div className="text-xs sm:text-sm font-medium">
-                                              {entry.player_name || entry.entry_name}
+                                  {standings.standings.map(
+                                    (entry: any, index: number) => {
+                                      const positionChange = entry.last_rank
+                                        ? entry.rank - entry.last_rank
+                                        : 0;
+                                      return (
+                                        <tr
+                                          key={entry.id}
+                                          className={`border-b dark:border-gray-700 ${
+                                            entry.entry === managerId
+                                              ? "bg-blue-50 dark:bg-blue-900"
+                                              : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                                          }`}
+                                        >
+                                          <td className="px-2 sm:px-4 py-2 font-medium text-xs">
+                                            <div className="flex items-center gap-1">
+                                              <span
+                                                className={
+                                                  index < 3 ? "font-bold" : ""
+                                                }
+                                              >
+                                                {entry.rank}
+                                              </span>
+                                              {entry.entry === managerId && (
+                                                <span className="text-blue-500 text-xs">
+                                                  ←
+                                                </span>
+                                              )}
                                             </div>
-                                            {entry.entry === managerId && (
-                                              <span className="text-xs text-blue-500 font-medium">
-                                                {t("fplLive.you")}
+                                          </td>
+                                          <td className="px-2 sm:px-4 py-2">
+                                            <div className="truncate">
+                                              <div className="text-xs sm:text-sm font-medium">
+                                                {entry.player_name ||
+                                                  entry.entry_name}
+                                              </div>
+                                              {entry.entry === managerId && (
+                                                <span className="text-xs text-blue-500 font-medium">
+                                                  {t("fplLive.you")}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </td>
+                                          <td className="px-2 sm:px-4 py-2 text-right text-xs">
+                                            <span className="font-mono">
+                                              {entry.matches_won}-
+                                              {entry.matches_drawn}-
+                                              {entry.matches_lost}
+                                            </span>
+                                          </td>
+                                          <td className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm">
+                                            {entry.total}
+                                          </td>
+                                          <td className="px-2 sm:px-4 py-2 text-center">
+                                            {positionChange > 0 ? (
+                                              <div className="flex items-center justify-center text-red-600">
+                                                <MdTrendingUp className="w-3 h-3 rotate-180" />
+                                                <span className="text-xs ml-1">
+                                                  -{Math.abs(positionChange)}
+                                                </span>
+                                              </div>
+                                            ) : positionChange < 0 ? (
+                                              <div className="flex items-center justify-center text-green-600">
+                                                <MdTrendingUp className="w-3 h-3" />
+                                                <span className="text-xs ml-1">
+                                                  +{Math.abs(positionChange)}
+                                                </span>
+                                              </div>
+                                            ) : (
+                                              <span className="text-gray-400 text-xs">
+                                                —
                                               </span>
                                             )}
-                                          </div>
-                                        </td>
-                                        <td className="px-2 sm:px-4 py-2 text-right text-xs">
-                                          <span className="font-mono">
-                                            {entry.matches_won}-{entry.matches_drawn}-{entry.matches_lost}
-                                          </span>
-                                        </td>
-                                        <td className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm">
-                                          {entry.total}
-                                        </td>
-                                        <td className="px-2 sm:px-4 py-2 text-center">
-                                          {positionChange > 0 ? (
-                                            <div className="flex items-center justify-center text-green-600">
-                                              <MdTrendingUp className="w-3 h-3" />
-                                              <span className="text-xs ml-1">+{Math.abs(positionChange)}</span>
-                                            </div>
-                                          ) : positionChange < 0 ? (
-                                            <div className="flex items-center justify-center text-red-600">
-                                              <MdTrendingUp className="w-3 h-3 rotate-180" />
-                                              <span className="text-xs ml-1">-{Math.abs(positionChange)}</span>
-                                            </div>
-                                          ) : (
-                                            <span className="text-gray-400 text-xs">—</span>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
+                                          </td>
+                                        </tr>
+                                      );
+                                    }
+                                  )}
                                 </tbody>
                               </table>
 

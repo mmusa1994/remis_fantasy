@@ -11,6 +11,13 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        // Enhanced theme colors for FPL Live
+        'theme-card': 'var(--theme-card, #ffffff)',
+        'theme-accent': 'var(--theme-accent, #f3f4f6)',
+        'theme-border': 'var(--theme-border, #e5e7eb)',
+        'theme-primary': 'var(--theme-primary, #111827)',
+        'theme-secondary': 'var(--theme-secondary, #6b7280)',
+        'theme-muted': 'var(--theme-muted, #9ca3af)',
       },
       fontFamily: {
         russo: ["Russo One", "system-ui", "sans-serif"],

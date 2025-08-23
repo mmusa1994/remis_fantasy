@@ -88,7 +88,7 @@ export const useLeagueData = (leagueType: string) => {
     if (leagueType) {
       loadData();
     }
-  }, [leagueType]);
+  }, [leagueType, t]);
 
   return {
     leagueData: leagueData,
@@ -267,7 +267,7 @@ export const useHomepageData = () => {
     };
 
     loadData();
-  }, []);
+  }, [t]);
 
   return { data, loading, error };
 };

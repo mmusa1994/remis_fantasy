@@ -1,0 +1,89 @@
+/* FPL Live Theme Variables */
+:root {
+  /* Light theme - Beige/Cream colors */
+  --theme-card: #fefcf3;
+  --theme-accent: #f5f3e7;
+  --theme-border: #e8e1c8;
+  --theme-primary: #8b6914;
+  --theme-secondary: #a0753e;
+  --theme-muted: #b4915a;
+  
+  /* Additional beige/cream shades */
+  --beige-50: #fefcf3;
+  --beige-100: #f8f4e6;
+  --beige-200: #f1e8cc;
+  --beige-300: #e8dab2;
+  --beige-400: #d9c184;
+  --beige-500: #c8a76e;
+  --beige-600: #b4915a;
+  --beige-700: #a0753e;
+  --beige-800: #8b6914;
+  --beige-900: #76530d;
+}
+
+[data-theme="dark"] {
+  /* Dark theme - Pure black */
+  --theme-card: #000000;
+  --theme-accent: #1a1a1a;
+  --theme-border: #2a2a2a;
+  --theme-primary: #ffffff;
+  --theme-secondary: #d1d5db;
+  --theme-muted: #9ca3af;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --theme-card: #000000;
+    --theme-accent: #1a1a1a;
+    --theme-border: #2a2a2a;
+    --theme-primary: #ffffff;
+    --theme-secondary: #d1d5db;
+    --theme-muted: #9ca3af;
+  }
+}
+
+/* Scrollbar styling for better mobile experience */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Input theme styling */
+.input-theme {
+  background-color: var(--theme-card);
+  border-color: var(--theme-border);
+  color: var(--theme-primary);
+}
+
+.input-theme:focus {
+  border-color: var(--beige-500, #c8a76e);
+  box-shadow: 0 0 0 1px var(--beige-500, #c8a76e);
+}
+
+[data-theme="dark"] .input-theme:focus {
+  border-color: #d1d5db;
+  box-shadow: 0 0 0 1px #d1d5db;
+}
+
+/* Mobile-first responsive breakpoints */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Enhanced touch targets for mobile */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Better mobile table scrolling */
+.mobile-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

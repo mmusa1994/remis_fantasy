@@ -335,9 +335,9 @@ export default function AdminTablesCleanPage() {
       // Refresh the tables after update
       await loadTables();
 
-      const totalInLeague = result.totalFPLPlayers || (result.updatedCount + (result.notFoundPlayers?.length || 0));
+      const totalInLeague = result.totalFPLPlayers || (result.updatedPlayers + (result.notFoundPlayers?.length || 0));
       let message = `${result.leagueType.toUpperCase()} liga ažurirana! Ažurirano ${
-        result.updatedCount
+        result.updatedPlayers || 0
       } od ukupno ${totalInLeague} igrača u ligi.`;
       if (result.notFoundPlayers && result.notFoundPlayers.length > 0) {
         message += ` Nisu pronađeni u bazi: ${result.notFoundPlayers
