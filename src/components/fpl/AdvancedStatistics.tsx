@@ -292,7 +292,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </div>
         </div>
 
-        <div className="flex flex-col xs:flex-row xs:flex-wrap gap-4">
+        <div className="flex flex-col md:flex-row md:flex-wrap gap-4">
           <div className="text-center p-3 bg-theme-secondary rounded-lg">
             <div className="font-bold text-theme-primary">
               {rankData.currentRank.toLocaleString()}

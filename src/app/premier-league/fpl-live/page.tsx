@@ -74,33 +74,18 @@ export default function FPLLivePage() {
         }
       }
 
-      // Restore cached team data if available and not too old (24 hours)
+      // Don't auto-restore cached data - user must click Load Team
+      // Just clear old cached data if it exists and is stale
       if (savedData && savedLastUpdated) {
         const lastUpdated = new Date(savedLastUpdated);
         const now = new Date();
         const hoursDiff =
           (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60);
 
-        if (hoursDiff < 24) {
-          try {
-            const parsedData = JSON.parse(savedData);
-            setData(parsedData);
-            setLastUpdated(savedLastUpdated);
-            showSuccess(t("fplLive.restoredCachedData"));
-
-            // Auto-load leagues if we have cached team data
-            if (parsedData.manager && savedManagerId) {
-              setLeaguesLoading(true);
-              loadLeaguesData();
-            }
-          } catch (parseError) {
-            console.warn("Failed to parse cached data:", parseError);
-          }
-        } else {
+        if (hoursDiff >= 24) {
           // Clear old cached data
           localStorage.removeItem("fpl-team-data");
           localStorage.removeItem("fpl-last-updated");
-          
         }
       }
     } catch (error) {
@@ -290,12 +275,10 @@ export default function FPLLivePage() {
   const handleManagerIdFound = useCallback(
     (newManagerId: number) => {
       setManagerId(newManagerId);
-      // Automatically load the team when a new Manager ID is provided
-      setTimeout(() => {
-        loadManagerInfo();
-      }, 100);
+      // Save to localStorage but don't auto-load
+      saveToLocalStorage("fpl-manager-id", newManagerId.toString());
     },
-    [loadManagerInfo]
+    [saveToLocalStorage]
   );
 
   const startPolling = useCallback(() => {
@@ -355,23 +338,7 @@ export default function FPLLivePage() {
     showSuccess(t("fplLive.livePollingStopped"));
   }, [pollingInterval]);
 
-  // Auto-load team data if manager ID is available but no team data is loaded
-  useEffect(() => {
-    const autoLoadTeam = async () => {
-      if (managerId && !data && !loading) {
-        console.log("Auto-loading team data for manager ID:", managerId);
-        try {
-          await loadFullTeamData();
-        } catch (error) {
-          console.warn("Auto-load failed:", error);
-        }
-      }
-    };
-
-    // Small delay to ensure all state is properly set
-    const timeoutId = setTimeout(autoLoadTeam, 500);
-    return () => clearTimeout(timeoutId);
-  }, [managerId, data, loading, loadFullTeamData]);
+  // Removed auto-load - user must manually click "Load Team"
 
   useEffect(() => {
     return () => {
@@ -392,22 +359,22 @@ export default function FPLLivePage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
           {t("fplLive.title")}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
           {t("fplLive.subtitle")}
         </p>
       </div>
 
       {/* Enhanced Info Accordions - Moved to Top */}
-      <div className="mb-6 flex flex-col lg:flex-row gap-4">
+      <div className="mb-4 sm:mb-6 flex flex-col lg:flex-row gap-2 sm:gap-4">
         {/* How to Use - Enhanced Version */}
         <div className="bg-theme-accent border border-theme-border rounded-lg overflow-hidden">
           <details className="group">
-            <summary className="flex items-center gap-3 p-4 text-sm font-medium text-theme-secondary cursor-pointer hover:bg-theme-secondary transition-colors">
+            <summary className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 text-xs sm:text-sm font-medium text-theme-secondary cursor-pointer hover:bg-theme-secondary transition-colors">
               <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-lg flex items-center justify-center">
                 <MdInfo className="text-white w-4 h-4" />
               </div>
@@ -565,8 +532,8 @@ export default function FPLLivePage() {
                   {/* Squad Skeleton */}
                   <div className="bg-theme-card rounded-lg shadow overflow-hidden">
                     <div className="px-6 py-4 border-b border-theme-border">
-                      <div className="h-6 bg-theme-accent rounded w-24 animate-pulse"></div>
-                      <div className="h-4 bg-theme-accent rounded w-48 mt-2 animate-pulse"></div>
+                      <div className="h-6 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-theme-accent rounded w-24 animate-pulse"></div>
+                      <div className="h-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:bg-theme-accent rounded w-48 mt-2 animate-pulse"></div>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">
@@ -574,7 +541,7 @@ export default function FPLLivePage() {
                           <tr>
                             {Array.from({ length: 14 }, (_, i) => (
                               <th key={i} className="px-3 py-3">
-                                <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-12 animate-pulse"></div>
+                                <div className="h-4 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-500 rounded w-12 animate-pulse"></div>
                               </th>
                             ))}
                           </tr>
@@ -584,7 +551,7 @@ export default function FPLLivePage() {
                             <tr key={i}>
                               {Array.from({ length: 14 }, (_, j) => (
                                 <td key={j} className="px-3 py-2">
-                                  <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded animate-pulse"></div>
+                                  <div className="h-4 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-500 rounded animate-pulse"></div>
                                 </td>
                               ))}
                             </tr>
@@ -596,20 +563,20 @@ export default function FPLLivePage() {
 
                   {/* Scoreboard Skeleton */}
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-32 mb-4 animate-pulse"></div>
+                    <div className="h-6 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-600 rounded w-32 mb-4 animate-pulse"></div>
                     <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
                       {Array.from({ length: 6 }, (_, i) => (
                         <div
                           key={i}
                           className="border dark:border-gray-600 rounded-lg p-4"
                         >
-                          <div className="h-4 bg-gray-200 dark:bg-gray-500 rounded w-24 mb-2 animate-pulse"></div>
-                          <div className="h-6 bg-gray-200 dark:bg-gray-500 rounded w-16 mb-3 animate-pulse"></div>
+                          <div className="h-4 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-500 rounded w-24 mb-2 animate-pulse"></div>
+                          <div className="h-6 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-500 rounded w-16 mb-3 animate-pulse"></div>
                           <div className="space-y-2">
                             {Array.from({ length: 3 }, (_, j) => (
                               <div
                                 key={j}
-                                className="h-4 bg-gray-200 dark:bg-gray-500 rounded animate-pulse"
+                                className="h-4 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-500 rounded animate-pulse"
                               ></div>
                             ))}
                           </div>
@@ -658,7 +625,7 @@ export default function FPLLivePage() {
             </div>
           ) : (
             leagueData && (
-              <LeagueTables leagueData={leagueData} managerId={managerId!} />
+              <LeagueTables leagueData={leagueData} managerId={managerId!} gameweek={gameweek} />
             )
           )}
           {/* Move Scoreboard below Leagues on desktop */}

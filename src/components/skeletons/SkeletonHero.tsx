@@ -36,7 +36,7 @@ export default function SkeletonHero({
               width="100%"
               height="100%"
               rounded="none"
-              className="border-2 border-gray-300 dark:border-gray-600"
+              className="border-2 border-amber-200 dark:border-gray-600"
             />
           </div>
         )}

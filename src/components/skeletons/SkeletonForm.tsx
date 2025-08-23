@@ -33,13 +33,13 @@ export default function SkeletonForm({
   const getFormClasses = () => {
     switch (variant) {
       case 'settings':
-        return 'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3';
+        return 'bg-gradient-to-br from-amber-50 via-orange-25 to-amber-75 dark:bg-gray-900 rounded-lg shadow-sm border border-amber-300 dark:border-gray-800 p-3';
       case 'registration':
-        return 'p-8 md:p-12 border-2 border-gray-600/30 rounded-2xl bg-theme-background/80 backdrop-blur-sm';
+        return 'p-8 md:p-12 border-2 border-amber-300 dark:border-gray-600 rounded-2xl bg-gradient-to-br from-amber-25/80 to-orange-25/80 dark:bg-theme-background/80 backdrop-blur-sm';
       case 'compact':
-        return 'bg-gray-50 dark:bg-gray-700 rounded-md p-4';
+        return 'bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-800 rounded-md p-4 border border-amber-200 dark:border-gray-800';
       default:
-        return 'bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6';
+        return 'bg-gradient-to-br from-amber-50 via-orange-25 to-amber-75 dark:bg-gray-900 rounded-lg shadow-sm border border-amber-200 dark:border-gray-800 p-6';
     }
   };
 

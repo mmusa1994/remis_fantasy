@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { SkeletonPage } from "@/components/skeletons";
+import { useTranslation } from "react-i18next";
 
 // Icon mapping for navigation cards
 const iconMap: Record<string, LucideIcon> = {
@@ -29,6 +30,7 @@ interface LeaguePageProps {
 
 export default function LeaguePage({ leagueId }: LeaguePageProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const { leagueData: data, loading, error } = useLeagueData(leagueId);
 
   if (loading) {
@@ -39,7 +41,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-500 mb-4">Greška pri učitavanju podataka</p>
+          <p className="text-red-500 mb-4">{t("common.error")}</p>
           <p className="text-theme-text-secondary">{error}</p>
         </div>
       </div>
@@ -184,7 +186,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
                         className={`inline-flex items-center text-sm font-semibold ${colorClasses.text} group-hover:translate-x-1 transition-transform duration-300`}
                         whileHover={{ x: 4 }}
                       >
-                        Otvori
+                        {t("hero.openLeague")}
                         <svg
                           className="w-4 h-4 ml-2"
                           fill="none"

@@ -39,24 +39,24 @@ export default function SkeletonList({
   const getContainerClasses = () => {
     switch (variant) {
       case 'events':
-        return 'bg-white dark:bg-gray-800 rounded-lg shadow';
+        return 'bg-gradient-to-br from-amber-50 via-orange-25 to-amber-75 dark:bg-gray-900 rounded-lg shadow border border-amber-200 dark:border-gray-800';
       case 'notifications':
-        return 'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700';
+        return 'bg-gradient-to-br from-amber-50 via-orange-25 to-amber-75 dark:bg-gray-900 rounded-lg shadow-sm border border-amber-300 dark:border-gray-800';
       case 'compact':
         return 'space-y-2';
       default:
-        return 'bg-white dark:bg-gray-800 rounded-lg shadow-sm';
+        return 'bg-gradient-to-br from-amber-50 via-orange-25 to-amber-75 dark:bg-gray-900 rounded-lg shadow-sm border border-amber-200 dark:border-gray-800';
     }
   };
 
   const getItemClasses = () => {
     switch (variant) {
       case 'events':
-        return 'flex items-start space-x-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700';
+        return 'flex items-start space-x-3 py-3 border-b border-amber-200 dark:border-gray-800 last:border-b-0 hover:bg-gradient-to-r hover:from-amber-75 hover:to-orange-75 dark:hover:bg-gray-800';
       case 'compact':
-        return 'flex items-center space-x-3 p-2 rounded-md bg-gray-50 dark:bg-gray-700';
+        return 'flex items-center space-x-3 p-2 rounded-md bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-800 border border-amber-200 dark:border-gray-800';
       default:
-        return 'flex items-center space-x-3 p-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0';
+        return 'flex items-center space-x-3 p-4 border-b border-amber-200 dark:border-gray-800 last:border-b-0';
     }
   };
 
@@ -64,7 +64,7 @@ export default function SkeletonList({
     <div className={`${getContainerClasses()} ${className}`}>
       {/* List Header */}
       {(showHeader || title) && (
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-amber-300 dark:border-gray-800">
           <div className="flex items-center justify-between">
             {title ? (
               <SkeletonBase

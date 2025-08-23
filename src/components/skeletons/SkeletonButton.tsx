@@ -51,7 +51,7 @@ export default function SkeletonButton({
       case "primary":
         return "shadow-md";
       case "secondary":
-        return "border border-gray-300 dark:border-gray-600";
+        return "border border-amber-300 dark:border-gray-600";
       case "icon":
         return "";
       default:

@@ -26,7 +26,7 @@ export default function SkeletonStatsGrid({
       {Array.from({ length: count }, (_, index) => (
         <div
           key={index}
-          className="text-center p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+          className="text-center p-4 md:p-6 bg-gradient-to-br from-amber-50 via-orange-25 to-amber-75 dark:bg-gray-900 rounded-lg shadow-sm border border-amber-300 dark:border-gray-800"
         >
           {/* Icon Skeleton */}
           {showIcons && (

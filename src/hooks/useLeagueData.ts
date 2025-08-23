@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 // Import league-specific data
 import {
   premierLeagueConfig,
@@ -15,6 +16,7 @@ import { BsCash } from "react-icons/bs";
 import { GrGroup } from "react-icons/gr";
 
 export const useLeagueData = (leagueType: string) => {
+  const { t } = useTranslation();
   const [leagueData, setLeagueData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,18 +55,18 @@ export const useLeagueData = (leagueType: string) => {
               description: configData.description,
               ctaButtons: {
                 primary: {
-                  text: "Registracija",
+                  text: t("navigation.registration"),
                   href: `${configData.basePath}/registracija`,
                 },
                 secondary: {
-                  text: "Nagrade",
+                  text: t("navigation.prizes"),
                   href: `${configData.basePath}/nagrade`,
                 },
               },
             },
             sections: {
               navigation: {
-                title: "Brza navigacija",
+                title: t("navigation.quickNavigation"),
               },
             },
           },
@@ -77,7 +79,7 @@ export const useLeagueData = (leagueType: string) => {
         setLeagueData(transformedData);
       } catch (err) {
         console.error("Error loading league data:", err);
-        setError("Failed to load league data");
+        setError(t("common.error"));
       } finally {
         setLoading(false);
       }
@@ -179,6 +181,7 @@ export const usePageContent = (leagueType: string) => {
 };
 
 export const useHomepageData = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -223,25 +226,25 @@ export const useHomepageData = () => {
         // Create global stats (static for now)
         const globalStats = [
           {
-            label: "Ukupno igrača",
+            label: t("stats.totalPlayers"),
             value: "160+",
             color: "text-orange-500",
             icon: FaUser,
           },
           {
-            label: "Aktivne lige",
+            label: t("stats.activeLeagues"),
             value: "5",
             color: "text-blue-500",
             icon: VscRunCoverage,
           },
           {
-            label: "Nagradni fond",
+            label: t("stats.prizesAwarded"),
             value: "8.000+ KM / 4.200+ €",
             color: "text-green-500",
             icon: BsCash,
           },
           {
-            label: "Zadovoljnih igrača",
+            label: t("stats.satisfiedPlayers"),
             value: "100%",
             color: "text-purple-500",
             icon: GrGroup,

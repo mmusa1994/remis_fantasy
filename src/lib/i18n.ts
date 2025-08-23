@@ -24,6 +24,7 @@ const resources = {
         liveFplDescription:
           "Follow live Premier League matches with real-time updates, scores and fantasy points!",
         watchLive: "Watch Live",
+        live: "LIVE",
       },
       // League Descriptions
       leagues: {
@@ -47,8 +48,9 @@ const resources = {
       stats: {
         totalPlayers: "Total Players",
         activeLeagues: "Active Leagues",
-        prizesAwarded: "Prizes Awarded",
+        prizesAwarded: "Prize Fund",
         liveMatches: "Live Matches",
+        satisfiedPlayers: "Satisfied Players",
       },
       // Navigation items
       navigation: {
@@ -57,6 +59,8 @@ const resources = {
         prizes: "Prizes",
         registration: "Registration",
         gallery: "Gallery",
+        // League navigation
+        quickNavigation: "Quick Navigation",
       },
       // FPL Live page
       fplLive: {
@@ -127,18 +131,18 @@ const resources = {
         settingsCardSaving: "Saving...",
         // Live Events
         eventGoal: "Goal",
-        eventAssist: "Assist",
+        eventAssist: "Assist", 
         eventYellowCard: "Yellow Card",
         eventRedCard: "Red Card",
-        eventPenaltyMissed: "Penalty Missed",
-        eventPenaltySaved: "Penalty Saved",
+        eventPenaltyMissed: "Penalty Miss",
+        eventPenaltySaved: "Penalty Save",
         eventOwnGoal: "Own Goal",
         eventSave: "Save",
         eventCleanSheet: "Clean Sheet",
-        eventGoalConceded: "Goal Conceded",
+        eventGoalConceded: "Goals Conceded",
         eventBonusPoints: "Bonus Points",
         eventTackle: "Tackle",
-        eventInterception: "Interception",
+        eventInterception: "Interception", 
         eventClearance: "Clearance",
         // Live Tracker
         liveTrackerTitle: "LIVE BPS Tracker",
@@ -193,16 +197,16 @@ const resources = {
           "Once loaded, your team will be saved for quick access",
         fplProxyURL: "FPL Proxy URL:",
         fplProxyDescription:
-          "Optional field to bypass CORS issues. Use only if you have problems accessing FPL API.",
+          "Optional field to bypass CORS issues. Only use if you experience problems accessing the FPL API.",
         cronSecret: "CRON Secret:",
         cronSecretDescription:
           "Security key for server-side automation and scheduled tasks. Required for backend operations.",
         liveBonus: "Live Bonus:",
         liveBonusDescription:
-          "YES! Bonus points are calculated live during matches based on BPS (Bonus Points System) statistics.",
+          "YES! Bonus points are calculated live during matches based on BPS (Bonus Point System) statistics.",
         pointsSystem: "Points System:",
         pointsSystemDescription:
-          "Active = starting team (positions 1-11), Bench = substitutes (positions 12-15)",
+          "Starting XI = active team (positions 1-11), Bench = substitutes (positions 12-15)",
         livePollingActive: "Live polling active - updating every 15 seconds",
         loadTeamFirst: "Load a team first",
         // Advanced Statistics
@@ -445,6 +449,7 @@ const resources = {
         liveFplDescription:
           "Pratite uživo Premier Liga utakmice sa ažuriranjima u realnom vremenu, rezultatima i fantasy bodovima!",
         watchLive: "Gledaj Uživo",
+        live: "UŽIVO",
       },
       // League Descriptions
       leagues: {
@@ -468,8 +473,9 @@ const resources = {
       stats: {
         totalPlayers: "Ukupno Igrača",
         activeLeagues: "Aktivne Lige",
-        prizesAwarded: "Dodijeljene Nagrade",
+        prizesAwarded: "Nagradni Fond",
         liveMatches: "Uživo Utakmice",
+        satisfiedPlayers: "Zadovoljni Igrači",
       },
       // Navigation items
       navigation: {
@@ -478,6 +484,8 @@ const resources = {
         prizes: "Nagrade",
         registration: "Registracija",
         gallery: "Galerija",
+        // League navigation
+        quickNavigation: "Brza Navigacija",
       },
       // FPL Live page
       fplLive: {
@@ -784,6 +792,79 @@ const resources = {
         liveFplDescription:
           "Пратите уживо Премијер лига утакмице са ажурирањима у реалном времену, резултатима и фантази бодовима!",
         watchLive: "Гледај Уживо",
+        live: "УЖИВО",
+      },
+      // Stats
+      stats: {
+        totalPlayers: "Укупно Играча",
+        activeLeagues: "Активне Лиге",
+        prizesAwarded: "Наградни Фонд",
+        liveMatches: "Уживо Утакмице",
+        satisfiedPlayers: "Задовољни Играчи",
+      },
+      // Navigation items
+      navigation: {
+        tables: "Табеле",
+        fplLive: "ФПЛ Уживо",
+        prizes: "Награде",
+        registration: "Регистрација",
+        gallery: "Галерија",
+        // League navigation
+        quickNavigation: "Брза Навигација",
+      },
+      // FPL Live page - Serbian
+      fplLive: {
+        title: "FPL Live Dashboard",
+        subtitle: "Праћење Fantasy Premier League-а у реалном времену са предвиђањима бонус бодова",
+        howToUse: "Како користити FPL Live",
+        manager: "Менаџер",
+        rank: "Ранг", 
+        overall: "Укупно",
+        live: "Уживо",
+        bonus: "Бонус",
+        captain: "Капитен",
+        you: "ТИ",
+        points: "Бодови",
+        leaguesManager: "Менаџер",
+        leaguesPoints: "Бодови",
+        wdl: "П-Н-Г",
+        managerId: "ID Менаџера:",
+        gameweek: "ГК:",
+        loadTeam: "Учитај Тим",
+        startLive: "Покрени Уживо",
+        position: "Поз",
+        player: "Играч",
+        teamColumn: "Тим",
+        minutes: "Мин",
+        goalsShort: "Г",
+        assistsShort: "А",
+        cleanSheetsShort: "ЧМ",
+        yellowCardsShort: "ЖК",
+        redCardsShort: "ЦК",
+        savesShort: "Одбране",
+        bpsShort: "БПС",
+        bonusShort: "Бонус",
+        totalShort: "Укупно",
+        ictShort: "ИЦТ",
+        benchShort: "Клупа",
+        captain: "(К)",
+        viceCaptain: "(ЗК)",
+        tripleCaptain: "(ТК)",
+        squad: "Постава",
+        loadTeamToSeeSquad: "Учитајте тим да видите деталје поставе",
+        squadTitle: "Постава (XI + Клупа)",
+        showingFinalBonus: "Приказује финалне бонус бодове",
+        classic: "Класична",
+        headToHead: "Глава против главе",
+        leaguesTables: "Лиге",
+        noLeagueDataAvailable: "Нема података о лигама. Прво учитајте тим да видите лиге.",
+        liveLeagueTracking: "Праћење лига уживо",
+        exitLive: "Изађи из уживо",
+        startLive: "Покрени уживо",
+        exit: "Изађи",
+        liveTrackerTitle: "УЖИВО БПС Праћење",
+        liveTrackerLivePolling: "Уживо — прати",
+        liveTrackerOfflinePolling: "Офлајн — не прати",
       },
       common: {
         loading: "Учитавање...",
@@ -812,6 +893,79 @@ const resources = {
         liveFplDescription:
           "Pratite uživo Premier Liga utakmice s ažuriranjima u stvarnom vremenu, rezultatima i fantasy bodovima!",
         watchLive: "Gledaj Uživo",
+        live: "UŽIVO",
+      },
+      // Stats
+      stats: {
+        totalPlayers: "Ukupno Igrača",
+        activeLeagues: "Aktivne Lige",
+        prizesAwarded: "Nagradni Fond",
+        liveMatches: "Uživo Utakmice",
+        satisfiedPlayers: "Zadovoljni Igrači",
+      },
+      // Navigation items
+      navigation: {
+        tables: "Tabele",
+        fplLive: "FPL Uživo",
+        prizes: "Nagrade",
+        registration: "Registracija",
+        gallery: "Galerija",
+        // League navigation
+        quickNavigation: "Brza Navigacija",
+      },
+      // FPL Live page - Croatian
+      fplLive: {
+        title: "FPL Live Dashboard",
+        subtitle: "Praćenje Fantasy Premier League-a u stvarnom vremenu s prognozama bonus bodova",
+        howToUse: "Kako koristiti FPL Live",
+        manager: "Menadžer",
+        rank: "Rang", 
+        overall: "Ukupno",
+        live: "Uživo",
+        bonus: "Bonus",
+        captain: "Kapetan",
+        you: "TI",
+        points: "Bodovi",
+        leaguesManager: "Menadžer",
+        leaguesPoints: "Bodovi",
+        wdl: "P-N-G",
+        managerId: "ID Menadžera:",
+        gameweek: "GK:",
+        loadTeam: "Učitaj Tim",
+        startLive: "Pokreni Uživo",
+        position: "Poz",
+        player: "Igrač",
+        teamColumn: "Tim",
+        minutes: "Min",
+        goalsShort: "G",
+        assistsShort: "A",
+        cleanSheetsShort: "ČM",
+        yellowCardsShort: "ŽK",
+        redCardsShort: "CK",
+        savesShort: "Obrane",
+        bpsShort: "BPS",
+        bonusShort: "Bonus",
+        totalShort: "Ukupno",
+        ictShort: "ICT",
+        benchShort: "Klupa",
+        captain: "(K)",
+        viceCaptain: "(ZK)",
+        tripleCaptain: "(TK)",
+        squad: "Postava",
+        loadTeamToSeeSquad: "Učitajte tim da vidite detalje postave",
+        squadTitle: "Postava (XI + Klupa)",
+        showingFinalBonus: "Prikazuje finalne bonus bodove",
+        classic: "Klasična",
+        headToHead: "Glava protiv glave",
+        leaguesTables: "Lige",
+        noLeagueDataAvailable: "Nema podataka o ligama. Prvo učitajte tim da vidite lige.",
+        liveLeagueTracking: "Praćenje liga uživo",
+        exitLive: "Izađi iz uživo",
+        startLive: "Pokreni uživo",
+        exit: "Izađi",
+        liveTrackerTitle: "UŽIVO BPS Praćenje",
+        liveTrackerLivePolling: "Uživo — prati",
+        liveTrackerOfflinePolling: "Offline — ne prati",
       },
       common: {
         loading: "Učitavanje...",

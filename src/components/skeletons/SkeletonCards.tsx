@@ -54,7 +54,7 @@ export default function SkeletonCards({
       {Array.from({ length: count }, (_, index) => (
         <div
           key={index}
-          className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm ${getCardPadding()}`}
+          className={`bg-gradient-to-br from-amber-50 via-orange-25 to-amber-75 dark:bg-gray-900 rounded-2xl border border-amber-300 dark:border-gray-800 overflow-hidden shadow-sm ${getCardPadding()}`}
         >
           {/* Card Image Skeleton */}
           {showImages && (

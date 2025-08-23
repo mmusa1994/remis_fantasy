@@ -129,10 +129,10 @@ const SquadTable = React.memo(function SquadTable({
           !isStarter ? "bg-theme-accent" : ""
         } hover:bg-theme-accent transition-colors`}
       >
-        <td className="px-3 py-2 text-sm">
-          <div className="flex items-center space-x-2">
+        <td className="px-1 sm:px-2 py-2 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
             <span
-              className={`text-xs px-2 py-1 no-radius ${
+              className={`text-xs px-1 py-1 rounded text-center ${
                 pick.is_captain || pick.is_vice_captain
                   ? "bg-yellow-200 text-yellow-800"
                   : "bg-theme-accent text-theme-secondary"
@@ -145,25 +145,30 @@ const SquadTable = React.memo(function SquadTable({
               }
             </span>
             {!isStarter && (
-              <span className="text-xs text-theme-muted">
+              <span className="text-xs text-theme-muted mt-1 sm:mt-0">
                 ({t("fplLive.benchShort").toUpperCase()})
               </span>
             )}
           </div>
         </td>
-        <td className="px-3 py-2 text-sm font-medium text-theme-primary sticky left-0 bg-theme-card z-10 border-r border-theme-border">
-          <div>
-            {pick.player.web_name} {getMultiplierDisplay(pick)}
+        <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-theme-primary">
+          <div className="truncate max-w-[120px] sm:max-w-none">
+            <span className="font-semibold">{pick.player.web_name}</span>
+            {getMultiplierDisplay(pick) && (
+              <span className="ml-1 text-xs font-bold text-blue-600">
+                {getMultiplierDisplay(pick)}
+              </span>
+            )}
           </div>
         </td>
-        <td className="px-3 py-2 text-sm text-center">
-          <div className="flex items-center justify-start space-x-1">
+        <td className="px-1 sm:px-2 py-2 text-xs text-center">
+          <div className="flex items-center justify-center space-x-1">
             <div style={{ color: getTeamColors(pick.player.team).primary }}>
               {getTeamColors(pick.player.team).primary !==
               getTeamColors(pick.player.team).secondary ? (
-                <PiTShirtFill size={16} />
+                <PiTShirtFill size={12} />
               ) : (
-                <PiTShirtLight size={16} />
+                <PiTShirtLight size={12} />
               )}
             </div>
             <span className="text-xs font-medium">
@@ -171,24 +176,24 @@ const SquadTable = React.memo(function SquadTable({
             </span>
           </div>
         </td>
-        <td className="px-3 py-2 text-sm text-center">{stats?.minutes || 0}</td>
-        <td className="px-3 py-2 text-sm text-center">
+        <td className="px-1 sm:px-2 py-2 text-xs text-center">{stats?.minutes || 0}</td>
+        <td className="px-1 py-2 text-xs text-center font-medium">
           {stats?.goals_scored || 0}
         </td>
-        <td className="px-3 py-2 text-sm text-center">{stats?.assists || 0}</td>
-        <td className="px-3 py-2 text-sm text-center">
+        <td className="px-1 py-2 text-xs text-center font-medium">{stats?.assists || 0}</td>
+        <td className="px-1 py-2 text-xs text-center font-medium">
           {stats?.clean_sheets || 0}
         </td>
-        <td className="px-3 py-2 text-sm text-center text-yellow-600">
+        <td className="px-1 py-2 text-xs text-center text-yellow-600 font-medium">
           {stats?.yellow_cards || 0}
         </td>
-        <td className="px-3 py-2 text-sm text-center text-red-600">
+        <td className="px-1 py-2 text-xs text-center text-red-600 font-medium">
           {stats?.red_cards || 0}
         </td>
-        <td className="px-3 py-2 text-sm text-center">{stats?.saves || 0}</td>
-        <td className="px-3 py-2 text-sm text-center">{stats?.bps || 0}</td>
+        <td className="px-1 py-2 text-xs text-center">{stats?.saves || 0}</td>
+        <td className="px-1 py-2 text-xs text-center font-medium">{stats?.bps || 0}</td>
         <td
-          className={`px-3 py-2 text-sm text-center ${
+          className={`px-1 py-2 text-xs text-center font-medium ${
             bonusAdded
               ? "text-green-600 dark:text-green-400"
               : "text-yellow-600 dark:text-yellow-400"
@@ -196,10 +201,10 @@ const SquadTable = React.memo(function SquadTable({
         >
           {displayBonus > 0 ? `+${displayBonus}` : "0"}
         </td>
-        <td className="px-3 py-2 text-sm text-center font-bold text-green-600 dark:text-green-400">
+        <td className="px-1 sm:px-2 py-2 text-xs text-center font-bold text-green-600 dark:text-green-400">
           {displayPoints}
         </td>
-        <td className="px-3 py-2 text-sm text-center">
+        <td className="px-1 py-2 text-xs text-center">
           {formatICT(stats?.ict_index || 0)}
         </td>
       </tr>
@@ -223,46 +228,51 @@ const SquadTable = React.memo(function SquadTable({
         <table className="w-full">
           <thead className="bg-theme-secondary">
             <tr>
-              <th className="px-3 py-3 text-left text-xs font-medium text-theme-muted uppercase tracking-wider">
+              <th className="px-1 sm:px-2 py-2 text-left text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.position")}
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-theme-muted uppercase tracking-wider sticky left-0 bg-theme-secondary z-20 border-r border-theme-border">
+              <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.player")}
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-theme-muted uppercase tracking-wider">
-                {t("fplLive.teamColumn")}
+              <th className="px-1 sm:px-2 py-2 text-left text-xs font-medium text-theme-muted uppercase">
+                <span className="hidden sm:inline">{t("fplLive.teamColumn")}</span>
+                <span className="sm:hidden">Team</span>
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
-                {t("fplLive.minutes")}
+              <th className="px-1 sm:px-2 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+                <span className="hidden sm:inline">{t("fplLive.minutes")}</span>
+                <span className="sm:hidden">Min</span>
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
+              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.goalsShort")}
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
+              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.assistsShort")}
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
+              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.cleanSheetsShort")}
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
+              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.yellowCardsShort")}
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
+              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.redCardsShort")}
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
-                {t("fplLive.savesShort")}
+              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+                <span className="hidden sm:inline">{t("fplLive.savesShort")}</span>
+                <span className="sm:hidden">Sv</span>
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
+              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.bpsShort")}
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
-                {t("fplLive.bonusShort")}
+              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+                <span className="hidden sm:inline">{t("fplLive.bonusShort")}</span>
+                <span className="sm:hidden">B</span>
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
-                {t("fplLive.totalShort")}
+              <th className="px-1 sm:px-2 py-2 text-center text-xs font-medium text-theme-muted uppercase font-bold">
+                <span className="hidden sm:inline">{t("fplLive.totalShort")}</span>
+                <span className="sm:hidden">Pts</span>
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-theme-muted uppercase tracking-wider">
+              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
                 {t("fplLive.ictShort")}
               </th>
             </tr>

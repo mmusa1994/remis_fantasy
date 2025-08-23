@@ -30,10 +30,10 @@ export default function SkeletonDashboard({
   variant = 'admin',
 }: SkeletonDashboardProps) {
   return (
-    <div className={`min-h-screen bg-gray-100 dark:bg-gray-900 ${className}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-amber-25 via-orange-25 to-amber-50 dark:bg-gray-900 ${className}`}>
       {/* Dashboard Header */}
       {showHeader && (
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:bg-gray-800 border-b border-amber-300 dark:border-gray-700 px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Title and user info */}
             <div className="flex items-center space-x-4">

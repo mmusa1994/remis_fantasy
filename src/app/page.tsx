@@ -148,7 +148,7 @@ export default function Home() {
               <div className="absolute -top-3 left-6 flex items-center gap-2">
                 <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-bold animate-pulse">
                   <RiLiveLine className="w-3 h-3" />
-                  LIVE
+                  {t("hero.live")}
                 </div>
               </div>
 

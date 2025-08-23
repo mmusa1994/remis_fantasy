@@ -40,13 +40,13 @@ export default function SkeletonTable({
   const getTableClasses = () => {
     switch (variant) {
       case "standings":
-        return "bg-white dark:bg-gray-800 rounded-lg shadow";
+        return "bg-gradient-to-br from-amber-50 via-orange-25 to-amber-75 dark:bg-gray-900 rounded-lg shadow border border-amber-200 dark:border-gray-800";
       case "admin":
-        return "bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700";
+        return "bg-gradient-to-br from-amber-50 via-orange-25 to-amber-75 dark:bg-gray-900 rounded-lg shadow-sm border border-amber-300 dark:border-gray-800";
       case "compact":
-        return "bg-gray-50 dark:bg-gray-700 rounded-md";
+        return "bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-900 rounded-md border border-amber-200 dark:border-gray-800";
       default:
-        return "bg-white dark:bg-gray-800 rounded-lg shadow-sm";
+        return "bg-gradient-to-br from-amber-50 via-orange-25 to-amber-75 dark:bg-gray-900 rounded-lg shadow-sm border border-amber-200 dark:border-gray-800";
     }
   };
 
@@ -54,7 +54,7 @@ export default function SkeletonTable({
     <div className={`${getTableClasses()} ${className}`}>
       {/* Table Header/Title */}
       {(title || showActions) && (
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-amber-300 dark:border-gray-800">
           <div className="flex items-center justify-between">
             {title && (
               <SkeletonBase width="8rem" height="1.5rem" rounded="md" />
@@ -75,7 +75,7 @@ export default function SkeletonTable({
         <table className="w-full text-sm">
           {/* Table Header */}
           {showHeader && (
-            <thead className="bg-gray-100 dark:bg-gray-600">
+            <thead className="bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-800 border-b border-amber-300 dark:border-gray-700">
               <tr>
                 {Array.from({ length: safeCols }, (_, colIndex) => (
                   <th key={colIndex} scope="col" className="px-4 py-3 text-left">
@@ -101,7 +101,7 @@ export default function SkeletonTable({
             {Array.from({ length: safeRows }, (_, rowIndex) => (
               <tr
                 key={rowIndex}
-                className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="border-b border-amber-200 dark:border-gray-800 hover:bg-gradient-to-r hover:from-amber-75 hover:to-orange-75 dark:hover:bg-gray-800"
               >
                 {Array.from({ length: safeCols }, (_, colIndex) => (
                   <td key={colIndex} className="px-4 py-3">
@@ -128,7 +128,7 @@ export default function SkeletonTable({
 
       {/* Pagination */}
       {showPagination && (
-        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
+        <div className="px-6 py-3 bg-gradient-to-r from-amber-100 to-orange-100 dark:bg-gray-800 border-t border-amber-300 dark:border-gray-700">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <SkeletonBase width="6rem" height="1rem" rounded="sm" />

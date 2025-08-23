@@ -39,7 +39,7 @@ export default function SkeletonBase({
 
   return (
     <div
-      className={`bg-gray-200 dark:bg-gray-700 ${roundedClasses[rounded]} ${animationClass} ${className}`}
+      className={`bg-gradient-to-r from-amber-75 to-orange-75 dark:bg-gray-700 ${roundedClasses[rounded]} ${animationClass} ${className}`}
       style={style}
       role="status"
       aria-label="Loading content"

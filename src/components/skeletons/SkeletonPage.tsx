@@ -91,7 +91,7 @@ export default function SkeletonPage({
             {/* Section Title */}
             <div className="text-center mb-8 md:mb-12">
               <div className="flex justify-center">
-                <div className="bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg h-8 w-64 md:h-10 md:w-80"></div>
+                <div className="bg-gradient-to-r from-amber-75 to-orange-75 dark:bg-gray-700 animate-pulse rounded-lg h-8 w-64 md:h-10 md:w-80"></div>
               </div>
             </div>
 
