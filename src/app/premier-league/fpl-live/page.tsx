@@ -5,36 +5,29 @@ import { useTranslation } from "react-i18next";
 import {
   MdDashboard,
   MdGroup,
-  MdBarChart,
   MdInfo,
   MdSettings,
   MdExpandMore,
   MdCancel,
-  MdTrendingUp,
-  MdTrendingDown,
   MdPlayArrow,
   MdStop,
   MdRefresh,
 } from "react-icons/md";
-import { IoIosFootball } from "react-icons/io";
 
-import {
-  FaChartLine,
-  FaTrophy,
-  FaFootballBall,
-  FaExchangeAlt,
-} from "react-icons/fa";
+import { FaChartLine, FaTrophy } from "react-icons/fa";
+
+import { IoIosFootball } from "react-icons/io";
 
 import SettingsCard from "@/components/fpl/SettingsCard";
 import ControlsBar from "@/components/fpl/ControlsBar";
 import ManagerSummary from "@/components/fpl/ManagerSummary";
 import GameweekStatus from "@/components/fpl/GameweekStatus";
 import SquadTable from "@/components/fpl/SquadTable";
-import ScoreboardGrid from "@/components/fpl/ScoreboardGrid";
 import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
 import LiveTracker from "@/components/fpl/LiveTracker";
 import LeagueTables from "@/components/fpl/LeagueTables";
 import TeamSearchHelper from "@/components/fpl/TeamSearchHelper";
+import MatchResults from "@/components/fpl/MatchResults";
 import type { GameweekStatus as GameweekStatusType } from "@/lib/fpl-api";
 
 interface FPLData {
@@ -50,7 +43,7 @@ interface FPLData {
   timestamp?: string;
 }
 
-type TabType = "overview" | "squad" | "leagues" | "analytics" | "transfers";
+type TabType = "overview" | "squad" | "leagues" | "analytics" | "matchResults";
 
 interface TabConfig {
   id: TabType;
@@ -117,11 +110,11 @@ export default function FPLLivePage() {
       color: "purple",
     },
     {
-      id: "transfers",
-      label: t("fplLive.tabs.transfers"),
-      icon: FaExchangeAlt,
-      description: t("fplLive.tabs.transfersDesc"),
-      color: "red",
+      id: "matchResults",
+      label: "Rezultati utakmica",
+      icon: IoIosFootball,
+      description: "Live match results and player ownership",
+      color: "green",
     },
   ];
 
@@ -419,109 +412,6 @@ export default function FPLLivePage() {
     showSuccess(t("fplLive.settingsSavedSuccessfully"));
   };
 
-  const getTabColorClasses = (color: string, isActive: boolean) => {
-    const colorMap = {
-      blue: isActive
-        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
-        : "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30",
-      green: isActive
-        ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg"
-        : "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30",
-      yellow: isActive
-        ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg"
-        : "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/30",
-      purple: isActive
-        ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg"
-        : "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/30",
-      red: isActive
-        ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
-        : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30",
-    };
-    return colorMap[color as keyof typeof colorMap] || colorMap.blue;
-  };
-
-  // Transfer Analysis Component (placeholder for now)
-  const TransferAnalysis = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 border border-amber-200 dark:border-gray-700">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-            <FaExchangeAlt className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-              {t("fplLive.transferAnalysis.title")}
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {t("fplLive.transferAnalysis.subtitle")}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2 mb-2">
-              <MdTrendingUp className="w-5 h-5 text-green-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t("fplLive.transferAnalysis.transfersIn")}
-              </span>
-            </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              -
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {t("fplLive.transferAnalysis.thisGameweek")}
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2 mb-2">
-              <MdTrendingDown className="w-5 h-5 text-red-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t("fplLive.transferAnalysis.transfersOut")}
-              </span>
-            </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              -
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {t("fplLive.transferAnalysis.thisGameweek")}
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2 mb-2">
-              <MdBarChart className="w-5 h-5 text-blue-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t("fplLive.transferAnalysis.netTransfers")}
-              </span>
-            </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              -
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {t("fplLive.transferAnalysis.thisGameweek")}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-          <div className="flex items-start gap-3">
-            <MdInfo className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                {t("fplLive.transferAnalysis.comingSoon")}
-              </p>
-              <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                {t("fplLive.transferAnalysis.comingSoonDesc")}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   const renderTabContent = () => {
     if (!teamLoaded || !data.manager) {
       return null;
@@ -545,7 +435,6 @@ export default function FPLLivePage() {
               gameweek={gameweek}
               loading={gameweekStatusLoading}
             />
-            <LiveTracker gameweek={gameweek} isPolling={isPolling} />
           </div>
         );
       case "squad":
@@ -574,11 +463,24 @@ export default function FPLLivePage() {
               predictedBonuses={data.predicted_bonuses || []}
               bonusAdded={data.bonus_added || false}
             />
-            <ScoreboardGrid
-              fixtures={data.fixtures || []}
-              predictedBonuses={data.predicted_bonuses || []}
-              bonusAdded={data.bonus_added || false}
-            />
+
+            {/* UŽIVO BPS Tracker */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl p-4 lg:p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <IoIosFootball className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
+                    UŽIVO BPS Tracker
+                  </h3>
+                  <p className="text-sm lg:text-base text-gray-600 dark:text-gray-400">
+                    Live bonus point system tracking
+                  </p>
+                </div>
+              </div>
+              <LiveTracker gameweek={gameweek} isPolling={isPolling} />
+            </div>
           </div>
         );
       case "leagues":
@@ -602,11 +504,13 @@ export default function FPLLivePage() {
           </div>
         ) : (
           leagueData && (
-            <LeagueTables
-              leagueData={leagueData}
-              managerId={managerId!}
-              gameweek={gameweek}
-            />
+            <div className="space-y-6">
+              <LeagueTables
+                leagueData={leagueData}
+                managerId={managerId!}
+                gameweek={gameweek}
+              />
+            </div>
           )
         );
       case "analytics":
@@ -618,8 +522,8 @@ export default function FPLLivePage() {
             managerData={data}
           />
         );
-      case "transfers":
-        return <TransferAnalysis />;
+      case "matchResults":
+        return <MatchResults gameweek={gameweek} isPolling={isPolling} />;
       default:
         return null;
     }
@@ -762,7 +666,7 @@ export default function FPLLivePage() {
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FaFootballBall className="w-5 h-5 text-white" />
+                    <IoIosFootball className="w-5 h-5 text-white" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-semibold text-gray-900 dark:text-white truncate">
@@ -822,7 +726,7 @@ export default function FPLLivePage() {
             {/* Tab Navigation */}
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
-                <div className="flex overflow-x-auto scrollbar-hide">
+                <div className="flex overflow-x-auto scrollbar-hide lg:justify-center">
                   {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -831,7 +735,7 @@ export default function FPLLivePage() {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all border-b-2 min-w-max ${
+                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all border-b-2 min-w-max lg:px-6 lg:py-4 lg:text-base ${
                           isActive
                             ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
                             : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"

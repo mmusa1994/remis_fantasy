@@ -1010,15 +1010,15 @@ export default function LeagueTables({
                                           </td>
                                           <td className="px-2 sm:px-4 py-2">
                                             <div className="truncate">
-                                              <div className="text-xs sm:text-sm font-medium">
+                                              <div className="text-xs sm:text-sm font-medium flex items-center gap-2">
                                                 {entry.player_name ||
                                                   entry.entry_name}
+                                                {entry.entry === managerId && (
+                                                  <span className="text-xs text-blue-500 font-bold bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">
+                                                    TI
+                                                  </span>
+                                                )}
                                               </div>
-                                              {entry.entry === managerId && (
-                                                <span className="text-xs text-blue-500 font-medium">
-                                                  {t("fplLive.you")}
-                                                </span>
-                                              )}
                                             </div>
                                           </td>
                                           <td className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm">
@@ -1062,15 +1062,13 @@ export default function LeagueTables({
                                         <div className="flex items-center gap-2 text-sm bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg">
                                           <MdPerson className="w-4 h-4" />
                                           <span className="font-medium">
-                                            {t("fplLive.you")} are #
-                                            {standings.manager_position}
+                                            TI si #{standings.manager_position}
                                           </span>
                                         </div>
                                       ) : (
                                         <div className="text-sm bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 px-4 py-2 rounded-lg">
                                           <span className="font-medium">
-                                            {t("fplLive.you")} are not in top{" "}
-                                            {maxPositions}
+                                            TI nisi u top {maxPositions}
                                           </span>
                                         </div>
                                       )}
@@ -1222,15 +1220,15 @@ export default function LeagueTables({
                                           </td>
                                           <td className="px-2 sm:px-4 py-2">
                                             <div className="truncate">
-                                              <div className="text-xs sm:text-sm font-medium">
+                                              <div className="text-xs sm:text-sm font-medium flex items-center gap-2">
                                                 {entry.player_name ||
                                                   entry.entry_name}
+                                                {entry.entry === managerId && (
+                                                  <span className="text-xs text-blue-500 font-bold bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">
+                                                    TI
+                                                  </span>
+                                                )}
                                               </div>
-                                              {entry.entry === managerId && (
-                                                <span className="text-xs text-blue-500 font-medium">
-                                                  {t("fplLive.you")}
-                                                </span>
-                                              )}
                                             </div>
                                           </td>
                                           <td className="px-2 sm:px-4 py-2 text-right text-xs">
@@ -1281,15 +1279,13 @@ export default function LeagueTables({
                                         <div className="flex items-center gap-2 text-sm bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg">
                                           <MdPerson className="w-4 h-4" />
                                           <span className="font-medium">
-                                            {t("fplLive.you")} are #
-                                            {standings.manager_position}
+                                            TI si #{standings.manager_position}
                                           </span>
                                         </div>
                                       ) : (
                                         <div className="text-sm bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 px-4 py-2 rounded-lg">
                                           <span className="font-medium">
-                                            {t("fplLive.you")} are not in top{" "}
-                                            {maxPositions}
+                                            TI nisi u top {maxPositions}
                                           </span>
                                         </div>
                                       )}

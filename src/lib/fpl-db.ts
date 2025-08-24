@@ -19,6 +19,7 @@ export interface DBPlayer {
   element_type: number;
   total_points: number;
   now_cost: number;
+  selected_by_percent: string;
 }
 
 export interface DBTeam {
@@ -52,6 +53,7 @@ class FPLDatabaseService {
       element_type: player.element_type,
       total_points: player.total_points,
       now_cost: player.now_cost,
+      selected_by_percent: player.selected_by_percent,
     }));
 
     const { error } = await supabaseAdmin

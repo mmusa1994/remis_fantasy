@@ -216,7 +216,7 @@ const GameweekStatus = React.memo(function GameweekStatus({
                 <div className="flex items-center">
                   <div className="text-right mr-2">
                     <div className="font-medium text-green-600 dark:text-green-400">
-                      +{differential.impact_percentage.toFixed(1)}%
+                      +{differential.impact_percentage.toFixed(2)}%
                     </div>
                   </div>
                   <div className="text-xl">
@@ -261,7 +261,7 @@ const GameweekStatus = React.memo(function GameweekStatus({
                 <div className="flex items-center">
                   <div className="text-right mr-2">
                     <div className="font-medium text-red-600 dark:text-red-400">
-                      -{threat.impact_percentage.toFixed(1)}%
+                      -{threat.impact_percentage.toFixed(2)}%
                     </div>
                   </div>
                   <div className="text-xl">
@@ -296,7 +296,7 @@ const GameweekStatus = React.memo(function GameweekStatus({
                   {t("fplLive.pointsAboveAverage", {
                     points: Math.abs(
                       gameweekStatus.captain_analysis.points_above_average
-                    ).toFixed(1),
+                    ).toFixed(2),
                     direction: gameweekStatus.captain_analysis.is_above_average
                       ? t("fplLive.higher")
                       : t("fplLive.lower"),

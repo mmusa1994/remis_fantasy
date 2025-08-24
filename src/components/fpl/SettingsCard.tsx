@@ -105,22 +105,30 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
         className="w-full p-4 text-left flex items-center justify-between hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-blue-50/30 dark:hover:from-gray-700/50 dark:hover:to-blue-900/20 transition-all duration-300 group"
       >
         <div className="flex items-center space-x-3">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
-            isExpanded 
-              ? "bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 shadow-md" 
-              : "bg-gradient-to-br from-gray-400 via-blue-500 to-purple-600 group-hover:from-blue-500 group-hover:to-purple-600"
-          }`}>
-            <MdSettings className={`w-4 h-4 text-white transition-transform duration-300 ${
-              isExpanded ? "rotate-90" : "group-hover:rotate-45"
-            }`} />
+          <div
+            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
+              isExpanded
+                ? "bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 shadow-md"
+                : "bg-gradient-to-br from-gray-400 via-blue-500 to-purple-600 group-hover:from-blue-500 group-hover:to-purple-600"
+            }`}
+          >
+            <MdSettings
+              className={`w-4 h-4 text-white transition-transform duration-300 ${
+                isExpanded ? "rotate-90" : "group-hover:rotate-45"
+              }`}
+            />
           </div>
           <span className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
             {t("fplLive.settingsCardTitle")}
           </span>
         </div>
-        <div className={`transition-all duration-300 ${
-          isExpanded ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400"
-        }`}>
+        <div
+          className={`transition-all duration-300 ${
+            isExpanded
+              ? "text-blue-600 dark:text-blue-400"
+              : "text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+          }`}
+        >
           {isExpanded ? (
             <MdExpandLess className="w-5 h-5" />
           ) : (
@@ -166,7 +174,10 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
                   max="38"
                   value={settings.default_gw}
                   onChange={(e) =>
-                    handleInputChange("default_gw", parseInt(e.target.value, 10))
+                    handleInputChange(
+                      "default_gw",
+                      parseInt(e.target.value, 10)
+                    )
                   }
                   className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:text-white transition-all duration-200 hover:border-green-300 dark:hover:border-green-400"
                 />
@@ -221,7 +232,9 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
             {saving ? (
               <span className="flex items-center justify-center gap-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span className="font-medium">{t("fplLive.settingsCardSaving")}</span>
+                <span className="font-medium">
+                  {t("fplLive.settingsCardSaving")}
+                </span>
               </span>
             ) : (
               <span className="flex items-center justify-center gap-2">

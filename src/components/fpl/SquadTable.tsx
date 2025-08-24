@@ -97,7 +97,7 @@ const SquadTable = React.memo(function SquadTable({
   };
 
   const formatICT = (value: number) => {
-    return value ? value.toFixed(1) : "0.0";
+    return value ? value.toFixed(2) : "0.00";
   };
 
   const getMultiplierDisplay = (pick: TeamPick) => {
