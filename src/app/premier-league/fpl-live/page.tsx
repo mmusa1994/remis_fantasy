@@ -531,14 +531,14 @@ export default function FPLLivePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-25 via-orange-25 to-amber-50 dark:bg-black">
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
           <div className="text-center mb-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3">
               {t("fplLive.title")}
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
               {t("fplLive.subtitle")}
             </p>
           </div>
@@ -546,10 +546,10 @@ export default function FPLLivePage() {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
-            <div className="flex items-center">
-              <MdCancel className="text-red-500 w-5 h-5 mr-3" />
-              <p className="text-sm font-medium">{error}</p>
+          <div className="mb-6 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-4 rounded-lg">
+            <div className="flex items-start gap-3">
+              <MdCancel className="text-red-500 w-5 h-5 mt-0.5 flex-shrink-0" />
+              <p className="text-sm font-medium leading-relaxed">{error}</p>
             </div>
           </div>
         )}
@@ -560,49 +560,50 @@ export default function FPLLivePage() {
             {/* How to Use Guide */}
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 border border-amber-200 dark:border-gray-700 rounded-xl overflow-hidden">
               <details className="group">
-                <summary className="flex items-center gap-3 p-4 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-amber-100 dark:hover:bg-gray-700 transition-colors">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                    <MdInfo className="text-white w-4 h-4" />
+                <summary className="flex items-center gap-3 p-4 sm:p-5 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-amber-100 dark:hover:bg-gray-700 transition-colors min-h-[60px] touch-manipulation">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MdInfo className="text-white w-5 h-5" />
                   </div>
-                  <span className="font-semibold">{t("fplLive.howToUse")}</span>
-                  <MdExpandMore className="ml-auto text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform duration-200 w-5 h-5" />
+                  <span className="font-semibold flex-1">{t("fplLive.howToUse")}</span>
+                  <MdExpandMore className="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform duration-200 w-6 h-6 flex-shrink-0" />
                 </summary>
 
-                <div className="px-4 pb-4 space-y-4 text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800">
-                  <div className="p-4 bg-gradient-to-br from-amber-25 to-orange-25 dark:from-gray-700 dark:to-gray-800 rounded-lg border border-amber-200 dark:border-gray-600">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                      📋 {t("fplLive.howToFindManagerIdDetailed")}
+                <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-4 text-sm sm:text-base text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800">
+                  <div className="p-4 sm:p-5 bg-gradient-to-br from-amber-25 to-orange-25 dark:from-gray-700 dark:to-gray-800 rounded-lg border border-amber-200 dark:border-gray-600">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-start gap-2 text-base sm:text-lg">
+                      <span className="text-xl">📋</span>
+                      <span>{t("fplLive.howToFindManagerIdDetailed")}</span>
                     </h4>
-                    <div className="space-y-3">
-                      <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300 leading-relaxed">
-                        <li>{t("fplLive.openWebBrowser")}</li>
-                        <li>
+                    <div className="space-y-4">
+                      <ol className="list-decimal list-inside space-y-3 text-gray-700 dark:text-gray-300 leading-relaxed">
+                        <li className="pl-2">{t("fplLive.openWebBrowser")}</li>
+                        <li className="pl-2">
                           {t("fplLive.goToFPLWebsite")}{" "}
-                          <strong>fantasy.premierleague.com</strong>
+                          <strong className="text-blue-600 dark:text-blue-400">fantasy.premierleague.com</strong>
                         </li>
-                        <li>{t("fplLive.loginToAccount")}</li>
-                        <li>{t("fplLive.clickPointsTab")}</li>
-                        <li>
+                        <li className="pl-2">{t("fplLive.loginToAccount")}</li>
+                        <li className="pl-2">{t("fplLive.clickPointsTab")}</li>
+                        <li className="pl-2">
                           {t("fplLive.copyNumbersFromURL")}{" "}
-                          <span className="text-xs">
+                          <span className="text-xs text-gray-500">
                             (e.g. entry/133444/event/1)
                           </span>
                         </li>
                       </ol>
 
-                      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-                        <div className="flex items-start gap-2 text-sm text-blue-700 dark:text-blue-300 mb-2">
-                          <span>💡</span>
+                      <div className="mt-5 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-start gap-2 text-sm text-blue-700 dark:text-blue-300 mb-3">
+                          <span className="text-lg">💡</span>
                           <span className="font-medium">
                             {t("fplLive.exampleURL")}
                           </span>
                         </div>
-                        <div className="bg-blue-100 dark:bg-blue-800/30 text-blue-900 dark:text-blue-100 p-2 rounded font-mono text-xs break-all">
+                        <div className="bg-blue-100 dark:bg-blue-800/30 text-blue-900 dark:text-blue-100 p-3 rounded font-mono text-xs sm:text-sm break-all overflow-hidden">
                           fantasy.premierleague.com/entry/133444/event/1
                         </div>
-                        <p className="text-sm text-blue-600 dark:text-blue-400 mt-2 text-center">
+                        <p className="text-sm text-blue-600 dark:text-blue-400 mt-3 text-center">
                           {t("fplLive.yourManagerIdIs2")}{" "}
-                          <strong className="text-lg">133444</strong>
+                          <strong className="text-lg font-bold">133444</strong>
                         </p>
                       </div>
                     </div>
@@ -631,24 +632,26 @@ export default function FPLLivePage() {
             />
 
             {/* Call to Action */}
-            <div className="text-center py-8">
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-8 border border-amber-200 dark:border-gray-700">
-                <IoIosFootball className="w-16 h-16 text-amber-600 dark:text-amber-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            <div className="text-center py-6 sm:py-8">
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 sm:p-8 border border-amber-200 dark:border-gray-700">
+                <IoIosFootball className="w-16 h-16 sm:w-20 sm:h-20 text-amber-600 dark:text-amber-400 mx-auto mb-6" />
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
                   {t("fplLive.readyToStart")}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+                <p className="text-base text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto leading-relaxed">
                   {t("fplLive.enterManagerIdToStart")}
                 </p>
                 {!managerId ? (
-                  <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
-                    {t("fplLive.enterManagerIdFirst")}
-                  </p>
+                  <div className="bg-amber-100 dark:bg-amber-900/30 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+                    <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                      {t("fplLive.enterManagerIdFirst")}
+                    </p>
+                  </div>
                 ) : (
                   <button
                     onClick={loadManagerInfo}
                     disabled={loading}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all shadow-lg"
+                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all shadow-lg text-base min-h-[52px] touch-manipulation"
                   >
                     {loading ? t("fplLive.loading") : t("fplLive.loadTeam")}
                   </button>
@@ -662,38 +665,38 @@ export default function FPLLivePage() {
         {teamLoaded && data.manager && (
           <div className="space-y-6">
             {/* Quick Controls Bar */}
-            <div className="bg-gradient-to-r from-amber-100 to-orange-100 dark:from-gray-800 dark:to-gray-700 rounded-xl p-4 border border-amber-200 dark:border-gray-600">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <IoIosFootball className="w-5 h-5 text-white" />
+            <div className="bg-gradient-to-r from-amber-100 to-orange-100 dark:from-gray-800 dark:to-gray-700 rounded-xl p-4 sm:p-5 border border-amber-200 dark:border-gray-600">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <IoIosFootball className="w-6 h-6 text-white" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-gray-900 dark:text-white truncate">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-gray-900 dark:text-white text-base sm:text-lg truncate">
                       {data.manager?.player_first_name}{" "}
                       {data.manager?.player_last_name}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       GW{gameweek} • ID: {managerId}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
                   <button
                     onClick={isPolling ? stopPolling : startPolling}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
                       isPolling
                         ? "bg-red-500 hover:bg-red-600 text-white"
                         : "bg-green-500 hover:bg-green-600 text-white"
                     }`}
                   >
                     {isPolling ? (
-                      <MdStop className="w-4 h-4" />
+                      <MdStop className="w-5 h-5" />
                     ) : (
-                      <MdPlayArrow className="w-4 h-4" />
+                      <MdPlayArrow className="w-5 h-5" />
                     )}
-                    <span className="hidden sm:inline">
+                    <span className="hidden xs:inline sm:inline">
                       {isPolling
                         ? t("fplLive.stopLive")
                         : t("fplLive.startLive")}
@@ -702,20 +705,20 @@ export default function FPLLivePage() {
 
                   <button
                     onClick={loadManagerInfo}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-all"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-all min-h-[44px]"
                   >
-                    <MdRefresh className="w-4 h-4" />
-                    <span className="hidden sm:inline">
+                    <MdRefresh className="w-5 h-5" />
+                    <span className="hidden xs:inline sm:inline">
                       {t("fplLive.refresh")}
                     </span>
                   </button>
 
                   <button
                     onClick={() => setShowSettings(!showSettings)}
-                    className="flex items-center gap-2 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-all"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-all min-h-[44px]"
                   >
-                    <MdSettings className="w-4 h-4" />
-                    <span className="hidden sm:inline">
+                    <MdSettings className="w-5 h-5" />
+                    <span className="hidden xs:inline sm:inline">
                       {t("fplLive.settings")}
                     </span>
                   </button>
@@ -726,7 +729,7 @@ export default function FPLLivePage() {
             {/* Tab Navigation */}
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
-                <div className="flex overflow-x-auto scrollbar-hide lg:justify-center">
+                <div className="flex overflow-x-auto scrollbar-hide lg:justify-center" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -735,14 +738,14 @@ export default function FPLLivePage() {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all border-b-2 min-w-max lg:px-6 lg:py-4 lg:text-base ${
+                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all border-b-2 min-w-max touch-manipulation lg:px-6 lg:py-4 lg:text-base min-h-[60px] ${
                           isActive
                             ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
                             : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
                         }`}
                       >
-                        <Icon className="w-4 h-4" />
-                        <span>{tab.label}</span>
+                        <Icon className="w-5 h-5" />
+                        <span className="text-xs sm:text-sm lg:text-base">{tab.label}</span>
                       </button>
                     );
                   })}

@@ -394,7 +394,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               </p>
             </div>
           </div>
-          <div className="h-32 lg:h-64">
+          <div className="h-40 sm:h-48 lg:h-64">
             {performanceData?.gameweekHistory && (
               <SimpleLineChart
                 data={performanceData.gameweekHistory.map(
@@ -422,7 +422,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               </p>
             </div>
           </div>
-          <div className="h-32 lg:h-64">
+          <div className="h-40 sm:h-48 lg:h-64">
             {performanceData?.playerDistribution && (
               <SimpleBarChart
                 data={performanceData.playerDistribution.map(
@@ -455,7 +455,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               </p>
             </div>
           </div>
-          <div className="h-32 lg:h-64">
+          <div className="h-40 sm:h-48 lg:h-64">
             {performanceData?.gameweekHistory && (
               <SimpleLineChart
                 data={performanceData.gameweekHistory
@@ -483,7 +483,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               </p>
             </div>
           </div>
-          <div className="h-32 lg:h-64">
+          <div className="h-40 sm:h-48 lg:h-64">
             <SimpleBarChart
               data={[
                 comparison.yourTeam,
