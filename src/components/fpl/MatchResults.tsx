@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -175,7 +176,7 @@ export default function MatchResults({
   const getStatusText = (match: MatchResult) => {
     switch (match.status) {
       case "LIVE":
-        return `${match.minutes}&apos;`;
+        return `${match.minutes}'`;
       case "FT":
         return "FT";
       case "SCHEDULED":
@@ -648,7 +649,7 @@ export default function MatchResults({
                                     : ""}
                                 </span>
                                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  {goalData.minutes.join(", ")}&apos;
+                                  {goalData.minutes.join(", ")}'
                                 </span>
                                 {goalData.penalties > 0 && (
                                   <span className="text-yellow-500 text-xs">
@@ -712,7 +713,7 @@ export default function MatchResults({
                                     : ""}
                                 </span>
                                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  {assistData.minutes.join(", ")}&apos;
+                                  {assistData.minutes.join(", ")}'
                                 </span>
                               </div>
                               <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
@@ -815,7 +816,7 @@ export default function MatchResults({
                                     : ""}
                                 </span>
                                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  {goalData.minutes.join(", ")}&apos;
+                                  {goalData.minutes.join(", ")}'
                                 </span>
                                 {goalData.penalties > 0 && (
                                   <span className="text-yellow-500 text-xs">
@@ -879,7 +880,7 @@ export default function MatchResults({
                                     : ""}
                                 </span>
                                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  {assistData.minutes.join(", ")}&apos;
+                                  {assistData.minutes.join(", ")}'
                                 </span>
                               </div>
                               <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
