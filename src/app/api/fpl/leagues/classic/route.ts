@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fplApi } from "@/lib/fpl-api";
+import { FPLService } from "@/services/fpl";
+
+const fplService = FPLService.getInstance();
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,7 +9,6 @@ export async function GET(request: NextRequest) {
     const leagueIdParam = searchParams.get("leagueId");
     const managerIdParam = searchParams.get("managerId");
     const pageParam = searchParams.get("page") || "1";
-    const pageSizeParam = searchParams.get("pageSize") || "10";
 
     if (!leagueIdParam) {
       return NextResponse.json(
@@ -19,20 +20,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!managerIdParam) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "managerId parameter is required",
-        },
-        { status: 400 }
-      );
-    }
-
     const leagueId = parseInt(leagueIdParam, 10);
-    const managerId = parseInt(managerIdParam, 10);
     const page = parseInt(pageParam, 10);
-    const pageSize = parseInt(pageSizeParam, 10);
+    let managerId: number | undefined;
+
+    if (managerIdParam) {
+      managerId = parseInt(managerIdParam, 10);
+      if (isNaN(managerId)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Invalid managerId parameter",
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     if (isNaN(leagueId)) {
       return NextResponse.json(
@@ -44,59 +47,40 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (isNaN(managerId)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid managerId parameter",
-        },
-        { status: 400 }
-      );
+    // Get league standings using new service
+    const leagueResponse = await fplService.league.getClassicLeagueStandings(leagueId, page);
+    
+    if (!leagueResponse.success) {
+      return NextResponse.json(leagueResponse);
     }
 
-    // Fetch classic league standings with FPL native pagination
-    const leagueStandings = await fplApi.getLeagueStandings(leagueId, page);
-
-    const standings = leagueStandings.standings?.results || [];
-
-    // Calculate manager position correctly
-    let managerPosition = null;
-    const managerIndex = standings.findIndex(
-      (entry: any) => entry.entry === managerId
-    );
-
-    if (managerIndex !== -1) {
-      // Manager found on this page - calculate actual position
-      managerPosition = managerIndex + 1 + (page - 1) * pageSize;
-    } else {
-      // Manager not on this page - try to get position from league data
-      // The FPL API sometimes includes overall position data in the league response
-      const overallPosition = leagueStandings.standings?.results?.find(
-        (entry: any) => entry.entry === managerId
-      )?.rank;
-      if (overallPosition) {
-        managerPosition = overallPosition;
+    // If manager ID provided, get their performance in the league
+    let managerPerformance = null;
+    if (managerId) {
+      try {
+        const performanceResponse = await fplService.league.getManagerLeaguePerformance(
+          leagueId,
+          managerId,
+          false
+        );
+        if (performanceResponse.success) {
+          managerPerformance = performanceResponse.data;
+        }
+      } catch (error) {
+        console.warn("Could not get manager performance:", error);
       }
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        standings: standings,
-        manager_position: managerPosition,
-        total_entries: leagueStandings.league?.size || 0,
-        current_page: page,
-        page_size: pageSize,
-        total_pages: Math.ceil((leagueStandings.league?.size || 0) / pageSize),
-        league_info: {
-          id: leagueId,
-          name: leagueStandings.league?.name || "Unknown League",
-        },
-        user_found: managerIndex !== -1, // Indicate if user was found on this page
+        league: leagueResponse.data,
+        pagination: leagueResponse.pagination,
+        manager_performance: managerPerformance,
+        manager_id: managerId,
       },
-      league_id: leagueId,
-      manager_id: managerId,
       timestamp: new Date().toISOString(),
+      cache_hit: leagueResponse.cache_hit,
     });
   } catch (error) {
     console.error("Error fetching classic league data:", error);
@@ -105,6 +89,7 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

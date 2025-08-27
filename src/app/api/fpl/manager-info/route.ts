@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fplApi } from "@/lib/fpl-api";
+import { FPLService } from "@/services/fpl";
+
+const fplService = FPLService.getInstance();
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,14 +30,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get just manager entry info (fast)
-    const managerEntry = await fplApi.getManagerEntry(managerId);
-
-    return NextResponse.json({
-      success: true,
-      data: managerEntry,
-      timestamp: new Date().toISOString(),
-    });
+    // Get manager info using new service architecture
+    const response = await fplService.team.getManagerInfo(managerId);
+    
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Error fetching manager info:", error);
 
@@ -43,6 +41,7 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

@@ -68,9 +68,11 @@ const SquadTable = React.memo(function SquadTable({
   const { t } = useTranslation();
   if (!teamData || teamData.length === 0) {
     return (
-      <div className="bg-theme-card shadow border border-theme-border p-6">
-        <h3 className="text-lg font-semibold mb-4">{t("fplLive.squad")}</h3>
-        <div className="text-center text-theme-muted">
+      <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-xl p-4 sm:p-6 theme-transition">
+        <h3 className="text-lg font-semibold mb-4 text-black dark:text-white theme-transition">
+          {t("fplLive.squad")}
+        </h3>
+        <div className="text-center text-black/70 dark:text-white/70 theme-transition">
           {t("fplLive.loadTeamToSeeSquad")}
         </div>
       </div>
@@ -126,17 +128,17 @@ const SquadTable = React.memo(function SquadTable({
     return (
       <tr
         className={`group ${
-          !isStarter ? "bg-theme-accent" : ""
-        } hover:bg-theme-accent transition-colors`}
+          !isStarter ? "bg-black/5 dark:bg-white/5" : ""
+        } hover:bg-black/5 dark:hover:bg-white/5 transition-colors theme-transition`}
       >
         <td className="px-1 sm:px-2 py-2 text-xs">
           <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
             <span
               className={`text-xs px-1 py-1 rounded text-center ${
                 pick.is_captain || pick.is_vice_captain
-                  ? "bg-yellow-200 text-yellow-800"
-                  : "bg-theme-accent text-theme-secondary"
-              }`}
+                  ? "bg-black dark:bg-white text-white dark:text-black"
+                  : "bg-black/10 dark:bg-white/10 text-black dark:text-white"
+              } theme-transition`}
             >
               {
                 POSITION_NAMES[
@@ -145,21 +147,21 @@ const SquadTable = React.memo(function SquadTable({
               }
             </span>
             {!isStarter && (
-              <span className="text-xs text-theme-muted mt-1 sm:mt-0">
+              <span className="text-xs text-black/50 dark:text-white/50 mt-1 sm:mt-0 theme-transition">
                 ({t("fplLive.benchShort").toUpperCase()})
               </span>
             )}
           </div>
         </td>
         <td
-          className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-theme-primary sticky left-0 z-10 group-hover:bg-theme-accent transition-colors ${
-            !isStarter ? "bg-theme-accent" : "bg-theme-card"
-          }`}
+          className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-black dark:text-white sticky left-0 z-10 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors ${
+            !isStarter ? "bg-black/5 dark:bg-white/5" : "bg-white dark:bg-black"
+          } theme-transition`}
         >
           <div className="truncate max-w-[120px] sm:max-w-none">
             <span className="font-semibold">{pick.player.web_name}</span>
             {getMultiplierDisplay(pick) && (
-              <span className="ml-1 text-xs font-bold text-blue-600">
+              <span className="ml-1 text-xs font-bold text-black dark:text-white theme-transition">
                 {getMultiplierDisplay(pick)}
               </span>
             )}
@@ -180,41 +182,39 @@ const SquadTable = React.memo(function SquadTable({
             </span>
           </div>
         </td>
-        <td className="px-1 sm:px-2 py-2 text-xs text-center">
+        <td className="px-1 sm:px-2 py-2 text-xs text-center text-black dark:text-white theme-transition">
           {stats?.minutes || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center font-medium">
+        <td className="px-1 py-2 text-xs text-center font-medium text-black dark:text-white theme-transition">
           {stats?.goals_scored || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center font-medium">
+        <td className="px-1 py-2 text-xs text-center font-medium text-black dark:text-white theme-transition">
           {stats?.assists || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center font-medium">
+        <td className="px-1 py-2 text-xs text-center font-medium text-black dark:text-white theme-transition">
           {stats?.clean_sheets || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center text-yellow-600 font-medium">
+        <td className="px-1 py-2 text-xs text-center text-black dark:text-white font-medium theme-transition">
           {stats?.yellow_cards || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center text-red-600 font-medium">
+        <td className="px-1 py-2 text-xs text-center text-black dark:text-white font-medium theme-transition">
           {stats?.red_cards || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center">{stats?.saves || 0}</td>
-        <td className="px-1 py-2 text-xs text-center font-medium">
+        <td className="px-1 py-2 text-xs text-center text-black dark:text-white theme-transition">
+          {stats?.saves || 0}
+        </td>
+        <td className="px-1 py-2 text-xs text-center font-medium text-black dark:text-white theme-transition">
           {stats?.bps || 0}
         </td>
         <td
-          className={`px-1 py-2 text-xs text-center font-medium ${
-            bonusAdded
-              ? "text-green-600 dark:text-green-400"
-              : "text-yellow-600 dark:text-yellow-400"
-          }`}
+          className={`px-1 py-2 text-xs text-center font-medium text-black dark:text-white theme-transition`}
         >
           {displayBonus > 0 ? `+${displayBonus}` : "0"}
         </td>
-        <td className="px-1 sm:px-2 py-2 text-xs text-center font-bold text-green-600 dark:text-green-400">
+        <td className="px-1 sm:px-2 py-2 text-xs text-center font-bold text-black dark:text-white theme-transition">
           {displayPoints}
         </td>
-        <td className="px-1 py-2 text-xs text-center">
+        <td className="px-1 py-2 text-xs text-center text-black dark:text-white theme-transition">
           {formatICT(stats?.ict_index || 0)}
         </td>
       </tr>
@@ -222,12 +222,12 @@ const SquadTable = React.memo(function SquadTable({
   };
 
   return (
-    <div className="bg-theme-card shadow border border-theme-border overflow-hidden">
-      <div className="px-6 py-4 border-b border-theme-border">
-        <h3 className="text-lg font-semibold text-theme-primary">
+    <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-xl overflow-hidden theme-transition">
+      <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-black dark:border-white theme-transition">
+        <h3 className="text-base sm:text-lg font-semibold text-black dark:text-white theme-transition">
           {t("fplLive.squadTitle")}
         </h3>
-        <p className="text-sm text-theme-muted mt-1">
+        <p className="text-xs sm:text-sm text-black/70 dark:text-white/70 mt-1 theme-transition">
           {bonusAdded
             ? t("fplLive.showingFinalBonus")
             : t("fplLive.showingFinalBonus")}
@@ -236,66 +236,66 @@ const SquadTable = React.memo(function SquadTable({
 
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-theme-secondary">
+          <thead className="bg-black/5 dark:bg-white/5 theme-transition">
             <tr>
-              <th className="px-1 sm:px-2 py-2 text-left text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 sm:px-2 py-2 text-left text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 {t("fplLive.position")}
               </th>
-              <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-theme-muted uppercase sticky left-0 bg-theme-card z-10">
+              <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-black/70 dark:text-white/70 uppercase sticky left-0 bg-white dark:bg-black z-10 theme-transition">
                 {t("fplLive.player")}
               </th>
-              <th className="px-1 sm:px-2 py-2 text-left text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 sm:px-2 py-2 text-left text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 <span className="hidden sm:inline">
                   {t("fplLive.teamColumn")}
                 </span>
                 <span className="sm:hidden">Team</span>
               </th>
-              <th className="px-1 sm:px-2 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 sm:px-2 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 <span className="hidden sm:inline">{t("fplLive.minutes")}</span>
                 <span className="sm:hidden">Min</span>
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 {t("fplLive.goalsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 {t("fplLive.assistsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 {t("fplLive.cleanSheetsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 {t("fplLive.yellowCardsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 {t("fplLive.redCardsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 <span className="hidden sm:inline">
                   {t("fplLive.savesShort")}
                 </span>
                 <span className="sm:hidden">Sv</span>
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 {t("fplLive.bpsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 <span className="hidden sm:inline">
                   {t("fplLive.bonusShort")}
                 </span>
                 <span className="sm:hidden">B</span>
               </th>
-              <th className="px-1 sm:px-2 py-2 text-center text-xs font-medium text-theme-muted uppercase font-bold">
+              <th className="px-1 sm:px-2 py-2 text-center text-xs font-medium text-black dark:text-white uppercase font-bold theme-transition">
                 <span className="hidden sm:inline">
                   {t("fplLive.totalShort")}
                 </span>
                 <span className="sm:hidden">Pts</span>
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-theme-muted uppercase">
+              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
                 {t("fplLive.ictShort")}
               </th>
             </tr>
           </thead>
-          <tbody className="bg-theme-card divide-y divide-theme-border">
+          <tbody className="bg-white dark:bg-black divide-y divide-black/10 dark:divide-white/10 theme-transition">
             {starters.map((pick) => (
               <PlayerRow key={pick.player_id} pick={pick} isStarter={true} />
             ))}

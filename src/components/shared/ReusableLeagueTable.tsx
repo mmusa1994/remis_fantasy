@@ -58,7 +58,6 @@ export default function ReusableLeagueTable({
   const { theme } = useTheme();
 
   const getLeagueColors = (leagueType: string) => {
-    console.log("ReusableLeagueTable leagueType:", leagueType); // Debug
     switch (leagueType) {
       case "premium":
         return {

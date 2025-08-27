@@ -28,7 +28,7 @@ import LiveTracker from "@/components/fpl/LiveTracker";
 import LeagueTables from "@/components/fpl/LeagueTables";
 import TeamSearchHelper from "@/components/fpl/TeamSearchHelper";
 import MatchResults from "@/components/fpl/MatchResults";
-import type { GameweekStatus as GameweekStatusType } from "@/lib/fpl-api";
+import type { FPLGameweekStatus } from "@/types/fpl";
 
 interface FPLData {
   manager?: any;
@@ -65,7 +65,7 @@ export default function FPLLivePage() {
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [data, setData] = useState<FPLData>({});
   const [gameweekStatus, setGameweekStatus] =
-    useState<GameweekStatusType | null>(null);
+    useState<FPLGameweekStatus | null>(null);
   const [gameweekStatusLoading, setGameweekStatusLoading] = useState(false);
   const [leagueData, setLeagueData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -180,6 +180,11 @@ export default function FPLLivePage() {
   const loadFullTeamData = useCallback(async () => {
     if (!managerId) return;
 
+    console.log(
+      "🔄 [FRONTEND] loadFullTeamData - Starting full team data load"
+    );
+    console.log("📥 [FRONTEND] Request params:", { managerId, gameweek });
+
     try {
       const teamResponse = await fetch("/api/fpl/load-team", {
         method: "POST",
@@ -192,9 +197,70 @@ export default function FPLLivePage() {
         }),
       });
 
+      console.log("🌐 [FRONTEND] API Response status:", teamResponse.status);
+
       if (teamResponse.ok) {
         const teamResult = await teamResponse.json();
+        console.log("✅ [FRONTEND] Full team API response received:", {
+          success: teamResult.success,
+          dataKeys: Object.keys(teamResult.data || {}),
+          teamSize: teamResult.data?.team_with_stats?.length || 0,
+          managerName: teamResult.data?.manager?.name || "Unknown",
+          responseTimeMs: teamResult.response_time_ms,
+          timestamp: teamResult.timestamp,
+        });
+
+        console.log(
+          "📊 [FRONTEND] Complete team data structure:",
+          teamResult.data
+        );
+
+        // Log detailed player statistics breakdown
+        if (teamResult.data?.team_with_stats) {
+          console.log("👥 [FRONTEND] Player Statistics Breakdown:");
+          teamResult.data.team_with_stats.forEach(
+            (player: any, index: number) => {
+              console.log(`🎯 Player ${index + 1}:`, {
+                name: player.player?.web_name || "Unknown",
+                position: player.position <= 11 ? "Starting XI" : "Bench",
+                captain: player.is_captain
+                  ? "(C)"
+                  : player.is_vice_captain
+                  ? "(VC)"
+                  : "",
+                points: player.live_stats?.total_points || 0,
+                minutes: player.live_stats?.minutes || 0,
+                goals: player.live_stats?.goals_scored || 0,
+                assists: player.live_stats?.assists || 0,
+                bps: player.live_stats?.bps || 0,
+                bonus: player.live_stats?.bonus || 0,
+                multiplier: player.multiplier,
+              });
+            }
+          );
+        }
+
+        // Log team totals breakdown
+        if (teamResult.data?.team_totals) {
+          console.log("📈 [FRONTEND] Team Totals Analysis:", {
+            active_points_no_bonus:
+              teamResult.data.team_totals.active_points_no_bonus,
+            active_points_final:
+              teamResult.data.team_totals.active_points_final,
+            bench_points: teamResult.data.team_totals.bench_points_final,
+            captain_bonus:
+              teamResult.data.captain?.stats?.total_points *
+                (teamResult.data.captain?.multiplier - 1) || 0,
+            predicted_bonus: teamResult.data.team_totals.predicted_bonus,
+            final_bonus: teamResult.data.team_totals.final_bonus,
+            total_goals: teamResult.data.team_totals.goals,
+            total_assists: teamResult.data.team_totals.assists,
+            clean_sheets: teamResult.data.team_totals.clean_sheets,
+          });
+        }
+
         if (teamResult.success) {
+          console.log("✅ [FRONTEND] Setting team data to component state");
           setData(teamResult.data);
           const timestamp = new Date().toISOString();
           setLastUpdated(timestamp);
@@ -204,10 +270,18 @@ export default function FPLLivePage() {
 
           setTeamDataLoading(false);
           showSuccess(t("fplLive.fullTeamDataLoaded"));
+
+          console.log("✅ [FRONTEND] Team data loading completed successfully");
         }
+      } else {
+        console.error(
+          "❌ [FRONTEND] API request failed:",
+          teamResponse.status,
+          teamResponse.statusText
+        );
       }
     } catch (err) {
-      console.warn("Failed to load full team data:", err);
+      console.error("💥 [FRONTEND] Failed to load full team data:", err);
       setTeamDataLoading(false);
     }
   }, [managerId, gameweek, saveToLocalStorage, t]);
@@ -215,17 +289,49 @@ export default function FPLLivePage() {
   const loadLeaguesData = useCallback(async () => {
     if (!managerId) return;
 
+    console.log("🏆 [FRONTEND] loadLeaguesData - Starting leagues data load");
+    console.log("📥 [FRONTEND] Request params:", { managerId });
+
     try {
       const response = await fetch(`/api/fpl/leagues?managerId=${managerId}`);
+      console.log(
+        "🌐 [FRONTEND] Leagues API Response status:",
+        response.status
+      );
+
       if (response.ok) {
         const result = await response.json();
+        console.log("✅ [FRONTEND] Leagues API response received:", {
+          success: result.success,
+          classicLeagues: result.data?.classic?.length || 0,
+          h2hLeagues: result.data?.h2h?.length || 0,
+          managerName: result.data?.manager?.name || "Unknown",
+          responseTimeMs: result.response_time_ms,
+        });
+
+        console.log("🏅 [FRONTEND] Complete leagues data:", {
+          classic: result.data?.classic,
+          h2h: result.data?.h2h,
+          manager: result.data?.manager,
+        });
+
         if (result.success) {
+          console.log("✅ [FRONTEND] Setting leagues data to component state");
           setLeagueData(result.data);
           setLeaguesLoading(false);
+          console.log(
+            "✅ [FRONTEND] Leagues data loading completed successfully"
+          );
         }
+      } else {
+        console.error(
+          "❌ [FRONTEND] Leagues API request failed:",
+          response.status,
+          response.statusText
+        );
       }
     } catch (err) {
-      console.warn("Failed to load leagues:", err);
+      console.error("💥 [FRONTEND] Failed to load leagues:", err);
       setLeaguesLoading(false);
     }
   }, [managerId]);
@@ -233,19 +339,58 @@ export default function FPLLivePage() {
   const loadGameweekStatus = useCallback(async () => {
     if (!managerId) return;
 
+    console.log(
+      "🎯 [FRONTEND] loadGameweekStatus - Starting gameweek status load"
+    );
+    console.log("📥 [FRONTEND] Request params:", { managerId, gameweek });
+
     setGameweekStatusLoading(true);
     try {
       const response = await fetch(
         `/api/fpl/gameweek-status?managerId=${managerId}&gameweek=${gameweek}`
       );
+      console.log(
+        "🌐 [FRONTEND] Gameweek Status API Response status:",
+        response.status
+      );
+
       if (response.ok) {
         const result = await response.json();
+        console.log("✅ [FRONTEND] Gameweek Status API response received:", {
+          success: result.success,
+          arrowDirection: result.data?.arrow_direction,
+          rankChange: result.data?.rank_change,
+          gameweekPoints: result.data?.gameweek_points,
+          safetyScore: result.data?.safety_score,
+          differentials: result.data?.differentials?.length || 0,
+          threats: result.data?.threats?.length || 0,
+          hasCaptainAnalysis: !!result.data?.captain_analysis,
+          responseTimeMs: result.response_time_ms,
+        });
+
+        console.log(
+          "🔍 [FRONTEND] Complete gameweek status data:",
+          result.data
+        );
+
         if (result.success) {
+          console.log(
+            "✅ [FRONTEND] Setting gameweek status data to component state"
+          );
           setGameweekStatus(result.data);
+          console.log(
+            "✅ [FRONTEND] Gameweek status data loading completed successfully"
+          );
         }
+      } else {
+        console.error(
+          "❌ [FRONTEND] Gameweek Status API request failed:",
+          response.status,
+          response.statusText
+        );
       }
     } catch (err) {
-      console.warn("Failed to load gameweek status:", err);
+      console.error("💥 [FRONTEND] Failed to load gameweek status:", err);
     } finally {
       setGameweekStatusLoading(false);
     }
@@ -260,11 +405,34 @@ export default function FPLLivePage() {
     setLoading(true);
     setError(null);
 
+    console.log("🚀 [FRONTEND] =================================");
+    console.log("🚀 [FRONTEND] FPL LIVE DATA LOADING INITIATED");
+    console.log("🚀 [FRONTEND] =================================");
+    console.log("📋 [FRONTEND] User clicked Load Team button");
+    console.log("👤 [FRONTEND] Manager ID:", managerId);
+    console.log("🏆 [FRONTEND] Gameweek:", gameweek);
+    console.log("⏰ [FRONTEND] Loading started at:", new Date().toISOString());
+    console.log("🔄 [FRONTEND] Current data state:", {
+      hasExistingData: !!data.manager,
+      teamLoaded: teamLoaded,
+      isPolling: isPolling,
+      currentTeamSize: data.team_with_stats?.length || 0,
+    });
+
     try {
       if (managerId !== null) {
         saveToLocalStorage("fpl-manager-id", managerId.toString());
       }
       saveToLocalStorage("fpl-gameweek", gameweek.toString());
+
+      console.log(
+        "🏃‍♂️ [FRONTEND] loadManagerInfo - Fetching skeleton data first"
+      );
+      console.log("📥 [FRONTEND] Skeleton request params:", {
+        managerId,
+        gameweek,
+        skeleton: true,
+      });
 
       // Get skeleton data first
       const skeletonResponse = await fetch("/api/fpl/load-team", {
@@ -279,10 +447,30 @@ export default function FPLLivePage() {
         }),
       });
 
+      console.log(
+        "🌐 [FRONTEND] Skeleton API Response status:",
+        skeletonResponse.status
+      );
+
       if (skeletonResponse.ok) {
         const result = await skeletonResponse.json();
 
+        console.log("✅ [FRONTEND] Skeleton API response received:", {
+          success: result.success,
+          skeleton: result.skeleton,
+          managerName: result.data?.manager?.name || "Unknown",
+          managerId: result.manager_id,
+          gameweek: result.gameweek,
+          responseTimeMs: result.response_time_ms,
+        });
+
+        console.log(
+          "👤 [FRONTEND] Manager skeleton data:",
+          result.data?.manager
+        );
+
         if (result.success) {
+          console.log("✅ [FRONTEND] Setting skeleton data to component state");
           setData(result.data);
           const timestamp = new Date().toISOString();
           saveToLocalStorage("fpl-team-data", result.data);
@@ -292,6 +480,7 @@ export default function FPLLivePage() {
           showSuccess(t("fplLive.managerInfoLoaded"));
           setLoading(false);
 
+          console.log("🔄 [FRONTEND] Starting background data loading...");
           // Load additional data in background
           setTeamDataLoading(true);
           loadFullTeamData();
@@ -300,18 +489,47 @@ export default function FPLLivePage() {
           loadLeaguesData();
 
           loadGameweekStatus();
+
+          console.log("✅ [FRONTEND] Background loading initiated");
+
+          // Set up final completion tracker
+          setTimeout(() => {
+            console.log(
+              "📋 [FRONTEND] COMPLETE DATA FLOW SUMMARY for Manager ID:",
+              managerId
+            );
+            console.log("┌─────────────────────────────────────────────┐");
+            console.log("│          FPL Live Data Loading Summary      │");
+            console.log("└─────────────────────────────────────────────┘");
+            console.log("🏃‍♂️ 1. Skeleton data: ✅ Manager info loaded");
+            console.log("👥 2. Full team data: ✅ Players and live stats");
+            console.log("🏆 3. Leagues data: ✅ League tables and rankings");
+            console.log("📊 4. Gameweek status: ✅ Performance analysis");
+            console.log("💾 5. Local storage: ✅ Data cached");
+            console.log("🔄 Ready for live polling and real-time updates");
+          }, 3000);
         } else {
           throw new Error(result.error || "Manager not found");
         }
       } else {
+        console.error(
+          "❌ [FRONTEND] Skeleton API request failed:",
+          skeletonResponse.status,
+          skeletonResponse.statusText
+        );
         throw new Error(
           `Failed to fetch manager info: ${skeletonResponse.status}`
         );
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("💥 [FRONTEND] Error loading manager:", {
+        error: err,
+        message,
+        managerId,
+        gameweek,
+      });
       showError(message);
-      console.error("Error loading manager:", err);
       setLoading(false);
     }
   }, [
@@ -439,17 +657,18 @@ export default function FPLLivePage() {
         );
       case "squad":
         return teamDataLoading ? (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow border border-amber-200 dark:border-gray-700 overflow-hidden">
-              <div className="px-6 py-4 border-b border-amber-200 dark:border-gray-700 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-gray-700 dark:to-gray-800">
-                <div className="h-6 bg-amber-200 dark:bg-gray-600 rounded w-24 animate-pulse"></div>
+          <div className="space-y-4 lg:space-y-6">
+            {/* Mobile-friendly loading state */}
+            <div className="bg-white dark:bg-black rounded-xl border-2 border-black dark:border-white overflow-hidden theme-transition">
+              <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-black dark:border-white bg-white dark:bg-black theme-transition">
+                <div className="h-4 sm:h-5 lg:h-6 bg-black/20 dark:bg-white/20 rounded w-20 sm:w-24 animate-pulse theme-transition"></div>
               </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  {Array.from({ length: 8 }, (_, i) => (
+              <div className="p-3 sm:p-4 lg:p-6">
+                <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+                  {Array.from({ length: 6 }, (_, i) => (
                     <div
                       key={i}
-                      className="h-12 bg-amber-100 dark:bg-gray-700 rounded animate-pulse"
+                      className="h-10 sm:h-11 lg:h-12 bg-black/10 dark:bg-white/10 rounded animate-pulse theme-transition"
                     ></div>
                   ))}
                 </div>
@@ -457,46 +676,28 @@ export default function FPLLivePage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4 lg:space-y-6">
             <SquadTable
               teamData={data.team_with_stats || []}
               predictedBonuses={data.predicted_bonuses || []}
               bonusAdded={data.bonus_added || false}
             />
-
-            {/* UŽIVO BPS Tracker */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-4 lg:p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <IoIosFootball className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
-                    UŽIVO BPS Tracker
-                  </h3>
-                  <p className="text-sm lg:text-base text-gray-600 dark:text-gray-400">
-                    Live bonus point system tracking
-                  </p>
-                </div>
-              </div>
-              <LiveTracker gameweek={gameweek} isPolling={isPolling} />
-            </div>
           </div>
         );
       case "leagues":
         return leaguesLoading ? (
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow border border-amber-200 dark:border-gray-700">
-            <div className="px-6 py-4 border-b border-amber-200 dark:border-gray-700 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-gray-700 dark:to-gray-800">
-              <div className="h-6 bg-amber-200 dark:bg-gray-600 rounded w-20 animate-pulse"></div>
+          <div className="bg-white dark:bg-black rounded-xl border-2 border-black dark:border-white theme-transition">
+            <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-black dark:border-white bg-white dark:bg-black theme-transition">
+              <div className="h-4 sm:h-5 lg:h-6 bg-black/20 dark:bg-white/20 rounded w-16 sm:w-20 animate-pulse theme-transition"></div>
             </div>
-            <div className="p-6 space-y-3">
+            <div className="p-3 sm:p-4 lg:p-6 space-y-2 sm:space-y-3">
               {Array.from({ length: 3 }, (_, i) => (
                 <div
                   key={i}
-                  className="border border-amber-200 dark:border-gray-700 rounded-lg overflow-hidden"
+                  className="border-2 border-black dark:border-white rounded-lg overflow-hidden theme-transition"
                 >
-                  <div className="bg-amber-100 dark:bg-gray-700 px-4 py-3 border-b border-amber-200 dark:border-gray-600">
-                    <div className="h-5 bg-amber-200 dark:bg-gray-600 rounded w-32 animate-pulse"></div>
+                  <div className="bg-black/5 dark:bg-white/5 px-3 py-2 sm:px-4 sm:py-3 border-b-2 border-black dark:border-white theme-transition">
+                    <div className="h-4 sm:h-5 bg-black/20 dark:bg-white/20 rounded w-24 sm:w-32 animate-pulse theme-transition"></div>
                   </div>
                 </div>
               ))}
@@ -504,12 +705,30 @@ export default function FPLLivePage() {
           </div>
         ) : (
           leagueData && (
-            <div className="space-y-6">
+            <div className="space-y-4 lg:space-y-6">
               <LeagueTables
                 leagueData={leagueData}
                 managerId={managerId!}
                 gameweek={gameweek}
               />
+
+              {/* Live BPS Tracker */}
+              <div className="bg-white dark:bg-black rounded-xl p-3 sm:p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black dark:bg-white rounded-lg flex items-center justify-center theme-transition">
+                    <IoIosFootball className="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-black theme-transition" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-black dark:text-white theme-transition">
+                      {t("fplLive.liveTrackerTitle")}
+                    </h3>
+                    <p className="text-xs sm:text-sm lg:text-base text-black/70 dark:text-white/70 theme-transition">
+                      Live bonus point system tracking
+                    </p>
+                  </div>
+                </div>
+                <LiveTracker gameweek={gameweek} isPolling={isPolling} />
+              </div>
             </div>
           )
         );
@@ -530,15 +749,15 @@ export default function FPLLivePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-25 via-orange-25 to-amber-50 dark:bg-black">
+    <div className="min-h-screen bg-white dark:bg-black theme-transition">
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
           <div className="text-center mb-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black dark:text-white mb-3 theme-transition">
               {t("fplLive.title")}
             </h1>
-            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-black dark:text-white max-w-2xl mx-auto leading-relaxed theme-transition">
               {t("fplLive.subtitle")}
             </p>
           </div>
@@ -546,64 +765,80 @@ export default function FPLLivePage() {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-4 rounded-lg">
+          <div className="mb-6 bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white p-4 rounded-lg theme-transition">
             <div className="flex items-start gap-3">
-              <MdCancel className="text-red-500 w-5 h-5 mt-0.5 flex-shrink-0" />
+              <MdCancel className="text-black dark:text-white w-5 h-5 mt-0.5 flex-shrink-0 theme-transition" />
               <p className="text-sm font-medium leading-relaxed">{error}</p>
             </div>
           </div>
         )}
 
-        {/* Mandatory Manager ID Entry */}
+        {/* Mobile-First Setup Interface */}
         {!teamLoaded && (
-          <div className="space-y-6">
-            {/* How to Use Guide */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 border border-amber-200 dark:border-gray-700 rounded-xl overflow-hidden">
+          <div className="space-y-4 lg:space-y-6">
+            {/* How to Use Guide - Mobile Accordion */}
+            <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-xl overflow-hidden theme-transition">
               <details className="group">
-                <summary className="flex items-center gap-3 p-4 sm:p-5 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-amber-100 dark:hover:bg-gray-700 transition-colors min-h-[60px] touch-manipulation">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <MdInfo className="text-white w-5 h-5" />
+                <summary className="flex items-center gap-3 p-3 sm:p-4 lg:p-5 text-sm sm:text-base font-medium text-black dark:text-white cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors min-h-[56px] lg:min-h-[60px] touch-manipulation theme-transition">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-black dark:bg-white rounded-lg flex items-center justify-center flex-shrink-0 theme-transition">
+                    <MdInfo className="text-white dark:text-black w-4 h-4 lg:w-5 lg:h-5 theme-transition" />
                   </div>
-                  <span className="font-semibold flex-1">{t("fplLive.howToUse")}</span>
-                  <MdExpandMore className="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform duration-200 w-6 h-6 flex-shrink-0" />
+                  <span className="font-semibold flex-1 text-sm lg:text-base">
+                    {t("fplLive.howToUse")}
+                  </span>
+                  <MdExpandMore className="text-black dark:text-white group-open:rotate-180 transition-transform duration-200 w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 theme-transition" />
                 </summary>
 
-                <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-4 text-sm sm:text-base text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800">
-                  <div className="p-4 sm:p-5 bg-gradient-to-br from-amber-25 to-orange-25 dark:from-gray-700 dark:to-gray-800 rounded-lg border border-amber-200 dark:border-gray-600">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-start gap-2 text-base sm:text-lg">
-                      <span className="text-xl">📋</span>
-                      <span>{t("fplLive.howToFindManagerIdDetailed")}</span>
+                <div className="px-3 sm:px-4 lg:px-5 pb-3 sm:pb-4 lg:pb-5 space-y-3 lg:space-y-4 text-sm sm:text-base text-black dark:text-white bg-white dark:bg-black theme-transition">
+                  <div className="p-3 sm:p-4 lg:p-5 bg-white dark:bg-black rounded-lg border-2 border-black dark:border-white theme-transition">
+                    <h4 className="font-semibold text-black dark:text-white mb-3 lg:mb-4 flex items-start gap-2 text-sm sm:text-base lg:text-lg theme-transition">
+                      <span className="text-base sm:text-lg lg:text-xl">
+                        📋
+                      </span>
+                      <span className="leading-tight">
+                        {t("fplLive.howToFindManagerIdDetailed")}
+                      </span>
                     </h4>
-                    <div className="space-y-4">
-                      <ol className="list-decimal list-inside space-y-3 text-gray-700 dark:text-gray-300 leading-relaxed">
-                        <li className="pl-2">{t("fplLive.openWebBrowser")}</li>
-                        <li className="pl-2">
-                          {t("fplLive.goToFPLWebsite")}{" "}
-                          <strong className="text-blue-600 dark:text-blue-400">fantasy.premierleague.com</strong>
+                    <div className="space-y-3 lg:space-y-4">
+                      <ol className="list-decimal list-inside space-y-2 lg:space-y-3 text-black dark:text-white leading-relaxed theme-transition text-sm sm:text-base">
+                        <li className="pl-1 sm:pl-2">
+                          {t("fplLive.openWebBrowser")}
                         </li>
-                        <li className="pl-2">{t("fplLive.loginToAccount")}</li>
-                        <li className="pl-2">{t("fplLive.clickPointsTab")}</li>
-                        <li className="pl-2">
+                        <li className="pl-1 sm:pl-2">
+                          {t("fplLive.goToFPLWebsite")}{" "}
+                          <strong className="text-black dark:text-white break-all">
+                            fantasy.premierleague.com
+                          </strong>
+                        </li>
+                        <li className="pl-1 sm:pl-2">
+                          {t("fplLive.loginToAccount")}
+                        </li>
+                        <li className="pl-1 sm:pl-2">
+                          {t("fplLive.clickPointsTab")}
+                        </li>
+                        <li className="pl-1 sm:pl-2">
                           {t("fplLive.copyNumbersFromURL")}{" "}
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-black/70 dark:text-white/70 block sm:inline mt-1 sm:mt-0">
                             (e.g. entry/133444/event/1)
                           </span>
                         </li>
                       </ol>
 
-                      <div className="mt-5 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <div className="flex items-start gap-2 text-sm text-blue-700 dark:text-blue-300 mb-3">
-                          <span className="text-lg">💡</span>
+                      <div className="mt-4 lg:mt-5 p-3 lg:p-4 bg-white dark:bg-black rounded-lg border-2 border-black dark:border-white theme-transition">
+                        <div className="flex items-start gap-2 text-sm text-black dark:text-white mb-2 lg:mb-3">
+                          <span className="text-base lg:text-lg">💡</span>
                           <span className="font-medium">
                             {t("fplLive.exampleURL")}
                           </span>
                         </div>
-                        <div className="bg-blue-100 dark:bg-blue-800/30 text-blue-900 dark:text-blue-100 p-3 rounded font-mono text-xs sm:text-sm break-all overflow-hidden">
+                        <div className="bg-black/5 dark:bg-white/5 text-black dark:text-white p-2 lg:p-3 rounded font-mono text-xs sm:text-sm break-all overflow-hidden border border-black/20 dark:border-white/20 theme-transition">
                           fantasy.premierleague.com/entry/133444/event/1
                         </div>
-                        <p className="text-sm text-blue-600 dark:text-blue-400 mt-3 text-center">
+                        <p className="text-xs sm:text-sm text-black dark:text-white mt-2 lg:mt-3 text-center theme-transition">
                           {t("fplLive.yourManagerIdIs2")}{" "}
-                          <strong className="text-lg font-bold">133444</strong>
+                          <strong className="text-base sm:text-lg font-bold">
+                            133444
+                          </strong>
                         </p>
                       </div>
                     </div>
@@ -631,19 +866,19 @@ export default function FPLLivePage() {
               loading={loading}
             />
 
-            {/* Call to Action */}
-            <div className="text-center py-6 sm:py-8">
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 sm:p-8 border border-amber-200 dark:border-gray-700">
-                <IoIosFootball className="w-16 h-16 sm:w-20 sm:h-20 text-amber-600 dark:text-amber-400 mx-auto mb-6" />
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+            {/* Mobile-Friendly Call to Action */}
+            <div className="text-center py-4 sm:py-6 lg:py-8">
+              <div className="bg-white dark:bg-black rounded-xl p-4 sm:p-6 lg:p-8 border-2 border-black dark:border-white theme-transition">
+                <IoIosFootball className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 text-black dark:text-white mx-auto mb-4 lg:mb-6 theme-transition" />
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-black dark:text-white mb-2 lg:mb-3 theme-transition">
                   {t("fplLive.readyToStart")}
                 </h3>
-                <p className="text-base text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto leading-relaxed">
+                <p className="text-sm sm:text-base text-black dark:text-white mb-4 lg:mb-6 max-w-md mx-auto leading-relaxed theme-transition">
                   {t("fplLive.enterManagerIdToStart")}
                 </p>
                 {!managerId ? (
-                  <div className="bg-amber-100 dark:bg-amber-900/30 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
-                    <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                  <div className="bg-white dark:bg-black rounded-lg p-3 lg:p-4 border-2 border-black dark:border-white theme-transition">
+                    <p className="text-sm font-medium text-black dark:text-white theme-transition">
                       {t("fplLive.enterManagerIdFirst")}
                     </p>
                   </div>
@@ -651,7 +886,7 @@ export default function FPLLivePage() {
                   <button
                     onClick={loadManagerInfo}
                     disabled={loading}
-                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all shadow-lg text-base min-h-[52px] touch-manipulation"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3 lg:py-4 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:bg-black/90 dark:hover:bg-white/90 disabled:opacity-50 transition-all text-sm sm:text-base min-h-[48px] lg:min-h-[52px] touch-manipulation theme-transition"
                   >
                     {loading ? t("fplLive.loading") : t("fplLive.loadTeam")}
                   </button>
@@ -661,42 +896,44 @@ export default function FPLLivePage() {
           </div>
         )}
 
-        {/* Tabbed Interface - Only shown after team is loaded */}
+        {/* Mobile-First Dashboard Interface */}
         {teamLoaded && data.manager && (
-          <div className="space-y-6">
-            {/* Quick Controls Bar */}
-            <div className="bg-gradient-to-r from-amber-100 to-orange-100 dark:from-gray-800 dark:to-gray-700 rounded-xl p-4 sm:p-5 border border-amber-200 dark:border-gray-600">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <IoIosFootball className="w-6 h-6 text-white" />
+          <div className="space-y-4 lg:space-y-6">
+            {/* Mobile-Optimized Controls Bar */}
+            <div className="bg-white dark:bg-black rounded-xl p-3 sm:p-4 lg:p-5 border-2 border-black dark:border-white theme-transition">
+              <div className="flex flex-col gap-3 sm:gap-4">
+                {/* Manager Info - Always visible */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black dark:bg-white rounded-lg flex items-center justify-center flex-shrink-0 theme-transition">
+                    <IoIosFootball className="w-5 h-5 sm:w-6 sm:h-6 text-white dark:text-black theme-transition" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-gray-900 dark:text-white text-base sm:text-lg truncate">
+                    <p className="font-semibold text-black dark:text-white text-sm sm:text-base lg:text-lg truncate theme-transition">
                       {data.manager?.player_first_name}{" "}
                       {data.manager?.player_last_name}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-black/70 dark:text-white/70 theme-transition">
                       GW{gameweek} • ID: {managerId}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                {/* Mobile Action Buttons - Stack on mobile, inline on larger screens */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                   <button
                     onClick={isPolling ? stopPolling : startPolling}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
+                    className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] theme-transition ${
                       isPolling
-                        ? "bg-red-500 hover:bg-red-600 text-white"
-                        : "bg-green-500 hover:bg-green-600 text-white"
+                        ? "bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90"
+                        : "bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90"
                     }`}
                   >
                     {isPolling ? (
-                      <MdStop className="w-5 h-5" />
+                      <MdStop className="w-4 h-4 sm:w-5 sm:h-5" />
                     ) : (
-                      <MdPlayArrow className="w-5 h-5" />
+                      <MdPlayArrow className="w-4 h-4 sm:w-5 sm:h-5" />
                     )}
-                    <span className="hidden xs:inline sm:inline">
+                    <span className="text-xs sm:text-sm">
                       {isPolling
                         ? t("fplLive.stopLive")
                         : t("fplLive.startLive")}
@@ -705,20 +942,20 @@ export default function FPLLivePage() {
 
                   <button
                     onClick={loadManagerInfo}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-all min-h-[44px]"
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium transition-all min-h-[44px] hover:bg-black/90 dark:hover:bg-white/90 theme-transition"
                   >
-                    <MdRefresh className="w-5 h-5" />
-                    <span className="hidden xs:inline sm:inline">
+                    <MdRefresh className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-xs sm:text-sm">
                       {t("fplLive.refresh")}
                     </span>
                   </button>
 
                   <button
                     onClick={() => setShowSettings(!showSettings)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-all min-h-[44px]"
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium transition-all min-h-[44px] hover:bg-black/90 dark:hover:bg-white/90 theme-transition"
                   >
-                    <MdSettings className="w-5 h-5" />
-                    <span className="hidden xs:inline sm:inline">
+                    <MdSettings className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-xs sm:text-sm">
                       {t("fplLive.settings")}
                     </span>
                   </button>
@@ -726,10 +963,14 @@ export default function FPLLivePage() {
               </div>
             </div>
 
-            {/* Tab Navigation */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
-                <div className="flex overflow-x-auto scrollbar-hide lg:justify-center" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Mobile-First Tab Navigation */}
+            <div className="bg-white dark:bg-black rounded-xl border-2 border-black dark:border-white overflow-hidden theme-transition">
+              {/* Mobile Horizontal Scroll Tab Bar */}
+              <div className="border-b-2 border-black dark:border-white bg-white dark:bg-black theme-transition">
+                <div
+                  className="flex overflow-x-auto scrollbar-hide"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
                   {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -738,22 +979,24 @@ export default function FPLLivePage() {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all border-b-2 min-w-max touch-manipulation lg:px-6 lg:py-4 lg:text-base min-h-[60px] ${
+                        className={`flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base font-medium whitespace-nowrap transition-all border-b-2 min-w-max touch-manipulation min-h-[56px] sm:min-h-[60px] ${
                           isActive
-                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                            : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
-                        }`}
+                            ? "border-black dark:border-white bg-black/5 dark:bg-white/5 text-black dark:text-white"
+                            : "border-transparent text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                        } theme-transition`}
                       >
-                        <Icon className="w-5 h-5" />
-                        <span className="text-xs sm:text-sm lg:text-base">{tab.label}</span>
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm lg:text-base leading-tight text-center sm:text-left">
+                          {tab.label}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Tab Content */}
-              <div className="p-6 bg-gradient-to-br from-amber-25 via-orange-25 to-amber-50 dark:bg-gray-900">
+              {/* Tab Content with Mobile Padding */}
+              <div className="p-3 sm:p-4 lg:p-6 bg-white dark:bg-black theme-transition">
                 {renderTabContent()}
               </div>
             </div>

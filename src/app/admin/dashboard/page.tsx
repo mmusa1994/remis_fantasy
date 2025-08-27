@@ -16,7 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import Toast from "@/components/shared/Toast";
-import { SkeletonDashboard } from "@/components/skeletons";
+import LoadingCard from "@/components/shared/LoadingCard";
 
 interface Registration {
   id: string;
@@ -449,7 +449,15 @@ export default function AdminDashboard() {
   };
 
   if (status === "loading" || loading) {
-    return <SkeletonDashboard variant="admin" />;
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <LoadingCard 
+          title="Loading Admin Dashboard"
+          description="Please wait while we fetch the registration data"
+          className="w-full max-w-md mx-auto"
+        />
+      </div>
+    );
   }
 
   return (

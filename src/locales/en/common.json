@@ -1,0 +1,94 @@
+{
+  "loading": "Loading...",
+  "error": "Error loading data",
+  "tryAgain": "Try Again",
+  "comingSoon": "Coming Soon",
+  "adminPanel": "Admin Panel",
+  "live": "LIVE",
+  "finished": "Finished",
+  "offline": "Offline",
+  "online": "Online",
+  "searching": "Searching...",
+  "refresh": "Refresh",
+  "settings": "Settings",
+  "footer": {
+    "tagline": "The ultimate destination for fantasy sports enthusiasts.",
+    "subtitle": "Join thousands of players in the most competitive fantasy leagues.",
+    "years": "Years of Excellence",
+    "trust": "Trusted by Players",
+    "copyright": "© 2025 REMIS Fantasy. All rights reserved."
+  },
+  "home": {
+    "siteName": "REMIS Fantasy",
+    "currentSeason": "2025/26",
+    "leagues": {
+      "premierLeague": {
+        "title": "Premier League",
+        "description": "The most popular fantasy league with 4 different categories"
+      },
+      "championsLeague": {
+        "title": "Champions League", 
+        "description": "European elite of fantasy football"
+      },
+      "f1Fantasy": {
+        "title": "F1 Fantasy",
+        "description": "Speed, strategy and adrenaline on the track"
+      }
+    },
+    "globalStats": {
+      "totalPrize": {
+        "label": "Total Prize Pool",
+        "value": "8000 KM"
+      },
+      "availableLeagues": {
+        "label": "Available Leagues", 
+        "value": "5"
+      },
+      "registeredPlayers": {
+        "label": "Registered Players",
+        "value": "160+"
+      },
+      "yearsExperience": {
+        "label": "Years of Experience",
+        "value": "9+"
+      }
+    }
+  },
+  "navigation": {
+    "registration": "Registration",
+    "register": "Register for",
+    "prizes": "Prizes",
+    "viewPrizes": "View all available prizes",
+    "gallery": "Gallery",
+    "viewGallery": "Photos and memories from previous seasons",
+    "tables": "Tables",
+    "viewTables": "Current results and standings",
+    "quickNavigation": "Quick Navigation"
+  },
+  "prizes": {
+    "firstPlace": "1st Place",
+    "firstPlaceDesc": "Winner of the league",
+    "secondPlace": "2nd Place", 
+    "secondPlaceDesc": "Runner-up of the league",
+    "thirdPlace": "3rd Place",
+    "thirdPlaceDesc": "Third place in the league"
+  },
+  "leagues": {
+    "standard": {
+      "title": "Standard League",
+      "description": "Classic fantasy league with standard rules"
+    },
+    "premium": {
+      "title": "Premium League",
+      "description": "Enhanced league with premium features and bigger prizes"
+    },
+    "free": {
+      "title": "Free League",
+      "description": "Free to play league for everyone"
+    },
+    "h2h": {
+      "title": "Head to Head",
+      "description": "Weekly matchups against other managers"
+    }
+  }
+}

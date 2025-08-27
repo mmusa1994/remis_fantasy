@@ -1,10 +1,11 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 
-export default function ThemeToggle() {
+const ThemeToggle = React.memo(function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -30,4 +31,6 @@ export default function ThemeToggle() {
       </motion.div>
     </motion.button>
   );
-}
+});
+
+export default ThemeToggle;

@@ -9,7 +9,7 @@ import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
 import { IconType } from "react-icons";
 import Image from "next/image";
-import { SkeletonPage } from "@/components/skeletons";
+import LoadingCard from "@/components/shared/LoadingCard";
 import { useTranslation } from "react-i18next";
 import { MdLiveTv } from "react-icons/md";
 import { RiLiveLine } from "react-icons/ri";
@@ -46,7 +46,17 @@ export default function Home() {
   const { data, loading, error } = useHomepageData();
 
   if (loading) {
-    return <SkeletonPage variant="homepage" />;
+    return (
+      <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
+        <div className="flex items-center justify-center min-h-screen">
+          <LoadingCard 
+            title={t("common.loading")}
+            description={t("common.loadingHomepage")}
+            className="w-full max-w-md mx-auto"
+          />
+        </div>
+      </main>
+    );
   }
 
   if (error) {

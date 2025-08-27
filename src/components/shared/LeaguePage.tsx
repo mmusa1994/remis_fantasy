@@ -13,7 +13,7 @@ import {
   BarChart3,
   type LucideIcon,
 } from "lucide-react";
-import { SkeletonPage } from "@/components/skeletons";
+import LoadingCard from "@/components/shared/LoadingCard";
 import { useTranslation } from "react-i18next";
 
 // Icon mapping for navigation cards
@@ -34,7 +34,15 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
   const { leagueData: data, loading, error } = useLeagueData(leagueId);
 
   if (loading) {
-    return <SkeletonPage variant="league" />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingCard 
+          title="Loading League Page"
+          description="Please wait while we fetch the league information"
+          className="w-full max-w-md mx-auto"
+        />
+      </div>
+    );
   }
 
   if (error || !data.config) {

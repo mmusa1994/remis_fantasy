@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import ReusableLeagueTable from "./ReusableLeagueTable";
 import { getLeagueDataForReusableTable } from "@/data/leagueTableData";
-import { SkeletonTable } from "@/components/skeletons";
+import LoadingCard from "@/components/shared/LoadingCard";
 import { useTranslation } from "react-i18next";
 
 interface LeaguePlayer {
@@ -270,13 +270,11 @@ export default function LeagueTableTabs() {
           {(() => {
             if (loading) {
               return (
-                <div className="py-4">
-                  <SkeletonTable
-                    rows={10}
-                    cols={6}
-                    showHeader
-                    variant="default"
-                    title="League Table"
+                <div className="py-4 flex justify-center">
+                  <LoadingCard 
+                    title={`Loading ${tabs.find((t) => t.id === activeTab)?.label}`}
+                    description="Please wait while we fetch the latest league standings"
+                    className="w-full max-w-md mx-auto"
                   />
                 </div>
               );

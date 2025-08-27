@@ -2,7 +2,7 @@
 
 import PrizesGallery from "@/components/shared/PrizesGallery";
 import { useLeaguePrizes, usePageContent } from "@/hooks/useLeagueData";
-import { SkeletonPage } from "@/components/skeletons";
+import LoadingCard from "@/components/shared/LoadingCard";
 
 export default function PremierLeagueNagradePage() {
   const {
@@ -17,7 +17,15 @@ export default function PremierLeagueNagradePage() {
   } = usePageContent("premier");
 
   if (prizesLoading || contentLoading) {
-    return <SkeletonPage variant="league" />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingCard 
+          title="Loading Premier League Prizes"
+          description="Please wait while we fetch the latest prize information"
+          className="w-full max-w-md mx-auto"
+        />
+      </div>
+    );
   }
 
   if (prizesError || contentError) {

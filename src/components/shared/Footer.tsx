@@ -1,47 +1,25 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { Settings } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../contexts/ThemeContext";
 
-export default function Footer() {
+const Footer = React.memo(function Footer() {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   return (
-    <footer className="relative bg-theme-card-secondary py-16 theme-transition">
-      {/* Animated border-top */}
-      <motion.div
-        className="absolute top-0 left-0 right-0 h-0.5"
-        initial={{ opacity: 0, scaleX: 0 }}
-        whileInView={{ opacity: 1, scaleX: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        style={{
-          background:
-            "linear-gradient(90deg, rgba(139, 69, 19, 0.8), rgba(220, 38, 38, 0.6), rgba(107, 114, 128, 0.4), rgba(0, 0, 0, 1))",
-          backgroundSize: "300% 100%",
-        }}
-      >
-        <motion.div
-          className="w-full h-full"
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 0%", "0% 0%"],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-          style={{
-            background: "inherit",
-          }}
-        />
-      </motion.div>
+    <footer className="relative bg-white dark:bg-black py-16 theme-transition border-t border-black dark:border-white">
+      {/* Simple animated white border */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-black dark:bg-white animate-border-slide"></div>
 
       {/* Subtle Background Effects */}
       <div className="absolute inset-0">
-        <div className="absolute bottom-0 left-1/3 w-96 h-32 bg-gradient-to-r from-gray-800/5 via-slate-700/3 to-gray-900/5 minimal-radius blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/3 w-80 h-28 bg-gradient-to-l from-slate-800/5 via-gray-800/3 to-slate-900/5 minimal-radius blur-3xl"></div>
+        <div className="absolute bottom-0 left-1/3 w-96 h-32 bg-gradient-to-r from-black/5 dark:from-white/5 via-black/3 dark:via-white/3 to-black/5 dark:to-white/5 minimal-radius blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/3 w-80 h-28 bg-gradient-to-l from-black/5 dark:from-white/5 via-black/3 dark:via-white/3 to-black/5 dark:to-white/5 minimal-radius blur-3xl"></div>
       </div>
 
       <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
@@ -59,7 +37,7 @@ export default function Footer() {
             >
               {/* Elegant glow effect */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-br from-gray-600/20 via-slate-500/15 to-gray-700/20 force-circle blur-xl group-hover:from-red-900/30 group-hover:via-gray-600/25 group-hover:to-red-800/30 transition-all duration-500"
+                className="absolute inset-0 bg-gradient-to-br from-black/20 dark:from-white/20 via-black/15 dark:via-white/15 to-black/20 dark:to-white/20 force-circle blur-xl group-hover:from-black/30 dark:group-hover:from-white/30 group-hover:via-black/25 dark:group-hover:via-white/25 group-hover:to-black/30 dark:group-hover:to-white/30 transition-all duration-500"
                 animate={{
                   scale: [1, 1.2, 1],
                   opacity: [0.3, 0.5, 0.3],
@@ -86,11 +64,11 @@ export default function Footer() {
               <motion.div
                 className="absolute inset-0 force-circle opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                 style={{
-                  background:
-                    "conic-gradient(from 0deg, transparent 0deg, rgba(139, 69, 19, 0.4) 90deg, transparent 180deg, rgba(220, 38, 38, 0.3) 270deg, transparent 360deg)",
-                  mask: "radial-gradient(circle at center, transparent 65%, black 67%)",
-                  WebkitMask:
-                    "radial-gradient(circle at center, transparent 65%, black 67%)",
+                  background: theme === "dark"
+                    ? "conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.4) 90deg, transparent 180deg, rgba(255, 255, 255, 0.3) 270deg, transparent 360deg)"
+                    : "conic-gradient(from 0deg, transparent 0deg, rgba(0, 0, 0, 0.4) 90deg, transparent 180deg, rgba(0, 0, 0, 0.3) 270deg, transparent 360deg)",
+                  mask: theme === "dark" ? "radial-gradient(circle at center, transparent 65%, white 67%)" : "radial-gradient(circle at center, transparent 65%, black 67%)",
+                  WebkitMask: theme === "dark" ? "radial-gradient(circle at center, transparent 65%, white 67%)" : "radial-gradient(circle at center, transparent 65%, black 67%)",
                 }}
                 animate={{ rotate: 360 }}
                 transition={{
@@ -126,9 +104,9 @@ export default function Footer() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              {t("footer.tagline")}
+              {t("common:footer.tagline")}
               <br />
-              {t("footer.subtitle")}
+              {t("common:footer.subtitle")}
             </motion.p>
           </motion.div>
 
@@ -140,8 +118,8 @@ export default function Footer() {
             transition={{ duration: 0.8, delay: 0.5 }}
           >
             {[
-              { number: "9+", label: t("footer.years") },
-              { number: "100%", label: t("footer.trust") },
+              { number: "9+", label: t("common:footer.years") },
+              { number: "100%", label: t("common:footer.trust") },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -162,13 +140,13 @@ export default function Footer() {
 
           {/* Copyright and Admin */}
           <motion.div
-            className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-gray-800/30"
+            className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-black/30 dark:border-white/30"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
             <div className="text-theme-text-muted text-sm md:text-base font-medium theme-transition">
-              {t("footer.copyright")}
+              {t("common:footer.copyright")}
             </div>
 
             <Link href="/admin" className="group">
@@ -191,8 +169,10 @@ export default function Footer() {
       </div>
 
       {/* Subtle corner accents */}
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-gray-800/10 to-transparent opacity-50"></div>
-      <div className="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-tl from-gray-800/10 to-transparent opacity-50"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-black/10 dark:from-white/10 to-transparent opacity-50"></div>
+      <div className="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-tl from-black/10 dark:from-white/10 to-transparent opacity-50"></div>
     </footer>
   );
-}
+});
+
+export default Footer;

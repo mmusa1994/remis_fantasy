@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import Toast from "@/components/shared/Toast";
-import { SkeletonDashboard } from "@/components/skeletons";
+import LoadingCard from "@/components/shared/LoadingCard";
 
 interface LeaguePlayer {
   id: string;
@@ -424,7 +424,15 @@ export default function AdminTablesCleanPage() {
 
   // Show loading state while checking authentication
   if (status === "loading") {
-    return <SkeletonDashboard variant="admin" />;
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <LoadingCard 
+          title="Loading Tables Management"
+          description="Please wait while we authenticate and load the table data"
+          className="w-full max-w-md mx-auto"
+        />
+      </div>
+    );
   }
 
   // Redirect if not authenticated (this shouldn't render due to useEffect redirect)

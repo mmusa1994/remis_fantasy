@@ -11,42 +11,37 @@
   font-display: swap;
 }
 
-/* Light Theme Colors - BEIGE PALETTE */
+/* Light Theme Colors - PURE WHITE PALETTE */
 :root[data-theme="light"] {
-  /* Basic colors - BEIGE */
-  --theme-background: linear-gradient(
-    to bottom right,
-    #fef3c7,
-    #fed7aa,
-    #fde68a
-  );
-  --theme-foreground: #2d2d2d;
-  --theme-muted: #8b7355;
+  /* Basic colors - PURE WHITE */
+  --theme-background: #ffffff;
+  --theme-foreground: #000000;
+  --theme-muted: #666666;
 
   /* Primary colors */
-  --theme-primary: #8b4513;
-  --theme-primary-foreground: #f5f5dc;
+  --theme-primary: #000000;
+  --theme-primary-foreground: #ffffff;
 
-  /* Surface colors - BEIGE variants */
-  --theme-secondary: #faf8f3;
-  --theme-accent: #f0ead6;
-  --theme-card: #fefdf8;
-  --theme-card-secondary: #f5f5dc;
+  /* Surface colors - WHITE variants */
+  --theme-secondary: #ffffff;
+  --theme-accent: #ffffff;
+  --theme-card: #ffffff;
+  --theme-card-secondary: #ffffff;
 
-  /* Border colors - BEIGE */
-  --theme-border: #d2b48c;
-  --theme-border-strong: #bc9a6a;
-  --theme-border-dark: #555555;
+  /* Border colors - BLACK for light theme */
+  --theme-border: #000000;
+  --theme-border-strong: #000000;
+  --theme-border-dark: #000000;
 
-  /* Text colors - BEIGE theme - BETTER CONTRAST */
-  --theme-text-primary: #1a1a1a;
-  --theme-text-secondary: #333333;
-  --theme-text-muted: #555555;
+  /* Text colors - BLACK for light theme */
+  --theme-text-primary: #000000;
+  --theme-text-secondary: #000000;
+  --theme-text-muted: #000000;
 
   /* Special heading colors for light theme */
-  --theme-heading-primary: #2d1810;
-  --theme-heading-secondary: #4a2c17;
-  --theme-beige-dark: #8b4513;
+  --theme-heading-primary: #000000;
+  --theme-heading-secondary: #000000;
+  --theme-beige-dark: #000000;
 
   /* Brand colors for light theme - BEIGE variants */
   --theme-red-primary: #a0522d;
@@ -78,24 +73,24 @@
   --theme-primary-foreground: #000000;
 
   /* Surface colors - BLACK variants */
-  --theme-secondary: #111111;
-  --theme-accent: #222222;
-  --theme-card: #111111;
+  --theme-secondary: #000000;
+  --theme-accent: #000000;
+  --theme-card: #000000;
   --theme-card-secondary: #000000;
 
-  /* Border colors - BLACK/GRAY */
-  --theme-border: #333333;
-  --theme-border-strong: #444444;
-  --theme-border-dark: #666666;
+  /* Border colors - WHITE for dark theme */
+  --theme-border: #ffffff;
+  --theme-border-strong: #ffffff;
+  --theme-border-dark: #ffffff;
 
-  /* Text colors - BLACK theme - BETTER CONTRAST */
+  /* Text colors - WHITE for dark theme */
   --theme-text-primary: #ffffff;
-  --theme-text-secondary: #dddddd;
-  --theme-text-muted: #aaaaaa;
+  --theme-text-secondary: #ffffff;
+  --theme-text-muted: #ffffff;
 
   /* Special heading colors for dark theme */
   --theme-heading-primary: #ffffff;
-  --theme-heading-secondary: #dddddd;
+  --theme-heading-secondary: #ffffff;
   --theme-beige-dark: #ffffff;
 
   /* Brand colors for dark theme - BLACK variants */
@@ -372,6 +367,59 @@ body {
   animation: rotateSlow 20s linear infinite;
 }
 
+.animate-border-slide {
+  animation: borderSlide 3s ease-in-out infinite;
+}
+
+@keyframes borderSlide {
+  0% { 
+    transform: translateX(-100%); 
+    opacity: 0; 
+  }
+  50% { 
+    transform: translateX(0); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateX(100%); 
+    opacity: 0; 
+  }
+}
+
+/* Navbar border animations */
+@keyframes navbarBorderAppear {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes navbarBorderSlide {
+  0%, 100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 0%;
+  }
+}
+
+.navbar-border-animated {
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.navbar-border-animated.visible {
+  opacity: 1;
+  transform: scaleX(1);
+  animation: navbarBorderSlide 4s linear infinite;
+}
+
 .animate-slide-x {
   animation: slideX 8s ease-in-out infinite alternate;
 }
@@ -517,7 +565,7 @@ body {
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
-/* Focus states for accessibility */
+/* Enhanced focus states for accessibility */
 .focus-ring {
   transition: box-shadow 0.2s ease-out;
 }
@@ -526,6 +574,7 @@ body {
   outline: none;
   box-shadow: 0 0 0 2px var(--theme-primary);
 }
+
 
 /* Animation delays for staggered effects */
 .animate-delay-100 {
@@ -930,4 +979,44 @@ body {
   .subnav-page-spacing {
     padding-top: 9rem; /* 80px navbar + 64px subnav */
   }
+}
+
+/* MUI Charts Theme Support */
+.chart-container {
+  background: transparent;
+}
+
+/* MUI Charts - Light Theme */
+:root {
+  --mui-chart-text-color: #000000;
+  --mui-chart-grid-color: rgba(0, 0, 0, 0.1);
+  --mui-chart-axis-color: rgba(0, 0, 0, 0.6);
+}
+
+/* MUI Charts - Dark Theme */
+[data-theme="dark"] {
+  --mui-chart-text-color: #ffffff;
+  --mui-chart-grid-color: rgba(255, 255, 255, 0.1);
+  --mui-chart-axis-color: rgba(255, 255, 255, 0.6);
+}
+
+/* MUI Chart Text Styling */
+.MuiChartsAxis-root text,
+.MuiChartsLegend-root text,
+.MuiChartsTooltip-root text {
+  fill: var(--mui-chart-text-color) !important;
+  transition: fill 0.3s ease;
+}
+
+/* MUI Chart Grid and Axis Lines */
+.MuiChartsAxis-root line,
+.MuiChartsAxis-root path {
+  stroke: var(--mui-chart-axis-color) !important;
+  transition: stroke 0.3s ease;
+}
+
+/* MUI Chart Grid Lines */
+.MuiChartsGrid-root line {
+  stroke: var(--mui-chart-grid-color) !important;
+  transition: stroke 0.3s ease;
 }

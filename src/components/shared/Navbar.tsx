@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,7 +14,13 @@ import LanguageSelector from "./LanguageSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 
-const getNavItems = (t: any) => [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const getNavItems = (t: any): NavItem[] => [
   { name: t("nav.home"), href: "/", icon: Home },
   {
     name: t("nav.premierLeague"),
@@ -29,7 +35,7 @@ const getNavItems = (t: any) => [
   { name: t("nav.f1Fantasy"), href: "/f1-fantasy", icon: GiF1Car },
 ];
 
-export default function Navbar() {
+const Navbar = React.memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
@@ -67,10 +73,10 @@ export default function Navbar() {
         backgroundColor: isScrolled
           ? theme === "dark"
             ? "rgba(0, 0, 0, 0.95)"
-            : "rgba(245, 245, 220, 0.95)"
+            : "rgba(255, 255, 255, 0.95)"
           : theme === "dark"
           ? "rgba(0, 0, 0, 0.90)"
-          : "rgba(245, 245, 220, 0.90)",
+          : "rgba(255, 255, 255, 0.90)",
       }}
       transition={{ duration: 0.3 }}
       style={{
@@ -84,37 +90,17 @@ export default function Navbar() {
       }}
     >
       {/* Animated border-bottom */}
-      <motion.div
-        className="absolute bottom-0 left-0 right-0 h-0.5"
-        initial={{ opacity: 0, scaleX: 0 }}
-        animate={{
-          opacity: isScrolled ? 1 : 0,
-          scaleX: isScrolled ? 1 : 0,
-        }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+      <div
+        className={`absolute bottom-0 left-0 right-0 h-0.5 navbar-border-animated ${
+          isScrolled ? "visible" : ""
+        }`}
         style={{
-          background:
-            "linear-gradient(90deg, rgba(139, 69, 19, 0.8), rgba(220, 38, 38, 0.6), rgba(107, 114, 128, 0.4), rgba(0, 0, 0, 1))",
+          backgroundImage: theme === "dark"
+            ? "linear-gradient(90deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 1))"
+            : "linear-gradient(90deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 1))",
           backgroundSize: "300% 100%",
         }}
-      >
-        <motion.div
-          className="w-full h-full"
-          animate={{
-            backgroundPosition: isScrolled
-              ? ["0% 0%", "100% 0%", "0% 0%"]
-              : "0% 0%",
-          }}
-          transition={{
-            duration: 4,
-            repeat: isScrolled ? Infinity : 0,
-            ease: "linear",
-          }}
-          style={{
-            background: "inherit",
-          }}
-        />
-      </motion.div>
+      />
 
       <div className="w-full px-4 sm:px-6 lg:px-8 py-2 relative z-10">
         <div className="flex items-center justify-between h-16 md:h-20">
@@ -200,8 +186,8 @@ export default function Navbar() {
                     <motion.div
                       className={`absolute inset-0 minimal-radius backdrop-blur-sm ${
                         theme === "light"
-                          ? "bg-gradient-to-r from-blue-100/60 via-slate-100/80 to-blue-100/60 shadow-lg"
-                          : "bg-gradient-to-r from-red-900/30 via-gray-800/40 to-red-900/30"
+                          ? "bg-black/10 shadow-lg"
+                          : "bg-white/10"
                       }`}
                       initial={{ opacity: 0, scale: 0.85 }}
                       whileHover={{ opacity: 1, scale: 1 }}
@@ -212,8 +198,8 @@ export default function Navbar() {
                     <motion.div
                       className={`absolute inset-0 minimal-radius ${
                         theme === "light"
-                          ? "bg-gradient-to-r from-transparent via-blue-200/20 to-transparent"
-                          : "bg-gradient-to-r from-transparent via-red-500/10 to-transparent"
+                          ? "bg-gradient-to-r from-transparent via-black/5 to-transparent"
+                          : "bg-gradient-to-r from-transparent via-white/5 to-transparent"
                       }`}
                       initial={{ opacity: 0 }}
                       whileHover={{ opacity: 1 }}
@@ -230,10 +216,14 @@ export default function Navbar() {
                       {item.name}
                     </span>
 
-                    {/* Active page indicator - sophisticated burgundy line */}
+                    {/* Active page indicator - theme adaptive line */}
                     {isActive && (
                       <motion.div
-                        className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-red-900 to-transparent origin-center"
+                        className={`absolute -bottom-2 left-0 right-0 h-0.5 origin-center ${
+                          theme === "light"
+                            ? "bg-gradient-to-r from-transparent via-black to-transparent"
+                            : "bg-gradient-to-r from-transparent via-white to-transparent"
+                        }`}
                         initial={{ scaleX: 0, opacity: 0 }}
                         animate={{ scaleX: 1, opacity: 1 }}
                         transition={{ duration: 0.6, ease: "easeOut" }}
@@ -243,11 +233,11 @@ export default function Navbar() {
                     {/* Sophisticated underline - theme adaptive */}
                     {!isActive && (
                       <motion.div
-                        className={`absolute -bottom-1 left-2 right-2 h-0.5 ${
+                        className={`absolute -bottom-1 left-2 right-2 h-0.5 origin-center ${
                           theme === "light"
-                            ? "bg-gradient-to-r from-transparent via-blue-600 to-transparent"
-                            : "bg-gradient-to-r from-transparent via-red-500 to-transparent"
-                        } origin-center`}
+                            ? "bg-gradient-to-r from-transparent via-black/60 to-transparent"
+                            : "bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                        }`}
                         initial={{ scaleX: 0, opacity: 0 }}
                         whileHover={{ scaleX: 1, opacity: 1 }}
                         transition={{ duration: 0.4, ease: "easeOut" }}
@@ -258,8 +248,8 @@ export default function Navbar() {
                     <motion.div
                       className={`absolute -top-1 left-2 right-2 h-0.5 ${
                         theme === "light"
-                          ? "bg-gradient-to-r from-transparent via-slate-400/60 to-transparent"
-                          : "bg-gradient-to-r from-transparent via-gray-400/40 to-transparent"
+                          ? "bg-gradient-to-r from-transparent via-black/40 to-transparent"
+                          : "bg-gradient-to-r from-transparent via-white/40 to-transparent"
                       }`}
                       initial={{ scaleX: 0, opacity: 0 }}
                       whileHover={{ scaleX: 1, opacity: 1 }}
@@ -272,33 +262,33 @@ export default function Navbar() {
 
                     {/* Corner accents */}
                     <motion.div
-                      className={`absolute top-0 left-0 w-1 h-1 ${
-                        theme === "light" ? "bg-blue-500" : "bg-red-500"
-                      } minimal-radius`}
+                      className={`absolute top-0 left-0 w-1 h-1 minimal-radius ${
+                        theme === "light" ? "bg-black" : "bg-white"
+                      }`}
                       initial={{ scale: 0, opacity: 0 }}
                       whileHover={{ scale: 1, opacity: 1 }}
                       transition={{ duration: 0.2, delay: 0.2 }}
                     />
                     <motion.div
-                      className={`absolute top-0 right-0 w-1 h-1 ${
-                        theme === "light" ? "bg-blue-500" : "bg-red-500"
-                      } minimal-radius`}
+                      className={`absolute top-0 right-0 w-1 h-1 minimal-radius ${
+                        theme === "light" ? "bg-black" : "bg-white"
+                      }`}
                       initial={{ scale: 0, opacity: 0 }}
                       whileHover={{ scale: 1, opacity: 1 }}
                       transition={{ duration: 0.2, delay: 0.25 }}
                     />
                     <motion.div
-                      className={`absolute bottom-0 left-0 w-1 h-1 ${
-                        theme === "light" ? "bg-blue-500" : "bg-red-500"
-                      } minimal-radius`}
+                      className={`absolute bottom-0 left-0 w-1 h-1 minimal-radius ${
+                        theme === "light" ? "bg-black" : "bg-white"
+                      }`}
                       initial={{ scale: 0, opacity: 0 }}
                       whileHover={{ scale: 1, opacity: 1 }}
                       transition={{ duration: 0.2, delay: 0.3 }}
                     />
                     <motion.div
-                      className={`absolute bottom-0 right-0 w-1 h-1 ${
-                        theme === "light" ? "bg-blue-500" : "bg-red-500"
-                      } minimal-radius`}
+                      className={`absolute bottom-0 right-0 w-1 h-1 minimal-radius ${
+                        theme === "light" ? "bg-black" : "bg-white"
+                      }`}
                       initial={{ scale: 0, opacity: 0 }}
                       whileHover={{ scale: 1, opacity: 1 }}
                       transition={{ duration: 0.2, delay: 0.35 }}
@@ -366,8 +356,8 @@ export default function Navbar() {
                       onClick={handleMobileNavClick}
                       className={`w-full text-center font-semibold py-4 px-4 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative ${
                         isActive
-                          ? "text-theme-foreground border-red-600"
-                          : "text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-border-strong"
+                          ? "text-theme-foreground border-theme-foreground"
+                          : "text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground"
                       }`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{
@@ -400,4 +390,6 @@ export default function Navbar() {
       </motion.div>
     </motion.nav>
   );
-}
+});
+
+export default Navbar;

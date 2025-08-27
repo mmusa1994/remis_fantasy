@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useTranslation } from "react-i18next";
-import type { GameweekStatus } from "@/lib/fpl-api";
+import type { FPLGameweekStatus } from "@/types/fpl";
 import {
   MdTrendingUp,
   MdTrendingDown,
@@ -12,7 +12,6 @@ import {
   MdCasino,
   MdWarning,
   MdStars,
-  MdGroups,
   MdSports,
   MdStar,
   MdThumbUp,
@@ -22,7 +21,7 @@ import {
 } from "react-icons/md";
 
 interface GameweekStatusProps {
-  gameweekStatus?: GameweekStatus;
+  gameweekStatus?: FPLGameweekStatus;
   gameweek: number;
   loading?: boolean;
 }
@@ -130,8 +129,8 @@ const GameweekStatus = React.memo(function GameweekStatus({
       </div>
 
       {/* Points Breakdown */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex-1 text-center p-4 bg-theme-accent rounded-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div className="text-center p-4 bg-theme-accent rounded-lg">
           <div className="flex items-center justify-center mb-2">
             <MdScoreboard className="text-blue-600 text-2xl mr-2" />
             <span className="font-medium text-theme-primary">
@@ -139,28 +138,41 @@ const GameweekStatus = React.memo(function GameweekStatus({
             </span>
           </div>
           <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-            {gameweekStatus.gameweek_points} {t("fplLive.points")}
+            {gameweekStatus.gameweek_points}
           </div>
-          <div className="text-sm text-theme-muted mt-1">
-            {t("fplLive.averageResult", {
-              points: gameweekStatus.safety_score,
-            })}
+          <div className="text-xs text-theme-muted mt-1">
+            {t("fplLive.points")}
+          </div>
+        </div>
+
+        <div className="text-center p-4 bg-theme-accent rounded-lg">
+          <div className="flex items-center justify-center mb-2">
+            <MdScoreboard className="text-orange-600 text-2xl mr-2" />
+            <span className="font-medium text-theme-primary">
+              {t("fplLive.averageGameWeekResult")}
+            </span>
+          </div>
+          <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+            {gameweek === 2 ? 51 : gameweekStatus.safety_score}
+          </div>
+          <div className="text-xs text-theme-muted mt-1">
+            {t("fplLive.safetyThreshold")}
           </div>
         </div>
 
         <div
-          className={`flex-1 text-center p-4 rounded-lg ${
-            gameweekStatus.gameweek_points >= gameweekStatus.safety_score
-              ? "bg-theme-accent"
-              : "bg-theme-accent"
+          className={`text-center p-4 rounded-lg ${
+            gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score)
+              ? "bg-green-50 dark:bg-green-900/10"
+              : "bg-red-50 dark:bg-red-900/10"
           }`}
         >
           <div className="flex items-center justify-center mb-2">
             <MdRocket
               className={`text-2xl mr-2 ${
-                gameweekStatus.gameweek_points >= gameweekStatus.safety_score
+                gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score)
                   ? "text-green-600"
-                  : "text-orange-600"
+                  : "text-red-600"
               }`}
             />
             <span className="font-medium text-theme-primary">
@@ -169,17 +181,18 @@ const GameweekStatus = React.memo(function GameweekStatus({
           </div>
           <div
             className={`text-3xl font-bold ${
-              gameweekStatus.gameweek_points >= gameweekStatus.safety_score
+              gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score)
                 ? "text-green-600 dark:text-green-400"
-                : "text-orange-600 dark:text-orange-400"
+                : "text-red-600 dark:text-red-400"
             }`}
           >
-            {gameweekStatus.gameweek_points >= gameweekStatus.safety_score
+            {gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score)
               ? t("fplLive.above")
               : t("fplLive.below")}
           </div>
-          <div className="text-sm text-theme-muted mt-1">
-            {t("fplLive.safetyThreshold")}
+          <div className="text-xs text-theme-muted mt-1">
+            {gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score) ? '+' : '-'}
+            {Math.abs(gameweekStatus.gameweek_points - (gameweek === 2 ? 51 : gameweekStatus.safety_score))} {t("fplLive.points")}
           </div>
         </div>
       </div>
@@ -315,19 +328,6 @@ const GameweekStatus = React.memo(function GameweekStatus({
         </div>
       )}
 
-      {/* Clone Information */}
-      <div>
-        <h4 className="font-medium text-theme-primary mb-3 flex items-center">
-          <MdGroups className="text-blue-500 text-xl mr-2" />
-          {t("fplLive.yourClonesInTop1Million")}
-          <button className="ml-2 text-xs text-blue-600 dark:text-blue-400 hover:underline">
-            {t("fplLive.hideClonesInfo")}
-          </button>
-        </h4>
-        <div className="text-center text-theme-muted py-4">
-          {gameweekStatus.clone_count} {t("fplLive.players")}
-        </div>
-      </div>
     </div>
   );
 });

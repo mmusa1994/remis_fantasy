@@ -7,10 +7,8 @@ import { ChevronDown, Globe } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const languages = [
-  { code: "bs", name: "Bosanski", flag: "🇧🇦" },
-  { code: "sr", name: "Српски", flag: "🇷🇸" },
-  { code: "hr", name: "Hrvatski", flag: "🇭🇷" },
-  { code: "en", name: "English", flag: "🇺🇸" },
+  { code: "en", name: "English", flagCode: "gb" },
+  { code: "bs", name: "Bosanski", flagCode: "ba" },
 ];
 
 export default function LanguageSelector() {
@@ -50,14 +48,14 @@ export default function LanguageSelector() {
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 ${
           theme === "dark"
-            ? "bg-gray-800/50 hover:bg-gray-700/70 text-white border border-gray-700"
-            : "bg-white/60 hover:bg-white/80 text-gray-800 border border-gray-200"
+            ? "bg-black hover:bg-gray-900 text-white border border-white"
+            : "bg-white hover:bg-gray-50 text-black border border-black"
         }`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
         <Globe className="w-4 h-4" />
-        <span className="text-lg">{currentLanguage.flag}</span>
+        <span className={`fi fi-${currentLanguage.flagCode} text-lg`}></span>
         <span className="text-sm font-medium hidden sm:block">
           {currentLanguage.code.toUpperCase()}
         </span>
@@ -78,8 +76,8 @@ export default function LanguageSelector() {
             transition={{ duration: 0.2 }}
             className={`absolute top-full left-0 mt-2 w-48 rounded-xl shadow-2xl border backdrop-blur-xl z-50 ${
               theme === "dark"
-                ? "bg-gray-900/95 border-gray-700"
-                : "bg-white/95 border-gray-200"
+                ? "bg-black border-white"
+                : "bg-white border-black"
             }`}
           >
             <div className="py-2">
@@ -90,18 +88,18 @@ export default function LanguageSelector() {
                   className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 ${
                     i18n.language === language.code
                       ? theme === "dark"
-                        ? "bg-red-900/30 text-red-400"
-                        : "bg-blue-100/70 text-blue-700"
+                        ? "bg-white/20 text-white"
+                        : "bg-black/10 text-black"
                       : theme === "dark"
-                      ? "hover:bg-gray-800/70 text-gray-300 hover:text-white"
-                      : "hover:bg-gray-100/70 text-gray-700 hover:text-gray-900"
+                      ? "hover:bg-white/10 text-white hover:text-white"
+                      : "hover:bg-black/5 text-black hover:text-black"
                   }`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
                   whileHover={{ x: 4 }}
                 >
-                  <span className="text-xl">{language.flag}</span>
+                  <span className={`fi fi-${language.flagCode} text-xl`}></span>
                   <div className="flex flex-col">
                     <span className="font-medium text-sm">{language.name}</span>
                     <span className="text-xs opacity-70">
@@ -111,7 +109,7 @@ export default function LanguageSelector() {
                   {i18n.language === language.code && (
                     <motion.div
                       className={`ml-auto w-2 h-2 rounded-full ${
-                        theme === "dark" ? "bg-red-400" : "bg-blue-600"
+                        theme === "dark" ? "bg-white" : "bg-black"
                       }`}
                       layoutId="activeLanguage"
                     />

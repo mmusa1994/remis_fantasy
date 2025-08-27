@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import LayoutContent from "../components/shared/LayoutContent";
+import FlagLoader from "../components/shared/FlagLoader";
 import JsonLd, {
   organizationSchema,
   websiteSchema,
@@ -121,6 +122,7 @@ export default function RootLayout({
         className="font-russo antialiased w-full"
         suppressHydrationWarning={true}
       >
+        <FlagLoader />
         <Providers>
           <LayoutContent>{children}</LayoutContent>
         </Providers>

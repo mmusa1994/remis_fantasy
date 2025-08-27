@@ -1,0 +1,94 @@
+{
+  "loading": "Učitavanje...",
+  "error": "Greška pri učitavanju podataka",
+  "tryAgain": "Pokušaj Ponovo",
+  "comingSoon": "Uskoro",
+  "adminPanel": "Admin Panel",
+  "live": "UŽIVO",
+  "finished": "Završeno",
+  "offline": "Offline",
+  "online": "Online",
+  "searching": "Pretražujem...",
+  "refresh": "Osvježi",
+  "settings": "Postavke",
+  "footer": {
+    "tagline": "Ultimativna destinacija za ljubitelje fantasy sporta.",
+    "subtitle": "Pridruži se hiljadama igrača u najkonkurentnijim fantasy ligama.",
+    "years": "Godina Izvrsnosti", 
+    "trust": "Vjeruju Igrači",
+    "copyright": "© 2025 REMIS Fantasy. Sva prava zadržana."
+  },
+  "home": {
+    "siteName": "REMIS Fantasy",
+    "currentSeason": "2025/26",
+    "leagues": {
+      "premierLeague": {
+        "title": "Premier League",
+        "description": "Najpopularnija fantasy liga sa 4 različite kategorije"
+      },
+      "championsLeague": {
+        "title": "Champions League",
+        "description": "Evropska elita fantasy fudbala"
+      },
+      "f1Fantasy": {
+        "title": "F1 Fantasy",
+        "description": "Brzina, strategija i adrenalin na stazi"
+      }
+    },
+    "globalStats": {
+      "totalPrize": {
+        "label": "Ukupan nagradni fond",
+        "value": "8000 KM"
+      },
+      "availableLeagues": {
+        "label": "Dostupne lige",
+        "value": "5"
+      },
+      "registeredPlayers": {
+        "label": "Registrovanih igrača", 
+        "value": "160+"
+      },
+      "yearsExperience": {
+        "label": "Godina iskustva",
+        "value": "9+"
+      }
+    }
+  },
+  "navigation": {
+    "registration": "Registracija",
+    "register": "Registruj se za",
+    "prizes": "Nagrade",
+    "viewPrizes": "Pogledaj sve dostupne nagrade",
+    "gallery": "Galerija",
+    "viewGallery": "Slike i uspomene iz prethodnih sezona",
+    "tables": "Tabele",
+    "viewTables": "Trenutni rezultati i tabele",
+    "quickNavigation": "Brza Navigacija"
+  },
+  "prizes": {
+    "firstPlace": "1. Mjesto",
+    "firstPlaceDesc": "Pobjednik lige",
+    "secondPlace": "2. Mjesto",
+    "secondPlaceDesc": "Drugoplasirani u ligi",
+    "thirdPlace": "3. Mjesto",
+    "thirdPlaceDesc": "Trećeplasirani u ligi"
+  },
+  "leagues": {
+    "standard": {
+      "title": "Standardna Liga",
+      "description": "Klasična fantasy liga sa standardnim pravilima"
+    },
+    "premium": {
+      "title": "Premium Liga",
+      "description": "Poboljšana liga sa premium funkcijama i većim nagradama"
+    },
+    "free": {
+      "title": "Besplatna Liga",
+      "description": "Besplatna liga za sve igrače"
+    },
+    "h2h": {
+      "title": "Glava u Glavu",
+      "description": "Sedmični mečevi protiv drugih menadžera"
+    }
+  }
+}

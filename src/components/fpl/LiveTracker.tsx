@@ -18,7 +18,7 @@ import {
   TbArrowBack,
 } from "react-icons/tb";
 import { RiShieldLine } from "react-icons/ri";
-import { SkeletonList } from "@/components/skeletons";
+import LoadingCard from "@/components/shared/LoadingCard";
 import { useTranslation } from "react-i18next";
 
 interface Event {
@@ -64,7 +64,6 @@ const EVENT_ICONS = {
   clearances: <GiPlayerPrevious className="text-gray-600" />,
 };
 
-
 const LiveTracker = React.memo(function LiveTracker({
   gameweek,
   isPolling,
@@ -77,34 +76,34 @@ const LiveTracker = React.memo(function LiveTracker({
 
   const getEventLabel = (eventType: string) => {
     switch (eventType) {
-      case 'goals_scored':
-        return t('fplLive.eventGoal');
-      case 'assists':
-        return t('fplLive.eventAssist');
-      case 'yellow_cards':
-        return t('fplLive.eventYellowCard');
-      case 'red_cards':
-        return t('fplLive.eventRedCard');
-      case 'penalties_missed':
-        return t('fplLive.eventPenaltyMissed');
-      case 'penalties_saved':
-        return t('fplLive.eventPenaltySaved');
-      case 'own_goals':
-        return t('fplLive.eventOwnGoal');
-      case 'saves':
-        return t('fplLive.eventSave');
-      case 'clean_sheets':
-        return t('fplLive.eventCleanSheet');
-      case 'goals_conceded':
-        return t('fplLive.eventGoalConceded');
-      case 'bonus':
-        return t('fplLive.eventBonusPoints');
-      case 'tackles':
-        return t('fplLive.eventTackle');
-      case 'interceptions':
-        return t('fplLive.eventInterception');
-      case 'clearances':
-        return t('fplLive.eventClearance');
+      case "goals_scored":
+        return t("fplLive.eventGoal");
+      case "assists":
+        return t("fplLive.eventAssist");
+      case "yellow_cards":
+        return t("fplLive.eventYellowCard");
+      case "red_cards":
+        return t("fplLive.eventRedCard");
+      case "penalties_missed":
+        return t("fplLive.eventPenaltyMissed");
+      case "penalties_saved":
+        return t("fplLive.eventPenaltySaved");
+      case "own_goals":
+        return t("fplLive.eventOwnGoal");
+      case "saves":
+        return t("fplLive.eventSave");
+      case "clean_sheets":
+        return t("fplLive.eventCleanSheet");
+      case "goals_conceded":
+        return t("fplLive.eventGoalConceded");
+      case "bonus":
+        return t("fplLive.eventBonusPoints");
+      case "tackles":
+        return t("fplLive.eventTackle");
+      case "interceptions":
+        return t("fplLive.eventInterception");
+      case "clearances":
+        return t("fplLive.eventClearance");
       default:
         return eventType;
     }
@@ -177,13 +176,14 @@ const LiveTracker = React.memo(function LiveTracker({
     const diffMs = now.getTime() - eventTime.getTime();
     const diffMins = Math.floor(diffMs / 60000);
 
-    if (diffMins < 1) return t('fplLive.liveTrackerJustNow');
-    if (diffMins === 1) return `1 ${t('fplLive.liveTrackerMinAgo')}`;
-    if (diffMins < 60) return `${diffMins} ${t('fplLive.liveTrackerMinsAgo')}`;
+    if (diffMins < 1) return t("fplLive.liveTrackerJustNow");
+    if (diffMins === 1) return `1 ${t("fplLive.liveTrackerMinAgo")}`;
+    if (diffMins < 60) return `${diffMins} ${t("fplLive.liveTrackerMinsAgo")}`;
 
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours === 1) return `1 ${t('fplLive.liveTrackerHourAgo')}`;
-    if (diffHours < 24) return `${diffHours} ${t('fplLive.liveTrackerHoursAgo')}`;
+    if (diffHours === 1) return `1 ${t("fplLive.liveTrackerHourAgo")}`;
+    if (diffHours < 24)
+      return `${diffHours} ${t("fplLive.liveTrackerHoursAgo")}`;
 
     return eventTime.toLocaleDateString();
   };
@@ -238,7 +238,7 @@ const LiveTracker = React.memo(function LiveTracker({
       <div className="px-6 py-4 border-b border-theme-border">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-theme-primary">
-            {t('fplLive.liveTrackerTitle')}
+            {t("fplLive.liveTrackerTitle")}
           </h3>
           <div className="flex items-center space-x-2">
             {loading && (
@@ -250,7 +250,9 @@ const LiveTracker = React.memo(function LiveTracker({
               <MdWifiOff className="w-4 h-4 text-gray-400" />
             )}
             <span className="text-xs text-theme-muted">
-              {isPolling ? t('fplLive.liveTrackerLivePolling') : t('fplLive.liveTrackerOfflinePolling')}
+              {isPolling
+                ? t("fplLive.liveTrackerLivePolling")
+                : t("fplLive.liveTrackerOfflinePolling")}
             </span>
           </div>
         </div>
@@ -265,12 +267,9 @@ const LiveTracker = React.memo(function LiveTracker({
           </div>
         ) : loading ? (
           <div className="px-6">
-            <SkeletonList
-              items={6}
-              showIcons
-              showSecondaryText
-              showActions
-              variant="events"
+            <LoadingCard
+              title="Loading Live Events..."
+              description="Fetching real-time match events and updates"
               className="border-none shadow-none"
             />
           </div>

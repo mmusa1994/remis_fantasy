@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useTranslation } from "react-i18next";
+import FlagLoader from "@/components/shared/FlagLoader";
 
 interface ManagerSummaryProps {
   manager?: {
@@ -13,6 +14,18 @@ interface ManagerSummaryProps {
     summary_overall_rank: number;
     summary_event_points: number;
     summary_event_rank: number;
+    player_region_iso_code_short?: string;
+    player_region_name?: string;
+    club_badge_src?: string;
+    current_event?: number;
+    entered_events?: number[];
+    favourite_team?: number;
+    joined_time?: string;
+    last_deadline_bank?: number;
+    last_deadline_total_transfers?: number;
+    last_deadline_value?: number;
+    started_event?: number;
+    years_active?: number;
   };
   teamTotals?: {
     goals: number;
@@ -84,6 +97,7 @@ const ManagerSummary = React.memo(function ManagerSummary({
 
   return (
     <div className="bg-theme-card rounded-lg shadow p-6">
+      <FlagLoader />
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-theme-primary">
           {t("fplLive.managerOverview")} - GW{gameweek}
@@ -102,16 +116,48 @@ const ManagerSummary = React.memo(function ManagerSummary({
             {t("fplLive.managerInfo")}
           </h4>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-theme-muted">{t("fplLive.name")}</span>
-              <span className="font-medium text-theme-primary">
-                {manager.player_first_name} {manager.player_last_name}
-              </span>
+              <div className="flex items-center space-x-2">
+                {manager.player_region_iso_code_short && (
+                  <span 
+                    className={`fi fi-${manager.player_region_iso_code_short.toLowerCase()} w-4 h-3 rounded-sm`}
+                    title={manager.player_region_name}
+                  ></span>
+                )}
+                <span className="font-medium text-theme-primary">
+                  {manager.player_first_name} {manager.player_last_name}
+                </span>
+              </div>
             </div>
             <div className="flex justify-between">
               <span className="text-theme-muted">{t("fplLive.team")}</span>
               <span className="font-medium text-theme-primary">
                 {manager.name}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-theme-muted">{t("fplLive.country")}</span>
+              <span className="font-medium text-theme-primary">
+                {manager.player_region_name || 'Unknown'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-theme-muted">{t("fplLive.yearsActive")}</span>
+              <span className="font-medium text-theme-primary">
+                {manager.years_active || 0} {t("fplLive.years")}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-theme-muted">{t("fplLive.joinedDate")}</span>
+              <span className="font-medium text-theme-primary">
+                {manager.joined_time ? new Date(manager.joined_time).toLocaleDateString() : 'Unknown'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-theme-muted">{t("fplLive.startedEvent")}</span>
+              <span className="font-medium text-theme-primary">
+                {t("fplLive.gw")} {manager.started_event || 1}
               </span>
             </div>
             <div className="flex justify-between">
@@ -130,6 +176,24 @@ const ManagerSummary = React.memo(function ManagerSummary({
                 {formatRank(manager.summary_overall_rank)}
               </span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-theme-muted">{t("fplLive.lastDeadlineBank")}</span>
+              <span className="font-medium text-theme-primary">
+                £{(manager.last_deadline_bank || 0).toFixed(1)}m
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-theme-muted">{t("fplLive.lastDeadlineValue")}</span>
+              <span className="font-medium text-theme-primary">
+                £{(manager.last_deadline_value || 0).toFixed(1)}m
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-theme-muted">{t("fplLive.totalTransfers")}</span>
+              <span className="font-medium text-theme-primary">
+                {manager.last_deadline_total_transfers || 0}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -138,6 +202,18 @@ const ManagerSummary = React.memo(function ManagerSummary({
             {t("fplLive.gwPerformance", { gw: gameweek })}
           </h4>
           <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-theme-muted">{t("fplLive.gameweekPoints")}</span>
+              <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
+                {manager.summary_event_points} {t("fplLive.points")}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-theme-muted">{t("fplLive.gameweekRank")}</span>
+              <span className="font-medium text-theme-primary">
+                {formatRank(manager.summary_event_rank)}
+              </span>
+            </div>
             <div className="flex justify-between">
               <span className="text-theme-muted">
                 {t("fplLive.activePoints")}

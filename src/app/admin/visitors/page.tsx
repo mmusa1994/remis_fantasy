@@ -20,8 +20,97 @@ import {
   LogOut,
   Table2,
 } from "lucide-react";
-import { getCountryFlag } from "@/lib/country-flags";
-import { SkeletonVisitorAnalytics } from "@/components/skeletons";
+// Note: flag-icons CSS will need to be imported in globals.css or layout
+import LoadingCard from "@/components/shared/LoadingCard";
+
+// Helper function to convert country names to ISO codes for flag-icons
+const getCountryCode = (countryName: string): string => {
+  const countryMap: { [key: string]: string } = {
+    'United States': 'us',
+    'United Kingdom': 'gb',
+    'Germany': 'de',
+    'France': 'fr',
+    'Italy': 'it',
+    'Spain': 'es',
+    'Netherlands': 'nl',
+    'Belgium': 'be',
+    'Austria': 'at',
+    'Switzerland': 'ch',
+    'Sweden': 'se',
+    'Norway': 'no',
+    'Denmark': 'dk',
+    'Finland': 'fi',
+    'Poland': 'pl',
+    'Czech Republic': 'cz',
+    'Slovakia': 'sk',
+    'Hungary': 'hu',
+    'Romania': 'ro',
+    'Bulgaria': 'bg',
+    'Greece': 'gr',
+    'Portugal': 'pt',
+    'Ireland': 'ie',
+    'Croatia': 'hr',
+    'Slovenia': 'si',
+    'Serbia': 'rs',
+    'Bosnia and Herzegovina': 'ba',
+    'Montenegro': 'me',
+    'North Macedonia': 'mk',
+    'Albania': 'al',
+    'Russia': 'ru',
+    'Ukraine': 'ua',
+    'Belarus': 'by',
+    'Lithuania': 'lt',
+    'Latvia': 'lv',
+    'Estonia': 'ee',
+    'Canada': 'ca',
+    'Australia': 'au',
+    'New Zealand': 'nz',
+    'Japan': 'jp',
+    'South Korea': 'kr',
+    'China': 'cn',
+    'India': 'in',
+    'Brazil': 'br',
+    'Argentina': 'ar',
+    'Mexico': 'mx',
+    'Turkey': 'tr',
+    'South Africa': 'za',
+    'Egypt': 'eg',
+    'Morocco': 'ma',
+    'Nigeria': 'ng',
+    'Kenya': 'ke',
+    'Ghana': 'gh',
+    'Israel': 'il',
+    'United Arab Emirates': 'ae',
+    'Saudi Arabia': 'sa',
+    'Qatar': 'qa',
+    'Kuwait': 'kw',
+    'Bahrain': 'bh',
+    'Oman': 'om',
+    'Jordan': 'jo',
+    'Lebanon': 'lb',
+    'Syria': 'sy',
+    'Iraq': 'iq',
+    'Iran': 'ir',
+    'Afghanistan': 'af',
+    'Pakistan': 'pk',
+    'Bangladesh': 'bd',
+    'Sri Lanka': 'lk',
+    'Myanmar': 'mm',
+    'Thailand': 'th',
+    'Vietnam': 'vn',
+    'Cambodia': 'kh',
+    'Laos': 'la',
+    'Malaysia': 'my',
+    'Singapore': 'sg',
+    'Indonesia': 'id',
+    'Philippines': 'ph',
+    'Taiwan': 'tw',
+    'Hong Kong': 'hk',
+    'Macau': 'mo'
+  };
+  
+  return countryMap[countryName] || countryName.toLowerCase().slice(0, 2);
+};
 
 interface Visitor {
   id: number;
@@ -122,7 +211,15 @@ export default function VisitorsPage() {
   };
 
   if (status === "loading" || loading) {
-    return <SkeletonVisitorAnalytics />;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <LoadingCard 
+          title="Loading Visitor Analytics"
+          description="Please wait while we fetch the visitor data"
+          className="w-full max-w-md mx-auto"
+        />
+      </div>
+    );
   }
 
   if (error) {
@@ -298,7 +395,7 @@ export default function VisitorsPage() {
                          className="flex justify-between items-center"
                        >
                          <span className="text-gray-300 flex items-center gap-2">
-                           <span className="text-lg">{getCountryFlag(country)}</span>
+                           <span className={`fi fi-${getCountryCode(country)} text-lg`}></span>
                            {country || "Nepoznato"}
                          </span>
                          <span className="text-blue-400 font-semibold">{count}</span>
@@ -374,7 +471,7 @@ export default function VisitorsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                       <div className="flex items-center gap-2">
-                        <span className="text-base">{getCountryFlag(visitor.country)}</span>
+                        <span className={`fi fi-${getCountryCode(visitor.country)} text-base`}></span>
                         <span>
                           {visitor.country
                             ? `${visitor.country}${
