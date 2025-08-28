@@ -5,5 +5,10 @@
   "openLeague": "Otvori Ligu",
   "liveFpl": "UŽIVO FPL",
   "liveFplDescription": "Pratite uživo Premier Liga utakmice sa ažuriranjima u realnom vremenu, rezultatima i fantasy bodovima!",
-  "watchLive": "Gledaj Uživo"
+  "watchLive": "Gledaj Uživo",
+  "live": "UŽIVO",
+  "registeredPlayers": "Registrovani Igrači",
+  "availableLeagues": "Dostupne Lige",
+  "totalPrizePool": "Ukupan Nagradni Fond",
+  "yearsOfExperience": "Godine Iskustva"
 }

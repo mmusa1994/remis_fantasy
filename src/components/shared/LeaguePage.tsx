@@ -30,10 +30,10 @@ interface LeaguePageProps {
 
 export default function LeaguePage({ leagueId }: LeaguePageProps) {
   const { theme } = useTheme();
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation();
   const { leagueData: data, loading, error } = useLeagueData(leagueId);
 
-  if (loading) {
+  if (loading || !ready) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingCard 
@@ -116,10 +116,10 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
     <div className="min-h-screen">
       {/* Hero Section */}
       <HeroSection
-        content={config.pageContent.hero}
         logoPath={config.logoPath}
         primaryColor={config.primaryColor}
         className=""
+        leagueType={leagueId}
       />
 
       {/* Stats Section */}
@@ -129,6 +129,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
             stats={config.stats}
             theme={config.primaryColor}
             className="max-w-4xl mx-auto"
+            leagueType={leagueId}
           />
         </div>
       </section>

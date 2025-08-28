@@ -85,7 +85,7 @@ export default function MatchResults({
   gameweek,
   isPolling = false,
 }: MatchResultsProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   const [matchData, setMatchData] = useState<MatchResult[]>([]);
   const [stats, setStats] = useState<GameweekStats | null>(null);
   const [loading, setLoading] = useState(false);

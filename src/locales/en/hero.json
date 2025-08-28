@@ -5,5 +5,10 @@
   "openLeague": "Open League",
   "liveFpl": "LIVE FPL",
   "liveFplDescription": "Follow live Premier League matches with real-time updates, scores and fantasy points!",
-  "watchLive": "Watch Live"
+  "watchLive": "Watch Live",
+  "live": "LIVE",
+  "registeredPlayers": "Registered Players",
+  "availableLeagues": "Available Leagues",
+  "totalPrizePool": "Total Prize Pool",
+  "yearsOfExperience": "Years of Experience"
 }

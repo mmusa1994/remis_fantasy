@@ -42,7 +42,7 @@ export default function SubNavigation({
   baseColor = "orange",
   leagueBasePath,
 }: SubNavigationProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("navigation");
   const pathname = usePathname();
   const { theme } = useTheme();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -66,7 +66,7 @@ export default function SubNavigation({
 
   // Add "Početna" item at the beginning if leagueBasePath is provided
   const allItems = leagueBasePath
-    ? [{ name: t("nav.home"), href: leagueBasePath }, ...items]
+    ? [{ name: t("home"), href: leagueBasePath }, ...items]
     : items;
 
   const colorConfig = {

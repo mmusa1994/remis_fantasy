@@ -1,5 +1,7 @@
 {
   "loading": "Loading...",
+  "loadingHomepage": "Loading homepage content...",
+  "more": "More",
   "error": "Error loading data",
   "tryAgain": "Try Again",
   "comingSoon": "Coming Soon",
@@ -74,6 +76,18 @@
     "thirdPlaceDesc": "Third place in the league"
   },
   "leagues": {
+    "premier-league": {
+      "name": "Premier League",
+      "description": "The most popular fantasy league with 4 different categories"
+    },
+    "champions-league": {
+      "name": "Champions League",
+      "description": "European elite of fantasy football"
+    },
+    "f1-fantasy": {
+      "name": "F1 Fantasy",
+      "description": "Speed, strategy and adrenaline on the track"
+    },
     "standard": {
       "title": "Standard League",
       "description": "Classic fantasy league with standard rules"
@@ -89,6 +103,37 @@
     "h2h": {
       "title": "Head to Head",
       "description": "Weekly matchups against other managers"
+    }
+  },
+  "hero": {
+    "title": "REMIS Fantasy",
+    "season": "Season 2025/26",
+    "subtitle": "Welcome to the most exciting fantasy leagues! Choose your league and show your sports knowledge.",
+    "live": "LIVE",
+    "liveFpl": "LIVE FPL",
+    "liveFplDescription": "Follow live Premier League matches with real-time updates, scores and fantasy points!",
+    "watchLive": "Watch Live",
+    "openLeague": "Open League",
+    "premier": {
+      "title": "Premier League Fantasy",
+      "season": "Season 2025/26",
+      "subtitle": "The most popular fantasy league with 4 different categories. Build your dream team and compete against other managers!",
+      "primaryButton": "Join League",
+      "secondaryButton": "View Prizes"
+    },
+    "champions": {
+      "title": "Champions League Fantasy",
+      "season": "Season 2025/26", 
+      "subtitle": "European elite of fantasy football. Experience the thrill of Champions League with the best teams in Europe!",
+      "primaryButton": "Join League",
+      "secondaryButton": "View Prizes"
+    },
+    "f1": {
+      "title": "F1 Fantasy Racing",
+      "season": "Season 2025",
+      "subtitle": "Speed, strategy and adrenaline on the track. Pick your drivers and constructors for the ultimate F1 fantasy experience!",
+      "primaryButton": "Join League",
+      "secondaryButton": "View Prizes"
     }
   }
 }

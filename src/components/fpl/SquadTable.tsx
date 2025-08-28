@@ -67,7 +67,7 @@ const SquadTable = React.memo(function SquadTable({
   predictedBonuses,
   bonusAdded,
 }: SquadTableProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   if (!teamData || teamData.length === 0) {
     return (
       <div className="bg-theme-card border-theme-border rounded-xl p-4 sm:p-6 theme-transition">

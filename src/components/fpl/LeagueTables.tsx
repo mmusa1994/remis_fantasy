@@ -47,7 +47,7 @@ export default function LeagueTables({
   gameweek,
   onManagerSelect,
 }: LeagueTablesProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   const [activeTab, setActiveTab] = useState<"classic" | "h2h">("classic");
   const [expandedLeagues, setExpandedLeagues] = useState<Set<number>>(
     new Set()

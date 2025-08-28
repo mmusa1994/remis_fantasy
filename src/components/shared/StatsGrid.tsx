@@ -39,14 +39,29 @@ interface StatsGridProps {
   stats: Stat[];
   theme?: string;
   className?: string;
+  leagueType?: string;
 }
 
 export default function StatsGrid({
   stats,
   theme: customTheme,
   className = "",
+  leagueType,
 }: StatsGridProps) {
   const { theme } = useTheme();
+  
+  // Force correct theme based on leagueType (same logic as HeroSection)
+  let resolvedTheme = customTheme || "gray";
+  
+  if (leagueType === "premier-league" || leagueType === "premier") {
+    resolvedTheme = "purple";
+  } else if (leagueType === "champions-league" || leagueType === "champions") {
+    resolvedTheme = "blue";
+  } else if (leagueType === "f1-fantasy" || leagueType === "f1") {
+    resolvedTheme = "red";
+  }
+  
+  console.log("StatsGrid Debug:", { customTheme, resolvedTheme, leagueType });
 
   const getIconComponent = (icon: IconName | ComponentType<any>) => {
     if (typeof icon === "string") {
@@ -167,7 +182,7 @@ export default function StatsGrid({
     }
   };
 
-  const colors = getThemeColors();
+  const colors = getThemeColors(resolvedTheme);
   const defaultThemeColors = theme === "dark" ? colors.dark : colors.light;
 
   return (

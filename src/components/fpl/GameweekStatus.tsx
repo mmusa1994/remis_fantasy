@@ -31,7 +31,7 @@ const GameweekStatus = React.memo(function GameweekStatus({
   gameweek,
   loading = false,
 }: GameweekStatusProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   if (loading) {
     return (
       <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">

@@ -44,7 +44,7 @@ const ScoreboardGrid = React.memo(function ScoreboardGrid({
   predictedBonuses,
   bonusAdded,
 }: ScoreboardGridProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   if (!fixtures || fixtures.length === 0) {
     return (
       <div className="bg-theme-card rounded-lg shadow p-6">

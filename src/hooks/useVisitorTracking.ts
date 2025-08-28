@@ -94,17 +94,24 @@ export function useVisitorTracking() {
         isReturningVisitor: returning,
       };
 
-      // Try to get location data from a geolocation API (optional)
-      try {
-        const geoResponse = await fetch("https://ipapi.co/json/");
-        if (geoResponse.ok) {
-          const geoData = await geoResponse.json();
-          visitorData.country = geoData.country_name;
-          visitorData.city = geoData.city;
+      // Skip geolocation API calls in development to avoid CORS issues
+      if (process.env.NODE_ENV === 'production') {
+        // Try to get location data from a geolocation API (optional)
+        try {
+          const geoResponse = await fetch("https://ipapi.co/json/");
+          if (geoResponse.ok) {
+            const geoData = await geoResponse.json();
+            visitorData.country = geoData.country_name;
+            visitorData.city = geoData.city;
+          }
+        } catch (error) {
+          // Geolocation is optional, continue without it
+          console.log("Could not fetch location data:", error);
         }
-      } catch (error) {
-        // Geolocation is optional, continue without it
-        console.log("Could not fetch location data:", error);
+      } else {
+        // In development, use mock data
+        visitorData.country = "Development";
+        visitorData.city = "Local";
       }
 
       // Send tracking data to our API

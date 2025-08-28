@@ -27,7 +27,7 @@ export default function ControlsBar({
   onStopPolling,
   loading,
 }: ControlsBarProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   const [localManagerId, setLocalManagerId] = useState(
     managerId?.toString() || ""
   );
@@ -77,7 +77,7 @@ export default function ControlsBar({
         <p className="text-blue-100 text-sm">
           {managerId
             ? `${t("fplLive.currentManagerId")} ${managerId}`
-            : t("fplLive.pleaseEnterManagerId")}
+            : t("pleaseEnterManagerId")}
         </p>
       </div>
 
@@ -165,12 +165,12 @@ export default function ControlsBar({
           {isPolling ? (
             <>
               <MdStop className="text-lg" />
-              <span className="text-sm">{t("fplLive.stopLive")}</span>
+              <span className="text-sm">{t("stopLive")}</span>
             </>
           ) : (
             <>
               <MdPlayArrow className="text-lg" />
-              <span className="text-sm">{t("fplLive.startLive")}</span>
+              <span className="text-sm">{t("startLive")}</span>
             </>
           )}
         </button>

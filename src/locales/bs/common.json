@@ -1,5 +1,7 @@
 {
   "loading": "Učitavanje...",
+  "loadingHomepage": "Učitavam sadržaj početne stranice...",
+  "more": "Više",
   "error": "Greška pri učitavanju podataka",
   "tryAgain": "Pokušaj Ponovo",
   "comingSoon": "Uskoro",
@@ -74,6 +76,18 @@
     "thirdPlaceDesc": "Trećeplasirani u ligi"
   },
   "leagues": {
+    "premier-league": {
+      "name": "Premier Liga",
+      "description": "Najpopularnija fantasy liga sa 4 različite kategorije"
+    },
+    "champions-league": {
+      "name": "Liga Šampiona",
+      "description": "Evropska elita fantasy fudbala"
+    },
+    "f1-fantasy": {
+      "name": "F1 Fantasy",
+      "description": "Brzina, strategija i adrenalin na stazi"
+    },
     "standard": {
       "title": "Standardna Liga",
       "description": "Klasična fantasy liga sa standardnim pravilima"
@@ -89,6 +103,37 @@
     "h2h": {
       "title": "Glava u Glavu",
       "description": "Sedmični mečevi protiv drugih menadžera"
+    }
+  },
+  "hero": {
+    "title": "REMIS Fantasy",
+    "season": "Sezona 2025/26",
+    "subtitle": "Dobrodošli u najuzbudljivije fantasy lige! Odaberite svoju ligu i pokažite svoje znanje sporta.",
+    "live": "UŽIVO",
+    "liveFpl": "UŽIVO FPL",
+    "liveFplDescription": "Pratite uživo Premier Liga utakmice sa ažuriranjima u realnom vremenu, rezultatima i fantasy bodovima!",
+    "watchLive": "Gledaj Uživo",
+    "openLeague": "Otvori Ligu",
+    "premier": {
+      "title": "Premier Liga Fantasy",
+      "season": "Sezona 2025/26",
+      "subtitle": "Najpopularnija fantasy liga sa 4 različite kategorije. Napravi svoj snovski tim i takmiči se protiv drugih menadžera!",
+      "primaryButton": "Pridruži se Ligi",
+      "secondaryButton": "Pogledaj Nagrade"
+    },
+    "champions": {
+      "title": "Liga Šampiona Fantasy",
+      "season": "Sezona 2025/26",
+      "subtitle": "Evropska elita fantasy fudbala. Doživite uzbuđenje Lige Šampiona sa najboljim timovima Evrope!",
+      "primaryButton": "Pridruži se Ligi", 
+      "secondaryButton": "Pogledaj Nagrade"
+    },
+    "f1": {
+      "title": "F1 Fantasy Trke",
+      "season": "Sezona 2025",
+      "subtitle": "Brzina, strategija i adrenalin na stazi. Odaberite svoje vozače i konstruktore za ultimativno F1 fantasy iskustvo!",
+      "primaryButton": "Pridruži se Ligi",
+      "secondaryButton": "Pogledaj Nagrade"
     }
   }
 }

@@ -42,10 +42,10 @@ const iconMap: Record<string, IconType> = {
 
 export default function Home() {
   const { theme } = useTheme();
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation();
   const { data, loading, error } = useHomepageData();
 
-  if (loading) {
+  if (loading || !ready) {
     return (
       <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
         <div className="flex items-center justify-center min-h-screen">

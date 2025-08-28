@@ -16,7 +16,7 @@ interface FPLSettings {
 }
 
 export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   const [settings, setSettings] = useState<FPLSettings>({
     fpl_proxy_url: null,
     cron_secret: null,

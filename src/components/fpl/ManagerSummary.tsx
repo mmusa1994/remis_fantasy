@@ -64,7 +64,7 @@ const ManagerSummary = React.memo(function ManagerSummary({
   gameweek,
   lastUpdated,
 }: ManagerSummaryProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   if (!manager || !teamTotals) {
     return (
       <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">

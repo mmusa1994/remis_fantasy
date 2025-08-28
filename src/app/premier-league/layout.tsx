@@ -8,21 +8,21 @@ export default function PremierLeagueLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("navigation");
 
   const premierLeagueNavItems = [
-    { name: t("navigation.tables"), href: "/premier-league/tabele" },
+    { name: t("tables"), href: "/premier-league/tabele" },
     {
-      name: t("navigation.fplLive"),
+      name: t("fplLive"),
       href: "/premier-league/fpl-live",
       badge: { color: "red" as const, pulse: true },
     },
-    { name: t("navigation.prizes"), href: "/premier-league/nagrade" },
+    { name: t("prizes"), href: "/premier-league/nagrade" },
     {
-      name: t("navigation.registration"),
+      name: t("registration"),
       href: "/premier-league/registracija",
     },
-    { name: t("navigation.gallery"), href: "/premier-league/galerija" },
+    { name: t("gallery"), href: "/premier-league/galerija" },
   ];
 
   return (

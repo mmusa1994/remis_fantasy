@@ -25,7 +25,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   loading = false,
   managerData,
 }: AdvancedStatisticsProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
 
   if (loading) {
     return (

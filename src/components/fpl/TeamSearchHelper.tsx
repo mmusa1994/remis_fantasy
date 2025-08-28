@@ -13,7 +13,7 @@ export default function TeamSearchHelper({
   onManagerIdFound,
   currentManagerId,
 }: TeamSearchHelperProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);

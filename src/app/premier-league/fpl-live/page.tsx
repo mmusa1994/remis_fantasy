@@ -54,7 +54,7 @@ interface TabConfig {
 }
 
 export default function FPLLivePage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   const { theme } = useTheme();
 
   // Core state
@@ -78,6 +78,7 @@ export default function FPLLivePage() {
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [showSettings, setShowSettings] = useState(false);
+  const [showTabDropdown, setShowTabDropdown] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
 
   // Tab configuration
@@ -270,7 +271,7 @@ export default function FPLLivePage() {
           saveToLocalStorage("fpl-last-updated", timestamp);
 
           setTeamDataLoading(false);
-          showSuccess(t("fplLive.fullTeamDataLoaded"));
+          showSuccess(t("fullTeamDataLoaded"));
 
           console.log("✅ [FRONTEND] Team data loading completed successfully");
         }
@@ -399,7 +400,7 @@ export default function FPLLivePage() {
 
   const loadManagerInfo = useCallback(async () => {
     if (!managerId) {
-      showError(t("fplLive.pleaseEnterManagerId"));
+      showError(t("pleaseEnterManagerId"));
       return;
     }
 
@@ -478,7 +479,7 @@ export default function FPLLivePage() {
           saveToLocalStorage("fpl-last-updated", timestamp);
 
           setTeamLoaded(true);
-          showSuccess(t("fplLive.managerInfoLoaded"));
+          showSuccess(t("managerInfoLoaded"));
           setLoading(false);
 
           console.log("🔄 [FRONTEND] Starting background data loading...");
@@ -549,12 +550,12 @@ export default function FPLLivePage() {
 
   const startPolling = useCallback(() => {
     if (!managerId) {
-      showError(t("fplLive.pleaseEnterManagerId"));
+      showError(t("pleaseEnterManagerId"));
       return;
     }
 
     if (!data.manager) {
-      showError(t("fplLive.loadTeamFirst"));
+      showError(t("loadTeamFirst"));
       return;
     }
 
@@ -590,7 +591,7 @@ export default function FPLLivePage() {
     }, 15000);
 
     setPollingInterval(interval);
-    showSuccess(t("fplLive.livePollingStarted"));
+    showSuccess(t("livePollingStarted"));
   }, [
     managerId,
     data.manager,
@@ -606,7 +607,7 @@ export default function FPLLivePage() {
       setPollingInterval(null);
     }
     setIsPolling(false);
-    showSuccess(t("fplLive.livePollingStopped"));
+    showSuccess(t("livePollingStopped"));
   }, [pollingInterval, t]);
 
   useEffect(() => {
@@ -624,7 +625,7 @@ export default function FPLLivePage() {
     if (settings.default_gw !== gameweek) {
       setGameweek(settings.default_gw);
     }
-    showSuccess(t("fplLive.settingsSavedSuccessfully"));
+    showSuccess(t("settingsSavedSuccessfully"));
   };
 
   const renderTabContent = () => {
@@ -783,10 +784,10 @@ export default function FPLLivePage() {
         <div className="mb-6">
           <div className="text-center mb-4">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-theme-foreground mb-3 theme-transition">
-              {t("fplLive.title")}
+              {t("title")}
             </h1>
             <p className="text-base sm:text-lg text-theme-foreground max-w-2xl mx-auto leading-relaxed theme-transition">
-              {t("fplLive.subtitle")}
+              {t("subtitle")}
             </p>
           </div>
         </div>
@@ -812,7 +813,7 @@ export default function FPLLivePage() {
                     <MdInfo className="text-white w-4 h-4 lg:w-5 lg:h-5" />
                   </div>
                   <span className="font-semibold flex-1 text-sm lg:text-base">
-                    {t("fplLive.howToUse")}
+                    {t("howToUse")}
                   </span>
                   <MdExpandMore className="text-theme-foreground group-open:rotate-180 transition-transform duration-200 w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 theme-transition" />
                 </summary>
@@ -929,8 +930,8 @@ export default function FPLLivePage() {
                     )}
                     <span className="text-xs sm:text-sm">
                       {isPolling
-                        ? t("fplLive.stopLive")
-                        : t("fplLive.startLive")}
+                        ? t("stopLive")
+                        : t("startLive")}
                     </span>
                   </button>
 
@@ -940,7 +941,7 @@ export default function FPLLivePage() {
                   >
                     <MdRefresh className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="text-xs sm:text-sm">
-                      {t("fplLive.refresh")}
+                      {t("refresh")}
                     </span>
                   </button>
 
@@ -950,39 +951,171 @@ export default function FPLLivePage() {
                   >
                     <MdSettings className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="text-xs sm:text-sm">
-                      {t("fplLive.settings")}
+                      {t("settings")}
                     </span>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Mobile-First Tab Navigation */}
+            {/* Responsive Tab Navigation */}
             <div className="bg-theme-card rounded-md border-theme-border overflow-hidden theme-transition">
-              {/* Mobile Horizontal Scroll Tab Bar */}
               <div className="border-b border-theme-border bg-theme-card theme-transition">
-                <div
-                  className="flex overflow-x-auto scrollbar-hide"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                >
-                  {tabs.map((tab) => {
+                {/* Mobile: Show 2 tabs + dropdown */}
+                <div className="sm:hidden">
+                  <div className="flex">
+                    {/* First 2 tabs visible */}
+                    {tabs.slice(0, 2).map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`flex-1 flex flex-col items-center gap-1 px-2 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
+                            isActive
+                              ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                              : "border-transparent text-gray-600 dark:text-gray-400"
+                          } theme-transition`}
+                        >
+                          <Icon className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-xs leading-tight text-center">
+                            {tab.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    
+                    {/* Dropdown for remaining tabs */}
+                    <div className="relative flex-1">
+                      <button
+                        onClick={() => setShowTabDropdown(!showTabDropdown)}
+                        className={`w-full flex flex-col items-center gap-1 px-2 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
+                          tabs.slice(2).some(tab => tab.id === activeTab)
+                            ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                            : "border-transparent text-gray-600 dark:text-gray-400"
+                        } theme-transition`}
+                      >
+                        <MdExpandMore className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-xs leading-tight text-center">
+                          {tabs.slice(2).find(tab => tab.id === activeTab)?.label || t("common.more", "More")}
+                        </span>
+                      </button>
+                      
+                      {/* Dropdown Menu */}
+                      {showTabDropdown && (
+                        <div className="absolute top-full left-0 right-0 bg-theme-card border border-theme-border rounded-b-md shadow-lg z-50 theme-transition">
+                          {tabs.slice(2).map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === tab.id;
+                            return (
+                              <button
+                                key={tab.id}
+                                onClick={() => {
+                                  setActiveTab(tab.id);
+                                  setShowTabDropdown(false);
+                                }}
+                                className={`w-full flex items-center gap-2 px-3 py-3 text-sm font-medium transition-all ${
+                                  isActive
+                                    ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                                    : "text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                                } theme-transition`}
+                              >
+                                <Icon className="w-4 h-4 flex-shrink-0" />
+                                <span>{tab.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Tablet: Show 3 tabs + dropdown */}
+                <div className="hidden sm:flex md:hidden">
+                  {tabs.slice(0, 3).map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
-
                     return (
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base font-medium whitespace-nowrap transition-all border-b-2 min-w-max touch-manipulation min-h-[56px] sm:min-h-[60px] ${
+                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
+                          isActive
+                            ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                            : "border-transparent text-gray-600 dark:text-gray-400"
+                        } theme-transition`}
+                      >
+                        <Icon className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm">{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                  
+                  {/* Tablet Dropdown */}
+                  {tabs.length > 3 && (
+                    <div className="relative flex-1">
+                      <button
+                        onClick={() => setShowTabDropdown(!showTabDropdown)}
+                        className={`w-full flex items-center justify-center gap-2 px-3 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
+                          tabs.slice(3).some(tab => tab.id === activeTab)
+                            ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                            : "border-transparent text-gray-600 dark:text-gray-400"
+                        } theme-transition`}
+                      >
+                        <MdExpandMore className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm">
+                          {tabs.slice(3).find(tab => tab.id === activeTab)?.label || t("common.more", "More")}
+                        </span>
+                      </button>
+                      
+                      {showTabDropdown && (
+                        <div className="absolute top-full left-0 right-0 bg-theme-card border border-theme-border rounded-b-md shadow-lg z-50 theme-transition">
+                          {tabs.slice(3).map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === tab.id;
+                            return (
+                              <button
+                                key={tab.id}
+                                onClick={() => {
+                                  setActiveTab(tab.id);
+                                  setShowTabDropdown(false);
+                                }}
+                                className={`w-full flex items-center gap-2 px-3 py-3 text-sm font-medium transition-all ${
+                                  isActive
+                                    ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                                    : "text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                                } theme-transition`}
+                              >
+                                <Icon className="w-4 h-4 flex-shrink-0" />
+                                <span>{tab.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Desktop: Show all tabs */}
+                <div className="hidden md:flex">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-base font-medium transition-all border-b-2 min-h-[60px] ${
                           isActive
                             ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
                             : "border-transparent text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
                         } theme-transition`}
                       >
-                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                        <span className="text-xs sm:text-sm lg:text-base leading-tight text-center sm:text-left">
-                          {tab.label}
-                        </span>
+                        <Icon className="w-5 h-5 flex-shrink-0" />
+                        <span className="text-base">{tab.label}</span>
                       </button>
                     );
                   })}

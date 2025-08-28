@@ -68,7 +68,7 @@ const LiveTracker = React.memo(function LiveTracker({
   gameweek,
   isPolling,
 }: LiveTrackerProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("fpl");
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
