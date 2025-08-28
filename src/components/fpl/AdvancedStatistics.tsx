@@ -1,15 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { BarChart, LineChart, PieChart, ScatterChart } from "@mui/x-charts";
 import {
   MdStar,
   MdTrendingDown,
   MdDangerous,
-  MdSports,
-  MdShowChart,
-  MdBarChart,
 } from "react-icons/md";
 
 interface AdvancedStatisticsProps {
@@ -28,7 +25,6 @@ interface PlayerPerformance {
 }
 
 const AdvancedStatistics = React.memo(function AdvancedStatistics({
-  managerId,
   gameweek,
   loading = false,
   managerData,
@@ -38,13 +34,13 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-        {Array.from({ length: 12 }, (_, i) => (
+        {Array.from({ length: 12 }, (_, index) => (
           <div
-            key={i}
-            className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition animate-pulse"
+            key={index}
+            className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition animate-pulse"
           >
-            <div className="h-6 bg-black/20 dark:bg-white/20 rounded w-32 mb-4"></div>
-            <div className="h-48 bg-black/10 dark:bg-white/10 rounded"></div>
+            <div className="h-6 bg-theme-text-secondary/20 rounded w-32 mb-4 theme-transition"></div>
+            <div className="h-48 bg-theme-text-secondary/10 rounded theme-transition"></div>
           </div>
         ))}
       </div>
@@ -53,7 +49,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
 
   if (!managerData?.manager || !managerData?.team_with_stats) {
     return (
-      <div className="text-center text-black/60 dark:text-white/60 p-8 theme-transition">
+      <div className="text-center text-theme-text-secondary p-8 theme-transition">
         {t("fplLive.loadTeamForAdvancedStats")}
       </div>
     );
@@ -250,22 +246,22 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   const pointsData = getPointsDistribution();
   const trendData = getGameweekTrend();
   const valueData = getTeamValueHistory();
-  const minutesData = getPlayerMinutes();
+  // Removed unused minutesData
   const performanceData = getPlayerPerformance();
 
   return (
     <div className="space-y-6">
       {/* Player Performance Analysis */}
-      <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
+      <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
         <div className="flex items-center gap-2 sm:gap-3 mb-4">
           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black dark:bg-white rounded-lg flex items-center justify-center theme-transition">
-            <MdStar className="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-black theme-transition" />
+            <MdStar className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary-foreground theme-transition" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg lg:text-xl font-bold text-black dark:text-white theme-transition">
+            <h3 className="text-base sm:text-lg lg:text-xl font-bold text-theme-foreground theme-transition">
               {t("fplLive.playerPerformanceAnalysis")}
             </h3>
-            <p className="text-xs sm:text-sm lg:text-base text-black/70 dark:text-white/70 theme-transition">
+            <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary theme-transition">
               Stars, flops, and differential threats
             </p>
           </div>
@@ -283,7 +279,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                 key={player.player_id}
                 className="p-3 bg-green-50 dark:bg-green-900/10 rounded-lg"
               >
-                <div className="font-medium text-black dark:text-white theme-transition">
+                <div className="font-medium text-theme-foreground theme-transition">
                   {player.web_name}
                 </div>
                 <div className="text-sm text-green-600 dark:text-green-400">
@@ -305,7 +301,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                 key={player.player_id}
                 className="p-3 bg-red-50 dark:bg-red-900/10 rounded-lg"
               >
-                <div className="font-medium text-black dark:text-white theme-transition">
+                <div className="font-medium text-theme-foreground theme-transition">
                   {player.web_name}
                 </div>
                 <div className="text-sm text-red-600 dark:text-red-400">
@@ -327,7 +323,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                 key={player.player_id}
                 className="p-3 bg-orange-50 dark:bg-orange-900/10 rounded-lg"
               >
-                <div className="font-medium text-black dark:text-white theme-transition">
+                <div className="font-medium text-theme-foreground theme-transition">
                   {player.web_name}
                 </div>
                 <div className="text-sm text-orange-600 dark:text-orange-400">
@@ -345,8 +341,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
         {/* Row 1: Position Distribution + Points Breakdown (2 pie charts) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {/* 1. Position Distribution */}
-          <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-            <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
               {t("fplLive.positionDistribution")}
             </h4>
             <div className="chart-container">
@@ -376,8 +372,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </div>
 
           {/* 2. Points Breakdown */}
-          <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-            <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
               {t("fplLive.pointsBreakdown")}
             </h4>
             <div className="chart-container">
@@ -408,8 +404,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
         {/* Row 2: Goals/Assists + Defensive Stats + Card Distribution (3 bar charts) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* Goals & Assists */}
-          <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-            <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
               {t("fplLive.goalsAssists")}
             </h4>
             <BarChart
@@ -431,8 +427,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </div>
 
           {/* Defensive Stats */}
-          <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-            <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
               {t("fplLive.defensiveStats")}
             </h4>
             <BarChart
@@ -454,8 +450,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </div>
 
           {/* Card Distribution with correct colors */}
-          <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-            <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
               {t("fplLive.cardDistribution")}
             </h4>
             <BarChart
@@ -483,8 +479,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
         {/* Row 3: Performance Matrix + Gameweek Trend (2 charts) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {/* Performance Matrix */}
-          <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-            <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
               {t("fplLive.performanceMatrix")}
             </h4>
             <ScatterChart
@@ -506,8 +502,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </div>
 
           {/* Gameweek Trend */}
-          <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-            <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
               {t("fplLive.gameweekTrend")}
             </h4>
             <LineChart
@@ -526,8 +522,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
         </div>
 
         {/* 4. Team Value History */}
-        <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-          <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+          <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
             {t("fplLive.teamValueHistory")}
           </h4>
           <LineChart
@@ -545,8 +541,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
         </div>
 
         {/* 5. Player Minutes - Starting XI */}
-        <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-          <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+          <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
             {t("fplLive.playerMinutes")}
           </h4>
           <BarChart
@@ -574,8 +570,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
         </div>
 
         {/* 7. BPS Distribution - All Starting XI */}
-        <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-          <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+          <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
             {t("fplLive.bpsDistribution")}
           </h4>
           <BarChart
@@ -605,8 +601,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
         </div>
 
         {/* 8. ICT Index - All Starting XI */}
-        <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-          <h4 className="font-bold text-black dark:text-white mb-4 theme-transition">
+        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+          <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
             {t("fplLive.ictIndex")}
           </h4>
           <LineChart

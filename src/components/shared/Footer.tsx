@@ -12,9 +12,9 @@ const Footer = React.memo(function Footer() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   return (
-    <footer className="relative bg-white dark:bg-black py-16 theme-transition border-t border-black dark:border-white">
+    <footer className="relative py-16 theme-transition border-t theme-transition">
       {/* Simple animated white border */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-black dark:bg-white animate-border-slide"></div>
+      <div className="absolute top-0 left-0 right-0 h-px bg-gray-200 dark:bg-white animate-border-slide"></div>
 
       {/* Subtle Background Effects */}
       <div className="absolute inset-0">
@@ -64,11 +64,18 @@ const Footer = React.memo(function Footer() {
               <motion.div
                 className="absolute inset-0 force-circle opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                 style={{
-                  background: theme === "dark"
-                    ? "conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.4) 90deg, transparent 180deg, rgba(255, 255, 255, 0.3) 270deg, transparent 360deg)"
-                    : "conic-gradient(from 0deg, transparent 0deg, rgba(0, 0, 0, 0.4) 90deg, transparent 180deg, rgba(0, 0, 0, 0.3) 270deg, transparent 360deg)",
-                  mask: theme === "dark" ? "radial-gradient(circle at center, transparent 65%, white 67%)" : "radial-gradient(circle at center, transparent 65%, black 67%)",
-                  WebkitMask: theme === "dark" ? "radial-gradient(circle at center, transparent 65%, white 67%)" : "radial-gradient(circle at center, transparent 65%, black 67%)",
+                  background:
+                    theme === "dark"
+                      ? "conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.4) 90deg, transparent 180deg, rgba(255, 255, 255, 0.3) 270deg, transparent 360deg)"
+                      : "conic-gradient(from 0deg, transparent 0deg, rgba(0, 0, 0, 0.4) 90deg, transparent 180deg, rgba(0, 0, 0, 0.3) 270deg, transparent 360deg)",
+                  mask:
+                    theme === "dark"
+                      ? "radial-gradient(circle at center, transparent 65%, white 67%)"
+                      : "radial-gradient(circle at center, transparent 65%, black 67%)",
+                  WebkitMask:
+                    theme === "dark"
+                      ? "radial-gradient(circle at center, transparent 65%, white 67%)"
+                      : "radial-gradient(circle at center, transparent 65%, black 67%)",
                 }}
                 animate={{ rotate: 360 }}
                 transition={{
@@ -88,18 +95,18 @@ const Footer = React.memo(function Footer() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <motion.h3
-              className="text-2xl md:text-3xl font-black text-theme-heading-primary mb-4 leading-tight theme-transition"
+              className="text-2xl md:text-3xl font-black text-black dark:text-white mb-4 leading-tight theme-transition"
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3 }}
             >
-              <motion.span className="text-theme-heading-primary theme-transition">
+              <motion.span className="text-black dark:text-white theme-transition">
                 REMIS Fantasy
               </motion.span>
             </motion.h3>
 
             <motion.p
-              className="text-theme-text-secondary text-lg md:text-xl leading-relaxed font-medium max-w-2xl mx-auto theme-transition"
+              className="text-gray-600 dark:text-gray-300 text-lg md:text-xl leading-relaxed font-medium max-w-2xl mx-auto theme-transition"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
@@ -128,10 +135,10 @@ const Footer = React.memo(function Footer() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
               >
-                <div className="text-2xl md:text-3xl font-black text-theme-heading-primary mb-1 theme-transition">
+                <div className="text-2xl md:text-3xl font-black text-black dark:text-white mb-1 theme-transition">
                   {stat.number}
                 </div>
-                <div className="text-theme-text-muted text-sm md:text-base font-medium theme-transition">
+                <div className="text-gray-500 dark:text-gray-400 text-sm md:text-base font-medium theme-transition">
                   {stat.label}
                 </div>
               </motion.div>
@@ -140,18 +147,18 @@ const Footer = React.memo(function Footer() {
 
           {/* Copyright and Admin */}
           <motion.div
-            className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-black/30 dark:border-white/30"
+            className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-gray-200 dark:border-white/30"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
-            <div className="text-theme-text-muted text-sm md:text-base font-medium theme-transition">
+            <div className="text-gray-500 dark:text-gray-400 text-sm md:text-base font-medium theme-transition">
               {t("common:footer.copyright")}
             </div>
 
             <Link href="/admin" className="group">
               <motion.button
-                className="flex items-center gap-2 px-4 py-2 minimal-radius bg-theme-secondary border border-theme-border text-theme-text-muted hover:text-theme-text-secondary hover:bg-theme-accent hover:border-theme-border-strong transition-all duration-300 text-sm opacity-40 hover:opacity-100 backdrop-blur-sm theme-transition"
+                className="flex items-center gap-2 px-4 py-2 minimal-radius bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 text-sm opacity-40 hover:opacity-100 backdrop-blur-sm theme-transition"
                 whileHover={{
                   scale: 1.05,
                   boxShadow: "0 8px 25px rgba(0, 0, 0, 0.2)",

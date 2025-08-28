@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  FPLService,
   FPLTeamService,
-  FPLLeagueService,
 } from "@/services/fpl";
 
 // Initialize FPL services
-const fplService = FPLService.getInstance();
 const teamService = FPLTeamService.getInstance();
-const leagueService = FPLLeagueService.getInstance();
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();

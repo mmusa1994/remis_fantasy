@@ -34,11 +34,11 @@ const GameweekStatus = React.memo(function GameweekStatus({
   const { t } = useTranslation();
   if (loading) {
     return (
-      <div className="bg-theme-card rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-theme-primary">
+      <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">
+        <h3 className="text-lg font-semibold mb-4 text-theme-foreground theme-transition">
           {t("fplLive.gameweekStatusTitle", { gw: gameweek || 1 })}
         </h3>
-        <div className="text-center text-theme-muted">
+        <div className="text-center text-theme-text-secondary theme-transition">
           {t("fplLive.loadingGameweekStatus")}
         </div>
       </div>
@@ -47,11 +47,11 @@ const GameweekStatus = React.memo(function GameweekStatus({
 
   if (!gameweekStatus) {
     return (
-      <div className="bg-theme-card rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-theme-primary">
+      <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">
+        <h3 className="text-lg font-semibold mb-4 text-theme-foreground theme-transition">
           {t("fplLive.gameweekStatusTitle", { gw: gameweek || 1 })}
         </h3>
-        <div className="text-center text-theme-muted">
+        <div className="text-center text-theme-text-secondary theme-transition">
           {t("fplLive.loadTeamToSeeGameweekStatus")}
         </div>
       </div>
@@ -100,19 +100,19 @@ const GameweekStatus = React.memo(function GameweekStatus({
   };
 
   return (
-    <div className="bg-theme-card rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-6 text-theme-primary">
+    <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">
+      <h3 className="text-lg font-semibold mb-6 text-theme-foreground theme-transition">
         {t("fplLive.gameweekStatusTitle", { gw: gameweek || 1 })}
       </h3>
 
       {/* Arrow Status */}
       <div className="mb-6">
         <div className="flex items-center mb-2">
-          <span className="text-sm text-theme-muted mr-2">
+          <span className="text-sm text-theme-text-secondary mr-2 theme-transition">
             {t("fplLive.youAreOn")}
           </span>
           {getArrowIcon(gameweekStatus.arrow_direction)}
-          <span className="ml-2 font-semibold text-theme-primary">
+          <span className="ml-2 font-semibold text-theme-foreground theme-transition">
             {gameweekStatus.arrow_direction === "green"
               ? t("fplLive.greenArrow")
               : gameweekStatus.arrow_direction === "red"
@@ -120,7 +120,7 @@ const GameweekStatus = React.memo(function GameweekStatus({
               : t("fplLive.noChange")}
           </span>
         </div>
-        <p className="text-sm text-theme-muted">
+        <p className="text-sm text-theme-text-secondary theme-transition">
           {getArrowText(
             gameweekStatus.arrow_direction,
             gameweekStatus.rank_change
@@ -130,32 +130,32 @@ const GameweekStatus = React.memo(function GameweekStatus({
 
       {/* Points Breakdown */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div className="text-center p-4 bg-theme-accent rounded-lg">
+        <div className="text-center p-4 bg-theme-card-secondary border-theme-border rounded-lg theme-transition">
           <div className="flex items-center justify-center mb-2">
             <MdScoreboard className="text-blue-600 text-2xl mr-2" />
-            <span className="font-medium text-theme-primary">
+            <span className="font-medium text-theme-foreground theme-transition">
               {t("fplLive.gameweekPoints")}
             </span>
           </div>
           <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
             {gameweekStatus.gameweek_points}
           </div>
-          <div className="text-xs text-theme-muted mt-1">
+          <div className="text-xs text-theme-text-secondary mt-1 theme-transition">
             {t("fplLive.points")}
           </div>
         </div>
 
-        <div className="text-center p-4 bg-theme-accent rounded-lg">
+        <div className="text-center p-4 bg-theme-card-secondary border-theme-border rounded-lg theme-transition">
           <div className="flex items-center justify-center mb-2">
             <MdScoreboard className="text-orange-600 text-2xl mr-2" />
-            <span className="font-medium text-theme-primary">
+            <span className="font-medium text-theme-foreground theme-transition">
               {t("fplLive.averageGameWeekResult")}
             </span>
           </div>
           <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
             {gameweek === 2 ? 51 : gameweekStatus.safety_score}
           </div>
-          <div className="text-xs text-theme-muted mt-1">
+          <div className="text-xs text-theme-text-secondary mt-1 theme-transition">
             {t("fplLive.safetyThreshold")}
           </div>
         </div>
@@ -175,7 +175,7 @@ const GameweekStatus = React.memo(function GameweekStatus({
                   : "text-red-600"
               }`}
             />
-            <span className="font-medium text-theme-primary">
+            <span className="font-medium text-theme-foreground theme-transition">
               {t("fplLive.performance")}
             </span>
           </div>
@@ -190,7 +190,7 @@ const GameweekStatus = React.memo(function GameweekStatus({
               ? t("fplLive.above")
               : t("fplLive.below")}
           </div>
-          <div className="text-xs text-theme-muted mt-1">
+          <div className="text-xs text-theme-text-secondary mt-1 theme-transition">
             {gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score) ? '+' : '-'}
             {Math.abs(gameweekStatus.gameweek_points - (gameweek === 2 ? 51 : gameweekStatus.safety_score))} {t("fplLive.points")}
           </div>

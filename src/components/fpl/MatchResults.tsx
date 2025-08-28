@@ -1,10 +1,9 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   MdRefresh,
-  MdExpandMore,
   MdStar,
   MdTrendingUp,
   MdKeyboardArrowDown,
@@ -18,6 +17,7 @@ import LoadingCard from "../shared/LoadingCard";
 interface MatchResultsProps {
   gameweek: number;
   isPolling?: boolean;
+  onManagerSelect?: (managerId: number) => void;
 }
 
 interface MatchResultPlayer {
@@ -92,6 +92,7 @@ export default function MatchResults({
     new Set()
   );
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [selectedManagerId, setSelectedManagerId] = useState<number | null>(null);
 
   const toggleMatchExpansion = (fixtureId: number) => {
     const newExpanded = new Set(expandedMatches);
@@ -115,53 +116,77 @@ export default function MatchResults({
     setExpandedMatches(newExpanded);
   };
 
-  const fetchMatchData = async () => {
+  const fetchMatchData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
+      console.log("🔄 Fetching match data for gameweek:", gameweek);
+      
+      // Use our API endpoint which handles CORS and data formatting
       const [matchResponse, statsResponse] = await Promise.all([
         fetch(`/api/fpl/match-results?gameweek=${gameweek}`),
         fetch(`/api/fpl/match-results?gameweek=${gameweek}&stats=true`),
       ]);
 
-      if (!matchResponse.ok || !statsResponse.ok) {
-        throw new Error("Failed to fetch match data");
+      console.log("📡 API responses:", {
+        matchOk: matchResponse.ok,
+        statsOk: statsResponse.ok,
+        matchStatus: matchResponse.status,
+        statsStatus: statsResponse.status
+      });
+
+      if (!matchResponse.ok) {
+        throw new Error(`Match data API failed with status: ${matchResponse.status}`);
       }
 
-      const [matchResult, statsResult] = await Promise.all([
-        matchResponse.json(),
-        statsResponse.json(),
-      ]);
-
-      if (matchResult.success) {
-        setMatchData(matchResult.data);
+      if (!statsResponse.ok) {
+        console.warn("Stats API failed, continuing without stats:", statsResponse.status);
       }
 
-      if (statsResult.success) {
-        setStats(statsResult.data);
+      const matchResult = await matchResponse.json();
+      
+      if (!matchResult.success) {
+        throw new Error(matchResult.error || "Failed to fetch match data");
+      }
+
+      console.log("✅ Match data loaded:", {
+        gameweek: matchResult.gameweek,
+        matchCount: matchResult.data?.length || 0,
+        dataSource: matchResult.data_sources
+      });
+
+      setMatchData(matchResult.data || []);
+
+      // Try to load stats if available
+      if (statsResponse.ok) {
+        const statsResult = await statsResponse.json();
+        if (statsResult.success) {
+          setStats(statsResult.data);
+          console.log("✅ Stats data loaded:", statsResult.data);
+        }
       }
 
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (error) {
-      console.error("Error fetching match data:", error);
+      console.error("❌ Error fetching match data:", error);
       setError(
         error instanceof Error ? error.message : "Failed to fetch match data"
       );
     } finally {
       setLoading(false);
     }
-  };
+  }, [gameweek]);
 
   useEffect(() => {
     fetchMatchData();
-  }, [gameweek]);
+  }, [gameweek, fetchMatchData]);
 
   useEffect(() => {
     if (!isPolling) return;
     const interval = setInterval(fetchMatchData, 30000);
     return () => clearInterval(interval);
-  }, [isPolling, gameweek]);
+  }, [isPolling, gameweek, fetchMatchData]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -240,10 +265,25 @@ export default function MatchResults({
 
   return (
     <div className="space-y-4 lg:space-y-6">
+      {/* Manager Selection */}
+      {selectedManagerId && (
+        <div className="bg-theme-card rounded-md p-4 border-theme-border theme-transition mb-4">
+          <h4 className="text-lg font-bold text-theme-foreground mb-2 theme-transition">
+            Manager #{selectedManagerId} Statistics
+          </h4>
+          <button 
+            onClick={() => setSelectedManagerId(null)}
+            className="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors theme-transition"
+          >
+            Clear Selection
+          </button>
+        </div>
+      )}
+      
       {/* Gameweek Stats */}
       {stats && (
-        <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
-          <h4 className="text-lg font-bold text-black dark:text-white mb-4 flex items-center gap-2 theme-transition">
+        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+          <h4 className="text-lg font-bold text-theme-foreground mb-4 flex items-center gap-2 theme-transition">
             <FaFire className="text-orange-500" />
             GW{gameweek} Ključne Statistike
           </h4>
@@ -253,7 +293,7 @@ export default function MatchResults({
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {stats.totalGoals}
               </div>
-              <div className="text-sm text-black dark:text-white theme-transition">
+              <div className="text-sm text-theme-foreground theme-transition">
                 Golova
               </div>
             </div>
@@ -262,7 +302,7 @@ export default function MatchResults({
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {stats.totalAssists}
               </div>
-              <div className="text-sm text-black dark:text-white theme-transition">
+              <div className="text-sm text-theme-foreground theme-transition">
                 Asistencija
               </div>
             </div>
@@ -275,7 +315,7 @@ export default function MatchResults({
                 <div className="font-bold text-yellow-600 dark:text-yellow-400 text-sm mb-1">
                   {stats.highestScorer.web_name}
                 </div>
-                <div className="text-lg font-bold text-black dark:text-white theme-transition">
+                <div className="text-lg font-bold text-theme-foreground theme-transition">
                   {stats.highestScorer.points} pts
                 </div>
               </div>
@@ -289,7 +329,7 @@ export default function MatchResults({
                 <div className="font-bold text-purple-600 dark:text-purple-400 text-sm mb-1">
                   {stats.mostOwned.web_name}
                 </div>
-                <div className="text-lg font-bold text-black dark:text-white theme-transition">
+                <div className="text-lg font-bold text-theme-foreground theme-transition">
                   {stats.mostOwned.ownership_top10k?.toFixed(1)}%
                 </div>
               </div>
@@ -303,7 +343,7 @@ export default function MatchResults({
                 <div className="font-bold text-red-600 dark:text-red-400 text-sm mb-1">
                   {stats.biggestDifferential.web_name}
                 </div>
-                <div className="text-lg font-bold text-black dark:text-white theme-transition">
+                <div className="text-lg font-bold text-theme-foreground theme-transition">
                   {stats.biggestDifferential.points} pts
                 </div>
               </div>
@@ -313,14 +353,14 @@ export default function MatchResults({
       )}
 
       {/* Main Match Results Container */}
-      <div className="bg-white dark:bg-black rounded-xl p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
+      <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
               <IoIosFootball className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-black dark:text-white theme-transition">
+              <h3 className="text-xl font-bold text-theme-foreground theme-transition">
                 Rezultati utakmica GW{gameweek}
               </h3>
               <p className="text-sm text-black/60 dark:text-white/60 theme-transition">
@@ -362,11 +402,11 @@ export default function MatchResults({
             return (
               <div
                 key={match.fixture_id}
-                className="bg-black/5 dark:bg-white/5 rounded-xl border border-black/10 dark:border-white/10 overflow-hidden hover:shadow-lg transition-all theme-transition"
+                className="bg-theme-card rounded-md border-theme-border overflow-hidden hover:shadow-lg transition-all theme-transition"
               >
                 {/* Accordion Header */}
                 <div
-                  className="p-6 cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-all theme-transition"
+                  className="p-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 transition-all theme-transition"
                   onClick={() => toggleMatchExpansion(match.fixture_id)}
                 >
                   {/* Status and Expand Icon */}
@@ -379,7 +419,7 @@ export default function MatchResults({
                       {getStatusText(match)}
                     </span>
                     <MdKeyboardArrowDown
-                      className={`w-6 h-6 text-black dark:text-white transition-transform theme-transition ${
+                      className={`w-6 h-6 text-theme-foreground transition-transform theme-transition ${
                         isExpanded ? "rotate-180" : ""
                       }`}
                     />
@@ -396,7 +436,7 @@ export default function MatchResults({
                         }}
                       />
                       <div>
-                        <div className="font-bold text-xl text-black dark:text-white theme-transition">
+                        <div className="font-bold text-xl text-theme-foreground theme-transition">
                           {match.home_team.short_name}
                         </div>
                         <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
@@ -406,7 +446,7 @@ export default function MatchResults({
                     </div>
 
                     {/* Score */}
-                    <div className="px-6 py-4 bg-black dark:bg-white rounded-xl mx-6">
+                    <div className="px-6 py-4 bg-black dark:bg-white rounded-md mx-6">
                       <div className="text-3xl font-bold text-white dark:text-black text-center theme-transition">
                         {match.home_score} - {match.away_score}
                       </div>
@@ -415,7 +455,7 @@ export default function MatchResults({
                     {/* Away Team */}
                     <div className="flex items-center gap-4 flex-1 justify-end">
                       <div className="text-right">
-                        <div className="font-bold text-xl text-black dark:text-white theme-transition">
+                        <div className="font-bold text-xl text-theme-foreground theme-transition">
                           {match.away_team.short_name}
                         </div>
                         <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
@@ -436,7 +476,7 @@ export default function MatchResults({
                     awayGoals.length > 0 ||
                     homeAssists.length > 0 ||
                     awayAssists.length > 0) && (
-                    <div className="mt-6 pt-4 border-t border-black/10 dark:border-white/10">
+                    <div className="mt-6 pt-4 border-t border-theme-border">
                       <div className="grid grid-cols-2 gap-6">
                         {/* Home Team Events */}
                         <div className="space-y-2">
@@ -446,7 +486,7 @@ export default function MatchResults({
                               className="flex items-center gap-2 text-sm"
                             >
                               <IoIosFootball className="w-4 h-4 text-green-600" />
-                              <span className="font-medium text-black dark:text-white theme-transition">
+                              <span className="font-medium text-theme-foreground theme-transition">
                                 {goalData.player.web_name}
                                 {goalData.count > 1
                                   ? ` (x${goalData.count})`
@@ -468,7 +508,7 @@ export default function MatchResults({
                               className="flex items-center gap-2 text-sm"
                             >
                               <FaShoePrints className="w-4 h-4 text-blue-600" />
-                              <span className="font-medium text-black dark:text-white theme-transition">
+                              <span className="font-medium text-theme-foreground theme-transition">
                                 {assistData.player.web_name}
                                 {assistData.count > 1
                                   ? ` (x${assistData.count})`
@@ -499,7 +539,7 @@ export default function MatchResults({
                                     : ""}
                                 </span>
                               )}
-                              <span className="font-medium text-black dark:text-white theme-transition">
+                              <span className="font-medium text-theme-foreground theme-transition">
                                 {goalData.player.web_name}
                                 {goalData.count > 1
                                   ? ` (x${goalData.count})`
@@ -513,7 +553,7 @@ export default function MatchResults({
                               key={`preview-away-assist-${assistData.player.id}`}
                               className="flex items-center gap-2 text-sm justify-end"
                             >
-                              <span className="font-medium text-black dark:text-white theme-transition">
+                              <span className="font-medium text-theme-foreground theme-transition">
                                 {assistData.player.web_name}
                                 {assistData.count > 1
                                   ? ` (x${assistData.count})`
@@ -538,14 +578,14 @@ export default function MatchResults({
                 {isExpanded && (
                   <div
                     id={`expanded-${match.fixture_id}`}
-                    className="border-t border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 p-6 theme-transition"
+                    className="border-t border-theme-border bg-gray-50 dark:bg-gray-900 p-6 theme-transition"
                   >
                     {/* Detailed Match Header */}
-                    <div className="text-center mb-6 pb-4 border-b border-black/10 dark:border-white/10">
-                      <h4 className="text-2xl font-bold text-black dark:text-white mb-3 theme-transition">
+                    <div className="text-center mb-6 pb-4 border-b border-theme-border">
+                      <h4 className="text-2xl font-bold text-theme-foreground mb-3 theme-transition">
                         {match.home_team.name} vs {match.away_team.name}
                       </h4>
-                      <div className="text-4xl font-bold text-black dark:text-white mb-4 theme-transition">
+                      <div className="text-4xl font-bold text-theme-foreground mb-4 theme-transition">
                         {match.home_score} - {match.away_score}
                       </div>
                     </div>
@@ -553,7 +593,7 @@ export default function MatchResults({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       {/* Home Team Details */}
                       <div className="space-y-6">
-                        <h5 className="font-bold text-black dark:text-white text-xl flex items-center gap-3 theme-transition">
+                        <h5 className="font-bold text-theme-foreground text-xl flex items-center gap-3 theme-transition">
                           <PiTShirtFill
                             className="w-6 h-6 drop-shadow-lg"
                             style={{
@@ -566,7 +606,7 @@ export default function MatchResults({
                         {/* Goals */}
                         {homeGoals.length > 0 && (
                           <div>
-                            <h6 className="text-lg font-bold text-black dark:text-white mb-3 flex items-center gap-2 theme-transition">
+                            <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                               <IoIosFootball className="w-5 h-5 text-green-600" />
                               Golovi
                             </h6>
@@ -579,7 +619,7 @@ export default function MatchResults({
                                   <div className="flex items-center gap-3">
                                     <IoIosFootball className="w-5 h-5 text-green-600" />
                                     <div>
-                                      <div className="font-bold text-black dark:text-white theme-transition">
+                                      <div className="font-bold text-theme-foreground theme-transition">
                                         {goalData.player.web_name}
                                         {goalData.count > 1
                                           ? ` (x${goalData.count})`
@@ -618,7 +658,7 @@ export default function MatchResults({
                         {/* Assists */}
                         {homeAssists.length > 0 && (
                           <div>
-                            <h6 className="text-lg font-bold text-black dark:text-white mb-3 flex items-center gap-2 theme-transition">
+                            <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                               <FaShoePrints className="w-5 h-5 text-blue-600" />
                               Asistencije
                             </h6>
@@ -631,7 +671,7 @@ export default function MatchResults({
                                   <div className="flex items-center gap-3">
                                     <FaShoePrints className="w-5 h-5 text-blue-600" />
                                     <div>
-                                      <div className="font-bold text-black dark:text-white theme-transition">
+                                      <div className="font-bold text-theme-foreground theme-transition">
                                         {assistData.player.web_name}
                                         {assistData.count > 1
                                           ? ` (x${assistData.count})`
@@ -661,7 +701,7 @@ export default function MatchResults({
 
                         {/* Top Players */}
                         <div>
-                          <h6 className="text-lg font-bold text-black dark:text-white mb-3 flex items-center gap-2 theme-transition">
+                          <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                             <MdStar className="w-5 h-5 text-yellow-500" />
                             Najbiraniji u Top 10k
                           </h6>
@@ -670,16 +710,22 @@ export default function MatchResults({
                               (player: MatchResultPlayer, idx: number) => (
                                 <div
                                   key={idx}
-                                  className="flex items-center justify-between p-3 bg-white dark:bg-black rounded-lg border border-black/10 dark:border-white/10 hover:shadow-md transition-all theme-transition"
+                                  className="flex items-center justify-between p-3 bg-theme-card rounded-md border-theme-border hover:shadow-md transition-all cursor-pointer theme-transition"
+                                  onClick={() => {
+                                    if (player.ownership_top10k && player.ownership_top10k > 5) {
+                                      setSelectedManagerId(player.id);
+                                      onManagerSelect?.(player.id);
+                                    }
+                                  }}
                                 >
                                   <div className="flex items-center gap-3">
                                     <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                    <span className="font-bold text-black dark:text-white theme-transition">
+                                    <span className="font-bold text-theme-foreground theme-transition">
                                       {player.web_name}
                                     </span>
                                   </div>
                                   <div className="text-right">
-                                    <div className="font-bold text-black dark:text-white theme-transition">
+                                    <div className="font-bold text-theme-foreground theme-transition">
                                       {player.points} pts
                                     </div>
                                     <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
@@ -695,7 +741,7 @@ export default function MatchResults({
 
                       {/* Away Team Details - Same structure as home team */}
                       <div className="space-y-6">
-                        <h5 className="font-bold text-black dark:text-white text-xl flex items-center gap-3 theme-transition">
+                        <h5 className="font-bold text-theme-foreground text-xl flex items-center gap-3 theme-transition">
                           <PiTShirtFill
                             className="w-6 h-6 drop-shadow-lg"
                             style={{
@@ -708,7 +754,7 @@ export default function MatchResults({
                         {/* Goals */}
                         {awayGoals.length > 0 && (
                           <div>
-                            <h6 className="text-lg font-bold text-black dark:text-white mb-3 flex items-center gap-2 theme-transition">
+                            <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                               <IoIosFootball className="w-5 h-5 text-green-600" />
                               Golovi
                             </h6>
@@ -721,7 +767,7 @@ export default function MatchResults({
                                   <div className="flex items-center gap-3">
                                     <IoIosFootball className="w-5 h-5 text-green-600" />
                                     <div>
-                                      <div className="font-bold text-black dark:text-white theme-transition">
+                                      <div className="font-bold text-theme-foreground theme-transition">
                                         {goalData.player.web_name}
                                         {goalData.count > 1
                                           ? ` (x${goalData.count})`
@@ -760,7 +806,7 @@ export default function MatchResults({
                         {/* Assists */}
                         {awayAssists.length > 0 && (
                           <div>
-                            <h6 className="text-lg font-bold text-black dark:text-white mb-3 flex items-center gap-2 theme-transition">
+                            <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                               <FaShoePrints className="w-5 h-5 text-blue-600" />
                               Asistencije
                             </h6>
@@ -773,7 +819,7 @@ export default function MatchResults({
                                   <div className="flex items-center gap-3">
                                     <FaShoePrints className="w-5 h-5 text-blue-600" />
                                     <div>
-                                      <div className="font-bold text-black dark:text-white theme-transition">
+                                      <div className="font-bold text-theme-foreground theme-transition">
                                         {assistData.player.web_name}
                                         {assistData.count > 1
                                           ? ` (x${assistData.count})`
@@ -803,7 +849,7 @@ export default function MatchResults({
 
                         {/* Top Players */}
                         <div>
-                          <h6 className="text-lg font-bold text-black dark:text-white mb-3 flex items-center gap-2 theme-transition">
+                          <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                             <MdStar className="w-5 h-5 text-yellow-500" />
                             Najbiraniji u Top 10k
                           </h6>
@@ -812,16 +858,22 @@ export default function MatchResults({
                               (player: MatchResultPlayer, idx: number) => (
                                 <div
                                   key={idx}
-                                  className="flex items-center justify-between p-3 bg-white dark:bg-black rounded-lg border border-black/10 dark:border-white/10 hover:shadow-md transition-all theme-transition"
+                                  className="flex items-center justify-between p-3 bg-theme-card rounded-md border-theme-border hover:shadow-md transition-all cursor-pointer theme-transition"
+                                  onClick={() => {
+                                    if (player.ownership_top10k && player.ownership_top10k > 5) {
+                                      setSelectedManagerId(player.id);
+                                      onManagerSelect?.(player.id);
+                                    }
+                                  }}
                                 >
                                   <div className="flex items-center gap-3">
                                     <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                    <span className="font-bold text-black dark:text-white theme-transition">
+                                    <span className="font-bold text-theme-foreground theme-transition">
                                       {player.web_name}
                                     </span>
                                   </div>
                                   <div className="text-right">
-                                    <div className="font-bold text-black dark:text-white theme-transition">
+                                    <div className="font-bold text-theme-foreground theme-transition">
                                       {player.points} pts
                                     </div>
                                     <div className="text-sm text-black/60 dark:text-white/60 theme-transition">

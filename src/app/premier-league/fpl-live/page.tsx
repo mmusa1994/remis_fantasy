@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   MdDashboard,
   MdGroup,
@@ -26,7 +27,6 @@ import SquadTable from "@/components/fpl/SquadTable";
 import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
 import LiveTracker from "@/components/fpl/LiveTracker";
 import LeagueTables from "@/components/fpl/LeagueTables";
-import TeamSearchHelper from "@/components/fpl/TeamSearchHelper";
 import MatchResults from "@/components/fpl/MatchResults";
 import type { FPLGameweekStatus } from "@/types/fpl";
 
@@ -55,6 +55,7 @@ interface TabConfig {
 
 export default function FPLLivePage() {
   const { t } = useTranslation();
+  const { theme } = useTheme();
 
   // Core state
   const [managerId, setManagerId] = useState<number | null>(null);
@@ -540,15 +541,11 @@ export default function FPLLivePage() {
     loadGameweekStatus,
     saveToLocalStorage,
     t,
+    data?.manager,
+    data?.team_with_stats?.length,
+    isPolling,
+    teamLoaded,
   ]);
-
-  const handleManagerIdFound = useCallback(
-    (newManagerId: number) => {
-      setManagerId(newManagerId);
-      saveToLocalStorage("fpl-manager-id", newManagerId.toString());
-    },
-    [saveToLocalStorage]
-  );
 
   const startPolling = useCallback(() => {
     if (!managerId) {
@@ -578,7 +575,7 @@ export default function FPLLivePage() {
 
         if (response.ok) {
           const result = await response.json();
-          if (result.success && result.data.new_events > 0) {
+          if (result.success && result.data?.new_events > 0) {
             loadManagerInfo().catch((err) =>
               console.error("Polling load team error:", err)
             );
@@ -638,7 +635,7 @@ export default function FPLLivePage() {
     switch (activeTab) {
       case "overview":
         return (
-          <div className="space-y-6">
+          <div className="bg-theme-card space-y-6 theme-transition">
             <ManagerSummary
               manager={data.manager}
               teamTotals={data.team_totals}
@@ -657,10 +654,10 @@ export default function FPLLivePage() {
         );
       case "squad":
         return teamDataLoading ? (
-          <div className="space-y-4 lg:space-y-6">
+          <div className="bg-theme-card rounded-xl border-theme-border theme-transition">
             {/* Mobile-friendly loading state */}
-            <div className="bg-white dark:bg-black rounded-xl border-2 border-black dark:border-white overflow-hidden theme-transition">
-              <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-black dark:border-white bg-white dark:bg-black theme-transition">
+            <div className="bg-theme-card rounded-xl border-theme-border overflow-hidden theme-transition">
+              <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-theme-border bg-theme-card theme-transition">
                 <div className="h-4 sm:h-5 lg:h-6 bg-black/20 dark:bg-white/20 rounded w-20 sm:w-24 animate-pulse theme-transition"></div>
               </div>
               <div className="p-3 sm:p-4 lg:p-6">
@@ -686,7 +683,7 @@ export default function FPLLivePage() {
         );
       case "leagues":
         return leaguesLoading ? (
-          <div className="bg-white dark:bg-black rounded-xl border-2 border-black dark:border-white theme-transition">
+          <div className="bg-theme-card rounded-xl border-theme-border theme-transition">
             <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-black dark:border-white bg-white dark:bg-black theme-transition">
               <div className="h-4 sm:h-5 lg:h-6 bg-black/20 dark:bg-white/20 rounded w-16 sm:w-20 animate-pulse theme-transition"></div>
             </div>
@@ -710,19 +707,41 @@ export default function FPLLivePage() {
                 leagueData={leagueData}
                 managerId={managerId!}
                 gameweek={gameweek}
+                onManagerSelect={(selectedManagerId) => {
+                  console.log("Manager selected:", selectedManagerId);
+                  // Future: Load manager-specific data
+                }}
               />
 
+              {/* Live Border Indicator */}
+              <div className="bg-theme-card rounded-md p-1 border-theme-border theme-transition">
+                <div
+                  className={`w-full h-2 rounded-sm transition-all duration-300 ${
+                    isPolling
+                      ? "bg-green-500 animate-pulse"
+                      : "bg-gray-300 dark:bg-gray-600"
+                  }`}
+                ></div>
+                <div className="text-center mt-2">
+                  <p className="text-xs font-medium text-theme-text-secondary theme-transition">
+                    {isPolling
+                      ? "🔴 Live praćenje aktivno"
+                      : "⚪ Live praćenje neaktivno"}
+                  </p>
+                </div>
+              </div>
+
               {/* Live BPS Tracker */}
-              <div className="bg-white dark:bg-black rounded-xl p-3 sm:p-4 lg:p-6 border-2 border-black dark:border-white theme-transition">
+              <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
                 <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black dark:bg-white rounded-lg flex items-center justify-center theme-transition">
-                    <IoIosFootball className="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-black theme-transition" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black dark:bg-white rounded-md flex items-center justify-center theme-transition">
+                    <IoIosFootball className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary-foreground theme-transition" />
                   </div>
                   <div>
-                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-black dark:text-white theme-transition">
+                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-theme-foreground theme-transition">
                       {t("fplLive.liveTrackerTitle")}
                     </h3>
-                    <p className="text-xs sm:text-sm lg:text-base text-black/70 dark:text-white/70 theme-transition">
+                    <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary theme-transition">
                       Live bonus point system tracking
                     </p>
                   </div>
@@ -742,22 +761,34 @@ export default function FPLLivePage() {
           />
         );
       case "matchResults":
-        return <MatchResults gameweek={gameweek} isPolling={isPolling} />;
+        return (
+          <MatchResults
+            gameweek={gameweek}
+            isPolling={isPolling}
+            onManagerSelect={(selectedManagerId) => {
+              console.log(
+                "Manager selected from match results:",
+                selectedManagerId
+              );
+              // Future: Load manager-specific data
+            }}
+          />
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black theme-transition">
+    <div className="min-h-screen bg-theme-card theme-transition">
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
           <div className="text-center mb-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black dark:text-white mb-3 theme-transition">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-theme-foreground mb-3 theme-transition">
               {t("fplLive.title")}
             </h1>
-            <p className="text-base sm:text-lg text-black dark:text-white max-w-2xl mx-auto leading-relaxed theme-transition">
+            <p className="text-base sm:text-lg text-theme-foreground max-w-2xl mx-auto leading-relaxed theme-transition">
               {t("fplLive.subtitle")}
             </p>
           </div>
@@ -765,9 +796,9 @@ export default function FPLLivePage() {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white p-4 rounded-lg theme-transition">
+          <div className="mb-6 bg-theme-card border-theme-border text-red-700 dark:text-red-300 p-4 rounded-md theme-transition">
             <div className="flex items-start gap-3">
-              <MdCancel className="text-black dark:text-white w-5 h-5 mt-0.5 flex-shrink-0 theme-transition" />
+              <MdCancel className="text-red-500 w-5 h-5 mt-0.5 flex-shrink-0" />
               <p className="text-sm font-medium leading-relaxed">{error}</p>
             </div>
           </div>
@@ -777,20 +808,20 @@ export default function FPLLivePage() {
         {!teamLoaded && (
           <div className="space-y-4 lg:space-y-6">
             {/* How to Use Guide - Mobile Accordion */}
-            <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-xl overflow-hidden theme-transition">
+            <div className="bg-theme-card border-theme-border rounded-md overflow-hidden theme-transition">
               <details className="group">
-                <summary className="flex items-center gap-3 p-3 sm:p-4 lg:p-5 text-sm sm:text-base font-medium text-black dark:text-white cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors min-h-[56px] lg:min-h-[60px] touch-manipulation theme-transition">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-black dark:bg-white rounded-lg flex items-center justify-center flex-shrink-0 theme-transition">
-                    <MdInfo className="text-white dark:text-black w-4 h-4 lg:w-5 lg:h-5 theme-transition" />
+                <summary className="flex items-center gap-3 p-3 sm:p-4 lg:p-5 text-sm sm:text-base font-medium text-theme-foreground cursor-pointer hover:bg-theme-card-secondary transition-colors min-h-[56px] lg:min-h-[60px] touch-manipulation theme-transition">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-500 dark:bg-purple-600 rounded-md flex items-center justify-center flex-shrink-0">
+                    <MdInfo className="text-white w-4 h-4 lg:w-5 lg:h-5" />
                   </div>
                   <span className="font-semibold flex-1 text-sm lg:text-base">
                     {t("fplLive.howToUse")}
                   </span>
-                  <MdExpandMore className="text-black dark:text-white group-open:rotate-180 transition-transform duration-200 w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 theme-transition" />
+                  <MdExpandMore className="text-theme-foreground group-open:rotate-180 transition-transform duration-200 w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 theme-transition" />
                 </summary>
 
                 <div className="px-3 sm:px-4 lg:px-5 pb-3 sm:pb-4 lg:pb-5 space-y-3 lg:space-y-4 text-sm sm:text-base text-black dark:text-white bg-white dark:bg-black theme-transition">
-                  <div className="p-3 sm:p-4 lg:p-5 bg-white dark:bg-black rounded-lg border-2 border-black dark:border-white theme-transition">
+                  <div className="p-3 sm:p-4 lg:p-5 bg-theme-card rounded-md border-theme-border theme-transition">
                     <h4 className="font-semibold text-black dark:text-white mb-3 lg:mb-4 flex items-start gap-2 text-sm sm:text-base lg:text-lg theme-transition">
                       <span className="text-base sm:text-lg lg:text-xl">
                         📋
@@ -824,14 +855,14 @@ export default function FPLLivePage() {
                         </li>
                       </ol>
 
-                      <div className="mt-4 lg:mt-5 p-3 lg:p-4 bg-white dark:bg-black rounded-lg border-2 border-black dark:border-white theme-transition">
+                      <div className="mt-4 lg:mt-5 p-3 lg:p-4 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-800 theme-transition">
                         <div className="flex items-start gap-2 text-sm text-black dark:text-white mb-2 lg:mb-3">
                           <span className="text-base lg:text-lg">💡</span>
                           <span className="font-medium">
                             {t("fplLive.exampleURL")}
                           </span>
                         </div>
-                        <div className="bg-black/5 dark:bg-white/5 text-black dark:text-white p-2 lg:p-3 rounded font-mono text-xs sm:text-sm break-all overflow-hidden border border-black/20 dark:border-white/20 theme-transition">
+                        <div className="bg-gray-100 dark:bg-gray-800 text-black dark:text-white p-2 lg:p-3 rounded-md font-mono text-xs sm:text-sm break-all overflow-hidden border border-gray-200 dark:border-gray-700 theme-transition">
                           fantasy.premierleague.com/entry/133444/event/1
                         </div>
                         <p className="text-xs sm:text-sm text-black dark:text-white mt-2 lg:mt-3 text-center theme-transition">
@@ -846,12 +877,6 @@ export default function FPLLivePage() {
                 </div>
               </details>
             </div>
-
-            {/* Team Search Helper */}
-            <TeamSearchHelper
-              onManagerIdFound={handleManagerIdFound}
-              currentManagerId={managerId}
-            />
 
             {/* Controls */}
             <ControlsBar
@@ -868,17 +893,17 @@ export default function FPLLivePage() {
 
             {/* Mobile-Friendly Call to Action */}
             <div className="text-center py-4 sm:py-6 lg:py-8">
-              <div className="bg-white dark:bg-black rounded-xl p-4 sm:p-6 lg:p-8 border-2 border-black dark:border-white theme-transition">
+              <div className="bg-white dark:bg-black rounded-md p-4 sm:p-6 lg:p-8 border border-gray-200 dark:border-gray-800 theme-transition">
                 <IoIosFootball className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 text-black dark:text-white mx-auto mb-4 lg:mb-6 theme-transition" />
                 <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-black dark:text-white mb-2 lg:mb-3 theme-transition">
                   {t("fplLive.readyToStart")}
                 </h3>
-                <p className="text-sm sm:text-base text-black dark:text-white mb-4 lg:mb-6 max-w-md mx-auto leading-relaxed theme-transition">
+                <p className="text-sm sm:text-base text-theme-foreground mb-4 lg:mb-6 max-w-md mx-auto leading-relaxed theme-transition">
                   {t("fplLive.enterManagerIdToStart")}
                 </p>
                 {!managerId ? (
-                  <div className="bg-white dark:bg-black rounded-lg p-3 lg:p-4 border-2 border-black dark:border-white theme-transition">
-                    <p className="text-sm font-medium text-black dark:text-white theme-transition">
+                  <div className="bg-theme-card-secondary rounded-md p-3 lg:p-4 border-theme-border theme-transition">
+                    <p className="text-sm font-medium text-theme-foreground theme-transition">
                       {t("fplLive.enterManagerIdFirst")}
                     </p>
                   </div>
@@ -886,7 +911,7 @@ export default function FPLLivePage() {
                   <button
                     onClick={loadManagerInfo}
                     disabled={loading}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3 lg:py-4 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:bg-black/90 dark:hover:bg-white/90 disabled:opacity-50 transition-all text-sm sm:text-base min-h-[48px] lg:min-h-[52px] touch-manipulation theme-transition"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3 lg:py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium disabled:opacity-50 transition-all text-sm sm:text-base min-h-[48px] lg:min-h-[52px] touch-manipulation"
                   >
                     {loading ? t("fplLive.loading") : t("fplLive.loadTeam")}
                   </button>
@@ -900,19 +925,19 @@ export default function FPLLivePage() {
         {teamLoaded && data.manager && (
           <div className="space-y-4 lg:space-y-6">
             {/* Mobile-Optimized Controls Bar */}
-            <div className="bg-white dark:bg-black rounded-xl p-3 sm:p-4 lg:p-5 border-2 border-black dark:border-white theme-transition">
+            <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-5 border-theme-border theme-transition">
               <div className="flex flex-col gap-3 sm:gap-4">
                 {/* Manager Info - Always visible */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black dark:bg-white rounded-lg flex items-center justify-center flex-shrink-0 theme-transition">
-                    <IoIosFootball className="w-5 h-5 sm:w-6 sm:h-6 text-white dark:text-black theme-transition" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-md flex items-center justify-center flex-shrink-0">
+                    <IoIosFootball className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-black dark:text-white text-sm sm:text-base lg:text-lg truncate theme-transition">
+                    <p className="font-semibold text-theme-foreground text-sm sm:text-base lg:text-lg truncate theme-transition">
                       {data.manager?.player_first_name}{" "}
                       {data.manager?.player_last_name}
                     </p>
-                    <p className="text-xs sm:text-sm text-black/70 dark:text-white/70 theme-transition">
+                    <p className="text-xs sm:text-sm text-theme-text-secondary theme-transition">
                       GW{gameweek} • ID: {managerId}
                     </p>
                   </div>
@@ -922,10 +947,10 @@ export default function FPLLivePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                   <button
                     onClick={isPolling ? stopPolling : startPolling}
-                    className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] theme-transition ${
+                    className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all min-h-[44px] ${
                       isPolling
-                        ? "bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90"
-                        : "bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90"
+                        ? "bg-red-500 hover:bg-red-600 text-white"
+                        : "bg-green-500 hover:bg-green-600 text-white"
                     }`}
                   >
                     {isPolling ? (
@@ -942,7 +967,7 @@ export default function FPLLivePage() {
 
                   <button
                     onClick={loadManagerInfo}
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium transition-all min-h-[44px] hover:bg-black/90 dark:hover:bg-white/90 theme-transition"
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-all min-h-[44px]"
                   >
                     <MdRefresh className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="text-xs sm:text-sm">
@@ -952,7 +977,7 @@ export default function FPLLivePage() {
 
                   <button
                     onClick={() => setShowSettings(!showSettings)}
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium transition-all min-h-[44px] hover:bg-black/90 dark:hover:bg-white/90 theme-transition"
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-all min-h-[44px]"
                   >
                     <MdSettings className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="text-xs sm:text-sm">
@@ -964,9 +989,9 @@ export default function FPLLivePage() {
             </div>
 
             {/* Mobile-First Tab Navigation */}
-            <div className="bg-white dark:bg-black rounded-xl border-2 border-black dark:border-white overflow-hidden theme-transition">
+            <div className="bg-theme-card rounded-md border-theme-border overflow-hidden theme-transition">
               {/* Mobile Horizontal Scroll Tab Bar */}
-              <div className="border-b-2 border-black dark:border-white bg-white dark:bg-black theme-transition">
+              <div className="border-b border-theme-border bg-theme-card theme-transition">
                 <div
                   className="flex overflow-x-auto scrollbar-hide"
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -981,8 +1006,8 @@ export default function FPLLivePage() {
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base font-medium whitespace-nowrap transition-all border-b-2 min-w-max touch-manipulation min-h-[56px] sm:min-h-[60px] ${
                           isActive
-                            ? "border-black dark:border-white bg-black/5 dark:bg-white/5 text-black dark:text-white"
-                            : "border-transparent text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                            ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                            : "border-transparent text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
                         } theme-transition`}
                       >
                         <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
@@ -996,7 +1021,7 @@ export default function FPLLivePage() {
               </div>
 
               {/* Tab Content with Mobile Padding */}
-              <div className="p-3 sm:p-4 lg:p-6 bg-white dark:bg-black theme-transition">
+              <div className="p-3 sm:p-4 lg:p-6 bg-theme-card theme-transition">
                 {renderTabContent()}
               </div>
             </div>

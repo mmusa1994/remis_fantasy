@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { FPLService } from "@/services/fpl/fpl.service";
 import { FaUser } from "react-icons/fa";
 import { VscRunCoverage } from "react-icons/vsc";
 import { BsCash } from "react-icons/bs";
@@ -20,7 +19,7 @@ export const useLeagueData = (leagueType: string) => {
 
         // Create league configuration using translations
         const getLeagueConfig = () => {
-          const basePath = `/${leagueType}`;
+          // Configure league based on type
           
           switch (leagueType) {
             case "premier-league":
@@ -201,81 +200,102 @@ export const useLeaguePrizes = (leagueType: string) => {
         setLoading(true);
         setError(null);
 
-        // Create prizes data using translations - can be extended with API calls later
-        const getPrizesData = () => {
-          switch (leagueType) {
-            case "premier-league":
-            case "premier":
-              return [
-                {
-                  rank: 1,
-                  title: t("prizes.firstPlace"),
-                  prize: "3000 KM",
-                  description: t("prizes.firstPlaceDesc")
-                },
-                {
-                  rank: 2,
-                  title: t("prizes.secondPlace"),
-                  prize: "2000 KM", 
-                  description: t("prizes.secondPlaceDesc")
-                },
-                {
-                  rank: 3,
-                  title: t("prizes.thirdPlace"),
-                  prize: "1000 KM",
-                  description: t("prizes.thirdPlaceDesc")
-                }
-              ];
-            case "champions-league":
-            case "champions":
-              return [
-                {
-                  rank: 1,
-                  title: t("prizes.firstPlace"),
-                  prize: "1500 KM",
-                  description: t("prizes.firstPlaceDesc")
-                },
-                {
-                  rank: 2,
-                  title: t("prizes.secondPlace"),
-                  prize: "1000 KM",
-                  description: t("prizes.secondPlaceDesc")
-                },
-                {
-                  rank: 3,
-                  title: t("prizes.thirdPlace"),
-                  prize: "500 KM",
-                  description: t("prizes.thirdPlaceDesc")
-                }
-              ];
-            case "f1-fantasy":
-            case "f1":
-              return [
-                {
-                  rank: 1,
-                  title: t("prizes.firstPlace"),
-                  prize: "1000 KM",
-                  description: t("prizes.firstPlaceDesc")
-                },
-                {
-                  rank: 2,
-                  title: t("prizes.secondPlace"),
-                  prize: "750 KM",
-                  description: t("prizes.secondPlaceDesc")
-                },
-                {
-                  rank: 3,
-                  title: t("prizes.thirdPlace"),
-                  prize: "500 KM",
-                  description: t("prizes.thirdPlaceDesc")
-                }
-              ];
-            default:
-              return [];
+        // Load prizes from JSON file based on league type
+        const loadPrizesFromFile = async () => {
+          try {
+            let prizesData: any[] = [];
+            
+            switch (leagueType) {
+              case "premier-league":
+              case "premier":
+                // Import the Premier League prizes JSON file
+                const premierPrizes = await import("@/data/premier-league/prizes.json");
+                prizesData = premierPrizes.default;
+                console.log("Loaded Premier League prizes:", prizesData);
+                break;
+              case "champions-league":
+              case "champions":
+                // For now, fallback to basic data - can add champions JSON file later
+                prizesData = [
+                  {
+                    id: 1,
+                    title: t("prizes.firstPlace"),
+                    subtitle: "Champions League Winner", 
+                    image: "/images/prizes/champions-first.png",
+                    description: t("prizes.firstPlaceDesc"),
+                    tier: "premium",
+                    league: "champions",
+                    price: "1500 KM",
+                    features: ["Trophy", "Medal", "Certificate"]
+                  }
+                ];
+                break;
+              case "f1-fantasy":
+              case "f1":
+                // For now, fallback to basic data - can add F1 JSON file later
+                prizesData = [
+                  {
+                    id: 1,
+                    title: t("prizes.firstPlace"),
+                    subtitle: "F1 Fantasy Champion",
+                    image: "/images/prizes/f1-first.png", 
+                    description: t("prizes.firstPlaceDesc"),
+                    tier: "premium",
+                    league: "f1",
+                    price: "1000 KM",
+                    features: ["Trophy", "Medal", "Certificate"]
+                  }
+                ];
+                break;
+              default:
+                prizesData = [];
+            }
+
+            return prizesData;
+          } catch (importError) {
+            console.warn("Failed to import prizes file, using fallback data:", importError);
+            
+            // Fallback data with proper structure
+            return [
+              {
+                id: 1,
+                title: t("prizes.firstPlace"),
+                subtitle: "Liga Champion",
+                image: "/images/new-season/premium.png",
+                description: t("prizes.firstPlaceDesc"),
+                tier: "premium",
+                league: leagueType,
+                price: "3000 KM", 
+                features: ["Trophy", "Medal", "Certificate"]
+              },
+              {
+                id: 2,
+                title: t("prizes.secondPlace"),
+                subtitle: "Runner Up",
+                image: "/images/new-season/standard.png",
+                description: t("prizes.secondPlaceDesc"),
+                tier: "standard",
+                league: leagueType,
+                price: "2000 KM",
+                features: ["Medal", "Certificate"]
+              },
+              {
+                id: 3,
+                title: t("prizes.thirdPlace"),
+                subtitle: "Third Place",
+                image: "/images/new-season/free.png", 
+                description: t("prizes.thirdPlaceDesc"),
+                tier: "h2h",
+                league: leagueType,
+                price: "1000 KM",
+                features: ["Certificate"]
+              }
+            ];
           }
         };
 
-        setData(getPrizesData());
+        const prizesData = await loadPrizesFromFile();
+        setData(prizesData);
       } catch (err) {
         console.error("Error loading prizes:", err);
         setError(t("common.error"));

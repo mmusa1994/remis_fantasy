@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  FPLService,
   FPLLiveService,
   FPLBootstrapService,
   FPLFixtureService,
@@ -27,7 +26,6 @@ interface LiveEvent {
 }
 
 // Initialize FPL services
-const fplService = FPLService.getInstance();
 const liveService = FPLLiveService.getInstance();
 const bootstrapService = FPLBootstrapService.getInstance();
 const fixtureService = FPLFixtureService.getInstance();

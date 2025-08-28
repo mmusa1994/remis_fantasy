@@ -68,11 +68,11 @@ const SquadTable = React.memo(function SquadTable({
   const { t } = useTranslation();
   if (!teamData || teamData.length === 0) {
     return (
-      <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-xl p-4 sm:p-6 theme-transition">
-        <h3 className="text-lg font-semibold mb-4 text-black dark:text-white theme-transition">
+      <div className="bg-theme-card border-theme-border rounded-xl p-4 sm:p-6 theme-transition">
+        <h3 className="text-lg font-semibold mb-4 text-theme-foreground theme-transition">
           {t("fplLive.squad")}
         </h3>
-        <div className="text-center text-black/70 dark:text-white/70 theme-transition">
+        <div className="text-center text-theme-text-secondary theme-transition">
           {t("fplLive.loadTeamToSeeSquad")}
         </div>
       </div>
@@ -109,6 +109,18 @@ const SquadTable = React.memo(function SquadTable({
     return pick.multiplier > 1 ? `x${pick.multiplier}` : "";
   };
 
+  const getPointsColorClass = (points: number) => {
+    if (points > 0) return "text-green-600 dark:text-green-400 font-bold";
+    if (points < 0) return "text-red-600 dark:text-red-400 font-bold";
+    return "text-gray-500 dark:text-gray-400";
+  };
+
+  const getMinutesColorClass = (minutes: number) => {
+    if (minutes >= 60) return "text-green-600 dark:text-green-400";
+    if (minutes > 0) return "text-yellow-600 dark:text-yellow-400";
+    return "text-red-600 dark:text-red-400";
+  };
+
   const PlayerRow = ({
     pick,
     isStarter,
@@ -127,17 +139,22 @@ const SquadTable = React.memo(function SquadTable({
 
     return (
       <tr
-        className={`group ${
-          !isStarter ? "bg-black/5 dark:bg-white/5" : ""
-        } hover:bg-black/5 dark:hover:bg-white/5 transition-colors theme-transition`}
+        className={`group border-b border-theme-border ${
+          !isStarter ? "bg-theme-card-secondary/50" : "hover:bg-theme-card-secondary/30"
+        } transition-colors theme-transition`}
       >
-        <td className="px-1 sm:px-2 py-2 text-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
+        <td className={`px-3 py-3 text-center text-lg font-bold ${getPointsColorClass(displayPoints)} bg-green-50 dark:bg-green-900/20 theme-transition`}>
+          {displayPoints}
+        </td>
+        <td className="px-3 py-3 text-sm">
+          <div className="flex items-center space-x-2">
             <span
-              className={`text-xs px-1 py-1 rounded text-center ${
-                pick.is_captain || pick.is_vice_captain
-                  ? "bg-black dark:bg-white text-white dark:text-black"
-                  : "bg-black/10 dark:bg-white/10 text-black dark:text-white"
+              className={`text-xs px-2 py-1 rounded-md font-bold ${
+                pick.is_captain 
+                  ? "bg-yellow-500 text-white"
+                  : pick.is_vice_captain
+                  ? "bg-blue-500 text-white"
+                  : "bg-theme-card-secondary text-theme-text-primary border border-theme-border"
               } theme-transition`}
             >
               {
@@ -147,74 +164,75 @@ const SquadTable = React.memo(function SquadTable({
               }
             </span>
             {!isStarter && (
-              <span className="text-xs text-black/50 dark:text-white/50 mt-1 sm:mt-0 theme-transition">
-                ({t("fplLive.benchShort").toUpperCase()})
+              <span className="text-xs text-theme-text-secondary px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-700 theme-transition">
+                {t("fplLive.benchShort").toUpperCase()}
               </span>
             )}
           </div>
         </td>
         <td
-          className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-black dark:text-white sticky left-0 z-10 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors ${
-            !isStarter ? "bg-black/5 dark:bg-white/5" : "bg-white dark:bg-black"
+          className={`px-3 py-3 text-sm font-semibold text-theme-foreground sticky left-0 z-10 transition-colors ${
+            !isStarter ? "bg-theme-card-secondary/50" : "bg-theme-card"
           } theme-transition`}
         >
-          <div className="truncate max-w-[120px] sm:max-w-none">
-            <span className="font-semibold">{pick.player.web_name}</span>
+          <div className="flex items-center space-x-2">
+            <span className="truncate max-w-[120px] sm:max-w-none font-bold">
+              {pick.player.web_name}
+            </span>
             {getMultiplierDisplay(pick) && (
-              <span className="ml-1 text-xs font-bold text-black dark:text-white theme-transition">
+              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                pick.is_captain ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                : pick.is_vice_captain ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                : "bg-theme-card-secondary text-theme-text-primary"
+              } theme-transition`}>
                 {getMultiplierDisplay(pick)}
               </span>
             )}
           </div>
         </td>
-        <td className="px-1 sm:px-2 py-2 text-xs text-center">
-          <div className="flex items-center justify-center space-x-1">
+        <td className="px-2 py-3 text-center">
+          <div className="flex items-center justify-center space-x-1.5">
             <div style={{ color: getTeamColors(pick.player.team).primary }}>
               {getTeamColors(pick.player.team).primary !==
               getTeamColors(pick.player.team).secondary ? (
-                <PiTShirtFill size={12} />
+                <PiTShirtFill size={16} />
               ) : (
-                <PiTShirtLight size={12} />
+                <PiTShirtLight size={16} />
               )}
             </div>
-            <span className="text-xs font-medium">
+            <span className="text-xs font-bold text-theme-text-primary theme-transition">
               {getTeamColors(pick.player.team).shortName}
             </span>
           </div>
         </td>
-        <td className="px-1 sm:px-2 py-2 text-xs text-center text-black dark:text-white theme-transition">
-          {stats?.minutes || 0}
+        <td className={`px-2 py-3 text-center text-sm font-medium ${getMinutesColorClass(stats?.minutes || 0)} theme-transition`}>
+          {stats?.minutes || 0}'
         </td>
-        <td className="px-1 py-2 text-xs text-center font-medium text-black dark:text-white theme-transition">
+        <td className="px-2 py-3 text-center text-sm font-medium text-theme-text-primary theme-transition">
           {stats?.goals_scored || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center font-medium text-black dark:text-white theme-transition">
+        <td className="px-2 py-3 text-center text-sm font-medium text-theme-text-primary theme-transition">
           {stats?.assists || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center font-medium text-black dark:text-white theme-transition">
+        <td className="px-2 py-3 text-center text-sm font-medium text-theme-text-primary theme-transition">
           {stats?.clean_sheets || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center text-black dark:text-white font-medium theme-transition">
+        <td className="px-2 py-3 text-center text-sm font-medium text-theme-text-primary theme-transition">
           {stats?.yellow_cards || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center text-black dark:text-white font-medium theme-transition">
+        <td className="px-2 py-3 text-center text-sm font-medium text-theme-text-primary theme-transition">
           {stats?.red_cards || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center text-black dark:text-white theme-transition">
+        <td className="px-2 py-3 text-center text-sm font-medium text-theme-text-primary theme-transition">
           {stats?.saves || 0}
         </td>
-        <td className="px-1 py-2 text-xs text-center font-medium text-black dark:text-white theme-transition">
+        <td className="px-2 py-3 text-center text-sm font-medium text-theme-text-primary theme-transition">
           {stats?.bps || 0}
         </td>
-        <td
-          className={`px-1 py-2 text-xs text-center font-medium text-black dark:text-white theme-transition`}
-        >
+        <td className="px-2 py-3 text-center text-sm font-bold text-theme-text-primary theme-transition">
           {displayBonus > 0 ? `+${displayBonus}` : "0"}
         </td>
-        <td className="px-1 sm:px-2 py-2 text-xs text-center font-bold text-black dark:text-white theme-transition">
-          {displayPoints}
-        </td>
-        <td className="px-1 py-2 text-xs text-center text-black dark:text-white theme-transition">
+        <td className="px-2 py-3 text-center text-sm text-theme-text-primary theme-transition">
           {formatICT(stats?.ict_index || 0)}
         </td>
       </tr>
@@ -222,97 +240,93 @@ const SquadTable = React.memo(function SquadTable({
   };
 
   return (
-    <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-xl overflow-hidden theme-transition">
-      <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-black dark:border-white theme-transition">
-        <h3 className="text-base sm:text-lg font-semibold text-black dark:text-white theme-transition">
+    <div className="bg-theme-card border-theme-border rounded-xl overflow-hidden shadow-lg theme-transition">
+      <div className="px-4 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <h3 className="text-lg font-bold">
           {t("fplLive.squadTitle")}
         </h3>
-        <p className="text-xs sm:text-sm text-black/70 dark:text-white/70 mt-1 theme-transition">
+        <p className="text-sm text-white/90 mt-1">
           {bonusAdded
             ? t("fplLive.showingFinalBonus")
-            : t("fplLive.showingFinalBonus")}
+            : t("fplLive.showingPredictedBonus")}
         </p>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-black/5 dark:bg-white/5 theme-transition">
+          <thead className="bg-theme-card-secondary border-b-2 border-theme-border theme-transition">
             <tr>
-              <th className="px-1 sm:px-2 py-2 text-left text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
+              <th className="px-3 py-3 text-center text-xs font-bold text-green-600 dark:text-green-400 uppercase bg-green-50 dark:bg-green-900/20 theme-transition">
+                {t("fplLive.totalShort")}
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.position")}
               </th>
-              <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-black/70 dark:text-white/70 uppercase sticky left-0 bg-white dark:bg-black z-10 theme-transition">
+              <th className="px-3 py-3 text-left text-xs font-bold text-theme-text-primary uppercase sticky left-0 bg-theme-card-secondary z-10 theme-transition">
                 {t("fplLive.player")}
               </th>
-              <th className="px-1 sm:px-2 py-2 text-left text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
-                <span className="hidden sm:inline">
-                  {t("fplLive.teamColumn")}
-                </span>
-                <span className="sm:hidden">Team</span>
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
+                {t("fplLive.teamColumn")}
               </th>
-              <th className="px-1 sm:px-2 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
-                <span className="hidden sm:inline">{t("fplLive.minutes")}</span>
-                <span className="sm:hidden">Min</span>
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
+                {t("fplLive.minutes")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.goalsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.assistsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.cleanSheetsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.yellowCardsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.redCardsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
-                <span className="hidden sm:inline">
-                  {t("fplLive.savesShort")}
-                </span>
-                <span className="sm:hidden">Sv</span>
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
+                {t("fplLive.savesShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.bpsShort")}
               </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
-                <span className="hidden sm:inline">
-                  {t("fplLive.bonusShort")}
-                </span>
-                <span className="sm:hidden">B</span>
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
+                {t("fplLive.bonusShort")}
               </th>
-              <th className="px-1 sm:px-2 py-2 text-center text-xs font-medium text-black dark:text-white uppercase font-bold theme-transition">
-                <span className="hidden sm:inline">
-                  {t("fplLive.totalShort")}
-                </span>
-                <span className="sm:hidden">Pts</span>
-              </th>
-              <th className="px-1 py-2 text-center text-xs font-medium text-black/70 dark:text-white/70 uppercase theme-transition">
+              <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.ictShort")}
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-black divide-y divide-black/10 dark:divide-white/10 theme-transition">
+          <tbody className="bg-theme-card theme-transition">
+            {/* Starting XI Section */}
+            <tr className="bg-gradient-to-r from-green-600 to-green-700 text-white">
+              <td
+                colSpan={14}
+                className="px-4 py-3 text-sm font-bold text-center uppercase tracking-wide"
+              >
+                🟢 {t("fplLive.startingXI")} (11 players)
+              </td>
+            </tr>
             {starters.map((pick) => (
               <PlayerRow key={pick.player_id} pick={pick} isStarter={true} />
             ))}
+            
             {bench.length > 0 && (
               <>
-                <tr className="bg-theme-accent border-t-2 border-theme-border">
+                {/* Bench Section */}
+                <tr className="bg-gradient-to-r from-orange-600 to-orange-700 text-white">
+                  <td className="px-3 py-3 text-sm font-bold text-center bg-orange-100 text-orange-900">
+                    {benchTotalPoints} pts
+                  </td>
                   <td
-                    colSpan={11}
-                    className="px-6 py-3 text-sm font-semibold text-theme-secondary text-left"
+                    colSpan={13}
+                    className="px-4 py-3 text-sm font-bold text-left uppercase tracking-wide"
                   >
-                    {t("fplLive.benchShort")}
+                    🔶 {t("fplLive.bench")} ({bench.length} players)
                   </td>
-                  <td className="px-3 py-3 text-sm text-center bg-theme-accent"></td>
-                  <td className="px-3 py-3 text-sm text-center font-bold text-blue-600 bg-theme-accent">
-                    {benchTotalPoints}
-                  </td>
-                  <td className="px-3 py-3 text-sm text-center bg-theme-accent"></td>
                 </tr>
                 {bench.map((pick) => (
                   <PlayerRow
@@ -327,7 +341,7 @@ const SquadTable = React.memo(function SquadTable({
         </table>
       </div>
 
-      <div className="px-6 py-3 bg-theme-secondary text-xs text-theme-muted">
+      <div className="px-4 py-3 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 text-xs text-theme-text-secondary border-t border-theme-border theme-transition">
         <div className="flex justify-between items-center">
           <div>(C) = Captain • (VC) = Vice Captain • (TC) = Triple Captain</div>
           <div className="flex items-center space-x-4">

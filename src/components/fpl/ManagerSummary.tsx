@@ -67,11 +67,11 @@ const ManagerSummary = React.memo(function ManagerSummary({
   const { t } = useTranslation();
   if (!manager || !teamTotals) {
     return (
-      <div className="bg-theme-card rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">
+      <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">
+        <h3 className="text-lg font-semibold mb-4 text-theme-foreground theme-transition">
           {t("fplLive.managerOverview")}
         </h3>
-        <div className="text-center text-theme-muted">
+        <div className="text-center text-theme-text-secondary theme-transition">
           {t("fplLive.loadTeamToSeeManagerOverview")}
         </div>
       </div>
@@ -96,14 +96,14 @@ const ManagerSummary = React.memo(function ManagerSummary({
   const bonusLabel = bonusAdded ? "Final Bonus" : "Predicted Bonus";
 
   return (
-    <div className="bg-theme-card rounded-lg shadow p-6">
+    <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">
       <FlagLoader />
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-theme-primary">
+        <h3 className="text-lg font-semibold text-theme-foreground theme-transition">
           {t("fplLive.managerOverview")} - GW{gameweek}
         </h3>
         {lastUpdated && (
-          <p className="text-sm text-theme-muted mt-1">
+          <p className="text-sm text-theme-text-secondary mt-1 theme-transition">
             {t("fplLive.lastUpdated")}{" "}
             {new Date(lastUpdated).toLocaleTimeString()}
           </p>
@@ -112,12 +112,12 @@ const ManagerSummary = React.memo(function ManagerSummary({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <h4 className="font-medium text-theme-primary mb-3">
+          <h4 className="font-medium text-theme-foreground mb-3 theme-transition">
             {t("fplLive.managerInfo")}
           </h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between items-center">
-              <span className="text-theme-muted">{t("fplLive.name")}</span>
+              <span className="text-theme-text-secondary theme-transition">{t("fplLive.name")}</span>
               <div className="flex items-center space-x-2">
                 {manager.player_region_iso_code_short && (
                   <span 
@@ -125,14 +125,14 @@ const ManagerSummary = React.memo(function ManagerSummary({
                     title={manager.player_region_name}
                   ></span>
                 )}
-                <span className="font-medium text-theme-primary">
+                <span className="font-medium text-theme-foreground theme-transition">
                   {manager.player_first_name} {manager.player_last_name}
                 </span>
               </div>
             </div>
             <div className="flex justify-between">
-              <span className="text-theme-muted">{t("fplLive.team")}</span>
-              <span className="font-medium text-theme-primary">
+              <span className="text-theme-text-secondary theme-transition">{t("fplLive.team")}</span>
+              <span className="font-medium text-theme-foreground theme-transition">
                 {manager.name}
               </span>
             </div>

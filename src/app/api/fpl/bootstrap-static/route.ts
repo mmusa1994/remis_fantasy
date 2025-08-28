@@ -1,14 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import {
-  FPLService,
-  FPLBootstrapService,
-} from "@/services/fpl";
+import { NextResponse } from "next/server";
+import { FPLBootstrapService } from "@/services/fpl";
 
 // Initialize FPL services
-const fplService = FPLService.getInstance();
 const bootstrapService = FPLBootstrapService.getInstance();
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const startTime = Date.now();
   console.log('📊 FPL Bootstrap Static API - Request started');
   

@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  FPLService,
-  FPLPlayerService,
-} from "@/services/fpl";
+import { FPLPlayerService } from "@/services/fpl";
 
 // Initialize FPL services
-const fplService = FPLService.getInstance();
 const playerService = FPLPlayerService.getInstance();
 
 export async function GET(

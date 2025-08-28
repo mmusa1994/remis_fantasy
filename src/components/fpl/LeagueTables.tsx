@@ -24,6 +24,7 @@ interface LeagueTablesProps {
   leagueData: any;
   managerId: number;
   gameweek: number;
+  onManagerSelect?: (managerId: number) => void;
 }
 
 interface LivePlayer {
@@ -44,6 +45,7 @@ export default function LeagueTables({
   leagueData,
   managerId,
   gameweek,
+  onManagerSelect,
 }: LeagueTablesProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"classic" | "h2h">("classic");
@@ -369,12 +371,12 @@ export default function LeagueTables({
 
   if (!leagueData || (!leagueData.classic?.length && !leagueData.h2h?.length)) {
     return (
-      <div className="bg-theme-card rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 text-theme-primary flex items-center">
+      <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">
+        <h3 className="text-lg font-semibold mb-4 text-theme-foreground flex items-center theme-transition">
           <GiTrophy className="mr-2 text-yellow-500" />
           {t("fplLive.leaguesTables")}
         </h3>
-        <p className="text-theme-muted text-sm">
+        <p className="text-theme-text-secondary text-sm theme-transition">
           {t("fplLive.noLeagueDataAvailable")}
         </p>
       </div>
@@ -387,10 +389,10 @@ export default function LeagueTables({
   const hasH2H = allH2HLeagues.length > 0;
 
   return (
-    <div className="bg-theme-card rounded-lg shadow">
+    <div className="bg-theme-card border-theme-border rounded-lg shadow theme-transition">
       <div className="px-6 py-4 border-b border-theme-border">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-theme-primary flex items-center">
+          <h3 className="text-lg font-semibold text-theme-foreground flex items-center theme-transition">
             <GiTrophy className="mr-2 text-yellow-500" />
             {isLiveMode
               ? t("fplLive.liveLeagueTracking")
@@ -425,7 +427,7 @@ export default function LeagueTables({
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <h4 className="text-lg font-semibold text-theme-primary">
+              <h4 className="text-lg font-semibold text-theme-foreground theme-transition">
                 {t("fplLive.liveTrackingControls")}
               </h4>
             </div>
@@ -496,9 +498,9 @@ export default function LeagueTables({
             {liveStats && (
               <div className="mt-6 pt-4 border-t border-theme-border">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-theme-card rounded-lg p-4 text-center shadow-sm border border-theme-border">
+                  <div className="bg-theme-card-secondary rounded-lg p-4 text-center shadow-sm border-theme-border theme-transition">
                     <MdPerson className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-theme-primary">
+                    <div className="text-2xl font-bold text-theme-foreground theme-transition">
                       {liveStats.total_players}
                     </div>
                     <div className="text-xs text-theme-muted font-medium">
@@ -506,9 +508,9 @@ export default function LeagueTables({
                     </div>
                   </div>
 
-                  <div className="bg-theme-card rounded-lg p-4 text-center shadow-sm border border-theme-border">
+                  <div className="bg-theme-card-secondary rounded-lg p-4 text-center shadow-sm border-theme-border theme-transition">
                     <BsLightningCharge className="w-6 h-6 text-green-500 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-theme-primary">
+                    <div className="text-2xl font-bold text-theme-foreground theme-transition">
                       {liveStats.live_events}
                     </div>
                     <div className="text-xs text-theme-muted font-medium">
@@ -516,9 +518,9 @@ export default function LeagueTables({
                     </div>
                   </div>
 
-                  <div className="bg-theme-card rounded-lg p-4 text-center shadow-sm border border-theme-border">
+                  <div className="bg-theme-card-secondary rounded-lg p-4 text-center shadow-sm border-theme-border theme-transition">
                     <MdSports className="w-6 h-6 text-purple-500 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-theme-primary">
+                    <div className="text-2xl font-bold text-theme-foreground theme-transition">
                       {liveStats.gameweek}
                     </div>
                     <div className="text-xs text-theme-muted font-medium">
@@ -527,7 +529,7 @@ export default function LeagueTables({
                   </div>
 
                   {lastLiveUpdate && (
-                    <div className="bg-theme-card rounded-lg p-4 text-center shadow-sm border border-theme-border">
+                    <div className="bg-theme-card-secondary rounded-lg p-4 text-center shadow-sm border-theme-border theme-transition">
                       <MdRefresh className="w-6 h-6 text-orange-500 mx-auto mb-2" />
                       <div className="text-sm font-bold text-theme-primary">
                         {lastLiveUpdate}

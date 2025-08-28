@@ -214,13 +214,13 @@ const LiveTracker = React.memo(function LiveTracker({
     );
 
     return (
-      <div className="flex items-start space-x-3 py-3 border-b border-theme-border last:border-b-0 hover:bg-theme-accent transition-colors">
+      <div className="flex items-start space-x-3 py-3 border-b border-theme-border last:border-b-0 hover:bg-theme-card-secondary transition-colors theme-transition">
         <div className="text-lg flex items-center">{icon}</div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-theme-primary truncate">
+          <p className="text-sm font-medium text-theme-foreground truncate theme-transition">
             {getEventDescription(event)}
           </p>
-          <p className="text-xs text-theme-muted mt-1">
+          <p className="text-xs text-theme-text-secondary mt-1 theme-transition">
             {formatTimeAgo(event.occurred_at)}
           </p>
         </div>
@@ -234,10 +234,10 @@ const LiveTracker = React.memo(function LiveTracker({
   };
 
   return (
-    <div className="bg-theme-card rounded-lg shadow">
+    <div className="bg-theme-card border-theme-border rounded-lg shadow theme-transition">
       <div className="px-6 py-4 border-b border-theme-border">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-theme-primary">
+          <h3 className="text-lg font-semibold text-theme-foreground theme-transition">
             {t("fplLive.liveTrackerTitle")}
           </h3>
           <div className="flex items-center space-x-2">

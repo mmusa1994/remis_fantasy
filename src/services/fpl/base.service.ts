@@ -240,7 +240,7 @@ export abstract class BaseFPLService {
       const latency = Date.now() - startTime;
       
       return { status: 'healthy', latency };
-    } catch (error) {
+    } catch {
       return { status: 'unhealthy' };
     }
   }

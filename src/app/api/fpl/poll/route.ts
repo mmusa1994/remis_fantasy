@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  FPLService,
   FPLLiveService,
   FPLFixtureService,
   FPLBootstrapService,
-  FPLLeagueService,
 } from "@/services/fpl";
 
 interface PreviousFixtureStats {
@@ -13,14 +11,10 @@ interface PreviousFixtureStats {
   };
 }
 
-const previousFixtureStats: PreviousFixtureStats = {};
-
 // Initialize FPL services
-const fplService = FPLService.getInstance();
 const liveService = FPLLiveService.getInstance();
 const fixtureService = FPLFixtureService.getInstance();
 const bootstrapService = FPLBootstrapService.getInstance();
-const leagueService = FPLLeagueService.getInstance();
 
 export async function POST(request: NextRequest) {
   console.log("🔄 FPL Poll API - Request started");

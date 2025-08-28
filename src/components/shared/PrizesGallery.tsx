@@ -224,7 +224,23 @@ export default function PrizesGallery({
   }
 
   const currentPrize = filteredPrizes[currentIndex];
-  const colors = tierColors[currentPrize.tier];
+  
+  if (!currentPrize) {
+    return (
+      <section className="relative w-full min-h-[400px] bg-theme-background py-20 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-theme-heading-primary mb-4">
+            {title}
+          </h2>
+          <p className="text-theme-text-secondary">
+            Greška pri učitavanju nagrada.
+          </p>
+        </div>
+      </section>
+    );
+  }
+  
+  const colors = tierColors[currentPrize.tier] || tierColors.standard;
 
   return (
     <section className="relative w-full min-h-screen bg-theme-background overflow-hidden theme-transition">
