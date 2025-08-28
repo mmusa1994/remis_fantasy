@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { getCountryFlagCode } from "@/utils/countryMapping";
 import {
@@ -21,6 +21,7 @@ import {
 } from "react-icons/md";
 import { GiTrophy, GiArmBandage } from "react-icons/gi";
 import { BsLightningCharge } from "react-icons/bs";
+import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 
 interface LeagueTablesProps {
   leagueData: any;
@@ -42,6 +43,16 @@ interface LivePlayer {
   rank: number;
   is_captain: boolean;
   is_vice_captain: boolean;
+  chips_remaining?: {
+    wildcard: number;
+    bench_boost: number;
+    triple_captain: number;
+    free_hit: number;
+  };
+  team_data?: {
+    starting_xi: any[];
+    bench: any[];
+  };
 }
 
 export default function LeagueTables({
@@ -74,6 +85,9 @@ export default function LeagueTables({
   const [liveStats, setLiveStats] = useState<any>(null);
   const [lastLiveUpdate, setLastLiveUpdate] = useState<string>("");
   const [isLoadingLiveData, setIsLoadingLiveData] = useState(false);
+  const [expandedManagers, setExpandedManagers] = useState<Set<string>>(new Set());
+  const [managerDetails, setManagerDetails] = useState<{[key: string]: any}>({});
+  const [loadingManagerDetails, setLoadingManagerDetails] = useState<Set<string>>(new Set());
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
 
   const maxPositions = 50;
@@ -271,6 +285,106 @@ export default function LeagueTables({
   };
 
   // Remove live mode controls - now handled by parent
+  
+  const fetchManagerDetails = async (managerId: string) => {
+    if (managerDetails[managerId] || loadingManagerDetails.has(managerId)) return;
+    
+    setLoadingManagerDetails(prev => new Set([...prev, managerId]));
+    
+    try {
+      // Fetch team data and manager history in parallel
+      const [teamResponse, historyResponse] = await Promise.all([
+        fetch("/api/fpl/load-team", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            managerId: parseInt(managerId),
+            gameweek: gameweek,
+            skeleton: false,
+          }),
+        }),
+        fetch(`/api/fpl/entry/${managerId}/history`)
+      ]);
+      
+      if (teamResponse.ok) {
+        const teamResult = await teamResponse.json();
+        if (teamResult.success && teamResult.data) {
+          // Get chip history if available
+          let usedChips: any[] = [];
+          if (historyResponse.ok) {
+            const historyResult = await historyResponse.json();
+            if (historyResult.success && historyResult.data?.chips) {
+              usedChips = historyResult.data.chips;
+            }
+          }
+          
+          // Calculate remaining chips (each manager starts with 1 of each)
+          const calculateRemainingChips = (usedChips: any[]) => {
+            const chipCounts = {
+              wildcard: 1, // Each manager gets 1 wildcard
+              bench_boost: 1,
+              triple_captain: 1,
+              free_hit: 1,
+            };
+            
+            // Subtract used chips
+            usedChips.forEach((chip: any) => {
+              // Map API chip names to internal names
+              const chipNameMap: {[key: string]: keyof typeof chipCounts} = {
+                'bboost': 'bench_boost',
+                '3xc': 'triple_captain', 
+                'freehit': 'free_hit',
+                'wildcard': 'wildcard'
+              };
+              
+              const mappedName = chipNameMap[chip.name];
+              if (mappedName && chipCounts.hasOwnProperty(mappedName)) {
+                chipCounts[mappedName] = Math.max(0, chipCounts[mappedName] - 1);
+              }
+            });
+            
+            return chipCounts;
+          };
+          
+          const remainingChips = calculateRemainingChips(usedChips);
+          console.log('Used chips:', usedChips);
+          console.log('Calculated remaining chips:', remainingChips);
+          
+          setManagerDetails(prev => ({
+            ...prev,
+            [managerId]: {
+              ...teamResult.data,
+              chips_remaining: remainingChips,
+              used_chips: usedChips
+            }
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching manager details:", error);
+    } finally {
+      setLoadingManagerDetails(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(managerId);
+        return newSet;
+      });
+    }
+  };
+  
+  const toggleManagerDetails = (managerId: string) => {
+    const isExpanded = expandedManagers.has(managerId);
+    
+    if (isExpanded) {
+      setExpandedManagers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(managerId);
+        return newSet;
+      });
+    } else {
+      setExpandedManagers(prev => new Set([...prev, managerId]));
+      fetchManagerDetails(managerId);
+    }
+  };
 
   const fetchLeagueStandings = async (
     leagueId: number,
@@ -350,6 +464,158 @@ export default function LeagueTables({
         return newSet;
       });
     }
+  };
+  
+  // Player Card Component
+  const PlayerCard = ({ playerData, isStarting = true }: { playerData: any, isStarting?: boolean }) => {
+    // Extract player info and stats from the team_with_stats structure
+    const player = playerData.player || {};
+    const liveStats = playerData.live_stats || {};
+    const position = playerData.position || 0;
+    const multiplier = playerData.multiplier || 1;
+    const isCaptain = playerData.is_captain || false;
+    const isViceCaptain = playerData.is_vice_captain || false;
+    
+    const getPositionColor = (elementType: number) => {
+      switch (elementType) {
+        case 1: return "bg-green-500"; // Goalkeeper
+        case 2: return "bg-blue-500"; // Defender  
+        case 3: return "bg-yellow-500"; // Midfielder
+        case 4: return "bg-red-500"; // Forward
+        default: return "bg-gray-500";
+      }
+    };
+    
+    const getPositionShort = (elementType: number) => {
+      switch (elementType) {
+        case 1: return "GK";
+        case 2: return "DEF";
+        case 3: return "MID";
+        case 4: return "FWD";
+        default: return "";
+      }
+    };
+    
+    // Get team name from player.team (ID) and convert to actual team name
+    const getTeamName = (teamId: number) => {
+      const teamNames: {[key: number]: string} = {
+        1: "ARS", 2: "AVL", 3: "BOU", 4: "BRE", 5: "BHA", 6: "CHE", 7: "CRY", 8: "EVE",
+        9: "FUL", 10: "IPS", 11: "LEI", 12: "LIV", 13: "MCI", 14: "MUN", 15: "NEW", 16: "NFO",
+        17: "SOU", 18: "TOT", 19: "WHU", 20: "WOL"
+      };
+      return teamNames[teamId] || "UNK";
+    };
+    
+    const totalPoints = liveStats.total_points || 0;
+    const displayPoints = multiplier > 1 ? totalPoints * multiplier : totalPoints;
+    
+    return (
+      <div className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+        isStarting ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800" : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600"
+      }`}>
+        {/* Player Kit/Position */}
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
+          getPositionColor(player.element_type)
+        }`}>
+          {getPositionShort(player.element_type)}
+        </div>
+        
+        {/* Player Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-sm text-theme-foreground truncate">
+              {player.web_name || (player.first_name && player.second_name ? `${player.first_name} ${player.second_name}` : "Unknown Player")}
+            </span>
+            {isCaptain && (
+              <span className="bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded font-bold">C</span>
+            )}
+            {isViceCaptain && (
+              <span className="bg-gray-500 text-white text-xs px-1.5 py-0.5 rounded font-bold">V</span>
+            )}
+          </div>
+          <div className="text-xs text-theme-text-secondary">
+            {getTeamName(player.team)}
+          </div>
+        </div>
+        
+        {/* Points */}
+        <div className="text-right">
+          <div className={`text-lg font-bold ${
+            displayPoints > 5 ? "text-green-600 dark:text-green-400" : 
+            displayPoints < 0 ? "text-red-600 dark:text-red-400" : "text-theme-foreground"
+          }`}>
+            {displayPoints}
+          </div>
+          <div className="text-xs text-theme-text-secondary">pts</div>
+        </div>
+      </div>
+    );
+  };
+  
+  // Chips Component
+  const ChipsDisplay = ({ chips, usedChips }: { chips?: any, usedChips?: any[] }) => {
+    if (!chips) return null;
+    
+    const chipsList = [
+      { name: "WC", key: "wildcard", apiName: "wildcard", color: "bg-purple-500", fullName: "Wildcard", range: "1-19" },
+      { name: "BB", key: "bench_boost", apiName: "bboost", color: "bg-blue-500", fullName: "Bench Boost", range: "1-19" },
+      { name: "TC", key: "triple_captain", apiName: "3xc", color: "bg-green-500", fullName: "Triple Captain", range: "1-19" },
+      { name: "FH", key: "free_hit", apiName: "freehit", color: "bg-orange-500", fullName: "Free Hit", range: "1-19" },
+    ];
+    
+    // Create a map of used chips from the usedChips array
+    const usedChipsMap = new Map();
+    if (usedChips) {
+      usedChips.forEach((chip: any) => {
+        usedChipsMap.set(chip.name, chip);
+      });
+    }
+    
+    return (
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2">
+          {chipsList.map(chip => {
+            // Use the chips_remaining object for the count
+            const remaining = chips[chip.key] || 0;
+            const isGray = remaining === 0;
+            const isUsed = usedChipsMap.has(chip.apiName);
+            const usedChipInfo = usedChipsMap.get(chip.apiName);
+            
+            return (
+              <div 
+                key={chip.key} 
+                className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                  isGray 
+                    ? "bg-gray-400 text-white shadow-sm" 
+                    : `${chip.color} text-white shadow-sm`
+                }`}
+                title={
+                  isUsed
+                    ? `${chip.fullName} used in GW${usedChipInfo?.event}` 
+                    : `${chip.fullName} available (GW ${chip.range})`
+                }
+              >
+                <span className="font-bold">{chip.name}</span>
+                <span>{remaining}</span>
+                {isUsed && (
+                  <span className="text-xs opacity-75">
+                    (GW{usedChipInfo?.event})
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="text-xs text-theme-text-secondary">
+          GW 1-19 | Second set: GW 19-38
+        </div>
+        {usedChips && usedChips.length > 0 && (
+          <div className="text-xs text-theme-text-secondary">
+            Used: {usedChips.map((chip: any) => `${chip.name} (GW${chip.event})`).join(", ")}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const toggleLeague = (leagueId: number, isH2H: boolean = false) => {
@@ -621,29 +887,34 @@ export default function LeagueTables({
                           <span className="sm:hidden">Δ</span>
                         </div>
                       </th>
+                      <th className="px-1 sm:px-2 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                        <span className="hidden sm:inline">Details</span>
+                        <span className="sm:hidden">+</span>
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tbody className="bg-white dark:bg-gray-800">
                     {liveData.map((player, index) => {
                       const previousPosition = player.rank;
                       const currentPosition = index + 1;
                       const positionChange = previousPosition - currentPosition;
+                      const isExpanded = expandedManagers.has(player.id);
+                      const isLoading = loadingManagerDetails.has(player.id);
+                      const details = managerDetails[player.id];
 
                       return (
-                        <tr
-                          key={player.id}
-                          className={`transition-all duration-300 hover:shadow-sm ${
+                        <React.Fragment key={player.id}>
+                          {/* Main Row */}
+                          <tr className={`transition-all duration-300 hover:shadow-sm border-b border-gray-200 dark:border-gray-700 ${
                             player.id === managerId?.toString()
                               ? "bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/80 dark:from-blue-900/20 dark:via-indigo-900/15 dark:to-purple-900/20 border-l-4 border-gradient-to-b from-blue-500 to-purple-500 shadow-md"
                               : index < 3
                               ? "bg-gradient-to-r from-yellow-50/50 to-orange-50/30 dark:from-yellow-900/10 dark:to-orange-900/10 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20"
                               : "hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-blue-50/40 dark:hover:from-gray-700/30 dark:hover:to-blue-900/10"
-                          }`}
-                        >
-                          <td className="px-2 sm:px-4 py-3">
-                            <div className="flex items-center gap-1 sm:gap-2">
-                              <div
-                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-sm border-2 ${
+                          } ${ isExpanded ? "border-b-0" : "" }`}>
+                            <td className="px-2 sm:px-4 py-3">
+                              <div className="flex items-center gap-1 sm:gap-2">
+                                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-sm border-2 ${
                                   index < 3
                                     ? index === 0
                                       ? "bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white border-yellow-300 shadow-yellow-200"
@@ -651,100 +922,186 @@ export default function LeagueTables({
                                       ? "bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 text-gray-800 border-gray-200 shadow-gray-100"
                                       : "bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white border-orange-300 shadow-orange-200"
                                     : "bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600"
-                                }`}
-                              >
-                                {currentPosition}
-                              </div>
-                              {player.id === managerId?.toString() && (
-                                <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm border border-blue-400">
-                                  {t("fplLive.you")}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-2 sm:px-4 py-3">
-                            <div>
-                              <div className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm truncate">
-                                {player.name}
-                              </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 truncate font-medium">
-                                {player.team}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-1 sm:px-2 py-3 text-center">
-                            <div className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">
-                              <span className="font-bold text-blue-700 dark:text-blue-300 text-xs sm:text-sm">
-                                {player.overall_points}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-1 sm:px-2 py-3 text-center">
-                            <div className="flex flex-col items-center">
-                              <div className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-lg">
-                                <span className="font-bold text-green-700 dark:text-green-300 text-xs sm:text-sm">
-                                  {player.live_points}
-                                </span>
-                              </div>
-                              {player.live_points !== player.overall_points && (
-                                <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full mt-1 font-medium border border-green-200 dark:border-green-800">
-                                  +{player.live_points - player.overall_points}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-1 sm:px-2 py-3 text-center">
-                            {player.bonus_points > 0 ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white shadow-sm border border-yellow-300">
-                                +{player.bonus_points}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">
-                                —
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-1 sm:px-2 py-3 text-center">
-                            {player.is_captain ? (
-                              <div className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-full shadow-sm border-2 border-yellow-300">
-                                <GiArmBandage className="w-3 h-3 text-white" />
-                              </div>
-                            ) : player.is_vice_captain ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600">
-                                VC
-                              </span>
-                            ) : (
-                              <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">
-                                —
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-1 sm:px-2 py-3 text-center">
-                            {positionChange !== 0 ? (
-                              <div className="flex items-center justify-center">
-                                {positionChange > 0 ? (
-                                  <div className="flex items-center bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg border border-red-200 dark:border-red-800">
-                                    <MdTrendingUp className="w-3 h-3 rotate-180 text-red-600 dark:text-red-400" />
-                                    <span className="text-xs ml-1 font-bold text-red-700 dark:text-red-300">
-                                      -{positionChange}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-lg border border-green-200 dark:border-green-800">
-                                    <MdTrendingUp className="w-3 h-3 text-green-600 dark:text-green-400" />
-                                    <span className="text-xs ml-1 font-bold text-green-700 dark:text-green-300">
-                                      +{Math.abs(positionChange)}
-                                    </span>
-                                  </div>
+                                }`}>
+                                  {currentPosition}
+                                </div>
+                                {player.id === managerId?.toString() && (
+                                  <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm border border-blue-400">
+                                    {t("fplLive.you")}
+                                  </span>
                                 )}
                               </div>
-                            ) : (
-                              <span className="text-gray-400 dark:text-gray-500 text-xs font-medium bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-lg">
-                                —
-                              </span>
-                            )}
-                          </td>
-                        </tr>
+                            </td>
+                            <td className="px-2 sm:px-4 py-3">
+                              <div>
+                                <div className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm truncate">
+                                  {player.name}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 truncate font-medium">
+                                  {player.team}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-1 sm:px-2 py-3 text-center">
+                              <div className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">
+                                <span className="font-bold text-blue-700 dark:text-blue-300 text-xs sm:text-sm">
+                                  {player.overall_points}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-1 sm:px-2 py-3 text-center">
+                              <div className="flex flex-col items-center">
+                                <div className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-lg">
+                                  <span className="font-bold text-green-700 dark:text-green-300 text-xs sm:text-sm">
+                                    {player.live_points}
+                                  </span>
+                                </div>
+                                {player.live_points !== player.overall_points && (
+                                  <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full mt-1 font-medium border border-green-200 dark:border-green-800">
+                                    +{player.live_points - player.overall_points}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-1 sm:px-2 py-3 text-center">
+                              {player.bonus_points > 0 ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white shadow-sm border border-yellow-300">
+                                  +{player.bonus_points}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">
+                                  —
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-1 sm:px-2 py-3 text-center">
+                              {player.is_captain ? (
+                                <div className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-full shadow-sm border-2 border-yellow-300">
+                                  <GiArmBandage className="w-3 h-3 text-white" />
+                                </div>
+                              ) : player.is_vice_captain ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600">
+                                  VC
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">
+                                  —
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-1 sm:px-2 py-3 text-center">
+                              {positionChange !== 0 ? (
+                                <div className="flex items-center justify-center">
+                                  {positionChange > 0 ? (
+                                    <div className="flex items-center bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg border border-red-200 dark:border-red-800">
+                                      <MdTrendingUp className="w-3 h-3 rotate-180 text-red-600 dark:text-red-400" />
+                                      <span className="text-xs ml-1 font-bold text-red-700 dark:text-red-300">
+                                        -{positionChange}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-lg border border-green-200 dark:border-green-800">
+                                      <MdTrendingUp className="w-3 h-3 text-green-600 dark:text-green-400" />
+                                      <span className="text-xs ml-1 font-bold text-green-700 dark:text-green-300">
+                                        +{Math.abs(positionChange)}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-500 text-xs font-medium bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-lg">
+                                  —
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-1 sm:px-2 py-3 text-center">
+                              <button
+                                onClick={() => toggleManagerDetails(player.id)}
+                                className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                              >
+                                {isExpanded ? <FiChevronUp className="w-4 h-4" /> : <FiChevronDown className="w-4 h-4" />}
+                              </button>
+                            </td>
+                          </tr>
+                          
+                          {/* Accordion Details */}
+                          {isExpanded && (
+                            <tr>
+                              <td colSpan={8} className="px-0 py-0 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                                <div className="p-4 sm:p-6">
+                                  {isLoading ? (
+                                    <div className="flex items-center justify-center py-8">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="text-sm text-theme-text-secondary">Loading manager details...</span>
+                                      </div>
+                                    </div>
+                                  ) : details ? (
+                                    <div className="space-y-4">
+                                      {/* Chips Display */}
+                                      <div className="flex flex-col sm:flex-row gap-4">
+                                        <div className="flex-1">
+                                          <h4 className="text-sm font-semibold mb-2 text-theme-foreground">Chips Remaining</h4>
+                                          <ChipsDisplay chips={details.chips_remaining || {
+                                            wildcard: 0,
+                                            bench_boost: 0,
+                                            triple_captain: 0,
+                                            free_hit: 0,
+                                          }} usedChips={details.used_chips || []} />
+                                        </div>
+                                        <div className="flex-1">
+                                          <h4 className="text-sm font-semibold mb-2 text-theme-foreground">Team Value</h4>
+                                          <div className="text-lg font-bold text-blue-600">
+                                            £{((details.manager?.last_deadline_value || 0) / 10).toFixed(1)}m
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Team Display */}
+                                      {details.team_with_stats && (
+                                        <div className="space-y-4">
+                                          {/* Starting XI */}
+                                          <div>
+                                            <h4 className="text-sm font-semibold mb-3 text-theme-foreground flex items-center gap-2">
+                                              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                              Starting XI
+                                            </h4>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                              {details.team_with_stats
+                                                .filter((p: any) => p.position <= 11)
+                                                .map((player: any) => (
+                                                <PlayerCard key={player.player_id} playerData={player} isStarting={true} />
+                                              ))}
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Bench */}
+                                          <div>
+                                            <h4 className="text-sm font-semibold mb-3 text-theme-foreground flex items-center gap-2">
+                                              <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                                              Bench
+                                            </h4>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                              {details.team_with_stats
+                                                .filter((p: any) => p.position > 11)
+                                                .map((player: any) => (
+                                                <PlayerCard key={player.player_id} playerData={player} isStarting={false} />
+                                              ))}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="text-center py-8">
+                                      <span className="text-sm text-theme-text-secondary">Failed to load manager details</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </tbody>
@@ -985,6 +1342,10 @@ export default function LeagueTables({
                                     <th className="px-2 sm:px-4 py-2 text-center text-theme-primary text-xs">
                                       Δ
                                     </th>
+                                    <th className="px-1 sm:px-2 py-2 text-center text-theme-primary text-xs">
+                                      <span className="hidden sm:inline">Details</span>
+                                      <span className="sm:hidden">+</span>
+                                    </th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -993,79 +1354,152 @@ export default function LeagueTables({
                                       const positionChange = entry.last_rank
                                         ? entry.rank - entry.last_rank
                                         : 0;
+                                      const isExpanded = expandedManagers.has(entry.entry.toString());
+                                      const isLoading = loadingManagerDetails.has(entry.entry.toString());
+                                      const details = managerDetails[entry.entry.toString()];
+                                      
                                       return (
-                                        <tr
-                                          key={entry.id}
-                                          className={`border-b dark:border-gray-700 ${
+                                        <React.Fragment key={entry.id}>
+                                          {/* Main Row */}
+                                          <tr className={`border-b dark:border-gray-700 ${
                                             entry.entry === managerId
                                               ? "bg-blue-50 dark:bg-blue-900"
                                               : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                          }`}
-                                        >
-                                          <td className="px-2 sm:px-4 py-2 font-medium text-xs">
-                                            <div className="flex items-center gap-1">
-                                              <span
-                                                className={
-                                                  index < 3 ? "font-bold" : ""
-                                                }
-                                              >
-                                                {entry.rank}
-                                              </span>
-                                              {entry.entry === managerId && (
-                                                <span className="text-blue-500 text-xs">
-                                                  ←
+                                          } ${ isExpanded ? "border-b-0" : "" }`}>
+                                            <td className="px-2 sm:px-4 py-2 font-medium text-xs">
+                                              <div className="flex items-center gap-1">
+                                                <span className={ index < 3 ? "font-bold" : "" }>
+                                                  {entry.rank}
                                                 </span>
-                                              )}
-                                            </div>
-                                          </td>
-                                          <td className="px-2 sm:px-4 py-2">
-                                            <div className="truncate">
-                                              <div className="text-xs sm:text-sm font-medium flex items-center gap-2">
-                                                {entry.player_region_name && (
-                                                  <span
-                                                    className={`fi fi-${getCountryFlagCode(
-                                                      entry.player_region_name
-                                                    )} w-3 h-2 rounded-sm`}
-                                                    title={
-                                                      entry.player_region_name
-                                                    }
-                                                  ></span>
-                                                )}
-                                                {entry.player_name ||
-                                                  entry.entry_name}
                                                 {entry.entry === managerId && (
-                                                  <span className="text-xs text-blue-500 font-bold bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">
-                                                    TI
-                                                  </span>
+                                                  <span className="text-blue-500 text-xs">←</span>
                                                 )}
                                               </div>
-                                            </div>
-                                          </td>
-                                          <td className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm">
-                                            {entry.total.toLocaleString()}
-                                          </td>
-                                          <td className="px-2 sm:px-4 py-2 text-center">
-                                            {positionChange > 0 ? (
-                                              <div className="flex items-center justify-center text-red-600">
-                                                <MdTrendingUp className="w-3 h-3 rotate-180" />
-                                                <span className="text-xs ml-1">
-                                                  -{Math.abs(positionChange)}
-                                                </span>
+                                            </td>
+                                            <td className="px-2 sm:px-4 py-2">
+                                              <div className="truncate">
+                                                <div className="text-xs sm:text-sm font-medium flex items-center gap-2">
+                                                  {entry.player_region_name && (
+                                                    <span
+                                                      className={`fi fi-${getCountryFlagCode(
+                                                        entry.player_region_name
+                                                      )} w-3 h-2 rounded-sm`}
+                                                      title={entry.player_region_name}
+                                                    ></span>
+                                                  )}
+                                                  {entry.player_name || entry.entry_name}
+                                                  {entry.entry === managerId && (
+                                                    <span className="text-xs text-blue-500 font-bold bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">TI</span>
+                                                  )}
+                                                </div>
                                               </div>
-                                            ) : positionChange < 0 ? (
-                                              <div className="flex items-center justify-center text-green-600">
-                                                <MdTrendingUp className="w-3 h-3" />
-                                                <span className="text-xs ml-1">
-                                                  +{Math.abs(positionChange)}
-                                                </span>
-                                              </div>
-                                            ) : (
-                                              <span className="text-gray-400 text-xs">
-                                                —
-                                              </span>
-                                            )}
-                                          </td>
-                                        </tr>
+                                            </td>
+                                            <td className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm">
+                                              {entry.total.toLocaleString()}
+                                            </td>
+                                            <td className="px-2 sm:px-4 py-2 text-center">
+                                              {positionChange > 0 ? (
+                                                <div className="flex items-center justify-center text-red-600">
+                                                  <MdTrendingUp className="w-3 h-3 rotate-180" />
+                                                  <span className="text-xs ml-1">-{Math.abs(positionChange)}</span>
+                                                </div>
+                                              ) : positionChange < 0 ? (
+                                                <div className="flex items-center justify-center text-green-600">
+                                                  <MdTrendingUp className="w-3 h-3" />
+                                                  <span className="text-xs ml-1">+{Math.abs(positionChange)}</span>
+                                                </div>
+                                              ) : (
+                                                <span className="text-gray-400 text-xs">—</span>
+                                              )}
+                                            </td>
+                                            <td className="px-1 sm:px-2 py-2 text-center">
+                                              <button
+                                                onClick={() => toggleManagerDetails(entry.entry.toString())}
+                                                className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                              >
+                                                {isExpanded ? <FiChevronUp className="w-3 h-3 sm:w-4 sm:h-4" /> : <FiChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />}
+                                              </button>
+                                            </td>
+                                          </tr>
+                                          
+                                          {/* Accordion Details */}
+                                          {isExpanded && (
+                                            <tr>
+                                              <td colSpan={5} className="px-0 py-0 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                                                <div className="p-3 sm:p-4">
+                                                  {isLoading ? (
+                                                    <div className="flex items-center justify-center py-6">
+                                                      <div className="flex items-center gap-2">
+                                                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                                        <span className="text-xs text-theme-text-secondary">Loading manager details...</span>
+                                                      </div>
+                                                    </div>
+                                                  ) : details ? (
+                                                    <div className="space-y-3">
+                                                      {/* Chips and Team Value */}
+                                                      <div className="flex flex-col sm:flex-row gap-3">
+                                                        <div className="flex-1">
+                                                          <h4 className="text-xs font-semibold mb-2 text-theme-foreground">Chips Remaining</h4>
+                                                          <ChipsDisplay chips={details.chips_remaining || {
+                                                            wildcard: 0,
+                                                            bench_boost: 0,
+                                                            triple_captain: 0,
+                                                            free_hit: 0,
+                                                          }} usedChips={details.used_chips || []} />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                          <h4 className="text-xs font-semibold mb-2 text-theme-foreground">Team Value</h4>
+                                                          <div className="text-base font-bold text-blue-600">
+                                                            £{((details.manager?.last_deadline_value || 0) / 10).toFixed(1)}m
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                      
+                                                      {/* Team Display */}
+                                                      {details.team_with_stats && (
+                                                        <div className="space-y-3">
+                                                          {/* Starting XI */}
+                                                          <div>
+                                                            <h4 className="text-xs font-semibold mb-2 text-theme-foreground flex items-center gap-1">
+                                                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                                              Starting XI
+                                                            </h4>
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                                              {details.team_with_stats
+                                                                .filter((p: any) => p.position <= 11)
+                                                                .map((player: any) => (
+                                                                <PlayerCard key={player.player_id} playerData={player} isStarting={true} />
+                                                              ))}
+                                                            </div>
+                                                          </div>
+                                                          
+                                                          {/* Bench */}
+                                                          <div>
+                                                            <h4 className="text-xs font-semibold mb-2 text-theme-foreground flex items-center gap-1">
+                                                              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                                              Bench
+                                                            </h4>
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                                              {details.team_with_stats
+                                                                .filter((p: any) => p.position > 11)
+                                                                .map((player: any) => (
+                                                                <PlayerCard key={player.player_id} playerData={player} isStarting={false} />
+                                                              ))}
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  ) : (
+                                                    <div className="text-center py-6">
+                                                      <span className="text-xs text-theme-text-secondary">Failed to load manager details</span>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </td>
+                                            </tr>
+                                          )}
+                                        </React.Fragment>
                                       );
                                     }
                                   )}

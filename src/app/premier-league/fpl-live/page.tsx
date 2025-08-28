@@ -157,8 +157,11 @@ export default function FPLLivePage() {
     console.info("Success:", message);
   };
 
-  const loadFullTeamData = useCallback(async () => {
-    if (!managerId) return;
+  const loadFullTeamData = useCallback(async (useManagerId?: number, useGameweek?: number) => {
+    const actualManagerId = useManagerId || managerId;
+    const actualGameweek = useGameweek || gameweek;
+    
+    if (!actualManagerId) return;
 
     try {
       const teamResponse = await fetch("/api/fpl/load-team", {
@@ -167,8 +170,8 @@ export default function FPLLivePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          managerId,
-          gameweek,
+          managerId: actualManagerId,
+          gameweek: actualGameweek,
         }),
       });
 
@@ -196,11 +199,13 @@ export default function FPLLivePage() {
     }
   }, [managerId, gameweek, t]);
 
-  const loadLeaguesData = useCallback(async () => {
-    if (!managerId) return;
+  const loadLeaguesData = useCallback(async (useManagerId?: number) => {
+    const actualManagerId = useManagerId || managerId;
+    
+    if (!actualManagerId) return;
 
     try {
-      const response = await fetch(`/api/fpl/leagues?managerId=${managerId}`);
+      const response = await fetch(`/api/fpl/leagues?managerId=${actualManagerId}`);
 
       if (response.ok) {
         const result = await response.json();
@@ -222,13 +227,16 @@ export default function FPLLivePage() {
     }
   }, [managerId]);
 
-  const loadGameweekStatus = useCallback(async () => {
-    if (!managerId) return;
+  const loadGameweekStatus = useCallback(async (useManagerId?: number, useGameweek?: number) => {
+    const actualManagerId = useManagerId || managerId;
+    const actualGameweek = useGameweek || gameweek;
+    
+    if (!actualManagerId) return;
 
     setGameweekStatusLoading(true);
     try {
       const response = await fetch(
-        `/api/fpl/gameweek-status?managerId=${managerId}&gameweek=${gameweek}`
+        `/api/fpl/gameweek-status?managerId=${actualManagerId}&gameweek=${actualGameweek}`
       );
 
       if (response.ok) {
@@ -251,8 +259,12 @@ export default function FPLLivePage() {
     }
   }, [managerId, gameweek]);
 
-  const loadManagerInfo = useCallback(async () => {
-    if (!managerId) {
+  const loadManagerInfo = useCallback(async (inputManagerId?: number, inputGameweek?: number) => {
+    // Use input values if provided, otherwise fall back to state
+    const useManagerId = inputManagerId || managerId;
+    const useGameweek = inputGameweek || gameweek;
+    
+    if (!useManagerId) {
       showError(t("pleaseEnterManagerId"));
       return;
     }
@@ -261,10 +273,10 @@ export default function FPLLivePage() {
     setError(null);
 
     try {
-      if (managerId !== null) {
-        localStorage.setItem("fpl-manager-id", managerId.toString());
+      if (useManagerId !== null) {
+        localStorage.setItem("fpl-manager-id", useManagerId.toString());
       }
-      localStorage.setItem("fpl-gameweek", gameweek.toString());
+      localStorage.setItem("fpl-gameweek", useGameweek.toString());
 
       // Get skeleton data first
       const skeletonResponse = await fetch("/api/fpl/load-team", {
@@ -273,8 +285,8 @@ export default function FPLLivePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          managerId,
-          gameweek,
+          managerId: useManagerId,
+          gameweek: useGameweek,
           skeleton: true,
         }),
       });
@@ -287,18 +299,22 @@ export default function FPLLivePage() {
           const timestamp = new Date().toISOString();
           setLastUpdated(timestamp);
 
+          // Update state with the actual values being used
+          if (inputManagerId) setManagerId(inputManagerId);
+          if (inputGameweek) setGameweek(inputGameweek);
+
           setTeamLoaded(true);
           showSuccess(t("managerInfoLoaded"));
           setLoading(false);
 
           // Load additional data in background
           setTeamDataLoading(true);
-          loadFullTeamData();
+          loadFullTeamData(useManagerId, useGameweek);
 
           setLeaguesLoading(true);
-          loadLeaguesData();
+          loadLeaguesData(useManagerId);
 
-          loadGameweekStatus();
+          loadGameweekStatus(useManagerId, useGameweek);
         } else {
           throw new Error(result.error || "Manager not found");
         }
@@ -317,8 +333,8 @@ export default function FPLLivePage() {
       console.error("💥 [FRONTEND] Error loading manager:", {
         error: err,
         message,
-        managerId,
-        gameweek,
+        managerId: useManagerId,
+        gameweek: useGameweek,
       });
       showError(message);
       setLoading(false);
@@ -720,7 +736,7 @@ export default function FPLLivePage() {
               isPolling={false}
               onManagerIdChange={setManagerId}
               onGameweekChange={setGameweek}
-              onLoadTeam={loadManagerInfo}
+              onLoadTeam={(inputManagerId, inputGameweek) => loadManagerInfo(inputManagerId, inputGameweek)}
               onStartPolling={() => {}}
               onStopPolling={() => {}}
               loading={loading}
@@ -771,7 +787,7 @@ export default function FPLLivePage() {
                   </button>
 
                   <button
-                    onClick={loadManagerInfo}
+                    onClick={() => loadManagerInfo()}
                     className="flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-all min-h-[44px]"
                   >
                     <MdRefresh className="w-4 h-4 sm:w-5 sm:h-5" />

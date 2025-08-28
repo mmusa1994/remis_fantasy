@@ -10,7 +10,7 @@ interface ControlsBarProps {
   isPolling: boolean;
   onManagerIdChange: (id: number) => void;
   onGameweekChange: (gw: number) => void;
-  onLoadTeam: () => void;
+  onLoadTeam: (managerId?: number, gameweek?: number) => void; // Optional params
   onStartPolling: () => void;
   onStopPolling: () => void;
   loading: boolean;
@@ -28,6 +28,8 @@ export default function ControlsBar({
   loading,
 }: ControlsBarProps) {
   const { t } = useTranslation("fpl");
+  
+  // Simple state - only prefill from localStorage on initial load
   const [localManagerId, setLocalManagerId] = useState(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("fpl-manager-id");
@@ -35,6 +37,7 @@ export default function ControlsBar({
     }
     return "";
   });
+  
   const [localGameweek, setLocalGameweek] = useState(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("fpl-gameweek");
@@ -43,49 +46,40 @@ export default function ControlsBar({
     return "";
   });
 
-  // No automatic syncing with parent props - only localStorage and manual Load button
-
-  // No debounce timers needed since we don't auto-call parent functions
-
+  // Simple handlers - update state and localStorage
   const handleManagerIdChange = (value: string) => {
     setLocalManagerId(value);
-    
-    // Save to localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem("fpl-manager-id", value);
     }
-    
-    // NOTE: No automatic call to onManagerIdChange - only happens on Load button
   };
 
   const handleGameweekChange = (value: string) => {
     setLocalGameweek(value);
-    
-    // Save to localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem("fpl-gameweek", value);
     }
-    
-    // NOTE: No automatic call to onGameweekChange - only happens on Load button
   };
 
-  // No cleanup needed since we don't use timers anymore
-
   const handleLoadTeam = () => {
-    // Update parent with current values before loading
-    const managerId = parseInt(localManagerId, 10);
-    const gameweek = parseInt(localGameweek, 10);
+    const managerIdNum = parseInt(localManagerId, 10);
+    const gameweekNum = parseInt(localGameweek, 10);
     
-    if (!isNaN(managerId) && managerId > 0) {
-      onManagerIdChange(managerId);
+    // Validate input values
+    if (isNaN(managerIdNum) || managerIdNum <= 0) {
+      return; // Button should be disabled, but just in case
     }
     
-    if (!isNaN(gameweek) && gameweek >= 1 && gameweek <= 38) {
-      onGameweekChange(gameweek);
+    if (isNaN(gameweekNum) || gameweekNum < 1 || gameweekNum > 38) {
+      return; // Button should be disabled, but just in case  
     }
     
-    // Then call the load team function
-    onLoadTeam();
+    // Update parent state first
+    onManagerIdChange(managerIdNum);
+    onGameweekChange(gameweekNum);
+    
+    // Call load team with the actual values from input
+    onLoadTeam(managerIdNum, gameweekNum);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -100,7 +94,7 @@ export default function ControlsBar({
 
   return (
     <div className="bg-gradient-to-r from-blue-500/90 to-purple-600/90 rounded-xl shadow-lg p-4 md:p-6 border border-blue-300/30 backdrop-blur-sm">
-      {/* Elegant header */}
+      {/* Header */}
       <div className="text-center mb-4">
         <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
           {t("fplLive.enterManagerId")}
@@ -153,6 +147,7 @@ export default function ControlsBar({
             onChange={(e) => handleGameweekChange(e.target.value)}
             onKeyDown={handleKeyDown}
             className="w-full px-3 py-2 text-center border-2 border-white/30 bg-white/20 text-white rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 backdrop-blur transition-all duration-200"
+            placeholder="1-38"
           />
         </div>
 
