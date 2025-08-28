@@ -99,7 +99,7 @@ export class FPLLeagueService extends BaseFPLService {
       if (cachedData) {
         return {
           success: true,
-          data: cachedData,
+          data: cachedData as { league_info: any; standings: FPLClassicLeagueEntry[]; total_entries: number; },
           timestamp: new Date().toISOString(),
         };
       }

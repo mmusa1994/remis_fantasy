@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { BaseFPLService } from "./base.service";
 import { FPLBootstrapService } from "./bootstrap.service";
 import { FPLServiceError } from "./errors";

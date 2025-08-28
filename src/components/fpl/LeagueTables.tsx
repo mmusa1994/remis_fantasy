@@ -416,9 +416,7 @@ export default function LeagueTables({
               }`}
             ></div>
             <span className="text-theme-text-secondary text-xs">
-              {isLiveTracking
-                ? "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu"
-                : "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu"}
+              {t("fplLive.startLiveTrackingMessage")}
             </span>
           </div>
         </div>
@@ -470,9 +468,7 @@ export default function LeagueTables({
                     isLiveTracking ? "bg-green-500 animate-pulse" : "bg-gray-400"
                   }`}></div>
                   <span className="text-sm font-medium text-theme-foreground">
-                    {isLiveTracking 
-                      ? "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu" 
-                      : "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu"}
+                    {t("fplLive.startLiveTrackingMessage")}
                   </span>
                   {isLiveTracking && (
                     <button
@@ -841,7 +837,7 @@ export default function LeagueTables({
                     </div>
                     <div className="flex items-center gap-2 text-sm text-theme-muted">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span>Ažuriranje svakih 30 sekundi</span>
+                      <span>{t("fplLive.updatesEvery30Seconds")}</span>
                     </div>
                   </>
                 ) : (
@@ -859,7 +855,7 @@ export default function LeagueTables({
                     </div>
                     <div className="flex items-center gap-2 text-sm text-theme-muted">
                       <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                      <span>Ažuriranje svakih 30 sekundi</span>
+                      <span>{t("fplLive.updatesEvery30Seconds")}</span>
                     </div>
                   </>
                 )}

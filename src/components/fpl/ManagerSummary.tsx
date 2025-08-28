@@ -3,6 +3,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import FlagLoader from "@/components/shared/FlagLoader";
+import LoadingCard from "@/components/shared/LoadingCard";
 import { getCountryFlagCode } from "@/utils/countryMapping";
 import { formatTeamValueWithCurrency } from "@/utils/teamValueFormatter";
 
@@ -56,7 +57,8 @@ interface ManagerSummaryProps {
   bonusAdded: boolean;
   gameweek: number;
   lastUpdated?: string;
-  managerId?: number; // Add the actual manager ID from user input
+  managerId?: number;
+  loading?: boolean; // Add loading state
 }
 
 const ManagerSummary = React.memo(function ManagerSummary({
@@ -67,18 +69,17 @@ const ManagerSummary = React.memo(function ManagerSummary({
   gameweek,
   lastUpdated,
   managerId,
+  loading = false,
 }: ManagerSummaryProps) {
   const { t } = useTranslation("fpl");
-  if (!manager || !teamTotals) {
+  // Show loading card when loading or when data is not available yet
+  if (loading || !manager || !teamTotals) {
     return (
-      <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">
-        <h3 className="text-lg font-semibold mb-4 text-theme-foreground theme-transition">
-          {t("fplLive.managerOverview")}
-        </h3>
-        <div className="text-center text-theme-text-secondary theme-transition">
-          {t("fplLive.loadTeamToSeeManagerOverview")}
-        </div>
-      </div>
+      <LoadingCard
+        title={t("fplLive.managerOverview")} 
+        description={loading ? t("fplLive.loadingManagerInfo") : t("fplLive.loadTeamToSeeManagerOverview")}
+        className="bg-theme-card border-theme-border rounded-lg shadow theme-transition"
+      />
     );
   }
 

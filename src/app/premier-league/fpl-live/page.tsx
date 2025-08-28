@@ -27,6 +27,7 @@ import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
 import LiveTracker from "@/components/fpl/LiveTracker";
 import LeagueTables from "@/components/fpl/LeagueTables";
 import MatchResults from "@/components/fpl/MatchResults";
+import LoadingCard from "@/components/shared/LoadingCard";
 import type { FPLGameweekStatus } from "@/types/fpl";
 
 interface FPLData {
@@ -82,6 +83,7 @@ export default function FPLLivePage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showTabDropdown, setShowTabDropdown] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
+  const [tabLoading, setTabLoading] = useState(false);
 
   // Tab configuration
   const tabs: TabConfig[] = [
@@ -419,16 +421,7 @@ export default function FPLLivePage() {
     t,
   ]);
 
-  // Legacy functions for backward compatibility
-  const startPolling = useCallback(() => {
-    toggleLiveTracking();
-  }, [toggleLiveTracking]);
-  
-  const stopPolling = useCallback(() => {
-    if (isLiveTracking) {
-      toggleLiveTracking();
-    }
-  }, [isLiveTracking, toggleLiveTracking]);
+  // Legacy functions removed - now using toggleLiveTracking directly
 
   useEffect(() => {
     return () => {
@@ -448,9 +441,30 @@ export default function FPLLivePage() {
     showSuccess(t("settingsSavedSuccessfully"));
   };
 
+  const handleTabChange = (newTab: TabType) => {
+    setTabLoading(true);
+    setActiveTab(newTab);
+    
+    // Simulate brief loading for smooth transition
+    setTimeout(() => {
+      setTabLoading(false);
+    }, 300);
+  };
+
   const renderTabContent = () => {
     if (!teamLoaded || !data.manager) {
       return null;
+    }
+
+    // Show loading during tab transitions
+    if (tabLoading) {
+      return (
+        <LoadingCard
+          title={`${t("fplLive.loadingContent")} ${tabs.find(tab => tab.id === activeTab)?.label || ''}...`}
+          description={t("fplLive.preparingContent")}
+          className="bg-theme-card border-theme-border rounded-lg shadow theme-transition"
+        />
+      );
     }
 
     switch (activeTab) {
@@ -465,7 +479,8 @@ export default function FPLLivePage() {
               bonusAdded={data.bonus_added || false}
               gameweek={gameweek}
               lastUpdated={lastUpdated || undefined}
-              managerId={managerId}
+              managerId={managerId || undefined}
+              loading={loading || teamDataLoading}
             />
             <GameweekStatus
               gameweekStatus={gameweekStatus || undefined}
@@ -787,7 +802,7 @@ export default function FPLLivePage() {
                       return (
                         <button
                           key={tab.id}
-                          onClick={() => setActiveTab(tab.id)}
+                          onClick={() => handleTabChange(tab.id)}
                           className={`flex-1 flex flex-col items-center gap-1 px-2 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
                             isActive
                               ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
@@ -829,7 +844,7 @@ export default function FPLLivePage() {
                               <button
                                 key={tab.id}
                                 onClick={() => {
-                                  setActiveTab(tab.id);
+                                  handleTabChange(tab.id);
                                   setShowTabDropdown(false);
                                 }}
                                 className={`w-full flex items-center gap-2 px-3 py-3 text-sm font-medium transition-all ${
@@ -857,7 +872,7 @@ export default function FPLLivePage() {
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => handleTabChange(tab.id)}
                         className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
                           isActive
                             ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
@@ -897,7 +912,7 @@ export default function FPLLivePage() {
                               <button
                                 key={tab.id}
                                 onClick={() => {
-                                  setActiveTab(tab.id);
+                                  handleTabChange(tab.id);
                                   setShowTabDropdown(false);
                                 }}
                                 className={`w-full flex items-center gap-2 px-3 py-3 text-sm font-medium transition-all ${
@@ -925,7 +940,7 @@ export default function FPLLivePage() {
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => handleTabChange(tab.id)}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-base font-medium transition-all border-b-2 min-h-[60px] ${
                           isActive
                             ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"

@@ -204,6 +204,16 @@
     "leaguesManager": "Menadžer",
     "leaguesPoints": "Bodovi",
     "wdl": "P/N/I",
-    "manager": "Menadžer"
+    "manager": "Menadžer",
+    "loadingLiveData": "Učitavanje uživo podataka...",
+    "loadingManagerInfo": "Učitavanje informacija o menadžeru...",
+    "loadingContent": "Učitavanje sadržaja...",
+    "preparingContent": "Priprema sadržaja za prikaz",
+    "fetchingLatestStandings": "Preuzimanje najnovijih rezultata iz",
+    "liveTrackingActive": "Uživo praćenje aktivno",
+    "waitingForUpdates": "Čeka se na nova ažuriranja...",
+    "readyForLiveTracking": "Spreman za živo praćenje",
+    "startLiveTrackingMessage": "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu",
+    "updatesEvery30Seconds": "Ažuriranje svakih 30 sekundi"
   }
 }

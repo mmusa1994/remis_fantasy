@@ -224,6 +224,16 @@
     "leaguesManager": "Manager",
     "leaguesPoints": "Points",
     "wdl": "W/D/L",
-    "manager": "Manager"
+    "manager": "Manager",
+    "loadingLiveData": "Loading live data...",
+    "loadingManagerInfo": "Loading manager information...",
+    "loadingContent": "Loading content...",
+    "preparingContent": "Preparing content for display",
+    "fetchingLatestStandings": "Fetching latest standings from",
+    "liveTrackingActive": "Live tracking active",
+    "waitingForUpdates": "Waiting for new updates...",
+    "readyForLiveTracking": "Ready for live tracking",
+    "startLiveTrackingMessage": "Start live tracking to see real-time updates",
+    "updatesEvery30Seconds": "Updates every 30 seconds"
   }
 }
