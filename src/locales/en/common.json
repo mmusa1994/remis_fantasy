@@ -5,7 +5,6 @@
   "error": "Error loading data",
   "tryAgain": "Try Again",
   "comingSoon": "Coming Soon",
-  "adminPanel": "Admin Panel",
   "live": "LIVE",
   "finished": "Finished",
   "offline": "Offline",
@@ -18,7 +17,8 @@
     "subtitle": "Join thousands of players in the most competitive fantasy leagues.",
     "years": "Years of Excellence",
     "trust": "Trusted by Players",
-    "copyright": "© 2025 REMIS Fantasy. All rights reserved."
+    "copyright": "© 2025 REMIS Fantasy. All rights reserved.",
+    "adminPanel": "Admin Panel"
   },
   "home": {
     "siteName": "REMIS Fantasy",
@@ -29,7 +29,7 @@
         "description": "The most popular fantasy league with 4 different categories"
       },
       "championsLeague": {
-        "title": "Champions League", 
+        "title": "Champions League",
         "description": "European elite of fantasy football"
       },
       "f1Fantasy": {
@@ -43,7 +43,7 @@
         "value": "8000 KM"
       },
       "availableLeagues": {
-        "label": "Available Leagues", 
+        "label": "Available Leagues",
         "value": "5"
       },
       "registeredPlayers": {
@@ -70,7 +70,7 @@
   "prizes": {
     "firstPlace": "1st Place",
     "firstPlaceDesc": "Winner of the league",
-    "secondPlace": "2nd Place", 
+    "secondPlace": "2nd Place",
     "secondPlaceDesc": "Runner-up of the league",
     "thirdPlace": "3rd Place",
     "thirdPlaceDesc": "Third place in the league"
@@ -123,7 +123,7 @@
     },
     "champions": {
       "title": "Champions League Fantasy",
-      "season": "Season 2025/26", 
+      "season": "Season 2025/26",
       "subtitle": "European elite of fantasy football. Experience the thrill of Champions League with the best teams in Europe!",
       "primaryButton": "Join League",
       "secondaryButton": "View Prizes"

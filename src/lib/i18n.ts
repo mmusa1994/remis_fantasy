@@ -7,7 +7,6 @@ import commonBS from "@/locales/bs/common.json";
 import fplEN from "@/locales/en/fpl.json";
 import fplBS from "@/locales/bs/fpl.json";
 import heroEN from "@/locales/en/hero.json";
-import heroBS from "@/locales/bs/hero.json";
 import navigationEN from "@/locales/en/navigation.json";
 import navigationBS from "@/locales/bs/navigation.json";
 
@@ -21,7 +20,6 @@ const resources = {
   bs: {
     common: commonBS,
     fpl: fplBS,
-    hero: heroBS,
     navigation: navigationBS,
   },
 };

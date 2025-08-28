@@ -31,16 +31,24 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     setMounted(true);
 
-    // Check localStorage first
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    if (savedTheme) {
-      setThemeState(savedTheme);
+    // Check if URL contains "admin" - set default to light for admin pages
+    const isAdminPage = window.location.pathname.includes("admin");
+
+    if (isAdminPage) {
+      // For admin pages, always default to light theme
+      setThemeState("light");
     } else {
-      // Check system preference
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      setThemeState(prefersDark ? "dark" : "light");
+      // For non-admin pages, check localStorage first, then system preference
+      const savedTheme = localStorage.getItem("theme") as Theme | null;
+      if (savedTheme) {
+        setThemeState(savedTheme);
+      } else {
+        // Check system preference for non-admin pages
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        setThemeState(prefersDark ? "dark" : "light");
+      }
     }
   }, []);
 

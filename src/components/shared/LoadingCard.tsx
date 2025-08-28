@@ -20,6 +20,8 @@ const LoadingCard = React.memo<LoadingCardProps>(function LoadingCard({
   const { t } = useTranslation();
   const { theme } = useTheme();
 
+  console.log(theme);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

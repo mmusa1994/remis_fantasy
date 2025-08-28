@@ -5,7 +5,6 @@
   "error": "Greška pri učitavanju podataka",
   "tryAgain": "Pokušaj Ponovo",
   "comingSoon": "Uskoro",
-  "adminPanel": "Admin Panel",
   "live": "UŽIVO",
   "finished": "Završeno",
   "offline": "Offline",
@@ -16,9 +15,10 @@
   "footer": {
     "tagline": "Ultimativna destinacija za ljubitelje fantasy sporta.",
     "subtitle": "Pridruži se hiljadama igrača u najkonkurentnijim fantasy ligama.",
-    "years": "Godina Izvrsnosti", 
+    "years": "Godina Izvrsnosti",
     "trust": "Vjeruju Igrači",
-    "copyright": "© 2025 REMIS Fantasy. Sva prava zadržana."
+    "copyright": "© 2025 REMIS Fantasy. Sva prava zadržana.",
+    "adminPanel": "Admin Panel"
   },
   "home": {
     "siteName": "REMIS Fantasy",
@@ -47,7 +47,7 @@
         "value": "5"
       },
       "registeredPlayers": {
-        "label": "Registrovanih igrača", 
+        "label": "Registrovanih igrača",
         "value": "160+"
       },
       "yearsExperience": {
@@ -125,7 +125,7 @@
       "title": "Liga Šampiona Fantasy",
       "season": "Sezona 2025/26",
       "subtitle": "Evropska elita fantasy fudbala. Doživite uzbuđenje Lige Šampiona sa najboljim timovima Evrope!",
-      "primaryButton": "Pridruži se Ligi", 
+      "primaryButton": "Pridruži se Ligi",
       "secondaryButton": "Pogledaj Nagrade"
     },
     "f1": {

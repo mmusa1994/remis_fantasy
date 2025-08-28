@@ -35,9 +35,9 @@ interface StatCard {
 
 // Icon mapping for league cards
 const iconMap: Record<string, IconType> = {
-  premier: SiPremierleague,
-  champions: PiSoccerBall,
-  f1: GiF1Car,
+  "premier-league": SiPremierleague,
+  "champions-league": PiSoccerBall,
+  "f1-fantasy": GiF1Car,
 };
 
 export default function Home() {
@@ -49,7 +49,7 @@ export default function Home() {
     return (
       <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
         <div className="flex items-center justify-center min-h-screen">
-          <LoadingCard 
+          <LoadingCard
             title={t("common.loading")}
             description={t("common.loadingHomepage")}
             className="w-full max-w-md mx-auto"
@@ -82,16 +82,48 @@ export default function Home() {
 
   const typedStats: StatCard[] = globalStats;
 
-  const getLeagueTextColor = (leagueId: string) => {
+  const getLeagueColors = (leagueId: string, isDark: boolean) => {
     switch (leagueId) {
-      case "premier":
-        return "text-purple-500";
-      case "champions":
-        return "text-blue-500";
-      case "f1":
-        return "text-red-500";
+      case "premier-league":
+        return {
+          bg: isDark ? "bg-purple-500/20" : "bg-purple-500/10",
+          border: "border-purple-500/50",
+          text: "text-purple-400",
+          hover: isDark ? "hover:bg-purple-500/30" : "hover:bg-purple-500/20",
+          icon: "text-purple-400",
+          cardBg: isDark ? "bg-gray-800/80" : "bg-white/80",
+          glow: "shadow-purple-500/20",
+        };
+      case "champions-league":
+        return {
+          bg: isDark ? "bg-blue-500/20" : "bg-blue-500/10",
+          border: "border-blue-500/50",
+          text: "text-blue-400",
+          hover: isDark ? "hover:bg-blue-500/30" : "hover:bg-blue-500/20",
+          icon: "text-blue-400",
+          cardBg: isDark ? "bg-gray-800/80" : "bg-white/80",
+          glow: "shadow-blue-500/20",
+        };
+      case "f1-fantasy":
+        return {
+          bg: isDark ? "bg-red-500/20" : "bg-red-500/10",
+          border: "border-red-500/50",
+          text: "text-red-400",
+          hover: isDark ? "hover:bg-red-500/30" : "hover:bg-red-500/20",
+          icon: "text-red-400",
+          cardBg: isDark ? "bg-gray-800/80" : "bg-white/80",
+          glow: "shadow-red-500/20",
+        };
       default:
-        return "text-gray-500";
+        return {
+          bg: isDark ? "bg-gray-500/20" : "bg-gray-500/10",
+          border: "border-gray-500/50",
+          text: "text-gray-400",
+          hover: isDark ? "hover:bg-gray-500/30" : "hover:bg-gray-500/20",
+          icon: "text-gray-400",
+          cardBg: isDark ? "bg-gray-800/80" : "bg-white/80",
+          glow: "shadow-gray-500/20",
+        };
     }
   };
 
@@ -212,20 +244,69 @@ export default function Home() {
           {/* Dynamic League Selection Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
             {typedLeagues.map((league: LeagueCard) => {
-              const IconComponent = league.icon;
+              const isDark = theme === "dark";
+              const colors = getLeagueColors(league.id, isDark);
 
               return (
                 <div
                   key={league.id}
-                  className={`group relative p-6 md:p-8 rounded-2xl md:rounded-3xl backdrop-blur-lg border transition-all duration-500 hover:scale-105 ${
-                    theme === "dark"
-                      ? "bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 cursor-pointer"
-                      : "bg-white/60 border-orange-200 hover:bg-white/80 cursor-pointer"
-                  } hover:shadow-2xl`}
+                  className={`group relative p-6 md:p-8 rounded-2xl md:rounded-3xl backdrop-blur-lg border-2 transition-all duration-500 hover:scale-105 cursor-pointer ${colors.border} ${colors.hover} ${colors.glow} hover:shadow-2xl flex flex-col h-full`}
+                  style={{
+                    background: isDark
+                      ? league.id === "premier-league"
+                        ? "linear-gradient(135deg, rgba(31,41,55,0.95) 0%, rgba(147,51,234,0.1) 100%)"
+                        : league.id === "champions-league"
+                        ? "linear-gradient(135deg, rgba(31,41,55,0.95) 0%, rgba(59,130,246,0.1) 100%)"
+                        : "linear-gradient(135deg, rgba(31,41,55,0.95) 0%, rgba(239,68,68,0.1) 100%)"
+                      : league.id === "premier-league"
+                      ? "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(147,51,234,0.05) 100%)"
+                      : league.id === "champions-league"
+                      ? "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(59,130,246,0.05) 100%)"
+                      : "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(239,68,68,0.05) 100%)",
+                    borderColor:
+                      league.id === "premier-league"
+                        ? "rgba(147,51,234,0.5)"
+                        : league.id === "champions-league"
+                        ? "rgba(59,130,246,0.5)"
+                        : "rgba(239,68,68,0.5)",
+                    boxShadow:
+                      league.id === "premier-league"
+                        ? "0 0 20px rgba(147,51,234,0.3)"
+                        : league.id === "champions-league"
+                        ? "0 0 20px rgba(59,130,246,0.3)"
+                        : "0 0 20px rgba(239,68,68,0.3)",
+                  }}
                 >
-                  <Link href={league.href} className="block">
+                  <Link
+                    href={league.href}
+                    className="block flex flex-col h-full"
+                  >
                     <div className="mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
-                      <IconComponent className="w-12 h-12 md:w-16 md:h-16 text-white" />
+                      {league.id === "champions-league" ? (
+                        <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
+                          <Image
+                            src="/images/logos/cl-logo.png"
+                            alt="Champions League"
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      ) : league.id === "f1-fantasy" ? (
+                        <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
+                          <Image
+                            src="/images/logos/f1.png"
+                            alt="F1 Fantasy"
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <SiPremierleague
+                          className={`w-12 h-12 md:w-16 md:h-16 ${colors.icon}`}
+                        />
+                      )}
                     </div>
                     <h3
                       className={`text-2xl font-bold mb-4 ${
@@ -235,16 +316,14 @@ export default function Home() {
                       {t(`leagues.${league.id}.name`)}
                     </h3>
                     <p
-                      className={`text-base leading-relaxed mb-6 ${
+                      className={`text-base leading-relaxed mb-6 flex-grow ${
                         theme === "dark" ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
                       {t(`leagues.${league.id}.description`)}
                     </p>
                     <div
-                      className={`inline-flex items-center text-sm font-semibold ${getLeagueTextColor(
-                        league.id
-                      )} group-hover:translate-x-1 transition-transform duration-300`}
+                      className={`w-full flex items-center justify-center text-sm font-semibold ${colors.text} group-hover:translate-x-1 transition-transform duration-300 mt-auto py-3 px-4 rounded-lg border ${colors.border} hover:bg-opacity-20 hover:bg-current`}
                     >
                       {t("hero.openLeague")}
                       <svg

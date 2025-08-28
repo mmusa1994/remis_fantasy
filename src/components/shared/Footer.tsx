@@ -200,7 +200,7 @@ const Footer = React.memo(function Footer() {
               >
                 <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
                 <span className="hidden md:inline font-medium">
-                  {t("common.adminPanel")}
+                  {t("common:footer.adminPanel")}
                 </span>
               </motion.button>
             </Link>
