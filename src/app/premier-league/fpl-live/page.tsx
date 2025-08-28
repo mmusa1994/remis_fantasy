@@ -120,13 +120,11 @@ export default function FPLLivePage() {
     },
   ];
 
-  // Load manager ID and cached data on mount
+  // Load manager ID and gameweek from localStorage on mount
   useEffect(() => {
     try {
       const savedManagerId = localStorage.getItem("fpl-manager-id");
       const savedGameweek = localStorage.getItem("fpl-gameweek");
-      const savedData = localStorage.getItem("fpl-team-data");
-      const savedLastUpdated = localStorage.getItem("fpl-last-updated");
 
       if (savedManagerId) {
         const parsedId = parseInt(savedManagerId, 10);
@@ -139,19 +137,6 @@ export default function FPLLivePage() {
         const parsedGw = parseInt(savedGameweek, 10);
         if (!isNaN(parsedGw) && parsedGw >= 1 && parsedGw <= 38) {
           setGameweek(parsedGw);
-        }
-      }
-
-      // Clear stale cached data
-      if (savedData && savedLastUpdated) {
-        const lastUpdated = new Date(savedLastUpdated);
-        const now = new Date();
-        const hoursDiff =
-          (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60);
-
-        if (hoursDiff >= 24) {
-          localStorage.removeItem("fpl-team-data");
-          localStorage.removeItem("fpl-last-updated");
         }
       }
     } catch (error) {
@@ -167,17 +152,6 @@ export default function FPLLivePage() {
   const showSuccess = (message: string) => {
     console.log("Success:", message);
   };
-
-  const saveToLocalStorage = useCallback((key: string, value: any) => {
-    try {
-      localStorage.setItem(
-        key,
-        typeof value === "string" ? value : JSON.stringify(value)
-      );
-    } catch (error) {
-      console.warn(`Failed to save ${key} to localStorage:`, error);
-    }
-  }, []);
 
   const loadFullTeamData = useCallback(async () => {
     if (!managerId) return;
@@ -267,9 +241,6 @@ export default function FPLLivePage() {
           const timestamp = new Date().toISOString();
           setLastUpdated(timestamp);
 
-          saveToLocalStorage("fpl-team-data", teamResult.data);
-          saveToLocalStorage("fpl-last-updated", timestamp);
-
           setTeamDataLoading(false);
           showSuccess(t("fullTeamDataLoaded"));
 
@@ -286,7 +257,7 @@ export default function FPLLivePage() {
       console.error("💥 [FRONTEND] Failed to load full team data:", err);
       setTeamDataLoading(false);
     }
-  }, [managerId, gameweek, saveToLocalStorage, t]);
+  }, [managerId, gameweek, t]);
 
   const loadLeaguesData = useCallback(async () => {
     if (!managerId) return;
@@ -423,9 +394,9 @@ export default function FPLLivePage() {
 
     try {
       if (managerId !== null) {
-        saveToLocalStorage("fpl-manager-id", managerId.toString());
+        localStorage.setItem("fpl-manager-id", managerId.toString());
       }
-      saveToLocalStorage("fpl-gameweek", gameweek.toString());
+      localStorage.setItem("fpl-gameweek", gameweek.toString());
 
       console.log(
         "🏃‍♂️ [FRONTEND] loadManagerInfo - Fetching skeleton data first"
@@ -475,8 +446,7 @@ export default function FPLLivePage() {
           console.log("✅ [FRONTEND] Setting skeleton data to component state");
           setData(result.data);
           const timestamp = new Date().toISOString();
-          saveToLocalStorage("fpl-team-data", result.data);
-          saveToLocalStorage("fpl-last-updated", timestamp);
+          setLastUpdated(timestamp);
 
           setTeamLoaded(true);
           showSuccess(t("managerInfoLoaded"));
@@ -507,7 +477,9 @@ export default function FPLLivePage() {
             console.log("👥 2. Full team data: ✅ Players and live stats");
             console.log("🏆 3. Leagues data: ✅ League tables and rankings");
             console.log("📊 4. Gameweek status: ✅ Performance analysis");
-            console.log("💾 5. Local storage: ✅ Data cached");
+            console.log(
+              "💾 5. Local storage: ✅ Manager ID and gameweek saved"
+            );
             console.log("🔄 Ready for live polling and real-time updates");
           }, 3000);
         } else {
@@ -540,13 +512,23 @@ export default function FPLLivePage() {
     loadFullTeamData,
     loadLeaguesData,
     loadGameweekStatus,
-    saveToLocalStorage,
     t,
     data?.manager,
     data?.team_with_stats?.length,
     isPolling,
     teamLoaded,
   ]);
+
+  // Auto-load team data if manager ID exists in localStorage
+  useEffect(() => {
+    if (managerId && !data.manager && !loading) {
+      console.log(
+        "🔄 [FRONTEND] Auto-loading team data for saved manager ID:",
+        managerId
+      );
+      loadManagerInfo();
+    }
+  }, [managerId, data.manager, loading, loadManagerInfo]);
 
   const startPolling = useCallback(() => {
     if (!managerId) {
@@ -929,9 +911,7 @@ export default function FPLLivePage() {
                       <MdPlayArrow className="w-4 h-4 sm:w-5 sm:h-5" />
                     )}
                     <span className="text-xs sm:text-sm">
-                      {isPolling
-                        ? t("stopLive")
-                        : t("startLive")}
+                      {isPolling ? t("stopLive") : t("startLive")}
                     </span>
                   </button>
 
@@ -940,9 +920,7 @@ export default function FPLLivePage() {
                     className="flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-all min-h-[44px]"
                   >
                     <MdRefresh className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="text-xs sm:text-sm">
-                      {t("refresh")}
-                    </span>
+                    <span className="text-xs sm:text-sm">{t("refresh")}</span>
                   </button>
 
                   <button
@@ -950,9 +928,7 @@ export default function FPLLivePage() {
                     className="flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-all min-h-[44px]"
                   >
                     <MdSettings className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="text-xs sm:text-sm">
-                      {t("settings")}
-                    </span>
+                    <span className="text-xs sm:text-sm">{t("settings")}</span>
                   </button>
                 </div>
               </div>
@@ -985,23 +961,24 @@ export default function FPLLivePage() {
                         </button>
                       );
                     })}
-                    
+
                     {/* Dropdown for remaining tabs */}
                     <div className="relative flex-1">
                       <button
                         onClick={() => setShowTabDropdown(!showTabDropdown)}
                         className={`w-full flex flex-col items-center gap-1 px-2 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
-                          tabs.slice(2).some(tab => tab.id === activeTab)
+                          tabs.slice(2).some((tab) => tab.id === activeTab)
                             ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
                             : "border-transparent text-gray-600 dark:text-gray-400"
                         } theme-transition`}
                       >
                         <MdExpandMore className="w-4 h-4 flex-shrink-0" />
                         <span className="text-xs leading-tight text-center">
-                          {tabs.slice(2).find(tab => tab.id === activeTab)?.label || t("common.more", "More")}
+                          {tabs.slice(2).find((tab) => tab.id === activeTab)
+                            ?.label || t("common.more", "More")}
                         </span>
                       </button>
-                      
+
                       {/* Dropdown Menu */}
                       {showTabDropdown && (
                         <div className="absolute top-full left-0 right-0 bg-theme-card border border-theme-border rounded-b-md shadow-lg z-50 theme-transition">
@@ -1031,7 +1008,7 @@ export default function FPLLivePage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Tablet: Show 3 tabs + dropdown */}
                 <div className="hidden sm:flex md:hidden">
                   {tabs.slice(0, 3).map((tab) => {
@@ -1052,24 +1029,25 @@ export default function FPLLivePage() {
                       </button>
                     );
                   })}
-                  
+
                   {/* Tablet Dropdown */}
                   {tabs.length > 3 && (
                     <div className="relative flex-1">
                       <button
                         onClick={() => setShowTabDropdown(!showTabDropdown)}
                         className={`w-full flex items-center justify-center gap-2 px-3 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
-                          tabs.slice(3).some(tab => tab.id === activeTab)
+                          tabs.slice(3).some((tab) => tab.id === activeTab)
                             ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
                             : "border-transparent text-gray-600 dark:text-gray-400"
                         } theme-transition`}
                       >
                         <MdExpandMore className="w-4 h-4 flex-shrink-0" />
                         <span className="text-sm">
-                          {tabs.slice(3).find(tab => tab.id === activeTab)?.label || t("common.more", "More")}
+                          {tabs.slice(3).find((tab) => tab.id === activeTab)
+                            ?.label || t("common.more", "More")}
                         </span>
                       </button>
-                      
+
                       {showTabDropdown && (
                         <div className="absolute top-full left-0 right-0 bg-theme-card border border-theme-border rounded-b-md shadow-lg z-50 theme-transition">
                           {tabs.slice(3).map((tab) => {
@@ -1098,7 +1076,7 @@ export default function FPLLivePage() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Desktop: Show all tabs */}
                 <div className="hidden md:flex">
                   {tabs.map((tab) => {

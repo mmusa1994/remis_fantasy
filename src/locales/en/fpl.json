@@ -27,7 +27,7 @@
   "gwPerformance": "GW{{gw}} Performance",
   "activePoints": "Active Points:",
   "benchPointsLong": "Bench Points:",
-  "finalBonus": "Final Bonus",
+
   "predictedBonus": "Predicted Bonus",
   "provisional": "provisional",
   "captainPointsLong": "Captain Points:",
@@ -57,6 +57,7 @@
     "title": "FPL Live Dashboard",
     "subtitle": "Real-time Fantasy Premier League tracking with live bonus predictions",
     "howToUse": "How to use FPL Live",
+    "finalBonus": "Final Bonus",
     "howToFindManagerId": "How to find your Manager ID",
     "howToFindManagerIdDetailed": "How to find your Manager ID",
     "openWebBrowser": "Open your web browser",

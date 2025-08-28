@@ -27,7 +27,6 @@
   "gwPerformance": "GW{{gw}} Performanse",
   "activePoints": "Aktivni Bodovi:",
   "benchPointsLong": "Bodovi Klupe:",
-  "finalBonus": "Finalni Bonus",
   "predictedBonus": "Predviđeni Bonus",
   "provisional": "privremeno",
   "captainPointsLong": "Bodovi Kapitena:",
@@ -67,6 +66,7 @@
     "copyNumbersFromURL": "Kopirajte brojeve iz URL-a",
     "yourManagerIdIs": "Vaš Manager ID je broj u URL-u",
     "yourManagerIdIs2": "Vaš Manager ID je broj u URL-u, na primjer:",
+    "finalBonus": "Finalni Bonus",
     "tabs": {
       "overview": "Pregled",
       "overviewDesc": "Pregled menadžera i live performanse",
