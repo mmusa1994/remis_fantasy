@@ -11,15 +11,24 @@ import { useTheme } from "../../contexts/ThemeContext";
 const Footer = React.memo(function Footer() {
   const { t } = useTranslation();
   const { theme } = useTheme();
+
   return (
-    <footer className="relative py-16 theme-transition border-t theme-transition">
-      {/* Simple animated white border */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gray-200 dark:bg-white animate-border-slide"></div>
+    <footer
+      className={`relative py-16 border-t ${
+        theme === "dark" ? "border-white" : "border-black"
+      }`}
+    >
+      {/* Simple animated border */}
+      <div
+        className={`absolute top-0 left-0 right-0 h-px animate-border-slide ${
+          theme === "dark" ? "bg-white" : "bg-black"
+        }`}
+      ></div>
 
       {/* Subtle Background Effects */}
       <div className="absolute inset-0">
-        <div className="absolute bottom-0 left-1/3 w-96 h-32 bg-gradient-to-r from-black/5 dark:from-white/5 via-black/3 dark:via-white/3 to-black/5 dark:to-white/5 minimal-radius blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/3 w-80 h-28 bg-gradient-to-l from-black/5 dark:from-white/5 via-black/3 dark:via-white/3 to-black/5 dark:to-white/5 minimal-radius blur-3xl"></div>
+        <div className="absolute bottom-0 left-1/3 w-96 h-32 bg-gradient-to-r from-black/5 dark:from-white/5 via-black/3 dark:via-white/3 to-black/5 dark:to-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/3 w-80 h-28 bg-gradient-to-l from-black/5 dark:from-white/5 via-black/3 dark:via-white/3 to-black/5 dark:to-white/5 rounded-full blur-3xl"></div>
       </div>
 
       <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
@@ -37,7 +46,7 @@ const Footer = React.memo(function Footer() {
             >
               {/* Elegant glow effect */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-br from-black/20 dark:from-white/20 via-black/15 dark:via-white/15 to-black/20 dark:to-white/20 force-circle blur-xl group-hover:from-black/30 dark:group-hover:from-white/30 group-hover:via-black/25 dark:group-hover:via-white/25 group-hover:to-black/30 dark:group-hover:to-white/30 transition-all duration-500"
+                className="absolute inset-0 bg-gradient-to-br from-black/20 dark:from-white/20 via-black/15 dark:via-white/15 to-black/20 dark:to-white/20 rounded-full blur-xl group-hover:from-black/30 dark:group-hover:from-white/30 group-hover:via-black/25 dark:group-hover:via-white/25 group-hover:to-black/30 dark:group-hover:to-white/30 transition-all duration-500"
                 animate={{
                   scale: [1, 1.2, 1],
                   opacity: [0.3, 0.5, 0.3],
@@ -62,7 +71,7 @@ const Footer = React.memo(function Footer() {
 
               {/* Rotating border */}
               <motion.div
-                className="absolute inset-0 force-circle opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                 style={{
                   background:
                     theme === "dark"
@@ -95,18 +104,24 @@ const Footer = React.memo(function Footer() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <motion.h3
-              className="text-2xl md:text-3xl font-black text-black dark:text-white mb-4 leading-tight theme-transition"
+              className={`text-2xl md:text-3xl font-black mb-4 leading-tight ${
+                theme === "dark" ? "text-white" : "text-black"
+              }`}
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3 }}
             >
-              <motion.span className="text-black dark:text-white theme-transition">
+              <motion.span
+                className={theme === "dark" ? "text-white" : "text-black"}
+              >
                 REMIS Fantasy
               </motion.span>
             </motion.h3>
 
             <motion.p
-              className="text-gray-600 dark:text-gray-300 text-lg md:text-xl leading-relaxed font-medium max-w-2xl mx-auto theme-transition"
+              className={`text-lg md:text-xl leading-relaxed font-medium max-w-2xl mx-auto ${
+                theme === "dark" ? "text-white" : "text-black"
+              }`}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
@@ -135,10 +150,18 @@ const Footer = React.memo(function Footer() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
               >
-                <div className="text-2xl md:text-3xl font-black text-black dark:text-white mb-1 theme-transition">
+                <div
+                  className={`text-2xl md:text-3xl font-black mb-1 ${
+                    theme === "dark" ? "text-white" : "text-black"
+                  }`}
+                >
                   {stat.number}
                 </div>
-                <div className="text-gray-500 dark:text-gray-400 text-sm md:text-base font-medium theme-transition">
+                <div
+                  className={`text-sm md:text-base font-medium ${
+                    theme === "dark" ? "text-white" : "text-black"
+                  }`}
+                >
                   {stat.label}
                 </div>
               </motion.div>
@@ -147,18 +170,28 @@ const Footer = React.memo(function Footer() {
 
           {/* Copyright and Admin */}
           <motion.div
-            className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-gray-200 dark:border-white/30"
+            className={`flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t ${
+              theme === "dark" ? "border-white" : "border-black"
+            }`}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
-            <div className="text-gray-500 dark:text-gray-400 text-sm md:text-base font-medium theme-transition">
+            <div
+              className={`text-sm md:text-base font-medium ${
+                theme === "dark" ? "text-white" : "text-black"
+              }`}
+            >
               {t("common:footer.copyright")}
             </div>
 
             <Link href="/admin" className="group">
               <motion.button
-                className="flex items-center gap-2 px-4 py-2 minimal-radius bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 text-sm opacity-40 hover:opacity-100 backdrop-blur-sm theme-transition"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border transition-all duration-300 text-sm opacity-40 hover:opacity-100 backdrop-blur-sm ${
+                  theme === "dark"
+                    ? "border-white text-white hover:text-white hover:bg-gray-700"
+                    : "border-black text-black hover:text-black hover:bg-gray-200"
+                }`}
                 whileHover={{
                   scale: 1.05,
                   boxShadow: "0 8px 25px rgba(0, 0, 0, 0.2)",

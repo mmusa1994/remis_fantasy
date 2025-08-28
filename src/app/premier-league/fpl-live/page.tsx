@@ -808,7 +808,7 @@ export default function FPLLivePage() {
         {!teamLoaded && (
           <div className="space-y-4 lg:space-y-6">
             {/* How to Use Guide - Mobile Accordion */}
-            <div className="bg-theme-card border-theme-border rounded-md overflow-hidden theme-transition">
+            <div className="bg-theme-card border border-theme-border rounded-md overflow-hidden theme-transition">
               <details className="group">
                 <summary className="flex items-center gap-3 p-3 sm:p-4 lg:p-5 text-sm sm:text-base font-medium text-theme-foreground cursor-pointer hover:bg-theme-card-secondary transition-colors min-h-[56px] lg:min-h-[60px] touch-manipulation theme-transition">
                   <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-500 dark:bg-purple-600 rounded-md flex items-center justify-center flex-shrink-0">
@@ -890,34 +890,6 @@ export default function FPLLivePage() {
               onStopPolling={() => {}}
               loading={loading}
             />
-
-            {/* Mobile-Friendly Call to Action */}
-            <div className="text-center py-4 sm:py-6 lg:py-8">
-              <div className="bg-white dark:bg-black rounded-md p-4 sm:p-6 lg:p-8 border border-gray-200 dark:border-gray-800 theme-transition">
-                <IoIosFootball className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 text-black dark:text-white mx-auto mb-4 lg:mb-6 theme-transition" />
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-black dark:text-white mb-2 lg:mb-3 theme-transition">
-                  {t("fplLive.readyToStart")}
-                </h3>
-                <p className="text-sm sm:text-base text-theme-foreground mb-4 lg:mb-6 max-w-md mx-auto leading-relaxed theme-transition">
-                  {t("fplLive.enterManagerIdToStart")}
-                </p>
-                {!managerId ? (
-                  <div className="bg-theme-card-secondary rounded-md p-3 lg:p-4 border-theme-border theme-transition">
-                    <p className="text-sm font-medium text-theme-foreground theme-transition">
-                      {t("fplLive.enterManagerIdFirst")}
-                    </p>
-                  </div>
-                ) : (
-                  <button
-                    onClick={loadManagerInfo}
-                    disabled={loading}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3 lg:py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium disabled:opacity-50 transition-all text-sm sm:text-base min-h-[48px] lg:min-h-[52px] touch-manipulation"
-                  >
-                    {loading ? t("fplLive.loading") : t("fplLive.loadTeam")}
-                  </button>
-                )}
-              </div>
-            </div>
           </div>
         )}
 

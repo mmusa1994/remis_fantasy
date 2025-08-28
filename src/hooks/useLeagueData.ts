@@ -20,7 +20,7 @@ export const useLeagueData = (leagueType: string) => {
         // Create league configuration using translations
         const getLeagueConfig = () => {
           // Configure league based on type
-          
+
           switch (leagueType) {
             case "premier-league":
             case "premier":
@@ -33,7 +33,7 @@ export const useLeagueData = (leagueType: string) => {
                 logoPath: "/images/logos/pl-logo.png",
                 basePath: "/premier-league",
                 primaryColor: "purple",
-                baseColor: "#8b5cf6"
+                baseColor: "#8b5cf6",
               };
             case "champions-league":
             case "champions":
@@ -42,11 +42,13 @@ export const useLeagueData = (leagueType: string) => {
                 name: t("common:home.leagues.championsLeague.title"),
                 title: t("common:home.leagues.championsLeague.title"),
                 subtitle: "Fantasy Liga",
-                description: t("common:home.leagues.championsLeague.description"),
+                description: t(
+                  "common:home.leagues.championsLeague.description"
+                ),
                 logoPath: "/images/logos/cl-logo.png",
                 basePath: "/champions-league",
                 primaryColor: "blue",
-                baseColor: "#3b82f6"
+                baseColor: "#3b82f6",
               };
             case "f1-fantasy":
             case "f1":
@@ -56,10 +58,10 @@ export const useLeagueData = (leagueType: string) => {
                 title: t("common:home.leagues.f1Fantasy.title"),
                 subtitle: "Fantasy Liga",
                 description: t("common:home.leagues.f1Fantasy.description"),
-                logoPath: "/images/logos/f1-logo.png",
+                logoPath: "/images/logos/f1.png",
                 basePath: "/f1-fantasy",
-                primaryColor: "red", 
-                baseColor: "#ef4444"
+                primaryColor: "red",
+                baseColor: "#ef4444",
               };
             default:
               return {
@@ -71,7 +73,7 @@ export const useLeagueData = (leagueType: string) => {
                 logoPath: "/images/logos/pl-logo.png",
                 basePath: "/premier-league",
                 primaryColor: "purple",
-                baseColor: "#8b5cf6"
+                baseColor: "#8b5cf6",
               };
           }
         };
@@ -83,23 +85,23 @@ export const useLeagueData = (leagueType: string) => {
           {
             label: t("common:home.globalStats.totalPrize.label"),
             value: t("common:home.globalStats.totalPrize.value"),
-            icon: "DollarSign"
+            icon: "DollarSign",
           },
           {
             label: t("common:home.globalStats.availableLeagues.label"),
             value: t("common:home.globalStats.availableLeagues.value"),
-            icon: "Trophy"
+            icon: "Trophy",
           },
           {
             label: t("common:home.globalStats.registeredPlayers.label"),
             value: t("common:home.globalStats.registeredPlayers.value"),
-            icon: "Users"
+            icon: "Users",
           },
           {
             label: t("common:home.globalStats.yearsExperience.label"),
             value: t("common:home.globalStats.yearsExperience.value"),
-            icon: "Calendar"
-          }
+            icon: "Calendar",
+          },
         ];
 
         // Create navigation using translations
@@ -109,29 +111,29 @@ export const useLeagueData = (leagueType: string) => {
             description: `${t("navigation.register")} ${configData.name}`,
             href: `${configData.basePath}/registracija`,
             icon: "PenTool",
-            color: configData.primaryColor
+            color: configData.primaryColor,
           },
           {
             title: t("navigation.prizes"),
             description: t("navigation.viewPrizes"),
             href: `${configData.basePath}/nagrade`,
             icon: "Trophy",
-            color: "yellow"
+            color: "yellow",
           },
           {
             title: t("navigation.gallery"),
             description: t("navigation.viewGallery"),
             href: `${configData.basePath}/galerija`,
             icon: "Camera",
-            color: "blue"
+            color: "blue",
           },
           {
             title: t("navigation.tables"),
             description: t("navigation.viewTables"),
             href: `${configData.basePath}/tabele`,
             icon: "BarChart3",
-            color: "green"
-          }
+            color: "green",
+          },
         ];
 
         // Transform into expected format for LeaguePage component
@@ -163,7 +165,7 @@ export const useLeagueData = (leagueType: string) => {
           primaryColor: configData.baseColor,
           stats: stats,
           navigation: navigation,
-          quickNavigation: navigation
+          quickNavigation: navigation,
         };
 
         setLeagueData(transformedData);
@@ -204,12 +206,14 @@ export const useLeaguePrizes = (leagueType: string) => {
         const loadPrizesFromFile = async () => {
           try {
             let prizesData: any[] = [];
-            
+
             switch (leagueType) {
               case "premier-league":
               case "premier":
                 // Import the Premier League prizes JSON file
-                const premierPrizes = await import("@/data/premier-league/prizes.json");
+                const premierPrizes = await import(
+                  "@/data/premier-league/prizes.json"
+                );
                 prizesData = premierPrizes.default;
                 console.log("Loaded Premier League prizes:", prizesData);
                 break;
@@ -220,14 +224,14 @@ export const useLeaguePrizes = (leagueType: string) => {
                   {
                     id: 1,
                     title: t("prizes.firstPlace"),
-                    subtitle: "Champions League Winner", 
+                    subtitle: "Champions League Winner",
                     image: "/images/prizes/champions-first.png",
                     description: t("prizes.firstPlaceDesc"),
                     tier: "premium",
                     league: "champions",
                     price: "1500 KM",
-                    features: ["Trophy", "Medal", "Certificate"]
-                  }
+                    features: ["Trophy", "Medal", "Certificate"],
+                  },
                 ];
                 break;
               case "f1-fantasy":
@@ -238,13 +242,13 @@ export const useLeaguePrizes = (leagueType: string) => {
                     id: 1,
                     title: t("prizes.firstPlace"),
                     subtitle: "F1 Fantasy Champion",
-                    image: "/images/prizes/f1-first.png", 
+                    image: "/images/prizes/f1-first.png",
                     description: t("prizes.firstPlaceDesc"),
                     tier: "premium",
                     league: "f1",
                     price: "1000 KM",
-                    features: ["Trophy", "Medal", "Certificate"]
-                  }
+                    features: ["Trophy", "Medal", "Certificate"],
+                  },
                 ];
                 break;
               default:
@@ -253,8 +257,11 @@ export const useLeaguePrizes = (leagueType: string) => {
 
             return prizesData;
           } catch (importError) {
-            console.warn("Failed to import prizes file, using fallback data:", importError);
-            
+            console.warn(
+              "Failed to import prizes file, using fallback data:",
+              importError
+            );
+
             // Fallback data with proper structure
             return [
               {
@@ -265,8 +272,8 @@ export const useLeaguePrizes = (leagueType: string) => {
                 description: t("prizes.firstPlaceDesc"),
                 tier: "premium",
                 league: leagueType,
-                price: "3000 KM", 
-                features: ["Trophy", "Medal", "Certificate"]
+                price: "3000 KM",
+                features: ["Trophy", "Medal", "Certificate"],
               },
               {
                 id: 2,
@@ -277,19 +284,19 @@ export const useLeaguePrizes = (leagueType: string) => {
                 tier: "standard",
                 league: leagueType,
                 price: "2000 KM",
-                features: ["Medal", "Certificate"]
+                features: ["Medal", "Certificate"],
               },
               {
                 id: 3,
                 title: t("prizes.thirdPlace"),
                 subtitle: "Third Place",
-                image: "/images/new-season/free.png", 
+                image: "/images/new-season/free.png",
                 description: t("prizes.thirdPlaceDesc"),
                 tier: "h2h",
                 league: leagueType,
                 price: "1000 KM",
-                features: ["Certificate"]
-              }
+                features: ["Certificate"],
+              },
             ];
           }
         };
@@ -334,7 +341,7 @@ export const usePageContent = (leagueType: string) => {
                 subtitle: "Fantasy Liga",
                 description: t("common:home.leagues.premierLeague.description"),
                 logoPath: "/images/logos/pl-logo.png",
-                primaryColor: "purple"
+                primaryColor: "purple",
               };
             case "champions-league":
             case "champions":
@@ -343,9 +350,11 @@ export const usePageContent = (leagueType: string) => {
                 name: t("common:home.leagues.championsLeague.title"),
                 title: t("common:home.leagues.championsLeague.title"),
                 subtitle: "Fantasy Liga",
-                description: t("common:home.leagues.championsLeague.description"),
+                description: t(
+                  "common:home.leagues.championsLeague.description"
+                ),
                 logoPath: "/images/logos/cl-logo.png",
-                primaryColor: "blue"
+                primaryColor: "blue",
               };
             case "f1-fantasy":
             case "f1":
@@ -356,17 +365,17 @@ export const usePageContent = (leagueType: string) => {
                 subtitle: "Fantasy Liga",
                 description: t("common:home.leagues.f1Fantasy.description"),
                 logoPath: "/images/logos/f1-logo.png",
-                primaryColor: "red"
+                primaryColor: "red",
               };
             default:
               return {
                 id: "premier",
                 name: t("common:home.leagues.premierLeague.title"),
                 title: t("common:home.leagues.premierLeague.title"),
-                subtitle: "Fantasy Liga", 
+                subtitle: "Fantasy Liga",
                 description: t("common:home.leagues.premierLeague.description"),
                 logoPath: "/images/logos/pl-logo.png",
-                primaryColor: "purple"
+                primaryColor: "purple",
               };
           }
         };
@@ -410,7 +419,7 @@ export const useHomepageData = () => {
             registrationOpen: true,
           },
           {
-            id: "champions-league", 
+            id: "champions-league",
             name: "champions-league",
             title: t("common:home.leagues.championsLeague.title"),
             subtitle: "Champions League Fantasy",
@@ -420,7 +429,7 @@ export const useHomepageData = () => {
           },
           {
             id: "f1-fantasy",
-            name: "f1-fantasy", 
+            name: "f1-fantasy",
             title: t("common:home.leagues.f1Fantasy.title"),
             subtitle: "F1 Fantasy League",
             description: t("common:home.leagues.f1Fantasy.description"),
@@ -446,7 +455,7 @@ export const useHomepageData = () => {
           {
             label: t("common:home.globalStats.totalPrize.label"),
             value: t("common:home.globalStats.totalPrize.value"),
-            color: "text-black dark:text-white", 
+            color: "text-black dark:text-white",
             icon: BsCash,
           },
           {
@@ -501,15 +510,15 @@ export const useRegistrationConfig = (leagueType: string) => {
                 description: t("leagues.standard.description"),
                 price: 50,
                 currency: "KM",
-                maxParticipants: 40
+                maxParticipants: 40,
               },
               {
-                id: "premium", 
+                id: "premium",
                 name: t("leagues.premium.title"),
                 description: t("leagues.premium.description"),
                 price: 100,
                 currency: "KM",
-                maxParticipants: 30
+                maxParticipants: 30,
               },
               {
                 id: "free",
@@ -517,17 +526,17 @@ export const useRegistrationConfig = (leagueType: string) => {
                 description: t("leagues.free.description"),
                 price: 0,
                 currency: "KM",
-                maxParticipants: 50
+                maxParticipants: 50,
               },
               {
                 id: "h2h",
                 name: t("leagues.h2h.title"),
-                description: t("leagues.h2h.description"), 
+                description: t("leagues.h2h.description"),
                 price: 75,
                 currency: "KM",
-                maxParticipants: 25
-              }
-            ]
+                maxParticipants: 25,
+              },
+            ],
           };
 
           switch (leagueType) {
@@ -536,27 +545,29 @@ export const useRegistrationConfig = (leagueType: string) => {
               return {
                 ...baseConfig,
                 title: t("common:home.leagues.premierLeague.title"),
-                description: t("common:home.leagues.premierLeague.description")
+                description: t("common:home.leagues.premierLeague.description"),
               };
             case "champions-league":
             case "champions":
               return {
                 ...baseConfig,
                 title: t("common:home.leagues.championsLeague.title"),
-                description: t("common:home.leagues.championsLeague.description")
+                description: t(
+                  "common:home.leagues.championsLeague.description"
+                ),
               };
             case "f1-fantasy":
             case "f1":
               return {
                 ...baseConfig,
                 title: t("common:home.leagues.f1Fantasy.title"),
-                description: t("common:home.leagues.f1Fantasy.description")
+                description: t("common:home.leagues.f1Fantasy.description"),
               };
             default:
               return {
                 ...baseConfig,
                 title: t("common:home.leagues.premierLeague.title"),
-                description: t("common:home.leagues.premierLeague.description")
+                description: t("common:home.leagues.premierLeague.description"),
               };
           }
         };
