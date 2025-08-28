@@ -73,6 +73,9 @@ export default function FPLLivePage() {
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
     null
   );
+  
+  // Master live tracking state
+  const [isLiveTracking, setIsLiveTracking] = useState(false);
 
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -346,67 +349,86 @@ export default function FPLLivePage() {
   //   }
   // }, [managerId, data.manager, loading, loadManagerInfo]);
 
-  const startPolling = useCallback(() => {
-    if (!managerId) {
-      showError(t("pleaseEnterManagerId"));
-      return;
-    }
-
-    if (!data.manager) {
-      showError(t("loadTeamFirst"));
-      return;
-    }
-
-    setIsPolling(true);
-
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch("/api/fpl/poll", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            gameweek,
-            secret: "auto-poll",
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data?.new_events > 0) {
-            loadManagerInfo().catch((err) =>
-              console.error("Polling load team error:", err)
-            );
-            loadGameweekStatus().catch((err) =>
-              console.error("Polling gameweek status error:", err)
-            );
-          }
-        }
-      } catch (err) {
-        console.error("Error in polling:", err);
+  const toggleLiveTracking = useCallback(() => {
+    if (!isLiveTracking) {
+      // Start live tracking
+      if (!managerId) {
+        showError(t("pleaseEnterManagerId"));
+        return;
       }
-    }, 15000);
 
-    setPollingInterval(interval);
-    showSuccess(t("livePollingStarted"));
+      if (!data.manager) {
+        showError(t("loadTeamFirst"));
+        return;
+      }
+
+      setIsLiveTracking(true);
+      setIsPolling(true);
+
+      const interval = setInterval(async () => {
+        try {
+          const response = await fetch("/api/fpl/poll", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              gameweek,
+              secret: "auto-poll",
+            }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data?.new_events > 0) {
+              loadManagerInfo().catch((err) =>
+                console.error("Polling load team error:", err)
+              );
+              loadGameweekStatus().catch((err) =>
+                console.error("Polling gameweek status error:", err)
+              );
+            }
+          }
+        } catch (err) {
+          console.error("Error in polling:", err);
+        }
+      }, 15000);
+
+      setPollingInterval(interval);
+      showSuccess("Pokrenuto je uživo praćenje za sve komponente");
+    } else {
+      // Stop live tracking
+      setIsLiveTracking(false);
+      setIsPolling(false);
+      
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
+      }
+      
+      showSuccess("Zaustavljen je uživo praćenje");
+    }
   }, [
+    isLiveTracking,
     managerId,
     data.manager,
     gameweek,
     loadManagerInfo,
     loadGameweekStatus,
+    pollingInterval,
     t,
   ]);
 
+  // Legacy functions for backward compatibility
+  const startPolling = useCallback(() => {
+    toggleLiveTracking();
+  }, [toggleLiveTracking]);
+  
   const stopPolling = useCallback(() => {
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-      setPollingInterval(null);
+    if (isLiveTracking) {
+      toggleLiveTracking();
     }
-    setIsPolling(false);
-    showSuccess(t("livePollingStopped"));
-  }, [pollingInterval, t]);
+  }, [isLiveTracking, toggleLiveTracking]);
 
   useEffect(() => {
     return () => {
@@ -515,9 +537,9 @@ export default function FPLLivePage() {
                 ></div>
                 <div className="text-center mt-2">
                   <p className="text-xs font-medium text-theme-text-secondary theme-transition">
-                    {isPolling
-                      ? "🔴 Live praćenje aktivno"
-                      : "⚪ Live praćenje neaktivno"}
+                    {isLiveTracking
+                      ? "🔴 Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu"
+                      : "⚪ Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu"}
                   </p>
                 </div>
                 {/* Live BPS Tracker */}
@@ -533,13 +555,14 @@ export default function FPLLivePage() {
                       </p>
                     </div>
                   </div>
-                  <LiveTracker gameweek={gameweek} isPolling={isPolling} />
+                  <LiveTracker gameweek={gameweek} isPolling={isLiveTracking} />
                 </div>
               </div>
               <LeagueTables
                 leagueData={leagueData}
                 managerId={managerId!}
                 gameweek={gameweek}
+                isLiveTracking={isLiveTracking}
                 onManagerSelect={(selectedManagerId) => {
                   console.log("Manager selected:", selectedManagerId);
                   // Future: Load manager-specific data
@@ -561,7 +584,7 @@ export default function FPLLivePage() {
         return (
           <MatchResults
             gameweek={gameweek}
-            isPolling={isPolling}
+            isPolling={isLiveTracking}
             onManagerSelect={(selectedManagerId) => {
               console.log(
                 "Manager selected from match results:",
@@ -715,20 +738,20 @@ export default function FPLLivePage() {
                 {/* Mobile Action Buttons - Stack on mobile, inline on larger screens */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                   <button
-                    onClick={isPolling ? stopPolling : startPolling}
+                    onClick={toggleLiveTracking}
                     className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all min-h-[44px] ${
-                      isPolling
+                      isLiveTracking
                         ? "bg-red-500 hover:bg-red-600 text-white"
                         : "bg-green-500 hover:bg-green-600 text-white"
                     }`}
                   >
-                    {isPolling ? (
+                    {isLiveTracking ? (
                       <MdStop className="w-4 h-4 sm:w-5 sm:h-5" />
                     ) : (
                       <MdPlayArrow className="w-4 h-4 sm:w-5 sm:h-5" />
                     )}
                     <span className="text-xs sm:text-sm">
-                      {isPolling ? t("stopLive") : t("startLive")}
+                      {isLiveTracking ? "Zaustavi Uživo" : "Pokreni Uživo"}
                     </span>
                   </button>
 

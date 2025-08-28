@@ -27,6 +27,7 @@ interface LeagueTablesProps {
   managerId: number;
   gameweek: number;
   onManagerSelect?: (managerId: number) => void;
+  isLiveTracking?: boolean; // Passed from parent to show live status
 }
 
 interface LivePlayer {
@@ -48,6 +49,7 @@ export default function LeagueTables({
   managerId,
   gameweek,
   onManagerSelect,
+  isLiveTracking = false,
 }: LeagueTablesProps) {
   const { t } = useTranslation("fpl");
 
@@ -64,15 +66,14 @@ export default function LeagueTables({
   );
   const [lastFetched, setLastFetched] = useState<{ [key: number]: number }>({});
 
-  // Live mode state
-  const [isLiveMode, setIsLiveMode] = useState(false);
+  // Live mode state - controlled by parent
   const [selectedLiveLeague, setSelectedLiveLeague] = useState<number | null>(
     null
   );
   const [liveData, setLiveData] = useState<LivePlayer[]>([]);
-  const [isPolling, setIsPolling] = useState(false);
   const [liveStats, setLiveStats] = useState<any>(null);
   const [lastLiveUpdate, setLastLiveUpdate] = useState<string>("");
+  const [isLoadingLiveData, setIsLoadingLiveData] = useState(false);
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
 
   const maxPositions = 50;
@@ -130,9 +131,9 @@ export default function LeagueTables({
     }
   }, [availableLeagues, selectedLiveLeague]);
 
-  // Live polling effect
+  // Live polling effect - controlled by parent isLiveTracking
   useEffect(() => {
-    if (isPolling && isLiveMode && selectedLiveLeague) {
+    if (isLiveTracking && selectedLiveLeague) {
       const poll = () => fetchLiveData();
 
       // Initial fetch
@@ -147,11 +148,12 @@ export default function LeagueTables({
         }
       };
     }
-  }, [isPolling, isLiveMode, selectedLiveLeague]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLiveTracking, selectedLiveLeague]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchLiveData = async () => {
-    if (!isLiveMode || !selectedLiveLeague) return;
+    if (!isLiveTracking || !selectedLiveLeague) return;
 
+    setIsLoadingLiveData(true);
     try {
       const selectedLeague = availableLeagues.find(
         (league) => league.id === selectedLiveLeague
@@ -263,20 +265,12 @@ export default function LeagueTables({
       setLastLiveUpdate(new Date().toLocaleTimeString());
     } catch (error) {
       console.error("Live data fetch error:", error);
+    } finally {
+      setIsLoadingLiveData(false);
     }
   };
 
-  const toggleLiveMode = () => {
-    setIsLiveMode(!isLiveMode);
-    setIsPolling(false);
-    if (pollingInterval.current) {
-      clearInterval(pollingInterval.current);
-    }
-  };
-
-  const togglePolling = () => {
-    setIsPolling(!isPolling);
-  };
+  // Remove live mode controls - now handled by parent
 
   const fetchLeagueStandings = async (
     leagueId: number,
@@ -359,7 +353,7 @@ export default function LeagueTables({
   };
 
   const toggleLeague = (leagueId: number, isH2H: boolean = false) => {
-    if (isLiveMode) return; // Don't expand in live mode
+    // Always allow expand/collapse
 
     const isExpanded = expandedLeagues.has(leagueId);
 
@@ -409,33 +403,29 @@ export default function LeagueTables({
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold text-theme-foreground flex items-center theme-transition">
             <GiTrophy className="mr-2 text-yellow-500" />
-            {isLiveMode
+            {isLiveTracking
               ? t("fplLive.liveLeagueTracking")
               : t("fplLive.leaguesTables")}
           </h3>
 
-          {/* Live mode toggle */}
-          <button
-            onClick={toggleLiveMode}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              isLiveMode
-                ? "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-300"
-                : "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300"
-            }`}
-          >
-            {isLiveMode ? <MdStop /> : <MdPlayArrow />}
-            <span className="hidden xs:inline">
-              {isLiveMode ? t("fplLive.exitLive") : t("fplLive.startLive")}
+          {/* Live status indicator */}
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium bg-theme-secondary">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                isLiveTracking ? "bg-green-500 animate-pulse" : "bg-gray-400"
+              }`}
+            ></div>
+            <span className="text-theme-text-secondary text-xs">
+              {isLiveTracking
+                ? "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu"
+                : "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu"}
             </span>
-            <span className="xs:hidden">
-              {isLiveMode ? t("fplLive.exit") : t("fplLive.live")}
-            </span>
-          </button>
+          </div>
         </div>
       </div>
 
       {/* Live Mode UI */}
-      {isLiveMode ? (
+      {isLiveTracking ? (
         <div className="p-6">
           {/* Live Controls Card */}
           <div className="bg-gradient-to-r from-blue-50/50 to-green-50/50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 mb-6 border border-blue-200/50 dark:border-gray-600 backdrop-blur-sm">
@@ -473,38 +463,27 @@ export default function LeagueTables({
                 </select>
               </div>
 
-              {/* Control Buttons */}
+              {/* Status indicator only */}
               <div className="space-y-3">
-                <label className="flex items-center gap-2 text-sm font-medium text-theme-secondary">
-                  <MdFlashOn className="w-4 h-4" />
-                  {t("fplLive.liveActions")}
-                </label>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={togglePolling}
-                    disabled={!selectedLiveLeague}
-                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${
-                      isPolling
-                        ? "bg-red-500 text-white hover:bg-red-600"
-                        : "bg-green-500 text-white hover:bg-green-600"
-                    }`}
-                  >
-                    {isPolling ? (
-                      <MdStop className="w-5 h-5" />
-                    ) : (
-                      <MdPlayArrow className="w-5 h-5" />
-                    )}
-                    {isPolling ? t("fplLive.stopLive") : t("fplLive.startLive")}
-                  </button>
-
-                  <button
-                    onClick={fetchLiveData}
-                    disabled={!selectedLiveLeague}
-                    className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium text-sm bg-blue-500 text-white hover:bg-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                  >
-                    <MdRefresh className="w-4 h-4" />
-                    {t("fplLive.refresh")}
-                  </button>
+                <div className="flex items-center justify-center gap-3 p-4 bg-theme-card-secondary rounded-lg border border-theme-border">
+                  <div className={`w-3 h-3 rounded-full ${
+                    isLiveTracking ? "bg-green-500 animate-pulse" : "bg-gray-400"
+                  }`}></div>
+                  <span className="text-sm font-medium text-theme-foreground">
+                    {isLiveTracking 
+                      ? "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu" 
+                      : "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu"}
+                  </span>
+                  {isLiveTracking && (
+                    <button
+                      onClick={fetchLiveData}
+                      disabled={!selectedLiveLeague}
+                      className="flex items-center justify-center gap-1 px-3 py-1 rounded-md text-xs bg-blue-500 text-white hover:bg-blue-600 transition-all disabled:opacity-50"
+                    >
+                      <MdRefresh className="w-3 h-3" />
+                      {t("fplLive.refresh")}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -811,7 +790,7 @@ export default function LeagueTables({
           ) : (
             <div className="bg-theme-card rounded-xl shadow-lg border border-theme-border p-12 text-center">
               <div className="flex flex-col items-center space-y-4">
-                {isPolling ? (
+                {isLoadingLiveData ? (
                   <>
                     <div className="relative">
                       <div className="w-16 h-16 border-4 border-theme-border rounded-full animate-spin border-t-blue-500"></div>
@@ -819,10 +798,10 @@ export default function LeagueTables({
                     </div>
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold text-theme-primary">
-                        {t("fplLive.loadingLiveData")}
+                        Učitavanje uživo podataka...
                       </h3>
                       <p className="text-theme-muted">
-                        Fetching latest standings from{" "}
+                        Preuzimanje najnovijih rezultata iz{" "}
                         {
                           availableLeagues.find(
                             (league) => league.id === selectedLiveLeague
@@ -847,6 +826,24 @@ export default function LeagueTables({
                       </div>
                     </div>
                   </>
+                ) : isLiveTracking ? (
+                  <>
+                    <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-800 dark:to-blue-800 rounded-full flex items-center justify-center">
+                      <BsLightningCharge className="w-8 h-8 text-green-500 dark:text-green-400" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-theme-primary">
+                        Uživo praćenje aktivno
+                      </h3>
+                      <p className="text-theme-muted max-w-md">
+                        Čeka se na nova ažuriranja...
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-theme-muted">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span>Ažuriranje svakih 30 sekundi</span>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-green-100 dark:from-gray-700 dark:to-gray-600 rounded-full flex items-center justify-center">
@@ -854,15 +851,15 @@ export default function LeagueTables({
                     </div>
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold text-theme-primary">
-                        {t("fplLive.readyToGoLive")}
+                        Spreman za živo praćenje
                       </h3>
                       <p className="text-theme-muted max-w-md">
-                        {t("fplLive.selectLeagueAndClickStartLive")}
+                        Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-theme-muted">
                       <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                      <span>{t("fplLive.autoRefreshEvery30Seconds")}</span>
+                      <span>Ažuriranje svakih 30 sekundi</span>
                     </div>
                   </>
                 )}
