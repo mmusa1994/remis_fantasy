@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Globe } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import CountryFlag from "@/components/shared/CountryFlag";
 
 const languages = [
   { code: "en", name: "English", flagCode: "gb" },
@@ -99,7 +100,7 @@ export default function LanguageSelector() {
                   transition={{ delay: index * 0.05 }}
                   whileHover={{ x: 4 }}
                 >
-                  <span className={`fi fi-${language.flagCode} text-xl`}></span>
+                  <CountryFlag country={language.flagCode} size="xl" />
                   <div className="flex flex-col">
                     <span className="font-medium text-sm">{language.name}</span>
                     <span className="text-xs opacity-70">

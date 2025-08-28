@@ -101,7 +101,7 @@
       "description": "Besplatna liga za sve igrače"
     },
     "h2h": {
-      "title": "Glava u Glavu",
+      "title": "Head to Head",
       "description": "Sedmični mečevi protiv drugih menadžera"
     }
   },
@@ -139,8 +139,8 @@
   "fplLive": {
     "premiumLeague": "Premium Liga",
     "standardLeague": "Standardna Liga",
-    "h2hLeague": "Glava u Glavu Liga",
-    "h2h2League": "H2H Liga",
+    "h2hLeague": "H2H Liga",
+    "h2h2League": "H2H2 Liga",
     "freeLeague": "Besplatna Liga"
   },
   "premiumLeague": {
@@ -168,5 +168,28 @@
     "originalJersey": "ORIGINAL DRES 25/26 PL",
     "freeEntry": "BESPLATNO UČEŠĆE NAREDNE SEZONE",
     "freeEntryShort": "Free Entry"
+  },
+  "registration": {
+    "title": "PRIJAVI SE ZA NOVU SEZONU",
+    "subtitle": "Popuni formu i izaberi ligu za sebe koju želiš igrati, povratne informacije ćeš dobiti u mailu.",
+    "personalData": "Lični Podaci",
+    "firstName": "Ime",
+    "lastName": "Prezime",
+    "contactData": "Kontakt Podaci",
+    "emailAddress": "Email Adresa",
+    "phoneNumber": "Broj Telefona",
+    "teamInfo": "Informacije o Ekipi",
+    "teamName": "Ime Ekipe",
+    "notes": "Napomene (opciono)",
+    "notesPlaceholder": "Unesite dodatne napomene ili komentare...",
+    "registrationClosed": "REGISTRACIJA TRENUTNO ZATVORENA",
+    "submitButton": "Pošalji Prijavu",
+    "loading": "Slanje prijave...",
+    "successTitle": "PRIJAVA USPJEŠNO POSLATA",
+    "successMessage": "Vaša prijava je uspješno poslata. Povratne informacije ćete dobiti u mailu.",
+    "errorTitle": "GREŠKA PRI PRIJAVI",
+    "errorMessage": "Nešto je pošlo po zlu. Molimo pokušajte ponovo.",
+    "loadingForm": "Učitavanje registracijske forme...",
+    "loadingDescription": "Molimo sačekajte dok pripremamo registracijsku formu za vas."
   }
 }

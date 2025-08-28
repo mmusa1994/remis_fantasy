@@ -24,99 +24,7 @@ import {
 // Note: flag-icons CSS will need to be imported in globals.css or layout
 import LoadingCard from "@/components/shared/LoadingCard";
 
-// Helper function to convert country names to ISO codes for flag-icons
-const getCountryCode = (countryName: string | null): string => {
-  // Handle null or undefined country names
-  if (!countryName) {
-    return "xx"; // Default flag for unknown countries
-  }
-
-  const countryMap: { [key: string]: string } = {
-    "United States": "us",
-    "United Kingdom": "gb",
-    Germany: "de",
-    France: "fr",
-    Italy: "it",
-    Spain: "es",
-    Netherlands: "nl",
-    Belgium: "be",
-    Austria: "at",
-    Switzerland: "ch",
-    Sweden: "se",
-    Norway: "no",
-    Denmark: "dk",
-    Finland: "fi",
-    Poland: "pl",
-    "Czech Republic": "cz",
-    Slovakia: "sk",
-    Hungary: "hu",
-    Romania: "ro",
-    Bulgaria: "bg",
-    Greece: "gr",
-    Portugal: "pt",
-    Ireland: "ie",
-    Croatia: "hr",
-    Slovenia: "si",
-    Serbia: "rs",
-    "Bosnia and Herzegovina": "ba",
-    Montenegro: "me",
-    "North Macedonia": "mk",
-    Albania: "al",
-    Russia: "ru",
-    Ukraine: "ua",
-    Belarus: "by",
-    Lithuania: "lt",
-    Latvia: "lv",
-    Estonia: "ee",
-    Canada: "ca",
-    Australia: "au",
-    "New Zealand": "nz",
-    Japan: "jp",
-    "South Korea": "kr",
-    China: "cn",
-    India: "in",
-    Brazil: "br",
-    Argentina: "ar",
-    Mexico: "mx",
-    Turkey: "tr",
-    "South Africa": "za",
-    Egypt: "eg",
-    Morocco: "ma",
-    Nigeria: "ng",
-    Kenya: "ke",
-    Ghana: "gh",
-    Israel: "il",
-    "United Arab Emirates": "ae",
-    "Saudi Arabia": "sa",
-    Qatar: "qa",
-    Kuwait: "kw",
-    Bahrain: "bh",
-    Oman: "om",
-    Jordan: "jo",
-    Lebanon: "lb",
-    Syria: "sy",
-    Iraq: "iq",
-    Iran: "ir",
-    Afghanistan: "af",
-    Pakistan: "pk",
-    Bangladesh: "bd",
-    "Sri Lanka": "lk",
-    Myanmar: "mm",
-    Thailand: "th",
-    Vietnam: "vn",
-    Cambodia: "kh",
-    Laos: "la",
-    Malaysia: "my",
-    Singapore: "sg",
-    Indonesia: "id",
-    Philippines: "ph",
-    Taiwan: "tw",
-    "Hong Kong": "hk",
-    Macau: "mo",
-  };
-
-  return countryMap[countryName] || countryName.toLowerCase().slice(0, 2);
-};
+import CountryFlag from "@/components/shared/CountryFlag";
 
 interface Visitor {
   id: number;
@@ -417,9 +325,7 @@ export default function VisitorsPage() {
                       className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors"
                     >
                       <span className="text-gray-700 flex items-center gap-3 font-medium">
-                        <span
-                          className={`fi fi-${getCountryCode(country)} text-xl`}
-                        ></span>
+                        <CountryFlag country={country} size="xl" />
                         {country || "Unknown"}
                       </span>
                       <span className="text-blue-600 font-bold text-lg">
@@ -510,11 +416,7 @@ export default function VisitorsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       <div className="flex items-center gap-3">
-                        <span
-                          className={`fi fi-${getCountryCode(
-                            visitor.country
-                          )} text-lg`}
-                        ></span>
+                        <CountryFlag country={visitor.country} size="lg" />
                         <span className="font-medium">
                           {visitor.country
                             ? `${visitor.country}${

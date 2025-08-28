@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { 
- 
-  FPLLiveService, 
-  FPLTeamService, 
+import {
+  FPLLiveService,
+  FPLTeamService,
   FPLBootstrapService,
-  FPLFixtureService
+  FPLFixtureService,
 } from "@/services/fpl";
 
 // Initialize FPL services
@@ -15,16 +14,19 @@ const fixtureService = FPLFixtureService.getInstance();
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  console.log('🚀 FPL Load Team API - Request started');
-  
+  console.log("🚀 FPL Load Team API - Request started");
+
+  let managerId: any, gameweek: any;
+
   try {
     const body = await request.json();
-    const { managerId, gameweek, skeleton = false } = body;
-    
-    console.log('📥 Request data:', { managerId, gameweek, skeleton });
+    ({ managerId, gameweek } = body);
+    const skeleton = body.skeleton || false;
+
+    console.log("📥 Request data:", { managerId, gameweek, skeleton });
 
     if (!managerId || !gameweek) {
-      console.log('❌ Validation failed: Missing required parameters');
+      console.log("❌ Validation failed: Missing required parameters");
       return NextResponse.json(
         {
           success: false,
@@ -38,7 +40,10 @@ export async function POST(request: NextRequest) {
     const gw = parseInt(gameweek, 10);
 
     if (isNaN(managerIdNum) || isNaN(gw)) {
-      console.log('❌ Validation failed: Invalid parameters', { managerIdNum, gw });
+      console.log("❌ Validation failed: Invalid parameters", {
+        managerIdNum,
+        gw,
+      });
       return NextResponse.json(
         {
           success: false,
@@ -47,26 +52,41 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    console.log('✅ Validation passed:', { managerId: managerIdNum, gameweek: gw });
+
+    console.log("✅ Validation passed:", {
+      managerId: managerIdNum,
+      gameweek: gw,
+    });
 
     // If skeleton mode requested, return minimal manager data quickly
     if (skeleton) {
-      console.log('🏃‍♂️ Skeleton mode - fetching basic manager info');
+      console.log("🏃‍♂️ Skeleton mode - fetching basic manager info");
       try {
         const managerResponse = await teamService.getManagerInfo(managerIdNum);
-        
+
         if (!managerResponse.success || !managerResponse.data) {
-          console.log('❌ Failed to get manager info in skeleton mode');
-          throw new Error('Manager not found');
+          console.log("❌ Failed to get manager info in skeleton mode");
+          throw new Error("Manager not found");
         }
-        
-        console.log('✅ Skeleton data loaded for manager:', managerResponse.data.name);
-        
+
+        console.log(
+          "✅ Skeleton data loaded for manager:",
+          managerResponse.data.name
+        );
+        console.log("🏴 Skeleton manager region data:", {
+          original: managerResponse.data?.player_region_short_iso,
+          mapped: managerResponse.data?.player_region_short_iso,
+          region_name: managerResponse.data?.player_region_name,
+        });
+
         return NextResponse.json({
           success: true,
           data: {
-            manager: managerResponse.data,
+            manager: {
+              ...managerResponse.data,
+              player_region_iso_code_short:
+                managerResponse.data.player_region_short_iso,
+            },
             team_with_stats: [],
             team_totals: null,
             fixtures: [],
@@ -78,14 +98,14 @@ export async function POST(request: NextRequest) {
             captain: { player_id: null, multiplier: null, stats: null },
             vice_captain: { player_id: null, multiplier: null, stats: null },
           },
-          gameweek: gw,
-          manager_id: managerIdNum,
+          gameweek: parseInt(gameweek, 10),
+          manager_id: parseInt(managerId, 10),
           timestamp: new Date().toISOString(),
           skeleton: true,
           response_time_ms: Date.now() - startTime,
         });
       } catch (error) {
-        console.log('❌ Skeleton mode failed:', error);
+        console.log("❌ Skeleton mode failed:", error);
         return NextResponse.json(
           {
             success: false,
@@ -96,8 +116,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('📊 Phase 1: Fetching critical data (picks + live)');
-    
+    console.log("📊 Phase 1: Fetching critical data (picks + live)");
+
     // Priority 1: Get critical data first (manager picks + live data)
     let managerPicks, liveData;
 
@@ -106,24 +126,27 @@ export async function POST(request: NextRequest) {
         teamService.getManagerPicks(managerIdNum, gw),
         liveService.getLiveData(gw),
       ]);
-      
-      if (!picksResponse.success || !liveResponse.success ||
-          !picksResponse.data || !liveResponse.data) {
-        throw new Error('Failed to get critical data');
+
+      if (
+        !picksResponse.success ||
+        !liveResponse.success ||
+        !picksResponse.data ||
+        !liveResponse.data
+      ) {
+        throw new Error("Failed to get critical data");
       }
-      
+
       managerPicks = picksResponse.data;
       liveData = liveResponse.data;
-      
-      console.log('✅ Critical data loaded:', {
+
+      console.log("✅ Critical data loaded:", {
         picks_count: managerPicks.picks.length,
         live_elements: liveData.elements.length,
         picks_cache_hit: picksResponse.cache_hit,
-        live_cache_hit: liveResponse.cache_hit
+        live_cache_hit: liveResponse.cache_hit,
       });
-      
     } catch (apiError) {
-      console.log('❌ Critical data fetch failed:', apiError);
+      console.log("❌ Critical data fetch failed:", apiError);
       if (apiError instanceof Error && apiError.message.includes("404")) {
         return NextResponse.json(
           {
@@ -136,65 +159,86 @@ export async function POST(request: NextRequest) {
       throw apiError;
     }
 
-    console.log('👥 Phase 2: Fetching player data');
-    
+    console.log("👥 Phase 2: Fetching player data");
+
     // Priority 2: Get player data from services
     const playerIds = managerPicks.picks.map((pick) => pick.element);
     let playersData: any[];
 
     try {
       const playersResponse = await bootstrapService.getAllPlayers();
-      
+
       if (!playersResponse.success || !playersResponse.data) {
-        throw new Error('Failed to get players data');
+        throw new Error("Failed to get players data");
       }
-      
+
       // Filter to only the players we need
       playersData = playersResponse.data.filter((p: any) =>
         playerIds.includes(p.id)
       );
-      
-      console.log('✅ Player data loaded:', {
+
+      console.log("✅ Player data loaded:", {
         total_players_available: playersResponse.data.length,
         filtered_players: playersData.length,
-        cache_hit: playersResponse.cache_hit
+        cache_hit: playersResponse.cache_hit,
       });
-      
     } catch (error) {
-      console.log('❌ Player data fetch failed:', error);
+      console.log("❌ Player data fetch failed:", error);
       throw error;
     }
 
-    console.log('📋 Phase 3: Fetching additional data (manager info, fixtures, status)');
-    
+    console.log(
+      "📋 Phase 3: Fetching additional data (manager info, fixtures, status)"
+    );
+
     // Priority 3: Get remaining data in parallel
     let managerEntry: any = null;
     let fixtures: any[] = [];
     let eventStatus: any = { status: [] };
 
     try {
-      const [managerResponse, fixturesResponse, statusResponse] = await Promise.all([
-        teamService.getManagerInfo(managerIdNum),
-        fixtureService.getAllFixtures(),
-        liveService.getEventStatus(),
-      ]);
-      
-      managerEntry = managerResponse.success ? managerResponse.data : null;
-      fixtures = fixturesResponse.success ? 
-        (fixturesResponse.data || []).filter((f: any) => f.event === gw) : [];
-      eventStatus = statusResponse.success ? statusResponse.data : { status: [] };
-      
-      console.log('✅ Additional data loaded:', {
+      const [managerResponse, fixturesResponse, statusResponse] =
+        await Promise.all([
+          teamService.getManagerInfo(managerIdNum),
+          fixtureService.getAllFixtures(),
+          liveService.getEventStatus(),
+        ]);
+
+      managerEntry =
+        managerResponse.success && managerResponse.data
+          ? {
+              ...managerResponse.data,
+              player_region_iso_code_short:
+                managerResponse.data.player_region_short_iso,
+            }
+          : null;
+
+      console.log("🏴 Manager region data:", {
+        original: managerResponse.data?.player_region_short_iso,
+        mapped: managerEntry?.player_region_iso_code_short,
+        region_name: managerEntry?.player_region_name,
+        full_manager_data: managerResponse.data,
+      });
+      fixtures = fixturesResponse.success
+        ? (fixturesResponse.data || []).filter((f: any) => f.event === gw)
+        : [];
+      eventStatus = statusResponse.success
+        ? statusResponse.data
+        : { status: [] };
+
+      console.log("✅ Additional data loaded:", {
         manager_loaded: !!managerEntry,
         fixtures_count: fixtures.length,
         event_status_loaded: !!eventStatus,
         manager_cache_hit: managerResponse.cache_hit,
         fixtures_cache_hit: fixturesResponse.cache_hit,
-        status_cache_hit: statusResponse.cache_hit
+        status_cache_hit: statusResponse.cache_hit,
       });
-      
     } catch (error) {
-      console.warn('⚠️ Secondary data fetch failed (continuing with partial data):', error);
+      console.warn(
+        "⚠️ Secondary data fetch failed (continuing with partial data):",
+        error
+      );
       managerEntry = null;
       fixtures = [];
       eventStatus = { status: [] };
@@ -246,12 +290,15 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    console.log('🎯 Phase 4: Calculating bonus points and predictions');
-    
+    console.log("🎯 Phase 4: Calculating bonus points and predictions");
+
     const bonusStatus = eventStatus?.status?.find((s: any) => s.event === gw);
     const bonusAdded = bonusStatus?.bonus_added || false;
-    
-    console.log('📊 Bonus status:', { bonusAdded, bonusStatus: bonusStatus ? 'found' : 'not found' });
+
+    console.log("📊 Bonus status:", {
+      bonusAdded,
+      bonusStatus: bonusStatus ? "found" : "not found",
+    });
 
     // Extract live stats for calculations - optimized filtering
     const liveStats = teamWithStats
@@ -263,20 +310,20 @@ export async function POST(request: NextRequest) {
 
     // Simplified bonus prediction without external library
     if (!bonusAdded && fixtures && fixtures.length > 0) {
-      console.log('🔮 Calculating bonus predictions');
+      console.log("🔮 Calculating bonus predictions");
       try {
         // Basic bonus prediction based on BPS
         const fixtureGroups = new Map<number, any[]>();
-        
+
         // Group players by fixture
         liveStats.forEach((stat) => {
           const player = playersDataMap.get(stat.player_id);
           if (player && stat.minutes > 0) {
-            const playerFixtures = fixtures.filter(f => 
-              f.team_h === player.team || f.team_a === player.team
+            const playerFixtures = fixtures.filter(
+              (f) => f.team_h === player.team || f.team_a === player.team
             );
-            
-            playerFixtures.forEach(fixture => {
+
+            playerFixtures.forEach((fixture) => {
               if (!fixtureGroups.has(fixture.id)) {
                 fixtureGroups.set(fixture.id, []);
               }
@@ -290,13 +337,13 @@ export async function POST(request: NextRequest) {
             });
           }
         });
-        
+
         // Calculate bonus for each fixture
         for (const [fixtureId, players] of fixtureGroups.entries()) {
           const sortedPlayers = players
-            .filter(p => p.minutes >= 60) // Only players with 60+ minutes
+            .filter((p) => p.minutes >= 60) // Only players with 60+ minutes
             .sort((a, b) => b.bps - a.bps);
-            
+
           if (sortedPlayers.length >= 3) {
             // Award bonus points: 3, 2, 1
             const bonusPoints = [3, 2, 1];
@@ -311,22 +358,21 @@ export async function POST(request: NextRequest) {
             }
           }
         }
-        
+
         // Calculate total predicted bonus for this manager's team
         totalPredictedBonus = managerPicks.picks.reduce((total, pick) => {
           const playerBonus = predictedBonuses
-            .filter(pb => pb.player_id === pick.element)
+            .filter((pb) => pb.player_id === pick.element)
             .reduce((sum, pb) => sum + pb.bonus, 0);
-          return total + (playerBonus * pick.multiplier);
+          return total + playerBonus * pick.multiplier;
         }, 0);
-        
-        console.log('✅ Bonus predictions calculated:', {
+
+        console.log("✅ Bonus predictions calculated:", {
           predicted_bonuses_count: predictedBonuses.length,
-          total_predicted_bonus: totalPredictedBonus
+          total_predicted_bonus: totalPredictedBonus,
         });
-        
       } catch (error) {
-        console.warn('⚠️ Bonus prediction failed:', error);
+        console.warn("⚠️ Bonus prediction failed:", error);
         predictedBonuses = [];
         totalPredictedBonus = 0;
       }
@@ -408,19 +454,26 @@ export async function POST(request: NextRequest) {
         : 0,
     };
 
-    console.log('📈 Phase 5: Final calculations and response preparation');
-    
+    console.log("📈 Phase 5: Final calculations and response preparation");
+
     const responseTime = Date.now() - startTime;
-    
-    console.log('✅ Load team completed successfully:', {
+
+    console.log("✅ Load team completed successfully:", {
       manager_id: managerIdNum,
       gameweek: gw,
       total_response_time_ms: responseTime,
       team_size: teamWithStats.length,
-      active_players: teamWithStats.filter(t => t.position <= 11).length,
-      bench_players: teamWithStats.filter(t => t.position > 11).length,
-      captain: teamWithStats.find(t => t.is_captain)?.player?.web_name || 'Unknown',
-      vice_captain: teamWithStats.find(t => t.is_vice_captain)?.player?.web_name || 'Unknown'
+      active_players: teamWithStats.filter((t) => t.position <= 11).length,
+      bench_players: teamWithStats.filter((t) => t.position > 11).length,
+      captain:
+        teamWithStats.find((t) => t.is_captain)?.player?.web_name || "Unknown",
+      vice_captain:
+        teamWithStats.find((t) => t.is_vice_captain)?.player?.web_name ||
+        "Unknown",
+      manager_region_data: {
+        iso: managerEntry?.player_region_iso_code_short,
+        name: managerEntry?.player_region_name,
+      },
     });
 
     return NextResponse.json({
@@ -446,23 +499,23 @@ export async function POST(request: NextRequest) {
           stats: viceCaptainStats,
         },
       },
-      gameweek: gw,
-      manager_id: managerIdNum,
+      gameweek: parseInt(gameweek, 10),
+      manager_id: parseInt(managerId, 10),
       timestamp: new Date().toISOString(),
       response_time_ms: responseTime,
       data_sources: {
         using_services: true,
         live_tracking: true,
-        database_free: true
-      }
+        database_free: true,
+      },
     });
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    console.error('💥 Load team failed:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    console.error("💥 Load team failed:", {
+      error: error instanceof Error ? error.message : "Unknown error",
       response_time_ms: responseTime,
-      managerId,
-      gameweek
+      managerId: managerId || "unknown",
+      gameweek: gameweek || "unknown",
     });
 
     return NextResponse.json(
@@ -470,7 +523,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
         response_time_ms: responseTime,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

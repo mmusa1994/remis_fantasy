@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 import Toast from "./shared/Toast";
 import { supabase } from "@/lib/supabase";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -43,6 +44,7 @@ interface RegistrationFormProps {
 const RegistrationForm = React.memo<RegistrationFormProps>(
   function RegistrationForm({ leagueType }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const {
       data: registrationConfig,
       loading: configLoading,
@@ -88,8 +90,8 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
         <section className="relative w-full bg-theme-background overflow-hidden theme-transition min-h-screen flex items-center justify-center">
           <div className="w-full max-w-4xl mx-auto px-4">
             <LoadingCard
-              title="Loading Registration Form..."
-              description="Please wait while we prepare the registration form for you."
+              title={t("registration.loadingForm")}
+              description={t("registration.loadingDescription")}
               className="animate-fade-in-up"
             />
           </div>
@@ -395,13 +397,12 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
             <div className="text-center mb-12 animate-fade-in-up">
               <h2 className="text-3xl md:text-5xl lg:text-6xl font-black mb-4 text-balance leading-tight font-russo animate-scale-in animate-delay-200">
                 <span className="text-theme-heading-primary drop-shadow-2xl theme-transition">
-                  PRIJAVI SE ZA NOVU SEZONU
+                  {t("registration.title")}
                 </span>
               </h2>
 
               <p className="text-theme-text-secondary text-sm md:text-base lg:text-lg w-full max-w-3xl mx-auto leading-relaxed font-medium theme-transition animate-fade-in animate-delay-500">
-                Popuni formu i izaberi ligu za sebe koju želiš igrati, povratne
-                informacije ćeš dobiti u mailu.
+                {t("registration.subtitle")}
               </p>
             </div>
 
@@ -415,7 +416,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                   <div className="mb-12">
                     <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
                       <span className="text-theme-heading-primary theme-transition">
-                        Lični Podaci
+                        {t("registration.personalData")}
                       </span>
                     </h3>
 
@@ -449,7 +450,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                                 : "floating-label-placeholder transform translate-y-0 scale-100"
                             }`}
                           >
-                            Ime *
+                            {t("registration.firstName")} *
                           </label>
                         </div>
                         {errors.first_name && (
@@ -488,7 +489,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                                 : "floating-label-placeholder transform translate-y-0 scale-100"
                             }`}
                           >
-                            Prezime *
+                            {t("registration.lastName")} *
                           </label>
                         </div>
                         {errors.last_name && (
@@ -505,7 +506,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                   <div className="mb-12">
                     <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
                       <span className="text-theme-heading-primary theme-transition">
-                        Kontakt Podaci
+                        {t("registration.contactData")}
                       </span>
                     </h3>
 
@@ -538,7 +539,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                                 : "floating-label-placeholder transform translate-y-0 scale-100"
                             }`}
                           >
-                            Email Adresa *
+                            {t("registration.emailAddress")} *
                           </label>
                         </div>
                         {errors.email && (
@@ -577,7 +578,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                                 : "floating-label-placeholder transform translate-y-0 scale-100"
                             }`}
                           >
-                            Broj Telefona *
+                            {t("registration.phoneNumber")} *
                           </label>
                         </div>
                         {errors.phone && (
@@ -594,7 +595,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                   <div className="mb-12">
                     <h3 className="text-lg md:text-xl lg:text-2xl font-black mb-4 md:mb-6 animate-slide-in-left animate-delay-100">
                       <span className="text-theme-heading-primary theme-transition">
-                        Informacije o Ekipi
+                        {t("registration.teamInfo")}
                       </span>
                     </h3>
 
@@ -624,9 +625,9 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                               ? "transform -translate-y-2 scale-90"
                               : "floating-label-placeholder transform translate-y-0 scale-100"
                           }`}
-                        >
-                          Ime Ekipe *
-                        </label>
+                                                  >
+                            {t("registration.teamName")} *
+                          </label>
                       </div>
                       {errors.team_name && (
                         <p className="text-red-400 text-sm mt-2 flex items-center gap-1 font-medium theme-transition animate-fade-in">
@@ -644,7 +645,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                       className="block text-sm md:text-base font-bold mb-3 theme-transition font-russo"
                     >
                       <span className="text-theme-heading-primary theme-transition">
-                        Napomene (opciono)
+                        {t("registration.notes")}
                       </span>
                     </label>
                     <textarea
@@ -655,7 +656,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                         setFormData({ ...formData, notes: e.target.value })
                       }
                       className="w-full px-4 py-3 md:px-6 md:py-4 minimal-radius bg-theme-background backdrop-blur-sm border-2 border-theme-border focus:border-blue-400 focus:outline-none text-sm md:text-base theme-transition placeholder:text-gray-400 font-medium font-inter resize-vertical focus-ring"
-                      placeholder="Unesite dodatne napomene ili komentare..."
+                      placeholder={t("registration.notesPlaceholder")}
                       rows={4}
                       maxLength={1000}
                     />
@@ -675,11 +676,11 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                     {isSubmitting ? (
                       <div className="flex items-center justify-center gap-3 animate-fade-in">
                         <div className="w-6 h-6 border-3 border-white border-t-transparent minimal-radius animate-rotate-slow"></div>
-                        <span>OBRAĐUJEM PRIJAVU...</span>
+                        <span>{t("registration.loading")}</span>
                       </div>
                     ) : (
                       <span className="flex items-center justify-center gap-3 animate-fade-in">
-                        <span>REGISTRACIJA TRENUTNO ZATVORENA</span>
+                        <span>{t("registration.registrationClosed")}</span>
                       </span>
                     )}
 
@@ -703,7 +704,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                                 : "text-green-300"
                             } font-black text-xl md:text-lg mb-1 animate-fade-in animate-delay-400`}
                           >
-                            PRIJAVA USPJEŠNA!
+                            {t("registration.successTitle")}
                           </h4>
                           <p
                             className={`${
@@ -732,10 +733,10 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                         </div>
                         <div>
                           <h4 className="text-red-300 font-black text-lg mb-1">
-                            GREŠKA PRI PRIJAVI
+                            {t("registration.errorTitle")}
                           </h4>
                           <p className="text-red-200 text-sm">
-                            Nešto je pošlo po zlu. Molimo pokušajte ponovo.
+                            {t("registration.errorMessage")}
                           </p>
                         </div>
                       </div>

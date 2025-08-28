@@ -3,6 +3,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import FlagLoader from "@/components/shared/FlagLoader";
+import { getCountryFlagCode } from "@/utils/countryMapping";
+import { formatTeamValueWithCurrency } from "@/utils/teamValueFormatter";
 
 interface ManagerSummaryProps {
   manager?: {
@@ -84,6 +86,15 @@ const ManagerSummary = React.memo(function ManagerSummary({
     return `#${formatNumber(rank)}`;
   };
 
+  // Debug log for country data
+  console.log("🏴 ManagerSummary country data:", {
+    region_iso: manager.player_region_iso_code_short,
+    region_name: manager.player_region_name,
+    flag_code: getCountryFlagCode(
+      manager.player_region_iso_code_short || manager.player_region_name
+    ),
+  });
+
   const activePoints = bonusAdded
     ? teamTotals.active_points_final
     : teamTotals.active_points_no_bonus;
@@ -93,7 +104,9 @@ const ManagerSummary = React.memo(function ManagerSummary({
   const bonusPoints = bonusAdded
     ? teamTotals.final_bonus
     : teamTotals.predicted_bonus;
-  const bonusLabel = bonusAdded ? "Final Bonus" : "Predicted Bonus";
+  const bonusLabel = bonusAdded
+    ? t("fplLive.finalBonus")
+    : t("fplLive.predictedBonus");
 
   return (
     <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">
@@ -117,11 +130,15 @@ const ManagerSummary = React.memo(function ManagerSummary({
           </h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between items-center">
-              <span className="text-theme-text-secondary theme-transition">{t("fplLive.name")}</span>
+              <span className="text-theme-text-secondary theme-transition">
+                {t("fplLive.name")}
+              </span>
               <div className="flex items-center space-x-2">
                 {manager.player_region_iso_code_short && (
-                  <span 
-                    className={`fi fi-${manager.player_region_iso_code_short.toLowerCase()} w-4 h-3 rounded-sm`}
+                  <span
+                    className={`fi fi-${getCountryFlagCode(
+                      manager.player_region_iso_code_short
+                    )} w-4 h-3 rounded-sm`}
                     title={manager.player_region_name}
                   ></span>
                 )}
@@ -131,31 +148,52 @@ const ManagerSummary = React.memo(function ManagerSummary({
               </div>
             </div>
             <div className="flex justify-between">
-              <span className="text-theme-text-secondary theme-transition">{t("fplLive.team")}</span>
+              <span className="text-theme-text-secondary theme-transition">
+                {t("fplLive.team")}
+              </span>
               <span className="font-medium text-theme-foreground theme-transition">
                 {manager.name}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-theme-muted">{t("fplLive.country")}</span>
-              <span className="font-medium text-theme-primary">
-                {manager.player_region_name || 'Unknown'}
-              </span>
+              <div className="flex items-center space-x-2">
+                {manager.player_region_name && (
+                  <span
+                    className={`fi fi-${getCountryFlagCode(
+                      manager.player_region_iso_code_short ||
+                        manager.player_region_name
+                    )} w-4 h-3 rounded-sm`}
+                    title={manager.player_region_name}
+                  ></span>
+                )}
+                <span className="font-medium text-theme-primary">
+                  {manager.player_region_name || "Unknown"}
+                </span>
+              </div>
             </div>
             <div className="flex justify-between">
-              <span className="text-theme-muted">{t("fplLive.yearsActive")}</span>
+              <span className="text-theme-muted">
+                {t("fplLive.yearsActive")}
+              </span>
               <span className="font-medium text-theme-primary">
                 {manager.years_active || 0} {t("fplLive.years")}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-theme-muted">{t("fplLive.joinedDate")}</span>
+              <span className="text-theme-muted">
+                {t("fplLive.joinedDate")}
+              </span>
               <span className="font-medium text-theme-primary">
-                {manager.joined_time ? new Date(manager.joined_time).toLocaleDateString() : 'Unknown'}
+                {manager.joined_time
+                  ? new Date(manager.joined_time).toLocaleDateString()
+                  : "Unknown"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-theme-muted">{t("fplLive.startedEvent")}</span>
+              <span className="text-theme-muted">
+                {t("fplLive.startedEvent")}
+              </span>
               <span className="font-medium text-theme-primary">
                 {t("fplLive.gw")} {manager.started_event || 1}
               </span>
@@ -177,19 +215,25 @@ const ManagerSummary = React.memo(function ManagerSummary({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-theme-muted">{t("fplLive.lastDeadlineBank")}</span>
+              <span className="text-theme-muted">
+                {t("fplLive.lastDeadlineBank")}
+              </span>
               <span className="font-medium text-theme-primary">
-                £{(manager.last_deadline_bank || 0).toFixed(1)}m
+                {formatTeamValueWithCurrency(manager.last_deadline_bank || 0)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-theme-muted">{t("fplLive.lastDeadlineValue")}</span>
+              <span className="text-theme-muted">
+                {t("fplLive.lastDeadlineValue")}
+              </span>
               <span className="font-medium text-theme-primary">
-                £{(manager.last_deadline_value || 0).toFixed(1)}m
+                {formatTeamValueWithCurrency(manager.last_deadline_value || 0)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-theme-muted">{t("fplLive.totalTransfers")}</span>
+              <span className="text-theme-muted">
+                {t("fplLive.totalTransfers")}
+              </span>
               <span className="font-medium text-theme-primary">
                 {manager.last_deadline_total_transfers || 0}
               </span>
@@ -203,13 +247,17 @@ const ManagerSummary = React.memo(function ManagerSummary({
           </h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-theme-muted">{t("fplLive.gameweekPoints")}</span>
+              <span className="text-theme-muted">
+                {t("fplLive.gameweekPoints")}
+              </span>
               <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
                 {manager.summary_event_points} {t("fplLive.points")}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-theme-muted">{t("fplLive.gameweekRank")}</span>
+              <span className="text-theme-muted">
+                {t("fplLive.gameweekRank")}
+              </span>
               <span className="font-medium text-theme-primary">
                 {formatRank(manager.summary_event_rank)}
               </span>
@@ -322,9 +370,13 @@ const ManagerSummary = React.memo(function ManagerSummary({
               bonusAdded ? "bg-green-500" : "bg-yellow-500"
             }`}
           ></div>
-          {bonusAdded ? t("fplLive.bonusFinalized") : t("fplLive.bonusPredicted")}
+          {bonusAdded
+            ? t("fplLive.bonusFinalized")
+            : t("fplLive.bonusPredicted")}
         </div>
-        <div>{t("fplLive.managerId")} {manager.id}</div>
+        <div>
+          {t("fplLive.managerId")} {manager.id}
+        </div>
       </div>
     </div>
   );

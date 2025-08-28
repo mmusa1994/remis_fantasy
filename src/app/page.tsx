@@ -300,7 +300,7 @@ export default function Home() {
                             className="w-full h-full object-contain relative z-10 drop-shadow-lg"
                             style={{
                               filter: isDark
-                                ? "drop-shadow(0 0 8px rgba(59,130,246,0.6)) brightness(1.2)"
+                                ? "drop-shadow(0 0 8px rgba(59,130,246,0.6)) brightness(1.2) contrast(1.2)"
                                 : "drop-shadow(0 0 12px rgba(59,130,246,0.8)) brightness(1.1) contrast(1.2)",
                             }}
                           />

@@ -1,3 +1,6 @@
+/* Flag Icons */
+@import 'flag-icons/css/flag-icons.min.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -49,10 +52,10 @@
   --theme-burgundy: #8b4513;
   --theme-gray: #696969;
 
-  /* Form colors - BEIGE */
-  --theme-input-bg: rgba(250, 248, 243, 0.9);
-  --theme-input-border: #6b5b47;
-  --theme-input-focus: #8b4513;
+  /* Form colors - WHITE for light theme */
+  --theme-input-bg: #ffffff;
+  --theme-input-border: #000000;
+  --theme-input-focus: #000000;
   --theme-placeholder: #666666;
 
   /* Glass effect for light theme - BEIGE */
@@ -228,8 +231,21 @@ body {
 .input-theme:focus {
   border-color: var(--theme-input-focus);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
   background-color: var(--theme-input-bg);
+}
+
+/* Light theme specific input styles */
+[data-theme="light"] .input-theme {
+  background-color: #ffffff;
+  border: 2px solid #000000;
+  color: #000000;
+}
+
+[data-theme="light"] .input-theme:focus {
+  border-color: #000000;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+  background-color: #ffffff;
 }
 
 /* Label animation improvements - NO DUPLICATES */
@@ -245,6 +261,12 @@ body {
   z-index: 10;
   font-weight: 500;
   pointer-events: none;
+}
+
+/* Light theme specific label styles */
+[data-theme="light"] .floating-label {
+  background-color: #ffffff;
+  color: #000000;
 }
 
 .floating-label-placeholder {

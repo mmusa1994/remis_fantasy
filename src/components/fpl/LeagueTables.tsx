@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { getCountryFlagCode } from "@/utils/countryMapping";
 import {
   MdPerson,
   MdGroup,
@@ -48,6 +49,7 @@ export default function LeagueTables({
   onManagerSelect,
 }: LeagueTablesProps) {
   const { t } = useTranslation("fpl");
+
   const [activeTab, setActiveTab] = useState<"classic" | "h2h">("classic");
   const [expandedLeagues, setExpandedLeagues] = useState<Set<number>>(
     new Set()
@@ -294,7 +296,11 @@ export default function LeagueTables({
         const result = await response.json();
 
         if (result.success && result.data) {
-          const standingsData = result.data.standings || [];
+          // Handle different API response structures
+          const standingsData =
+            result.data.standings ||
+            result.data.league?.standings?.results ||
+            [];
           const userFound = standingsData.some(
             (entry: any) => entry.entry === managerId
           );
@@ -303,8 +309,13 @@ export default function LeagueTables({
             ...prev,
             [leagueId]: {
               standings: standingsData,
-              manager_position: result.data.manager_position,
-              total_entries: result.data.total_entries || 0,
+              manager_position:
+                result.data.manager_position ||
+                result.data.manager_performance?.current_rank,
+              total_entries:
+                result.data.total_entries ||
+                result.data.league?.league?.max_entries ||
+                standingsData.length,
               user_found: userFound,
               has_data: true,
               error: null,
@@ -313,7 +324,10 @@ export default function LeagueTables({
 
           setTotalEntries((prev) => ({
             ...prev,
-            [leagueId]: result.data.total_entries || 0,
+            [leagueId]:
+              result.data.total_entries ||
+              result.data.league?.league?.max_entries ||
+              standingsData.length,
           }));
 
           setLastFetched((prev) => ({
@@ -1013,6 +1027,16 @@ export default function LeagueTables({
                                           <td className="px-2 sm:px-4 py-2">
                                             <div className="truncate">
                                               <div className="text-xs sm:text-sm font-medium flex items-center gap-2">
+                                                {entry.player_region_name && (
+                                                  <span
+                                                    className={`fi fi-${getCountryFlagCode(
+                                                      entry.player_region_name
+                                                    )} w-3 h-2 rounded-sm`}
+                                                    title={
+                                                      entry.player_region_name
+                                                    }
+                                                  ></span>
+                                                )}
                                                 {entry.player_name ||
                                                   entry.entry_name}
                                                 {entry.entry === managerId && (
@@ -1223,6 +1247,16 @@ export default function LeagueTables({
                                           <td className="px-2 sm:px-4 py-2">
                                             <div className="truncate">
                                               <div className="text-xs sm:text-sm font-medium flex items-center gap-2">
+                                                {entry.player_region_name && (
+                                                  <span
+                                                    className={`fi fi-${getCountryFlagCode(
+                                                      entry.player_region_name
+                                                    )} w-3 h-2 rounded-sm`}
+                                                    title={
+                                                      entry.player_region_name
+                                                    }
+                                                  ></span>
+                                                )}
                                                 {entry.player_name ||
                                                   entry.entry_name}
                                                 {entry.entry === managerId && (

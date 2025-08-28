@@ -141,7 +141,7 @@ export default function ControlsBar({
           {loading ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm">{t("common.loading")}</span>
+              <span className="text-sm">{t("fplLive.loading")}</span>
             </>
           ) : (
             <>

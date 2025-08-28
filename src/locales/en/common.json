@@ -168,5 +168,28 @@
     "originalJersey": "ORIGINAL JERSEY 25/26 PL",
     "freeEntry": "FREE ENTRY NEXT SEASON",
     "freeEntryShort": "Free Entry"
+  },
+  "registration": {
+    "title": "REGISTER FOR NEW SEASON",
+    "subtitle": "Fill out the form and choose the league you want to play, you will receive feedback in your email.",
+    "personalData": "Personal Data",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "contactData": "Contact Data",
+    "emailAddress": "Email Address",
+    "phoneNumber": "Phone Number",
+    "teamInfo": "Team Information",
+    "teamName": "Team Name",
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "Enter additional notes or comments...",
+    "registrationClosed": "REGISTRATION CURRENTLY CLOSED",
+    "submitButton": "Submit Registration",
+    "loading": "Sending registration...",
+    "successTitle": "REGISTRATION SUCCESSFULLY SENT",
+    "successMessage": "Your registration has been successfully sent. You will receive feedback in your email.",
+    "errorTitle": "REGISTRATION ERROR",
+    "errorMessage": "Something went wrong. Please try again.",
+    "loadingForm": "Loading Registration Form...",
+    "loadingDescription": "Please wait while we prepare the registration form for you."
   }
 }
