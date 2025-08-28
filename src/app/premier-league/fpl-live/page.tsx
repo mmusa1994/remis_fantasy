@@ -15,6 +15,7 @@ import {
 } from "react-icons/md";
 
 import { FaChartLine, FaTrophy } from "react-icons/fa";
+import { TbTransfer } from "react-icons/tb";
 
 import { IoFootballOutline } from "react-icons/io5";
 
@@ -27,6 +28,7 @@ import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
 import LiveTracker from "@/components/fpl/LiveTracker";
 import LeagueTables from "@/components/fpl/LeagueTables";
 import MatchResults from "@/components/fpl/MatchResults";
+import TransfersMarket from "@/components/fpl/TransfersMarket";
 import LoadingCard from "@/components/shared/LoadingCard";
 import type { FPLGameweekStatus } from "@/types/fpl";
 
@@ -43,7 +45,7 @@ interface FPLData {
   timestamp?: string;
 }
 
-type TabType = "overview" | "squad" | "leagues" | "analytics" | "matchResults";
+type TabType = "overview" | "squad" | "leagues" | "analytics" | "transfers" | "matchResults";
 
 interface TabConfig {
   id: TabType;
@@ -114,6 +116,13 @@ export default function FPLLivePage() {
       icon: FaChartLine,
       description: t("fplLive.tabs.analyticsDesc"),
       color: "purple",
+    },
+    {
+      id: "transfers",
+      label: t("fplLive.tabs.transfers"),
+      icon: TbTransfer,
+      description: t("fplLive.tabs.transfersDesc"),
+      color: "orange",
     },
     {
       id: "matchResults",
@@ -625,6 +634,8 @@ export default function FPLLivePage() {
             }}
           />
         );
+      case "transfers":
+        return <TransfersMarket gameweek={gameweek} />;
       default:
         return null;
     }

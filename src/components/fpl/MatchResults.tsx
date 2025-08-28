@@ -282,62 +282,62 @@ export default function MatchResults({
             GW{gameweek} {t("fplLive.keyStats")}
           </h4>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  gap-4 w-full">
-            <div className="text-center p-4 sm:p-6 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] flex flex-col justify-center">
-              <div className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
+            <div className="text-center p-3 sm:p-4 lg:p-6 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[100px] sm:min-h-[120px] flex flex-col justify-center">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-600 dark:text-green-400 mb-1 sm:mb-2">
                 {stats.totalGoals}
               </div>
-              <div className="text-sm sm:text-base font-medium text-theme-foreground theme-transition">
+              <div className="text-xs sm:text-sm lg:text-base font-medium text-theme-foreground theme-transition">
                 {t("fplLive.goals")}
               </div>
             </div>
 
-            <div className="text-center p-4 sm:p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] flex flex-col justify-center">
-              <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+            <div className="text-center p-3 sm:p-4 lg:p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[100px] sm:min-h-[120px] flex flex-col justify-center">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-1 sm:mb-2">
                 {stats.totalAssists}
               </div>
-              <div className="text-sm sm:text-base font-medium text-theme-foreground theme-transition">
+              <div className="text-xs sm:text-sm lg:text-base font-medium text-theme-foreground theme-transition">
                 {t("fplLive.assists")}
               </div>
             </div>
 
             {stats.highestScorer && (
-              <div className="text-center p-4 sm:p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] flex flex-col justify-center">
-                <div className="flex items-center justify-center gap-1 mb-2">
-                  <FaCrown className="text-yellow-600 text-lg" />
+              <div className="text-center p-3 sm:p-4 lg:p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[100px] sm:min-h-[120px] flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-1 mb-1 sm:mb-2">
+                  <FaCrown className="text-yellow-600 text-sm sm:text-lg" />
                 </div>
-                <div className="font-bold text-yellow-600 dark:text-yellow-400 text-sm sm:text-base mb-2 truncate">
+                <div className="font-bold text-yellow-600 dark:text-yellow-400 text-xs sm:text-sm lg:text-base mb-1 sm:mb-2 truncate">
                   {stats.highestScorer.web_name}
                 </div>
-                <div className="text-lg sm:text-xl font-bold text-theme-foreground theme-transition">
+                <div className="text-sm sm:text-lg lg:text-xl font-bold text-theme-foreground theme-transition">
                   {stats.highestScorer.points} {t("fplLive.points")}
                 </div>
               </div>
             )}
 
             {stats.mostOwned && (
-              <div className="text-center p-4 sm:p-6 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] flex flex-col justify-center">
-                <div className="flex items-center justify-center gap-1 mb-2">
-                  <MdTrendingUp className="text-purple-600 text-lg" />
+              <div className="text-center p-3 sm:p-4 lg:p-6 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[100px] sm:min-h-[120px] flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-1 mb-1 sm:mb-2">
+                  <MdTrendingUp className="text-purple-600 text-sm sm:text-lg" />
                 </div>
-                <div className="font-bold text-purple-600 dark:text-purple-400 text-sm sm:text-base mb-2 truncate">
+                <div className="font-bold text-purple-600 dark:text-purple-400 text-xs sm:text-sm lg:text-base mb-1 sm:mb-2 truncate">
                   {stats.mostOwned.web_name}
                 </div>
-                <div className="text-lg sm:text-xl font-bold text-theme-foreground theme-transition">
+                <div className="text-sm sm:text-lg lg:text-xl font-bold text-theme-foreground theme-transition">
                   {stats.mostOwned.ownership_top10k?.toFixed(1)}%
                 </div>
               </div>
             )}
 
             {stats.biggestDifferential && (
-              <div className="text-center p-4 sm:p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] flex flex-col justify-center">
-                <div className="flex items-center justify-center gap-1 mb-2">
-                  <MdStar className="text-red-600 text-lg" />
+              <div className="text-center p-3 sm:p-4 lg:p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[100px] sm:min-h-[120px] flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-1 mb-1 sm:mb-2">
+                  <MdStar className="text-red-600 text-sm sm:text-lg" />
                 </div>
-                <div className="font-bold text-red-600 dark:text-red-400 text-sm sm:text-base mb-2 truncate">
+                <div className="font-bold text-red-600 dark:text-red-400 text-xs sm:text-sm lg:text-base mb-1 sm:mb-2 truncate">
                   {stats.biggestDifferential.web_name}
                 </div>
-                <div className="text-lg sm:text-xl font-bold text-theme-foreground theme-transition">
+                <div className="text-sm sm:text-lg lg:text-xl font-bold text-theme-foreground theme-transition">
                   {stats.biggestDifferential.points} {t("fplLive.points")}
                 </div>
               </div>
@@ -347,21 +347,21 @@ export default function MatchResults({
       )}
 
       {/* Main Match Results Container */}
-      <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 sm:mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-              <IoIosFootball className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+              <IoIosFootball className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-theme-foreground theme-transition">
+              <h3 className="text-lg sm:text-xl font-bold text-theme-foreground theme-transition">
                 {t("fplLive.matchResults")} GW{gameweek}
               </h3>
-              <p className="text-sm text-black/60 dark:text-white/60 theme-transition">
+              <p className="text-xs sm:text-sm text-black/60 dark:text-white/60 theme-transition">
                 {matchData.length} {t("fplLive.matches")}
                 {lastUpdated && (
-                  <span className="ml-2 text-xs">
-                    • {t("fplLive.updated")}: {lastUpdated}
+                  <span className="block sm:inline sm:ml-2 text-xs">
+                    {lastUpdated && <span className="hidden sm:inline">• </span>}{t("fplLive.updated")}: {lastUpdated}
                   </span>
                 )}
               </p>
@@ -371,7 +371,7 @@ export default function MatchResults({
           <button
             onClick={fetchMatchData}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all"
+            className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all text-sm sm:text-base w-full sm:w-auto justify-center"
           >
             <MdRefresh className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             {t("fplLive.refresh")}
@@ -404,11 +404,11 @@ export default function MatchResults({
               >
                 {/* Accordion Header */}
                 <div
-                  className="p-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 transition-all theme-transition"
+                  className="p-4 sm:p-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 transition-all theme-transition"
                   onClick={() => toggleMatchExpansion(match.fixture_id)}
                 >
                   {/* Status and Expand Icon */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-bold ${getStatusColor(
                         match.status
@@ -426,44 +426,46 @@ export default function MatchResults({
                   {/* Teams and Score */}
                   <div className="flex items-center justify-between">
                     {/* Home Team */}
-                    <div className="flex items-center gap-4 flex-1">
+                    <div className="flex items-center gap-2 sm:gap-4 flex-1">
                       <PiTShirtFill
-                        className="w-12 h-12 drop-shadow-lg"
+                        className="w-8 h-8 sm:w-12 sm:h-12 drop-shadow-lg flex-shrink-0"
                         style={{
                           color: getTeamColors(match.home_team.id).primary,
                         }}
                       />
-                      <div>
-                        <div className="font-bold text-xl text-theme-foreground theme-transition">
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm sm:text-xl text-theme-foreground theme-transition truncate">
                           {match.home_team.short_name}
                         </div>
-                        <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
+                        <div className="text-xs sm:text-sm text-black/60 dark:text-white/60 theme-transition">
                           {match.home_ownership.toFixed(1)}%{" "}
-                          {t("fplLive.effectiveOwnership")}
+                          <span className="hidden sm:inline">{t("fplLive.effectiveOwnership")}</span>
+                          <span className="sm:hidden">EO</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Score */}
-                    <div className="px-6 py-4 bg-black dark:bg-white rounded-md mx-6">
-                      <div className="text-3xl font-bold text-white dark:text-black text-center theme-transition">
+                    <div className="px-3 py-2 sm:px-6 sm:py-4 bg-black dark:bg-white rounded-md mx-2 sm:mx-6">
+                      <div className="text-lg sm:text-3xl font-bold text-white dark:text-black text-center theme-transition">
                         {match.home_score} - {match.away_score}
                       </div>
                     </div>
 
                     {/* Away Team */}
-                    <div className="flex items-center gap-4 flex-1 justify-end">
-                      <div className="text-right">
-                        <div className="font-bold text-xl text-theme-foreground theme-transition">
+                    <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end">
+                      <div className="text-right min-w-0">
+                        <div className="font-bold text-sm sm:text-xl text-theme-foreground theme-transition truncate">
                           {match.away_team.short_name}
                         </div>
-                        <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
+                        <div className="text-xs sm:text-sm text-black/60 dark:text-white/60 theme-transition">
                           {match.away_ownership.toFixed(1)}%{" "}
-                          {t("fplLive.effectiveOwnership")}
+                          <span className="hidden sm:inline">{t("fplLive.effectiveOwnership")}</span>
+                          <span className="sm:hidden">EO</span>
                         </div>
                       </div>
                       <PiTShirtFill
-                        className="w-12 h-12 drop-shadow-lg"
+                        className="w-8 h-8 sm:w-12 sm:h-12 drop-shadow-lg flex-shrink-0"
                         style={{
                           color: getTeamColors(match.away_team.id).primary,
                         }}
@@ -476,10 +478,10 @@ export default function MatchResults({
                     awayGoals.length > 0 ||
                     homeAssists.length > 0 ||
                     awayAssists.length > 0) && (
-                    <div className="mt-6 pt-4 border-t border-theme-border">
-                      <div className="grid grid-cols-2 gap-6">
+                    <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-theme-border">
+                      <div className="grid grid-cols-2 gap-2 sm:gap-6">
                         {/* Home Team Events */}
-                        <div className="space-y-2">
+                        <div className="space-y-1 sm:space-y-2">
                           {homeGoals.map((goalData) => (
                             <div
                               key={`preview-home-goal-${goalData.player.id}`}
@@ -525,7 +527,7 @@ export default function MatchResults({
                         </div>
 
                         {/* Away Team Events */}
-                        <div className="space-y-2 text-right">
+                        <div className="space-y-1 sm:space-y-2 text-right">
                           {awayGoals.map((goalData) => (
                             <div
                               key={`preview-away-goal-${goalData.player.id}`}
@@ -578,39 +580,39 @@ export default function MatchResults({
                 {isExpanded && (
                   <div
                     id={`expanded-${match.fixture_id}`}
-                    className="border-t border-theme-border bg-gray-50 dark:bg-gray-900 p-6 theme-transition"
+                    className="border-t border-theme-border bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 theme-transition"
                   >
                     {/* Detailed Match Header */}
-                    <div className="text-center mb-6 pb-4 border-b border-theme-border">
-                      <h4 className="text-2xl font-bold text-theme-foreground mb-3 theme-transition">
+                    <div className="text-center mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-theme-border">
+                      <h4 className="text-lg sm:text-2xl font-bold text-theme-foreground mb-2 sm:mb-3 theme-transition px-2">
                         {match.home_team.name} vs {match.away_team.name}
                       </h4>
-                      <div className="text-4xl font-bold text-theme-foreground mb-4 theme-transition">
+                      <div className="text-2xl sm:text-4xl font-bold text-theme-foreground mb-3 sm:mb-4 theme-transition">
                         {match.home_score} - {match.away_score}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                       {/* Home Team Details */}
-                      <div className="space-y-6">
-                        <h5 className="font-bold text-theme-foreground text-xl flex items-center gap-3 theme-transition">
+                      <div className="space-y-4 sm:space-y-6">
+                        <h5 className="font-bold text-theme-foreground text-lg sm:text-xl flex items-center gap-2 sm:gap-3 theme-transition">
                           <PiTShirtFill
-                            className="w-6 h-6 drop-shadow-lg"
+                            className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-lg flex-shrink-0"
                             style={{
                               color: getTeamColors(match.home_team.id).primary,
                             }}
                           />
-                          {match.home_team.name}
+                          <span className="truncate">{match.home_team.name}</span>
                         </h5>
 
                         {/* Goals */}
                         {homeGoals.length > 0 && (
                           <div>
-                            <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
-                              <IoIosFootball className="w-5 h-5 text-green-600" />
+                            <h6 className="text-base sm:text-lg font-bold text-theme-foreground mb-2 sm:mb-3 flex items-center gap-2 theme-transition">
+                              <IoIosFootball className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                               Golovi
                             </h6>
-                            <div className="space-y-3">
+                            <div className="space-y-2 sm:space-y-3">
                               {homeGoals.map((goalData, idx) => (
                                 <div
                                   key={idx}
@@ -743,15 +745,15 @@ export default function MatchResults({
                       </div>
 
                       {/* Away Team Details - Same structure as home team */}
-                      <div className="space-y-6">
-                        <h5 className="font-bold text-theme-foreground text-xl flex items-center gap-3 theme-transition">
+                      <div className="space-y-4 sm:space-y-6">
+                        <h5 className="font-bold text-theme-foreground text-lg sm:text-xl flex items-center gap-2 sm:gap-3 theme-transition">
                           <PiTShirtFill
-                            className="w-6 h-6 drop-shadow-lg"
+                            className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-lg flex-shrink-0"
                             style={{
                               color: getTeamColors(match.away_team.id).primary,
                             }}
                           />
-                          {match.away_team.name}
+                          <span className="truncate">{match.away_team.name}</span>
                         </h5>
 
                         {/* Goals */}

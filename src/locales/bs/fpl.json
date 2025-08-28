@@ -76,6 +76,8 @@
       "leaguesDesc": "Tabele liga i rangiranja",
       "analytics": "Analitika",
       "analyticsDesc": "Napredne statistike i uvidi",
+      "transfers": "Transferi",
+      "transfersDesc": "Aktivnost na transfernom tržištu i trendovi",
       "matchResults": "Rezultati utakmica",
       "matchResultsDesc": "Live rezultati utakmica i performanse igrača"
     },
@@ -214,6 +216,18 @@
     "waitingForUpdates": "Čeka se na nova ažuriranja...",
     "readyForLiveTracking": "Spreman za živo praćenje",
     "startLiveTrackingMessage": "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu",
-    "updatesEvery30Seconds": "Ažuriranje svakih 30 sekundi"
+    "updatesEvery30Seconds": "Ažuriranje svakih 30 sekundi",
+    "transfers": {
+      "title": "Transferno Tržište",
+      "subtitle": "Najviše transferisani igrači ovaj gameweek",
+      "loading": "Učitavanje podataka o transferima...",
+      "error": "Greška prilikom učitavanja transfera",
+      "mostTransferredIn": "Najviše Dovođeni",
+      "mostTransferredOut": "Najviše Otpuštani",
+      "popularAdditions": "Popularni dodaci u timove",
+      "popularRemovals": "Popularni odlasci iz timova",
+      "thisGW": "Ovaj GW",
+      "noData": "Nema dostupnih podataka o transferima"
+    }
   }
 }

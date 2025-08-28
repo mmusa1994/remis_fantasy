@@ -76,6 +76,8 @@
       "leaguesDesc": "League standings and rankings",
       "analytics": "Analytics",
       "analyticsDesc": "Advanced statistics and insights",
+      "transfers": "Transfers",
+      "transfersDesc": "Transfer market activity and trends",
       "matchResults": "Match Results",
       "matchResultsDesc": "Live match results and player performance"
     },
@@ -234,6 +236,18 @@
     "waitingForUpdates": "Waiting for new updates...",
     "readyForLiveTracking": "Ready for live tracking",
     "startLiveTrackingMessage": "Start live tracking to see real-time updates",
-    "updatesEvery30Seconds": "Updates every 30 seconds"
+    "updatesEvery30Seconds": "Updates every 30 seconds",
+    "transfers": {
+      "title": "Transfer Market",
+      "subtitle": "Most transferred players this gameweek",
+      "loading": "Loading transfers data...",
+      "error": "Error loading transfers",
+      "mostTransferredIn": "Most Transferred In",
+      "mostTransferredOut": "Most Transferred Out",
+      "popularAdditions": "Popular additions to teams",
+      "popularRemovals": "Popular departures from teams", 
+      "thisGW": "This GW",
+      "noData": "No transfer data available"
+    }
   }
 }
