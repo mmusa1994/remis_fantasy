@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { FPLBootstrapService } from './bootstrap.service';
 import { FPLPlayerService } from './player.service';
 import { FPLTeamService } from './team.service';
@@ -26,7 +27,7 @@ export class FPLService {
   public readonly live: FPLLiveService;
   public readonly stats: FPLStatsService;
 
-  private constructor(config?: Partial<FPLServiceConfig>) {
+  private constructor(_config?: Partial<FPLServiceConfig>) {
     // Initialize all service singletons
     this.bootstrap = FPLBootstrapService.getInstance();
     this.player = FPLPlayerService.getInstance();
@@ -317,7 +318,7 @@ export class FPLService {
     try {
       const currentGameweek = gameweek || (await this.bootstrap.getCurrentGameweek()).data?.id || 1;
 
-      const [gameweekInfo, topPlayers, dreamTeam] = await Promise.allSettled([
+      const [gameweekInfo, topPlayers] = await Promise.allSettled([
         this.bootstrap.getGameweek(currentGameweek),
         this.bootstrap.getTopPlayers('total_points', 10),
         // Note: Dream team endpoint would need to be implemented in a separate service

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  FPLLiveService,
   FPLBootstrapService,
   FPLFixtureService,
 } from "@/services/fpl";
@@ -118,7 +117,7 @@ export async function GET(request: NextRequest) {
     const previousStats = fixtureStatsCache[cacheKey] || {};
     const currentStats: any = {};
 
-    let totalChangesDetected = 0;
+    // let totalChangesDetected = 0; // Used for tracking changes
 
     // Generate events from fixture stats changes
     for (const fixture of fixtures) {
@@ -145,7 +144,7 @@ export async function GET(request: NextRequest) {
             currentStats[fixtureKey][playerKey] = currentValue;
 
             if (delta > 0) {
-              totalChangesDetected++;
+              // totalChangesDetected++;
               const player = playersCache[playerStat.element];
               const event: LiveEvent = {
                 id: `${fixture.id}_${
@@ -194,7 +193,7 @@ export async function GET(request: NextRequest) {
             currentStats[fixtureKey][playerKey] = currentValue;
 
             if (delta > 0) {
-              totalChangesDetected++;
+              // totalChangesDetected++;
               const player = playersCache[playerStat.element];
               const event: LiveEvent = {
                 id: `${fixture.id}_${

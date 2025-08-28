@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/contexts/ThemeContext";
 import {
   MdDashboard,
   MdGroup,
@@ -55,7 +54,7 @@ interface TabConfig {
 
 export default function FPLLivePage() {
   const { t } = useTranslation("fpl");
-  const { theme } = useTheme();
+  // const { theme } = useTheme(); // Unused but kept for future use
 
   // Core state
   const [managerId, setManagerId] = useState<number | null>(null);
@@ -326,18 +325,23 @@ export default function FPLLivePage() {
     loadLeaguesData,
     loadGameweekStatus,
     t,
-    data?.manager,
-    data?.team_with_stats?.length,
-    isPolling,
-    teamLoaded,
   ]);
 
   // Auto-load team data ONLY if manager ID was loaded from localStorage on mount
   useEffect(() => {
     // Only auto-load if we have manager ID AND it came from localStorage (not user input)
     const savedManagerId = localStorage.getItem("fpl-manager-id");
-    if (savedManagerId && managerId && !data.manager && !loading && managerId.toString() === savedManagerId) {
-      console.log("🔄 [FRONTEND] Auto-loading team data for saved manager ID:", managerId);
+    if (
+      savedManagerId &&
+      managerId &&
+      !data.manager &&
+      !loading &&
+      managerId.toString() === savedManagerId
+    ) {
+      console.log(
+        "🔄 [FRONTEND] Auto-loading team data for saved manager ID:",
+        managerId
+      );
       loadManagerInfo();
     }
   }, [managerId, data.manager, loading, loadManagerInfo]);

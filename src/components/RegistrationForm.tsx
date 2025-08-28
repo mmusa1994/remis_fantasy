@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useState, useRef } from "react";
@@ -6,20 +7,8 @@ import { useTranslation } from "react-i18next";
 import Toast from "./shared/Toast";
 import { supabase } from "@/lib/supabase";
 import ReCAPTCHA from "react-google-recaptcha";
-import {
-  CheckCircle,
-  AlertCircle,
-  Upload,
-  Building2,
-  Banknote,
-  CreditCardIcon,
-  Download,
-  Mail,
-  Copy,
-  Lightbulb,
-} from "lucide-react";
-import Image from "next/image";
-import { downloadPaymentInstructions } from "@/utils/downloadPDF";
+import { CheckCircle, AlertCircle } from "lucide-react";
+
 import { useRegistrationConfig } from "@/hooks/useLeagueData";
 import LoadingCard from "@/components/shared/LoadingCard";
 
@@ -625,9 +614,9 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                               ? "transform -translate-y-2 scale-90"
                               : "floating-label-placeholder transform translate-y-0 scale-100"
                           }`}
-                                                  >
-                            {t("registration.teamName")} *
-                          </label>
+                        >
+                          {t("registration.teamName")} *
+                        </label>
                       </div>
                       {errors.team_name && (
                         <p className="text-red-400 text-sm mt-2 flex items-center gap-1 font-medium theme-transition animate-fade-in">

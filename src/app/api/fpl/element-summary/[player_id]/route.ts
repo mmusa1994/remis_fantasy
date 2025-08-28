@@ -6,8 +6,9 @@ const playerService = FPLPlayerService.getInstance();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { player_id: string } }
+  context: { params: Promise<{ player_id: string }> }
 ) {
+  const params = await context.params;
   const startTime = Date.now();
 
   try {

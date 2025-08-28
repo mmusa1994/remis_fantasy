@@ -6,8 +6,9 @@ const teamService = FPLTeamService.getInstance();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { team_id: string; event_id: string } }
+  context: { params: Promise<{ team_id: string; event_id: string }> }
 ) {
+  const params = await context.params;
   const startTime = Date.now();
 
   try {

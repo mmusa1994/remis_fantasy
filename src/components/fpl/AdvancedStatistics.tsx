@@ -135,7 +135,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   const getGameweekTrend = () => {
     // Mock historical data - replace with real data
     const gameweeks = Array.from({ length: gameweek }, (_, i) => i + 1);
-    const points = gameweeks.map((gw, i) => {
+    const points = gameweeks.map((gw) => {
       if (gw === gameweek) return manager.summary_event_points;
       return Math.floor(Math.random() * 100) + 20; // Mock data
     });
@@ -157,7 +157,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   const getCaptainPointsHistory = () => {
     // Mock captain points history - replace with real data from API
     const gameweeks = Array.from({ length: gameweek }, (_, i) => i + 1);
-    const captainPoints = gameweeks.map((gw, i) => {
+    const captainPoints = gameweeks.map((gw) => {
       if (gw === gameweek) {
         // Current gameweek - get actual captain points (multiplied by 2)
         const captain = teamStats.find((p: any) => p.is_captain);
@@ -172,16 +172,16 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
     return { gameweeks, captainPoints };
   };
 
-  const getPlayerMinutes = () => {
-    return teamStats
-      .filter((player: any) => player.position <= 11)
-      .map((player: any) => ({
-        player: player.player?.web_name || "Unknown",
-        minutes: player.live_stats?.minutes || 0,
-      }))
-      .sort((a: any, b: any) => b.minutes - a.minutes)
-      .slice(0, 11);
-  };
+  // const getPlayerMinutes = () => {
+  //   return teamStats
+  //     .filter((player: any) => player.position <= 11)
+  //     .map((player: any) => ({
+  //       player: player.player?.web_name || "Unknown",
+  //       minutes: player.live_stats?.minutes || 0,
+  //     }))
+  //     .sort((a: any, b: any) => b.minutes - a.minutes)
+  //     .slice(0, 11);
+  // };
 
   const getPlayerPerformance = (): {
     stars: PlayerPerformance[];

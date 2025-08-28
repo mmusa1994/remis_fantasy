@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { BaseFPLService } from "./base.service";
 import { FPLBootstrapService } from "./bootstrap.service";
 import { FPLServiceError } from "./errors";
@@ -302,7 +303,7 @@ export class FPLPlayerService extends BaseFPLService {
         throw new Error("Failed to get required data");
       }
 
-      const playerTeamId = playerResponse.data.team;
+      // const playerTeamId = playerResponse.data.team; // Unused but kept for future use
       const teamsMap = new Map(
         teamsResponse.data.map((team) => [team.id, team])
       );

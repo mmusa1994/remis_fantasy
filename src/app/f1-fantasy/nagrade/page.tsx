@@ -16,7 +16,7 @@ export default function F1FantasyNagradePage() {
       <PrizesGallery
         prizes={prizes}
         leagueFilter="f1"
-        title={content?.title || "F1 Fantasy Nagrade"}
+        title={content?.pageContent?.sections?.prizes?.title || "F1 Fantasy Nagrade"}
         subtitle="Osvojite brzinske nagrade u najuzbudljivijoj racing ligi!"
       />
     </div>

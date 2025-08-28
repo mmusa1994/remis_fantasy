@@ -18,7 +18,6 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Table2,
   ArrowLeft,
 } from "lucide-react";
 // Note: flag-icons CSS will need to be imported in globals.css or layout
@@ -319,7 +318,7 @@ export default function VisitorsPage() {
               <div className="space-y-4">
                 {data.stats.topCountries
                   .slice(0, 5)
-                  .map(([country, count], index) => (
+                  .map(([country, count]) => (
                     <div
                       key={country}
                       className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors"

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
@@ -169,7 +170,7 @@ export default function MatchResults({
     } finally {
       setLoading(false);
     }
-  }, [gameweek]);
+  }, [gameweek, t]);
 
   useEffect(() => {
     fetchMatchData();

@@ -5,11 +5,11 @@ import {
   FPLBootstrapService,
 } from "@/services/fpl";
 
-interface PreviousFixtureStats {
-  [key: string]: {
-    [key: string]: number;
-  };
-}
+// interface PreviousFixtureStats {
+//   [key: string]: {
+//     [key: string]: number;
+//   };
+// }
 
 // Initialize FPL services
 const liveService = FPLLiveService.getInstance();
