@@ -2,6 +2,8 @@
 
 import React from "react";
 import { PiTShirtLight, PiTShirtFill } from "react-icons/pi";
+import { TbUsers } from "react-icons/tb";
+import { GiSoccerKick } from "react-icons/gi";
 import { getTeamColors } from "@/lib/team-colors";
 import { useTranslation } from "react-i18next";
 
@@ -86,6 +88,13 @@ const SquadTable = React.memo(function SquadTable({
     .filter((pick) => pick.position > 11)
     .sort((a, b) => a.position - b.position);
 
+  // Calculate starting XI totals (with multipliers)
+  const startingXITotalPoints = starters.reduce((sum, pick) => {
+    const stats = pick.live_stats;
+    const totalPoints = stats?.total_points || 0;
+    return sum + totalPoints * pick.multiplier;
+  }, 0);
+
   // Calculate bench totals
   const benchTotalPoints = bench.reduce((sum, pick) => {
     const stats = pick.live_stats;
@@ -140,17 +149,16 @@ const SquadTable = React.memo(function SquadTable({
     return (
       <tr
         className={`group border-b border-theme-border ${
-          !isStarter ? "bg-theme-card-secondary/50" : "hover:bg-theme-card-secondary/30"
+          !isStarter
+            ? "bg-gray-100 dark:bg-gray-800"
+            : "hover:bg-theme-card-secondary/30"
         } transition-colors theme-transition`}
       >
-        <td className={`px-3 py-3 text-center text-lg font-bold ${getPointsColorClass(displayPoints)} bg-green-50 dark:bg-green-900/20 theme-transition`}>
-          {displayPoints}
-        </td>
         <td className="px-3 py-3 text-sm">
           <div className="flex items-center space-x-2">
             <span
               className={`text-xs px-2 py-1 rounded-md font-bold ${
-                pick.is_captain 
+                pick.is_captain
                   ? "bg-yellow-500 text-white"
                   : pick.is_vice_captain
                   ? "bg-blue-500 text-white"
@@ -164,7 +172,7 @@ const SquadTable = React.memo(function SquadTable({
               }
             </span>
             {!isStarter && (
-              <span className="text-xs text-theme-text-secondary px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-700 theme-transition">
+              <span className="text-xs text-gray-600 dark:text-gray-300 px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-700 theme-transition">
                 {t("fplLive.benchShort").toUpperCase()}
               </span>
             )}
@@ -172,7 +180,7 @@ const SquadTable = React.memo(function SquadTable({
         </td>
         <td
           className={`px-3 py-3 text-sm font-semibold text-theme-foreground sticky left-0 z-10 transition-colors ${
-            !isStarter ? "bg-theme-card-secondary/50" : "bg-theme-card"
+            !isStarter ? "bg-gray-100 dark:bg-gray-800" : "bg-theme-card"
           } theme-transition`}
         >
           <div className="flex items-center space-x-2">
@@ -180,11 +188,15 @@ const SquadTable = React.memo(function SquadTable({
               {pick.player.web_name}
             </span>
             {getMultiplierDisplay(pick) && (
-              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                pick.is_captain ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                : pick.is_vice_captain ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                : "bg-theme-card-secondary text-theme-text-primary"
-              } theme-transition`}>
+              <span
+                className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                  pick.is_captain
+                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                    : pick.is_vice_captain
+                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                    : "bg-theme-card-secondary text-theme-text-primary"
+                } theme-transition`}
+              >
                 {getMultiplierDisplay(pick)}
               </span>
             )}
@@ -205,8 +217,19 @@ const SquadTable = React.memo(function SquadTable({
             </span>
           </div>
         </td>
-        <td className={`px-2 py-3 text-center text-sm font-medium ${getMinutesColorClass(stats?.minutes || 0)} theme-transition`}>
-          {stats?.minutes || 0}'
+        <td
+          className={`px-2 py-3 text-center text-sm font-medium ${getMinutesColorClass(
+            stats?.minutes || 0
+          )} theme-transition`}
+        >
+          {stats?.minutes || 0}&apos;
+        </td>
+        <td
+          className={`px-3 py-3 text-center text-lg font-bold ${getPointsColorClass(
+            displayPoints
+          )} bg-green-50 dark:bg-green-900/20 theme-transition`}
+        >
+          {displayPoints}
         </td>
         <td className="px-2 py-3 text-center text-sm font-medium text-theme-text-primary theme-transition">
           {stats?.goals_scored || 0}
@@ -242,23 +265,28 @@ const SquadTable = React.memo(function SquadTable({
   return (
     <div className="bg-theme-card border-theme-border rounded-xl overflow-hidden shadow-lg theme-transition">
       <div className="px-4 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <h3 className="text-lg font-bold">
-          {t("fplLive.squadTitle")}
-        </h3>
-        <p className="text-sm text-white/90 mt-1">
-          {bonusAdded
-            ? t("fplLive.showingFinalBonus")
-            : t("fplLive.showingPredictedBonus")}
-        </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <h3 className="text-lg font-bold">{t("fplLive.squadTitle")}</h3>
+            <p className="text-sm text-white/90 mt-1">
+              {bonusAdded
+                ? t("fplLive.showingFinalBonus")
+                : t("fplLive.showingPredictedBonus")}
+            </p>
+          </div>
+          <div className="mt-3 md:mt-0 text-right">
+            <div className="text-2xl font-bold text-green-300">
+              {startingXITotalPoints} pts
+            </div>
+            <div className="text-sm text-white/80">Starting XI Total</div>
+          </div>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-theme-card-secondary border-b-2 border-theme-border theme-transition">
             <tr>
-              <th className="px-3 py-3 text-center text-xs font-bold text-green-600 dark:text-green-400 uppercase bg-green-50 dark:bg-green-900/20 theme-transition">
-                {t("fplLive.totalShort")}
-              </th>
               <th className="px-3 py-3 text-left text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.position")}
               </th>
@@ -270,6 +298,9 @@ const SquadTable = React.memo(function SquadTable({
               </th>
               <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.minutes")}
+              </th>
+              <th className="px-3 py-3 text-center text-xs font-bold text-green-600 dark:text-green-400 uppercase theme-transition">
+                {t("fplLive.totalShort")}
               </th>
               <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
                 {t("fplLive.goalsShort")}
@@ -304,29 +335,42 @@ const SquadTable = React.memo(function SquadTable({
             {/* Starting XI Section */}
             <tr className="bg-gradient-to-r from-green-600 to-green-700 text-white">
               <td
-                colSpan={14}
-                className="px-4 py-3 text-sm font-bold text-center uppercase tracking-wide"
+                colSpan={4}
+                className="px-4 py-3 text-sm font-bold text-start uppercase tracking-wide"
               >
-                🟢 {t("fplLive.startingXI")} (11 players)
+                <GiSoccerKick className="inline-block" size={24} />{" "}
+                {t("fplLive.startingXI")}
               </td>
+              <td className="px-3 py-3 text-sm font-bold text-center text-white">
+                {startingXITotalPoints} pts
+              </td>
+              <td
+                colSpan={9}
+                className="px-4 py-3 text-sm font-bold text-start uppercase tracking-wide"
+              ></td>
             </tr>
             {starters.map((pick) => (
               <PlayerRow key={pick.player_id} pick={pick} isStarter={true} />
             ))}
-            
+
             {bench.length > 0 && (
               <>
                 {/* Bench Section */}
-                <tr className="bg-gradient-to-r from-orange-600 to-orange-700 text-white">
-                  <td className="px-3 py-3 text-sm font-bold text-center bg-orange-100 text-orange-900">
+                <tr className="bg-gradient-to-r from-gray-600 to-gray-700 text-white">
+                  <td
+                    colSpan={4}
+                    className="px-4 py-3 text-sm font-bold text-left uppercase tracking-wide"
+                  >
+                    <TbUsers className="inline-block" size={24} />{" "}
+                    {t("fplLive.bench")}
+                  </td>
+                  <td className="px-3 py-3 text-sm font-bold text-center text-white">
                     {benchTotalPoints} pts
                   </td>
                   <td
-                    colSpan={13}
+                    colSpan={9}
                     className="px-4 py-3 text-sm font-bold text-left uppercase tracking-wide"
-                  >
-                    🔶 {t("fplLive.bench")} ({bench.length} players)
-                  </td>
+                  ></td>
                 </tr>
                 {bench.map((pick) => (
                   <PlayerRow
@@ -350,7 +394,7 @@ const SquadTable = React.memo(function SquadTable({
               <span>Starting XI</span>
             </div>
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-gray-400 rounded-full mr-1"></div>
+              <div className="w-2 h-2 bg-gray-500 rounded-full mr-1"></div>
               <span>Bench</span>
             </div>
           </div>

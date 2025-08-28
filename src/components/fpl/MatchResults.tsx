@@ -13,6 +13,7 @@ import { FaShoePrints, FaFire, FaCrown } from "react-icons/fa";
 import { PiTShirtFill } from "react-icons/pi";
 import { getTeamColors } from "@/lib/team-colors";
 import LoadingCard from "../shared/LoadingCard";
+import { useTranslation } from "react-i18next";
 
 interface MatchResultsProps {
   gameweek: number;
@@ -84,6 +85,7 @@ export default function MatchResults({
   gameweek,
   isPolling = false,
 }: MatchResultsProps) {
+  const { t } = useTranslation();
   const [matchData, setMatchData] = useState<MatchResult[]>([]);
   const [stats, setStats] = useState<GameweekStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -92,7 +94,9 @@ export default function MatchResults({
     new Set()
   );
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [selectedManagerId, setSelectedManagerId] = useState<number | null>(null);
+  const [selectedManagerId, setSelectedManagerId] = useState<number | null>(
+    null
+  );
 
   const toggleMatchExpansion = (fixtureId: number) => {
     const newExpanded = new Set(expandedMatches);
@@ -122,7 +126,7 @@ export default function MatchResults({
 
     try {
       console.log("🔄 Fetching match data for gameweek:", gameweek);
-      
+
       // Use our API endpoint which handles CORS and data formatting
       const [matchResponse, statsResponse] = await Promise.all([
         fetch(`/api/fpl/match-results?gameweek=${gameweek}`),
@@ -133,19 +137,24 @@ export default function MatchResults({
         matchOk: matchResponse.ok,
         statsOk: statsResponse.ok,
         matchStatus: matchResponse.status,
-        statsStatus: statsResponse.status
+        statsStatus: statsResponse.status,
       });
 
       if (!matchResponse.ok) {
-        throw new Error(`Match data API failed with status: ${matchResponse.status}`);
+        throw new Error(
+          `Match data API failed with status: ${matchResponse.status}`
+        );
       }
 
       if (!statsResponse.ok) {
-        console.warn("Stats API failed, continuing without stats:", statsResponse.status);
+        console.warn(
+          "Stats API failed, continuing without stats:",
+          statsResponse.status
+        );
       }
 
       const matchResult = await matchResponse.json();
-      
+
       if (!matchResult.success) {
         throw new Error(matchResult.error || "Failed to fetch match data");
       }
@@ -153,7 +162,7 @@ export default function MatchResults({
       console.log("✅ Match data loaded:", {
         gameweek: matchResult.gameweek,
         matchCount: matchResult.data?.length || 0,
-        dataSource: matchResult.data_sources
+        dataSource: matchResult.data_sources,
       });
 
       setMatchData(matchResult.data || []);
@@ -171,7 +180,7 @@ export default function MatchResults({
     } catch (error) {
       console.error("❌ Error fetching match data:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to fetch match data"
+        error instanceof Error ? error.message : t("fplLive.fetchError")
       );
     } finally {
       setLoading(false);
@@ -271,7 +280,7 @@ export default function MatchResults({
           <h4 className="text-lg font-bold text-theme-foreground mb-2 theme-transition">
             Manager #{selectedManagerId} Statistics
           </h4>
-          <button 
+          <button
             onClick={() => setSelectedManagerId(null)}
             className="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors theme-transition"
           >
@@ -279,72 +288,72 @@ export default function MatchResults({
           </button>
         </div>
       )}
-      
+
       {/* Gameweek Stats */}
       {stats && (
         <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
           <h4 className="text-lg font-bold text-theme-foreground mb-4 flex items-center gap-2 theme-transition">
             <FaFire className="text-orange-500" />
-            GW{gameweek} Ključne Statistike
+            GW{gameweek} {t("fplLive.keyStats")}
           </h4>
 
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  gap-4 w-full">
+            <div className="text-center p-4 sm:p-6 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] flex flex-col justify-center">
+              <div className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
                 {stats.totalGoals}
               </div>
-              <div className="text-sm text-theme-foreground theme-transition">
-                Golova
+              <div className="text-sm sm:text-base font-medium text-theme-foreground theme-transition">
+                {t("fplLive.goals")}
               </div>
             </div>
 
-            <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-center p-4 sm:p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] flex flex-col justify-center">
+              <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 {stats.totalAssists}
               </div>
-              <div className="text-sm text-theme-foreground theme-transition">
-                Asistencija
+              <div className="text-sm sm:text-base font-medium text-theme-foreground theme-transition">
+                {t("fplLive.assists")}
               </div>
             </div>
 
             {stats.highestScorer && (
-              <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <FaCrown className="text-yellow-600" />
+              <div className="text-center p-4 sm:p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-1 mb-2">
+                  <FaCrown className="text-yellow-600 text-lg" />
                 </div>
-                <div className="font-bold text-yellow-600 dark:text-yellow-400 text-sm mb-1">
+                <div className="font-bold text-yellow-600 dark:text-yellow-400 text-sm sm:text-base mb-2 truncate">
                   {stats.highestScorer.web_name}
                 </div>
-                <div className="text-lg font-bold text-theme-foreground theme-transition">
-                  {stats.highestScorer.points} pts
+                <div className="text-lg sm:text-xl font-bold text-theme-foreground theme-transition">
+                  {stats.highestScorer.points} {t("fplLive.points")}
                 </div>
               </div>
             )}
 
             {stats.mostOwned && (
-              <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <MdTrendingUp className="text-purple-600" />
+              <div className="text-center p-4 sm:p-6 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-1 mb-2">
+                  <MdTrendingUp className="text-purple-600 text-lg" />
                 </div>
-                <div className="font-bold text-purple-600 dark:text-purple-400 text-sm mb-1">
+                <div className="font-bold text-purple-600 dark:text-purple-400 text-sm sm:text-base mb-2 truncate">
                   {stats.mostOwned.web_name}
                 </div>
-                <div className="text-lg font-bold text-theme-foreground theme-transition">
+                <div className="text-lg sm:text-xl font-bold text-theme-foreground theme-transition">
                   {stats.mostOwned.ownership_top10k?.toFixed(1)}%
                 </div>
               </div>
             )}
 
             {stats.biggestDifferential && (
-              <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <MdStar className="text-red-600" />
+              <div className="text-center p-4 sm:p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 shadow-sm hover:shadow-md transition-all duration-200 min-h-[120px] flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-1 mb-2">
+                  <MdStar className="text-red-600 text-lg" />
                 </div>
-                <div className="font-bold text-red-600 dark:text-red-400 text-sm mb-1">
+                <div className="font-bold text-red-600 dark:text-red-400 text-sm sm:text-base mb-2 truncate">
                   {stats.biggestDifferential.web_name}
                 </div>
-                <div className="text-lg font-bold text-theme-foreground theme-transition">
-                  {stats.biggestDifferential.points} pts
+                <div className="text-lg sm:text-xl font-bold text-theme-foreground theme-transition">
+                  {stats.biggestDifferential.points} {t("fplLive.points")}
                 </div>
               </div>
             )}
@@ -361,13 +370,13 @@ export default function MatchResults({
             </div>
             <div>
               <h3 className="text-xl font-bold text-theme-foreground theme-transition">
-                Rezultati utakmica GW{gameweek}
+                {t("fplLive.matchResults")} GW{gameweek}
               </h3>
               <p className="text-sm text-black/60 dark:text-white/60 theme-transition">
-                {matchData.length} utakmica
+                {matchData.length} {t("fplLive.matches")}
                 {lastUpdated && (
                   <span className="ml-2 text-xs">
-                    • Ažurirano: {lastUpdated}
+                    • {t("fplLive.updated")}: {lastUpdated}
                   </span>
                 )}
               </p>
@@ -380,7 +389,7 @@ export default function MatchResults({
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all"
           >
             <MdRefresh className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            Ažuriraj
+            {t("fplLive.refresh")}
           </button>
         </div>
 
@@ -398,6 +407,10 @@ export default function MatchResults({
             const awayGoals = getGroupedGoals(match.away_goals);
             const homeAssists = getGroupedAssists(match.home_assists);
             const awayAssists = getGroupedAssists(match.away_assists);
+
+            function onManagerSelect(id: number) {
+              throw new Error("Function not implemented.");
+            }
 
             return (
               <div
@@ -440,7 +453,8 @@ export default function MatchResults({
                           {match.home_team.short_name}
                         </div>
                         <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
-                          {match.home_ownership.toFixed(1)}% EO
+                          {match.home_ownership.toFixed(1)}%{" "}
+                          {t("fplLive.effectiveOwnership")}
                         </div>
                       </div>
                     </div>
@@ -459,7 +473,8 @@ export default function MatchResults({
                           {match.away_team.short_name}
                         </div>
                         <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
-                          {match.away_ownership.toFixed(1)}% EO
+                          {match.away_ownership.toFixed(1)}%{" "}
+                          {t("fplLive.effectiveOwnership")}
                         </div>
                       </div>
                       <PiTShirtFill
@@ -519,7 +534,7 @@ export default function MatchResults({
                           {homeGoals.length === 0 &&
                             homeAssists.length === 0 && (
                               <div className="text-sm text-black/50 dark:text-white/50 italic theme-transition">
-                                Nema događaja
+                                {t("fplLive.noEvents")}
                               </div>
                             )}
                         </div>
@@ -712,7 +727,10 @@ export default function MatchResults({
                                   key={idx}
                                   className="flex items-center justify-between p-3 bg-theme-card rounded-md border-theme-border hover:shadow-md transition-all cursor-pointer theme-transition"
                                   onClick={() => {
-                                    if (player.ownership_top10k && player.ownership_top10k > 5) {
+                                    if (
+                                      player.ownership_top10k &&
+                                      player.ownership_top10k > 5
+                                    ) {
                                       setSelectedManagerId(player.id);
                                       onManagerSelect?.(player.id);
                                     }
@@ -726,7 +744,7 @@ export default function MatchResults({
                                   </div>
                                   <div className="text-right">
                                     <div className="font-bold text-theme-foreground theme-transition">
-                                      {player.points} pts
+                                      {player.points} {t("fplLive.points")}
                                     </div>
                                     <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
                                       {player.ownership_top10k?.toFixed(1)}% EO
@@ -756,7 +774,7 @@ export default function MatchResults({
                           <div>
                             <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                               <IoIosFootball className="w-5 h-5 text-green-600" />
-                              Golovi
+                              {t("fplLive.goals")}
                             </h6>
                             <div className="space-y-3">
                               {awayGoals.map((goalData, idx) => (
@@ -777,7 +795,7 @@ export default function MatchResults({
                                         {goalData.minutes.join(", ")}'
                                         {goalData.penalties > 0 && (
                                           <span className="ml-2 px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full font-bold">
-                                            PEN
+                                            {t("fplLive.penalty")}
                                             {goalData.penalties > 1
                                               ? `(x${goalData.penalties})`
                                               : ""}
@@ -808,7 +826,7 @@ export default function MatchResults({
                           <div>
                             <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                               <FaShoePrints className="w-5 h-5 text-blue-600" />
-                              Asistencije
+                              {t("fplLive.assists")}
                             </h6>
                             <div className="space-y-3">
                               {awayAssists.map((assistData, idx) => (
@@ -851,7 +869,7 @@ export default function MatchResults({
                         <div>
                           <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                             <MdStar className="w-5 h-5 text-yellow-500" />
-                            Najbiraniji u Top 10k
+                            {t("fplLive.mostOwnedTop10k")}
                           </h6>
                           <div className="space-y-2">
                             {match.top_performers.away.map(
@@ -860,7 +878,10 @@ export default function MatchResults({
                                   key={idx}
                                   className="flex items-center justify-between p-3 bg-theme-card rounded-md border-theme-border hover:shadow-md transition-all cursor-pointer theme-transition"
                                   onClick={() => {
-                                    if (player.ownership_top10k && player.ownership_top10k > 5) {
+                                    if (
+                                      player.ownership_top10k &&
+                                      player.ownership_top10k > 5
+                                    ) {
                                       setSelectedManagerId(player.id);
                                       onManagerSelect?.(player.id);
                                     }

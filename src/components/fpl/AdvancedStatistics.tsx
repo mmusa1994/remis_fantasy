@@ -3,11 +3,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { BarChart, LineChart, PieChart, ScatterChart } from "@mui/x-charts";
-import {
-  MdStar,
-  MdTrendingDown,
-  MdDangerous,
-} from "react-icons/md";
+import { MdStar, MdTrendingDown, MdDangerous } from "react-icons/md";
 
 interface AdvancedStatisticsProps {
   managerId?: number;
@@ -202,36 +198,65 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
 
     // Stars: High points (8+) OR high efficiency with decent points (5+)
     const stars = startingPlayers
-      .filter((p) => p.points >= 8 || (p.points >= 5 && p.efficiency > 0.15))
-      .sort((a, b) => b.points - a.points)
+      .filter(
+        (p: { points: number; efficiency: number }) =>
+          p.points >= 8 || (p.points >= 5 && p.efficiency > 0.15)
+      )
+      .sort(
+        (a: { points: number }, b: { points: number }) => b.points - a.points
+      )
       .slice(0, 3)
-      .map((p) => ({
-        player_id: p.player_id,
-        web_name: p.web_name,
-        points: p.points,
-        differential: p.valuePerMillion,
-        category: "star" as const,
-      }));
+      .map(
+        (p: {
+          player_id: any;
+          web_name: any;
+          points: any;
+          valuePerMillion: any;
+        }) => ({
+          player_id: p.player_id,
+          web_name: p.web_name,
+          points: p.points,
+          differential: p.valuePerMillion,
+          category: "star" as const,
+        })
+      );
 
     // Flops: Low points (0-2) with decent minutes (30+) OR negative points
     const flops = startingPlayers
-      .filter((p) => (p.points <= 2 && p.minutes >= 30) || p.points < 0)
-      .sort((a, b) => a.points - b.points)
+      .filter(
+        (p: { points: number; minutes: number }) =>
+          (p.points <= 2 && p.minutes >= 30) || p.points < 0
+      )
+      .sort(
+        (a: { points: number }, b: { points: number }) => a.points - b.points
+      )
       .slice(0, 3)
-      .map((p) => ({
-        player_id: p.player_id,
-        web_name: p.web_name,
-        points: p.points,
-        differential: p.valuePerMillion,
-        category: "flop" as const,
-      }));
+      .map(
+        (p: {
+          player_id: any;
+          web_name: any;
+          points: any;
+          valuePerMillion: any;
+        }) => ({
+          player_id: p.player_id,
+          web_name: p.web_name,
+          points: p.points,
+          differential: p.valuePerMillion,
+          category: "flop" as const,
+        })
+      );
 
     // Killers: Players with very poor value (expensive but low points)
     const killers = startingPlayers
-      .filter((p) => p.cost >= 8 && p.points <= 3) // Expensive (8m+) but low points
-      .sort((a, b) => a.valuePerMillion - b.valuePerMillion) // Worst value first
+      .filter(
+        (p: { cost: number; points: number }) => p.cost >= 8 && p.points <= 3
+      ) // Expensive (8m+) but low points
+      .sort(
+        (a: { valuePerMillion: number }, b: { valuePerMillion: number }) =>
+          a.valuePerMillion - b.valuePerMillion
+      ) // Worst value first
       .slice(0, 2)
-      .map((p) => ({
+      .map((p: { player_id: any; web_name: any; points: any; cost: any }) => ({
         player_id: p.player_id,
         web_name: p.web_name,
         points: p.points,
@@ -254,9 +279,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
       {/* Player Performance Analysis */}
       <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
         <div className="flex items-center gap-2 sm:gap-3 mb-4">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black dark:bg-white rounded-lg flex items-center justify-center theme-transition">
-            <MdStar className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary-foreground theme-transition" />
-          </div>
+          <MdStar className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary-foreground theme-transition" />
           <div>
             <h3 className="text-base sm:text-lg lg:text-xl font-bold text-theme-foreground theme-transition">
               {t("fplLive.playerPerformanceAnalysis")}
@@ -467,7 +490,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                     teamTotals.yellow_cards || 0,
                     teamTotals.red_cards || 0,
                   ],
-                  color: ["#eab308", "#ef4444"], // Yellow for yellow cards, red for red cards
+                  color: "#eab308", // Use yellow for the bar, since BarChart expects a string not an array
                 },
               ]}
               height={300}

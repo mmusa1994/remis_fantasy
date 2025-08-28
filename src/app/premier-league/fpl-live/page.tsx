@@ -17,7 +17,7 @@ import {
 
 import { FaChartLine, FaTrophy } from "react-icons/fa";
 
-import { IoIosFootball } from "react-icons/io";
+import { IoFootballOutline } from "react-icons/io5";
 
 import SettingsCard from "@/components/fpl/SettingsCard";
 import ControlsBar from "@/components/fpl/ControlsBar";
@@ -113,7 +113,7 @@ export default function FPLLivePage() {
     {
       id: "matchResults",
       label: "Rezultati utakmica",
-      icon: IoIosFootball,
+      icon: IoFootballOutline,
       description: "Live match results and player ownership",
       color: "green",
     },
@@ -687,6 +687,7 @@ export default function FPLLivePage() {
             <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-black dark:border-white bg-white dark:bg-black theme-transition">
               <div className="h-4 sm:h-5 lg:h-6 bg-black/20 dark:bg-white/20 rounded w-16 sm:w-20 animate-pulse theme-transition"></div>
             </div>
+
             <div className="p-3 sm:p-4 lg:p-6 space-y-2 sm:space-y-3">
               {Array.from({ length: 3 }, (_, i) => (
                 <div
@@ -703,16 +704,6 @@ export default function FPLLivePage() {
         ) : (
           leagueData && (
             <div className="space-y-4 lg:space-y-6">
-              <LeagueTables
-                leagueData={leagueData}
-                managerId={managerId!}
-                gameweek={gameweek}
-                onManagerSelect={(selectedManagerId) => {
-                  console.log("Manager selected:", selectedManagerId);
-                  // Future: Load manager-specific data
-                }}
-              />
-
               {/* Live Border Indicator */}
               <div className="bg-theme-card rounded-md p-1 border-theme-border theme-transition">
                 <div
@@ -729,25 +720,31 @@ export default function FPLLivePage() {
                       : "⚪ Live praćenje neaktivno"}
                   </p>
                 </div>
-              </div>
-
-              {/* Live BPS Tracker */}
-              <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black dark:bg-white rounded-md flex items-center justify-center theme-transition">
-                    <IoIosFootball className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary-foreground theme-transition" />
+                {/* Live BPS Tracker */}
+                <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <IoFootballOutline size={24} />
+                    <div>
+                      <h3 className="text-base sm:text-lg lg:text-xl font-bold text-theme-foreground theme-transition">
+                        {t("fplLive.liveTrackerTitle")}
+                      </h3>
+                      <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary theme-transition">
+                        Live bonus point system tracking
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-theme-foreground theme-transition">
-                      {t("fplLive.liveTrackerTitle")}
-                    </h3>
-                    <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary theme-transition">
-                      Live bonus point system tracking
-                    </p>
-                  </div>
+                  <LiveTracker gameweek={gameweek} isPolling={isPolling} />
                 </div>
-                <LiveTracker gameweek={gameweek} isPolling={isPolling} />
               </div>
+              <LeagueTables
+                leagueData={leagueData}
+                managerId={managerId!}
+                gameweek={gameweek}
+                onManagerSelect={(selectedManagerId) => {
+                  console.log("Manager selected:", selectedManagerId);
+                  // Future: Load manager-specific data
+                }}
+              />
             </div>
           )
         );
@@ -902,7 +899,7 @@ export default function FPLLivePage() {
                 {/* Manager Info - Always visible */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-md flex items-center justify-center flex-shrink-0">
-                    <IoIosFootball className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <IoFootballOutline className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-theme-foreground text-sm sm:text-base lg:text-lg truncate theme-transition">

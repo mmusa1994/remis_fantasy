@@ -21,18 +21,22 @@ interface NavItem {
 }
 
 const getNavItems = (t: any): NavItem[] => [
-  { name: t("nav.home"), href: "/", icon: Home },
+  { name: t("home", "Home"), href: "/", icon: Home },
   {
-    name: t("nav.premierLeague"),
+    name: t("premierLeague", "Premier League"),
     href: "/premier-league",
     icon: SiPremierleague,
   },
   {
-    name: t("nav.championsLeague"),
+    name: t("championsLeague", "Champions League"),
     href: "/champions-league",
     icon: PiSoccerBall,
   },
-  { name: t("nav.f1Fantasy"), href: "/f1-fantasy", icon: GiF1Car },
+  {
+    name: t("f1Fantasy", "F1 Fantasy"),
+    href: "/f1-fantasy",
+    icon: GiF1Car,
+  },
 ];
 
 const Navbar = React.memo(function Navbar() {
@@ -40,10 +44,18 @@ const Navbar = React.memo(function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
   const { theme } = useTheme();
-  const { t } = useTranslation();
+  const { t, ready, i18n } = useTranslation("navigation");
   const pathname = usePathname();
 
-  const navItems = getNavItems(t);
+  // Debug: Check current language and translations
+  console.log("Navbar debug:", {
+    currentLanguage: i18n.language,
+    ready: ready,
+    home: t("home"),
+    premierLeague: t("premierLeague"),
+    championsLeague: t("championsLeague"),
+    f1Fantasy: t("f1Fantasy"),
+  });
 
   const backdropBlur = useTransform(
     scrollY,
@@ -57,6 +69,26 @@ const Navbar = React.memo(function Navbar() {
     });
     return () => unsubscribe();
   }, [scrollY]);
+
+  // Wait for i18n to be ready
+  if (!ready) {
+    return (
+      <div className="fixed top-0 left-0 right-0 w-full bg-theme-background border-b border-theme-border z-50">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-2">
+          <div className="flex items-center justify-between h-16 md:h-20">
+            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+            <div className="hidden md:flex items-center space-x-4">
+              <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              <div className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const navItems = getNavItems(t);
 
   const handleMobileNavClick = () => {
     setIsOpen(false);
@@ -95,9 +127,10 @@ const Navbar = React.memo(function Navbar() {
           isScrolled ? "visible" : ""
         }`}
         style={{
-          backgroundImage: theme === "dark"
-            ? "linear-gradient(90deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 1))"
-            : "linear-gradient(90deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 1))",
+          backgroundImage:
+            theme === "dark"
+              ? "linear-gradient(90deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 1))"
+              : "linear-gradient(90deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 1))",
           backgroundSize: "300% 100%",
         }}
       />

@@ -162,7 +162,8 @@ const GameweekStatus = React.memo(function GameweekStatus({
 
         <div
           className={`text-center p-4 rounded-lg ${
-            gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score)
+            gameweekStatus.gameweek_points >=
+            (gameweek === 2 ? 51 : gameweekStatus.safety_score)
               ? "bg-green-50 dark:bg-green-900/10"
               : "bg-red-50 dark:bg-red-900/10"
           }`}
@@ -170,7 +171,8 @@ const GameweekStatus = React.memo(function GameweekStatus({
           <div className="flex items-center justify-center mb-2">
             <MdRocket
               className={`text-2xl mr-2 ${
-                gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score)
+                gameweekStatus.gameweek_points >=
+                (gameweek === 2 ? 51 : gameweekStatus.safety_score)
                   ? "text-green-600"
                   : "text-red-600"
               }`}
@@ -181,18 +183,27 @@ const GameweekStatus = React.memo(function GameweekStatus({
           </div>
           <div
             className={`text-3xl font-bold ${
-              gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score)
+              gameweekStatus.gameweek_points >=
+              (gameweek === 2 ? 51 : gameweekStatus.safety_score)
                 ? "text-green-600 dark:text-green-400"
                 : "text-red-600 dark:text-red-400"
             }`}
           >
-            {gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score)
+            {gameweekStatus.gameweek_points >=
+            (gameweek === 2 ? 51 : gameweekStatus.safety_score)
               ? t("fplLive.above")
               : t("fplLive.below")}
           </div>
           <div className="text-xs text-theme-text-secondary mt-1 theme-transition">
-            {gameweekStatus.gameweek_points >= (gameweek === 2 ? 51 : gameweekStatus.safety_score) ? '+' : '-'}
-            {Math.abs(gameweekStatus.gameweek_points - (gameweek === 2 ? 51 : gameweekStatus.safety_score))} {t("fplLive.points")}
+            {gameweekStatus.gameweek_points >=
+            (gameweek === 2 ? 51 : gameweekStatus.safety_score)
+              ? "+"
+              : "-"}
+            {Math.abs(
+              gameweekStatus.gameweek_points -
+                (gameweek === 2 ? 51 : gameweekStatus.safety_score)
+            )}{" "}
+            {t("fplLive.points")}
           </div>
         </div>
       </div>
@@ -297,15 +308,33 @@ const GameweekStatus = React.memo(function GameweekStatus({
             <MdStars className="text-yellow-500 text-xl mr-2" />
             {t("fplLive.captainLong")}
           </h4>
-          <div className="p-4 bg-theme-accent rounded-lg">
+          <div
+            className={`p-4 rounded-lg border transition-all duration-200 hover:shadow-md ${
+              gameweekStatus.captain_analysis.is_above_average
+                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30"
+                : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30"
+            }`}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-theme-primary">
+                <div
+                  className={`font-medium ${
+                    gameweekStatus.captain_analysis.is_above_average
+                      ? "text-green-800 dark:text-green-200"
+                      : "text-red-800 dark:text-red-200"
+                  }`}
+                >
                   {gameweekStatus.captain_analysis.web_name}{" "}
                   {t("fplLive.finishedWith")}{" "}
                   {gameweekStatus.captain_analysis.points} {t("fplLive.points")}
                 </div>
-                <div className="text-sm text-theme-muted mt-1">
+                <div
+                  className={`text-sm mt-1 ${
+                    gameweekStatus.captain_analysis.is_above_average
+                      ? "text-green-600 dark:text-green-300"
+                      : "text-red-600 dark:text-red-300"
+                  }`}
+                >
                   {t("fplLive.pointsAboveAverage", {
                     points: Math.abs(
                       gameweekStatus.captain_analysis.points_above_average
@@ -318,16 +347,15 @@ const GameweekStatus = React.memo(function GameweekStatus({
               </div>
               <div className="text-2xl">
                 {gameweekStatus.captain_analysis.is_above_average ? (
-                  <MdThumbUp className="text-green-500" />
+                  <MdThumbUp className="text-green-600 dark:text-green-400 hover:scale-110 transition-transform duration-200" />
                 ) : (
-                  <MdThumbDown className="text-red-500" />
+                  <MdThumbDown className="text-red-600 dark:text-red-400 hover:scale-110 transition-transform duration-200" />
                 )}
               </div>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 });
