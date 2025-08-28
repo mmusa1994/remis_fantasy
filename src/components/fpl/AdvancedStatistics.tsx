@@ -154,6 +154,24 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
     return { weeks, values, color };
   };
 
+  const getCaptainPointsHistory = () => {
+    // Mock captain points history - replace with real data from API
+    const gameweeks = Array.from({ length: gameweek }, (_, i) => i + 1);
+    const captainPoints = gameweeks.map((gw, i) => {
+      if (gw === gameweek) {
+        // Current gameweek - get actual captain points (multiplied by 2)
+        const captain = teamStats.find((p: any) => p.is_captain);
+        const basePoints = captain?.live_stats?.total_points || 0;
+        return basePoints * 2; // Captain points are doubled
+      }
+      // Mock historical data - replace with real API data
+      const mockBasePoints = Math.floor(Math.random() * 15) + 1; // Base points 1-16
+      return mockBasePoints * 2; // Captain points are doubled (2-32)
+    });
+
+    return { gameweeks, captainPoints };
+  };
+
   const getPlayerMinutes = () => {
     return teamStats
       .filter((player: any) => player.position <= 11)
@@ -271,6 +289,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   const pointsData = getPointsDistribution();
   const trendData = getGameweekTrend();
   const valueData = getTeamValueHistory();
+  const captainData = getCaptainPointsHistory();
   // Removed unused minutesData
   const performanceData = getPlayerPerformance();
 
@@ -542,6 +561,33 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               margin={{ top: 20, right: 40, bottom: 60, left: 60 }}
             />
           </div>
+        </div>
+
+        {/* Row 4: Captain Points History (full width) */}
+        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+          <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+            {t("fplLive.captainPoints")}
+          </h4>
+          <BarChart
+            xAxis={[
+              {
+                scaleType: "band",
+                data: captainData.gameweeks.map(gw => `GW${gw}`),
+                tickLabelStyle: {
+                  angle: 0,
+                  fontSize: 10,
+                },
+              },
+            ]}
+            series={[
+              {
+                data: captainData.captainPoints,
+                color: "#8b5cf6", // Purple color for captain
+              },
+            ]}
+            height={350}
+            margin={{ top: 20, right: 20, bottom: 40, left: 60 }}
+          />
         </div>
 
         {/* 4. Team Value History */}

@@ -49,41 +49,31 @@ async function fetchFPLLeagueData(
   let currentPage = 1;
 
   try {
-    console.log(
-      `[FPL-SYNC] Fetching league ${leagueId}, type: ${type}, max: ${maxPlayers}`
-    );
-    console.log(`[FPL-SYNC] Using URL: ${baseUrl}`);
-
     while (players.length < maxPlayers) {
       const url = `${baseUrl}?page_standings=${currentPage}`;
-      console.log(`[FPL-SYNC] Fetching page ${currentPage}: ${url}`);
-      
+
       const response = await fetch(url, {
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          "Accept": "application/json",
+          Accept: "application/json",
           "Accept-Language": "en-US,en;q=0.9",
         },
       });
 
       if (!response.ok) {
-        console.error(`[FPL-SYNC] API Error: ${response.status} ${response.statusText}`);
+        console.error(
+          `[FPL-SYNC] API Error: ${response.status} ${response.statusText}`
+        );
         throw new Error(
           `FPL API returned ${response.status} for league ${leagueId}, page ${currentPage}`
         );
       }
 
       const data = await response.json();
-      console.log(`[FPL-SYNC] Response structure for ${type}:`, {
-        hasStandings: !!data.standings,
-        hasResults: !!data.results,
-        standingsResults: data.standings?.results?.length || 0,
-        directResults: data.results?.length || 0
-      });
-      
+
       let pageResults: FPLPlayer[] = [];
-      
+
       if (isH2H) {
         // For H2H, results are in standings.results (not direct results)
         pageResults = data.standings?.results || [];
@@ -92,15 +82,7 @@ async function fetchFPLLeagueData(
         pageResults = data.standings?.results || [];
       }
 
-      if (!pageResults.length) {
-        console.log(`[FPL-SYNC] No more results on page ${currentPage}`);
-        break;
-      }
-
       players.push(...pageResults);
-      console.log(
-        `[FPL-SYNC] Page ${currentPage}: ${pageResults.length} players (total: ${players.length})`
-      );
 
       // Check if we have more pages to fetch
       if (pageResults.length < 50 || players.length >= maxPlayers) {
@@ -111,9 +93,6 @@ async function fetchFPLLeagueData(
     }
 
     const finalPlayers = players.slice(0, maxPlayers);
-    console.log(
-      `[FPL-SYNC] League ${leagueId} completed: ${finalPlayers.length}/${players.length} players`
-    );
 
     return finalPlayers;
   } catch (error) {
@@ -139,10 +118,6 @@ async function syncPlayersToDatabase(
   leagueType: LeagueType,
   fplPlayers: FPLPlayer[]
 ) {
-  console.log(
-    `[FPL-SYNC] Starting database sync for ${leagueType} with ${fplPlayers.length} FPL players`
-  );
-
   const { data: dbPlayers, error: fetchError } = await supabase
     .from("premier_league_25_26")
     .select("*")
@@ -153,8 +128,6 @@ async function syncPlayersToDatabase(
     throw new Error(`Database fetch error: ${fetchError.message}`);
   }
 
-  console.log(`[FPL-SYNC] Found ${dbPlayers?.length || 0} database players`);
-
   const updates: Array<{ id: string; data: any }> = [];
   const matches: Array<{ fpl: FPLPlayer; db: DatabasePlayer }> = [];
   const notFound: string[] = [];
@@ -162,10 +135,6 @@ async function syncPlayersToDatabase(
   for (const fplPlayer of fplPlayers) {
     const normalizedFPLName = normalizeString(fplPlayer.player_name);
     const normalizedFPLTeam = normalizeString(fplPlayer.entry_name);
-
-    console.log(
-      `[FPL-SYNC] Looking for match: "${fplPlayer.player_name}" (${fplPlayer.entry_name})`
-    );
 
     const dbPlayer = dbPlayers?.find((player: DatabasePlayer) => {
       const normalizedDBName = normalizeString(
@@ -181,11 +150,6 @@ async function syncPlayersToDatabase(
         normalizedDBTeam === normalizedFPLTeam;
 
       if (nameMatch || teamMatch || partialMatch) {
-        console.log(
-          `[FPL-SYNC] MATCH FOUND: ${player.first_name} ${player.last_name} (${
-            player.team_name
-          }) - Type: ${nameMatch ? "name" : teamMatch ? "team" : "partial"}`
-        );
         return true;
       }
 
@@ -200,7 +164,7 @@ async function syncPlayersToDatabase(
 
       // Add H2H data if applicable
       if (leagueType === "h2h" || leagueType === "h2h2") {
-        // Za H2H: 
+        // Za H2H:
         // - points = overall FPL points (total) -> 83
         // - h2h_points = H2H league points (total from H2H standings) -> 3
         updateData.h2h_points = fplPlayer.total || 0; // H2H league points (3)
@@ -212,7 +176,6 @@ async function syncPlayersToDatabase(
         };
         // points ostaju overall FPL points (points_for je 83)
         updateData.points = fplPlayer.points_for || 0; // Overall points (83)
-        console.log(`[FPL-SYNC] H2H data for ${fplPlayer.player_name}: Overall:${fplPlayer.points_for} H2H:${fplPlayer.total} W${fplPlayer.matches_won} D${fplPlayer.matches_drawn} L${fplPlayer.matches_lost}`);
       }
 
       // League type filter for standings leagues
@@ -225,23 +188,15 @@ async function syncPlayersToDatabase(
       if (shouldUpdate) {
         updates.push({ id: dbPlayer.id, data: updateData });
         matches.push({ fpl: fplPlayer, db: dbPlayer });
-        console.log(
-          `[FPL-SYNC] Will update: ${dbPlayer.first_name} ${dbPlayer.last_name} (${dbPlayer.team_name})`
-        );
       } else {
-        console.log(
+        console.error(
           `[FPL-SYNC] Skipping player (wrong league): ${dbPlayer.first_name} ${dbPlayer.last_name} (db: ${dbPlayer.league_type}, sync: ${leagueType})`
         );
       }
     } else {
       notFound.push(`${fplPlayer.player_name} (${fplPlayer.entry_name})`);
-      console.log(
-        `[FPL-SYNC] No match found for: ${fplPlayer.player_name} (${fplPlayer.entry_name})`
-      );
     }
   }
-
-  console.log(`[FPL-SYNC] Prepared ${updates.length} updates`);
 
   // Execute updates
   let updateSuccess = 0;
@@ -269,10 +224,6 @@ async function syncPlayersToDatabase(
     }
   }
 
-  console.log(
-    `[FPL-SYNC] Database sync completed: ${updateSuccess} successful, ${updateErrors} errors`
-  );
-
   return {
     totalFPLPlayers: fplPlayers.length,
     matchedPlayers: matches.length,
@@ -282,7 +233,7 @@ async function syncPlayersToDatabase(
     matches: matches.map((m) => {
       // Pravilno mapiranje poena za različite tipove liga
       const isH2HLeague = leagueType === "h2h" || leagueType === "h2h2";
-      
+
       return {
         rank: m.fpl.rank,
         fplName: m.fpl.player_name,
@@ -295,17 +246,19 @@ async function syncPlayersToDatabase(
         dbEmail: m.db.email,
         oldPoints: m.db.points,
         oldH2HPoints: m.db.h2h_points,
-        pointsDiff: isH2HLeague 
+        pointsDiff: isH2HLeague
           ? (m.fpl.points_for || 0) - (m.db.points || 0)
           : m.fpl.total - (m.db.points || 0),
-        h2hPointsDiff: isH2HLeague 
+        h2hPointsDiff: isH2HLeague
           ? (m.fpl.total || 0) - (m.db.h2h_points || 0)
           : undefined,
-        h2hStats: isH2HLeague ? {
-          w: m.fpl.matches_won || 0,
-          d: m.fpl.matches_drawn || 0,
-          l: m.fpl.matches_lost || 0
-        } : undefined
+        h2hStats: isH2HLeague
+          ? {
+              w: m.fpl.matches_won || 0,
+              d: m.fpl.matches_drawn || 0,
+              l: m.fpl.matches_lost || 0,
+            }
+          : undefined,
       };
     }),
   };
@@ -319,7 +272,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    console.log(`[FPL-SYNC] Request body:`, body);
 
     const { leagueType } = body;
 
@@ -335,7 +287,6 @@ export async function POST(request: NextRequest) {
     }
 
     const config = LEAGUE_CONFIGS[leagueType as LeagueType];
-    console.log(`[FPL-SYNC] Processing league: ${leagueType}`, config);
 
     try {
       // Fetch FPL data

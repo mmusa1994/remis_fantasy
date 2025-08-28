@@ -1308,7 +1308,7 @@ export const sendConfirmationEmail = async (userData: UserData) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully:", result);
+    console.info("Email sent successfully:", result);
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error("Error sending email:", error);
@@ -1335,7 +1335,7 @@ export const sendAdminNotificationEmail = async (
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("Admin notification email sent successfully:", result);
+    console.info("Admin notification email sent successfully:", result);
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error("Error sending admin notification email:", error);
@@ -1357,7 +1357,7 @@ export const sendRegistrationConfirmationEmail = async (userData: UserData) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log("Registration confirmation email sent successfully:", result);
+    console.info("Registration confirmation email sent successfully:", result);
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error("Error sending registration confirmation email:", error);

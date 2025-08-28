@@ -125,20 +125,11 @@ export default function MatchResults({
     setError(null);
 
     try {
-      console.log("🔄 Fetching match data for gameweek:", gameweek);
-
       // Use our API endpoint which handles CORS and data formatting
       const [matchResponse, statsResponse] = await Promise.all([
         fetch(`/api/fpl/match-results?gameweek=${gameweek}`),
         fetch(`/api/fpl/match-results?gameweek=${gameweek}&stats=true`),
       ]);
-
-      console.log("📡 API responses:", {
-        matchOk: matchResponse.ok,
-        statsOk: statsResponse.ok,
-        matchStatus: matchResponse.status,
-        statsStatus: statsResponse.status,
-      });
 
       if (!matchResponse.ok) {
         throw new Error(
@@ -159,12 +150,6 @@ export default function MatchResults({
         throw new Error(matchResult.error || "Failed to fetch match data");
       }
 
-      console.log("✅ Match data loaded:", {
-        gameweek: matchResult.gameweek,
-        matchCount: matchResult.data?.length || 0,
-        dataSource: matchResult.data_sources,
-      });
-
       setMatchData(matchResult.data || []);
 
       // Try to load stats if available
@@ -172,7 +157,6 @@ export default function MatchResults({
         const statsResult = await statsResponse.json();
         if (statsResult.success) {
           setStats(statsResult.data);
-          console.log("✅ Stats data loaded:", statsResult.data);
         }
       }
 

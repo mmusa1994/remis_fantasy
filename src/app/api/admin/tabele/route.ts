@@ -237,12 +237,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update positions if points were changed - temporarily disable until function is created
-    if (typeof points === "number") {
-      // TODO: Implement position update after database functions are created
-      console.log("Position update needed for player:", playerId);
-    }
-
     return NextResponse.json({
       message: "Player updated successfully",
       player: data?.[0],

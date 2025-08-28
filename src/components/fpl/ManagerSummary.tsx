@@ -86,15 +86,6 @@ const ManagerSummary = React.memo(function ManagerSummary({
     return `#${formatNumber(rank)}`;
   };
 
-  // Debug log for country data
-  console.log("🏴 ManagerSummary country data:", {
-    region_iso: manager.player_region_iso_code_short,
-    region_name: manager.player_region_name,
-    flag_code: getCountryFlagCode(
-      manager.player_region_iso_code_short || manager.player_region_name
-    ),
-  });
-
   const activePoints = bonusAdded
     ? teamTotals.active_points_final
     : teamTotals.active_points_no_bonus;

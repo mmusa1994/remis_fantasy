@@ -150,16 +150,11 @@ export default function FPLLivePage() {
   };
 
   const showSuccess = (message: string) => {
-    console.log("Success:", message);
+    console.info("Success:", message);
   };
 
   const loadFullTeamData = useCallback(async () => {
     if (!managerId) return;
-
-    console.log(
-      "🔄 [FRONTEND] loadFullTeamData - Starting full team data load"
-    );
-    console.log("📥 [FRONTEND] Request params:", { managerId, gameweek });
 
     try {
       const teamResponse = await fetch("/api/fpl/load-team", {
@@ -173,78 +168,16 @@ export default function FPLLivePage() {
         }),
       });
 
-      console.log("🌐 [FRONTEND] API Response status:", teamResponse.status);
-
       if (teamResponse.ok) {
         const teamResult = await teamResponse.json();
-        console.log("✅ [FRONTEND] Full team API response received:", {
-          success: teamResult.success,
-          dataKeys: Object.keys(teamResult.data || {}),
-          teamSize: teamResult.data?.team_with_stats?.length || 0,
-          managerName: teamResult.data?.manager?.name || "Unknown",
-          responseTimeMs: teamResult.response_time_ms,
-          timestamp: teamResult.timestamp,
-        });
-
-        console.log(
-          "📊 [FRONTEND] Complete team data structure:",
-          teamResult.data
-        );
-
-        // Log detailed player statistics breakdown
-        if (teamResult.data?.team_with_stats) {
-          console.log("👥 [FRONTEND] Player Statistics Breakdown:");
-          teamResult.data.team_with_stats.forEach(
-            (player: any, index: number) => {
-              console.log(`🎯 Player ${index + 1}:`, {
-                name: player.player?.web_name || "Unknown",
-                position: player.position <= 11 ? "Starting XI" : "Bench",
-                captain: player.is_captain
-                  ? "(C)"
-                  : player.is_vice_captain
-                  ? "(VC)"
-                  : "",
-                points: player.live_stats?.total_points || 0,
-                minutes: player.live_stats?.minutes || 0,
-                goals: player.live_stats?.goals_scored || 0,
-                assists: player.live_stats?.assists || 0,
-                bps: player.live_stats?.bps || 0,
-                bonus: player.live_stats?.bonus || 0,
-                multiplier: player.multiplier,
-              });
-            }
-          );
-        }
-
-        // Log team totals breakdown
-        if (teamResult.data?.team_totals) {
-          console.log("📈 [FRONTEND] Team Totals Analysis:", {
-            active_points_no_bonus:
-              teamResult.data.team_totals.active_points_no_bonus,
-            active_points_final:
-              teamResult.data.team_totals.active_points_final,
-            bench_points: teamResult.data.team_totals.bench_points_final,
-            captain_bonus:
-              teamResult.data.captain?.stats?.total_points *
-                (teamResult.data.captain?.multiplier - 1) || 0,
-            predicted_bonus: teamResult.data.team_totals.predicted_bonus,
-            final_bonus: teamResult.data.team_totals.final_bonus,
-            total_goals: teamResult.data.team_totals.goals,
-            total_assists: teamResult.data.team_totals.assists,
-            clean_sheets: teamResult.data.team_totals.clean_sheets,
-          });
-        }
 
         if (teamResult.success) {
-          console.log("✅ [FRONTEND] Setting team data to component state");
           setData(teamResult.data);
           const timestamp = new Date().toISOString();
           setLastUpdated(timestamp);
 
           setTeamDataLoading(false);
           showSuccess(t("fullTeamDataLoaded"));
-
-          console.log("✅ [FRONTEND] Team data loading completed successfully");
         }
       } else {
         console.error(
@@ -262,39 +195,15 @@ export default function FPLLivePage() {
   const loadLeaguesData = useCallback(async () => {
     if (!managerId) return;
 
-    console.log("🏆 [FRONTEND] loadLeaguesData - Starting leagues data load");
-    console.log("📥 [FRONTEND] Request params:", { managerId });
-
     try {
       const response = await fetch(`/api/fpl/leagues?managerId=${managerId}`);
-      console.log(
-        "🌐 [FRONTEND] Leagues API Response status:",
-        response.status
-      );
 
       if (response.ok) {
         const result = await response.json();
-        console.log("✅ [FRONTEND] Leagues API response received:", {
-          success: result.success,
-          classicLeagues: result.data?.classic?.length || 0,
-          h2hLeagues: result.data?.h2h?.length || 0,
-          managerName: result.data?.manager?.name || "Unknown",
-          responseTimeMs: result.response_time_ms,
-        });
-
-        console.log("🏅 [FRONTEND] Complete leagues data:", {
-          classic: result.data?.classic,
-          h2h: result.data?.h2h,
-          manager: result.data?.manager,
-        });
 
         if (result.success) {
-          console.log("✅ [FRONTEND] Setting leagues data to component state");
           setLeagueData(result.data);
           setLeaguesLoading(false);
-          console.log(
-            "✅ [FRONTEND] Leagues data loading completed successfully"
-          );
         }
       } else {
         console.error(
@@ -312,48 +221,17 @@ export default function FPLLivePage() {
   const loadGameweekStatus = useCallback(async () => {
     if (!managerId) return;
 
-    console.log(
-      "🎯 [FRONTEND] loadGameweekStatus - Starting gameweek status load"
-    );
-    console.log("📥 [FRONTEND] Request params:", { managerId, gameweek });
-
     setGameweekStatusLoading(true);
     try {
       const response = await fetch(
         `/api/fpl/gameweek-status?managerId=${managerId}&gameweek=${gameweek}`
       );
-      console.log(
-        "🌐 [FRONTEND] Gameweek Status API Response status:",
-        response.status
-      );
 
       if (response.ok) {
         const result = await response.json();
-        console.log("✅ [FRONTEND] Gameweek Status API response received:", {
-          success: result.success,
-          arrowDirection: result.data?.arrow_direction,
-          rankChange: result.data?.rank_change,
-          gameweekPoints: result.data?.gameweek_points,
-          safetyScore: result.data?.safety_score,
-          differentials: result.data?.differentials?.length || 0,
-          threats: result.data?.threats?.length || 0,
-          hasCaptainAnalysis: !!result.data?.captain_analysis,
-          responseTimeMs: result.response_time_ms,
-        });
-
-        console.log(
-          "🔍 [FRONTEND] Complete gameweek status data:",
-          result.data
-        );
 
         if (result.success) {
-          console.log(
-            "✅ [FRONTEND] Setting gameweek status data to component state"
-          );
           setGameweekStatus(result.data);
-          console.log(
-            "✅ [FRONTEND] Gameweek status data loading completed successfully"
-          );
         }
       } else {
         console.error(
@@ -378,34 +256,11 @@ export default function FPLLivePage() {
     setLoading(true);
     setError(null);
 
-    console.log("🚀 [FRONTEND] =================================");
-    console.log("🚀 [FRONTEND] FPL LIVE DATA LOADING INITIATED");
-    console.log("🚀 [FRONTEND] =================================");
-    console.log("📋 [FRONTEND] User clicked Load Team button");
-    console.log("👤 [FRONTEND] Manager ID:", managerId);
-    console.log("🏆 [FRONTEND] Gameweek:", gameweek);
-    console.log("⏰ [FRONTEND] Loading started at:", new Date().toISOString());
-    console.log("🔄 [FRONTEND] Current data state:", {
-      hasExistingData: !!data.manager,
-      teamLoaded: teamLoaded,
-      isPolling: isPolling,
-      currentTeamSize: data.team_with_stats?.length || 0,
-    });
-
     try {
       if (managerId !== null) {
         localStorage.setItem("fpl-manager-id", managerId.toString());
       }
       localStorage.setItem("fpl-gameweek", gameweek.toString());
-
-      console.log(
-        "🏃‍♂️ [FRONTEND] loadManagerInfo - Fetching skeleton data first"
-      );
-      console.log("📥 [FRONTEND] Skeleton request params:", {
-        managerId,
-        gameweek,
-        skeleton: true,
-      });
 
       // Get skeleton data first
       const skeletonResponse = await fetch("/api/fpl/load-team", {
@@ -420,30 +275,10 @@ export default function FPLLivePage() {
         }),
       });
 
-      console.log(
-        "🌐 [FRONTEND] Skeleton API Response status:",
-        skeletonResponse.status
-      );
-
       if (skeletonResponse.ok) {
         const result = await skeletonResponse.json();
 
-        console.log("✅ [FRONTEND] Skeleton API response received:", {
-          success: result.success,
-          skeleton: result.skeleton,
-          managerName: result.data?.manager?.name || "Unknown",
-          managerId: result.manager_id,
-          gameweek: result.gameweek,
-          responseTimeMs: result.response_time_ms,
-        });
-
-        console.log(
-          "👤 [FRONTEND] Manager skeleton data:",
-          result.data?.manager
-        );
-
         if (result.success) {
-          console.log("✅ [FRONTEND] Setting skeleton data to component state");
           setData(result.data);
           const timestamp = new Date().toISOString();
           setLastUpdated(timestamp);
@@ -452,7 +287,6 @@ export default function FPLLivePage() {
           showSuccess(t("managerInfoLoaded"));
           setLoading(false);
 
-          console.log("🔄 [FRONTEND] Starting background data loading...");
           // Load additional data in background
           setTeamDataLoading(true);
           loadFullTeamData();
@@ -461,27 +295,6 @@ export default function FPLLivePage() {
           loadLeaguesData();
 
           loadGameweekStatus();
-
-          console.log("✅ [FRONTEND] Background loading initiated");
-
-          // Set up final completion tracker
-          setTimeout(() => {
-            console.log(
-              "📋 [FRONTEND] COMPLETE DATA FLOW SUMMARY for Manager ID:",
-              managerId
-            );
-            console.log("┌─────────────────────────────────────────────┐");
-            console.log("│          FPL Live Data Loading Summary      │");
-            console.log("└─────────────────────────────────────────────┘");
-            console.log("🏃‍♂️ 1. Skeleton data: ✅ Manager info loaded");
-            console.log("👥 2. Full team data: ✅ Players and live stats");
-            console.log("🏆 3. Leagues data: ✅ League tables and rankings");
-            console.log("📊 4. Gameweek status: ✅ Performance analysis");
-            console.log(
-              "💾 5. Local storage: ✅ Manager ID and gameweek saved"
-            );
-            console.log("🔄 Ready for live polling and real-time updates");
-          }, 3000);
         } else {
           throw new Error(result.error || "Manager not found");
         }
@@ -519,13 +332,12 @@ export default function FPLLivePage() {
     teamLoaded,
   ]);
 
-  // Auto-load team data if manager ID exists in localStorage
+  // Auto-load team data ONLY if manager ID was loaded from localStorage on mount
   useEffect(() => {
-    if (managerId && !data.manager && !loading) {
-      console.log(
-        "🔄 [FRONTEND] Auto-loading team data for saved manager ID:",
-        managerId
-      );
+    // Only auto-load if we have manager ID AND it came from localStorage (not user input)
+    const savedManagerId = localStorage.getItem("fpl-manager-id");
+    if (savedManagerId && managerId && !data.manager && !loading && managerId.toString() === savedManagerId) {
+      console.log("🔄 [FRONTEND] Auto-loading team data for saved manager ID:", managerId);
       loadManagerInfo();
     }
   }, [managerId, data.manager, loading, loadManagerInfo]);

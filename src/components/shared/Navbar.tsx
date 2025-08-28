@@ -44,18 +44,8 @@ const Navbar = React.memo(function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
   const { theme } = useTheme();
-  const { t, ready, i18n } = useTranslation("navigation");
+  const { t, ready } = useTranslation("navigation");
   const pathname = usePathname();
-
-  // Debug: Check current language and translations
-  console.log("Navbar debug:", {
-    currentLanguage: i18n.language,
-    ready: ready,
-    home: t("home"),
-    premierLeague: t("premierLeague"),
-    championsLeague: t("championsLeague"),
-    f1Fantasy: t("f1Fantasy"),
-  });
 
   const backdropBlur = useTransform(
     scrollY,

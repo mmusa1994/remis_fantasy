@@ -11,34 +11,8 @@ const DEFAULT_SETTINGS = {
   cache_ttl: 300, // 5 minutes
 };
 
-// In-memory cache for settings (since we're not using database)
-let settingsCache: any = DEFAULT_SETTINGS;
-let settingsCacheTime = Date.now();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
 export async function GET() {
-  console.log("⚙️ FPL Settings API - GET request");
-
   try {
-    const now = Date.now();
-
-    // Return cached settings if still fresh
-    if (settingsCache && now - settingsCacheTime < CACHE_TTL) {
-      console.log("✅ Returning cached settings");
-      return NextResponse.json({
-        success: true,
-        data: settingsCache,
-        cache_hit: true,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    console.log("✅ Returning default settings (live data mode)");
-
-    // Cache the default settings
-    settingsCache = DEFAULT_SETTINGS;
-    settingsCacheTime = now;
-
     return NextResponse.json({
       success: true,
       data: DEFAULT_SETTINGS,
@@ -62,18 +36,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  console.log("⚙️ FPL Settings API - POST request");
-
   try {
     const body = await request.json();
     const { fpl_proxy_url, cron_secret, default_gw, default_manager_id } = body;
-
-    console.log("📥 Request body:", {
-      fpl_proxy_url,
-      cron_secret,
-      default_gw,
-      default_manager_id,
-    });
 
     const updateData: any = { ...DEFAULT_SETTINGS };
 
@@ -82,7 +47,6 @@ export async function POST(request: NextRequest) {
     if (default_gw !== undefined) {
       const gw = parseInt(default_gw, 10);
       if (isNaN(gw) || gw < 1 || gw > 38) {
-        console.log("❌ Validation failed: Invalid gameweek");
         return NextResponse.json(
           {
             success: false,
@@ -96,7 +60,6 @@ export async function POST(request: NextRequest) {
     if (default_manager_id !== undefined) {
       const managerId = parseInt(default_manager_id, 10);
       if (isNaN(managerId) || managerId < 1) {
-        console.log("❌ Validation failed: Invalid manager ID");
         return NextResponse.json(
           {
             success: false,
@@ -109,7 +72,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (Object.keys(updateData).length === 0) {
-      console.log("❌ Validation failed: No valid settings provided");
       return NextResponse.json(
         {
           success: false,
@@ -118,14 +80,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    console.log("✅ Validation passed, updating settings");
-
-    // Update in-memory cache (no database storage)
-    settingsCache = updateData;
-    settingsCacheTime = Date.now();
-
-    console.log("✅ Settings updated successfully");
 
     return NextResponse.json({
       success: true,

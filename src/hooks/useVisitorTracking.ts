@@ -95,7 +95,7 @@ export function useVisitorTracking() {
       };
 
       // Skip geolocation API calls in development to avoid CORS issues
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.NODE_ENV === "production") {
         // Try to get location data from a geolocation API (optional)
         try {
           const geoResponse = await fetch("https://ipapi.co/json/");
@@ -106,7 +106,7 @@ export function useVisitorTracking() {
           }
         } catch (error) {
           // Geolocation is optional, continue without it
-          console.log("Could not fetch location data:", error);
+          console.error("Could not fetch location data:", error);
         }
       } else {
         // In development, use mock data

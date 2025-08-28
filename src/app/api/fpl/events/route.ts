@@ -26,7 +26,6 @@ interface LiveEvent {
 }
 
 // Initialize FPL services
-const liveService = FPLLiveService.getInstance();
 const bootstrapService = FPLBootstrapService.getInstance();
 const fixtureService = FPLFixtureService.getInstance();
 
@@ -35,16 +34,12 @@ const fixtureStatsCache: { [key: string]: any } = {};
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  console.log('⚡ FPL Live Events API - Request started');
-  
+
   const searchParams = request.nextUrl.searchParams;
   const gw = searchParams.get("gw");
   const limit = searchParams.get("limit");
-  
-  console.log('📥 Request parameters:', { gw, limit });
 
   if (!gw) {
-    console.log('❌ Validation failed: Missing gameweek parameter');
     return NextResponse.json(
       {
         success: false,
@@ -58,7 +53,6 @@ export async function GET(request: NextRequest) {
   const eventLimit = limit ? parseInt(limit, 10) : 50;
 
   if (isNaN(gameweek)) {
-    console.log('❌ Validation failed: Invalid gameweek parameter');
     return NextResponse.json(
       {
         success: false,
@@ -67,27 +61,19 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   }
-  
-  console.log('✅ Validation passed:', { gameweek, eventLimit });
 
   try {
-    console.log('🏈 Phase 1: Fetching fixtures data');
-    
     // Fetch fixtures using service
     const fixturesResponse = await fixtureService.getAllFixtures();
-    
+
     if (!fixturesResponse.success || !fixturesResponse.data) {
-      throw new Error('Failed to fetch fixtures data');
+      throw new Error("Failed to fetch fixtures data");
     }
-    
+
     // Filter fixtures for the specified gameweek
-    const fixtures = fixturesResponse.data.filter((f: any) => f.event === gameweek);
-    
-    console.log('✅ Fixtures loaded:', {
-      total_fixtures: fixturesResponse.data.length,
-      gameweek_fixtures: fixtures.length,
-      cache_hit: fixturesResponse.cache_hit
-    });
+    const fixtures = fixturesResponse.data.filter(
+      (f: any) => f.event === gameweek
+    );
 
     // Get unique player IDs from active fixtures
     const activeFixtures = fixtures.filter((f: any) => f.started);
@@ -99,51 +85,39 @@ export async function GET(request: NextRequest) {
         stat.a?.forEach((p: any) => playerIds.add(p.element));
       });
     });
-    
-    console.log('🎯 Active fixtures analysis:', {
-      active_fixtures: activeFixtures.length,
-      unique_players: playerIds.size
-    });
 
-    console.log('👥 Phase 2: Fetching players and teams data');
-    
     // Get players and teams data using services
     const [playersResponse, teamsResponse] = await Promise.all([
       bootstrapService.getAllPlayers(),
-      bootstrapService.getAllTeams()
+      bootstrapService.getAllTeams(),
     ]);
-    
-    if (!playersResponse.success || !teamsResponse.success ||
-        !playersResponse.data || !teamsResponse.data) {
-      throw new Error('Failed to fetch players or teams data');
+
+    if (
+      !playersResponse.success ||
+      !teamsResponse.success ||
+      !playersResponse.data ||
+      !teamsResponse.data
+    ) {
+      throw new Error("Failed to fetch players or teams data");
     }
-    
+
     // Create lookup maps for O(1) access
     const playersCache: { [key: number]: any } = {};
     const teamsCache: { [key: number]: any } = {};
-    
+
     playersResponse.data.forEach((player) => {
       playersCache[player.id] = player;
     });
-    
+
     teamsResponse.data.forEach((team) => {
       teamsCache[team.id] = team;
     });
-    
-    console.log('✅ Reference data loaded:', {
-      players_loaded: Object.keys(playersCache).length,
-      teams_loaded: Object.keys(teamsCache).length,
-      players_cache_hit: playersResponse.cache_hit,
-      teams_cache_hit: teamsResponse.cache_hit
-    });
 
-    console.log('⚡ Phase 3: Generating live events from fixture changes');
-    
     const events: LiveEvent[] = [];
     const cacheKey = `gw_${gameweek}`;
     const previousStats = fixtureStatsCache[cacheKey] || {};
     const currentStats: any = {};
-    
+
     let totalChangesDetected = 0;
 
     // Generate events from fixture stats changes
@@ -154,7 +128,6 @@ export async function GET(request: NextRequest) {
       currentStats[fixtureKey] = {};
 
       if (!fixture.stats || !Array.isArray(fixture.stats)) {
-        console.log('⚠️ Fixture has no stats:', fixture.id);
         continue;
       }
 
@@ -260,15 +233,7 @@ export async function GET(request: NextRequest) {
         }
       }
     }
-    
-    console.log('⚡ Live events analysis:', {
-      total_changes_detected: totalChangesDetected,
-      events_generated: events.length,
-      fixtures_processed: fixtures.filter((f: any) => f.started).length
-    });
 
-    console.log('📋 Phase 4: Finalizing events and updating cache');
-    
     // Update cache with current stats
     fixtureStatsCache[cacheKey] = currentStats;
 
@@ -279,22 +244,9 @@ export async function GET(request: NextRequest) {
           new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()
       )
       .slice(0, eventLimit);
-      
-    console.log('🏆 Events processing completed:', {
-      total_events: events.length,
-      sorted_events: sortedEvents.length,
-      event_limit: eventLimit,
-      cache_updated: true
-    });
 
     const responseTime = Date.now() - startTime;
-    
-    console.log('✅ Live events completed successfully:', {
-      gameweek,
-      events_returned: sortedEvents.length,
-      response_time_ms: responseTime
-    });
-    
+
     return NextResponse.json({
       success: true,
       data: sortedEvents,
@@ -306,15 +258,15 @@ export async function GET(request: NextRequest) {
       data_sources: {
         using_services: true,
         live_tracking: true,
-        database_free: true
-      }
+        database_free: true,
+      },
     });
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    console.error('💥 Live events generation failed:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    console.error("💥 Live events generation failed:", {
+      error: error instanceof Error ? error.message : "Unknown error",
       response_time_ms: responseTime,
-      gameweek
+      gameweek,
     });
 
     // Return empty events list to keep frontend functional

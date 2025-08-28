@@ -93,7 +93,7 @@ export default function AdminDashboard() {
     if (status === "unauthenticated") {
       router.push("/admin");
     } else if (status === "authenticated" && session) {
-      console.log("User authenticated:", session.user);
+      console.info("User authenticated:", session.user);
     }
   }, [status, session, router]);
 
@@ -451,7 +451,7 @@ export default function AdminDashboard() {
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <LoadingCard 
+        <LoadingCard
           title="Loading Admin Dashboard"
           description="Please wait while we fetch the registration data"
           className="w-full max-w-md mx-auto"

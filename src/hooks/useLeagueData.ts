@@ -215,7 +215,6 @@ export const useLeaguePrizes = (leagueType: string) => {
                   "@/data/premier-league/prizes.json"
                 );
                 prizesData = premierPrizes.default;
-                console.log("Loaded Premier League prizes:", prizesData);
                 break;
               case "champions-league":
               case "champions":

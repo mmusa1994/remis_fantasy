@@ -41,21 +41,59 @@ export default function ControlsBar({
     setLocalGameweek(gameweek.toString());
   }, [gameweek]);
 
+  // Debounce timer refs
+  const [managerDebounceTimer, setManagerDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [gameweekDebounceTimer, setGameweekDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+
   const handleManagerIdChange = (value: string) => {
     setLocalManagerId(value);
-    const id = parseInt(value, 10);
-    if (!isNaN(id) && id > 0) {
-      onManagerIdChange(id);
+    
+    // Clear existing timer
+    if (managerDebounceTimer) {
+      clearTimeout(managerDebounceTimer);
     }
+    
+    // Set new debounced timer - only call parent after user stops typing
+    const timer = setTimeout(() => {
+      const id = parseInt(value, 10);
+      if (!isNaN(id) && id > 0) {
+        onManagerIdChange(id);
+      }
+    }, 800); // 800ms debounce - wait until user stops typing
+    
+    setManagerDebounceTimer(timer);
   };
 
   const handleGameweekChange = (value: string) => {
     setLocalGameweek(value);
-    const gw = parseInt(value, 10);
-    if (!isNaN(gw) && gw >= 1 && gw <= 38) {
-      onGameweekChange(gw);
+    
+    // Clear existing timer
+    if (gameweekDebounceTimer) {
+      clearTimeout(gameweekDebounceTimer);
     }
+    
+    // Set new debounced timer - only call parent after user stops typing
+    const timer = setTimeout(() => {
+      const gw = parseInt(value, 10);
+      if (!isNaN(gw) && gw >= 1 && gw <= 38) {
+        onGameweekChange(gw);
+      }
+    }, 800); // 800ms debounce - wait until user stops typing
+    
+    setGameweekDebounceTimer(timer);
   };
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (managerDebounceTimer) {
+        clearTimeout(managerDebounceTimer);
+      }
+      if (gameweekDebounceTimer) {
+        clearTimeout(gameweekDebounceTimer);
+      }
+    };
+  }, [managerDebounceTimer, gameweekDebounceTimer]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {

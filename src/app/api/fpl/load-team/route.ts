@@ -14,7 +14,6 @@ const fixtureService = FPLFixtureService.getInstance();
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  console.log("🚀 FPL Load Team API - Request started");
 
   let managerId: any, gameweek: any;
 
@@ -23,10 +22,7 @@ export async function POST(request: NextRequest) {
     ({ managerId, gameweek } = body);
     const skeleton = body.skeleton || false;
 
-    console.log("📥 Request data:", { managerId, gameweek, skeleton });
-
     if (!managerId || !gameweek) {
-      console.log("❌ Validation failed: Missing required parameters");
       return NextResponse.json(
         {
           success: false,
@@ -40,10 +36,6 @@ export async function POST(request: NextRequest) {
     const gw = parseInt(gameweek, 10);
 
     if (isNaN(managerIdNum) || isNaN(gw)) {
-      console.log("❌ Validation failed: Invalid parameters", {
-        managerIdNum,
-        gw,
-      });
       return NextResponse.json(
         {
           success: false,
@@ -53,31 +45,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("✅ Validation passed:", {
-      managerId: managerIdNum,
-      gameweek: gw,
-    });
-
     // If skeleton mode requested, return minimal manager data quickly
     if (skeleton) {
-      console.log("🏃‍♂️ Skeleton mode - fetching basic manager info");
       try {
         const managerResponse = await teamService.getManagerInfo(managerIdNum);
 
         if (!managerResponse.success || !managerResponse.data) {
-          console.log("❌ Failed to get manager info in skeleton mode");
           throw new Error("Manager not found");
         }
-
-        console.log(
-          "✅ Skeleton data loaded for manager:",
-          managerResponse.data.name
-        );
-        console.log("🏴 Skeleton manager region data:", {
-          original: managerResponse.data?.player_region_short_iso,
-          mapped: managerResponse.data?.player_region_short_iso,
-          region_name: managerResponse.data?.player_region_name,
-        });
 
         return NextResponse.json({
           success: true,
@@ -105,7 +80,6 @@ export async function POST(request: NextRequest) {
           response_time_ms: Date.now() - startTime,
         });
       } catch (error) {
-        console.log("❌ Skeleton mode failed:", error);
         return NextResponse.json(
           {
             success: false,
@@ -115,8 +89,6 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-
-    console.log("📊 Phase 1: Fetching critical data (picks + live)");
 
     // Priority 1: Get critical data first (manager picks + live data)
     let managerPicks, liveData;
@@ -138,15 +110,7 @@ export async function POST(request: NextRequest) {
 
       managerPicks = picksResponse.data;
       liveData = liveResponse.data;
-
-      console.log("✅ Critical data loaded:", {
-        picks_count: managerPicks.picks.length,
-        live_elements: liveData.elements.length,
-        picks_cache_hit: picksResponse.cache_hit,
-        live_cache_hit: liveResponse.cache_hit,
-      });
     } catch (apiError) {
-      console.log("❌ Critical data fetch failed:", apiError);
       if (apiError instanceof Error && apiError.message.includes("404")) {
         return NextResponse.json(
           {
@@ -158,8 +122,6 @@ export async function POST(request: NextRequest) {
       }
       throw apiError;
     }
-
-    console.log("👥 Phase 2: Fetching player data");
 
     // Priority 2: Get player data from services
     const playerIds = managerPicks.picks.map((pick) => pick.element);
@@ -176,20 +138,10 @@ export async function POST(request: NextRequest) {
       playersData = playersResponse.data.filter((p: any) =>
         playerIds.includes(p.id)
       );
-
-      console.log("✅ Player data loaded:", {
-        total_players_available: playersResponse.data.length,
-        filtered_players: playersData.length,
-        cache_hit: playersResponse.cache_hit,
-      });
     } catch (error) {
-      console.log("❌ Player data fetch failed:", error);
+      console.error("❌ Player data fetch failed:", error);
       throw error;
     }
-
-    console.log(
-      "📋 Phase 3: Fetching additional data (manager info, fixtures, status)"
-    );
 
     // Priority 3: Get remaining data in parallel
     let managerEntry: any = null;
@@ -213,27 +165,12 @@ export async function POST(request: NextRequest) {
             }
           : null;
 
-      console.log("🏴 Manager region data:", {
-        original: managerResponse.data?.player_region_short_iso,
-        mapped: managerEntry?.player_region_iso_code_short,
-        region_name: managerEntry?.player_region_name,
-        full_manager_data: managerResponse.data,
-      });
       fixtures = fixturesResponse.success
         ? (fixturesResponse.data || []).filter((f: any) => f.event === gw)
         : [];
       eventStatus = statusResponse.success
         ? statusResponse.data
         : { status: [] };
-
-      console.log("✅ Additional data loaded:", {
-        manager_loaded: !!managerEntry,
-        fixtures_count: fixtures.length,
-        event_status_loaded: !!eventStatus,
-        manager_cache_hit: managerResponse.cache_hit,
-        fixtures_cache_hit: fixturesResponse.cache_hit,
-        status_cache_hit: statusResponse.cache_hit,
-      });
     } catch (error) {
       console.warn(
         "⚠️ Secondary data fetch failed (continuing with partial data):",
@@ -290,15 +227,8 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    console.log("🎯 Phase 4: Calculating bonus points and predictions");
-
     const bonusStatus = eventStatus?.status?.find((s: any) => s.event === gw);
     const bonusAdded = bonusStatus?.bonus_added || false;
-
-    console.log("📊 Bonus status:", {
-      bonusAdded,
-      bonusStatus: bonusStatus ? "found" : "not found",
-    });
 
     // Extract live stats for calculations - optimized filtering
     const liveStats = teamWithStats
@@ -310,7 +240,6 @@ export async function POST(request: NextRequest) {
 
     // Simplified bonus prediction without external library
     if (!bonusAdded && fixtures && fixtures.length > 0) {
-      console.log("🔮 Calculating bonus predictions");
       try {
         // Basic bonus prediction based on BPS
         const fixtureGroups = new Map<number, any[]>();
@@ -366,11 +295,6 @@ export async function POST(request: NextRequest) {
             .reduce((sum, pb) => sum + pb.bonus, 0);
           return total + playerBonus * pick.multiplier;
         }, 0);
-
-        console.log("✅ Bonus predictions calculated:", {
-          predicted_bonuses_count: predictedBonuses.length,
-          total_predicted_bonus: totalPredictedBonus,
-        });
       } catch (error) {
         console.warn("⚠️ Bonus prediction failed:", error);
         predictedBonuses = [];
@@ -454,27 +378,7 @@ export async function POST(request: NextRequest) {
         : 0,
     };
 
-    console.log("📈 Phase 5: Final calculations and response preparation");
-
     const responseTime = Date.now() - startTime;
-
-    console.log("✅ Load team completed successfully:", {
-      manager_id: managerIdNum,
-      gameweek: gw,
-      total_response_time_ms: responseTime,
-      team_size: teamWithStats.length,
-      active_players: teamWithStats.filter((t) => t.position <= 11).length,
-      bench_players: teamWithStats.filter((t) => t.position > 11).length,
-      captain:
-        teamWithStats.find((t) => t.is_captain)?.player?.web_name || "Unknown",
-      vice_captain:
-        teamWithStats.find((t) => t.is_vice_captain)?.player?.web_name ||
-        "Unknown",
-      manager_region_data: {
-        iso: managerEntry?.player_region_iso_code_short,
-        name: managerEntry?.player_region_name,
-      },
-    });
 
     return NextResponse.json({
       success: true,
