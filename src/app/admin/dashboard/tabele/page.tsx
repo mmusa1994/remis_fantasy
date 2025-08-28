@@ -50,11 +50,11 @@ interface PremierLeagueResponse {
 }
 
 const leagueTypes = [
-  { key: "premiumLeague", name: "Premium Liga", color: "yellow" },
-  { key: "standardLeague", name: "Standard Liga", color: "blue" },
-  { key: "h2hLeague", name: "H2H Liga", color: "red" },
-  { key: "h2h2League", name: "H2H2 Liga", color: "red" },
-  { key: "freeLeague", name: "Free Liga", color: "purple" },
+  { key: "premiumLeague", name: "Premium League", color: "yellow" },
+  { key: "standardLeague", name: "Standard League", color: "blue" },
+  { key: "h2hLeague", name: "H2H League", color: "red" },
+  { key: "h2h2League", name: "H2H2 League", color: "red" },
+  { key: "freeLeague", name: "Free League", color: "purple" },
 ];
 
 // Function to get indicator color based on league color
@@ -127,7 +127,7 @@ export default function AdminTablesCleanPage() {
       console.error("Error loading tables:", error);
       setToast({
         show: true,
-        message: "Greška pri učitavanju tabela",
+        message: "Error loading tables",
         type: "error",
       });
     } finally {
@@ -157,7 +157,7 @@ export default function AdminTablesCleanPage() {
 
       setToast({
         show: true,
-        message: "Igrač je uspešno ažuriran!",
+        message: "Player updated successfully!",
         type: "success",
       });
     } catch (error) {
@@ -190,7 +190,7 @@ export default function AdminTablesCleanPage() {
       if (response.ok) {
         setToast({
           show: true,
-          message: "Free Liga igrač uspešno ažuriran!",
+          message: "Free League player updated successfully!",
           type: "success",
         });
         setEditingFreePlayer(null);
@@ -208,7 +208,7 @@ export default function AdminTablesCleanPage() {
       console.error("Error updating free player:", error);
       setToast({
         show: true,
-        message: "Greška pri ažuriranju igrača",
+        message: "Error updating player",
         type: "error",
       });
     }
@@ -218,7 +218,7 @@ export default function AdminTablesCleanPage() {
     if (!bulkUpdateData.trim()) {
       setToast({
         show: true,
-        message: "Molimo unesite JSON podatke za bulk update",
+        message: "Please enter JSON data for bulk update",
         type: "error",
       });
       return;
@@ -250,9 +250,9 @@ export default function AdminTablesCleanPage() {
       // Refresh tables after update
       await loadTables();
 
-      let message = `Bulk update završen! Ažurirano ${result.updatedCount}/${result.totalUpdates} igrača.`;
+      let message = `Bulk update completed! Updated ${result.updatedCount}/${result.totalUpdates} players.`;
       if (result.notFound && result.notFound.length > 0) {
-        message += ` Nisu pronađeni: ${result.notFound.slice(0, 3).join(", ")}${
+        message += ` Not found: ${result.notFound.slice(0, 3).join(", ")}${
           result.notFound.length > 3 ? "..." : ""
         }`;
       }
@@ -269,7 +269,7 @@ export default function AdminTablesCleanPage() {
       console.error("Error during bulk update:", error);
       setToast({
         show: true,
-        message: "Greška pri bulk update - proverite JSON format",
+        message: "Error during bulk update - check JSON format",
         type: "error",
       });
     } finally {
@@ -335,12 +335,14 @@ export default function AdminTablesCleanPage() {
       // Refresh the tables after update
       await loadTables();
 
-      const totalInLeague = result.totalFPLPlayers || (result.updatedPlayers + (result.notFoundPlayers?.length || 0));
-      let message = `${result.leagueType.toUpperCase()} liga ažurirana! Ažurirano ${
+      const totalInLeague =
+        result.totalFPLPlayers ||
+        result.updatedPlayers + (result.notFoundPlayers?.length || 0);
+      let message = `${result.leagueType.toUpperCase()} league updated! Updated ${
         result.updatedPlayers || 0
-      } od ukupno ${totalInLeague} igrača u ligi.`;
+      } out of ${totalInLeague} players in the league.`;
       if (result.notFoundPlayers && result.notFoundPlayers.length > 0) {
-        message += ` Nisu pronađeni u bazi: ${result.notFoundPlayers
+        message += ` Not found in database: ${result.notFoundPlayers
           .slice(0, 3)
           .join(", ")}${result.notFoundPlayers.length > 3 ? "..." : ""}`;
       }
@@ -354,7 +356,7 @@ export default function AdminTablesCleanPage() {
       console.error("Error updating from FPL:", error);
       setToast({
         show: true,
-        message: `Greška pri ažuriranju ${leagueType} lige iz FPL API-ja`,
+        message: `Error updating ${leagueType} league from FPL API`,
         type: "error",
       });
     } finally {
@@ -426,7 +428,7 @@ export default function AdminTablesCleanPage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <LoadingCard 
+        <LoadingCard
           title="Loading Tables Management"
           description="Please wait while we authenticate and load the table data"
           className="w-full max-w-md mx-auto"
@@ -450,8 +452,8 @@ export default function AdminTablesCleanPage() {
               <button
                 onClick={() => router.push("/admin/dashboard")}
                 className="bg-white/20 hover:bg-white/30 p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation"
-                title="Nazad na dashboard"
-                aria-label="Nazad na dashboard"
+                title="Back to dashboard"
+                aria-label="Back to dashboard"
               >
                 <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
@@ -465,21 +467,21 @@ export default function AdminTablesCleanPage() {
               />
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate">
-                  Premier League Tabele
+                  Premier League Tables
                 </h1>
                 <p className="text-xs sm:text-sm opacity-75 truncate hidden sm:block">
-                  Upravljanje ligama i rangiranjem
+                  League and ranking management
                 </p>
               </div>
             </div>
             <button
               onClick={handleSignOut}
               className="bg-white/20 hover:bg-white/30 p-1.5 sm:p-2 lg:px-4 lg:py-2 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 flex-shrink-0 touch-manipulation"
-              title="Odjavi se"
-              aria-label="Odjavi se"
+              title="Sign Out"
+              aria-label="Sign Out"
             >
               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden lg:inline text-sm">Odjavi se</span>
+              <span className="hidden lg:inline text-sm">Sign Out</span>
             </button>
           </div>
         </div>
@@ -498,14 +500,14 @@ export default function AdminTablesCleanPage() {
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-base sm:text-lg font-bold text-gray-800 truncate">
-                    Premier League Tabele
+                    Premier League Tables
                   </h2>
                   {source && (
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium whitespace-nowrap">
                         {source === "clean_table"
-                          ? "Ažurirana Tabela"
-                          : "Registraciona Tabela"}
+                          ? "Updated Table"
+                          : "Registration Table"}
                       </span>
                       {lastUpdated && (
                         <span className="text-xs text-gray-500 hidden sm:inline truncate">
@@ -524,24 +526,24 @@ export default function AdminTablesCleanPage() {
                   <button
                     onClick={() => setShowBulkUpdate(true)}
                     className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow transition-all duration-200 text-xs sm:text-sm font-medium touch-manipulation"
-                    aria-label="Grupno ažuriranje"
+                    aria-label="Bulk Update"
                   >
                     <Upload className="w-4 h-4 flex-shrink-0" />
-                    <span className="hidden sm:inline">Grupno ažuriranje</span>
-                    <span className="sm:hidden">Grupno</span>
+                    <span className="hidden sm:inline">Bulk Update</span>
+                    <span className="sm:hidden">Bulk</span>
                   </button>
                   <button
                     onClick={refreshTables}
                     disabled={loading}
                     className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium touch-manipulation"
-                    aria-label={loading ? "Učitavam tabele" : "Osveži tabele"}
+                    aria-label={loading ? "Loading tables" : "Refresh tables"}
                   >
                     <RefreshCw
                       className={`w-4 h-4 flex-shrink-0 ${
                         loading ? "animate-spin" : ""
                       }`}
                     />
-                    <span>{loading ? "Učitavam" : "Osveži"}</span>
+                    <span>{loading ? "Loading" : "Refresh"}</span>
                   </button>
                 </div>
 
@@ -656,7 +658,7 @@ export default function AdminTablesCleanPage() {
                 </h3>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1">
                   <p className="text-sm text-gray-600">
-                    Ukupno igrača:{" "}
+                    Total players:{" "}
                     <span className="font-semibold">
                       {currentPlayers.length}
                     </span>
@@ -664,7 +666,7 @@ export default function AdminTablesCleanPage() {
                   <p className="text-xs text-green-600 flex items-center gap-1">
                     <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></span>
                     <span className="hidden sm:inline">
-                      Automatsko sortiranje i pozicioniranje
+                      Automatic sorting and positioning
                     </span>
                     <span className="sm:hidden">Auto sort</span>
                   </p>
@@ -676,11 +678,11 @@ export default function AdminTablesCleanPage() {
           <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {loading ? (
               <div className="flex items-center justify-center py-8 sm:py-12">
-                <div className="text-center">
-                  <p className="text-sm sm:text-base text-gray-600">
-                    Učitavam tabele...
-                  </p>
-                </div>
+                <LoadingCard
+                  title="Loading Tables"
+                  description="Please wait while we fetch the table data"
+                  className="w-full max-w-md mx-auto"
+                />
               </div>
             ) : (
               <table
@@ -694,15 +696,15 @@ export default function AdminTablesCleanPage() {
                       className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       scope="col"
                     >
-                      <span className="hidden sm:inline">Pozicija</span>
-                      <span className="sm:hidden">Poz.</span>
+                      <span className="hidden sm:inline">Position</span>
+                      <span className="sm:hidden">Pos.</span>
                     </th>
                     <th
                       className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       scope="col"
                     >
-                      <span className="hidden sm:inline">Ime i prezime</span>
-                      <span className="sm:hidden">Ime</span>
+                      <span className="hidden sm:inline">Name</span>
+                      <span className="sm:hidden">Name</span>
                     </th>
                     {selectedLeague !== "freeLeague" && (
                       <th
@@ -716,7 +718,7 @@ export default function AdminTablesCleanPage() {
                       className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       scope="col"
                     >
-                      Tim
+                      Team
                     </th>
                     {selectedLeague === "h2hLeague" ||
                     selectedLeague === "h2h2League" ? (
@@ -732,7 +734,7 @@ export default function AdminTablesCleanPage() {
                           scope="col"
                         >
                           <span className="hidden sm:inline">
-                            Overall Poeni
+                            Overall Points
                           </span>
                           <span className="sm:hidden">Overall</span>
                         </th>
@@ -740,7 +742,7 @@ export default function AdminTablesCleanPage() {
                           className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           scope="col"
                         >
-                          <span className="hidden sm:inline">H2H Poeni</span>
+                          <span className="hidden sm:inline">H2H Points</span>
                           <span className="sm:hidden">H2H</span>
                         </th>
                       </>
@@ -749,14 +751,14 @@ export default function AdminTablesCleanPage() {
                         className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         scope="col"
                       >
-                        Poeni
+                        Points
                       </th>
                     )}
                     <th
                       className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       scope="col"
                     >
-                      Akcije
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -1005,8 +1007,8 @@ export default function AdminTablesCleanPage() {
                             >
                               <Edit3 className="w-3 h-3 mr-1" />
                               {editingPlayer === player.id
-                                ? "Završi"
-                                : "Uredi poene"}
+                                ? "Finish"
+                                : "Edit Points"}
                             </button>
                           )}
                         </td>
@@ -1028,11 +1030,11 @@ export default function AdminTablesCleanPage() {
                   <div>
                     <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                       <Upload className="w-6 h-6 text-green-600" />
-                      Grupno ažuriranje
+                      Bulk Update
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      Ažurirajte poene ili H2H kategorije za više igrača
-                      odjednom koristeći JSON format
+                      Update points or H2H categories for multiple players at
+                      once using JSON format
                     </p>
                   </div>
                   <button
@@ -1064,25 +1066,25 @@ export default function AdminTablesCleanPage() {
                 <div className="mb-6">
                   <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <FileText className="w-4 h-4" />
-                    Format podataka:
+                    Data Format:
                   </h4>
                   <div className="bg-gray-100 rounded-lg p-4 text-xs">
                     <h5 className="font-semibold mb-2 text-gray-800">
-                      Za ažuriranje poena:
+                      For updating points:
                     </h5>
                     <pre className="text-gray-700 mb-4">{`{
   "updates": [
     {
       "rank": 1,
-      "team": "Naziv tima",
-      "manager": "Ime menadžera", 
+      "team": "Team name",
+      "manager": "Manager name", 
       "gw": 81,
       "total": 81
     },
     {
       "rank": 2,
-      "team": "Drugi tim",
-      "manager": "Drugi menadžer",
+      "team": "Second team",
+      "manager": "Second manager",
       "gw": 79,
       "total": 79
     }
@@ -1090,7 +1092,7 @@ export default function AdminTablesCleanPage() {
 }`}</pre>
 
                     <h5 className="font-semibold mb-2 text-gray-800">
-                      Za ažuriranje H2H statistika (W/D/L i H2H poeni):
+                      For updating H2H statistics (W/D/L and H2H points):
                     </h5>
                     <pre className="text-gray-700">{`{
   "updates": [
@@ -1128,29 +1130,31 @@ export default function AdminTablesCleanPage() {
 }`}</pre>
                   </div>
                   <div className="text-xs text-gray-500 mt-2 space-y-1">
-                    <p>• Sistem traži igrače po nazivu tima i menadžera</p>
-                    <p>• Za poene koristite total field</p>
                     <p>
-                      • Za H2H statistike koristite w, d, l (win/draw/loss) i
+                      • System searches for players by team name and manager
+                    </p>
+                    <p>• For points use total field</p>
+                    <p>
+                      • For H2H statistics use w, d, l (win/draw/loss) and
                       h2h_pts
                     </p>
                     <p>
-                      • score predstavlja overall poene, a h2h_pts H2H poene
+                      • score represents overall points, and h2h_pts H2H points
                     </p>
-                    <p>• Možete kombinovati različite tipove u istom zahtev</p>
+                    <p>• You can combine different types in the same request</p>
                   </div>
                 </div>
 
                 {/* JSON Input */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    JSON Podaci:
+                    JSON Data:
                   </label>
                   <textarea
                     value={bulkUpdateData}
                     onChange={(e) => setBulkUpdateData(e.target.value)}
                     className="w-full h-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm font-mono text-gray-900 bg-white placeholder-gray-500"
-                    placeholder="Unesite JSON podatke ovde..."
+                    placeholder="Enter JSON data here..."
                   />
                 </div>
 
@@ -1163,7 +1167,7 @@ export default function AdminTablesCleanPage() {
                     }}
                     className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
                   >
-                    Otkaži
+                    Cancel
                   </button>
                   <button
                     onClick={bulkUpdatePlayers}
@@ -1175,7 +1179,7 @@ export default function AdminTablesCleanPage() {
                         bulkUpdating ? "animate-pulse" : ""
                       }`}
                     />
-                    {bulkUpdating ? "Ažuriram..." : "Ažuriraj"}
+                    {bulkUpdating ? "Updating..." : "Update"}
                   </button>
                 </div>
               </div>
