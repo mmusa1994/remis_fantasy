@@ -1,5 +1,4 @@
-import PrizesGallery from "@/components/shared/PrizesGallery";
-import { f1FantasyPrizes, f1FantasyConstruction } from "@/data/f1-fantasy";
+import ConstructionPage from "@/components/shared/ConstructionPage";
 
 export const metadata = {
   title: "F1 Fantasy — Nagrade",
@@ -8,17 +7,10 @@ export const metadata = {
 };
 
 export default function F1FantasyNagradePage() {
-  const prizes = f1FantasyPrizes;
-  const content = f1FantasyConstruction;
-
   return (
-    <div className="min-h-screen">
-      <PrizesGallery
-        prizes={prizes}
-        leagueFilter="f1"
-        title={content?.pageContent?.sections?.prizes?.title || "F1 Fantasy Nagrade"}
-        subtitle="Osvojite brzinske nagrade u najuzbudljivijoj racing ligi!"
-      />
-    </div>
+    <ConstructionPage
+      title="F1 Fantasy Nagrade"
+      description="Stranica za F1 Fantasy nagrade je u razvoju! Pripremaju se najuzbudljivije nagrade za najbrže motorsport fantasy lige."
+    />
   );
 }

@@ -327,24 +327,24 @@ export default function FPLLivePage() {
     t,
   ]);
 
-  // Auto-load team data ONLY if manager ID was loaded from localStorage on mount
-  useEffect(() => {
-    // Only auto-load if we have manager ID AND it came from localStorage (not user input)
-    const savedManagerId = localStorage.getItem("fpl-manager-id");
-    if (
-      savedManagerId &&
-      managerId &&
-      !data.manager &&
-      !loading &&
-      managerId.toString() === savedManagerId
-    ) {
-      console.log(
-        "🔄 [FRONTEND] Auto-loading team data for saved manager ID:",
-        managerId
-      );
-      loadManagerInfo();
-    }
-  }, [managerId, data.manager, loading, loadManagerInfo]);
+  // DISABLED: Auto-load team data - user must click Load Team button manually
+  // useEffect(() => {
+  //   // Only auto-load if we have manager ID AND it came from localStorage (not user input)
+  //   const savedManagerId = localStorage.getItem("fpl-manager-id");
+  //   if (
+  //     savedManagerId &&
+  //     managerId &&
+  //     !data.manager &&
+  //     !loading &&
+  //     managerId.toString() === savedManagerId
+  //   ) {
+  //     console.log(
+  //       "🔄 [FRONTEND] Auto-loading team data for saved manager ID:",
+  //       managerId
+  //     );
+  //     loadManagerInfo();
+  //   }
+  // }, [managerId, data.manager, loading, loadManagerInfo]);
 
   const startPolling = useCallback(() => {
     if (!managerId) {
@@ -443,6 +443,7 @@ export default function FPLLivePage() {
               bonusAdded={data.bonus_added || false}
               gameweek={gameweek}
               lastUpdated={lastUpdated || undefined}
+              managerId={managerId}
             />
             <GameweekStatus
               gameweekStatus={gameweekStatus || undefined}

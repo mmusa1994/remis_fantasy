@@ -47,8 +47,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get league standings using new service
-    const leagueResponse = await fplService.league.getClassicLeagueStandings(leagueId, page);
+    // Get league standings using optimized service
+    // If requesting first page (most common), use optimized top 50 method
+    const leagueResponse = page === 1 
+      ? await fplService.league.getTopClassicLeagueStandings(leagueId, 50)
+        .then(response => ({
+          ...response,
+          pagination: {
+            current_page: 1,
+            total_pages: Math.ceil((response.data?.total_entries || 0) / 50),
+            page_size: 50,
+            total_count: response.data?.total_entries || 0,
+            has_next: (response.data?.total_entries || 0) > 50,
+            has_previous: false,
+          },
+          data: response.data ? {
+            league: response.data.league_info,
+            standings: {
+              results: response.data.standings,
+              has_next: (response.data?.total_entries || 0) > 50,
+            },
+          } : null,
+        }))
+      : await fplService.league.getClassicLeagueStandings(leagueId, page);
     
     if (!leagueResponse.success) {
       return NextResponse.json(leagueResponse);

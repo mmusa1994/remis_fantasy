@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MdDownload, MdPlayArrow, MdStop } from "react-icons/md";
 import { useTranslation } from "react-i18next";
 
@@ -18,7 +18,7 @@ interface ControlsBarProps {
 
 export default function ControlsBar({
   managerId,
-  gameweek,
+  gameweek: _gameweek,
   isPolling,
   onManagerIdChange,
   onGameweekChange,
@@ -28,79 +28,72 @@ export default function ControlsBar({
   loading,
 }: ControlsBarProps) {
   const { t } = useTranslation("fpl");
-  const [localManagerId, setLocalManagerId] = useState(
-    managerId?.toString() || ""
-  );
-  const [localGameweek, setLocalGameweek] = useState(gameweek.toString());
+  const [localManagerId, setLocalManagerId] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("fpl-manager-id");
+      return stored || "";
+    }
+    return "";
+  });
+  const [localGameweek, setLocalGameweek] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("fpl-gameweek");
+      return stored || "";
+    }
+    return "";
+  });
 
-  // Keep inputs in sync when parent props change
-  useEffect(() => {
-    setLocalManagerId(managerId?.toString() || "");
-  }, [managerId]);
-  useEffect(() => {
-    setLocalGameweek(gameweek.toString());
-  }, [gameweek]);
+  // No automatic syncing with parent props - only localStorage and manual Load button
 
-  // Debounce timer refs
-  const [managerDebounceTimer, setManagerDebounceTimer] = useState<NodeJS.Timeout | null>(null);
-  const [gameweekDebounceTimer, setGameweekDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  // No debounce timers needed since we don't auto-call parent functions
 
   const handleManagerIdChange = (value: string) => {
     setLocalManagerId(value);
     
-    // Clear existing timer
-    if (managerDebounceTimer) {
-      clearTimeout(managerDebounceTimer);
+    // Save to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fpl-manager-id", value);
     }
     
-    // Set new debounced timer - only call parent after user stops typing
-    const timer = setTimeout(() => {
-      const id = parseInt(value, 10);
-      if (!isNaN(id) && id > 0) {
-        onManagerIdChange(id);
-      }
-    }, 800); // 800ms debounce - wait until user stops typing
-    
-    setManagerDebounceTimer(timer);
+    // NOTE: No automatic call to onManagerIdChange - only happens on Load button
   };
 
   const handleGameweekChange = (value: string) => {
     setLocalGameweek(value);
     
-    // Clear existing timer
-    if (gameweekDebounceTimer) {
-      clearTimeout(gameweekDebounceTimer);
+    // Save to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fpl-gameweek", value);
     }
     
-    // Set new debounced timer - only call parent after user stops typing
-    const timer = setTimeout(() => {
-      const gw = parseInt(value, 10);
-      if (!isNaN(gw) && gw >= 1 && gw <= 38) {
-        onGameweekChange(gw);
-      }
-    }, 800); // 800ms debounce - wait until user stops typing
-    
-    setGameweekDebounceTimer(timer);
+    // NOTE: No automatic call to onGameweekChange - only happens on Load button
   };
 
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      if (managerDebounceTimer) {
-        clearTimeout(managerDebounceTimer);
-      }
-      if (gameweekDebounceTimer) {
-        clearTimeout(gameweekDebounceTimer);
-      }
-    };
-  }, [managerDebounceTimer, gameweekDebounceTimer]);
+  // No cleanup needed since we don't use timers anymore
+
+  const handleLoadTeam = () => {
+    // Update parent with current values before loading
+    const managerId = parseInt(localManagerId, 10);
+    const gameweek = parseInt(localGameweek, 10);
+    
+    if (!isNaN(managerId) && managerId > 0) {
+      onManagerIdChange(managerId);
+    }
+    
+    if (!isNaN(gameweek) && gameweek >= 1 && gameweek <= 38) {
+      onGameweekChange(gameweek);
+    }
+    
+    // Then call the load team function
+    onLoadTeam();
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       e.stopPropagation();
       if (!loading) {
-        onLoadTeam();
+        handleLoadTeam();
       }
     }
   };
@@ -165,7 +158,7 @@ export default function ControlsBar({
 
         {/* Load Team Button */}
         <button
-          onClick={onLoadTeam}
+          onClick={handleLoadTeam}
           disabled={
             loading ||
             isNaN(parseInt(localManagerId, 10)) ||

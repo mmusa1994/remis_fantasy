@@ -56,6 +56,7 @@ interface ManagerSummaryProps {
   bonusAdded: boolean;
   gameweek: number;
   lastUpdated?: string;
+  managerId?: number; // Add the actual manager ID from user input
 }
 
 const ManagerSummary = React.memo(function ManagerSummary({
@@ -65,6 +66,7 @@ const ManagerSummary = React.memo(function ManagerSummary({
   bonusAdded,
   gameweek,
   lastUpdated,
+  managerId,
 }: ManagerSummaryProps) {
   const { t } = useTranslation("fpl");
   if (!manager || !teamTotals) {
@@ -210,7 +212,7 @@ const ManagerSummary = React.memo(function ManagerSummary({
                 {t("fplLive.lastDeadlineBank")}
               </span>
               <span className="font-medium text-theme-primary">
-                {formatTeamValueWithCurrency(manager.last_deadline_bank || 0)}
+                £{((manager.last_deadline_bank || 0) / 10).toFixed(1)}m
               </span>
             </div>
             <div className="flex justify-between">
@@ -354,19 +356,23 @@ const ManagerSummary = React.memo(function ManagerSummary({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between text-xs text-theme-muted">
+      <div className="mt-4 pt-3 border-t border-theme-border flex items-center justify-between">
         <div className="flex items-center">
           <div
             className={`w-2 h-2 rounded-full mr-2 ${
               bonusAdded ? "bg-green-500" : "bg-yellow-500"
             }`}
           ></div>
-          {bonusAdded
-            ? t("fplLive.bonusFinalized")
-            : t("fplLive.bonusPredicted")}
+          <span className="text-xs text-theme-muted">
+            {bonusAdded
+              ? t("fplLive.bonusFinalized")
+              : t("fplLive.bonusPredicted")}
+          </span>
         </div>
-        <div>
-          {t("fplLive.managerId")} {manager.id}
+        <div className="bg-theme-secondary/10 px-3 py-1 rounded-full border border-theme-border">
+          <span className="text-xs font-medium text-theme-foreground theme-transition">
+            {t("fplLive.managerId")}: <span className="font-bold text-blue-600 dark:text-blue-400">{managerId || manager.id}</span>
+          </span>
         </div>
       </div>
     </div>

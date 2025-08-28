@@ -483,7 +483,7 @@ export default function MatchResults({
                           {homeGoals.map((goalData) => (
                             <div
                               key={`preview-home-goal-${goalData.player.id}`}
-                              className="flex items-center gap-2 text-sm"
+                              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                             >
                               <IoIosFootball className="w-4 h-4 text-green-600" />
                               <span className="font-medium text-theme-foreground theme-transition">
@@ -505,7 +505,7 @@ export default function MatchResults({
                           {homeAssists.map((assistData) => (
                             <div
                               key={`preview-home-assist-${assistData.player.id}`}
-                              className="flex items-center gap-2 text-sm"
+                              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                             >
                               <FaShoePrints className="w-4 h-4 text-blue-600" />
                               <span className="font-medium text-theme-foreground theme-transition">
@@ -529,7 +529,7 @@ export default function MatchResults({
                           {awayGoals.map((goalData) => (
                             <div
                               key={`preview-away-goal-${goalData.player.id}`}
-                              className="flex items-center gap-2 text-sm justify-end"
+                              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm justify-end"
                             >
                               {goalData.penalties > 0 && (
                                 <span className="px-1 py-0.5 bg-yellow-500 text-black text-xs rounded font-bold">
@@ -551,7 +551,7 @@ export default function MatchResults({
                           {awayAssists.map((assistData) => (
                             <div
                               key={`preview-away-assist-${assistData.player.id}`}
-                              className="flex items-center gap-2 text-sm justify-end"
+                              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm justify-end"
                             >
                               <span className="font-medium text-theme-foreground theme-transition">
                                 {assistData.player.web_name}
@@ -614,7 +614,7 @@ export default function MatchResults({
                               {homeGoals.map((goalData, idx) => (
                                 <div
                                   key={idx}
-                                  className="flex items-center justify-between p-4 bg-green-100 dark:bg-green-900/30 rounded-lg border-l-4 border-green-600"
+                                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-green-100 dark:bg-green-900/30 rounded-lg border-l-2 sm:border-l-4 border-green-600"
                                 >
                                   <div className="flex items-center gap-3">
                                     <IoIosFootball className="w-5 h-5 text-green-600" />
@@ -666,7 +666,7 @@ export default function MatchResults({
                               {homeAssists.map((assistData, idx) => (
                                 <div
                                   key={idx}
-                                  className="flex items-center justify-between p-4 bg-blue-100 dark:bg-blue-900/30 rounded-lg border-l-4 border-blue-600"
+                                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-blue-100 dark:bg-blue-900/30 rounded-lg border-l-2 sm:border-l-4 border-blue-600"
                                 >
                                   <div className="flex items-center gap-3">
                                     <FaShoePrints className="w-5 h-5 text-blue-600" />
@@ -765,7 +765,7 @@ export default function MatchResults({
                               {awayGoals.map((goalData, idx) => (
                                 <div
                                   key={idx}
-                                  className="flex items-center justify-between p-4 bg-green-100 dark:bg-green-900/30 rounded-lg border-l-4 border-green-600"
+                                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-green-100 dark:bg-green-900/30 rounded-lg border-l-2 sm:border-l-4 border-green-600"
                                 >
                                   <div className="flex items-center gap-3">
                                     <IoIosFootball className="w-5 h-5 text-green-600" />
@@ -817,7 +817,7 @@ export default function MatchResults({
                               {awayAssists.map((assistData, idx) => (
                                 <div
                                   key={idx}
-                                  className="flex items-center justify-between p-4 bg-blue-100 dark:bg-blue-900/30 rounded-lg border-l-4 border-blue-600"
+                                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-blue-100 dark:bg-blue-900/30 rounded-lg border-l-2 sm:border-l-4 border-blue-600"
                                 >
                                   <div className="flex items-center gap-3">
                                     <FaShoePrints className="w-5 h-5 text-blue-600" />

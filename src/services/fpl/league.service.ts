@@ -43,11 +43,12 @@ export class FPLLeagueService extends BaseFPLService {
     }
 
     try {
+      // Use longer cache for league data (10 minutes instead of 5)
       const data = await this.fetchWithRetry<FPLClassicLeagueResponse>(
         `/leagues-classic/${leagueId}/standings/?page_standings=${page}&page_new_entries=1`,
         {
           key: `classic_league_${leagueId}_page_${page}`,
-          ttl: this.config.cache.default_ttl,
+          ttl: this.config.cache.bootstrap_ttl, // 10 minutes
         }
       );
 
@@ -73,6 +74,69 @@ export class FPLLeagueService extends BaseFPLService {
         `Failed to fetch classic league standings for ${leagueId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'FPLLeagueService',
         'getClassicLeagueStandings',
+        error instanceof Error ? error : undefined
+      );
+    }
+  }
+
+  /**
+   * Get top N classic league standings (optimized for small counts)
+   */
+  public async getTopClassicLeagueStandings(
+    leagueId: number,
+    count = 50
+  ): Promise<FPLServiceResponse<{
+    league_info: any;
+    standings: FPLClassicLeagueEntry[];
+    total_entries: number;
+  }>> {
+    this.validateId(leagueId, 'leagueId');
+
+    // Check cache first for the exact count requested
+    const cacheKey = `top_classic_league_${leagueId}_${count}`;
+    if (this.isCacheValid(cacheKey, this.config.cache.bootstrap_ttl)) {
+      const cachedData = this.getFromCache(cacheKey);
+      if (cachedData) {
+        return {
+          success: true,
+          data: cachedData,
+          timestamp: new Date().toISOString(),
+        };
+      }
+    }
+
+    try {
+      // For top 50 or less, just get first page
+      if (count <= 50) {
+        const firstPageResponse = await this.getClassicLeagueStandings(leagueId, 1);
+        if (!firstPageResponse.success || !firstPageResponse.data) {
+          throw new Error('Failed to get first page');
+        }
+
+        const firstPageData = firstPageResponse.data;
+        const result = {
+          league_info: firstPageData.league,
+          standings: firstPageData.standings.results.slice(0, count),
+          total_entries: firstPageData.league.size || 0,
+        };
+
+        // Cache the result
+        this.setCache(cacheKey, result, this.config.cache.bootstrap_ttl);
+
+        return {
+          success: true,
+          data: result,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // For larger counts, use the original getAllClassicLeagueStandings logic
+      return this.getAllClassicLeagueStandings(leagueId, count);
+    } catch (error) {
+      throw new FPLServiceError(
+        `Failed to fetch top ${count} classic league standings for ${leagueId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'FPLLeagueService',
+        'getTopClassicLeagueStandings',
         error instanceof Error ? error : undefined
       );
     }
@@ -114,18 +178,26 @@ export class FPLLeagueService extends BaseFPLService {
         };
       }
 
-      // Fetch remaining pages
-      const pagePromises: Promise<FPLPaginatedResponse<FPLClassicLeagueResponse>>[] = [];
-      for (let page = 2; page <= totalPages; page++) {
-        pagePromises.push(this.getClassicLeagueStandings(leagueId, page));
-      }
-
-      const additionalPages = await Promise.all(pagePromises);
+      // Fetch remaining pages with limited concurrency to avoid overwhelming the API
       const allStandings: FPLClassicLeagueEntry[] = [...firstPageData.standings.results];
-
-      for (const pageResponse of additionalPages) {
-        if (pageResponse.success && pageResponse.data?.standings?.results) {
-          allStandings.push(...pageResponse.data.standings.results);
+      const batchSize = 5; // Process 5 pages at a time
+      
+      for (let i = 2; i <= totalPages; i += batchSize) {
+        const batch = [];
+        for (let j = i; j < i + batchSize && j <= totalPages; j++) {
+          batch.push(this.getClassicLeagueStandings(leagueId, j));
+        }
+        
+        const batchResults = await Promise.all(batch);
+        for (const pageResponse of batchResults) {
+          if (pageResponse.success && pageResponse.data?.standings?.results) {
+            allStandings.push(...pageResponse.data.standings.results);
+          }
+        }
+        
+        // Small delay between batches to be respectful to the API
+        if (i + batchSize <= totalPages) {
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
 

@@ -309,7 +309,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {/* Stars */}
           <div className="space-y-2">
             <h4 className="font-semibold text-green-600 dark:text-green-400 flex items-center gap-2">
@@ -381,32 +381,35 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
       {/* Analytics Charts - Structured layout as requested */}
       <div className="space-y-4 lg:space-y-6">
         {/* Row 1: Position Distribution + Points Breakdown (2 pie charts) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
           {/* 1. Position Distribution */}
-          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
-            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-sm sm:text-base text-theme-foreground mb-3 sm:mb-4 theme-transition">
               {t("fplLive.positionDistribution")}
             </h4>
-            <div className="chart-container">
+            <div className="chart-container w-full overflow-x-auto">
               <PieChart
                 series={[
                   {
                     data: positionData,
                     highlightScope: { faded: "global", highlighted: "item" },
                     faded: {
-                      innerRadius: 30,
-                      additionalRadius: -30,
+                      innerRadius: 20,
+                      additionalRadius: -20,
                       color: "gray",
                     },
                   },
                 ]}
-                height={350}
-                margin={{ top: 20, right: 100, bottom: 20, left: 20 }}
+                height={280}
+                margin={{ top: 20, right: 80, bottom: 20, left: 20 }}
                 slotProps={{
                   legend: {
                     direction: "column",
                     position: { vertical: "middle", horizontal: "right" },
                     padding: 0,
+                    itemMarkWidth: 12,
+                    itemMarkHeight: 12,
+                    labelStyle: { fontSize: "12px" },
                   },
                 }}
               />
@@ -414,28 +417,31 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </div>
 
           {/* 2. Points Breakdown */}
-          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
-            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-sm sm:text-base text-theme-foreground mb-3 sm:mb-4 theme-transition">
               {t("fplLive.pointsBreakdown")}
             </h4>
-            <div className="chart-container">
+            <div className="chart-container w-full overflow-x-auto">
               <PieChart
                 series={[
                   {
                     data: pointsData,
-                    innerRadius: 40,
-                    outerRadius: 100,
-                    paddingAngle: 3,
-                    cornerRadius: 5,
+                    innerRadius: 30,
+                    outerRadius: 80,
+                    paddingAngle: 2,
+                    cornerRadius: 3,
                   },
                 ]}
-                height={350}
-                margin={{ top: 20, right: 100, bottom: 20, left: 20 }}
+                height={280}
+                margin={{ top: 20, right: 80, bottom: 20, left: 20 }}
                 slotProps={{
                   legend: {
                     direction: "column",
                     position: { vertical: "middle", horizontal: "right" },
                     padding: 0,
+                    itemMarkWidth: 12,
+                    itemMarkHeight: 12,
+                    labelStyle: { fontSize: "12px" },
                   },
                 }}
               />
@@ -444,261 +450,307 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
         </div>
 
         {/* Row 2: Goals/Assists + Defensive Stats + Card Distribution (3 bar charts) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {/* Goals & Assists */}
-          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
-            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-sm sm:text-base text-theme-foreground mb-3 sm:mb-4 theme-transition">
               {t("fplLive.goalsAssists")}
             </h4>
-            <BarChart
-              xAxis={[
-                {
-                  scaleType: "band",
-                  data: ["Goals", "Assists"],
-                },
-              ]}
-              series={[
-                {
-                  data: [teamTotals.goals || 0, teamTotals.assists || 0],
-                  color: "#f59e0b",
-                },
-              ]}
-              height={300}
-              margin={{ top: 20, right: 20, bottom: 60, left: 60 }}
-            />
+            <div className="w-full overflow-x-auto">
+              <BarChart
+                xAxis={[
+                  {
+                    scaleType: "band",
+                    data: ["Goals", "Assists"],
+                    tickLabelStyle: { fontSize: "11px" },
+                  },
+                ]}
+                series={[
+                  {
+                    data: [teamTotals.goals || 0, teamTotals.assists || 0],
+                    color: "#f59e0b",
+                  },
+                ]}
+                height={240}
+                margin={{ top: 20, right: 15, bottom: 50, left: 40 }}
+              />
+            </div>
           </div>
 
           {/* Defensive Stats */}
-          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
-            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-sm sm:text-base text-theme-foreground mb-3 sm:mb-4 theme-transition">
               {t("fplLive.defensiveStats")}
             </h4>
-            <BarChart
-              xAxis={[
-                {
-                  scaleType: "band",
-                  data: ["Clean Sheets", "Saves"],
-                },
-              ]}
-              series={[
-                {
-                  data: [teamTotals.clean_sheets || 0, teamTotals.saves || 0],
-                  color: "#06b6d4",
-                },
-              ]}
-              height={300}
-              margin={{ top: 20, right: 20, bottom: 60, left: 60 }}
-            />
+            <div className="w-full overflow-x-auto">
+              <BarChart
+                xAxis={[
+                  {
+                    scaleType: "band",
+                    data: ["Clean Sheets", "Saves"],
+                    tickLabelStyle: { fontSize: "11px" },
+                  },
+                ]}
+                series={[
+                  {
+                    data: [teamTotals.clean_sheets || 0, teamTotals.saves || 0],
+                    color: "#06b6d4",
+                  },
+                ]}
+                height={240}
+                margin={{ top: 20, right: 15, bottom: 50, left: 40 }}
+              />
+            </div>
           </div>
 
           {/* Card Distribution with correct colors */}
-          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
-            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-sm sm:text-base text-theme-foreground mb-3 sm:mb-4 theme-transition">
               {t("fplLive.cardDistribution")}
             </h4>
-            <BarChart
-              xAxis={[
-                {
-                  scaleType: "band",
-                  data: ["Yellow Cards", "Red Cards"],
-                },
-              ]}
-              series={[
-                {
-                  data: [
-                    teamTotals.yellow_cards || 0,
-                    teamTotals.red_cards || 0,
-                  ],
-                  color: "#eab308", // Use yellow for the bar, since BarChart expects a string not an array
-                },
-              ]}
-              height={300}
-              margin={{ top: 20, right: 20, bottom: 60, left: 60 }}
-            />
+            <div className="w-full overflow-x-auto">
+              <BarChart
+                xAxis={[
+                  {
+                    scaleType: "band",
+                    data: ["Yellow Cards", "Red Cards"],
+                    tickLabelStyle: { fontSize: "11px" },
+                  },
+                ]}
+                series={[
+                  {
+                    data: [
+                      teamTotals.yellow_cards || 0,
+                      teamTotals.red_cards || 0,
+                    ],
+                    color: "#eab308",
+                  },
+                ]}
+                height={240}
+                margin={{ top: 20, right: 15, bottom: 50, left: 40 }}
+              />
+            </div>
           </div>
         </div>
 
         {/* Row 3: Performance Matrix + Gameweek Trend (2 charts) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
           {/* Performance Matrix */}
-          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
-            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-sm sm:text-base text-theme-foreground mb-3 sm:mb-4 theme-transition">
               {t("fplLive.performanceMatrix")}
             </h4>
-            <ScatterChart
-              height={350}
-              series={[
-                {
-                  data: teamStats
-                    .filter((p: any) => p.position <= 11)
-                    .map((p: any) => ({
-                      x: p.live_stats?.minutes || 0,
-                      y: p.live_stats?.total_points || 0,
-                      id: p.player_id,
-                    })),
-                  color: "#3b82f6",
-                },
-              ]}
-              margin={{ top: 20, right: 40, bottom: 60, left: 60 }}
-            />
+            <div className="w-full overflow-x-auto">
+              <ScatterChart
+                height={280}
+                series={[
+                  {
+                    data: teamStats
+                      .filter((p: any) => p.position <= 11)
+                      .map((p: any) => ({
+                        x: p.live_stats?.minutes || 0,
+                        y: p.live_stats?.total_points || 0,
+                        id: p.player_id,
+                      })),
+                    color: "#3b82f6",
+                  },
+                ]}
+                margin={{ top: 20, right: 30, bottom: 50, left: 50 }}
+                xAxis={[{ tickLabelStyle: { fontSize: "11px" } }]}
+                yAxis={[{ tickLabelStyle: { fontSize: "11px" } }]}
+              />
+            </div>
           </div>
 
           {/* Gameweek Trend */}
-          <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
-            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+          <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-sm sm:text-base text-theme-foreground mb-3 sm:mb-4 theme-transition">
               {t("fplLive.gameweekTrend")}
             </h4>
-            <LineChart
-              xAxis={[{ data: trendData.gameweeks }]}
-              series={[
-                {
-                  data: trendData.points,
-                  color: "#3b82f6",
-                  curve: "monotoneX",
-                },
-              ]}
-              height={350}
-              margin={{ top: 20, right: 40, bottom: 60, left: 60 }}
-            />
+            <div className="w-full overflow-x-auto">
+              <LineChart
+                xAxis={[{ 
+                  data: trendData.gameweeks,
+                  tickLabelStyle: { fontSize: "11px" }
+                }]}
+                series={[
+                  {
+                    data: trendData.points,
+                    color: "#3b82f6",
+                    curve: "monotoneX",
+                  },
+                ]}
+                height={280}
+                margin={{ top: 20, right: 30, bottom: 50, left: 50 }}
+                yAxis={[{ tickLabelStyle: { fontSize: "11px" } }]}
+              />
+            </div>
           </div>
         </div>
 
         {/* Row 4: Captain Points History (full width) */}
-        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+        <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
           <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
             {t("fplLive.captainPoints")}
           </h4>
-          <BarChart
-            xAxis={[
-              {
-                scaleType: "band",
-                data: captainData.gameweeks.map(gw => `GW${gw}`),
-                tickLabelStyle: {
-                  angle: 0,
-                  fontSize: 10,
+          <div className="w-full overflow-x-auto">
+            <BarChart
+              xAxis={[
+                {
+                  scaleType: "band",
+                  data: captainData.gameweeks.map(gw => `GW${gw}`),
+                  tickLabelStyle: {
+                    angle: 0,
+                    fontSize: 10,
+                  },
                 },
-              },
-            ]}
-            series={[
-              {
-                data: captainData.captainPoints,
-                color: "#8b5cf6", // Purple color for captain
-              },
-            ]}
-            height={350}
-            margin={{ top: 20, right: 20, bottom: 40, left: 60 }}
-          />
+              ]}
+              series={[
+                {
+                  data: captainData.captainPoints,
+                  color: "#8b5cf6",
+                },
+              ]}
+              height={280}
+              margin={{ top: 20, right: 15, bottom: 40, left: 50 }}
+            />
+          </div>
         </div>
 
         {/* 4. Team Value History */}
-        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+        <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
           <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
             {t("fplLive.teamValueHistory")}
           </h4>
-          <LineChart
-            xAxis={[{ data: valueData.weeks }]}
-            series={[
-              {
-                data: valueData.values,
-                color: valueData.color,
-                area: true,
-              },
-            ]}
-            height={400}
-            margin={{ top: 20, right: 40, bottom: 60, left: 60 }}
-          />
+          <div className="w-full overflow-x-auto">
+            <LineChart
+              xAxis={[{ 
+                data: valueData.weeks,
+                tickLabelStyle: { fontSize: "11px" }
+              }]}
+              series={[
+                {
+                  data: valueData.values,
+                  color: valueData.color,
+                  area: true,
+                },
+              ]}
+              height={300}
+              margin={{ top: 20, right: 30, bottom: 50, left: 50 }}
+              yAxis={[{ tickLabelStyle: { fontSize: "11px" } }]}
+            />
+          </div>
         </div>
 
         {/* 5. Player Minutes - Starting XI */}
-        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+        <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
           <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
             {t("fplLive.playerMinutes")}
           </h4>
-          <BarChart
-            xAxis={[
-              {
-                scaleType: "band",
-                data: teamStats
-                  .filter((p: any) => p.position <= 11)
-                  .map(
-                    (p: any) => p.player?.web_name?.slice(0, 8) || "Unknown"
-                  ),
-              },
-            ]}
-            series={[
-              {
-                data: teamStats
-                  .filter((p: any) => p.position <= 11)
-                  .map((p: any) => p.live_stats?.minutes || 0),
-                color: "#8b5cf6",
-              },
-            ]}
-            height={400}
-            margin={{ top: 20, right: 40, bottom: 80, left: 60 }}
-          />
+          <div className="w-full overflow-x-auto">
+            <BarChart
+              xAxis={[
+                {
+                  scaleType: "band",
+                  data: teamStats
+                    .filter((p: any) => p.position <= 11)
+                    .map(
+                      (p: any) => p.player?.web_name?.slice(0, 6) || "Unknown"
+                    ),
+                  tickLabelStyle: {
+                    angle: -45,
+                    fontSize: 10,
+                  },
+                },
+              ]}
+              series={[
+                {
+                  data: teamStats
+                    .filter((p: any) => p.position <= 11)
+                    .map((p: any) => p.live_stats?.minutes || 0),
+                  color: "#8b5cf6",
+                },
+              ]}
+              height={320}
+              margin={{ top: 20, right: 30, bottom: 70, left: 50 }}
+            />
+          </div>
         </div>
 
         {/* 7. BPS Distribution - All Starting XI */}
-        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+        <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
           <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
             {t("fplLive.bpsDistribution")}
           </h4>
-          <BarChart
-            xAxis={[
-              {
-                scaleType: "band",
-                data: teamStats
-                  .filter((p: any) => p.position <= 11)
-                  .sort((a: any, b: any) => a.position - b.position)
-                  .map(
-                    (p: any) => p.player?.web_name?.slice(0, 10) || "Unknown"
-                  ),
-              },
-            ]}
-            series={[
-              {
-                data: teamStats
-                  .filter((p: any) => p.position <= 11)
-                  .sort((a: any, b: any) => a.position - b.position)
-                  .map((p: any) => p.live_stats?.bps || 0),
-                color: "#10b981",
-              },
-            ]}
-            height={400}
-            margin={{ top: 20, right: 40, bottom: 80, left: 60 }}
-          />
+          <div className="w-full overflow-x-auto">
+            <BarChart
+              xAxis={[
+                {
+                  scaleType: "band",
+                  data: teamStats
+                    .filter((p: any) => p.position <= 11)
+                    .sort((a: any, b: any) => a.position - b.position)
+                    .map(
+                      (p: any) => p.player?.web_name?.slice(0, 6) || "Unknown"
+                    ),
+                  tickLabelStyle: {
+                    angle: -45,
+                    fontSize: 10,
+                  },
+                },
+              ]}
+              series={[
+                {
+                  data: teamStats
+                    .filter((p: any) => p.position <= 11)
+                    .sort((a: any, b: any) => a.position - b.position)
+                    .map((p: any) => p.live_stats?.bps || 0),
+                  color: "#10b981",
+                },
+              ]}
+              height={320}
+              margin={{ top: 20, right: 30, bottom: 70, left: 50 }}
+            />
+          </div>
         </div>
 
         {/* 8. ICT Index - All Starting XI */}
-        <div className="bg-theme-card rounded-md p-4 lg:p-6 border-theme-border theme-transition">
+        <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
           <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
             {t("fplLive.ictIndex")}
           </h4>
-          <LineChart
-            xAxis={[
-              {
-                data: teamStats
-                  .filter((p: any) => p.position <= 11)
-                  .sort((a: any, b: any) => a.position - b.position)
-                  .map(
-                    (p: any) => p.player?.web_name?.slice(0, 12) || "Unknown"
-                  ),
-                scaleType: "point",
-              },
-            ]}
-            series={[
-              {
-                data: teamStats
-                  .filter((p: any) => p.position <= 11)
-                  .sort((a: any, b: any) => a.position - b.position)
-                  .map((p: any) => p.live_stats?.ict_index || 0),
-                color: "#f59e0b",
-                curve: "monotoneX",
-              },
-            ]}
-            height={400}
-            margin={{ top: 20, right: 40, bottom: 80, left: 60 }}
-          />
+          <div className="w-full overflow-x-auto">
+            <LineChart
+              xAxis={[
+                {
+                  data: teamStats
+                    .filter((p: any) => p.position <= 11)
+                    .sort((a: any, b: any) => a.position - b.position)
+                    .map(
+                      (p: any) => p.player?.web_name?.slice(0, 6) || "Unknown"
+                    ),
+                  scaleType: "point",
+                  tickLabelStyle: {
+                    angle: -45,
+                    fontSize: 10,
+                  },
+                },
+              ]}
+              series={[
+                {
+                  data: teamStats
+                    .filter((p: any) => p.position <= 11)
+                    .sort((a: any, b: any) => a.position - b.position)
+                    .map((p: any) => p.live_stats?.ict_index || 0),
+                  color: "#f59e0b",
+                  curve: "monotoneX",
+                },
+              ]}
+              height={320}
+              margin={{ top: 20, right: 30, bottom: 70, left: 50 }}
+              yAxis={[{ tickLabelStyle: { fontSize: "10px" } }]}
+            />
+          </div>
         </div>
       </div>
     </div>
