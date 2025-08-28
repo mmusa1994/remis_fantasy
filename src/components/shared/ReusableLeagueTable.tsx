@@ -7,6 +7,7 @@ import { GiDiamondTrophy } from "react-icons/gi";
 import { LuGift } from "react-icons/lu";
 import { FaTshirt } from "react-icons/fa";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 export interface TablePlayer {
   id: string;
@@ -56,6 +57,7 @@ export default function ReusableLeagueTable({
   className = "",
 }: ReusableLeagueTableProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   const getLeagueColors = (leagueType: string) => {
     switch (leagueType) {
@@ -293,11 +295,12 @@ export default function ReusableLeagueTable({
           {leagueName}
         </h2>
         <p className="text-center text-theme-text-secondary">
-          Prikaz rangliste prvih - {players.length} igrača
+          {t("premiumLeague.subtitle").replace("- 50", `- ${players.length}`)}
         </p>
         <div className="text-center text-sm text-theme-text-muted mt-2">
-          Nagradni fond: {totalPrizeFundKM} KM / {totalPrizeFundEUR} € |
-          Kotizacija: {entryFeeKM} KM / {entryFeeEUR} €
+          {t("premiumLeague.prizePool")}: {totalPrizeFundKM} KM /{" "}
+          {totalPrizeFundEUR} € |{t("premiumLeague.entryFee")}: {entryFeeKM} KM
+          / {entryFeeEUR} €
         </div>
       </motion.div>
 
@@ -309,7 +312,7 @@ export default function ReusableLeagueTable({
         transition={{ duration: 0.5, delay: 0.3 }}
       >
         <h3 className="text-xl font-bold text-center text-${colors.text} mb-4">
-          🏆 Nagrade za prvih {prizes.length} pozicija
+          🏆 {t("premiumLeague.prizes")}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
@@ -552,6 +555,21 @@ export default function ReusableLeagueTable({
                 return `${prize.amountKM} KM / ${prize.amountEUR} €`;
               }
               if (prize.description && prize.description !== "") {
+                // Check for special prize descriptions and use translations
+                if (
+                  prize.description.includes("ORIGINAL DRES") ||
+                  prize.description.includes("ORIGINAL JERSEY") ||
+                  prize.description === "ORIGINAL_JERSEY_PLACEHOLDER"
+                ) {
+                  return t("prizes.originalJersey");
+                }
+                if (
+                  prize.description.includes("BESPLATNO UČEŠĆE") ||
+                  prize.description.includes("FREE ENTRY") ||
+                  prize.description === "FREE_ENTRY_PLACEHOLDER"
+                ) {
+                  return t("prizes.freeEntry");
+                }
                 return prize.description;
               }
               return "";
@@ -575,7 +593,12 @@ export default function ReusableLeagueTable({
                       leagueType
                     )}`}
                   >
-                    {prize.position}. mjesto
+                    {prize.position === 1 && t("premiumLeague.firstPlace")}
+                    {prize.position === 2 && t("premiumLeague.secondPlace")}
+                    {prize.position === 3 && t("premiumLeague.thirdPlace")}
+                    {prize.position === 4 && t("premiumLeague.fourthPlace")}
+                    {prize.position === 5 && t("premiumLeague.fifthPlace")}
+                    {prize.position > 5 && `${prize.position}. mjesto`}
                   </div>
                   <div className="text-xs text-theme-text-secondary truncate">
                     {getPrizeDescription(prize)}
@@ -610,7 +633,9 @@ export default function ReusableLeagueTable({
             colors.headerBg
           } border-${colors.border} text-${colors.text}`}
         >
-          <div className="col-span-1 text-center">#</div>
+          <div className="col-span-1 text-center">
+            {t("premiumLeague.tableHeaders.rank")}
+          </div>
           <div
             className={
               leagueType === "h2h" || leagueType === "h2h2"
@@ -618,7 +643,7 @@ export default function ReusableLeagueTable({
                 : "col-span-4 md:col-span-3"
             }
           >
-            Ime i Prezime
+            {t("premiumLeague.tableHeaders.name")}
           </div>
           <div
             className={
@@ -627,18 +652,22 @@ export default function ReusableLeagueTable({
                 : "col-span-4 md:col-span-5"
             }
           >
-            Tim
+            {t("premiumLeague.tableHeaders.team")}
           </div>
           {leagueType === "h2h" || leagueType === "h2h2" ? (
             <>
               <div className="col-span-1 text-center text-xs">W/D/L</div>
               <div className="col-span-2 text-center text-xs">
-                Overall Poeni
+                Overall {t("premiumLeague.tableHeaders.points")}
               </div>
-              <div className="col-span-1 text-center text-xs">H2H Poeni</div>
+              <div className="col-span-1 text-center text-xs">
+                H2H {t("premiumLeague.tableHeaders.points")}
+              </div>
             </>
           ) : (
-            <div className="col-span-3 text-center">Poeni</div>
+            <div className="col-span-3 text-center">
+              {t("premiumLeague.tableHeaders.points")}
+            </div>
           )}
         </div>
 
@@ -806,7 +835,8 @@ export default function ReusableLeagueTable({
         <div
           className={`p-2 md:p-4 text-center text-xs md:text-sm border-t-2 bg-theme-secondary border-${colors.border} text-theme-text-muted`}
         >
-          Poslednje ažurirano: {new Date().toLocaleDateString("sr-RS")}
+          {t("premiumLeague.lastUpdated")}:{" "}
+          {new Date().toLocaleDateString("sr-RS")}
         </div>
       </motion.div>
     </motion.div>

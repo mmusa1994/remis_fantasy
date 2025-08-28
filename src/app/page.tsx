@@ -256,12 +256,12 @@ export default function Home() {
                       ? league.id === "premier-league"
                         ? "linear-gradient(135deg, rgba(31,41,55,0.95) 0%, rgba(147,51,234,0.1) 100%)"
                         : league.id === "champions-league"
-                        ? "linear-gradient(135deg, rgba(31,41,55,0.95) 0%, rgba(59,130,246,0.1) 100%)"
+                        ? "linear-gradient(135deg, rgba(31,41,55,0.95) 0%, rgba(59,130,246,0.15) 100%)"
                         : "linear-gradient(135deg, rgba(31,41,55,0.95) 0%, rgba(239,68,68,0.1) 100%)"
                       : league.id === "premier-league"
                       ? "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(147,51,234,0.05) 100%)"
                       : league.id === "champions-league"
-                      ? "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(59,130,246,0.05) 100%)"
+                      ? "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(59,130,246,0.08) 100%)"
                       : "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(239,68,68,0.05) 100%)",
                     borderColor:
                       league.id === "premier-league"
@@ -273,7 +273,7 @@ export default function Home() {
                       league.id === "premier-league"
                         ? "0 0 20px rgba(147,51,234,0.3)"
                         : league.id === "champions-league"
-                        ? "0 0 20px rgba(59,130,246,0.3)"
+                        ? "0 0 25px rgba(59,130,246,0.4), 0 0 50px rgba(59,130,246,0.2)"
                         : "0 0 20px rgba(239,68,68,0.3)",
                   }}
                 >
@@ -283,13 +283,26 @@ export default function Home() {
                   >
                     <div className="mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
                       {league.id === "champions-league" ? (
-                        <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
+                        <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center relative">
+                          <div
+                            className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse"
+                            style={{
+                              background: isDark
+                                ? "radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(59,130,246,0.1) 50%, transparent 100%)"
+                                : "radial-gradient(circle, rgba(59,130,246,0.4) 0%, rgba(59,130,246,0.2) 50%, transparent 100%)",
+                            }}
+                          />
                           <Image
                             src="/images/logos/cl-logo.png"
                             alt="Champions League"
                             width={64}
                             height={64}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-contain relative z-10 drop-shadow-lg"
+                            style={{
+                              filter: isDark
+                                ? "drop-shadow(0 0 8px rgba(59,130,246,0.6)) brightness(1.2)"
+                                : "drop-shadow(0 0 12px rgba(59,130,246,0.8)) brightness(1.1) contrast(1.2)",
+                            }}
                           />
                         </div>
                       ) : league.id === "f1-fantasy" ? (

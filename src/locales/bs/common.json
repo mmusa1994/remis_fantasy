@@ -135,5 +135,38 @@
       "primaryButton": "Pridruži se Ligi",
       "secondaryButton": "Pogledaj Nagrade"
     }
+  },
+  "fplLive": {
+    "premiumLeague": "Premium Liga",
+    "standardLeague": "Standardna Liga",
+    "h2hLeague": "Glava u Glavu Liga",
+    "h2h2League": "H2H Liga",
+    "freeLeague": "Besplatna Liga"
+  },
+  "premiumLeague": {
+    "title": "Premium Liga",
+    "subtitle": "Prikaz rangliste prvih - 50 igrača",
+    "prizePool": "Nagradni fond",
+    "entryFee": "Kotizacija",
+    "prizes": "Nagrade za prvih 5 pozicija",
+    "firstPlace": "1. mjesto",
+    "secondPlace": "2. mjesto",
+    "thirdPlace": "3. mjesto",
+    "fourthPlace": "4. mjesto",
+    "fifthPlace": "5. mjesto",
+    "originalJersey": "ORIGINAL DRES 25/26 PL",
+    "freeEntry": "BESPLATNO UČEŠĆE NAREDNE SEZONE",
+    "tableHeaders": {
+      "rank": "#",
+      "name": "Ime i Prezime",
+      "team": "Tim",
+      "points": "Poeni"
+    },
+    "lastUpdated": "Poslednje ažurirano"
+  },
+  "prizes": {
+    "originalJersey": "ORIGINAL DRES 25/26 PL",
+    "freeEntry": "BESPLATNO UČEŠĆE NAREDNE SEZONE",
+    "freeEntryShort": "Free Entry"
   }
 }

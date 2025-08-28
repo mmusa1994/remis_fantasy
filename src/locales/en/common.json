@@ -135,5 +135,38 @@
       "primaryButton": "Join League",
       "secondaryButton": "View Prizes"
     }
+  },
+  "fplLive": {
+    "premiumLeague": "Premium League",
+    "standardLeague": "Standard League",
+    "h2hLeague": "H2H League",
+    "h2h2League": "H2H2 League",
+    "freeLeague": "Free League"
+  },
+  "premiumLeague": {
+    "title": "Premium League",
+    "subtitle": "Display of rankings for top - 50 players",
+    "prizePool": "Prize Pool",
+    "entryFee": "Entry Fee",
+    "prizes": "Prizes for top 5 positions",
+    "firstPlace": "1st Place",
+    "secondPlace": "2nd Place",
+    "thirdPlace": "3rd Place",
+    "fourthPlace": "4th Place",
+    "fifthPlace": "5th Place",
+    "originalJersey": "ORIGINAL JERSEY 25/26 PL",
+    "freeEntry": "FREE ENTRY NEXT SEASON",
+    "tableHeaders": {
+      "rank": "#",
+      "name": "Name and Surname",
+      "team": "Team",
+      "points": "Points"
+    },
+    "lastUpdated": "Last Updated"
+  },
+  "prizes": {
+    "originalJersey": "ORIGINAL JERSEY 25/26 PL",
+    "freeEntry": "FREE ENTRY NEXT SEASON",
+    "freeEntryShort": "Free Entry"
   }
 }
