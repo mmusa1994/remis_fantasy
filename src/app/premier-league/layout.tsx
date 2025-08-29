@@ -19,7 +19,7 @@ export default function PremierLeagueLayout({
     },
     { 
       name: t("tables"), 
-      subtitle: "Mini Liga",
+      subtitle: t("miniLeagues"),
       href: "/premier-league/tabele",
       icon: "BarChart3",
       showOnMobile: true 
@@ -70,7 +70,7 @@ export default function PremierLeagueLayout({
         baseColor="purple"
         leagueBasePath="/premier-league"
       />
-      <main className="relative pt-14 md:pt-16">{children}</main>
+      <main className="relative pt-28 sm:pt-32 md:pt-36">{children}</main>
     </div>
   );
 }

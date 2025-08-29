@@ -83,21 +83,21 @@ export default function Diamond() {
   };
 
   const findBestDifferentials = (players: any[]): Player[] => {
-    // Find players with good recent form but low ownership
     return players
       .filter(player => 
-        player.selected_by_percent < 10 && // Low ownership (under 10%)
-        player.form > 3 && // Good recent form
-        player.total_points > 20 && // Decent total points
-        player.now_cost < 100 // Under 10.0m
+        player.selected_by_percent < 15 && // Increased to catch Timber/Calafiori (under 15%)
+        parseFloat(player.form) >= 5.0 && // Lowered to catch more quality players
+        player.total_points >= 12 && // Lowered to catch more options
+        player.minutes >= 60 // Lowered minute requirement
       )
       .sort((a, b) => {
-        // Sort by form * points per game ratio, considering ownership
-        const scoreA = (parseFloat(a.form) * a.total_points) / (a.selected_by_percent + 1);
-        const scoreB = (parseFloat(b.form) * b.total_points) / (b.selected_by_percent + 1);
+        // Enhanced scoring: prioritize form and total points, penalize high ownership
+        const scoreA = (parseFloat(a.form) * 3 + a.total_points * 0.8) / Math.max(1, a.selected_by_percent / 5);
+        const scoreB = (parseFloat(b.form) * 3 + b.total_points * 0.8) / Math.max(1, b.selected_by_percent / 5);
+        
         return scoreB - scoreA;
       })
-      .slice(0, 3);
+      .slice(0, 5);
   };
 
   const organizeTeamNews = (players: any[]): TeamNews => {
@@ -275,7 +275,7 @@ function DifferentialsSection({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {differentials.map((player, index) => (
           <div
             key={player.id}

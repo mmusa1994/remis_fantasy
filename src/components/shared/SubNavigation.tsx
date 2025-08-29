@@ -174,10 +174,13 @@ export default function SubNavigation({
 
   const colors = colorConfig[baseColor] || colorConfig["purple"];
 
-  // Filter visible items for mobile (only showOnMobile: true)
-  const mobileItems = allItems.filter(item => item.showOnMobile);
+  // Filter visible items for mobile
+  // If we have 4 or fewer items total, show all on mobile
+  // Otherwise, use the showOnMobile logic
+  const shouldShowAllOnMobile = allItems.length <= 4;
+  const mobileItems = shouldShowAllOnMobile ? allItems : allItems.filter(item => item.showOnMobile);
   const desktopItems = allItems;
-  const dropdownItems = allItems.filter(item => !item.showOnMobile);
+  const dropdownItems = shouldShowAllOnMobile ? [] : allItems.filter(item => !item.showOnMobile);
   const hasDropdownItems = dropdownItems.length > 0;
 
   return (

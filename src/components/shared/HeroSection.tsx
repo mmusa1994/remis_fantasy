@@ -102,7 +102,6 @@ export default function HeroSection({
           shadow: "bg-purple-100/10 border-2 border-purple-500/30",
           shadowStyle: {
             background: "rgba(139, 92, 246, 0.1)",
-            border: "2px solid rgba(139, 92, 246, 0.3)",
             boxShadow: "0 20px 40px rgba(139, 92, 246, 0.4)",
           },
         },
@@ -116,7 +115,6 @@ export default function HeroSection({
           shadow: "bg-purple-900/10 border-2 border-purple-400/30",
           shadowStyle: {
             background: "rgba(196, 181, 253, 0.1)",
-            border: "2px solid rgba(196, 181, 253, 0.3)",
             boxShadow: "0 20px 40px rgba(196, 181, 253, 0.5)",
           },
         },
@@ -139,7 +137,6 @@ export default function HeroSection({
           shadow: "bg-blue-100/10 border-2 border-blue-500/30",
           shadowStyle: {
             background: "rgba(59, 130, 246, 0.1)",
-            border: "2px solid rgba(59, 130, 246, 0.3)",
             boxShadow: "0 20px 40px rgba(59, 130, 246, 0.4)",
           },
         },
@@ -153,7 +150,6 @@ export default function HeroSection({
           shadow: "bg-blue-900/10 border-2 border-blue-400/30",
           shadowStyle: {
             background: "rgba(147, 197, 253, 0.1)",
-            border: "2px solid rgba(147, 197, 253, 0.3)",
             boxShadow: "0 20px 40px rgba(147, 197, 253, 0.5)",
           },
         },
@@ -172,7 +168,6 @@ export default function HeroSection({
           shadow: "bg-red-100/10 border-2 border-red-500/30",
           shadowStyle: {
             background: "rgba(239, 68, 68, 0.1)",
-            border: "2px solid rgba(239, 68, 68, 0.3)",
             boxShadow: "0 20px 40px rgba(239, 68, 68, 0.4)",
           },
         },
@@ -186,7 +181,6 @@ export default function HeroSection({
           shadow: "bg-red-900/10 border-2 border-red-400/30",
           shadowStyle: {
             background: "rgba(252, 165, 165, 0.1)",
-            border: "2px solid rgba(252, 165, 165, 0.3)",
             boxShadow: "0 20px 40px rgba(252, 165, 165, 0.5)",
           },
         },
@@ -205,7 +199,6 @@ export default function HeroSection({
         shadow: "bg-gray-100/10 border-2 border-gray-500/30",
         shadowStyle: {
           background: "rgba(107, 114, 128, 0.1)",
-          border: "2px solid rgba(107, 114, 128, 0.3)",
           boxShadow: "0 20px 40px rgba(107, 114, 128, 0.4)",
         },
       },
@@ -219,7 +212,6 @@ export default function HeroSection({
         shadow: "bg-gray-900/10 border-2 border-gray-400/30",
         shadowStyle: {
           background: "rgba(156, 163, 175, 0.1)",
-          border: "2px solid rgba(156, 163, 175, 0.3)",
           boxShadow: "0 20px 40px rgba(156, 163, 175, 0.5)",
         },
       },
@@ -232,6 +224,10 @@ export default function HeroSection({
   return (
     <div
       className={`relative min-h-[60vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden py-8 md:py-12 ${className}`}
+      style={{
+        background: `linear-gradient(135deg, ${themeColors.shadowStyle.background}, transparent, ${themeColors.shadowStyle.background})`,
+        boxShadow: `inset ${themeColors.shadowStyle.boxShadow}`,
+      }}
     >
       {/* Background Image */}
       {backgroundImage && (
@@ -253,8 +249,7 @@ export default function HeroSection({
 
       {/* Content */}
       <div
-        className={`relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center rounded-3xl p-8`}
-        style={themeColors.shadowStyle}
+        className={`relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center`}
       >
         {/* Logo */}
         {logoPath && (
