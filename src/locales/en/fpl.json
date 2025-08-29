@@ -266,5 +266,37 @@
     "points": "Points",
     "doubtful": "Doubtful",
     "injured": "Injured"
+  },
+
+  "prices": {
+    "title": "LiveFPL Price Change Predictor",
+    "subtitle": "These are predicted rises and falls to take place at 1:30 am GMT tonight",
+    "loading": "Loading price predictions...",
+    "loadingDescription": "Fetching latest price change predictions",
+    "nextUpdate": "Next price change countdown",
+    "updateInfo": "Price changes occur at 1:30 am GMT daily",
+    "predictedRises": "Predicted Rises",
+    "predictedFalls": "Predicted Falls", 
+    "totalPredictions": "Total Players",
+    "targetReached": "Target Reached",
+    "searchPlayer": "Search for Player",
+    "allTeams": "All Teams",
+    "highOwnership": "High ownership only",
+    "yourTeam": "Your Team",
+    "watchlist": "Watchlist",
+    "alreadyReachedTarget": "Already reached target",
+    "projectedToReachTarget": "Projected to reach target",
+    "othersWhoWillBeClose": "Others who will be close (by end of day)",
+    "noPlayersFound": "No players found",
+    "tryAdjustingFilters": "Try adjusting your search filters",
+    "infoFooter": "This page predicts players who should rise/fall tonight. +100% -> rise, -100% -> fall. Click any shirt for full player info.",
+    "playerProgressNow": "Progress Now",
+    "playerPrediction": "Prediction",
+    "progressPerHour": "Progress per hr",
+    "tonight": "Tonight",
+    "tomorrow": "Tomorrow",
+    "moreThan2Days": ">2 days",
+    "owned": "Owned",
+    "form": "Form"
   }
 }

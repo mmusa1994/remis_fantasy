@@ -12,13 +12,14 @@ export default function PremierLeagueLayout({
 
   const premierLeagueNavItems = [
     { 
-      name: "",
+      name: t("home"),
       href: "/premier-league",
       icon: "TbHome2",
       showOnMobile: true
     },
     { 
       name: t("tables"), 
+      subtitle: "Mini Liga",
       href: "/premier-league/tabele",
       icon: "BarChart3",
       showOnMobile: true 
@@ -31,10 +32,16 @@ export default function PremierLeagueLayout({
       showOnMobile: true
     },
     {
+      name: t("prices"),
+      href: "/premier-league/cijene",
+      icon: "DollarSign",
+      showOnMobile: true
+    },
+    {
       name: t("diamond"),
       href: "/premier-league/diamond",
       icon: "GrDiamond",
-      showOnMobile: true
+      showOnMobile: false
     },
     { 
       name: t("prizes"), 

@@ -246,5 +246,37 @@
     "points": "Bodovi",
     "doubtful": "Upitni",
     "injured": "Nedostaju"
+  },
+
+  "prices": {
+    "title": "LiveFPL Prediktor Promjene Cijene",
+    "subtitle": "Ovo su predviđena poskupljenja i jeftinjenja koja će se desiti večeras u 1:30 GMT",
+    "loading": "Učitavanje predviđanja cijena...",
+    "loadingDescription": "Dohvaćanje najnovijih predviđanja promjene cijene",
+    "nextUpdate": "Odbrojavanja do sljedeće promjene cijene",
+    "updateInfo": "Promjene cijena se dešavaju dnevno u 1:30 GMT",
+    "predictedRises": "Predviđena Poskupljenja",
+    "predictedFalls": "Predviđena Jeftinjenja",
+    "totalPredictions": "Ukupno Igrača",
+    "targetReached": "Cilj Postignut",
+    "searchPlayer": "Pretražuj Igrače",
+    "allTeams": "Svi Timovi",
+    "highOwnership": "Samo visoko vlasništvo",
+    "yourTeam": "Vaš Tim",
+    "watchlist": "Lista Praćenja",
+    "alreadyReachedTarget": "Već dostigao cilj",
+    "projectedToReachTarget": "Projicirano da će dosegnuti cilj",
+    "othersWhoWillBeClose": "Ostali koji će biti blizu (do kraja dana)",
+    "noPlayersFound": "Nema pronađenih igrača",
+    "tryAdjustingFilters": "Probajte prilagoditi filtere pretrage",
+    "infoFooter": "Ova stranica predviđa igrače koji bi trebali rasti/padati večeras. +100% -> rast, -100% -> pad. Kliknite bilo koji dres za potpune informacije o igraču.",
+    "playerProgressNow": "Trenutni Progres",
+    "playerPrediction": "Predviđanje",
+    "progressPerHour": "Progres po satu",
+    "tonight": "Večeras",
+    "tomorrow": "Sutra",
+    "moreThan2Days": ">2 dana",
+    "owned": "Posjeduje",
+    "form": "Forma"
   }
 }

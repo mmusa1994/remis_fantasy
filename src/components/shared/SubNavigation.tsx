@@ -10,7 +10,8 @@ import {
   Activity, 
   Trophy, 
   UserPlus, 
-  Camera 
+  Camera,
+  DollarSign
 } from "lucide-react";
 import { TbHome2 } from "react-icons/tb";
 import { GrDiamond } from "react-icons/gr";
@@ -35,6 +36,7 @@ interface NavItem {
   name: string;
   href: string;
   icon?: string;
+  subtitle?: string;
   showOnMobile?: boolean;
   badge?: {
     color: "red" | "green" | "blue" | "orange" | "purple";
@@ -56,6 +58,7 @@ const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = 
   Trophy,
   UserPlus,
   Camera,
+  DollarSign,
 };
 
 const getIcon = (iconName?: string) => {
@@ -207,23 +210,30 @@ export default function SubNavigation({
                       : `text-gray-600 ${colors.hover.light}`
                   }`}
                 >
-                  <div className="flex items-center space-x-2">
-                    {IconComponent && <IconComponent className="w-4 h-4" />}
-                    {item.name && <span>{item.name}</span>}
-                    {item.badge && (
-                      <span
-                        className={`inline-block w-2 h-2 rounded-full ${
-                          item.badge.color === "red"
-                            ? "bg-red-500"
-                            : item.badge.color === "green"
-                            ? "bg-green-500"
-                            : item.badge.color === "blue"
-                            ? "bg-blue-500"
-                            : item.badge.color === "orange"
-                            ? "bg-orange-500"
-                            : "bg-purple-500"
-                        } ${item.badge.pulse ? "animate-pulse" : ""}`}
-                      />
+                  <div className="flex flex-col items-center space-y-0.5">
+                    <div className="flex items-center space-x-2">
+                      {IconComponent && <IconComponent className="w-4 h-4" />}
+                      {item.name && <span>{item.name}</span>}
+                      {item.badge && (
+                        <span
+                          className={`inline-block w-2 h-2 rounded-full ${
+                            item.badge.color === "red"
+                              ? "bg-red-500"
+                              : item.badge.color === "green"
+                              ? "bg-green-500"
+                              : item.badge.color === "blue"
+                              ? "bg-blue-500"
+                              : item.badge.color === "orange"
+                              ? "bg-orange-500"
+                              : "bg-purple-500"
+                          } ${item.badge.pulse ? "animate-pulse" : ""}`}
+                        />
+                      )}
+                    </div>
+                    {item.subtitle && (
+                      <span className="text-xs text-theme-text-secondary opacity-75">
+                        {item.subtitle}
+                      </span>
                     )}
                   </div>
                   {isActive && (
