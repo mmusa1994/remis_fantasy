@@ -245,7 +245,7 @@
     "price": "Cijena",
     "points": "Bodovi",
     "doubtful": "Upitni",
-    "injured": "Nedostaju"
+    "injured": "Povrjeđeni (Nedostaju)"
   },
 
   "prices": {
@@ -269,7 +269,7 @@
     "othersWhoWillBeClose": "Ostali koji će biti blizu (do kraja dana)",
     "noPlayersFound": "Nema pronađenih igrača",
     "tryAdjustingFilters": "Probajte prilagoditi filtere pretrage",
-    "infoFooter": "Ova stranica predviđa igrače koji bi trebali rasti/padati večeras. +100% -> rast, -100% -> pad. Kliknite bilo koji dres za potpune informacije o igraču.",
+    "infoFooter": "Ova stranica predviđa igrače koji bi trebali rasti/padati večeras. +100% -> rast, -100% -> pad.",
     "playerProgressNow": "Trenutni Progres",
     "playerPrediction": "Predviđanje",
     "progressPerHour": "Progres po satu",

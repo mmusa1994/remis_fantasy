@@ -29,6 +29,7 @@ interface InjuredPlayer {
   team: number;
   element_type: number;
   chance_of_playing_this_round: number | null;
+  chance_of_playing_next_round: number | null;
   news: string;
   status: string;
 }
@@ -110,22 +111,32 @@ export default function Diamond() {
 
     players.forEach((player: any) => {
       const chanceOfPlaying = player.chance_of_playing_this_round;
+      const chanceOfPlayingNext = player.chance_of_playing_next_round;
       const hasNews = player.news && player.news.trim() !== "";
       
-      if (hasNews || chanceOfPlaying !== null) {
+      // Include players with news, injury status, or playing chance issues
+      if (hasNews || chanceOfPlaying !== null || chanceOfPlayingNext !== null || 
+          player.status !== "a") {
         const playerData = {
           id: player.id,
           web_name: player.web_name,
           team: player.team,
           element_type: player.element_type,
           chance_of_playing_this_round: chanceOfPlaying,
+          chance_of_playing_next_round: chanceOfPlayingNext,
           news: player.news || "",
           status: player.status
         };
 
-        if (chanceOfPlaying === 0 || player.status === "i") {
+        // Injured: 0% chance or injured status or unavailable
+        if (chanceOfPlaying === 0 || chanceOfPlayingNext === 0 || 
+            player.status === "i" || player.status === "u") {
           news[player.team].injured.push(playerData);
-        } else if (chanceOfPlaying !== null && chanceOfPlaying < 100) {
+        } 
+        // Doubtful: Any chance less than 100% but greater than 0% or doubtful/suspended status
+        else if (((chanceOfPlaying !== null && chanceOfPlaying < 100 && chanceOfPlaying > 0) || 
+                  (chanceOfPlayingNext !== null && chanceOfPlayingNext < 100 && chanceOfPlayingNext > 0)) ||
+                 player.status === "d" || player.status === "s") {
           news[player.team].doubtful.push(playerData);
         }
       }
@@ -398,11 +409,9 @@ function TeamNewsSection({
                             {player.web_name}
                           </span>
                         </div>
-                        {player.chance_of_playing_this_round && (
-                          <span className="text-orange-600 dark:text-orange-400 font-medium">
-                            ({player.chance_of_playing_this_round}%)
-                          </span>
-                        )}
+                        <span className="text-orange-600 dark:text-orange-400 font-medium">
+                          {player.chance_of_playing_this_round || player.chance_of_playing_next_round || 0}%
+                        </span>
                       </div>
                     ))}
                   </div>

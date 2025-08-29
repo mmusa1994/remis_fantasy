@@ -245,7 +245,7 @@
       "mostTransferredIn": "Most Transferred In",
       "mostTransferredOut": "Most Transferred Out",
       "popularAdditions": "Popular additions to teams",
-      "popularRemovals": "Popular departures from teams", 
+      "popularRemovals": "Popular departures from teams",
       "thisGW": "This GW",
       "noData": "No transfer data available"
     }
@@ -265,7 +265,7 @@
     "price": "Price",
     "points": "Points",
     "doubtful": "Doubtful",
-    "injured": "Injured"
+    "injured": "Injured (Missed)"
   },
 
   "prices": {
@@ -276,7 +276,7 @@
     "nextUpdate": "Next price change countdown",
     "updateInfo": "Price changes occur at 1:30 am GMT daily",
     "predictedRises": "Predicted Rises",
-    "predictedFalls": "Predicted Falls", 
+    "predictedFalls": "Predicted Falls",
     "totalPredictions": "Total Players",
     "targetReached": "Target Reached",
     "searchPlayer": "Search for Player",
@@ -289,7 +289,7 @@
     "othersWhoWillBeClose": "Others who will be close (by end of day)",
     "noPlayersFound": "No players found",
     "tryAdjustingFilters": "Try adjusting your search filters",
-    "infoFooter": "This page predicts players who should rise/fall tonight. +100% -> rise, -100% -> fall. Click any shirt for full player info.",
+    "infoFooter": "This page predicts players who should rise/fall tonight. +100% -> rise, -100% -> fall.",
     "playerProgressNow": "Progress Now",
     "playerPrediction": "Prediction",
     "progressPerHour": "Progress per hr",

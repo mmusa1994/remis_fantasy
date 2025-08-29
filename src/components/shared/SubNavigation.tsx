@@ -5,13 +5,13 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { 
-  BarChart3, 
-  Activity, 
-  Trophy, 
-  UserPlus, 
+import {
+  BarChart3,
+  Activity,
+  Trophy,
+  UserPlus,
   Camera,
-  DollarSign
+  DollarSign,
 } from "lucide-react";
 import { TbHome2 } from "react-icons/tb";
 import { GrDiamond } from "react-icons/gr";
@@ -50,16 +50,17 @@ interface SubNavigationProps {
   leagueBasePath?: string; // e.g., "/premier-league", "/champions-league", "/f1-fantasy"
 }
 
-const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
-  TbHome2,
-  BarChart3,
-  Activity,
-  GrDiamond,
-  Trophy,
-  UserPlus,
-  Camera,
-  DollarSign,
-};
+const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } =
+  {
+    TbHome2,
+    BarChart3,
+    Activity,
+    GrDiamond,
+    Trophy,
+    UserPlus,
+    Camera,
+    DollarSign,
+  };
 
 const getIcon = (iconName?: string) => {
   if (!iconName) return null;
@@ -178,9 +179,13 @@ export default function SubNavigation({
   // If we have 4 or fewer items total, show all on mobile
   // Otherwise, use the showOnMobile logic
   const shouldShowAllOnMobile = allItems.length <= 4;
-  const mobileItems = shouldShowAllOnMobile ? allItems : allItems.filter(item => item.showOnMobile);
+  const mobileItems = shouldShowAllOnMobile
+    ? allItems
+    : allItems.filter((item) => item.showOnMobile);
   const desktopItems = allItems;
-  const dropdownItems = shouldShowAllOnMobile ? [] : allItems.filter(item => !item.showOnMobile);
+  const dropdownItems = shouldShowAllOnMobile
+    ? []
+    : allItems.filter((item) => !item.showOnMobile);
   const hasDropdownItems = dropdownItems.length > 0;
 
   return (
@@ -254,8 +259,8 @@ export default function SubNavigation({
           </div>
 
           {/* Mobile: Show only showOnMobile items + dropdown for rest */}
-          <div className="flex sm:hidden items-center w-full justify-center">
-            <div className="flex items-center space-x-3 flex-1 justify-center">
+          <div className="flex sm:hidden items-center w-full">
+            <div className="grid grid-cols-4 gap-1 w-full">
               {mobileItems.map((item) => {
                 const isActive = pathname === item.href;
                 const IconComponent = getIcon(item.icon);
@@ -264,7 +269,7 @@ export default function SubNavigation({
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`relative px-3 py-2 rounded-lg font-semibold text-xs whitespace-nowrap transition-all duration-300 flex flex-col items-center ${
+                    className={`relative px-1 py-2 rounded-lg font-semibold text-xs transition-all duration-300 flex flex-col items-center ${
                       isActive
                         ? theme === "dark"
                           ? colors.active.dark
@@ -274,35 +279,59 @@ export default function SubNavigation({
                         : `text-gray-600 ${colors.hover.light}`
                     }`}
                   >
-                    <div className="flex flex-col items-center space-y-1">
-                      {IconComponent && <IconComponent className="w-5 h-5" />}
-                      <div className="flex flex-col items-center">
-                        {item.name && <span className="text-xs">{item.name}</span>}
+                    <div className="flex flex-col items-center space-y-1 text-center">
+                      <div className="relative">
+                        {IconComponent && <IconComponent className="w-4 h-4" />}
+                        {item.badge && (
+                          <span
+                            className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${
+                              item.badge.color === "red"
+                                ? "bg-red-500"
+                                : item.badge.color === "green"
+                                ? "bg-green-500"
+                                : item.badge.color === "blue"
+                                ? "bg-blue-500"
+                                : item.badge.color === "orange"
+                                ? "bg-orange-500"
+                                : "bg-purple-500"
+                            } ${item.badge.pulse ? "animate-pulse" : ""}`}
+                          />
+                        )}
+                      </div>
+                      <div className="flex flex-col items-center leading-tight">
+                        {item.name && (
+                          <span className="text-xs font-medium">
+                            {item.name}
+                          </span>
+                        )}
                         {item.subtitle && (
-                          <span className="text-xs text-theme-text-secondary opacity-75 leading-tight">
+                          <span
+                            className={`text-xs font-normal opacity-90 ${
+                              theme === "dark"
+                                ? baseColor === "purple"
+                                  ? "text-purple-400"
+                                  : baseColor === "blue"
+                                  ? "text-blue-400"
+                                  : baseColor === "red"
+                                  ? "text-red-400"
+                                  : "text-purple-400"
+                                : baseColor === "purple"
+                                ? "text-purple-600"
+                                : baseColor === "blue"
+                                ? "text-blue-600"
+                                : baseColor === "red"
+                                ? "text-red-600"
+                                : "text-purple-600"
+                            }`}
+                          >
                             {item.subtitle}
                           </span>
                         )}
                       </div>
-                      {item.badge && (
-                        <span
-                          className={`inline-block w-2 h-2 rounded-full ${
-                            item.badge.color === "red"
-                              ? "bg-red-500"
-                              : item.badge.color === "green"
-                              ? "bg-green-500"
-                              : item.badge.color === "blue"
-                              ? "bg-blue-500"
-                              : item.badge.color === "orange"
-                              ? "bg-orange-500"
-                              : "bg-purple-500"
-                          } ${item.badge.pulse ? "animate-pulse" : ""}`}
-                        />
-                      )}
                     </div>
                     {isActive && (
                       <div
-                        className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 rounded-full ${
+                        className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full ${
                           theme === "dark"
                             ? colors.indicator.dark
                             : colors.indicator.light
@@ -314,9 +343,9 @@ export default function SubNavigation({
               })}
             </div>
 
-            {/* Dropdown for additional items */}
+            {/* More button for remaining items */}
             {hasDropdownItems && (
-              <div className="relative" ref={dropdownRef}>
+              <div className="ml-2">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className={`flex items-center px-2 py-2 rounded-lg font-semibold text-xs transition-all duration-300 ${
@@ -325,65 +354,68 @@ export default function SubNavigation({
                       : `text-gray-600 ${colors.hover.light}`
                   }`}
                 >
-                  More
-                  <ChevronDownIcon
-                    className={`ml-1 h-3 w-3 transition-transform ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {isDropdownOpen && (
-                  <div
-                    className={`absolute right-0 top-full mt-1 min-w-[140px] rounded-lg shadow-lg border z-50 ${
-                      theme === "dark"
-                        ? `bg-gray-800 ${colors.border.dark}`
-                        : `bg-white ${colors.border.light}`
-                    }`}
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
                   >
-                    {dropdownItems.map((item) => {
-                      const isActive = pathname === item.href;
-                      const IconComponent = getIcon(item.icon);
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
+                </button>
+              </div>
+            )}
 
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setIsDropdownOpen(false)}
-                          className={`block px-3 py-2 text-xs font-semibold transition-all duration-300 first:rounded-t-lg last:rounded-b-lg ${
-                            isActive
-                              ? theme === "dark"
-                                ? colors.active.dark
-                                : colors.active.light
-                              : theme === "dark"
-                              ? colors.hover.dark
-                              : `text-gray-600 ${colors.hover.light}`
-                          }`}
-                        >
-                          <div className="flex items-center space-x-2">
-                            {IconComponent && <IconComponent className="w-4 h-4" />}
-                            <span>{item.name}</span>
-                            {item.badge && (
-                              <span
-                                className={`inline-block w-2 h-2 rounded-full ${
-                                  item.badge.color === "red"
-                                    ? "bg-red-500"
-                                    : item.badge.color === "green"
-                                    ? "bg-green-500"
-                                    : item.badge.color === "blue"
-                                    ? "bg-blue-500"
-                                    : item.badge.color === "orange"
-                                    ? "bg-orange-500"
-                                    : "bg-purple-500"
-                                } ${item.badge.pulse ? "animate-pulse" : ""}`}
-                              />
-                            )}
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
+            {/* Dropdown for additional items */}
+            {hasDropdownItems && isDropdownOpen && (
+              <div
+                ref={dropdownRef}
+                className={`absolute right-4 top-full mt-1 min-w-[140px] rounded-lg shadow-lg border z-50 ${
+                  theme === "dark"
+                    ? `bg-gray-800 ${colors.border.dark}`
+                    : `bg-white ${colors.border.light}`
+                }`}
+              >
+                {dropdownItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const IconComponent = getIcon(item.icon);
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsDropdownOpen(false)}
+                      className={`block px-3 py-2 text-xs font-semibold transition-all duration-300 first:rounded-t-lg last:rounded-b-lg ${
+                        isActive
+                          ? theme === "dark"
+                            ? colors.active.dark
+                            : colors.active.light
+                          : theme === "dark"
+                          ? colors.hover.dark
+                          : `text-gray-600 ${colors.hover.light}`
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        {IconComponent && <IconComponent className="w-4 h-4" />}
+                        <span>{item.name}</span>
+                        {item.badge && (
+                          <span
+                            className={`inline-block w-2 h-2 rounded-full ${
+                              item.badge.color === "red"
+                                ? "bg-red-500"
+                                : item.badge.color === "green"
+                                ? "bg-green-500"
+                                : item.badge.color === "blue"
+                                ? "bg-blue-500"
+                                : item.badge.color === "orange"
+                                ? "bg-orange-500"
+                                : "bg-purple-500"
+                            } ${item.badge.pulse ? "animate-pulse" : ""}`}
+                          />
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -196,8 +196,8 @@ const Navbar = React.memo(function Navbar() {
                   <motion.div
                     className={`relative group font-semibold transition-all duration-500 text-sm uppercase tracking-widest font-russo theme-transition px-4 py-2 cursor-pointer ${
                       isActive
-                        ? "text-theme-foreground"
-                        : "text-theme-text-secondary hover:text-theme-foreground"
+                        ? "text-purple-600 dark:text-purple-400"
+                        : "text-theme-text-secondary hover:text-purple-600 dark:hover:text-purple-400"
                     }`}
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -205,25 +205,21 @@ const Navbar = React.memo(function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    {/* Dynamic background on hover - adapts to theme */}
+                    {/* Dynamic background on hover - purple tint */}
                     <motion.div
                       className={`absolute inset-0 minimal-radius backdrop-blur-sm ${
                         theme === "light"
-                          ? "bg-black/10 shadow-lg"
-                          : "bg-white/10"
+                          ? "bg-purple-500/10 shadow-lg"
+                          : "bg-purple-400/10"
                       }`}
                       initial={{ opacity: 0, scale: 0.85 }}
                       whileHover={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
                     />
 
-                    {/* Subtle inner glow */}
+                    {/* Subtle inner glow - purple */}
                     <motion.div
-                      className={`absolute inset-0 minimal-radius ${
-                        theme === "light"
-                          ? "bg-gradient-to-r from-transparent via-black/5 to-transparent"
-                          : "bg-gradient-to-r from-transparent via-white/5 to-transparent"
-                      }`}
+                      className="absolute inset-0 minimal-radius bg-gradient-to-r from-transparent via-purple-500/5 to-transparent"
                       initial={{ opacity: 0 }}
                       whileHover={{ opacity: 1 }}
                       transition={{ duration: 0.4, delay: 0.1 }}
@@ -239,28 +235,20 @@ const Navbar = React.memo(function Navbar() {
                       {item.name}
                     </span>
 
-                    {/* Active page indicator - theme adaptive line */}
+                    {/* Active page indicator - purple line */}
                     {isActive && (
                       <motion.div
-                        className={`absolute -bottom-2 left-0 right-0 h-0.5 origin-center ${
-                          theme === "light"
-                            ? "bg-gradient-to-r from-transparent via-black to-transparent"
-                            : "bg-gradient-to-r from-transparent via-white to-transparent"
-                        }`}
+                        className="absolute -bottom-2 left-0 right-0 h-0.5 origin-center bg-gradient-to-r from-transparent via-purple-600 to-transparent"
                         initial={{ scaleX: 0, opacity: 0 }}
                         animate={{ scaleX: 1, opacity: 1 }}
                         transition={{ duration: 0.6, ease: "easeOut" }}
                       />
                     )}
 
-                    {/* Sophisticated underline - theme adaptive */}
+                    {/* Sophisticated underline - purple */}
                     {!isActive && (
                       <motion.div
-                        className={`absolute -bottom-1 left-2 right-2 h-0.5 origin-center ${
-                          theme === "light"
-                            ? "bg-gradient-to-r from-transparent via-black/60 to-transparent"
-                            : "bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                        }`}
+                        className="absolute -bottom-1 left-2 right-2 h-0.5 origin-center bg-gradient-to-r from-transparent via-purple-600/60 to-transparent"
                         initial={{ scaleX: 0, opacity: 0 }}
                         whileHover={{ scaleX: 1, opacity: 1 }}
                         transition={{ duration: 0.4, ease: "easeOut" }}
