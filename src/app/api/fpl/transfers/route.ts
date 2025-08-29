@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const startTime = Date.now();
 
   try {
@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
     }
 
     const bootstrapData = await response.json();
-    const responseTime = Date.now() - startTime;
     
     // Extract and sort transfer data from bootstrap-static
     const players = bootstrapData.elements || [];

@@ -18,7 +18,6 @@ interface ControlsBarProps {
 
 export default function ControlsBar({
   managerId,
-  gameweek,
   isPolling,
   onManagerIdChange,
   onGameweekChange,

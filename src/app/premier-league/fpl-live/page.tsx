@@ -635,7 +635,7 @@ export default function FPLLivePage() {
           />
         );
       case "transfers":
-        return <TransfersMarket gameweek={gameweek} />;
+        return <TransfersMarket />;
       default:
         return null;
     }

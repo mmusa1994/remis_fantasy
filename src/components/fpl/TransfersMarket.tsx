@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { TbTrendingUp, TbTrendingDown, TbTransfer } from "react-icons/tb";
 import { MdRefresh, MdInfo } from "react-icons/md";
 import LoadingCard from "@/components/shared/LoadingCard";
+import { getTeamColors } from "@/lib/team-colors";
 
 interface TransferData {
   transfers_in?: Array<{
@@ -31,11 +32,7 @@ interface TransferData {
   }>;
 }
 
-interface TransfersMarketProps {
-  gameweek?: number;
-}
-
-export default function TransfersMarket({ gameweek }: TransfersMarketProps) {
+export default function TransfersMarket() {
   const { t } = useTranslation("fpl");
   const [transfersData, setTransfersData] = useState<TransferData>({});
   const [loading, setLoading] = useState(false);
@@ -192,9 +189,13 @@ export default function TransfersMarket({ gameweek }: TransfersMarketProps) {
                           {getPositionName(player.position)}
                         </span>
                       </div>
+                      <div className="w-2 h-8 rounded" style={{ backgroundColor: getTeamColors(player.team).primary }}></div>
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {player.web_name}
+                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                            ({getTeamColors(player.team).shortName})
+                          </span>
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           £{formatCost(player.now_cost)}m
@@ -253,9 +254,13 @@ export default function TransfersMarket({ gameweek }: TransfersMarketProps) {
                           {getPositionName(player.position)}
                         </span>
                       </div>
+                      <div className="w-2 h-8 rounded" style={{ backgroundColor: getTeamColors(player.team).primary }}></div>
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {player.web_name}
+                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                            ({getTeamColors(player.team).shortName})
+                          </span>
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           £{formatCost(player.now_cost)}m

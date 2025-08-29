@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { getCountryFlagCode } from "@/utils/countryMapping";
+import { getTeamColors } from "@/lib/team-colors";
 import {
   MdPerson,
   MdGroup,
@@ -22,6 +23,7 @@ import {
 import { GiTrophy, GiArmBandage } from "react-icons/gi";
 import { BsLightningCharge } from "react-icons/bs";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { PiTShirtFill } from "react-icons/pi";
 
 interface LeagueTablesProps {
   leagueData: any;
@@ -520,6 +522,15 @@ export default function LeagueTables({
           {getPositionShort(player.element_type)}
         </div>
         
+        {/* Team Jersey Icon */}
+        <div className="relative">
+          <PiTShirtFill 
+            className="w-6 h-6" 
+            style={{ color: getTeamColors(player.team).primary }}
+            title={getTeamColors(player.team).name}
+          />
+        </div>
+        
         {/* Player Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -905,7 +916,9 @@ export default function LeagueTables({
                       return (
                         <React.Fragment key={player.id}>
                           {/* Main Row */}
-                          <tr className={`transition-all duration-300 hover:shadow-sm border-b border-gray-200 dark:border-gray-700 ${
+                          <tr 
+                            onClick={() => toggleManagerDetails(player.id)}
+                            className={`transition-all duration-300 hover:shadow-sm border-b border-gray-200 dark:border-gray-700 cursor-pointer ${
                             player.id === managerId?.toString()
                               ? "bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/80 dark:from-blue-900/20 dark:via-indigo-900/15 dark:to-purple-900/20 border-l-4 border-gradient-to-b from-blue-500 to-purple-500 shadow-md"
                               : index < 3
@@ -1015,12 +1028,9 @@ export default function LeagueTables({
                               )}
                             </td>
                             <td className="px-1 sm:px-2 py-3 text-center">
-                              <button
-                                onClick={() => toggleManagerDetails(player.id)}
-                                className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                              >
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 transition-colors">
                                 {isExpanded ? <FiChevronUp className="w-4 h-4" /> : <FiChevronDown className="w-4 h-4" />}
-                              </button>
+                              </div>
                             </td>
                           </tr>
                           
@@ -1361,7 +1371,9 @@ export default function LeagueTables({
                                       return (
                                         <React.Fragment key={entry.id}>
                                           {/* Main Row */}
-                                          <tr className={`border-b dark:border-gray-700 ${
+                                          <tr 
+                                            onClick={() => toggleManagerDetails(entry.entry.toString())}
+                                            className={`border-b dark:border-gray-700 cursor-pointer ${
                                             entry.entry === managerId
                                               ? "bg-blue-50 dark:bg-blue-900"
                                               : "hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -1413,12 +1425,9 @@ export default function LeagueTables({
                                               )}
                                             </td>
                                             <td className="px-1 sm:px-2 py-2 text-center">
-                                              <button
-                                                onClick={() => toggleManagerDetails(entry.entry.toString())}
-                                                className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                              >
+                                              <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-100 dark:bg-gray-700 transition-colors">
                                                 {isExpanded ? <FiChevronUp className="w-3 h-3 sm:w-4 sm:h-4" /> : <FiChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />}
-                                              </button>
+                                              </div>
                                             </td>
                                           </tr>
                                           
