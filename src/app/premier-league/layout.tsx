@@ -68,7 +68,6 @@ export default function PremierLeagueLayout({
       <SubNavigation
         items={premierLeagueNavItems}
         baseColor="purple"
-        leagueBasePath="/premier-league"
       />
       <main className="relative pt-28 sm:pt-32 md:pt-36">{children}</main>
     </div>

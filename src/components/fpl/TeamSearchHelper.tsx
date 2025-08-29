@@ -31,6 +31,13 @@ export default function TeamSearchHelper({
         const result = await response.json();
         if (result.success) {
           setSearchResults(result.data);
+          
+          // If we found a manager directly, auto-load it
+          if (result.data.found && result.data.manager) {
+            onManagerIdFound(result.data.manager.id);
+            setSearchQuery("");
+            setSearchResults(null);
+          }
         }
       }
     } catch (error) {
@@ -57,7 +64,7 @@ export default function TeamSearchHelper({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-theme-primary flex items-center">
             <MdSearch className="mr-2" />
-            {t("fplLive.searchHelper")}
+            {t("fplLive.search.searchHelper")}
           </h3>
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -70,18 +77,18 @@ export default function TeamSearchHelper({
         {/* Direct Team Name Search - Always Visible */}
         <div className="mb-4 bg-theme-accent border border-theme-border rounded-lg p-4">
           <h4 className="font-medium text-theme-primary mb-2">
-            🔍{t("fplLive.searchPlaceholder")}
+            🔍{t("fplLive.search.searchPlaceholder")}
           </h4>
           <p className="text-sm text-theme-secondary mb-3">
-            {t("fplLive.searchDescription")}
+            {t("fplLive.search.searchDescription")}
           </p>
           <div className="flex gap-2">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              placeholder={t("fplLive.teamNamePlaceholder")}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder={t("fplLive.search.teamNamePlaceholder")}
               className="flex-1 px-3 py-2 input-theme rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <button
@@ -89,7 +96,7 @@ export default function TeamSearchHelper({
               disabled={isSearching || !searchQuery.trim()}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm font-medium transition-colors"
             >
-              {isSearching ? t("fplLive.searching") : t("fplLive.findTeam")}
+              {isSearching ? t("fplLive.search.searching") : t("fplLive.search.findTeam")}
             </button>
           </div>
         </div>
@@ -97,6 +104,46 @@ export default function TeamSearchHelper({
         {/* Search Results - Always Visible if Available */}
         {searchResults && (
           <div className="mb-4 space-y-4">
+            {/* Direct Manager Found */}
+            {searchResults.found && searchResults.manager && (
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-green-900 dark:text-green-100 flex items-center">
+                    ✅ Manager Found!
+                  </h4>
+                  <button
+                    onClick={() => onManagerIdFound(searchResults.manager.id)}
+                    className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-colors"
+                  >
+                    Load Team
+                  </button>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="font-medium text-green-900 dark:text-green-100">Player: </span>
+                      <span className="text-green-800 dark:text-green-200">{searchResults.manager.name}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-green-900 dark:text-green-100">Team: </span>
+                      <span className="text-green-800 dark:text-green-200">{searchResults.manager.team_name}</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="font-medium text-green-900 dark:text-green-100">Manager ID: </span>
+                      <span className="text-green-800 dark:text-green-200">{searchResults.manager.id}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-green-900 dark:text-green-100">Points: </span>
+                      <span className="text-green-800 dark:text-green-200">{searchResults.manager.total_points}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <p className="text-sm text-theme-secondary font-medium">
               {searchResults.message}
             </p>
@@ -105,7 +152,7 @@ export default function TeamSearchHelper({
             {searchResults.searchSuggestions && (
               <div className="space-y-3">
                 <h5 className="font-semibold text-theme-primary text-sm">
-                  🔍 {t("fplLive.tryTheseSearchMethods")}
+                  🔍 {t("fplLive.search.tryTheseSearchMethods")}
                 </h5>
                 {searchResults.searchSuggestions.map(
                   (suggestion: any, index: number) => (
@@ -124,7 +171,7 @@ export default function TeamSearchHelper({
                             rel="noopener noreferrer"
                             className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors"
                           >
-                            {t("fplLive.searchNow")}
+                            {t("fplLive.search.searchNow")}
                           </a>
                         )}
                       </div>
@@ -148,7 +195,7 @@ export default function TeamSearchHelper({
             {searchResults.specificTips && (
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                 <h6 className="font-medium text-green-900 dark:text-green-100 mb-2">
-                  💡 {t("fplLive.tipsFor")} &quot;{searchResults.query}&quot;:
+                  💡 {t("fplLive.search.tipsFor")} &quot;{searchResults.query}&quot;:
                 </h6>
                 <ul className="space-y-1 text-sm text-green-800 dark:text-green-200">
                   {searchResults.specificTips.map(
@@ -182,7 +229,7 @@ export default function TeamSearchHelper({
             {/* Quick Manager ID Input */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                {t("fplLive.quickLoadByManagerId")}
+                {t("fplLive.search.quickLoadByManagerId")}
               </h4>
               <form onSubmit={handleManagerIdSubmit} className="flex gap-2">
                 <input
@@ -196,7 +243,7 @@ export default function TeamSearchHelper({
                   type="submit"
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
                 >
-                  {t("fplLive.loadTeam")}
+                  {t("fplLive.search.loadTeam")}
                 </button>
               </form>
             </div>
@@ -204,10 +251,10 @@ export default function TeamSearchHelper({
             {/* Additional Help Section */}
             <div className="bg-theme-secondary border border-theme-border rounded-lg p-4">
               <h4 className="font-medium text-theme-primary mb-2">
-                📚 {t("fplLive.additionalHelp")}
+                📚 {t("fplLive.search.additionalHelp")}
               </h4>
               <p className="text-sm text-theme-muted mb-3">
-                {t("fplLive.moreTraditionalMethods")}
+                {t("fplLive.search.moreTraditionalMethods")}
               </p>
 
               {/* Show Traditional Methods and Emergency Methods from Search Results */}
@@ -217,7 +264,7 @@ export default function TeamSearchHelper({
                   {searchResults.traditionalMethods && (
                     <div className="space-y-3">
                       <h5 className="font-semibold text-theme-primary text-sm">
-                        📋 {t("fplLive.traditionalMethods")}
+                        📋 {t("fplLive.search.traditionalMethods")}
                       </h5>
                       {searchResults.traditionalMethods.map(
                         (method: any, index: number) => (
@@ -266,13 +313,13 @@ export default function TeamSearchHelper({
             {/* Quick Tips */}
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
               <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
-                {t("fplLive.quickTips")}
+                {t("fplLive.search.quickTips")}
               </h4>
               <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
-                <li>• {t("fplLive.managerIdIsNumber")}</li>
-                <li>• {t("fplLive.findInProfileURL")}</li>
-                <li>• {t("fplLive.visibleInLeagueStandings")}</li>
-                <li>• {t("fplLive.teamWillBeSaved")}</li>
+                <li>• {t("fplLive.search.managerIdIsNumber")}</li>
+                <li>• {t("fplLive.search.findInProfileURL")}</li>
+                <li>• {t("fplLive.search.visibleInLeagueStandings")}</li>
+                <li>• {t("fplLive.search.teamWillBeSaved")}</li>
               </ul>
             </div>
           </div>

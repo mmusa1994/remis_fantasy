@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { GrDiamond } from "react-icons/gr";
 import { MdTrendingUp, MdInfo } from "react-icons/md";
@@ -49,11 +49,7 @@ export default function Diamond() {
   const [teamNews, setTeamNews] = useState<TeamNews>({});
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchDiamondData();
-  }, []);
-
-  const fetchDiamondData = async () => {
+  const fetchDiamondData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -81,7 +77,11 @@ export default function Diamond() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchDiamondData();
+  }, [fetchDiamondData]);
 
   const findBestDifferentials = (players: any[]): Player[] => {
     return players

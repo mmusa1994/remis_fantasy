@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MdDownload, MdPlayArrow, MdStop } from "react-icons/md";
 import { useTranslation } from "react-i18next";
+import TeamSearchInput from "./TeamSearchInput";
 
 interface ControlsBarProps {
   managerId: number | null;
@@ -27,7 +28,7 @@ export default function ControlsBar({
   loading,
 }: ControlsBarProps) {
   const { t } = useTranslation("fpl");
-  
+
   // Simple state - only prefill from localStorage on initial load
   const [localManagerId, setLocalManagerId] = useState(() => {
     if (typeof window !== "undefined") {
@@ -36,7 +37,7 @@ export default function ControlsBar({
     }
     return "";
   });
-  
+
   const [localGameweek, setLocalGameweek] = useState(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("fpl-gameweek");
@@ -63,22 +64,31 @@ export default function ControlsBar({
   const handleLoadTeam = () => {
     const managerIdNum = parseInt(localManagerId, 10);
     const gameweekNum = parseInt(localGameweek, 10);
-    
+
     // Validate input values
     if (isNaN(managerIdNum) || managerIdNum <= 0) {
       return; // Button should be disabled, but just in case
     }
-    
+
     if (isNaN(gameweekNum) || gameweekNum < 1 || gameweekNum > 38) {
-      return; // Button should be disabled, but just in case  
+      return; // Button should be disabled, but just in case
     }
-    
+
     // Update parent state first
     onManagerIdChange(managerIdNum);
     onGameweekChange(gameweekNum);
-    
+
     // Call load team with the actual values from input
     onLoadTeam(managerIdNum, gameweekNum);
+  };
+
+  const handleTeamSearchFound = (foundManagerId: number) => {
+    const managerIdStr = foundManagerId.toString();
+    setLocalManagerId(managerIdStr);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fpl-manager-id", managerIdStr);
+    }
+    onManagerIdChange(foundManagerId);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -103,6 +113,18 @@ export default function ControlsBar({
             ? `${t("fplLive.currentManagerId")} ${managerId}`
             : t("pleaseEnterManagerId")}
         </p>
+      </div>
+
+      {/* Team Search */}
+      <div className="mb-4">
+        <div className="text-center mb-2">
+          <p className="text-white/80 text-sm">{t("fplLive.search.orSearchByTeamName")}</p>
+        </div>
+        <TeamSearchInput
+          onManagerIdFound={handleTeamSearchFound}
+          placeholder={t("fplLive.search.searchInputPlaceholder")}
+          className="max-w-md mx-auto"
+        />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-center justify-center bg-white/10 rounded-lg p-3 md:p-4 backdrop-blur">

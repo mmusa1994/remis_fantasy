@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -10,7 +10,7 @@ import {
   MdTrendingDown,
   MdRemove,
 } from "react-icons/md";
-import { GiF1Car, GiTrophyCup } from "react-icons/gi";
+import { GiTrophyCup } from "react-icons/gi";
 import { FaCoins } from "react-icons/fa";
 import LoadingCard from "@/components/shared/LoadingCard";
 
@@ -52,7 +52,7 @@ export default function F1FantasyTabelePage() {
   // Get league ID from URL params or use default
   const leagueId = searchParams.get("league") || "7206907";
 
-  const fetchLeaderboard = async (customLeagueId?: string) => {
+  const fetchLeaderboard = useCallback(async (customLeagueId?: string) => {
     const currentLeagueId = customLeagueId || leagueId;
     setLoading(true);
     setError(null);
@@ -74,11 +74,11 @@ export default function F1FantasyTabelePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [leagueId]);
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [leagueId]);
+  }, [leagueId, fetchLeaderboard]);
 
   const getRankStripeColor = (rank: number) => {
     switch (rank) {

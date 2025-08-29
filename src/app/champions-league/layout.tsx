@@ -25,7 +25,6 @@ export default function ChampionsLeagueLayout({
       <SubNavigation
         items={championsLeagueNavItems}
         baseColor="blue"
-        leagueBasePath="/champions-league"
       />
       <main className="relative pt-28 sm:pt-32 md:pt-36">{children}</main>
     </div>

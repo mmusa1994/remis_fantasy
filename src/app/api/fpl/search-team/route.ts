@@ -15,18 +15,108 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Enhanced search functionality with multiple approaches
+    // Check if query is a number (potential Manager ID)
+    const potentialManagerId = parseInt(query.trim());
+    const isNumericQuery = !isNaN(potentialManagerId) && potentialManagerId > 0;
+
+    if (isNumericQuery) {
+      // If it's a number, try to validate it as a Manager ID first
+      try {
+        const managerResponse = await fetch(
+          `https://fantasy.premierleague.com/api/entry/${potentialManagerId}/`
+        );
+
+        if (managerResponse.ok) {
+          const managerData = await managerResponse.json();
+          
+          return NextResponse.json({
+            success: true,
+            data: {
+              found: true,
+              query: query,
+              message: `Found Manager ID ${potentialManagerId}!`,
+              manager: {
+                id: potentialManagerId,
+                name: `${managerData.player_first_name} ${managerData.player_last_name}`,
+                team_name: managerData.name,
+                overall_rank: managerData.summary_overall_rank,
+                total_points: managerData.summary_overall_points,
+                country: managerData.player_region_name,
+                started_event: managerData.started_event,
+              },
+              directAccess: true
+            },
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        console.log("FPL API lookup failed:", error);
+      }
+    }
+
+    // Primary search: Azure API for team/player name search
+    try {
+      const searchUrl = `https://fontendfunctionsnortheuropenew.azurewebsites.net/api/SearchEntryFunction?teamName=${encodeURIComponent(query)}&teamNameBeginsWith=0&playerName=&playerNameBeginsWith=0&EntryId=null`;
+      
+      const searchResponse = await fetch(searchUrl);
+      
+      if (searchResponse.ok) {
+        const searchData = await searchResponse.json();
+        
+        // Handle successful Azure API response
+        if (searchData && searchData.Succeeded && searchData.EntryBaseDatas && searchData.EntryBaseDatas.length > 0) {
+          return NextResponse.json({
+            success: true,
+            data: {
+              found: true,
+              query: query,
+              message: searchData.Message,
+              teams: searchData.EntryBaseDatas.map((team: any) => ({
+                id: team.EntryId,
+                name: team.PlayerName,
+                team_name: team.Name,
+                overall_rank: null,
+                total_points: null,
+                country: null,
+                started_event: null,
+              })),
+              searchResults: true,
+              searchInfo: searchData.SearchInfoText,
+            },
+            timestamp: new Date().toISOString(),
+          });
+        }
+        
+        // Handle case where search succeeded but no results found
+        if (searchData && searchData.Succeeded) {
+          return NextResponse.json({
+            success: true,
+            data: {
+              found: false,
+              query: query,
+              message: searchData.Message || `No teams found with the name '${query}'`,
+              searchInfo: searchData.SearchInfoText,
+            },
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Azure search API error:", error);
+    }
+
+    // Fallback search suggestions when Azure API fails
     const searchResult = {
       query: query,
-      message: `Searching for "${query}" - FPL API doesn't provide direct search, but here are several ways to find your Manager ID:`,
+      message: `Found 0 teams with the name '${query}' - FPL API doesn't provide direct team name search, but here are several ways to find your Manager ID:`,
 
       // Direct search suggestions based on the query
       searchSuggestions: [
         {
-          title: "Google Search Method",
-          description: `Try searching Google for: "${query} FPL manager ID" or "${query} fantasy premier league"`,
+          title: "🔍 Google Search Method",
+          description: `Search Google for: "${query} FPL manager ID" or "${query} fantasy premier league"`,
           searchUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            query + " FPL manager ID fantasy premier league"
+            `"${query}" FPL manager ID fantasy premier league`
           )}`,
           steps: [
             `Search Google for: "${query} FPL manager ID"`,
@@ -36,7 +126,7 @@ export async function GET(request: NextRequest) {
           ],
         },
         {
-          title: "FPL Community Search",
+          title: "🏆 FPL Community Search",
           description:
             "Search FPL communities and forums where managers often share their details",
           searchUrl: `https://www.reddit.com/r/FantasyPL/search/?q=${encodeURIComponent(
@@ -50,7 +140,7 @@ export async function GET(request: NextRequest) {
           ],
         },
         {
-          title: "League Search Method",
+          title: "👥 League Search Method",
           description:
             "If you know any leagues you're in, search within those leagues",
           steps: [
@@ -58,6 +148,17 @@ export async function GET(request: NextRequest) {
             "Browse through league standings to find your team name",
             "Click on your team name to get your Manager ID from the URL",
             "Check work/family leagues where you might be registered",
+          ],
+        },
+        {
+          title: "🎯 Advanced Search Tools",
+          description: "Try specialized FPL search websites that may have indexed team names",
+          searchUrl: `https://www.fplgameweek.com/`,
+          steps: [
+            "Visit FPLGameweek.com or similar FPL tools",
+            "Look for team search or manager lookup features",
+            "Try FPL analysis websites that might have search functionality",
+            "Check if they have team name to Manager ID conversion tools",
           ],
         },
       ],

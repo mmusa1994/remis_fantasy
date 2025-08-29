@@ -15,22 +15,22 @@ import {
 } from "lucide-react";
 import { TbHome2 } from "react-icons/tb";
 import { GrDiamond } from "react-icons/gr";
-// Using inline SVG instead of heroicons to avoid dependency
-const ChevronDownIcon = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="m19.5 8.25-7.5 7.5-7.5-7.5"
-    />
-  </svg>
-);
+// Unused - commenting out to avoid ESLint warning
+// const ChevronDownIcon = ({ className }: { className?: string }) => (
+//   <svg
+//     className={className}
+//     fill="none"
+//     viewBox="0 0 24 24"
+//     strokeWidth={1.5}
+//     stroke="currentColor"
+//   >
+//     <path
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
+//       d="m19.5 8.25-7.5 7.5-7.5-7.5"
+//     />
+//   </svg>
+// );
 
 interface NavItem {
   name: string;
@@ -47,7 +47,6 @@ interface NavItem {
 interface SubNavigationProps {
   items: NavItem[];
   baseColor?: "orange" | "purple" | "blue" | "red";
-  leagueBasePath?: string; // e.g., "/premier-league", "/champions-league", "/f1-fantasy"
 }
 
 const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } =
@@ -71,9 +70,7 @@ const getIcon = (iconName?: string) => {
 export default function SubNavigation({
   items,
   baseColor = "orange",
-  leagueBasePath,
 }: SubNavigationProps) {
-  const { t } = useTranslation("navigation");
   const pathname = usePathname();
   const { theme } = useTheme();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -239,7 +236,15 @@ export default function SubNavigation({
                       )}
                     </div>
                     {item.subtitle && (
-                      <span className="text-xs text-theme-text-secondary opacity-75">
+                      <span
+                        className={`text-xs opacity-75 ${
+                          isActive
+                            ? "text-theme-text-secondary"
+                            : theme === "dark"
+                            ? "text-gray-300"
+                            : "text-gray-600"
+                        }`}
+                      >
                         {item.subtitle}
                       </span>
                     )}
@@ -305,25 +310,7 @@ export default function SubNavigation({
                           </span>
                         )}
                         {item.subtitle && (
-                          <span
-                            className={`text-xs font-normal opacity-90 ${
-                              theme === "dark"
-                                ? baseColor === "purple"
-                                  ? "text-purple-400"
-                                  : baseColor === "blue"
-                                  ? "text-blue-400"
-                                  : baseColor === "red"
-                                  ? "text-red-400"
-                                  : "text-purple-400"
-                                : baseColor === "purple"
-                                ? "text-purple-600"
-                                : baseColor === "blue"
-                                ? "text-blue-600"
-                                : baseColor === "red"
-                                ? "text-red-600"
-                                : "text-purple-600"
-                            }`}
-                          >
+                          <span className=" text-xs opacity-75">
                             {item.subtitle}
                           </span>
                         )}

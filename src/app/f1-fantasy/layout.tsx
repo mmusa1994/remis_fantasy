@@ -22,7 +22,6 @@ export default function F1FantasyLayout({
       <SubNavigation
         items={f1FantasyNavItems}
         baseColor="red"
-        leagueBasePath="/f1-fantasy"
       />
       <main className="relative pt-28 sm:pt-32 md:pt-36">{children}</main>
     </div>
