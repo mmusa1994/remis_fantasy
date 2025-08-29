@@ -249,5 +249,22 @@
       "thisGW": "This GW",
       "noData": "No transfer data available"
     }
+  },
+
+  "diamond": {
+    "title": "Diamond",
+    "subtitle": "Premium insights and team news",
+    "loading": "Loading diamond data...",
+    "bestDifferentials": "Best Differentials",
+    "teamNews": "Team News",
+    "differentialsDescription": "Low-owned players with excellent recent form",
+    "teamNewsDescription": "Injured and doubtful players for this gameweek",
+    "noDifferentials": "No differentials found",
+    "ownership": "Owned",
+    "form": "Form",
+    "price": "Price",
+    "points": "Points",
+    "doubtful": "Doubtful",
+    "injured": "Injured"
   }
 }

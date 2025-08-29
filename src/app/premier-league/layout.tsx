@@ -11,18 +11,49 @@ export default function PremierLeagueLayout({
   const { t } = useTranslation("navigation");
 
   const premierLeagueNavItems = [
-    { name: t("tables"), href: "/premier-league/tabele" },
+    { 
+      name: "",
+      href: "/premier-league",
+      icon: "TbHome2",
+      showOnMobile: true
+    },
+    { 
+      name: t("tables"), 
+      href: "/premier-league/tabele",
+      icon: "BarChart3",
+      showOnMobile: true 
+    },
     {
       name: t("fplLive"),
       href: "/premier-league/fpl-live",
       badge: { color: "red" as const, pulse: true },
+      icon: "Activity",
+      showOnMobile: true
     },
-    { name: t("prizes"), href: "/premier-league/nagrade" },
+    {
+      name: t("diamond"),
+      href: "/premier-league/diamond",
+      icon: "GrDiamond",
+      showOnMobile: true
+    },
+    { 
+      name: t("prizes"), 
+      href: "/premier-league/nagrade",
+      icon: "Trophy",
+      showOnMobile: false 
+    },
     {
       name: t("registration"),
       href: "/premier-league/registracija",
+      icon: "UserPlus",
+      showOnMobile: false
     },
-    { name: t("gallery"), href: "/premier-league/galerija" },
+    { 
+      name: t("gallery"), 
+      href: "/premier-league/galerija",
+      icon: "Camera",
+      showOnMobile: false 
+    },
   ];
 
   return (

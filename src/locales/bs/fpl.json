@@ -229,5 +229,22 @@
       "thisGW": "Ovaj GW",
       "noData": "Nema dostupnih podataka o transferima"
     }
+  },
+
+  "diamond": {
+    "title": "Dijamant",
+    "subtitle": "Premium uvidi i vijesti o timovima",
+    "loading": "Učitavanje dijamant podataka...",
+    "bestDifferentials": "Najbolji Diferencijali",
+    "teamNews": "Izvještaj o Timovima",
+    "differentialsDescription": "Malo posjedovani igrači sa odličnom nedavnom formom",
+    "teamNewsDescription": "Povrijeđeni i upitni igrači za ovo kolo",
+    "noDifferentials": "Nema pronađenih diferencijala",
+    "ownership": "Posjeduje",
+    "form": "Forma",
+    "price": "Cijena",
+    "points": "Bodovi",
+    "doubtful": "Upitni",
+    "injured": "Nedostaju"
   }
 }

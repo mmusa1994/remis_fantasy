@@ -5,6 +5,15 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { 
+  BarChart3, 
+  Activity, 
+  Trophy, 
+  UserPlus, 
+  Camera 
+} from "lucide-react";
+import { TbHome2 } from "react-icons/tb";
+import { GrDiamond } from "react-icons/gr";
 // Using inline SVG instead of heroicons to avoid dependency
 const ChevronDownIcon = ({ className }: { className?: string }) => (
   <svg
@@ -25,6 +34,8 @@ const ChevronDownIcon = ({ className }: { className?: string }) => (
 interface NavItem {
   name: string;
   href: string;
+  icon?: string;
+  showOnMobile?: boolean;
   badge?: {
     color: "red" | "green" | "blue" | "orange" | "purple";
     pulse?: boolean;
@@ -36,6 +47,22 @@ interface SubNavigationProps {
   baseColor?: "orange" | "purple" | "blue" | "red";
   leagueBasePath?: string; // e.g., "/premier-league", "/champions-league", "/f1-fantasy"
 }
+
+const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
+  TbHome2,
+  BarChart3,
+  Activity,
+  GrDiamond,
+  Trophy,
+  UserPlus,
+  Camera,
+};
+
+const getIcon = (iconName?: string) => {
+  if (!iconName) return null;
+  const IconComponent = iconMap[iconName];
+  return IconComponent ? IconComponent : null;
+};
 
 export default function SubNavigation({
   items,
@@ -64,10 +91,8 @@ export default function SubNavigation({
     };
   }, []);
 
-  // Add "Početna" item at the beginning if leagueBasePath is provided
-  const allItems = leagueBasePath
-    ? [{ name: t("home"), href: leagueBasePath }, ...items]
-    : items;
+  // Use items as provided (home button is already included with empty name)
+  const allItems = items;
 
   const colorConfig = {
     orange: {
@@ -146,9 +171,10 @@ export default function SubNavigation({
 
   const colors = colorConfig[baseColor] || colorConfig["purple"];
 
-  // Filter visible items for desktop (first 3)
-  const visibleItems = allItems.slice(0, 3);
-  const dropdownItems = allItems.slice(3);
+  // Filter visible items for mobile (only showOnMobile: true)
+  const mobileItems = allItems.filter(item => item.showOnMobile);
+  const desktopItems = allItems;
+  const dropdownItems = allItems.filter(item => !item.showOnMobile);
   const hasDropdownItems = dropdownItems.length > 0;
 
   return (
@@ -163,12 +189,13 @@ export default function SubNavigation({
         <div className="flex items-center justify-start md:justify-center space-x-2 sm:space-x-4 md:space-x-8 py-3 md:py-4">
           {/* Desktop: Show all items in horizontal layout */}
           <div className="hidden sm:flex items-center space-x-2 sm:space-x-4 md:space-x-8 overflow-x-auto scrollbar-none">
-            {allItems.map((item) => {
+            {desktopItems.map((item) => {
               const isActive = pathname === item.href;
+              const IconComponent = getIcon(item.icon);
 
               return (
                 <Link
-                  key={item.name}
+                  key={item.href}
                   href={item.href}
                   className={`relative px-2 sm:px-3 md:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm whitespace-nowrap transition-all duration-300 transform hover:scale-105 ${
                     isActive
@@ -180,8 +207,9 @@ export default function SubNavigation({
                       : `text-gray-600 ${colors.hover.light}`
                   }`}
                 >
-                  <div className="flex items-center space-x-1">
-                    <span>{item.name}</span>
+                  <div className="flex items-center space-x-2">
+                    {IconComponent && <IconComponent className="w-4 h-4" />}
+                    {item.name && <span>{item.name}</span>}
                     {item.badge && (
                       <span
                         className={`inline-block w-2 h-2 rounded-full ${
@@ -212,17 +240,18 @@ export default function SubNavigation({
             })}
           </div>
 
-          {/* Mobile: Show first 4 items + dropdown for rest */}
-          <div className="flex sm:hidden items-center w-full">
-            <div className="flex items-center space-x-2 flex-1 overflow-x-auto scrollbar-none">
-              {visibleItems.map((item) => {
+          {/* Mobile: Show only showOnMobile items + dropdown for rest */}
+          <div className="flex sm:hidden items-center w-full justify-center">
+            <div className="flex items-center space-x-3 flex-1 justify-center">
+              {mobileItems.map((item) => {
                 const isActive = pathname === item.href;
+                const IconComponent = getIcon(item.icon);
 
                 return (
                   <Link
-                    key={item.name}
+                    key={item.href}
                     href={item.href}
-                    className={`relative px-2 py-2 rounded-lg font-semibold text-xs whitespace-nowrap transition-all duration-300 ${
+                    className={`relative px-3 py-2 rounded-lg font-semibold text-xs whitespace-nowrap transition-all duration-300 flex flex-col items-center ${
                       isActive
                         ? theme === "dark"
                           ? colors.active.dark
@@ -232,8 +261,9 @@ export default function SubNavigation({
                         : `text-gray-600 ${colors.hover.light}`
                     }`}
                   >
-                    <div className="flex items-center space-x-1">
-                      <span>{item.name}</span>
+                    <div className="flex flex-col items-center space-y-1">
+                      {IconComponent && <IconComponent className="w-5 h-5" />}
+                      {item.name && <span className="text-xs">{item.name}</span>}
                       {item.badge && (
                         <span
                           className={`inline-block w-2 h-2 rounded-full ${
@@ -285,7 +315,7 @@ export default function SubNavigation({
 
                 {isDropdownOpen && (
                   <div
-                    className={`absolute right-0 top-full mt-1 min-w-[120px] rounded-lg shadow-lg border z-50 ${
+                    className={`absolute right-0 top-full mt-1 min-w-[140px] rounded-lg shadow-lg border z-50 ${
                       theme === "dark"
                         ? `bg-gray-800 ${colors.border.dark}`
                         : `bg-white ${colors.border.light}`
@@ -293,10 +323,11 @@ export default function SubNavigation({
                   >
                     {dropdownItems.map((item) => {
                       const isActive = pathname === item.href;
+                      const IconComponent = getIcon(item.icon);
 
                       return (
                         <Link
-                          key={item.name}
+                          key={item.href}
                           href={item.href}
                           onClick={() => setIsDropdownOpen(false)}
                           className={`block px-3 py-2 text-xs font-semibold transition-all duration-300 first:rounded-t-lg last:rounded-b-lg ${
@@ -309,7 +340,8 @@ export default function SubNavigation({
                               : `text-gray-600 ${colors.hover.light}`
                           }`}
                         >
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center space-x-2">
+                            {IconComponent && <IconComponent className="w-4 h-4" />}
                             <span>{item.name}</span>
                             {item.badge && (
                               <span

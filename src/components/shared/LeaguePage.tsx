@@ -36,7 +36,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
   if (loading || !ready) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingCard 
+        <LoadingCard
           title="Loading League Page"
           description="Please wait while we fetch the league information"
           className="w-full max-w-md mx-auto"
@@ -154,7 +154,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
               return (
                 <Link key={item.title} href={item.href}>
                   <motion.div
-                    className={`group p-4 sm:p-6 md:p-8 rounded-2xl border transition-all duration-300 hover:scale-105 cursor-pointer ${colorClasses.bg} ${colorClasses.border} ${colorClasses.hover} backdrop-blur-sm shadow-lg hover:shadow-xl`}
+                    className={`group p-4 sm:p-6 md:p-8 rounded-2xl transition-all duration-300 hover:scale-105 cursor-pointer ${colorClasses.bg} ${colorClasses.hover} backdrop-blur-sm shadow-lg hover:shadow-xl`}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -166,7 +166,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
                   >
                     <div className="text-center">
                       <motion.div
-                        className={`inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-xl mb-4 md:mb-6 ${colorClasses.bg} ${colorClasses.border} border-2`}
+                        className={`inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-xl mb-4 md:mb-6 ${colorClasses.bg}`}
                         whileHover={{
                           scale: 1.1,
                           rotate: 5,
