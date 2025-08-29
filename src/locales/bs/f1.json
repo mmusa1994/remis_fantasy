@@ -1,0 +1,31 @@
+{
+  "title": "F1 LIGA",
+  "leaderboard": {
+    "loading": "Učitavanje F1 Fantasy tabele...",
+    "error": "Greška pri učitavanju tabele",
+    "retry": "Pokušaj ponovo",
+    "refresh": "Ažuriraj",
+    "refreshing": "Ažuriranje...",
+    "lastUpdated": "Poslednje ažurirano:",
+    "participants": "učesnika",
+    "position": "Pozicija",
+    "player": "Igrač",
+    "team": "Tim", 
+    "points": "Bodovi"
+  },
+  "prizes": {
+    "first": "1.",
+    "second": "2.", 
+    "third": "3.",
+    "gold": "Zlato",
+    "silver": "Srebro",
+    "bronze": "Bronza"
+  },
+  "movement": {
+    "up": "Gore",
+    "down": "Dole",
+    "same": "Bez promjene"
+  },
+  "season": "Sezona",
+  "grandPrix": "Grand Prix"
+}

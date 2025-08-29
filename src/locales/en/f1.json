@@ -1,0 +1,31 @@
+{
+  "title": "F1 LEAGUE",
+  "leaderboard": {
+    "loading": "Loading F1 Fantasy Leaderboard...",
+    "error": "Error loading leaderboard",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "lastUpdated": "Last updated:",
+    "participants": "participants",
+    "position": "Position",
+    "player": "Player",
+    "team": "Team", 
+    "points": "Points"
+  },
+  "prizes": {
+    "first": "1st",
+    "second": "2nd", 
+    "third": "3rd",
+    "gold": "Gold",
+    "silver": "Silver",
+    "bronze": "Bronze"
+  },
+  "movement": {
+    "up": "Up",
+    "down": "Down",
+    "same": "No change"
+  },
+  "season": "Season",
+  "grandPrix": "Grand Prix"
+}
