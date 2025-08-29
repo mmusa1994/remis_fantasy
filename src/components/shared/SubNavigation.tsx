@@ -276,7 +276,14 @@ export default function SubNavigation({
                   >
                     <div className="flex flex-col items-center space-y-1">
                       {IconComponent && <IconComponent className="w-5 h-5" />}
-                      {item.name && <span className="text-xs">{item.name}</span>}
+                      <div className="flex flex-col items-center">
+                        {item.name && <span className="text-xs">{item.name}</span>}
+                        {item.subtitle && (
+                          <span className="text-xs text-theme-text-secondary opacity-75 leading-tight">
+                            {item.subtitle}
+                          </span>
+                        )}
+                      </div>
                       {item.badge && (
                         <span
                           className={`inline-block w-2 h-2 rounded-full ${
