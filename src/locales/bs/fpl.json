@@ -54,6 +54,8 @@
   "currentManagerId": "Trenutni ID Menadžera",
   "offline": "Van Mreže",
   "fplLive": {
+    "pickLeague": "Izaberite ligu",
+    "noAssignedYet": "Još nije dodeljen",
     "title": "FPL Live Dashboard",
     "subtitle": "Real-time Fantasy Premier League praćenje sa live bonus predviđanjima",
     "howToUse": "Kako koristiti FPL Live",
@@ -235,7 +237,7 @@
       "thisGW": "Ovaj GW",
       "noData": "Nema dostupnih podataka o transferima"
     },
-    "liveLeagueTracking": "UŽIVO Praćenje Liga",
+    "liveLeagueTracking": "UŽIVO Praćenje Liga(BETA)",
     "liveLeagueStandings": "UŽIVO Tabela Lige",
     "liveStandings": "UŽIVO Tabela",
     "liveTrackingControls": "Kontrole Uživo Praćenja",

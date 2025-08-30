@@ -92,9 +92,15 @@ export default function LeagueTables({
   const [liveStats, setLiveStats] = useState<any>(null);
   const [lastLiveUpdate, setLastLiveUpdate] = useState<string>("");
   const [isLoadingLiveData, setIsLoadingLiveData] = useState(false);
-  const [expandedManagers, setExpandedManagers] = useState<Set<string>>(new Set());
-  const [managerDetails, setManagerDetails] = useState<{[key: string]: any}>({});
-  const [loadingManagerDetails, setLoadingManagerDetails] = useState<Set<string>>(new Set());
+  const [expandedManagers, setExpandedManagers] = useState<Set<string>>(
+    new Set()
+  );
+  const [managerDetails, setManagerDetails] = useState<{ [key: string]: any }>(
+    {}
+  );
+  const [loadingManagerDetails, setLoadingManagerDetails] = useState<
+    Set<string>
+  >(new Set());
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
 
   const maxPositions = 50;
@@ -145,13 +151,6 @@ export default function LeagueTables({
     [leagueData]
   );
 
-  // Set initial selected league when available leagues change
-  useEffect(() => {
-    if (availableLeagues.length > 0 && selectedLiveLeague === null) {
-      setSelectedLiveLeague(availableLeagues[0].id);
-    }
-  }, [availableLeagues, selectedLiveLeague]);
-
   // Live polling effect - controlled by parent isLiveTracking
   useEffect(() => {
     if (isLiveTracking && selectedLiveLeague) {
@@ -175,7 +174,7 @@ export default function LeagueTables({
     if (!isLiveTracking || !selectedLiveLeague) {
       console.log("Skipping live data fetch - conditions not met:", {
         isLiveTracking,
-        selectedLiveLeague
+        selectedLiveLeague,
       });
       return;
     }
@@ -203,8 +202,11 @@ export default function LeagueTables({
       if (!standingsResponse.ok) return;
 
       const standingsResult = await standingsResponse.json();
-      console.log("API Response Structure:", JSON.stringify(standingsResult, null, 2));
-      
+      console.log(
+        "API Response Structure:",
+        JSON.stringify(standingsResult, null, 2)
+      );
+
       // Handle different response structures
       let standings = null;
       if (standingsResult.success && standingsResult.data) {
@@ -219,131 +221,133 @@ export default function LeagueTables({
           standings = standingsResult.data;
         }
       }
-      
+
       if (!standings || standings.length === 0) {
         console.warn("No standings data found in API response");
         return;
       }
 
       // Get live data for each manager in the league
-      const livePlayersPromises = standings.map(
-        async (entry: any) => {
-          try {
-            // Get live team data for each manager
-            const liveTeamResponse = await fetch("/api/fpl/load-team", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                managerId: entry.entry,
-                gameweek: currentGW,
-                skeleton: false,
-              }),
-            });
+      const livePlayersPromises = standings.map(async (entry: any) => {
+        try {
+          // Get live team data for each manager
+          const liveTeamResponse = await fetch("/api/fpl/load-team", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              managerId: entry.entry,
+              gameweek: currentGW,
+              skeleton: false,
+            }),
+          });
 
-            if (liveTeamResponse.ok) {
-              const liveTeamData = await liveTeamResponse.json();
-              if (liveTeamData.success && liveTeamData.data) {
-                const teamTotals = liveTeamData.data.team_totals || {};
-                const teamWithStats = liveTeamData.data.team_with_stats || [];
-                
-                // Calculate live points with more precision
-                const basePoints = teamTotals.total_points || entry.total;
-                const bonusPoints = teamTotals.bonus_points || 0;
-                const captainPoints = teamTotals.captain_points || 0;
-                
-                // Find captain and vice captain
-                const captain = teamWithStats.find((p: any) => p.is_captain);
-                const viceCaptain = teamWithStats.find((p: any) => p.is_vice_captain);
-                
-                // Calculate live total including any additional points from live events
-                let liveTotal = basePoints;
-                
-                // Add any live events that haven't been included yet
-                teamWithStats.forEach((player: any) => {
-                  if (player.live_stats) {
-                    const livePlayerPoints = player.live_stats.total_points || 0;
-                    const originalPoints = player.stats?.total_points || 0;
-                    const additionalPoints = livePlayerPoints - originalPoints;
-                    
-                    if (additionalPoints > 0) {
-                      if (player.is_captain) {
-                        liveTotal += additionalPoints * 2; // Captain gets double
-                      } else if (player.is_vice_captain && !captain) {
-                        liveTotal += additionalPoints * 2; // Vice captain gets double if no captain
-                      } else {
-                        liveTotal += additionalPoints;
-                      }
+          if (liveTeamResponse.ok) {
+            const liveTeamData = await liveTeamResponse.json();
+            if (liveTeamData.success && liveTeamData.data) {
+              const teamTotals = liveTeamData.data.team_totals || {};
+              const teamWithStats = liveTeamData.data.team_with_stats || [];
+
+              // Calculate live points with more precision
+              const basePoints = teamTotals.total_points || entry.total;
+              const bonusPoints = teamTotals.bonus_points || 0;
+              const captainPoints = teamTotals.captain_points || 0;
+              // Find captain and vice captain
+              const captain = teamWithStats.find((p: any) => p.is_captain);
+              const viceCaptain = teamWithStats.find(
+                (p: any) => p.is_vice_captain
+              );
+
+              // Calculate live total including any additional points from live events
+              let liveTotal = basePoints;
+
+              // Add any live events that haven't been included yet
+              teamWithStats.forEach((player: any) => {
+                if (player.live_stats) {
+                  const livePlayerPoints = player.live_stats.total_points || 0;
+                  const originalPoints = player.stats?.total_points || 0;
+                  const additionalPoints = livePlayerPoints - originalPoints;
+
+                  if (additionalPoints > 0) {
+                    if (player.is_captain) {
+                      liveTotal += additionalPoints * 2; // Captain gets double
+                    } else if (player.is_vice_captain && !captain) {
+                      liveTotal += additionalPoints * 2; // Vice captain gets double if no captain
+                    } else {
+                      liveTotal += additionalPoints;
                     }
                   }
-                });
+                }
+              });
 
-                console.log(`Live data for ${entry.player_name || entry.entry_name}:`, {
+              console.log(
+                `Live data for ${entry.player_name || entry.entry_name}:`,
+                {
                   original: entry.total,
                   base: basePoints,
                   live: liveTotal,
-                  bonus: bonusPoints
-                });
+                  bonus: bonusPoints,
+                }
+              );
 
-                return {
-                  id: entry.entry.toString(),
-                  name: entry.player_name || entry.entry_name,
-                  team: entry.entry_name,
-                  overall_points: entry.total,
-                  live_points: liveTotal,
-                  captain_multiplier: 2,
-                  vice_captain_multiplier: 1,
-                  bonus_points: bonusPoints,
-                  rank: entry.rank,
-                  is_captain: !!captain,
-                  is_vice_captain: !!viceCaptain,
-                  captain_info: captain ? {
-                    name: captain.player?.web_name || 'Unknown',
-                    points: captain.live_stats?.total_points || 0
-                  } : null,
-                };
-              }
+              return {
+                id: entry.entry.toString(),
+                name: entry.player_name || entry.entry_name,
+                team: entry.entry_name,
+                overall_points: entry.total,
+                live_points: liveTotal,
+                captain_multiplier: 2,
+                vice_captain_multiplier: 1,
+                bonus_points: bonusPoints,
+                rank: entry.rank,
+                is_captain: !!captain,
+                is_vice_captain: !!viceCaptain,
+                captain_info: captain
+                  ? {
+                      name: captain.player?.web_name || "Unknown",
+                      points: captain.live_stats?.total_points || 0,
+                    }
+                  : null,
+              };
             }
-          } catch (err) {
-            console.warn(
-              `Failed to get live data for manager ${entry.entry}:`,
-              err
-            );
           }
-
-          // Fallback to regular data when live data fails
-          console.log(`Using fallback data for manager ${entry.entry}`);
-          return {
-            id: entry.entry.toString(),
-            name: entry.player_name || entry.entry_name,
-            team: entry.entry_name,
-            overall_points: entry.total,
-            live_points: entry.total, // Same as overall when no live data
-            captain_multiplier: 2,
-            vice_captain_multiplier: 1,
-            bonus_points: 0,
-            rank: entry.rank,
-            live_rank: entry.rank, // Keep original rank as live rank
-            is_captain: false,
-            is_vice_captain: false,
-            captain_info: null,
-          };
+        } catch (err) {
+          console.warn(
+            `Failed to get live data for manager ${entry.entry}:`,
+            err
+          );
         }
-      );
+
+        // Fallback to regular data when live data fails
+        console.log(`Using fallback data for manager ${entry.entry}`);
+        return {
+          id: entry.entry.toString(),
+          name: entry.player_name || entry.entry_name,
+          team: entry.entry_name,
+          overall_points: entry.total,
+          live_points: entry.total, // Same as overall when no live data
+          captain_multiplier: 2,
+          vice_captain_multiplier: 1,
+          bonus_points: 0,
+          rank: entry.rank,
+          live_rank: entry.rank, // Keep original rank as live rank
+          is_captain: false,
+          is_vice_captain: false,
+          captain_info: null,
+        };
+      });
 
       const combinedPlayers = await Promise.all(livePlayersPromises);
 
       // Sort by live points and update ranks
-      combinedPlayers.sort(
-        (a: LivePlayer, b: LivePlayer) => {
-          // Primary sort: live points (descending)
-          if (b.live_points !== a.live_points) {
-            return b.live_points - a.live_points;
-          }
-          // Secondary sort: overall points (descending) 
-          return b.overall_points - a.overall_points;
+      combinedPlayers.sort((a: LivePlayer, b: LivePlayer) => {
+        // Primary sort: live points (descending)
+        if (b.live_points !== a.live_points) {
+          return b.live_points - a.live_points;
         }
-      );
-      
+        // Secondary sort: overall points (descending)
+        return b.overall_points - a.overall_points;
+      });
+
       // Update live ranks after sorting
       combinedPlayers.forEach((player, index) => {
         player.live_rank = index + 1;
@@ -367,8 +371,10 @@ export default function LeagueTables({
         gameweek: currentGW,
       });
       setLastLiveUpdate(new Date().toLocaleTimeString());
-      
-      console.log(`Live data updated: ${combinedPlayers.length} players, GW${currentGW}`);
+
+      console.log(
+        `Live data updated: ${combinedPlayers.length} players, GW${currentGW}`
+      );
     } catch (error) {
       console.error("Live data fetch error:", error);
       // Don't clear live data on error - keep showing last successful data
@@ -378,12 +384,13 @@ export default function LeagueTables({
   };
 
   // Remove live mode controls - now handled by parent
-  
+
   const fetchManagerDetails = async (managerId: string) => {
-    if (managerDetails[managerId] || loadingManagerDetails.has(managerId)) return;
-    
-    setLoadingManagerDetails(prev => new Set([...prev, managerId]));
-    
+    if (managerDetails[managerId] || loadingManagerDetails.has(managerId))
+      return;
+
+    setLoadingManagerDetails((prev) => new Set([...prev, managerId]));
+
     try {
       // Fetch team data and manager history in parallel
       const [teamResponse, historyResponse] = await Promise.all([
@@ -396,9 +403,9 @@ export default function LeagueTables({
             skeleton: false,
           }),
         }),
-        fetch(`/api/fpl/entry/${managerId}/history`)
+        fetch(`/api/fpl/entry/${managerId}/history`),
       ]);
-      
+
       if (teamResponse.ok) {
         const teamResult = await teamResponse.json();
         if (teamResult.success && teamResult.data) {
@@ -410,7 +417,7 @@ export default function LeagueTables({
               usedChips = historyResult.data.chips;
             }
           }
-          
+
           // Calculate remaining chips (each manager starts with 1 of each)
           const calculateRemainingChips = (usedChips: any[]) => {
             const chipCounts = {
@@ -419,62 +426,65 @@ export default function LeagueTables({
               triple_captain: 1,
               free_hit: 1,
             };
-            
+
             // Subtract used chips
             usedChips.forEach((chip: any) => {
               // Map API chip names to internal names
-              const chipNameMap: {[key: string]: keyof typeof chipCounts} = {
-                'bboost': 'bench_boost',
-                '3xc': 'triple_captain', 
-                'freehit': 'free_hit',
-                'wildcard': 'wildcard'
+              const chipNameMap: { [key: string]: keyof typeof chipCounts } = {
+                bboost: "bench_boost",
+                "3xc": "triple_captain",
+                freehit: "free_hit",
+                wildcard: "wildcard",
               };
-              
+
               const mappedName = chipNameMap[chip.name];
               if (mappedName && chipCounts.hasOwnProperty(mappedName)) {
-                chipCounts[mappedName] = Math.max(0, chipCounts[mappedName] - 1);
+                chipCounts[mappedName] = Math.max(
+                  0,
+                  chipCounts[mappedName] - 1
+                );
               }
             });
-            
+
             return chipCounts;
           };
-          
+
           const remainingChips = calculateRemainingChips(usedChips);
-          console.log('Used chips:', usedChips);
-          console.log('Calculated remaining chips:', remainingChips);
-          
-          setManagerDetails(prev => ({
+          console.log("Used chips:", usedChips);
+          console.log("Calculated remaining chips:", remainingChips);
+
+          setManagerDetails((prev) => ({
             ...prev,
             [managerId]: {
               ...teamResult.data,
               chips_remaining: remainingChips,
-              used_chips: usedChips
-            }
+              used_chips: usedChips,
+            },
           }));
         }
       }
     } catch (error) {
       console.error("Error fetching manager details:", error);
     } finally {
-      setLoadingManagerDetails(prev => {
+      setLoadingManagerDetails((prev) => {
         const newSet = new Set(prev);
         newSet.delete(managerId);
         return newSet;
       });
     }
   };
-  
+
   const toggleManagerDetails = (managerId: string) => {
     const isExpanded = expandedManagers.has(managerId);
-    
+
     if (isExpanded) {
-      setExpandedManagers(prev => {
+      setExpandedManagers((prev) => {
         const newSet = new Set(prev);
         newSet.delete(managerId);
         return newSet;
       });
     } else {
-      setExpandedManagers(prev => new Set([...prev, managerId]));
+      setExpandedManagers((prev) => new Set([...prev, managerId]));
       fetchManagerDetails(managerId);
     }
   };
@@ -510,9 +520,13 @@ export default function LeagueTables({
             // Direct array
             standingsData = result.data;
           }
-          
-          console.log("Parsed standings data:", standingsData.length, "entries");
-          
+
+          console.log(
+            "Parsed standings data:",
+            standingsData.length,
+            "entries"
+          );
+
           const userFound = standingsData.some(
             (entry: any) => entry.entry === managerId
           );
@@ -568,9 +582,15 @@ export default function LeagueTables({
       });
     }
   };
-  
+
   // Player Card Component
-  const PlayerCard = ({ playerData, isStarting = true }: { playerData: any, isStarting?: boolean }) => {
+  const PlayerCard = ({
+    playerData,
+    isStarting = true,
+  }: {
+    playerData: any;
+    isStarting?: boolean;
+  }) => {
     // Extract player info and stats from the team_with_stats structure
     const player = playerData.player || {};
     const liveStats = playerData.live_stats || {};
@@ -578,84 +598,130 @@ export default function LeagueTables({
     const multiplier = playerData.multiplier || 1;
     const isCaptain = playerData.is_captain || false;
     const isViceCaptain = playerData.is_vice_captain || false;
-    
+
     const getPositionColor = (elementType: number) => {
       switch (elementType) {
-        case 1: return "bg-green-500"; // Goalkeeper
-        case 2: return "bg-blue-500"; // Defender  
-        case 3: return "bg-yellow-500"; // Midfielder
-        case 4: return "bg-red-500"; // Forward
-        default: return "bg-gray-500";
+        case 1:
+          return "bg-green-500"; // Goalkeeper
+        case 2:
+          return "bg-blue-500"; // Defender
+        case 3:
+          return "bg-yellow-500"; // Midfielder
+        case 4:
+          return "bg-red-500"; // Forward
+        default:
+          return "bg-gray-500";
       }
     };
-    
+
     const getPositionShort = (elementType: number) => {
       switch (elementType) {
-        case 1: return "GK";
-        case 2: return "DEF";
-        case 3: return "MID";
-        case 4: return "FWD";
-        default: return "";
+        case 1:
+          return "GK";
+        case 2:
+          return "DEF";
+        case 3:
+          return "MID";
+        case 4:
+          return "FWD";
+        default:
+          return "";
       }
     };
-    
+
     // Get team name from player.team (ID) and convert to actual team name
     const getTeamName = (teamId: number) => {
-      const teamNames: {[key: number]: string} = {
-        1: "ARS", 2: "AVL", 3: "BOU", 4: "BRE", 5: "BHA", 6: "CHE", 7: "CRY", 8: "EVE",
-        9: "FUL", 10: "IPS", 11: "LEI", 12: "LIV", 13: "MCI", 14: "MUN", 15: "NEW", 16: "NFO",
-        17: "SOU", 18: "TOT", 19: "WHU", 20: "WOL"
+      const teamNames: { [key: number]: string } = {
+        1: "ARS",
+        2: "AVL",
+        3: "BOU",
+        4: "BRE",
+        5: "BHA",
+        6: "CHE",
+        7: "CRY",
+        8: "EVE",
+        9: "FUL",
+        10: "IPS",
+        11: "LEI",
+        12: "LIV",
+        13: "MCI",
+        14: "MUN",
+        15: "NEW",
+        16: "NFO",
+        17: "SOU",
+        18: "TOT",
+        19: "WHU",
+        20: "WOL",
       };
       return teamNames[teamId] || "UNK";
     };
-    
+
     const totalPoints = liveStats.total_points || 0;
-    const displayPoints = multiplier > 1 ? totalPoints * multiplier : totalPoints;
-    
+    const displayPoints =
+      multiplier > 1 ? totalPoints * multiplier : totalPoints;
+
     return (
-      <div className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
-        isStarting ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800" : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600"
-      }`}>
+      <div
+        className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+          isStarting
+            ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+            : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600"
+        }`}
+      >
         {/* Player Kit/Position */}
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-          getPositionColor(player.element_type)
-        }`}>
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${getPositionColor(
+            player.element_type
+          )}`}
+        >
           {getPositionShort(player.element_type)}
         </div>
-        
+
         {/* Team Jersey Icon */}
         <div className="relative">
-          <PiTShirtFill 
-            className="w-6 h-6" 
+          <PiTShirtFill
+            className="w-6 h-6"
             style={{ color: getTeamColors(player.team).primary }}
             title={getTeamColors(player.team).name}
           />
         </div>
-        
+
         {/* Player Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm text-theme-foreground truncate">
-              {player.web_name || (player.first_name && player.second_name ? `${player.first_name} ${player.second_name}` : "Unknown Player")}
+              {player.web_name ||
+                (player.first_name && player.second_name
+                  ? `${player.first_name} ${player.second_name}`
+                  : "Unknown Player")}
             </span>
             {isCaptain && (
-              <span className="bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded font-bold">C</span>
+              <span className="bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded font-bold">
+                C
+              </span>
             )}
             {isViceCaptain && (
-              <span className="bg-gray-500 text-white text-xs px-1.5 py-0.5 rounded font-bold">V</span>
+              <span className="bg-gray-500 text-white text-xs px-1.5 py-0.5 rounded font-bold">
+                V
+              </span>
             )}
           </div>
           <div className="text-xs text-theme-text-secondary">
             {getTeamName(player.team)}
           </div>
         </div>
-        
+
         {/* Points */}
         <div className="text-right">
-          <div className={`text-lg font-bold ${
-            displayPoints > 5 ? "text-green-600 dark:text-green-400" : 
-            displayPoints < 0 ? "text-red-600 dark:text-red-400" : "text-theme-foreground"
-          }`}>
+          <div
+            className={`text-lg font-bold ${
+              displayPoints > 5
+                ? "text-green-600 dark:text-green-400"
+                : displayPoints < 0
+                ? "text-red-600 dark:text-red-400"
+                : "text-theme-foreground"
+            }`}
+          >
             {displayPoints}
           </div>
           <div className="text-xs text-theme-text-secondary">pts</div>
@@ -663,18 +729,52 @@ export default function LeagueTables({
       </div>
     );
   };
-  
+
   // Chips Component
-  const ChipsDisplay = ({ chips, usedChips }: { chips?: any, usedChips?: any[] }) => {
+  const ChipsDisplay = ({
+    chips,
+    usedChips,
+  }: {
+    chips?: any;
+    usedChips?: any[];
+  }) => {
     if (!chips) return null;
-    
+
     const chipsList = [
-      { name: "WC", key: "wildcard", apiName: "wildcard", color: "bg-purple-500", fullName: "Wildcard", range: "1-19" },
-      { name: "BB", key: "bench_boost", apiName: "bboost", color: "bg-blue-500", fullName: "Bench Boost", range: "1-19" },
-      { name: "TC", key: "triple_captain", apiName: "3xc", color: "bg-green-500", fullName: "Triple Captain", range: "1-19" },
-      { name: "FH", key: "free_hit", apiName: "freehit", color: "bg-orange-500", fullName: "Free Hit", range: "1-19" },
+      {
+        name: "WC",
+        key: "wildcard",
+        apiName: "wildcard",
+        color: "bg-purple-500",
+        fullName: "Wildcard",
+        range: "1-19",
+      },
+      {
+        name: "BB",
+        key: "bench_boost",
+        apiName: "bboost",
+        color: "bg-blue-500",
+        fullName: "Bench Boost",
+        range: "1-19",
+      },
+      {
+        name: "TC",
+        key: "triple_captain",
+        apiName: "3xc",
+        color: "bg-green-500",
+        fullName: "Triple Captain",
+        range: "1-19",
+      },
+      {
+        name: "FH",
+        key: "free_hit",
+        apiName: "freehit",
+        color: "bg-orange-500",
+        fullName: "Free Hit",
+        range: "1-19",
+      },
     ];
-    
+
     // Create a map of used chips from the usedChips array
     const usedChipsMap = new Map();
     if (usedChips) {
@@ -682,28 +782,28 @@ export default function LeagueTables({
         usedChipsMap.set(chip.name, chip);
       });
     }
-    
+
     return (
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2">
-          {chipsList.map(chip => {
+          {chipsList.map((chip) => {
             // Use the chips_remaining object for the count
             const remaining = chips[chip.key] || 0;
             const isGray = remaining === 0;
             const isUsed = usedChipsMap.has(chip.apiName);
             const usedChipInfo = usedChipsMap.get(chip.apiName);
-            
+
             return (
-              <div 
-                key={chip.key} 
+              <div
+                key={chip.key}
                 className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                  isGray 
-                    ? "bg-gray-400 text-white shadow-sm" 
+                  isGray
+                    ? "bg-gray-400 text-white shadow-sm"
                     : `${chip.color} text-white shadow-sm`
                 }`}
                 title={
                   isUsed
-                    ? `${chip.fullName} used in GW${usedChipInfo?.event}` 
+                    ? `${chip.fullName} used in GW${usedChipInfo?.event}`
                     : `${chip.fullName} available (GW ${chip.range})`
                 }
               >
@@ -723,7 +823,10 @@ export default function LeagueTables({
         </div>
         {usedChips && usedChips.length > 0 && (
           <div className="text-xs text-theme-text-secondary">
-            Used: {usedChips.map((chip: any) => `${chip.name} (GW${chip.event})`).join(", ")}
+            Used:{" "}
+            {usedChips
+              .map((chip: any) => `${chip.name} (GW${chip.event})`)
+              .join(", ")}
           </div>
         )}
       </div>
@@ -821,7 +924,7 @@ export default function LeagueTables({
                   {t("fplLive.leagueSelection")}
                 </label>
                 <select
-                  value={selectedLiveLeague || ""}
+                  value={selectedLiveLeague || t("fplLive.pickLeague")}
                   onChange={(e) =>
                     setSelectedLiveLeague(Number(e.target.value))
                   }
@@ -842,9 +945,13 @@ export default function LeagueTables({
               {/* Status indicator only */}
               <div className="space-y-3">
                 <div className="flex items-center justify-center gap-3 p-4 bg-theme-card-secondary rounded-lg border border-theme-border">
-                  <div className={`w-3 h-3 rounded-full ${
-                    isLiveTracking ? "bg-green-500 animate-pulse" : "bg-gray-400"
-                  }`}></div>
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      isLiveTracking
+                        ? "bg-green-500 animate-pulse"
+                        : "bg-gray-400"
+                    }`}
+                  ></div>
                   <span className="text-sm font-medium text-theme-foreground">
                     {t("fplLive.startLiveTrackingMessage")}
                   </span>
@@ -1008,7 +1115,7 @@ export default function LeagueTables({
                   <tbody className="bg-white dark:bg-gray-800">
                     {liveData.map((player, index) => {
                       const previousPosition = player.rank; // Original rank from API
-                      const currentPosition = player.live_rank || (index + 1); // Live rank
+                      const currentPosition = player.live_rank || index + 1; // Live rank
                       const positionChange = previousPosition - currentPosition;
                       const isExpanded = expandedManagers.has(player.id);
                       const isLoading = loadingManagerDetails.has(player.id);
@@ -1017,26 +1124,29 @@ export default function LeagueTables({
                       return (
                         <React.Fragment key={player.id}>
                           {/* Main Row */}
-                          <tr 
+                          <tr
                             onClick={() => toggleManagerDetails(player.id)}
                             className={`transition-all duration-300 hover:shadow-sm border-b border-gray-200 dark:border-gray-700 cursor-pointer ${
-                            player.id === managerId?.toString()
-                              ? "bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/80 dark:from-blue-900/20 dark:via-indigo-900/15 dark:to-purple-900/20 border-l-4 border-gradient-to-b from-blue-500 to-purple-500 shadow-md"
-                              : index < 3
-                              ? "bg-gradient-to-r from-yellow-50/50 to-orange-50/30 dark:from-yellow-900/10 dark:to-orange-900/10 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20"
-                              : "hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-blue-50/40 dark:hover:from-gray-700/30 dark:hover:to-blue-900/10"
-                          } ${ isExpanded ? "border-b-0" : "" }`}>
+                              player.id === managerId?.toString()
+                                ? "bg-gradient-to-r  via-indigo-50/60  dark:from-blue-900/20 dark:via-indigo-900/15 dark:to-purple-900/20 border-l-4 border-gradient-to-b from-blue-500 to-purple-500 shadow-md"
+                                : index < 3
+                                ? "bg-gradient-to-r from-yellow-50/50 to-orange-50/30 dark:from-yellow-900/10 dark:to-orange-900/10 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20"
+                                : "hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-blue-50/40 dark:hover:from-gray-700/30 dark:hover:to-blue-900/10"
+                            } ${isExpanded ? "border-b-0" : ""}`}
+                          >
                             <td className="px-2 sm:px-4 py-3">
                               <div className="flex items-center gap-1 sm:gap-2">
-                                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-sm border-2 ${
-                                  index < 3
-                                    ? index === 0
-                                      ? "bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white border-yellow-300 shadow-yellow-200"
-                                      : index === 1
-                                      ? "bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 text-gray-800 border-gray-200 shadow-gray-100"
-                                      : "bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white border-orange-300 shadow-orange-200"
-                                    : "bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600"
-                                }`}>
+                                <div
+                                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-sm border-2 ${
+                                    index < 3
+                                      ? index === 0
+                                        ? "bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white border-yellow-300 shadow-yellow-200"
+                                        : index === 1
+                                        ? "bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 text-gray-800 border-gray-200 shadow-gray-100"
+                                        : "bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white border-orange-300 shadow-orange-200"
+                                      : "bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600"
+                                  }`}
+                                >
                                   {currentPosition}
                                 </div>
                                 {player.id === managerId?.toString() && (
@@ -1070,9 +1180,11 @@ export default function LeagueTables({
                                     {player.live_points}
                                   </span>
                                 </div>
-                                {player.live_points !== player.overall_points && (
+                                {player.live_points !==
+                                  player.overall_points && (
                                   <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full mt-1 font-medium border border-green-200 dark:border-green-800">
-                                    +{player.live_points - player.overall_points}
+                                    +
+                                    {player.live_points - player.overall_points}
                                   </span>
                                 )}
                               </div>
@@ -1084,14 +1196,20 @@ export default function LeagueTables({
                                 </span>
                               ) : (
                                 <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">
-                                  —
+                                  No assigned yet
                                 </span>
                               )}
                             </td>
                             <td className="px-1 sm:px-2 py-3 text-center">
                               {player.is_captain ? (
-                                <div className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-full shadow-sm border-2 border-yellow-300">
-                                  <GiArmBandage className="w-3 h-3 text-white" />
+                                <div className="flex flex-col md:flex-row gap-2 items-center justify-center ">
+                                  <GiArmBandage className="w-4 h-4 text-white" />
+                                  <span className="text-white text-sm">
+                                    {player.captain_info?.name}
+                                  </span>
+                                  <span className="text-white text-xs">
+                                    ({Number(player.captain_info?.points) * 2})
+                                  </span>
                                 </div>
                               ) : player.is_vice_captain ? (
                                 <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600">
@@ -1106,11 +1224,11 @@ export default function LeagueTables({
                             <td className="px-1 sm:px-2 py-3 text-center">
                               {positionChange !== 0 ? (
                                 <div className="flex items-center justify-center">
-                                  {positionChange > 0 ? (
+                                  {positionChange < 0 ? (
                                     <div className="flex items-center bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg border border-red-200 dark:border-red-800">
                                       <MdTrendingUp className="w-3 h-3 rotate-180 text-red-600 dark:text-red-400" />
                                       <span className="text-xs ml-1 font-bold text-red-700 dark:text-red-300">
-                                        -{positionChange}
+                                        {positionChange}
                                       </span>
                                     </div>
                                   ) : (
@@ -1130,21 +1248,30 @@ export default function LeagueTables({
                             </td>
                             <td className="px-1 sm:px-2 py-3 text-center">
                               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 transition-colors">
-                                {isExpanded ? <FiChevronUp className="w-4 h-4" /> : <FiChevronDown className="w-4 h-4" />}
+                                {isExpanded ? (
+                                  <FiChevronUp className="w-4 h-4" />
+                                ) : (
+                                  <FiChevronDown className="w-4 h-4" />
+                                )}
                               </div>
                             </td>
                           </tr>
-                          
+
                           {/* Accordion Details */}
                           {isExpanded && (
                             <tr>
-                              <td colSpan={8} className="px-0 py-0 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                              <td
+                                colSpan={8}
+                                className="px-0 py-0 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"
+                              >
                                 <div className="p-4 sm:p-6">
                                   {isLoading ? (
                                     <div className="flex items-center justify-center py-8">
                                       <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                        <span className="text-sm text-theme-text-secondary">{t("fplLive.loadingManagerDetails")}</span>
+                                        <span className="text-sm text-theme-text-secondary">
+                                          {t("fplLive.loadingManagerDetails")}
+                                        </span>
                                       </div>
                                     </div>
                                   ) : details ? (
@@ -1152,22 +1279,36 @@ export default function LeagueTables({
                                       {/* Chips Display */}
                                       <div className="flex flex-col sm:flex-row gap-4">
                                         <div className="flex-1">
-                                          <h4 className="text-sm font-semibold mb-2 text-theme-foreground">{t("fplLive.chipsRemaining")}</h4>
-                                          <ChipsDisplay chips={details.chips_remaining || {
-                                            wildcard: 0,
-                                            bench_boost: 0,
-                                            triple_captain: 0,
-                                            free_hit: 0,
-                                          }} usedChips={details.used_chips || []} />
+                                          <h4 className="text-sm font-semibold mb-2 text-theme-foreground">
+                                            {t("fplLive.chipsRemaining")}
+                                          </h4>
+                                          <ChipsDisplay
+                                            chips={
+                                              details.chips_remaining || {
+                                                wildcard: 0,
+                                                bench_boost: 0,
+                                                triple_captain: 0,
+                                                free_hit: 0,
+                                              }
+                                            }
+                                            usedChips={details.used_chips || []}
+                                          />
                                         </div>
                                         <div className="flex-1">
-                                          <h4 className="text-sm font-semibold mb-2 text-theme-foreground">{t("fplLive.teamValue")}</h4>
+                                          <h4 className="text-sm font-semibold mb-2 text-theme-foreground">
+                                            {t("fplLive.teamValue")}
+                                          </h4>
                                           <div className="text-lg font-bold text-blue-600">
-                                            £{((details.manager?.last_deadline_value || 0) / 10).toFixed(1)}m
+                                            £
+                                            {(
+                                              (details.manager
+                                                ?.last_deadline_value || 0) / 10
+                                            ).toFixed(1)}
+                                            m
                                           </div>
                                         </div>
                                       </div>
-                                      
+
                                       {/* Team Display */}
                                       {details.team_with_stats && (
                                         <div className="space-y-4">
@@ -1179,13 +1320,19 @@ export default function LeagueTables({
                                             </h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                               {details.team_with_stats
-                                                .filter((p: any) => p.position <= 11)
+                                                .filter(
+                                                  (p: any) => p.position <= 11
+                                                )
                                                 .map((player: any) => (
-                                                <PlayerCard key={player.player_id} playerData={player} isStarting={true} />
-                                              ))}
+                                                  <PlayerCard
+                                                    key={player.player_id}
+                                                    playerData={player}
+                                                    isStarting={true}
+                                                  />
+                                                ))}
                                             </div>
                                           </div>
-                                          
+
                                           {/* Bench */}
                                           <div>
                                             <h4 className="text-sm font-semibold mb-3 text-theme-foreground flex items-center gap-2">
@@ -1194,10 +1341,16 @@ export default function LeagueTables({
                                             </h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                               {details.team_with_stats
-                                                .filter((p: any) => p.position > 11)
+                                                .filter(
+                                                  (p: any) => p.position > 11
+                                                )
                                                 .map((player: any) => (
-                                                <PlayerCard key={player.player_id} playerData={player} isStarting={false} />
-                                              ))}
+                                                  <PlayerCard
+                                                    key={player.player_id}
+                                                    playerData={player}
+                                                    isStarting={false}
+                                                  />
+                                                ))}
                                             </div>
                                           </div>
                                         </div>
@@ -1205,7 +1358,11 @@ export default function LeagueTables({
                                     </div>
                                   ) : (
                                     <div className="text-center py-8">
-                                      <span className="text-sm text-theme-text-secondary">{t("fplLive.failedToLoadManagerDetails")}</span>
+                                      <span className="text-sm text-theme-text-secondary">
+                                        {t(
+                                          "fplLive.failedToLoadManagerDetails"
+                                        )}
+                                      </span>
                                     </div>
                                   )}
                                 </div>
@@ -1454,7 +1611,9 @@ export default function LeagueTables({
                                       Δ
                                     </th>
                                     <th className="px-1 sm:px-2 py-2 text-center text-theme-primary text-xs">
-                                      <span className="hidden sm:inline">Details</span>
+                                      <span className="hidden sm:inline">
+                                        Details
+                                      </span>
                                       <span className="sm:hidden">+</span>
                                     </th>
                                   </tr>
@@ -1465,27 +1624,46 @@ export default function LeagueTables({
                                       const positionChange = entry.last_rank
                                         ? entry.rank - entry.last_rank
                                         : 0;
-                                      const isExpanded = expandedManagers.has(entry.entry.toString());
-                                      const isLoading = loadingManagerDetails.has(entry.entry.toString());
-                                      const details = managerDetails[entry.entry.toString()];
-                                      
+                                      const isExpanded = expandedManagers.has(
+                                        entry.entry.toString()
+                                      );
+                                      const isLoading =
+                                        loadingManagerDetails.has(
+                                          entry.entry.toString()
+                                        );
+                                      const details =
+                                        managerDetails[entry.entry.toString()];
+
                                       return (
                                         <React.Fragment key={entry.id}>
                                           {/* Main Row */}
-                                          <tr 
-                                            onClick={() => toggleManagerDetails(entry.entry.toString())}
+                                          <tr
+                                            onClick={() =>
+                                              toggleManagerDetails(
+                                                entry.entry.toString()
+                                              )
+                                            }
                                             className={`border-b dark:border-gray-700 cursor-pointer ${
-                                            entry.entry === managerId
-                                              ? "bg-blue-50 dark:bg-blue-900"
-                                              : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                          } ${ isExpanded ? "border-b-0" : "" }`}>
+                                              entry.entry === managerId
+                                                ? "bg-blue-50 dark:bg-blue-900"
+                                                : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                                            } ${
+                                              isExpanded ? "border-b-0" : ""
+                                            }`}
+                                          >
                                             <td className="px-2 sm:px-4 py-2 font-medium text-xs">
                                               <div className="flex items-center gap-1">
-                                                <span className={ index < 3 ? "font-bold" : "" }>
+                                                <span
+                                                  className={
+                                                    index < 3 ? "font-bold" : ""
+                                                  }
+                                                >
                                                   {entry.rank}
                                                 </span>
                                                 {entry.entry === managerId && (
-                                                  <span className="text-blue-500 text-xs">←</span>
+                                                  <span className="text-blue-500 text-xs">
+                                                    ←
+                                                  </span>
                                                 )}
                                               </div>
                                             </td>
@@ -1497,12 +1675,18 @@ export default function LeagueTables({
                                                       className={`fi fi-${getCountryFlagCode(
                                                         entry.player_region_name
                                                       )} w-3 h-2 rounded-sm`}
-                                                      title={entry.player_region_name}
+                                                      title={
+                                                        entry.player_region_name
+                                                      }
                                                     ></span>
                                                   )}
-                                                  {entry.player_name || entry.entry_name}
-                                                  {entry.entry === managerId && (
-                                                    <span className="text-xs text-blue-500 font-bold bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">TI</span>
+                                                  {entry.player_name ||
+                                                    entry.entry_name}
+                                                  {entry.entry ===
+                                                    managerId && (
+                                                    <span className="text-xs text-blue-500 font-bold bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">
+                                                      TI
+                                                    </span>
                                                   )}
                                                 </div>
                                               </div>
@@ -1514,34 +1698,51 @@ export default function LeagueTables({
                                               {positionChange > 0 ? (
                                                 <div className="flex items-center justify-center text-red-600">
                                                   <MdTrendingUp className="w-3 h-3 rotate-180" />
-                                                  <span className="text-xs ml-1">-{Math.abs(positionChange)}</span>
+                                                  <span className="text-xs ml-1">
+                                                    -{Math.abs(positionChange)}
+                                                  </span>
                                                 </div>
                                               ) : positionChange < 0 ? (
                                                 <div className="flex items-center justify-center text-green-600">
                                                   <MdTrendingUp className="w-3 h-3" />
-                                                  <span className="text-xs ml-1">+{Math.abs(positionChange)}</span>
+                                                  <span className="text-xs ml-1">
+                                                    +{Math.abs(positionChange)}
+                                                  </span>
                                                 </div>
                                               ) : (
-                                                <span className="text-gray-400 text-xs">—</span>
+                                                <span className="text-gray-400 text-xs">
+                                                  —
+                                                </span>
                                               )}
                                             </td>
                                             <td className="px-1 sm:px-2 py-2 text-center">
                                               <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-100 dark:bg-gray-700 transition-colors">
-                                                {isExpanded ? <FiChevronUp className="w-3 h-3 sm:w-4 sm:h-4" /> : <FiChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />}
+                                                {isExpanded ? (
+                                                  <FiChevronUp className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                ) : (
+                                                  <FiChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                )}
                                               </div>
                                             </td>
                                           </tr>
-                                          
+
                                           {/* Accordion Details */}
                                           {isExpanded && (
                                             <tr>
-                                              <td colSpan={5} className="px-0 py-0 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                                              <td
+                                                colSpan={5}
+                                                className="px-0 py-0 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"
+                                              >
                                                 <div className="p-3 sm:p-4">
                                                   {isLoading ? (
                                                     <div className="flex items-center justify-center py-6">
                                                       <div className="flex items-center gap-2">
                                                         <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                                        <span className="text-xs text-theme-text-secondary">{t("fplLive.loadingManagerDetails")}</span>
+                                                        <span className="text-xs text-theme-text-secondary">
+                                                          {t(
+                                                            "fplLive.loadingManagerDetails"
+                                                          )}
+                                                        </span>
                                                       </div>
                                                     </div>
                                                   ) : details ? (
@@ -1549,22 +1750,44 @@ export default function LeagueTables({
                                                       {/* Chips and Team Value */}
                                                       <div className="flex flex-col sm:flex-row gap-3">
                                                         <div className="flex-1">
-                                                          <h4 className="text-xs font-semibold mb-2 text-theme-foreground">{t("fplLive.chipsRemaining")}</h4>
-                                                          <ChipsDisplay chips={details.chips_remaining || {
-                                                            wildcard: 0,
-                                                            bench_boost: 0,
-                                                            triple_captain: 0,
-                                                            free_hit: 0,
-                                                          }} usedChips={details.used_chips || []} />
+                                                          <h4 className="text-xs font-semibold mb-2 text-theme-foreground">
+                                                            {t(
+                                                              "fplLive.chipsRemaining"
+                                                            )}
+                                                          </h4>
+                                                          <ChipsDisplay
+                                                            chips={
+                                                              details.chips_remaining || {
+                                                                wildcard: 0,
+                                                                bench_boost: 0,
+                                                                triple_captain: 0,
+                                                                free_hit: 0,
+                                                              }
+                                                            }
+                                                            usedChips={
+                                                              details.used_chips ||
+                                                              []
+                                                            }
+                                                          />
                                                         </div>
                                                         <div className="flex-1">
-                                                          <h4 className="text-xs font-semibold mb-2 text-theme-foreground">{t("fplLive.teamValue")}</h4>
+                                                          <h4 className="text-xs font-semibold mb-2 text-theme-foreground">
+                                                            {t(
+                                                              "fplLive.teamValue"
+                                                            )}
+                                                          </h4>
                                                           <div className="text-base font-bold text-blue-600">
-                                                            £{((details.manager?.last_deadline_value || 0) / 10).toFixed(1)}m
+                                                            £
+                                                            {(
+                                                              (details.manager
+                                                                ?.last_deadline_value ||
+                                                                0) / 10
+                                                            ).toFixed(1)}
+                                                            m
                                                           </div>
                                                         </div>
                                                       </div>
-                                                      
+
                                                       {/* Team Display */}
                                                       {details.team_with_stats && (
                                                         <div className="space-y-3">
@@ -1572,29 +1795,69 @@ export default function LeagueTables({
                                                           <div>
                                                             <h4 className="text-xs font-semibold mb-2 text-theme-foreground flex items-center gap-1">
                                                               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                                              {t("fplLive.startingXI")}
+                                                              {t(
+                                                                "fplLive.startingXI"
+                                                              )}
                                                             </h4>
                                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                                                               {details.team_with_stats
-                                                                .filter((p: any) => p.position <= 11)
-                                                                .map((player: any) => (
-                                                                <PlayerCard key={player.player_id} playerData={player} isStarting={true} />
-                                                              ))}
+                                                                .filter(
+                                                                  (p: any) =>
+                                                                    p.position <=
+                                                                    11
+                                                                )
+                                                                .map(
+                                                                  (
+                                                                    player: any
+                                                                  ) => (
+                                                                    <PlayerCard
+                                                                      key={
+                                                                        player.player_id
+                                                                      }
+                                                                      playerData={
+                                                                        player
+                                                                      }
+                                                                      isStarting={
+                                                                        true
+                                                                      }
+                                                                    />
+                                                                  )
+                                                                )}
                                                             </div>
                                                           </div>
-                                                          
+
                                                           {/* Bench */}
                                                           <div>
                                                             <h4 className="text-xs font-semibold mb-2 text-theme-foreground flex items-center gap-1">
                                                               <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                                              {t("fplLive.bench")}
+                                                              {t(
+                                                                "fplLive.bench"
+                                                              )}
                                                             </h4>
                                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                                                               {details.team_with_stats
-                                                                .filter((p: any) => p.position > 11)
-                                                                .map((player: any) => (
-                                                                <PlayerCard key={player.player_id} playerData={player} isStarting={false} />
-                                                              ))}
+                                                                .filter(
+                                                                  (p: any) =>
+                                                                    p.position >
+                                                                    11
+                                                                )
+                                                                .map(
+                                                                  (
+                                                                    player: any
+                                                                  ) => (
+                                                                    <PlayerCard
+                                                                      key={
+                                                                        player.player_id
+                                                                      }
+                                                                      playerData={
+                                                                        player
+                                                                      }
+                                                                      isStarting={
+                                                                        false
+                                                                      }
+                                                                    />
+                                                                  )
+                                                                )}
                                                             </div>
                                                           </div>
                                                         </div>
@@ -1602,7 +1865,11 @@ export default function LeagueTables({
                                                     </div>
                                                   ) : (
                                                     <div className="text-center py-6">
-                                                      <span className="text-xs text-theme-text-secondary">{t("fplLive.failedToLoadManagerDetails")}</span>
+                                                      <span className="text-xs text-theme-text-secondary">
+                                                        {t(
+                                                          "fplLive.failedToLoadManagerDetails"
+                                                        )}
+                                                      </span>
                                                     </div>
                                                   )}
                                                 </div>

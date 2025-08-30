@@ -54,6 +54,8 @@
   "currentManagerId": "Current Manager ID",
   "offline": "Offline",
   "fplLive": {
+    "noAssignedYet": "No assigned yet",
+    "pickLeague": "Pick League",
     "title": "FPL Live Dashboard",
     "subtitle": "Real-time Fantasy Premier League tracking with live bonus predictions",
     "howToUse": "How to use FPL Live",
@@ -255,7 +257,7 @@
       "thisGW": "This GW",
       "noData": "No transfer data available"
     },
-    "liveLeagueTracking": "LIVE League Tracking",
+    "liveLeagueTracking": "LIVE League Tracking (BETA)",
     "liveLeagueStandings": "LIVE League Standings",
     "liveStandings": "LIVE Standings",
     "liveTrackingControls": "Live Tracking Controls",
