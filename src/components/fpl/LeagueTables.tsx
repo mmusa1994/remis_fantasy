@@ -1203,11 +1203,11 @@ export default function LeagueTables({
                             <td className="px-1 sm:px-2 py-3 text-center">
                               {player.is_captain ? (
                                 <div className="flex flex-col md:flex-row gap-1 sm:gap-2 items-center justify-center text-[8px] md:text-sm">
-                                  <GiArmBandage className="w-2 h-2 sm:w-4 sm:h-4 text-white" />
-                                  <span className="text-white text-[10px] sm:text-sm">
+                                  <GiArmBandage className="w-2 h-2 sm:w-4 sm:h-4 text-theme-foreground" />
+                                  <span className="text-theme-foreground text-[10px] sm:text-sm">
                                     {player.captain_info?.name}
                                   </span>
-                                  <span className="text-white text-[8px] sm:text-xs">
+                                  <span className="text-theme-foreground text-[8px] sm:text-xs">
                                     ({Number(player.captain_info?.points) * 2})
                                   </span>
                                 </div>
