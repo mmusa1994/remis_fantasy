@@ -45,7 +45,13 @@ interface FPLData {
   timestamp?: string;
 }
 
-type TabType = "overview" | "squad" | "leagues" | "analytics" | "transfers" | "matchResults";
+type TabType =
+  | "overview"
+  | "squad"
+  | "leagues"
+  | "analytics"
+  | "transfers"
+  | "matchResults";
 
 interface TabConfig {
   id: TabType;
@@ -76,7 +82,7 @@ export default function FPLLivePage() {
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
     null
   );
-  
+
   // Master live tracking state
   const [isLiveTracking, setIsLiveTracking] = useState(false);
 
@@ -166,196 +172,210 @@ export default function FPLLivePage() {
     console.info("Success:", message);
   };
 
-  const loadFullTeamData = useCallback(async (useManagerId?: number, useGameweek?: number) => {
-    const actualManagerId = useManagerId || managerId;
-    const actualGameweek = useGameweek || gameweek;
-    
-    if (!actualManagerId) return;
+  const loadFullTeamData = useCallback(
+    async (useManagerId?: number, useGameweek?: number) => {
+      const actualManagerId = useManagerId || managerId;
+      const actualGameweek = useGameweek || gameweek;
 
-    try {
-      const teamResponse = await fetch("/api/fpl/load-team", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          managerId: actualManagerId,
-          gameweek: actualGameweek,
-        }),
-      });
+      if (!actualManagerId) return;
 
-      if (teamResponse.ok) {
-        const teamResult = await teamResponse.json();
+      try {
+        const teamResponse = await fetch("/api/fpl/load-team", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            managerId: actualManagerId,
+            gameweek: actualGameweek,
+          }),
+        });
 
-        if (teamResult.success) {
-          setData(teamResult.data);
-          const timestamp = new Date().toISOString();
-          setLastUpdated(timestamp);
+        if (teamResponse.ok) {
+          const teamResult = await teamResponse.json();
 
-          setTeamDataLoading(false);
-          showSuccess(t("fullTeamDataLoaded"));
+          if (teamResult.success) {
+            setData(teamResult.data);
+            const timestamp = new Date().toISOString();
+            setLastUpdated(timestamp);
+
+            setTeamDataLoading(false);
+            showSuccess(t("fullTeamDataLoaded"));
+          }
+        } else {
+          console.error(
+            "❌ [FRONTEND] API request failed:",
+            teamResponse.status,
+            teamResponse.statusText
+          );
         }
-      } else {
-        console.error(
-          "❌ [FRONTEND] API request failed:",
-          teamResponse.status,
-          teamResponse.statusText
-        );
+      } catch (err) {
+        console.error("💥 [FRONTEND] Failed to load full team data:", err);
+        setTeamDataLoading(false);
       }
-    } catch (err) {
-      console.error("💥 [FRONTEND] Failed to load full team data:", err);
-      setTeamDataLoading(false);
-    }
-  }, [managerId, gameweek, t]);
+    },
+    [managerId, gameweek, t]
+  );
 
-  const loadLeaguesData = useCallback(async (useManagerId?: number) => {
-    const actualManagerId = useManagerId || managerId;
-    
-    if (!actualManagerId) return;
+  const loadLeaguesData = useCallback(
+    async (useManagerId?: number) => {
+      const actualManagerId = useManagerId || managerId;
 
-    try {
-      const response = await fetch(`/api/fpl/leagues?managerId=${actualManagerId}`);
+      if (!actualManagerId) return;
 
-      if (response.ok) {
-        const result = await response.json();
+      try {
+        const response = await fetch(
+          `/api/fpl/leagues?managerId=${actualManagerId}`
+        );
 
-        if (result.success) {
-          setLeagueData(result.data);
-          setLeaguesLoading(false);
+        if (response.ok) {
+          const result = await response.json();
+
+          if (result.success) {
+            setLeagueData(result.data);
+            setLeaguesLoading(false);
+          }
+        } else {
+          console.error(
+            "❌ [FRONTEND] Leagues API request failed:",
+            response.status,
+            response.statusText
+          );
         }
-      } else {
-        console.error(
-          "❌ [FRONTEND] Leagues API request failed:",
-          response.status,
-          response.statusText
-        );
+      } catch (err) {
+        console.error("💥 [FRONTEND] Failed to load leagues:", err);
+        setLeaguesLoading(false);
       }
-    } catch (err) {
-      console.error("💥 [FRONTEND] Failed to load leagues:", err);
-      setLeaguesLoading(false);
-    }
-  }, [managerId]);
+    },
+    [managerId]
+  );
 
-  const loadGameweekStatus = useCallback(async (useManagerId?: number, useGameweek?: number) => {
-    const actualManagerId = useManagerId || managerId;
-    const actualGameweek = useGameweek || gameweek;
-    
-    if (!actualManagerId) return;
+  const loadGameweekStatus = useCallback(
+    async (useManagerId?: number, useGameweek?: number) => {
+      const actualManagerId = useManagerId || managerId;
+      const actualGameweek = useGameweek || gameweek;
 
-    setGameweekStatusLoading(true);
-    try {
-      const response = await fetch(
-        `/api/fpl/gameweek-status?managerId=${actualManagerId}&gameweek=${actualGameweek}`
-      );
+      if (!actualManagerId) return;
 
-      if (response.ok) {
-        const result = await response.json();
+      setGameweekStatusLoading(true);
+      try {
+        const response = await fetch(
+          `/api/fpl/gameweek-status?managerId=${actualManagerId}&gameweek=${actualGameweek}`
+        );
 
-        if (result.success) {
-          setGameweekStatus(result.data);
+        if (response.ok) {
+          const result = await response.json();
+
+          if (result.success) {
+            setGameweekStatus(result.data);
+          }
+        } else {
+          console.error(
+            "❌ [FRONTEND] Gameweek Status API request failed:",
+            response.status,
+            response.statusText
+          );
         }
-      } else {
-        console.error(
-          "❌ [FRONTEND] Gameweek Status API request failed:",
-          response.status,
-          response.statusText
-        );
+      } catch (err) {
+        console.error("💥 [FRONTEND] Failed to load gameweek status:", err);
+      } finally {
+        setGameweekStatusLoading(false);
       }
-    } catch (err) {
-      console.error("💥 [FRONTEND] Failed to load gameweek status:", err);
-    } finally {
-      setGameweekStatusLoading(false);
-    }
-  }, [managerId, gameweek]);
+    },
+    [managerId, gameweek]
+  );
 
-  const loadManagerInfo = useCallback(async (inputManagerId?: number, inputGameweek?: number) => {
-    // Use input values if provided, otherwise fall back to state
-    const useManagerId = inputManagerId || managerId;
-    const useGameweek = inputGameweek || gameweek;
-    
-    if (!useManagerId) {
-      showError(t("pleaseEnterManagerId"));
-      return;
-    }
+  const loadManagerInfo = useCallback(
+    async (inputManagerId?: number, inputGameweek?: number) => {
+      // Use input values if provided, otherwise fall back to state
+      const useManagerId = inputManagerId || managerId;
+      const useGameweek = inputGameweek || gameweek;
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      if (useManagerId !== null) {
-        localStorage.setItem("fpl-manager-id", useManagerId.toString());
+      if (!useManagerId) {
+        showError(t("pleaseEnterManagerId"));
+        return;
       }
-      localStorage.setItem("fpl-gameweek", useGameweek.toString());
 
-      // Get skeleton data first
-      const skeletonResponse = await fetch("/api/fpl/load-team", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      setLoading(true);
+      setError(null);
+
+      try {
+        if (useManagerId !== null) {
+          localStorage.setItem("fpl-manager-id", useManagerId.toString());
+        }
+        localStorage.setItem("fpl-gameweek", useGameweek.toString());
+
+        // Get skeleton data first
+        const skeletonResponse = await fetch("/api/fpl/load-team", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            managerId: useManagerId,
+            gameweek: useGameweek,
+            skeleton: true,
+          }),
+        });
+
+        if (skeletonResponse.ok) {
+          const result = await skeletonResponse.json();
+
+          if (result.success) {
+            setData(result.data);
+            const timestamp = new Date().toISOString();
+            setLastUpdated(timestamp);
+
+            // Update state with the actual values being used
+            if (inputManagerId) setManagerId(inputManagerId);
+            if (inputGameweek) setGameweek(inputGameweek);
+
+            setTeamLoaded(true);
+            showSuccess(t("managerInfoLoaded"));
+            setLoading(false);
+
+            // Load additional data in background
+            setTeamDataLoading(true);
+            loadFullTeamData(useManagerId, useGameweek);
+
+            setLeaguesLoading(true);
+            loadLeaguesData(useManagerId);
+
+            loadGameweekStatus(useManagerId, useGameweek);
+          } else {
+            throw new Error(result.error || "Manager not found");
+          }
+        } else {
+          console.error(
+            "❌ [FRONTEND] Skeleton API request failed:",
+            skeletonResponse.status,
+            skeletonResponse.statusText
+          );
+          throw new Error(
+            `Failed to fetch manager info: ${skeletonResponse.status}`
+          );
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        console.error("💥 [FRONTEND] Error loading manager:", {
+          error: err,
+          message,
           managerId: useManagerId,
           gameweek: useGameweek,
-          skeleton: true,
-        }),
-      });
-
-      if (skeletonResponse.ok) {
-        const result = await skeletonResponse.json();
-
-        if (result.success) {
-          setData(result.data);
-          const timestamp = new Date().toISOString();
-          setLastUpdated(timestamp);
-
-          // Update state with the actual values being used
-          if (inputManagerId) setManagerId(inputManagerId);
-          if (inputGameweek) setGameweek(inputGameweek);
-
-          setTeamLoaded(true);
-          showSuccess(t("managerInfoLoaded"));
-          setLoading(false);
-
-          // Load additional data in background
-          setTeamDataLoading(true);
-          loadFullTeamData(useManagerId, useGameweek);
-
-          setLeaguesLoading(true);
-          loadLeaguesData(useManagerId);
-
-          loadGameweekStatus(useManagerId, useGameweek);
-        } else {
-          throw new Error(result.error || "Manager not found");
-        }
-      } else {
-        console.error(
-          "❌ [FRONTEND] Skeleton API request failed:",
-          skeletonResponse.status,
-          skeletonResponse.statusText
-        );
-        throw new Error(
-          `Failed to fetch manager info: ${skeletonResponse.status}`
-        );
+        });
+        showError(message);
+        setLoading(false);
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      console.error("💥 [FRONTEND] Error loading manager:", {
-        error: err,
-        message,
-        managerId: useManagerId,
-        gameweek: useGameweek,
-      });
-      showError(message);
-      setLoading(false);
-    }
-  }, [
-    managerId,
-    gameweek,
-    loadFullTeamData,
-    loadLeaguesData,
-    loadGameweekStatus,
-    t,
-  ]);
+    },
+    [
+      managerId,
+      gameweek,
+      loadFullTeamData,
+      loadLeaguesData,
+      loadGameweekStatus,
+      t,
+    ]
+  );
 
   // DISABLED: Auto-load team data - user must click Load Team button manually
   // useEffect(() => {
@@ -427,12 +447,12 @@ export default function FPLLivePage() {
       // Stop live tracking
       setIsLiveTracking(false);
       setIsPolling(false);
-      
+
       if (pollingInterval) {
         clearInterval(pollingInterval);
         setPollingInterval(null);
       }
-      
+
       showSuccess("Zaustavljen je uživo praćenje");
     }
   }, [
@@ -469,7 +489,7 @@ export default function FPLLivePage() {
   const handleTabChange = (newTab: TabType) => {
     setTabLoading(true);
     setActiveTab(newTab);
-    
+
     // Simulate brief loading for smooth transition
     setTimeout(() => {
       setTabLoading(false);
@@ -485,7 +505,9 @@ export default function FPLLivePage() {
     if (tabLoading) {
       return (
         <LoadingCard
-          title={`${t("fplLive.loadingContent")} ${tabs.find(tab => tab.id === activeTab)?.label || ''}...`}
+          title={`${t("fplLive.loadingContent")} ${
+            tabs.find((tab) => tab.id === activeTab)?.label || ""
+          }...`}
           description={t("fplLive.preparingContent")}
           className="bg-theme-card border-theme-border rounded-lg shadow theme-transition"
         />
@@ -578,8 +600,8 @@ export default function FPLLivePage() {
                 <div className="text-center mt-2">
                   <p className="text-xs font-medium text-theme-text-secondary theme-transition">
                     {isLiveTracking
-                      ? `🔴 ${t("fplLive.startLivePolling")}`
-                      : `⚪ ${t("fplLive.startLivePolling")}`}
+                      ? `🔴 ${t("startLivePolling")}`
+                      : `⚪ ${t("startLivePolling")}`}
                   </p>
                 </div>
                 {/* Live BPS Tracker */}
@@ -747,7 +769,9 @@ export default function FPLLivePage() {
               isPolling={false}
               onManagerIdChange={setManagerId}
               onGameweekChange={setGameweek}
-              onLoadTeam={(inputManagerId, inputGameweek) => loadManagerInfo(inputManagerId, inputGameweek)}
+              onLoadTeam={(inputManagerId, inputGameweek) =>
+                loadManagerInfo(inputManagerId, inputGameweek)
+              }
               onStartPolling={() => {}}
               onStopPolling={() => {}}
               loading={loading}
@@ -793,7 +817,9 @@ export default function FPLLivePage() {
                       <MdPlayArrow className="w-4 h-4 sm:w-5 sm:h-5" />
                     )}
                     <span className="text-xs sm:text-sm">
-                      {isLiveTracking ? t("fplLive.stopLive") : t("fplLive.startLive")}
+                      {isLiveTracking
+                        ? t("fplLive.stopLive")
+                        : t("fplLive.startLive")}
                     </span>
                   </button>
 

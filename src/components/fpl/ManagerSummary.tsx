@@ -273,7 +273,7 @@ const ManagerSummary = React.memo(function ManagerSummary({
                 </span>
                 {!bonusAdded && (
                   <span className="text-xs text-gray-500 dark:text-gray-400 block">
-                    ({t("fplLive.provisional")})
+                    ({t("provisional")})
                   </span>
                 )}
               </div>
