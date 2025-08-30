@@ -1129,12 +1129,10 @@ export default function LeagueTables({
                             className={`transition-all duration-300 hover:shadow-sm border-b border-gray-200 dark:border-gray-700 cursor-pointer ${
                               player.id === managerId?.toString()
                                 ? "bg-gradient-to-r  via-indigo-50/60  dark:from-blue-900/20 dark:via-indigo-900/15 dark:to-purple-900/20 border-l-4 border-gradient-to-b from-blue-500 to-purple-500 shadow-md"
-                                : index < 3
-                                ? "bg-gradient-to-r from-yellow-50/50 to-orange-50/30 dark:from-yellow-900/10 dark:to-orange-900/10 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20"
                                 : "hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-blue-50/40 dark:hover:from-gray-700/30 dark:hover:to-blue-900/10"
                             } ${isExpanded ? "border-b-0" : ""}`}
                           >
-                            <td className="px-0.5  sm:px-4 py-2 sm:py-3">
+                            <td className="px-1 sm:px-4 py-2 sm:py-3">
                               <div className="w-[10px] md:w-full flex items-center gap-0.5 sm:gap-2 ">
                                 <span className="text-[10px] sm:text-sm font-bold text-gray-600 dark:text-gray-400">
                                   {currentPosition}
@@ -1164,21 +1162,21 @@ export default function LeagueTables({
                               </div>
                             </td>
                             <td className="px-0.5 sm:px-2 py-2 sm:py-3 text-center">
-                              <div className="min-w-[60px] bg-green-50 dark:bg-green-900/20 px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg">
+                              <div className="min-w-[70px] bg-green-50 dark:bg-green-900/20 px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg">
                                 <span className="font-bold text-green-700 dark:text-green-300 text-xs sm:text-sm">
-                                  {player.live_points} (
+                                  {player.live_points} (+
                                   {player.live_points - player.overall_points})
                                 </span>
                               </div>
                             </td>
-                            <td className="flex justify-center items-center py-7 sm:px-2 sm:py-3 ">
+                            <td className="flex justify-center items-center py-7 sm:px-2 sm:py-3">
                               {player.bonus_points > 0 ? (
                                 <span className="inline-flex items-center px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white shadow-sm border border-yellow-300">
                                   +{player.bonus_points}
                                 </span>
                               ) : (
                                 <GiEmptyHourglass
-                                  className="w-3 h-3"
+                                  className="w-3 h-3 mt-0 md:w-5 md:h-5 md:mt-2"
                                   color="gray"
                                 />
                               )}
