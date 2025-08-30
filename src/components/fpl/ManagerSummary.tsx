@@ -76,16 +76,23 @@ const ManagerSummary = React.memo(function ManagerSummary({
   if (loading || !manager || !teamTotals) {
     return (
       <LoadingCard
-        title={t("fplLive.managerOverview")} 
-        description={loading ? t("fplLive.loadingManagerInfo") : t("fplLive.loadTeamToSeeManagerOverview")}
+        title={t("fplLive.managerOverview")}
+        description={
+          loading
+            ? t("fplLive.loadingManagerInfo")
+            : t("fplLive.loadTeamToSeeManagerOverview")
+        }
         className="bg-theme-card border-theme-border rounded-lg shadow theme-transition"
       />
     );
   }
 
-  const formatNumber = (num: number) => num.toLocaleString();
-  const formatRank = (rank: number) => {
-    if (rank === 0) return "N/A";
+  const formatNumber = (num: number | undefined | null) => {
+    if (num === undefined || num === null) return "0";
+    return num.toLocaleString();
+  };
+  const formatRank = (rank: number | undefined | null) => {
+    if (rank === undefined || rank === null || rank === 0) return "N/A";
     return `#${formatNumber(rank)}`;
   };
 
@@ -245,7 +252,7 @@ const ManagerSummary = React.memo(function ManagerSummary({
                 {t("fplLive.gameweekPoints")}
               </span>
               <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
-                {manager.summary_event_points} {t("fplLive.points")}
+                {manager.summary_event_points || 0} {t("fplLive.points")}
               </span>
             </div>
             <div className="flex justify-between">
@@ -372,7 +379,10 @@ const ManagerSummary = React.memo(function ManagerSummary({
         </div>
         <div className="bg-theme-secondary/10 px-3 py-1 rounded-full border border-theme-border">
           <span className="text-xs font-medium text-theme-foreground theme-transition">
-            {t("fplLive.managerId")}: <span className="font-bold text-blue-600 dark:text-blue-400">{managerId || manager.id}</span>
+            {t("fplLive.managerId")}:{" "}
+            <span className="font-bold text-blue-600 dark:text-blue-400">
+              {managerId || manager.id}
+            </span>
           </span>
         </div>
       </div>
