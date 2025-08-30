@@ -235,19 +235,7 @@ export default function SubNavigation({
                         />
                       )}
                     </div>
-                    {item.subtitle && (
-                      <span
-                        className={`text-xs opacity-75 ${
-                          isActive
-                            ? "text-theme-text-secondary"
-                            : theme === "dark"
-                            ? "text-gray-300"
-                            : "text-gray-600"
-                        }`}
-                      >
-                        {item.subtitle}
-                      </span>
-                    )}
+                    {item.subtitle && <span>{item.subtitle}</span>}
                   </div>
                   {isActive && (
                     <div
