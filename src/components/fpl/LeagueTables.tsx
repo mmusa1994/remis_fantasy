@@ -10,16 +10,16 @@ import {
   MdGroup,
   MdExpandMore,
   MdExpandLess,
-  MdPlayArrow,
-  MdStop,
   MdRefresh,
   MdSports,
   MdTrendingUp,
   MdStars,
   MdBarChart,
-  MdFlashOn,
   MdAccessTime,
 } from "react-icons/md";
+import { TbCopyrightFilled } from "react-icons/tb";
+
+import { GiEmptyHourglass } from "react-icons/gi";
 import { GiTrophy, GiArmBandage } from "react-icons/gi";
 import { BsLightningCharge } from "react-icons/bs";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
@@ -1134,19 +1134,9 @@ export default function LeagueTables({
                                 : "hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-blue-50/40 dark:hover:from-gray-700/30 dark:hover:to-blue-900/10"
                             } ${isExpanded ? "border-b-0" : ""}`}
                           >
-                            <td className="px-0.5 sm:px-4 py-2 sm:py-3">
-                              <div className="flex items-center gap-0.5 sm:gap-2">
-                                <span
-                                  className={`text-[10px] sm:text-sm font-bold ${
-                                    index < 3
-                                      ? index === 0
-                                        ? "text-yellow-500"
-                                        : index === 1
-                                        ? "text-gray-400"
-                                        : "text-orange-500"
-                                      : "text-gray-600 dark:text-gray-400"
-                                  }`}
-                                >
+                            <td className="px-0.5  sm:px-4 py-2 sm:py-3">
+                              <div className="w-[10px] md:w-full flex items-center gap-0.5 sm:gap-2 ">
+                                <span className="text-[10px] sm:text-sm font-bold text-gray-600 dark:text-gray-400">
                                   {currentPosition}
                                 </span>
                                 {player.id === managerId?.toString() && (
@@ -1174,36 +1164,36 @@ export default function LeagueTables({
                               </div>
                             </td>
                             <td className="px-0.5 sm:px-2 py-2 sm:py-3 text-center">
-                              <div className="flex flex-col items-center">
-                                <div className="bg-green-50 dark:bg-green-900/20 px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg">
-                                  <span className="font-bold text-green-700 dark:text-green-300 text-xs sm:text-sm">
-                                    {player.live_points}
-                                  </span>
-                                </div>
-                                {player.live_points !==
-                                  player.overall_points && (
-                                  <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-1 sm:px-2 py-0.5 rounded-full mt-1 font-medium border border-green-200 dark:border-green-800">
-                                    +
-                                    {player.live_points - player.overall_points}
-                                  </span>
-                                )}
+                              <div className="min-w-[60px] bg-green-50 dark:bg-green-900/20 px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg">
+                                <span className="font-bold text-green-700 dark:text-green-300 text-xs sm:text-sm">
+                                  {player.live_points} (
+                                  {player.live_points - player.overall_points})
+                                </span>
                               </div>
                             </td>
-                            <td className="px-0.5 sm:px-2 py-2 sm:py-3 text-center">
+                            <td className="flex justify-center items-center py-7 sm:px-2 sm:py-3 ">
                               {player.bonus_points > 0 ? (
                                 <span className="inline-flex items-center px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white shadow-sm border border-yellow-300">
                                   +{player.bonus_points}
                                 </span>
                               ) : (
-                                <span className="text-gray-400 dark:text-gray-500 text-[10px] sm:text-xs font-medium">
-                                  No assigned yet
-                                </span>
+                                <GiEmptyHourglass
+                                  className="w-3 h-3"
+                                  color="gray"
+                                />
                               )}
                             </td>
                             <td className="px-1 sm:px-2 py-3 text-center">
                               {player.is_captain ? (
-                                <div className="flex flex-col md:flex-row gap-1 sm:gap-2 items-center justify-center text-[8px] md:text-sm">
-                                  <GiArmBandage className="w-2 h-2 sm:w-4 sm:h-4 text-theme-foreground" />
+                                <div className="flex flex-row gap-1 sm:gap-2 items-center justify-center text-[8px] md:text-sm">
+                                  <TbCopyrightFilled
+                                    className="w-2 h-2 sm:w-4 sm:h-4 text-theme-foreground"
+                                    color={
+                                      Number(player.captain_info?.points) > 4
+                                        ? "green"
+                                        : "red"
+                                    }
+                                  />
                                   <span className="text-theme-foreground text-[10px] sm:text-sm">
                                     {player.captain_info?.name}
                                   </span>

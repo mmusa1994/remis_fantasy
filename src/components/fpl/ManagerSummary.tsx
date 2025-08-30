@@ -271,11 +271,6 @@ const ManagerSummary = React.memo(function ManagerSummary({
                 <span className="font-bold text-lg text-green-600 dark:text-green-400">
                   {activePoints}
                 </span>
-                {!bonusAdded && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400 block">
-                    ({t("provisional")})
-                  </span>
-                )}
               </div>
             </div>
             <div className="flex justify-between">

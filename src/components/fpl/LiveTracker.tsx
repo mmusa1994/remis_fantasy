@@ -76,6 +76,8 @@ const LiveTracker = React.memo(function LiveTracker({
 
   const getEventLabel = (eventType: string) => {
     switch (eventType) {
+      case "defensive_contribution":
+        return t("fplLive.eventDefensiveContribution");
       case "goals_scored":
         return t("fplLive.eventGoal");
       case "assists":

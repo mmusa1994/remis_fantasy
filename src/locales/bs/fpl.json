@@ -54,6 +54,11 @@
   "currentManagerId": "Trenutni ID Menadžera",
   "offline": "Van Mreže",
   "fplLive": {
+    "eventDefensiveContribution": "Defensive contribution",
+    "liveTrackerLivePolling": "Uživo praćenje aktivno",
+    "predictedBonus": "Predviđeni Bonus",
+    "noChange": "Nema promjene",
+    "playersNotMakingDifference": "Igrači koji ne čine razliku",
     "pickLeague": "Izaberite ligu",
     "noAssignedYet": "Još nije dodeljen",
     "title": "FPL Live Dashboard",

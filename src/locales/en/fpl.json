@@ -54,6 +54,11 @@
   "currentManagerId": "Current Manager ID",
   "offline": "Offline",
   "fplLive": {
+    "eventDefensiveContribution": "Defensive contribution",
+    "liveTrackerLivePolling": "Live tracking active",
+    "predictedBonus": "Predicted Bonus",
+    "noChange": "No change",
+    "playersNotMakingDifference": "Players not making difference",
     "noAssignedYet": "No assigned yet",
     "pickLeague": "Pick League",
     "title": "FPL Live Dashboard",
