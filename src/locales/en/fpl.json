@@ -54,6 +54,8 @@
   "currentManagerId": "Current Manager ID",
   "offline": "Offline",
   "fplLive": {
+    "liveTrackerMinAgo": "minute ago",
+    "liveTrackerMinsAgo": "minutes ago",
     "eventDefensiveContribution": "Defensive contribution",
     "liveTrackerLivePolling": "Live tracking active",
     "predictedBonus": "Predicted Bonus",

@@ -54,6 +54,8 @@
   "currentManagerId": "Trenutni ID Menadžera",
   "offline": "Van Mreže",
   "fplLive": {
+    "liveTrackerMinAgo": "minuta prije",
+    "liveTrackerMinsAgo": "minutama prije",
     "eventDefensiveContribution": "Defensive contribution",
     "liveTrackerLivePolling": "Uživo praćenje aktivno",
     "predictedBonus": "Predviđeni Bonus",
