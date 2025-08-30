@@ -924,12 +924,15 @@ export default function LeagueTables({
                   {t("fplLive.leagueSelection")}
                 </label>
                 <select
-                  value={selectedLiveLeague || t("fplLive.pickLeague")}
+                  value={selectedLiveLeague || ""}
                   onChange={(e) =>
-                    setSelectedLiveLeague(Number(e.target.value))
+                    setSelectedLiveLeague(
+                      e.target.value ? Number(e.target.value) : null
+                    )
                   }
                   className="w-full px-4 py-3 input-theme rounded-lg font-medium shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
+                  <option value="">{t("fplLive.pickLeague")}</option>
                   {availableLeagues.map((league: any) => (
                     <option
                       key={`${league.id}-${league.type}`}
