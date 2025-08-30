@@ -880,7 +880,7 @@ export default function LeagueTables({
 
   return (
     <div className="bg-theme-card border-theme-border rounded-lg shadow theme-transition">
-      <div className="px-6 py-4 border-b border-theme-border">
+      <div className="px-2 sm:px-6 py-4 border-b border-theme-border">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold text-theme-foreground flex items-center theme-transition">
             <GiTrophy className="mr-2 text-yellow-500" />
@@ -905,9 +905,9 @@ export default function LeagueTables({
 
       {/* Live Mode UI */}
       {isLiveTracking ? (
-        <div className="p-6">
+        <div className="p-2 sm:p-6">
           {/* Live Controls Card */}
-          <div className="bg-gradient-to-r from-blue-50/50 to-green-50/50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 mb-6 border border-blue-200/50 dark:border-gray-600 backdrop-blur-sm">
+          <div className="bg-gradient-to-r from-blue-50/50 to-green-50/50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-3 sm:p-6 mb-6 border border-blue-200/50 dark:border-gray-600 backdrop-blur-sm">
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
@@ -1024,7 +1024,7 @@ export default function LeagueTables({
 
           {/* Live Standings Table */}
           {liveData.length > 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mx-2 sm:mx-0">
               <div className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-600 dark:from-green-600 dark:via-blue-600 dark:to-purple-700 px-4 sm:px-6 py-3 sm:py-4">
                 <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg flex items-center gap-2">
                   <BsLightningCharge className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
@@ -1055,11 +1055,8 @@ export default function LeagueTables({
                 <table className="w-full">
                   <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border-b border-gray-200 dark:border-gray-600">
                     <tr>
-                      <th className="px-2 sm:px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                        <div className="flex items-center gap-1">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                          #
-                        </div>
+                      <th className="px-0.5 sm:px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                        <span className="hidden sm:inline">#</span>
                       </th>
                       <th className="px-2 sm:px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                         {t("fplLive.manager")}
@@ -1137,29 +1134,29 @@ export default function LeagueTables({
                                 : "hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-blue-50/40 dark:hover:from-gray-700/30 dark:hover:to-blue-900/10"
                             } ${isExpanded ? "border-b-0" : ""}`}
                           >
-                            <td className="px-2 sm:px-4 py-3">
-                              <div className="flex items-center gap-1 sm:gap-2">
-                                <div
-                                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-sm border-2 ${
+                            <td className="px-0.5 sm:px-4 py-2 sm:py-3">
+                              <div className="flex items-center gap-0.5 sm:gap-2">
+                                <span
+                                  className={`text-[10px] sm:text-sm font-bold ${
                                     index < 3
                                       ? index === 0
-                                        ? "bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white border-yellow-300 shadow-yellow-200"
+                                        ? "text-yellow-500"
                                         : index === 1
-                                        ? "bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 text-gray-800 border-gray-200 shadow-gray-100"
-                                        : "bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white border-orange-300 shadow-orange-200"
-                                      : "bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600"
+                                        ? "text-gray-400"
+                                        : "text-orange-500"
+                                      : "text-gray-600 dark:text-gray-400"
                                   }`}
                                 >
                                   {currentPosition}
-                                </div>
+                                </span>
                                 {player.id === managerId?.toString() && (
-                                  <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm border border-blue-400">
+                                  <span className="bg-blue-500 text-white px-0.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">
                                     {t("fplLive.you")}
                                   </span>
                                 )}
                               </div>
                             </td>
-                            <td className="px-2 sm:px-4 py-3">
+                            <td className="px-0.5 sm:px-4 py-2 sm:py-3">
                               <div>
                                 <div className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm truncate">
                                   {player.name}
@@ -1169,62 +1166,62 @@ export default function LeagueTables({
                                 </div>
                               </div>
                             </td>
-                            <td className="px-1 sm:px-2 py-3 text-center">
-                              <div className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">
+                            <td className="px-0.5 sm:px-2 py-2 sm:py-3 text-center">
+                              <div className="bg-blue-50 dark:bg-blue-900/20 px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg">
                                 <span className="font-bold text-blue-700 dark:text-blue-300 text-xs sm:text-sm">
                                   {player.overall_points}
                                 </span>
                               </div>
                             </td>
-                            <td className="px-1 sm:px-2 py-3 text-center">
+                            <td className="px-0.5 sm:px-2 py-2 sm:py-3 text-center">
                               <div className="flex flex-col items-center">
-                                <div className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-lg">
+                                <div className="bg-green-50 dark:bg-green-900/20 px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg">
                                   <span className="font-bold text-green-700 dark:text-green-300 text-xs sm:text-sm">
                                     {player.live_points}
                                   </span>
                                 </div>
                                 {player.live_points !==
                                   player.overall_points && (
-                                  <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full mt-1 font-medium border border-green-200 dark:border-green-800">
+                                  <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-1 sm:px-2 py-0.5 rounded-full mt-1 font-medium border border-green-200 dark:border-green-800">
                                     +
                                     {player.live_points - player.overall_points}
                                   </span>
                                 )}
                               </div>
                             </td>
-                            <td className="px-1 sm:px-2 py-3 text-center">
+                            <td className="px-0.5 sm:px-2 py-2 sm:py-3 text-center">
                               {player.bonus_points > 0 ? (
-                                <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white shadow-sm border border-yellow-300">
+                                <span className="inline-flex items-center px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white shadow-sm border border-yellow-300">
                                   +{player.bonus_points}
                                 </span>
                               ) : (
-                                <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">
+                                <span className="text-gray-400 dark:text-gray-500 text-[10px] sm:text-xs font-medium">
                                   No assigned yet
                                 </span>
                               )}
                             </td>
                             <td className="px-1 sm:px-2 py-3 text-center">
                               {player.is_captain ? (
-                                <div className="flex flex-col md:flex-row gap-2 items-center justify-center ">
-                                  <GiArmBandage className="w-4 h-4 text-white" />
-                                  <span className="text-white text-sm">
+                                <div className="flex flex-col md:flex-row gap-1 sm:gap-2 items-center justify-center text-[8px] md:text-sm">
+                                  <GiArmBandage className="w-2 h-2 sm:w-4 sm:h-4 text-white" />
+                                  <span className="text-white text-[10px] sm:text-sm">
                                     {player.captain_info?.name}
                                   </span>
-                                  <span className="text-white text-xs">
+                                  <span className="text-white text-[8px] sm:text-xs">
                                     ({Number(player.captain_info?.points) * 2})
                                   </span>
                                 </div>
                               ) : player.is_vice_captain ? (
-                                <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600">
+                                <span className="inline-flex items-center px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600">
                                   VC
                                 </span>
                               ) : (
-                                <span className="text-gray-400 dark:text-gray-500 text-xs font-medium">
+                                <span className="text-gray-400 dark:text-gray-500 text-[10px] sm:text-xs font-medium">
                                   —
                                 </span>
                               )}
                             </td>
-                            <td className="px-1 sm:px-2 py-3 text-center">
+                            <td className="px-0.5 sm:px-2 py-2 sm:py-3 text-center">
                               {positionChange !== 0 ? (
                                 <div className="flex items-center justify-center">
                                   {positionChange < 0 ? (
@@ -1267,7 +1264,7 @@ export default function LeagueTables({
                                 colSpan={8}
                                 className="px-0 py-0 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"
                               >
-                                <div className="p-4 sm:p-6">
+                                <div className="p-2 sm:p-6">
                                   {isLoading ? (
                                     <div className="flex items-center justify-center py-8">
                                       <div className="flex items-center gap-3">
@@ -1412,7 +1409,7 @@ export default function LeagueTables({
               </div>
             </div>
           ) : (
-            <div className="bg-theme-card rounded-xl shadow-lg border border-theme-border p-12 text-center">
+            <div className="bg-theme-card rounded-xl shadow-lg border border-theme-border p-4 sm:p-12 text-center">
               <div className="flex flex-col items-center space-y-4">
                 {isLoadingLiveData ? (
                   <>
@@ -1496,7 +1493,7 @@ export default function LeagueTables({
         <>
           {/* Tab Navigation */}
           {hasClassic && hasH2H && (
-            <div className="px-6 pt-4">
+            <div className="px-2 sm:px-6 pt-4">
               <div className="flex space-x-1 bg-theme-secondary rounded-lg p-1">
                 <button
                   onClick={() => setActiveTab("classic")}
@@ -1524,7 +1521,7 @@ export default function LeagueTables({
             </div>
           )}
 
-          <div className="p-6">
+          <div className="p-2 sm:p-6">
             {/* Classic Leagues */}
             {(activeTab === "classic" || !hasH2H) && hasClassic && (
               <div className="space-y-3">
@@ -1736,7 +1733,7 @@ export default function LeagueTables({
                                                 colSpan={5}
                                                 className="px-0 py-0 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"
                                               >
-                                                <div className="p-3 sm:p-4">
+                                                <div className="p-2 sm:p-4">
                                                   {isLoading ? (
                                                     <div className="flex items-center justify-center py-6">
                                                       <div className="flex items-center gap-2">
