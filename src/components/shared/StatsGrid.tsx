@@ -158,6 +158,25 @@ export default function StatsGrid({
             shadow: "shadow-red-500/10",
           },
         };
+      case "orange":
+        return {
+          light: {
+            bg: "bg-orange-50",
+            border: "border-orange-200",
+            icon: "text-orange-600",
+            value: "text-orange-800",
+            label: "text-orange-600",
+            shadow: "shadow-orange-100",
+          },
+          dark: {
+            bg: "bg-orange-500/10",
+            border: "border-orange-500/20",
+            icon: "text-orange-400",
+            value: "text-orange-300",
+            label: "text-orange-400",
+            shadow: "shadow-orange-500/10",
+          },
+        };
       default:
         return {
           light: {
@@ -185,7 +204,7 @@ export default function StatsGrid({
 
   return (
     <div
-      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 ${className}`}
+      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-8 lg:gap-10 ${className}`}
     >
       {stats.map((stat, index) => {
         const IconComponent = getIconComponent(stat.icon);
@@ -199,19 +218,24 @@ export default function StatsGrid({
         return (
           <motion.div
             key={`${stat.label}-${index}`}
-            className={`p-6 lg:p-8 rounded-2xl border ${themeColors.bg} ${themeColors.border} ${themeColors.shadow} shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-xl`}
+            className={`p-8 lg:p-10 rounded-3xl border-2 ${themeColors.bg} ${themeColors.border} ${themeColors.shadow} shadow-xl backdrop-blur-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:border-opacity-60`}
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${themeColors.bg.includes('dark') ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'} 0%, transparent 100%)`,
+            }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: index * 0.1 }}
             whileHover={{
-              scale: 1.05,
-              transition: { duration: 0.2 },
+              scale: 1.02,
+              y: -5,
+              transition: { duration: 0.3, ease: "easeOut" },
             }}
+            whileTap={{ scale: 0.98 }}
           >
             {/* Desktop Layout: Centered vertical */}
-            <div className="hidden lg:flex flex-col items-center text-center space-y-4">
+            <div className="hidden lg:flex flex-col items-center text-center space-y-6">
               <motion.div
-                className={`p-4 rounded-xl ${themeColors.bg} border ${themeColors.border} border-2`}
+                className={`p-6 rounded-2xl ${themeColors.bg} border ${themeColors.border} border-2 shadow-lg`}
                 initial={{ opacity: 0, rotate: -180 }}
                 animate={{ opacity: 1, rotate: 0 }}
                 transition={{
@@ -225,12 +249,12 @@ export default function StatsGrid({
                   transition: { duration: 0.2 },
                 }}
               >
-                <IconComponent className={`w-8 h-8 ${themeColors.icon}`} />
+                <IconComponent className={`w-12 h-12 ${themeColors.icon}`} />
               </motion.div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <motion.p
-                  className={`text-lg xl:text-xl font-bold ${themeColors.value} leading-none`}
+                  className={`text-2xl xl:text-3xl font-black ${themeColors.value} leading-none`}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 + 0.3 }}
@@ -238,7 +262,7 @@ export default function StatsGrid({
                   {stat.value}
                 </motion.p>
                 <motion.p
-                  className={`text-xs xl:text-sm font-medium ${themeColors.label} leading-tight`}
+                  className={`text-sm xl:text-base font-semibold ${themeColors.label} leading-tight tracking-wide`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.1 + 0.2 }}
@@ -252,7 +276,7 @@ export default function StatsGrid({
             <div className="flex lg:hidden items-center justify-between">
               <div className="flex-1">
                 <motion.p
-                  className={`text-xs sm:text-sm font-medium ${themeColors.label} mb-1`}
+                  className={`text-sm sm:text-base font-semibold ${themeColors.label} mb-2 tracking-wide`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.1 + 0.2 }}
@@ -260,7 +284,7 @@ export default function StatsGrid({
                   {stat.label}
                 </motion.p>
                 <motion.p
-                  className={`text-lg sm:text-xl md:text-2xl font-bold ${themeColors.value}`}
+                  className={`text-xl sm:text-2xl md:text-3xl font-black ${themeColors.value}`}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 + 0.3 }}
@@ -269,7 +293,7 @@ export default function StatsGrid({
                 </motion.p>
               </div>
               <motion.div
-                className={`ml-3 p-2 md:p-3 rounded-lg ${themeColors.bg} border ${themeColors.border}`}
+                className={`ml-4 p-3 md:p-4 rounded-xl ${themeColors.bg} border ${themeColors.border} shadow-lg`}
                 initial={{ opacity: 0, rotate: -180 }}
                 animate={{ opacity: 1, rotate: 0 }}
                 transition={{
@@ -284,7 +308,7 @@ export default function StatsGrid({
                 }}
               >
                 <IconComponent
-                  className={`w-5 h-5 md:w-6 md:h-6 ${themeColors.icon}`}
+                  className={`w-6 h-6 md:w-8 md:h-8 ${themeColors.icon}`}
                 />
               </motion.div>
             </div>

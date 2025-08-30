@@ -126,9 +126,9 @@ export default function FPLLivePage() {
     },
     {
       id: "matchResults",
-      label: "Rezultati utakmica",
+      label: t("fplLive.tabs.matchResults"),
       icon: IoFootballOutline,
-      description: "Live match results and player ownership",
+      description: t("fplLive.tabs.matchResultsDesc"),
       color: "green",
     },
   ];
@@ -578,8 +578,8 @@ export default function FPLLivePage() {
                 <div className="text-center mt-2">
                   <p className="text-xs font-medium text-theme-text-secondary theme-transition">
                     {isLiveTracking
-                      ? "🔴 Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu"
-                      : "⚪ Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu"}
+                      ? `🔴 ${t("fplLive.startLivePolling")}`
+                      : `⚪ ${t("fplLive.startLivePolling")}`}
                   </p>
                 </div>
                 {/* Live BPS Tracker */}
@@ -793,7 +793,7 @@ export default function FPLLivePage() {
                       <MdPlayArrow className="w-4 h-4 sm:w-5 sm:h-5" />
                     )}
                     <span className="text-xs sm:text-sm">
-                      {isLiveTracking ? "Zaustavi Uživo" : "Pokreni Uživo"}
+                      {isLiveTracking ? t("fplLive.stopLive") : t("fplLive.startLive")}
                     </span>
                   </button>
 
@@ -819,18 +819,18 @@ export default function FPLLivePage() {
             {/* Responsive Tab Navigation */}
             <div className="bg-theme-card rounded-md border-theme-border overflow-hidden theme-transition">
               <div className="border-b border-theme-border bg-theme-card theme-transition">
-                {/* Mobile: Show 2 tabs + dropdown */}
+                {/* Mobile: Show 3 tabs + dropdown - always show Overview, Squad, Leagues */}
                 <div className="sm:hidden">
                   <div className="flex">
-                    {/* First 2 tabs visible */}
-                    {tabs.slice(0, 2).map((tab) => {
+                    {/* First 3 tabs visible - ensure Leagues is always visible */}
+                    {tabs.slice(0, 3).map((tab) => {
                       const Icon = tab.icon;
                       const isActive = activeTab === tab.id;
                       return (
                         <button
                           key={tab.id}
                           onClick={() => handleTabChange(tab.id)}
-                          className={`flex-1 flex flex-col items-center gap-1 px-2 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
+                          className={`flex-1 flex flex-col items-center gap-1 px-1 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
                             isActive
                               ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
                               : "border-transparent text-gray-600 dark:text-gray-400"
@@ -848,23 +848,23 @@ export default function FPLLivePage() {
                     <div className="relative flex-1">
                       <button
                         onClick={() => setShowTabDropdown(!showTabDropdown)}
-                        className={`w-full flex flex-col items-center gap-1 px-2 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
-                          tabs.slice(2).some((tab) => tab.id === activeTab)
+                        className={`w-full flex flex-col items-center gap-1 px-1 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
+                          tabs.slice(3).some((tab) => tab.id === activeTab)
                             ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
                             : "border-transparent text-gray-600 dark:text-gray-400"
                         } theme-transition`}
                       >
                         <MdExpandMore className="w-4 h-4 flex-shrink-0" />
                         <span className="text-xs leading-tight text-center">
-                          {tabs.slice(2).find((tab) => tab.id === activeTab)
-                            ?.label || t("common.more", "More")}
+                          {tabs.slice(3).find((tab) => tab.id === activeTab)
+                            ?.label || t("fplLive.common.more")}
                         </span>
                       </button>
 
                       {/* Dropdown Menu */}
                       {showTabDropdown && (
                         <div className="absolute top-full left-0 right-0 bg-theme-card border border-theme-border rounded-b-md shadow-lg z-50 theme-transition">
-                          {tabs.slice(2).map((tab) => {
+                          {tabs.slice(3).map((tab) => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
                             return (
@@ -891,48 +891,48 @@ export default function FPLLivePage() {
                   </div>
                 </div>
 
-                {/* Tablet: Show 3 tabs + dropdown */}
+                {/* Tablet: Show 4 tabs + dropdown */}
                 <div className="hidden sm:flex md:hidden">
-                  {tabs.slice(0, 3).map((tab) => {
+                  {tabs.slice(0, 4).map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
                     return (
                       <button
                         key={tab.id}
                         onClick={() => handleTabChange(tab.id)}
-                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
+                        className={`flex-1 flex items-center justify-center gap-2 px-2 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
                           isActive
                             ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
                             : "border-transparent text-gray-600 dark:text-gray-400"
                         } theme-transition`}
                       >
                         <Icon className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm">{tab.label}</span>
+                        <span className="text-sm truncate">{tab.label}</span>
                       </button>
                     );
                   })}
 
                   {/* Tablet Dropdown */}
-                  {tabs.length > 3 && (
+                  {tabs.length > 4 && (
                     <div className="relative flex-1">
                       <button
                         onClick={() => setShowTabDropdown(!showTabDropdown)}
-                        className={`w-full flex items-center justify-center gap-2 px-3 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
-                          tabs.slice(3).some((tab) => tab.id === activeTab)
+                        className={`w-full flex items-center justify-center gap-2 px-2 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
+                          tabs.slice(4).some((tab) => tab.id === activeTab)
                             ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
                             : "border-transparent text-gray-600 dark:text-gray-400"
                         } theme-transition`}
                       >
                         <MdExpandMore className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm">
-                          {tabs.slice(3).find((tab) => tab.id === activeTab)
-                            ?.label || t("common.more", "More")}
+                        <span className="text-sm truncate">
+                          {tabs.slice(4).find((tab) => tab.id === activeTab)
+                            ?.label || t("fplLive.common.more")}
                         </span>
                       </button>
 
                       {showTabDropdown && (
                         <div className="absolute top-full left-0 right-0 bg-theme-card border border-theme-border rounded-b-md shadow-lg z-50 theme-transition">
-                          {tabs.slice(3).map((tab) => {
+                          {tabs.slice(4).map((tab) => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
                             return (

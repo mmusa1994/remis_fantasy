@@ -42,9 +42,14 @@ interface LivePlayer {
   captain_multiplier: number;
   vice_captain_multiplier: number;
   bonus_points: number;
-  rank: number;
+  rank: number; // Original rank from API
+  live_rank?: number; // Live calculated rank
   is_captain: boolean;
   is_vice_captain: boolean;
+  captain_info?: {
+    name: string;
+    points: number;
+  } | null;
   chips_remaining?: {
     wildcard: number;
     bench_boost: number;
@@ -167,8 +172,15 @@ export default function LeagueTables({
   }, [isLiveTracking, selectedLiveLeague]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchLiveData = async () => {
-    if (!isLiveTracking || !selectedLiveLeague) return;
+    if (!isLiveTracking || !selectedLiveLeague) {
+      console.log("Skipping live data fetch - conditions not met:", {
+        isLiveTracking,
+        selectedLiveLeague
+      });
+      return;
+    }
 
+    console.log("Starting live data fetch for league:", selectedLiveLeague);
     setIsLoadingLiveData(true);
     try {
       const selectedLeague = availableLeagues.find(
@@ -191,10 +203,30 @@ export default function LeagueTables({
       if (!standingsResponse.ok) return;
 
       const standingsResult = await standingsResponse.json();
-      if (!standingsResult.success || !standingsResult.data?.standings) return;
+      console.log("API Response Structure:", JSON.stringify(standingsResult, null, 2));
+      
+      // Handle different response structures
+      let standings = null;
+      if (standingsResult.success && standingsResult.data) {
+        if (standingsResult.data.standings) {
+          // Direct standings array
+          standings = standingsResult.data.standings;
+        } else if (standingsResult.data.league?.standings?.results) {
+          // Nested league structure
+          standings = standingsResult.data.league.standings.results;
+        } else if (Array.isArray(standingsResult.data)) {
+          // Direct array
+          standings = standingsResult.data;
+        }
+      }
+      
+      if (!standings || standings.length === 0) {
+        console.warn("No standings data found in API response");
+        return;
+      }
 
       // Get live data for each manager in the league
-      const livePlayersPromises = standingsResult.data.standings.map(
+      const livePlayersPromises = standings.map(
         async (entry: any) => {
           try {
             // Get live team data for each manager
@@ -212,21 +244,62 @@ export default function LeagueTables({
               const liveTeamData = await liveTeamResponse.json();
               if (liveTeamData.success && liveTeamData.data) {
                 const teamTotals = liveTeamData.data.team_totals || {};
-                const livePoints = teamTotals.total_points || entry.total;
+                const teamWithStats = liveTeamData.data.team_with_stats || [];
+                
+                // Calculate live points with more precision
+                const basePoints = teamTotals.total_points || entry.total;
                 const bonusPoints = teamTotals.bonus_points || 0;
+                const captainPoints = teamTotals.captain_points || 0;
+                
+                // Find captain and vice captain
+                const captain = teamWithStats.find((p: any) => p.is_captain);
+                const viceCaptain = teamWithStats.find((p: any) => p.is_vice_captain);
+                
+                // Calculate live total including any additional points from live events
+                let liveTotal = basePoints;
+                
+                // Add any live events that haven't been included yet
+                teamWithStats.forEach((player: any) => {
+                  if (player.live_stats) {
+                    const livePlayerPoints = player.live_stats.total_points || 0;
+                    const originalPoints = player.stats?.total_points || 0;
+                    const additionalPoints = livePlayerPoints - originalPoints;
+                    
+                    if (additionalPoints > 0) {
+                      if (player.is_captain) {
+                        liveTotal += additionalPoints * 2; // Captain gets double
+                      } else if (player.is_vice_captain && !captain) {
+                        liveTotal += additionalPoints * 2; // Vice captain gets double if no captain
+                      } else {
+                        liveTotal += additionalPoints;
+                      }
+                    }
+                  }
+                });
+
+                console.log(`Live data for ${entry.player_name || entry.entry_name}:`, {
+                  original: entry.total,
+                  base: basePoints,
+                  live: liveTotal,
+                  bonus: bonusPoints
+                });
 
                 return {
                   id: entry.entry.toString(),
                   name: entry.player_name || entry.entry_name,
                   team: entry.entry_name,
                   overall_points: entry.total,
-                  live_points: livePoints,
+                  live_points: liveTotal,
                   captain_multiplier: 2,
                   vice_captain_multiplier: 1,
                   bonus_points: bonusPoints,
                   rank: entry.rank,
-                  is_captain: false,
-                  is_vice_captain: false,
+                  is_captain: !!captain,
+                  is_vice_captain: !!viceCaptain,
+                  captain_info: captain ? {
+                    name: captain.player?.web_name || 'Unknown',
+                    points: captain.live_stats?.total_points || 0
+                  } : null,
                 };
               }
             }
@@ -237,29 +310,44 @@ export default function LeagueTables({
             );
           }
 
-          // Fallback to regular data
+          // Fallback to regular data when live data fails
+          console.log(`Using fallback data for manager ${entry.entry}`);
           return {
             id: entry.entry.toString(),
             name: entry.player_name || entry.entry_name,
             team: entry.entry_name,
             overall_points: entry.total,
-            live_points: entry.total,
+            live_points: entry.total, // Same as overall when no live data
             captain_multiplier: 2,
             vice_captain_multiplier: 1,
             bonus_points: 0,
             rank: entry.rank,
+            live_rank: entry.rank, // Keep original rank as live rank
             is_captain: false,
             is_vice_captain: false,
+            captain_info: null,
           };
         }
       );
 
       const combinedPlayers = await Promise.all(livePlayersPromises);
 
-      // Sort by live points
+      // Sort by live points and update ranks
       combinedPlayers.sort(
-        (a: LivePlayer, b: LivePlayer) => b.live_points - a.live_points
+        (a: LivePlayer, b: LivePlayer) => {
+          // Primary sort: live points (descending)
+          if (b.live_points !== a.live_points) {
+            return b.live_points - a.live_points;
+          }
+          // Secondary sort: overall points (descending) 
+          return b.overall_points - a.overall_points;
+        }
       );
+      
+      // Update live ranks after sorting
+      combinedPlayers.forEach((player, index) => {
+        player.live_rank = index + 1;
+      });
 
       // Get live events count
       const liveResponse = await fetch("/api/fpl/poll", {
@@ -279,8 +367,11 @@ export default function LeagueTables({
         gameweek: currentGW,
       });
       setLastLiveUpdate(new Date().toLocaleTimeString());
+      
+      console.log(`Live data updated: ${combinedPlayers.length} players, GW${currentGW}`);
     } catch (error) {
       console.error("Live data fetch error:", error);
+      // Don't clear live data on error - keep showing last successful data
     } finally {
       setIsLoadingLiveData(false);
     }
@@ -408,10 +499,20 @@ export default function LeagueTables({
 
         if (result.success && result.data) {
           // Handle different API response structures
-          const standingsData =
-            result.data.standings ||
-            result.data.league?.standings?.results ||
-            [];
+          let standingsData = [];
+          if (result.data.standings) {
+            // Direct standings array
+            standingsData = result.data.standings;
+          } else if (result.data.league?.standings?.results) {
+            // Nested league structure
+            standingsData = result.data.league.standings.results;
+          } else if (Array.isArray(result.data)) {
+            // Direct array
+            standingsData = result.data;
+          }
+          
+          console.log("Parsed standings data:", standingsData.length, "entries");
+          
           const userFound = standingsData.some(
             (entry: any) => entry.entry === managerId
           );
@@ -906,8 +1007,8 @@ export default function LeagueTables({
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800">
                     {liveData.map((player, index) => {
-                      const previousPosition = player.rank;
-                      const currentPosition = index + 1;
+                      const previousPosition = player.rank; // Original rank from API
+                      const currentPosition = player.live_rank || (index + 1); // Live rank
                       const positionChange = previousPosition - currentPosition;
                       const isExpanded = expandedManagers.has(player.id);
                       const isLoading = loadingManagerDetails.has(player.id);
@@ -1043,7 +1144,7 @@ export default function LeagueTables({
                                     <div className="flex items-center justify-center py-8">
                                       <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                        <span className="text-sm text-theme-text-secondary">Loading manager details...</span>
+                                        <span className="text-sm text-theme-text-secondary">{t("fplLive.loadingManagerDetails")}</span>
                                       </div>
                                     </div>
                                   ) : details ? (
@@ -1051,7 +1152,7 @@ export default function LeagueTables({
                                       {/* Chips Display */}
                                       <div className="flex flex-col sm:flex-row gap-4">
                                         <div className="flex-1">
-                                          <h4 className="text-sm font-semibold mb-2 text-theme-foreground">Chips Remaining</h4>
+                                          <h4 className="text-sm font-semibold mb-2 text-theme-foreground">{t("fplLive.chipsRemaining")}</h4>
                                           <ChipsDisplay chips={details.chips_remaining || {
                                             wildcard: 0,
                                             bench_boost: 0,
@@ -1060,7 +1161,7 @@ export default function LeagueTables({
                                           }} usedChips={details.used_chips || []} />
                                         </div>
                                         <div className="flex-1">
-                                          <h4 className="text-sm font-semibold mb-2 text-theme-foreground">Team Value</h4>
+                                          <h4 className="text-sm font-semibold mb-2 text-theme-foreground">{t("fplLive.teamValue")}</h4>
                                           <div className="text-lg font-bold text-blue-600">
                                             £{((details.manager?.last_deadline_value || 0) / 10).toFixed(1)}m
                                           </div>
@@ -1074,7 +1175,7 @@ export default function LeagueTables({
                                           <div>
                                             <h4 className="text-sm font-semibold mb-3 text-theme-foreground flex items-center gap-2">
                                               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                              Starting XI
+                                              {t("fplLive.startingXI")}
                                             </h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                               {details.team_with_stats
@@ -1089,7 +1190,7 @@ export default function LeagueTables({
                                           <div>
                                             <h4 className="text-sm font-semibold mb-3 text-theme-foreground flex items-center gap-2">
                                               <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                                              Bench
+                                              {t("fplLive.bench")}
                                             </h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                               {details.team_with_stats
@@ -1104,7 +1205,7 @@ export default function LeagueTables({
                                     </div>
                                   ) : (
                                     <div className="text-center py-8">
-                                      <span className="text-sm text-theme-text-secondary">Failed to load manager details</span>
+                                      <span className="text-sm text-theme-text-secondary">{t("fplLive.failedToLoadManagerDetails")}</span>
                                     </div>
                                   )}
                                 </div>
@@ -1161,10 +1262,10 @@ export default function LeagueTables({
                     </div>
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold text-theme-primary">
-                        Učitavanje uživo podataka...
+                        {t("fplLive.loadingLiveData")}
                       </h3>
                       <p className="text-theme-muted">
-                        Preuzimanje najnovijih rezultata iz{" "}
+                        {t("fplLive.fetchingLatestStandings")}{" "}
                         {
                           availableLeagues.find(
                             (league) => league.id === selectedLiveLeague
@@ -1196,10 +1297,10 @@ export default function LeagueTables({
                     </div>
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold text-theme-primary">
-                        Uživo praćenje aktivno
+                        {t("fplLive.liveTrackingActive")}
                       </h3>
                       <p className="text-theme-muted max-w-md">
-                        Čeka se na nova ažuriranja...
+                        {t("fplLive.waitingForUpdates")}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-theme-muted">
@@ -1214,10 +1315,10 @@ export default function LeagueTables({
                     </div>
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold text-theme-primary">
-                        Spreman za živo praćenje
+                        {t("fplLive.readyForLiveTracking")}
                       </h3>
                       <p className="text-theme-muted max-w-md">
-                        Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu
+                        {t("fplLive.startLiveTrackingMessage")}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-theme-muted">
@@ -1440,7 +1541,7 @@ export default function LeagueTables({
                                                     <div className="flex items-center justify-center py-6">
                                                       <div className="flex items-center gap-2">
                                                         <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                                        <span className="text-xs text-theme-text-secondary">Loading manager details...</span>
+                                                        <span className="text-xs text-theme-text-secondary">{t("fplLive.loadingManagerDetails")}</span>
                                                       </div>
                                                     </div>
                                                   ) : details ? (
@@ -1448,7 +1549,7 @@ export default function LeagueTables({
                                                       {/* Chips and Team Value */}
                                                       <div className="flex flex-col sm:flex-row gap-3">
                                                         <div className="flex-1">
-                                                          <h4 className="text-xs font-semibold mb-2 text-theme-foreground">Chips Remaining</h4>
+                                                          <h4 className="text-xs font-semibold mb-2 text-theme-foreground">{t("fplLive.chipsRemaining")}</h4>
                                                           <ChipsDisplay chips={details.chips_remaining || {
                                                             wildcard: 0,
                                                             bench_boost: 0,
@@ -1457,7 +1558,7 @@ export default function LeagueTables({
                                                           }} usedChips={details.used_chips || []} />
                                                         </div>
                                                         <div className="flex-1">
-                                                          <h4 className="text-xs font-semibold mb-2 text-theme-foreground">Team Value</h4>
+                                                          <h4 className="text-xs font-semibold mb-2 text-theme-foreground">{t("fplLive.teamValue")}</h4>
                                                           <div className="text-base font-bold text-blue-600">
                                                             £{((details.manager?.last_deadline_value || 0) / 10).toFixed(1)}m
                                                           </div>
@@ -1471,7 +1572,7 @@ export default function LeagueTables({
                                                           <div>
                                                             <h4 className="text-xs font-semibold mb-2 text-theme-foreground flex items-center gap-1">
                                                               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                                              Starting XI
+                                                              {t("fplLive.startingXI")}
                                                             </h4>
                                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                                                               {details.team_with_stats
@@ -1486,7 +1587,7 @@ export default function LeagueTables({
                                                           <div>
                                                             <h4 className="text-xs font-semibold mb-2 text-theme-foreground flex items-center gap-1">
                                                               <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                                              Bench
+                                                              {t("fplLive.bench")}
                                                             </h4>
                                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                                                               {details.team_with_stats
@@ -1501,7 +1602,7 @@ export default function LeagueTables({
                                                     </div>
                                                   ) : (
                                                     <div className="text-center py-6">
-                                                      <span className="text-xs text-theme-text-secondary">Failed to load manager details</span>
+                                                      <span className="text-xs text-theme-text-secondary">{t("fplLive.failedToLoadManagerDetails")}</span>
                                                     </div>
                                                   )}
                                                 </div>

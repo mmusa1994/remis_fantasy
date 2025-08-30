@@ -134,7 +134,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto text-center">
           {/* Logo */}
           <div
-            className={`w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 mx-auto mb-8 flex items-center justify-center bg-[#800020] shadow-2xl border-2 border-white`}
+            className={`w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 mx-auto mb-8 flex items-center justify-center drop-shadow-xl`}
           >
             <Image
               src="/images/rf-logo.svg"
@@ -336,7 +336,23 @@ export default function Home() {
                       {t(`leagues.${league.id}.description`)}
                     </p>
                     <div
-                      className={`w-full flex items-center justify-center text-sm font-semibold ${colors.text} group-hover:translate-x-1 transition-transform duration-300 mt-auto py-3 px-4 rounded-lg border ${colors.border} hover:bg-opacity-20 hover:bg-current`}
+                      className={`w-full flex items-center justify-center text-sm font-semibold ${colors.text} group-hover:translate-x-1 group-hover:text-white transition-all duration-300 mt-auto py-3 px-4 rounded-lg border ${colors.border}`}
+                      style={{
+                        backgroundColor: 'transparent'
+                      }}
+                      onMouseEnter={(e) => {
+                        const leagueId = league.id;
+                        if (leagueId === 'premier-league') {
+                          e.currentTarget.style.backgroundColor = 'rgba(147, 51, 234, 0.8)'; // purple
+                        } else if (leagueId === 'champions-league') {
+                          e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.8)'; // blue
+                        } else if (leagueId === 'f1-fantasy') {
+                          e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.8)'; // red
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                     >
                       {t("hero.openLeague")}
                       <svg
@@ -364,10 +380,23 @@ export default function Home() {
 
           {/* Dynamic Stats Section */}
           <div className="mt-12 md:mt-20 max-w-4xl mx-auto">
-            <StatsGrid
-              stats={typedStats}
-              className="transition-all duration-300"
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 transition-all duration-300">
+              {typedStats.map((stat, index) => {
+                // Assign different colors to each stat card
+                const colors = ['purple', 'blue', 'red', 'orange'];
+                const colorTheme = colors[index % colors.length];
+                
+                return (
+                  <div key={`stat-${index}`}>
+                    <StatsGrid
+                      stats={[stat]}
+                      theme={colorTheme}
+                      className=""
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
