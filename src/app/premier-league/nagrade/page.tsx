@@ -19,7 +19,7 @@ export default function PremierLeagueNagradePage() {
   if (prizesLoading || contentLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingCard 
+        <LoadingCard
           title="Loading Premier League Prizes"
           description="Please wait while we fetch the latest prize information"
           className="w-full max-w-md mx-auto"
@@ -42,7 +42,7 @@ export default function PremierLeagueNagradePage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen ">
       <PrizesGallery
         prizes={prizes}
         leagueFilter="premier"

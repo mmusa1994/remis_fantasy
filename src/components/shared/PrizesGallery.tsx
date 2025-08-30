@@ -210,16 +210,18 @@ export default function PrizesGallery({
 
   if (filteredPrizes.length === 0) {
     return (
-      <section className="relative w-full min-h-[400px] bg-theme-background py-20 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-theme-heading-primary mb-4">
-            {title}
-          </h2>
-          <p className="text-theme-text-secondary">
-            Nema dostupnih nagrada za ovu ligu.
-          </p>
+      <div className="w-full py-16 sm:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+          <div className="text-center">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-theme-heading-primary mb-4">
+              {title}
+            </h2>
+            <p className="text-theme-text-secondary text-sm sm:text-base">
+              Nema dostupnih nagrada za ovu ligu.
+            </p>
+          </div>
         </div>
-      </section>
+      </div>
     );
   }
 
@@ -227,292 +229,352 @@ export default function PrizesGallery({
   
   if (!currentPrize) {
     return (
-      <section className="relative w-full min-h-[400px] bg-theme-background py-20 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-theme-heading-primary mb-4">
-            {title}
-          </h2>
-          <p className="text-theme-text-secondary">
-            Greška pri učitavanju nagrada.
-          </p>
+      <div className="w-full py-16 sm:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+          <div className="text-center">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-theme-heading-primary mb-4">
+              {title}
+            </h2>
+            <p className="text-theme-text-secondary text-sm sm:text-base">
+              Greška pri učitavanju nagrada.
+            </p>
+          </div>
         </div>
-      </section>
+      </div>
     );
   }
   
   const colors = tierColors[currentPrize.tier] || tierColors.standard;
 
   return (
-    <section className="relative w-full min-h-screen bg-theme-background overflow-hidden theme-transition">
-      {/* Optimized Background Effects */}
-      <div className="absolute inset-0 particles-bg">
+    <div className="w-full py-8 sm:py-12 md:py-16 lg:py-20">
+      {/* Background Effects - contained */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
-          className={`absolute top-20 left-20 w-96 h-96 bg-gradient-to-r ${colors.gradient} minimal-radius blur-3xl opacity-15 animate-pulse-gentle gpu-accelerated`}
+          className={`absolute top-20 left-20 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-r ${colors.gradient} rounded-full blur-3xl opacity-5 animate-pulse`}
         />
         <div
-          className={`absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-l ${colors.gradient} minimal-radius blur-3xl opacity-10 animate-float-slow gpu-accelerated`}
+          className={`absolute bottom-20 right-20 w-48 h-48 sm:w-80 sm:h-80 bg-gradient-to-l ${colors.gradient} rounded-full blur-3xl opacity-5 animate-pulse`}
         />
-
-        <div className="absolute inset-0 opacity-5">
-          <div
-            className="absolute inset-0 bg-repeat"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M30 15l10 15-10 15-10-15z'/%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          ></div>
-        </div>
       </div>
 
-      <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl relative">
         {/* Header */}
-        <div className="text-center mb-12 mt-8 animate-fade-in-up">
-          <h2 className="text-3xl md:text-6xl font-black mb-4 leading-none font-russo animate-scale-in animate-delay-200">
-            <span className="text-theme-heading-primary drop-shadow-2xl theme-transition">
-              {title}
-            </span>
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-4 text-theme-heading-primary">
+            {title}
           </h2>
-
-          <p className="text-theme-text-secondary text-base md:text-lg w-full max-w-4xl mx-auto leading-relaxed font-medium theme-transition animate-fade-in animate-delay-500">
+          <p className="text-theme-text-secondary text-sm sm:text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
             {subtitle}
           </p>
         </div>
 
-        {/* Main Carousel Container */}
-        <div className="relative w-full max-w-7xl mx-auto">
-          {/* Navigation Buttons - only show if more than 1 prize */}
+        {/* Main Prize Card */}
+        <div className="relative">
+          <div
+            className={`bg-theme-card border-2 rounded-2xl overflow-hidden transition-all duration-300 ${
+              isTransitioning ? "opacity-50 scale-95" : "opacity-100 scale-100"
+            }`}
+            style={{
+              borderColor: `${colors.primary}40`,
+              boxShadow: `0 10px 30px -5px ${colors.primary}20`,
+            }}
+          >
+            {/* Mobile Layout */}
+            <div className="lg:hidden">
+              {/* Mobile Image */}
+              <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
+                <Image
+                  src={currentPrize.image}
+                  alt={currentPrize.title}
+                  fill
+                  sizes="100vw"
+                  className="object-contain p-4 sm:p-6"
+                  priority
+                  quality={100}
+                />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b ${colors.bg} opacity-10`}
+                />
+              </div>
+              
+              {/* Mobile Content */}
+              <div className="p-4 sm:p-6">
+                {/* Price Badge */}
+                {currentPrize.price && (
+                  <div
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-white font-bold text-sm mb-4 shadow-lg border"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
+                      borderColor: `${colors.primary}40`,
+                    }}
+                  >
+                    <Award className="w-4 h-4" />
+                    {currentPrize.price}
+                  </div>
+                )}
+
+                <h3 className="text-xl sm:text-2xl font-black text-theme-heading-primary mb-2">
+                  {currentPrize.title}
+                </h3>
+
+                <h4 className={`text-base sm:text-lg ${colors.accent} font-semibold mb-3`}>
+                  {currentPrize.subtitle}
+                </h4>
+
+                <p className="text-theme-text-secondary text-sm sm:text-base leading-relaxed mb-4">
+                  {currentPrize.description}
+                </p>
+
+                {/* Features Accordion */}
+                <div className="mb-6">
+                  <button
+                    onClick={() => setIsAccordionOpen(!isAccordionOpen)}
+                    className="flex items-center gap-2 text-theme-text-muted hover:text-theme-foreground transition-colors text-sm font-medium mb-2"
+                  >
+                    {isAccordionOpen ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        Sakrij detalje
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Prikaži detalje ({currentPrize.features.length})
+                      </>
+                    )}
+                  </button>
+
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${
+                      isAccordionOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {currentPrize.features.map((feature, index) => (
+                        <div key={index} className="flex items-start gap-3 text-sm">
+                          <div
+                            className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                            style={{ backgroundColor: colors.primary }}
+                          />
+                          <span className="text-theme-text-secondary leading-relaxed">
+                            {feature}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA Button */}
+                <button
+                  onClick={() => openModal(currentPrize)}
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg border hover:scale-105"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
+                    borderColor: `${colors.primary}40`,
+                    color: "#ffffff",
+                  }}
+                >
+                  <Eye className="w-4 h-4" />
+                  Pogledaj Detalje
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Layout */}
+            <div className="hidden lg:grid lg:grid-cols-5">
+              {/* Desktop Image */}
+              <div className="lg:col-span-2 relative overflow-hidden min-h-[500px]">
+                <Image
+                  src={currentPrize.image}
+                  alt={currentPrize.title}
+                  fill
+                  sizes="40vw"
+                  className="object-contain p-8"
+                  priority
+                  quality={100}
+                />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-r ${colors.bg} opacity-10`}
+                />
+              </div>
+
+              {/* Desktop Content */}
+              <div className="lg:col-span-3 p-8 flex flex-col justify-between">
+                <div className="flex-1">
+                  {/* Price Badge */}
+                  {currentPrize.price && (
+                    <div
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white font-bold text-sm mb-4 shadow-lg border"
+                      style={{
+                        background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
+                        borderColor: `${colors.primary}40`,
+                      }}
+                    >
+                      <Award className="w-4 h-4" />
+                      {currentPrize.price}
+                    </div>
+                  )}
+
+                  <h3 className="text-2xl lg:text-3xl font-black text-theme-heading-primary mb-3">
+                    {currentPrize.title}
+                  </h3>
+
+                  <h4 className={`text-lg lg:text-xl ${colors.accent} font-semibold mb-4`}>
+                    {currentPrize.subtitle}
+                  </h4>
+
+                  <p className="text-theme-text-secondary text-base leading-relaxed mb-6">
+                    {currentPrize.description}
+                  </p>
+
+                  {/* Features Accordion */}
+                  <div className="mb-6">
+                    <button
+                      onClick={() => setIsAccordionOpen(!isAccordionOpen)}
+                      className="flex items-center gap-2 text-theme-text-muted hover:text-theme-foreground transition-colors text-sm font-medium mb-3"
+                    >
+                      {isAccordionOpen ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                          Sakrij detalje
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                          Prikaži detalje ({currentPrize.features.length})
+                        </>
+                      )}
+                    </button>
+
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ${
+                        isAccordionOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {currentPrize.features.map((feature, index) => (
+                          <div key={index} className="flex items-start gap-3 text-sm">
+                            <div
+                              className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                              style={{ backgroundColor: colors.primary }}
+                            />
+                            <span className="text-theme-text-secondary leading-relaxed">
+                              {feature}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA Button */}
+                <button
+                  onClick={() => openModal(currentPrize)}
+                  className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg border hover:scale-105"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
+                    borderColor: `${colors.primary}40`,
+                    color: "#ffffff",
+                  }}
+                >
+                  <Eye className="w-4 h-4" />
+                  Pogledaj Detalje
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Buttons - Desktop */}
           {filteredPrizes.length > 1 && (
             <>
               <button
                 onClick={prevSlide}
                 disabled={isTransitioning}
-                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 sm:w-16 sm:h-16 bg-theme-secondary/70 backdrop-blur-xl minimal-radius flex items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-500 ease-in-out border border-theme-border shadow-2xl theme-transition hover:scale-105 focus-ring disabled:opacity-50"
+                className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-theme-secondary/80 backdrop-blur-sm rounded-full items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-300 border border-theme-border shadow-lg hover:scale-110 disabled:opacity-50"
               >
-                <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+                <ChevronLeft className="w-6 h-6" />
               </button>
 
               <button
                 onClick={nextSlide}
                 disabled={isTransitioning}
-                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 sm:w-16 sm:h-16 bg-theme-secondary/70 backdrop-blur-xl minimal-radius flex items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-500 ease-in-out border border-theme-border shadow-2xl theme-transition hover:scale-105 focus-ring disabled:opacity-50"
+                className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-theme-secondary/80 backdrop-blur-sm rounded-full items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-300 border border-theme-border shadow-lg hover:scale-110 disabled:opacity-50"
               >
-                <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+                <ChevronRight className="w-6 h-6" />
               </button>
             </>
           )}
-
-          {/* Carousel Container */}
-          <div className="relative h-[400px] sm:h-[450px] md:h-[500px] lg:h-[580px] overflow-hidden border border-gray-800/50">
-            <div
-              className={`absolute inset-0 transition-all duration-300 ease-in-out ${
-                isTransitioning ? "opacity-0 scale-95" : "opacity-100 scale-100"
-              }`}
-            >
-              {/* Main Prize Card */}
-              <div
-                className="relative w-full h-full bg-black/98 shadow-2xl overflow-hidden hover-glow gpu-accelerated"
-                style={{
-                  boxShadow: `0 20px 40px -8px ${colors.primary}20, inset 0 0 0 1px ${colors.primary}40`,
-                }}
-              >
-                {/* Background gradient overlay */}
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} opacity-5`}
-                ></div>
-
-                {/* Content Grid */}
-                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-5 h-full">
-                  {/* Left Side - Image */}
-                  <div className="hidden md:block md:col-span-2 lg:col-span-2 relative overflow-hidden">
-                    <div className="relative w-full h-full">
-                      <Image
-                        src={currentPrize.image}
-                        alt={currentPrize.title}
-                        fill
-                        sizes="(max-width: 1024px) 0vw, 40vw"
-                        className="object-contain p-4"
-                        priority
-                        quality={100}
-                      />
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-r ${colors.bg} opacity-20`}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Right Side - Content */}
-                  <div className="col-span-1 md:col-span-3 lg:col-span-3 p-3 sm:p-4 lg:p-8 flex flex-col justify-between min-h-full">
-                    {/* Top Content */}
-                    <div className="flex-1">
-                      {/* Price Badge */}
-                      {currentPrize.price && (
-                        <div
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-white font-bold text-sm mb-3 shadow-lg border animate-scale-in"
-                          style={{
-                            background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
-                            borderColor: `${colors.primary}40`,
-                            boxShadow: `0 4px 14px 0 ${colors.primary}25`,
-                          }}
-                        >
-                          <Award className="w-4 h-4" />
-                          {currentPrize.price}
-                        </div>
-                      )}
-
-                      <h3 className="text-lg sm:text-xl lg:text-3xl font-black text-theme-heading-primary mb-2 leading-tight theme-transition animate-slide-in-left">
-                        {currentPrize.title}
-                      </h3>
-
-                      <h4
-                        className={`text-sm sm:text-base lg:text-xl ${colors.accent} font-semibold mb-3 animate-slide-in-left animate-delay-100`}
-                      >
-                        {currentPrize.subtitle}
-                      </h4>
-
-                      <p className="text-theme-text-secondary text-sm lg:text-base leading-relaxed mb-4 theme-transition animate-fade-in animate-delay-200">
-                        {currentPrize.description}
-                      </p>
-
-                      {/* Features Preview/Accordion */}
-                      <div className="mb-4 animate-fade-in animate-delay-300">
-                        {/* Accordion Toggle */}
-                        <button
-                          onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                          className="flex items-center gap-2 text-theme-text-muted hover:text-theme-foreground transition-all duration-300 ease-in-out text-sm font-medium mb-2 theme-transition hover:scale-105 focus-ring"
-                        >
-                          {isAccordionOpen ? (
-                            <>
-                              <ChevronUp className="w-4 h-4" />
-                              Sakrij detalje
-                            </>
-                          ) : (
-                            <>
-                              <ChevronDown className="w-4 h-4" />
-                              Prikaži detalje ({currentPrize.features.length})
-                            </>
-                          )}
-                        </button>
-
-                        {/* Accordion Content */}
-                        <div
-                          className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                            isAccordionOpen
-                              ? "max-h-96 opacity-100 transform translate-y-0"
-                              : "max-h-0 opacity-0 transform -translate-y-2"
-                          }`}
-                        >
-                          <div className="space-y-2 max-h-32 lg:max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                            {currentPrize.features.map((feature, index) => (
-                              <div
-                                key={index}
-                                className="flex items-start gap-3 text-xs lg:text-sm animate-slide-in-left"
-                                style={{ animationDelay: `${index * 50}ms` }}
-                              >
-                                <div
-                                  className="w-1.5 h-1.5 minimal-radius mt-1.5 flex-shrink-0"
-                                  style={{
-                                    backgroundColor: colors.primary,
-                                  }}
-                                ></div>
-                                <span className="text-theme-text-secondary font-medium leading-relaxed theme-transition">
-                                  {feature}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bottom - Always Visible Button */}
-                    <div className="flex-shrink-0 pt-2 animate-fade-in animate-delay-400">
-                      <button
-                        onClick={() => openModal(currentPrize)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 minimal-radius font-bold text-xs sm:text-sm transition-all duration-300 shadow-lg border hover-scale focus-ring"
-                        style={{
-                          background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
-                          borderColor: `${colors.primary}40`,
-                          boxShadow: `0 4px 14px 0 ${colors.primary}25`,
-                          color: "#ffffff",
-                        }}
-                      >
-                        <Eye className="w-4 h-4" />
-                        Pogledaj Detalje
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Decorative Elements */}
-                <div
-                  className="absolute top-0 left-0 w-16 h-16 opacity-20 rounded-br-lg"
-                  style={{
-                    background: `linear-gradient(135deg, ${colors.primary}30, transparent)`,
-                  }}
-                ></div>
-                <div
-                  className="absolute bottom-0 right-0 w-16 h-16 opacity-20 rounded-tl-lg"
-                  style={{
-                    background: `linear-gradient(315deg, ${colors.primary}30, transparent)`,
-                  }}
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Indicators - only show if more than 1 prize */}
-          {filteredPrizes.length > 1 && (
-            <div className="flex justify-center space-x-3 mt-8">
-              {filteredPrizes.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  className={`relative overflow-hidden minimal-radius transition-all duration-500 ease-in-out hover:scale-110 focus-ring ${
-                    index === currentIndex
-                      ? "w-12 h-4"
-                      : "w-4 h-4 bg-gray-600 hover:bg-gray-500"
-                  }`}
-                  style={
-                    index === currentIndex
-                      ? {
-                          background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80, #000000)`,
-                        }
-                      : {}
-                  }
-                >
-                  {index === currentIndex && (
-                    <div className="absolute inset-0 bg-white/20 minimal-radius animate-slide-x" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Progress Bar - only show if auto-playing and more than 1 prize */}
-          {filteredPrizes.length > 1 && (
-            <div className="w-full bg-gray-800 minimal-radius h-1 mt-4 overflow-hidden">
-              <div
-                className={`h-full minimal-radius transition-all ease-linear ${
-                  isAutoPlaying ? "duration-[5000ms]" : "duration-300"
-                }`}
-                style={{
-                  background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80, #000000)`,
-                  width: isAutoPlaying ? "100%" : "0%",
-                  animation: isAutoPlaying
-                    ? "progressFill 5s linear infinite"
-                    : "none",
-                }}
-              />
-            </div>
-          )}
         </div>
 
-        {/* Prize Details Modal */}
-        <PrizeModal
-          prize={selectedPrize}
-          isOpen={isModalOpen}
-          onClose={closeModal}
-        />
+        {/* Mobile Navigation */}
+        {filteredPrizes.length > 1 && (
+          <div className="lg:hidden flex justify-center gap-4 mt-6">
+            <button
+              onClick={prevSlide}
+              disabled={isTransitioning}
+              className="w-12 h-12 bg-theme-secondary/80 backdrop-blur-sm rounded-full flex items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-300 border border-theme-border shadow-lg disabled:opacity-50"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            <button
+              onClick={nextSlide}
+              disabled={isTransitioning}
+              className="w-12 h-12 bg-theme-secondary/80 backdrop-blur-sm rounded-full flex items-center justify-center text-theme-foreground hover:bg-theme-accent transition-all duration-300 border border-theme-border shadow-lg disabled:opacity-50"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
+        )}
+
+        {/* Indicators */}
+        {filteredPrizes.length > 1 && (
+          <div className="flex justify-center gap-2 mt-6 sm:mt-8">
+            {filteredPrizes.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`transition-all duration-300 hover:scale-110 rounded-full ${
+                  index === currentIndex
+                    ? "w-8 h-3"
+                    : "w-3 h-3 bg-theme-text-muted/40 hover:bg-theme-text-muted/60"
+                }`}
+                style={
+                  index === currentIndex
+                    ? { background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80)` }
+                    : {}
+                }
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Progress Bar */}
+        {filteredPrizes.length > 1 && (
+          <div className="w-full max-w-md mx-auto bg-theme-border/20 rounded-full h-1 mt-4 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ease-linear ${
+                isAutoPlaying ? "duration-[5000ms]" : "duration-300"
+              }`}
+              style={{
+                background: `linear-gradient(90deg, ${colors.primary}, ${colors.primary}80)`,
+                width: isAutoPlaying ? "100%" : "0%",
+                animation: isAutoPlaying ? "progressFill 5s linear infinite" : "none",
+              }}
+            />
+          </div>
+        )}
       </div>
-    </section>
+
+      {/* Prize Details Modal */}
+      <PrizeModal
+        prize={selectedPrize}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+      />
+    </div>
   );
 }
