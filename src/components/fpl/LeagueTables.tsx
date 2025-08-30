@@ -18,6 +18,7 @@ import {
   MdAccessTime,
 } from "react-icons/md";
 import { TbCopyrightFilled } from "react-icons/tb";
+import { MdWifi } from "react-icons/md";
 
 import { GiEmptyHourglass } from "react-icons/gi";
 import { GiTrophy, GiArmBandage } from "react-icons/gi";
@@ -987,7 +988,7 @@ export default function LeagueTables({
                   </div>
 
                   <div className="bg-theme-card-secondary rounded-lg p-4 text-center shadow-sm border-theme-border theme-transition">
-                    <BsLightningCharge className="w-6 h-6 text-green-500 mx-auto mb-2" />
+                    <MdWifi className="w-4 h-4 text-green-500 animate-pulse" />
                     <div className="text-2xl font-bold text-theme-foreground theme-transition">
                       {liveStats.live_events}
                     </div>
