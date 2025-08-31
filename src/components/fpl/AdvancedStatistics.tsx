@@ -704,7 +704,13 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                   data: teamStats
                     .filter((p: any) => p.position <= 11)
                     .sort((a: any, b: any) => a.position - b.position)
-                    .map((p: any) => p.live_stats?.bps || 0),
+                    .map((p: any) => {
+                      // Ensure BPS value is properly extracted
+                      const bps = p.live_stats?.bps;
+                      // If live_stats exists but bps is undefined/null, default to 0
+                      // If live_stats doesn't exist, the player likely hasn't played
+                      return typeof bps === 'number' ? bps : 0;
+                    }),
                   color: "#10b981",
                 },
               ]}
