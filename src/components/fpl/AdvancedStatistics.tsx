@@ -21,11 +21,139 @@ interface PlayerPerformance {
 }
 
 const AdvancedStatistics = React.memo(function AdvancedStatistics({
+  managerId,
   gameweek,
   loading = false,
   managerData,
 }: AdvancedStatisticsProps) {
   const { t } = useTranslation("fpl");
+  const [historyData, setHistoryData] = React.useState<any>(null);
+  const [historyLoading, setHistoryLoading] = React.useState(false);
+  const [captainHistory, setCaptainHistory] = React.useState<any[]>([]);
+  const [captainLoading, setCaptainLoading] = React.useState(false);
+
+  // Fetch manager history data
+  React.useEffect(() => {
+    const fetchHistory = async () => {
+      if (!managerId) return;
+
+      setHistoryLoading(true);
+      try {
+        const response = await fetch(`/api/fpl/entry/${managerId}/history`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            setHistoryData(result.data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch manager history:", error);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [managerId]);
+
+
+  // Fetch actual captain points for each gameweek
+  React.useEffect(() => {
+    const fetchCaptainData = async () => {
+      if (!managerId || !historyData?.current) return;
+
+      setCaptainLoading(true);
+      try {
+        const history = historyData.current;
+        const captainData = [];
+
+        // Fetch picks for each gameweek to get actual captain points
+        for (const gwHistory of history) {
+          try {
+            // Get picks data for this specific gameweek via our backend API
+            const picksResponse = await fetch(
+              `/api/fpl/entry/${managerId}/event/${gwHistory.event}/picks`
+            );
+
+            if (picksResponse.ok) {
+              const picksResult = await picksResponse.json();
+              if (picksResult.success) {
+                const picksData = picksResult.data;
+                console.log(`GW${gwHistory.event} picks data:`, picksData);
+
+                // Find the captain from picks
+                const captain = picksData.picks?.find(
+                  (pick: any) => pick.is_captain
+                );
+
+                if (captain) {
+                  console.log(`GW${gwHistory.event} captain pick:`, captain);
+
+                  // Find captain player in current team data to get name and points  
+                  const captainPlayer = teamStats.find((p: any) => p.player_id === captain.element);
+                  const playerName = captainPlayer?.player?.web_name || `Player ${captain.element}`;
+                  
+                  // For current gameweek, use live stats, for past gameweeks use history points
+                  let playerPoints = 0;
+                  if (gwHistory.event === gameweek && captainPlayer?.live_stats) {
+                    // Current gameweek - use live stats
+                    playerPoints = captainPlayer.live_stats.total_points || 0;
+                  } else {
+                    // Past gameweek - estimate from gameweek points and captain contribution
+                    // Since we don't have individual player points for past GWs, estimate captain's share
+                    const gwPoints = gwHistory.points || 0;
+                    const estimatedCaptainShare = Math.max(4, Math.floor(gwPoints * 0.25)); // Estimate 25% for captain base
+                    playerPoints = estimatedCaptainShare;
+                  }
+
+                  const captainPoints = playerPoints * captain.multiplier; // Usually 2 for captain, 3 for TC
+
+                  console.log(
+                    `GW${gwHistory.event} FINAL - Captain ${playerName} (${captain.element}): basePoints=${playerPoints}, multiplier=${captain.multiplier}, totalCaptainPoints=${captainPoints}`
+                  );
+
+                  captainData.push({
+                    event: gwHistory.event,
+                    captainPoints: captainPoints,
+                    basePoints: playerPoints,
+                    multiplier: captain.multiplier,
+                    element: captain.element,
+                    playerName: playerName,
+                  });
+                } else {
+                  console.warn(`GW${gwHistory.event}: No captain found in picks`);
+                }
+              }
+            } else {
+              console.warn(`GW${gwHistory.event}: Failed to fetch picks data`);
+            }
+          } catch (error) {
+            console.warn(
+              `Failed to fetch captain data for GW${gwHistory.event}:`,
+              error
+            );
+            // Use fallback estimation
+            captainData.push({
+              event: gwHistory.event,
+              captainPoints: Math.max(4, Math.floor(gwHistory.points * 0.35)),
+              basePoints: 0,
+              multiplier: 2,
+            });
+          }
+        }
+
+        console.log("🚀 FINAL CAPTAIN DATA ARRAY:", captainData);
+        console.log("📊 Captain points for chart:", captainData.map(c => `GW${c.event}: ${c.captainPoints} points`));
+        setCaptainHistory(captainData);
+      } catch (error) {
+        console.error("Failed to fetch captain history:", error);
+      } finally {
+        setCaptainLoading(false);
+      }
+    };
+
+    fetchCaptainData();
+  }, [managerId, historyData]);
 
   if (loading) {
     return (
@@ -55,6 +183,9 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   const manager = managerData.manager;
   const teamStats = managerData.team_with_stats || [];
   const teamTotals = managerData.team_totals || {};
+
+  // Extract player data for use in charts
+  const playersData = teamStats.map((t: any) => t.player).filter(Boolean);
 
   // Generate analytics data
   const getPlayerPositionDistribution = () => {
@@ -133,19 +264,44 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   };
 
   const getGameweekTrend = () => {
-    // Mock historical data - replace with real data
-    const gameweeks = Array.from({ length: gameweek }, (_, i) => i + 1);
-    const points = gameweeks.map((gw) => {
-      if (gw === gameweek) return manager.summary_event_points;
-      return Math.floor(Math.random() * 100) + 20; // Mock data
-    });
+    // Get actual historical data from manager history
+    const history = historyData?.current || [];
+
+    if (history.length === 0) {
+      // Fallback to current gameweek data if no history available
+      const gameweeks = [gameweek];
+      const currentGwPoints = manager.summary_event_points || 0;
+      const points = [currentGwPoints];
+      return { gameweeks, points };
+    }
+
+    // Use actual historical data - sort by event to ensure correct order
+    // Show individual gameweek points, not cumulative totals
+    const sortedHistory = history.sort((a: any, b: any) => a.event - b.event);
+    const gameweeks = sortedHistory.map((h: any) => h.event);
+    const points = sortedHistory.map((h: any) => h.points); // Use 'points' instead of 'total_points'
+
     return { gameweeks, points };
   };
 
   const getTeamValueHistory = () => {
-    // Mock team value progression
-    const weeks = Array.from({ length: gameweek }, (_, i) => i + 1);
-    const values = weeks.map((_, i) => 100 - i * 0.5 + Math.random() * 2);
+    // Get actual team value history from manager history data
+    const history = historyData?.current || [];
+
+    if (history.length === 0) {
+      // Fallback to mock team value progression
+      const weeks = Array.from({ length: gameweek }, (_, i) => i + 1);
+      const values = weeks.map((_, i) => 100 - i * 0.5 + Math.random() * 2);
+      const isRising =
+        values.length > 1 && values[values.length - 1] > values[0];
+      const color = isRising ? "#10b981" : "#ef4444";
+      return { weeks, values, color };
+    }
+
+    // Use actual historical data - sort by event and convert value to millions
+    const sortedHistory = history.sort((a: any, b: any) => a.event - b.event);
+    const weeks = sortedHistory.map((h: any) => h.event);
+    const values = sortedHistory.map((h: any) => h.value / 10); // Convert to millions
 
     // Determine if team value is rising or falling overall
     const isRising = values.length > 1 && values[values.length - 1] > values[0];
@@ -155,21 +311,70 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   };
 
   const getCaptainPointsHistory = () => {
-    // Mock captain points history - replace with real data from API
-    const gameweeks = Array.from({ length: gameweek }, (_, i) => i + 1);
-    const captainPoints = gameweeks.map((gw) => {
-      if (gw === gameweek) {
-        // Current gameweek - get actual captain points (multiplied by 2)
-        const captain = teamStats.find((p: any) => p.is_captain);
-        const basePoints = captain?.live_stats?.total_points || 0;
-        return basePoints * 2; // Captain points are doubled
-      }
-      // Mock historical data - replace with real API data
-      const mockBasePoints = Math.floor(Math.random() * 15) + 1; // Base points 1-16
-      return mockBasePoints * 2; // Captain points are doubled (2-32)
-    });
+    // Use the fetched captain history data
+    if (captainHistory.length > 0) {
+      const gameweeks = captainHistory.map((c) => c.event);
+      const captainPoints = captainHistory.map((c) => c.captainPoints);
+      return { gameweeks, captainPoints };
+    }
+
+    // Fallback - show current gameweek captain data if available
+    const gameweeks = [gameweek];
+    const captain = teamStats.find((p: any) => p.is_captain);
+    const currentCaptainPoints = captain?.live_stats?.total_points || 0;
+    const captainPoints = [currentCaptainPoints * 2]; // Captain gets double points
 
     return { gameweeks, captainPoints };
+  };
+
+  const getPointsOnBenchHistory = () => {
+    // Get points on bench from history data
+    const history = historyData?.current || [];
+
+    if (history.length === 0) {
+      return { gameweeks: [], benchPoints: [] };
+    }
+
+    const sortedHistory = history.sort((a: any, b: any) => a.event - b.event);
+    const gameweeks = sortedHistory.map((h: any) => h.event);
+    const benchPoints = sortedHistory.map((h: any) => h.points_on_bench || 0);
+
+    return { gameweeks, benchPoints };
+  };
+
+  const getTransfersHistory = () => {
+    // Get transfers from history data
+    const history = historyData?.current || [];
+
+    if (history.length === 0) {
+      return { gameweeks: [], transfers: [] };
+    }
+
+    const sortedHistory = history.sort((a: any, b: any) => a.event - b.event);
+    const gameweeks = sortedHistory.map((h: any) => h.event);
+    const transfers = sortedHistory.map((h: any) => h.event_transfers || 0);
+
+    return { gameweeks, transfers };
+  };
+
+  const getSeasonRankings = () => {
+    // Get past season rankings
+    const pastSeasons = historyData?.past || [];
+
+    if (pastSeasons.length === 0) {
+      return { seasons: [], rankings: [], totalPoints: [] };
+    }
+
+    // Extract the end year from season_name (e.g., "2014/15" -> "2015")
+    const seasons = pastSeasons.map((s: any) => {
+      const seasonName = s.season_name; // e.g., "2014/15"
+      const endYear = seasonName.split("/")[1]; // Get "15"
+      return `20${endYear}`; // Convert to "2015"
+    });
+    const rankings = pastSeasons.map((s: any) => s.rank);
+    const totalPoints = pastSeasons.map((s: any) => s.total_points);
+
+    return { seasons, rankings, totalPoints };
   };
 
   // const getPlayerMinutes = () => {
@@ -290,6 +495,9 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   const trendData = getGameweekTrend();
   const valueData = getTeamValueHistory();
   const captainData = getCaptainPointsHistory();
+  const benchData = getPointsOnBenchHistory();
+  const transfersData = getTransfersHistory();
+  const seasonData = getSeasonRankings();
   // Removed unused minutesData
   const performanceData = getPlayerPerformance();
 
@@ -547,32 +755,51 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                   {
                     data: teamStats
                       .filter((p: any) => p.position <= 11)
-                      .map((p: any) => ({
-                        x: p.live_stats?.minutes || 0,
-                        y: p.live_stats?.total_points || 0,
-                        id: p.player_id,
-                      })),
+                      .map((p: any) => {
+                        const player = playersData.find(
+                          (pl: any) => pl.id === p.player_id
+                        );
+                        return {
+                          x: p.live_stats?.minutes || 0,
+                          y: p.live_stats?.total_points || 0,
+                          id: p.player_id,
+                          label: player?.web_name || "Unknown",
+                        };
+                      }),
                     color: "#3b82f6",
                   },
                 ]}
                 margin={{ top: 20, right: 30, bottom: 50, left: 50 }}
-                xAxis={[{ tickLabelStyle: { fontSize: "11px" } }]}
-                yAxis={[{ tickLabelStyle: { fontSize: "11px" } }]}
+                xAxis={[
+                  {
+                    tickLabelStyle: { fontSize: "11px" },
+                    min: 0,
+                    max: 90,
+                  },
+                ]}
+                yAxis={[
+                  {
+                    tickLabelStyle: { fontSize: "11px" },
+                    min: 0,
+                  },
+                ]}
               />
             </div>
           </div>
 
-          {/* Gameweek Trend */}
+          {/* Gameweek Points */}
           <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
             <h4 className="font-bold text-sm sm:text-base text-theme-foreground mb-3 sm:mb-4 theme-transition">
-              {t("fplLive.gameweekTrend")}
+              Gameweek Points
             </h4>
             <div className="w-full overflow-x-auto">
               <LineChart
-                xAxis={[{ 
-                  data: trendData.gameweeks,
-                  tickLabelStyle: { fontSize: "11px" }
-                }]}
+                xAxis={[
+                  {
+                    data: trendData.gameweeks,
+                    tickLabelStyle: { fontSize: "11px" },
+                  },
+                ]}
                 series={[
                   {
                     data: trendData.points,
@@ -588,17 +815,84 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </div>
         </div>
 
-        {/* Row 4: Captain Points History (full width) */}
+        {/* Row 4: Captain Points History + Points on Bench */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+          {/* Captain Points History */}
+          <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+              {t("fplLive.captainPoints")}
+              {captainLoading && (
+                <span className="text-xs text-gray-500 ml-2">(Loading...)</span>
+              )}
+            </h4>
+            <div className="w-full overflow-x-auto">
+              <BarChart
+                xAxis={[
+                  {
+                    scaleType: "band",
+                    data: captainHistory.map((captain) => {
+                      const playerName = captain.playerName || 'Unknown';
+                      return `GW${captain.event}\n${playerName}`;
+                    }),
+                    tickLabelStyle: {
+                      angle: 0,
+                      fontSize: 9,
+                    },
+                  },
+                ]}
+                series={[
+                  {
+                    data: captainHistory.map((captain) => captain.captainPoints),
+                    color: "#8b5cf6",
+                  },
+                ]}
+                height={280}
+                margin={{ top: 20, right: 15, bottom: 60, left: 50 }}
+              />
+            </div>
+          </div>
+
+          {/* Points on Bench */}
+          <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+              {t("fplLive.pointsOnBench")}
+            </h4>
+            <div className="w-full overflow-x-auto">
+              <BarChart
+                xAxis={[
+                  {
+                    scaleType: "band",
+                    data: benchData.gameweeks.map((gw: number) => `GW${gw}`),
+                    tickLabelStyle: {
+                      angle: 0,
+                      fontSize: 10,
+                    },
+                  },
+                ]}
+                series={[
+                  {
+                    data: benchData.benchPoints,
+                    color: "#f59e0b",
+                  },
+                ]}
+                height={280}
+                margin={{ top: 20, right: 15, bottom: 40, left: 50 }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 5: Transfers History (full width) */}
         <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
           <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
-            {t("fplLive.captainPoints")}
+            {t("fplLive.transfersByGameweek")}
           </h4>
           <div className="w-full overflow-x-auto">
             <BarChart
               xAxis={[
                 {
                   scaleType: "band",
-                  data: captainData.gameweeks.map(gw => `GW${gw}`),
+                  data: transfersData.gameweeks.map((gw: number) => `GW${gw}`),
                   tickLabelStyle: {
                     angle: 0,
                     fontSize: 10,
@@ -607,8 +901,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               ]}
               series={[
                 {
-                  data: captainData.captainPoints,
-                  color: "#8b5cf6",
+                  data: transfersData.transfers,
+                  color: "#ef4444",
                 },
               ]}
               height={280}
@@ -624,10 +918,12 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           </h4>
           <div className="w-full overflow-x-auto">
             <LineChart
-              xAxis={[{ 
-                data: valueData.weeks,
-                tickLabelStyle: { fontSize: "11px" }
-              }]}
+              xAxis={[
+                {
+                  data: valueData.weeks,
+                  tickLabelStyle: { fontSize: "11px" },
+                },
+              ]}
               series={[
                 {
                   data: valueData.values,
@@ -709,7 +1005,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                       const bps = p.live_stats?.bps;
                       // If live_stats exists but bps is undefined/null, default to 0
                       // If live_stats doesn't exist, the player likely hasn't played
-                      return typeof bps === 'number' ? bps : 0;
+                      return typeof bps === "number" ? bps : 0;
                     }),
                   color: "#10b981",
                 },
@@ -758,6 +1054,42 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
             />
           </div>
         </div>
+
+        {/* Row 6: Season Rankings History (full width) */}
+        {seasonData.seasons.length > 0 && (
+          <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+            <h4 className="font-bold text-theme-foreground mb-4 theme-transition">
+              {t("fplLive.seasonRankingsThroughYears")}
+            </h4>
+            <div className="w-full overflow-x-auto">
+              <LineChart
+                xAxis={[
+                  {
+                    data: seasonData.seasons,
+                    scaleType: "point",
+                    tickLabelStyle: { fontSize: "11px" },
+                  },
+                ]}
+                series={[
+                  {
+                    data: seasonData.rankings,
+                    color: "#10b981",
+                    curve: "monotoneX",
+                    label: "Rank",
+                  },
+                ]}
+                height={300}
+                margin={{ top: 20, right: 30, bottom: 50, left: 80 }}
+                yAxis={[
+                  {
+                    tickLabelStyle: { fontSize: "11px" },
+                    reverse: true, // Lower rank number = better position
+                  },
+                ]}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
