@@ -356,6 +356,37 @@
     },
     "common": {
       "more": "More"
+    },
+    "liveTable": {
+      "selectLeague": "Select League",
+      "chooseLeague": "Choose a league...",
+      "position": "Pos",
+      "manager": "Manager",
+      "yetToPlay": "Yet",
+      "captain": "(C)",
+      "gameweekPoints": "GW",
+      "totalPoints": "Total",
+      "details": "Details",
+      "refresh": "Refresh",
+      "updated": "Updated",
+      "loadingLiveData": "Loading live data...",
+      "managerInformation": "Manager Information",
+      "overallRank": "Overall Rank",
+      "freeTransfers": "Free Transfers",
+      "teamValue": "Team Value",
+      "transfersThisGW": "This GW Transfers",
+      "chips": "Chips",
+      "startingXI": "Starting XI",
+      "bench": "Bench",
+      "you": "You",
+      "noDataAvailable": "No Data Available",
+      "unableToFetchData": "Unable to fetch live data for the selected league.",
+      "selectLeaguePrompt": "Select a League",
+      "selectLeagueDescription": "Choose a league from the dropdown above to view live standings.",
+      "showing": "Showing",
+      "of": "of",
+      "managers": "managers",
+      "pts": "pts"
     }
   },
 

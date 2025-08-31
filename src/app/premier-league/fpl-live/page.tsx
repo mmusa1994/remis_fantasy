@@ -25,8 +25,7 @@ import ManagerSummary from "@/components/fpl/ManagerSummary";
 import GameweekStatus from "@/components/fpl/GameweekStatus";
 import SquadTable from "@/components/fpl/SquadTable";
 import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
-import LiveTracker from "@/components/fpl/LiveTracker";
-import LeagueTables from "@/components/fpl/LeagueTables";
+// import LiveTracker from "@/components/fpl/LiveTracker";
 import MatchResults from "@/components/fpl/MatchResults";
 import TransfersMarket from "@/components/fpl/TransfersMarket";
 import LoadingCard from "@/components/shared/LoadingCard";
@@ -617,19 +616,10 @@ export default function FPLLivePage() {
                       </p>
                     </div>
                   </div>
-                  <LiveTracker gameweek={gameweek} isPolling={isLiveTracking} />
+                  {/* <LiveTracker gameweek={gameweek} isPolling={isLiveTracking} /> */}
                 </div>
               </div>
-              <LeagueTables
-                leagueData={leagueData}
-                managerId={managerId!}
-                gameweek={gameweek}
-                isLiveTracking={isLiveTracking}
-                onManagerSelect={(selectedManagerId) => {
-                  console.log("Manager selected:", selectedManagerId);
-                  // Future: Load manager-specific data
-                }}
-              />
+              {/* here */}
             </div>
           )
         );

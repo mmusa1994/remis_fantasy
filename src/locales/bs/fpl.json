@@ -335,6 +335,37 @@
     },
     "common": {
       "more": "Više"
+    },
+    "liveTable": {
+      "selectLeague": "Izaberite Ligu",
+      "chooseLeague": "Odaberite ligu...",
+      "position": "Poz",
+      "manager": "Menadžer",
+      "yetToPlay": "Još",
+      "captain": "(K)",
+      "gameweekPoints": "GW",
+      "totalPoints": "Ukupno",
+      "details": "Detalji",
+      "refresh": "Osvježi",
+      "updated": "Ažurirano",
+      "loadingLiveData": "Učitavanje uživo podataka...",
+      "managerInformation": "Informacije o Menadžeru",
+      "overallRank": "Ukupni Rang",
+      "freeTransfers": "Besplatni Transferi",
+      "teamValue": "Vrijednost Tima",
+      "transfersThisGW": "Transferi ovaj GW",
+      "chips": "Čipovi",
+      "startingXI": "Početna Postava",
+      "bench": "Klupa",
+      "you": "Vi",
+      "noDataAvailable": "Nema Dostupnih Podataka",
+      "unableToFetchData": "Nije moguće dohvatiti uživo podatke za odabranu ligu.",
+      "selectLeaguePrompt": "Odaberite Ligu",
+      "selectLeagueDescription": "Odaberite ligu iz padajućeg menija iznad da vidite uživo tabelu.",
+      "showing": "Prikazano",
+      "of": "od",
+      "managers": "menadžera",
+      "pts": "bod"
     }
   },
 
