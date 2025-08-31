@@ -28,7 +28,9 @@ import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
 // import LiveTracker from "@/components/fpl/LiveTracker";
 import MatchResults from "@/components/fpl/MatchResults";
 import TransfersMarket from "@/components/fpl/TransfersMarket";
+import LeagueTables from "@/components/fpl/LeagueTables";
 import LoadingCard from "@/components/shared/LoadingCard";
+// import LiveTracker from "@/components/fpl/LiveTracker";
 import type { FPLGameweekStatus } from "@/types/fpl";
 
 interface FPLData {
@@ -604,7 +606,7 @@ export default function FPLLivePage() {
                   </p>
                 </div>
                 {/* Live BPS Tracker */}
-                <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
+                {/* <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
                   <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                     <IoFootballOutline size={24} />
                     <div>
@@ -616,10 +618,14 @@ export default function FPLLivePage() {
                       </p>
                     </div>
                   </div>
-                  {/* <LiveTracker gameweek={gameweek} isPolling={isLiveTracking} /> */}
-                </div>
+                  <LiveTracker gameweek={gameweek} isPolling={isLiveTracking} />
+                </div> */}
               </div>
-              {/* here */}
+              <LeagueTables
+                managerId={managerId || undefined}
+                gameweek={gameweek}
+                isPolling={isLiveTracking}
+              />
             </div>
           )
         );
