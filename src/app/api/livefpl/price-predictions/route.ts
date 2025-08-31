@@ -48,8 +48,6 @@ export async function GET() {
       );
     }
 
-    const playerData = await playerDataResponse.json();
-
     // Also get FPL bootstrap data for additional accuracy
     const fplResponse = await fetch(
       "https://fantasy.premierleague.com/api/bootstrap-static/",
@@ -152,9 +150,6 @@ export async function GET() {
           hourlyChange *= 1.2;
         }
       }
-
-      // Much more realistic clamping - only top few players reach extreme values
-      const ownershipRank = ownership; // Higher ownership = lower chance of extreme change
 
       if (netTransfers > 0) {
         // For risers: only top 3-5 players can get close to 100%

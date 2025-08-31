@@ -31,6 +31,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   const [historyLoading, setHistoryLoading] = React.useState(false);
   const [captainHistory, setCaptainHistory] = React.useState<any[]>([]);
   const [captainLoading, setCaptainLoading] = React.useState(false);
+  const [allPlayers, setAllPlayers] = React.useState<any[]>([]);
 
   // Fetch manager history data
   React.useEffect(() => {
@@ -56,6 +57,24 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
     fetchHistory();
   }, [managerId]);
 
+  // Fetch all players data from bootstrap
+  React.useEffect(() => {
+    const fetchAllPlayers = async () => {
+      try {
+        const bootstrapResponse = await fetch("/api/fpl/bootstrap-static");
+        if (bootstrapResponse.ok) {
+          const bootstrapResult = await bootstrapResponse.json();
+          if (bootstrapResult.success) {
+            setAllPlayers(bootstrapResult.data.elements || []);
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to fetch bootstrap data:", error);
+      }
+    };
+
+    fetchAllPlayers();
+  }, []);
 
   // Fetch actual captain points for each gameweek
   React.useEffect(() => {
@@ -89,21 +108,73 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                 if (captain) {
                   console.log(`GW${gwHistory.event} captain pick:`, captain);
 
-                  // Find captain player in current team data to get name and points  
-                  const captainPlayer = teamStats.find((p: any) => p.player_id === captain.element);
-                  const playerName = captainPlayer?.player?.web_name || `Player ${captain.element}`;
-                  
-                  // For current gameweek, use live stats, for past gameweeks use history points
+                  // Find captain player - first try current team, then all players data
+                  const captainPlayer = teamStats.find(
+                    (p: any) => p.player_id === captain.element
+                  );
+                  let playerName = captainPlayer?.player?.web_name;
+
+                  // If not found in current team (player transferred out), get from bootstrap
+                  if (!playerName && allPlayers.length > 0) {
+                    const bootstrapPlayer = allPlayers.find(
+                      (p: any) => p.id === captain.element
+                    );
+                    playerName =
+                      bootstrapPlayer?.web_name || `Player ${captain.element}`;
+                  }
+
+                  // Fallback if still not found
+                  if (!playerName) {
+                    playerName = `Player ${captain.element}`;
+                  }
+
+                  // Get exact player points for this gameweek using element-summary API
                   let playerPoints = 0;
-                  if (gwHistory.event === gameweek && captainPlayer?.live_stats) {
-                    // Current gameweek - use live stats
-                    playerPoints = captainPlayer.live_stats.total_points || 0;
-                  } else {
-                    // Past gameweek - estimate from gameweek points and captain contribution
-                    // Since we don't have individual player points for past GWs, estimate captain's share
-                    const gwPoints = gwHistory.points || 0;
-                    const estimatedCaptainShare = Math.max(4, Math.floor(gwPoints * 0.25)); // Estimate 25% for captain base
-                    playerPoints = estimatedCaptainShare;
+                  try {
+                    const playerSummaryResponse = await fetch(
+                      `/api/fpl/element-summary/${captain.element}`
+                    );
+                    if (playerSummaryResponse.ok) {
+                      const playerSummaryResult =
+                        await playerSummaryResponse.json();
+                      if (playerSummaryResult.success) {
+                        const playerSummaryData = playerSummaryResult.data;
+                        const gwHistoryEntry = playerSummaryData.history?.find(
+                          (h: any) => h.round === gwHistory.event
+                        );
+                        if (gwHistoryEntry) {
+                          playerPoints = gwHistoryEntry.total_points || 0;
+                          console.log(
+                            `GW${gwHistory.event} - Found exact points for ${playerName} (${captain.element}): ${playerPoints} points`
+                          );
+                        } else {
+                          console.warn(
+                            `GW${gwHistory.event} - No history entry found for ${playerName}, using fallback`
+                          );
+                          // Fallback to estimation
+                          const gwPoints = gwHistory.points || 0;
+                          playerPoints = Math.max(
+                            4,
+                            Math.floor(gwPoints * 0.25)
+                          );
+                        }
+                      }
+                    }
+                  } catch (error) {
+                    console.warn(
+                      `Failed to get exact points for ${playerName}:`,
+                      error
+                    );
+                    // Fallback to current logic
+                    if (
+                      gwHistory.event === gameweek &&
+                      captainPlayer?.live_stats
+                    ) {
+                      playerPoints = captainPlayer.live_stats.total_points || 0;
+                    } else {
+                      const gwPoints = gwHistory.points || 0;
+                      playerPoints = Math.max(4, Math.floor(gwPoints * 0.25));
+                    }
                   }
 
                   const captainPoints = playerPoints * captain.multiplier; // Usually 2 for captain, 3 for TC
@@ -121,7 +192,9 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                     playerName: playerName,
                   });
                 } else {
-                  console.warn(`GW${gwHistory.event}: No captain found in picks`);
+                  console.warn(
+                    `GW${gwHistory.event}: No captain found in picks`
+                  );
                 }
               }
             } else {
@@ -142,9 +215,20 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           }
         }
 
-        console.log("🚀 FINAL CAPTAIN DATA ARRAY:", captainData);
-        console.log("📊 Captain points for chart:", captainData.map(c => `GW${c.event}: ${c.captainPoints} points`));
+        console.log("🚀 FINAL CAPTAIN DATA ARRAY:");
+        console.table(captainData);
+        console.log("📊 Captain details:");
+        captainData.forEach((c) => {
+          console.log(
+            `GW${c.event}: ${c.playerName} (${c.element}) - Base: ${c.basePoints}, Multiplier: ${c.multiplier}, Total: ${c.captainPoints}`
+          );
+        });
         setCaptainHistory(captainData);
+        console.log(
+          "✅ Captain history state updated with",
+          captainData.length,
+          "items"
+        );
       } catch (error) {
         console.error("Failed to fetch captain history:", error);
       } finally {
@@ -831,7 +915,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                   {
                     scaleType: "band",
                     data: captainHistory.map((captain) => {
-                      const playerName = captain.playerName || 'Unknown';
+                      const playerName = captain.playerName || "Unknown";
                       return `GW${captain.event}\n${playerName}`;
                     }),
                     tickLabelStyle: {
@@ -842,7 +926,9 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                 ]}
                 series={[
                   {
-                    data: captainHistory.map((captain) => captain.captainPoints),
+                    data: captainHistory.map(
+                      (captain) => captain.captainPoints
+                    ),
                     color: "#8b5cf6",
                   },
                 ]}
