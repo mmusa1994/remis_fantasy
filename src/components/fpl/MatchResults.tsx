@@ -361,7 +361,10 @@ export default function MatchResults({
                 {matchData.length} {t("fplLive.matches")}
                 {lastUpdated && (
                   <span className="block sm:inline sm:ml-2 text-xs">
-                    {lastUpdated && <span className="hidden sm:inline">• </span>}{t("fplLive.updated")}: {lastUpdated}
+                    {lastUpdated && (
+                      <span className="hidden sm:inline">• </span>
+                    )}
+                    {t("fplLive.updated")}: {lastUpdated}
                   </span>
                 )}
               </p>
@@ -439,7 +442,9 @@ export default function MatchResults({
                         </div>
                         <div className="text-xs sm:text-sm text-black/60 dark:text-white/60 theme-transition">
                           {match.home_ownership.toFixed(1)}%{" "}
-                          <span className="hidden sm:inline">{t("fplLive.effectiveOwnership")}</span>
+                          <span className="hidden sm:inline">
+                            {t("fplLive.effectiveOwnership")}
+                          </span>
                           <span className="sm:hidden">EO</span>
                         </div>
                       </div>
@@ -460,7 +465,9 @@ export default function MatchResults({
                         </div>
                         <div className="text-xs sm:text-sm text-black/60 dark:text-white/60 theme-transition">
                           {match.away_ownership.toFixed(1)}%{" "}
-                          <span className="hidden sm:inline">{t("fplLive.effectiveOwnership")}</span>
+                          <span className="hidden sm:inline">
+                            {t("fplLive.effectiveOwnership")}
+                          </span>
                           <span className="sm:hidden">EO</span>
                         </div>
                       </div>
@@ -602,7 +609,9 @@ export default function MatchResults({
                               color: getTeamColors(match.home_team.id).primary,
                             }}
                           />
-                          <span className="truncate">{match.home_team.name}</span>
+                          <span className="truncate">
+                            {match.home_team.name}
+                          </span>
                         </h5>
 
                         {/* Goals */}
@@ -701,11 +710,11 @@ export default function MatchResults({
                           </div>
                         )}
 
-                        {/* Top Players */}
+                        {/* Best Performers and EO Players */}
                         <div>
                           <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                             <MdStar className="w-5 h-5 text-yellow-500" />
-                            Najbiraniji u Top 10k
+                            {t("fplLive.bestPerformersAndEO")}
                           </h6>
                           <div className="space-y-2">
                             {match.top_performers.home.map(
@@ -753,7 +762,9 @@ export default function MatchResults({
                               color: getTeamColors(match.away_team.id).primary,
                             }}
                           />
-                          <span className="truncate">{match.away_team.name}</span>
+                          <span className="truncate">
+                            {match.away_team.name}
+                          </span>
                         </h5>
 
                         {/* Goals */}
@@ -856,7 +867,7 @@ export default function MatchResults({
                         <div>
                           <h6 className="text-lg font-bold text-theme-foreground mb-3 flex items-center gap-2 theme-transition">
                             <MdStar className="w-5 h-5 text-yellow-500" />
-                            {t("fplLive.mostOwnedTop10k")}
+                            {t("fplLive.bestPerformersAndEO")}
                           </h6>
                           <div className="space-y-2">
                             {match.top_performers.away.map(

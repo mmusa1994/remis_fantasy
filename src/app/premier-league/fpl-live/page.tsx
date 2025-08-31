@@ -430,6 +430,27 @@ export default function FPLLivePage() {
     };
   }, [pollingInterval]);
 
+  // Close dropdown when clicking outside or on window resize
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowTabDropdown(false);
+    };
+
+    const handleResize = () => {
+      setShowTabDropdown(false);
+    };
+
+    if (showTabDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      window.addEventListener('resize', handleResize);
+      
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [showTabDropdown]);
+
 
   const handleTabChange = (newTab: TabType) => {
     setTabLoading(true);
@@ -797,7 +818,10 @@ export default function FPLLivePage() {
                     {/* Dropdown for remaining tabs */}
                     <div className="relative flex-1">
                       <button
-                        onClick={() => setShowTabDropdown(!showTabDropdown)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowTabDropdown(!showTabDropdown);
+                        }}
                         className={`w-full flex flex-col items-center gap-1 px-1 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
                           tabs.slice(3).some((tab) => tab.id === activeTab)
                             ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
@@ -811,31 +835,40 @@ export default function FPLLivePage() {
                         </span>
                       </button>
 
-                      {/* Dropdown Menu */}
+                      {/* Dropdown Menu - Mobile Optimized */}
                       {showTabDropdown && (
-                        <div className="absolute top-full left-0 right-0 bg-theme-card border border-theme-border rounded-b-md shadow-lg z-50 theme-transition">
-                          {tabs.slice(3).map((tab) => {
-                            const Icon = tab.icon;
-                            const isActive = activeTab === tab.id;
-                            return (
-                              <button
-                                key={tab.id}
-                                onClick={() => {
-                                  handleTabChange(tab.id);
-                                  setShowTabDropdown(false);
-                                }}
-                                className={`w-full flex items-center gap-2 px-3 py-3 text-sm font-medium transition-all ${
-                                  isActive
-                                    ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                                    : "text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                                } theme-transition`}
-                              >
-                                <Icon className="w-4 h-4 flex-shrink-0" />
-                                <span>{tab.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
+                        <>
+                          {/* Overlay to close dropdown when clicking outside */}
+                          <div 
+                            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 sm:hidden"
+                            onClick={() => setShowTabDropdown(false)}
+                          />
+                          <div className="absolute top-full right-0 w-48 max-w-[90vw] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden theme-transition">
+                            <div className="py-2">
+                              {tabs.slice(3).map((tab, index) => {
+                                const Icon = tab.icon;
+                                const isActive = activeTab === tab.id;
+                                return (
+                                  <button
+                                    key={tab.id}
+                                    onClick={() => {
+                                      handleTabChange(tab.id);
+                                      setShowTabDropdown(false);
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all touch-manipulation ${
+                                      isActive
+                                        ? "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-r-2 border-purple-500"
+                                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700"
+                                    } ${index === 0 ? 'rounded-t-lg' : ''} ${index === tabs.slice(3).length - 1 ? 'rounded-b-lg' : ''}`}
+                                  >
+                                    <Icon className="w-5 h-5 flex-shrink-0" />
+                                    <span className="truncate">{tab.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
@@ -866,7 +899,10 @@ export default function FPLLivePage() {
                   {tabs.length > 4 && (
                     <div className="relative flex-1">
                       <button
-                        onClick={() => setShowTabDropdown(!showTabDropdown)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowTabDropdown(!showTabDropdown);
+                        }}
                         className={`w-full flex items-center justify-center gap-2 px-2 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
                           tabs.slice(4).some((tab) => tab.id === activeTab)
                             ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
@@ -881,29 +917,38 @@ export default function FPLLivePage() {
                       </button>
 
                       {showTabDropdown && (
-                        <div className="absolute top-full left-0 right-0 bg-theme-card border border-theme-border rounded-b-md shadow-lg z-50 theme-transition">
-                          {tabs.slice(4).map((tab) => {
-                            const Icon = tab.icon;
-                            const isActive = activeTab === tab.id;
-                            return (
-                              <button
-                                key={tab.id}
-                                onClick={() => {
-                                  handleTabChange(tab.id);
-                                  setShowTabDropdown(false);
-                                }}
-                                className={`w-full flex items-center gap-2 px-3 py-3 text-sm font-medium transition-all ${
-                                  isActive
-                                    ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                                    : "text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                                } theme-transition`}
-                              >
-                                <Icon className="w-4 h-4 flex-shrink-0" />
-                                <span>{tab.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
+                        <>
+                          {/* Overlay to close dropdown when clicking outside - Tablet */}
+                          <div 
+                            className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 md:hidden"
+                            onClick={() => setShowTabDropdown(false)}
+                          />
+                          <div className="absolute top-full right-0 w-56 max-w-[85vw] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden theme-transition">
+                            <div className="py-2">
+                              {tabs.slice(4).map((tab, index) => {
+                                const Icon = tab.icon;
+                                const isActive = activeTab === tab.id;
+                                return (
+                                  <button
+                                    key={tab.id}
+                                    onClick={() => {
+                                      handleTabChange(tab.id);
+                                      setShowTabDropdown(false);
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all touch-manipulation ${
+                                      isActive
+                                        ? "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-r-2 border-purple-500"
+                                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700"
+                                    } ${index === 0 ? 'rounded-t-lg' : ''} ${index === tabs.slice(4).length - 1 ? 'rounded-b-lg' : ''}`}
+                                  >
+                                    <Icon className="w-5 h-5 flex-shrink-0" />
+                                    <span className="truncate">{tab.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </>
                       )}
                     </div>
                   )}

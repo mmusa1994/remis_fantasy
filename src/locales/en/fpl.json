@@ -86,6 +86,7 @@
   "currentManagerId": "Current Manager ID",
   "offline": "Offline",
   "fplLive": {
+    "bestPerformersAndEO": "Best Performers and Effective Ownership",
     "eventDefensiveContribution": "Defensive contribution",
     "liveTrackerLivePolling": "Live tracking active",
     "predictedBonus": "Predicted Bonus",
