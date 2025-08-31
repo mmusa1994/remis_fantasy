@@ -202,11 +202,11 @@ export default function LeagueTables({
 
   const getRankChangeIcon = (change: number) => {
     if (change > 0) {
-      return <FaArrowUp className="w-3 h-3 text-green-500" />;
+      return <FaArrowUp className="w-4 h-4 text-green-500 flex-shrink-0" />;
     } else if (change < 0) {
-      return <FaArrowDown className="w-3 h-3 text-red-500" />;
+      return <FaArrowDown className="w-4 h-4 text-red-500 flex-shrink-0" />;
     }
-    return <MdRemove className="w-3 h-3 text-gray-400" />;
+    return <MdRemove className="w-4 h-4 text-gray-400 flex-shrink-0" />;
   };
 
   const getPlayerElement = (elementId: number) => {
