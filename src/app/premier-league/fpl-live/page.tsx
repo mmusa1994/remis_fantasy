@@ -6,7 +6,6 @@ import {
   MdDashboard,
   MdGroup,
   MdInfo,
-  MdSettings,
   MdExpandMore,
   MdCancel,
   MdPlayArrow,
@@ -19,7 +18,6 @@ import { TbTransfer } from "react-icons/tb";
 
 import { IoFootballOutline } from "react-icons/io5";
 
-import SettingsCard from "@/components/fpl/SettingsCard";
 import ControlsBar from "@/components/fpl/ControlsBar";
 import ManagerSummary from "@/components/fpl/ManagerSummary";
 import GameweekStatus from "@/components/fpl/GameweekStatus";
@@ -89,7 +87,6 @@ export default function FPLLivePage() {
 
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>("overview");
-  const [showSettings, setShowSettings] = useState(false);
   const [showTabDropdown, setShowTabDropdown] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [tabLoading, setTabLoading] = useState(false);
@@ -433,15 +430,6 @@ export default function FPLLivePage() {
     };
   }, [pollingInterval]);
 
-  const handleSettingsSaved = (settings: any) => {
-    if (settings.default_manager_id !== managerId) {
-      setManagerId(settings.default_manager_id);
-    }
-    if (settings.default_gw !== gameweek) {
-      setGameweek(settings.default_gw);
-    }
-    showSuccess(t("settingsSavedSuccessfully"));
-  };
 
   const handleTabChange = (newTab: TabType) => {
     setTabLoading(true);
@@ -746,7 +734,7 @@ export default function FPLLivePage() {
                 </div>
 
                 {/* Mobile Action Buttons - Stack on mobile, inline on larger screens */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   <button
                     onClick={toggleLiveTracking}
                     className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all min-h-[44px] ${
@@ -773,14 +761,6 @@ export default function FPLLivePage() {
                   >
                     <MdRefresh className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="text-xs sm:text-sm">{t("refresh")}</span>
-                  </button>
-
-                  <button
-                    onClick={() => setShowSettings(!showSettings)}
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-all min-h-[44px]"
-                  >
-                    <MdSettings className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="text-xs sm:text-sm">{t("settings")}</span>
                   </button>
                 </div>
               </div>
@@ -958,12 +938,6 @@ export default function FPLLivePage() {
               </div>
             </div>
 
-            {/* Settings Panel */}
-            {showSettings && (
-              <div className="mt-6">
-                <SettingsCard onSettingsSaved={handleSettingsSaved} />
-              </div>
-            )}
           </div>
         )}
       </div>
