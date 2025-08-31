@@ -76,7 +76,8 @@
     "bench": "Klupa",
     "loadManagerFirst": "Molimo prvo učitajte menadžera da vidite tabele liga",
     "noLeagueSelected": "Nije odabrana liga",
-    "errorLoadingTable": "Greška pri učitavanju tabele lige"
+    "errorLoadingTable": "Greška pri učitavanju tabele lige",
+    "unranked": "Bez ranga"
   },
   "startLivePolling": "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu",
   "howToUse": "Kako koristiti FPL Live",

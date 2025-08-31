@@ -76,7 +76,8 @@
     "bench": "Bench",
     "loadManagerFirst": "Please load a manager first to view league tables",
     "noLeagueSelected": "No league selected",
-    "errorLoadingTable": "Error loading league table"
+    "errorLoadingTable": "Error loading league table",
+    "unranked": "Unranked"
   },
   "startLivePolling": "Start live polling to see real-time updates",
   "howToUse": "How to use FPL Live",

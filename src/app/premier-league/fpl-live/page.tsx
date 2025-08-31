@@ -399,7 +399,7 @@ export default function FPLLivePage() {
 
   const toggleLiveTracking = useCallback(() => {
     if (!isLiveTracking) {
-      // Start live tracking
+      // Start live tracking - Visual only, no API calls
       if (!managerId) {
         showError(t("pleaseEnterManagerId"));
         return;
@@ -413,59 +413,15 @@ export default function FPLLivePage() {
       setIsLiveTracking(true);
       setIsPolling(true);
 
-      const interval = setInterval(async () => {
-        try {
-          const response = await fetch("/api/fpl/poll", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              gameweek,
-              secret: "auto-poll",
-            }),
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success && result.data?.new_events > 0) {
-              loadManagerInfo().catch((err) =>
-                console.error("Polling load team error:", err)
-              );
-              loadGameweekStatus().catch((err) =>
-                console.error("Polling gameweek status error:", err)
-              );
-            }
-          }
-        } catch (err) {
-          console.error("Error in polling:", err);
-        }
-      }, 15000);
-
-      setPollingInterval(interval);
       showSuccess("Pokrenuto je uživo praćenje za sve komponente");
     } else {
-      // Stop live tracking
+      // Stop live tracking - Visual only
       setIsLiveTracking(false);
       setIsPolling(false);
 
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        setPollingInterval(null);
-      }
-
       showSuccess("Zaustavljen je uživo praćenje");
     }
-  }, [
-    isLiveTracking,
-    managerId,
-    data.manager,
-    gameweek,
-    loadManagerInfo,
-    loadGameweekStatus,
-    pollingInterval,
-    t,
-  ]);
+  }, [isLiveTracking, managerId, data.manager, t]);
 
   // Legacy functions removed - now using toggleLiveTracking directly
 
@@ -589,37 +545,29 @@ export default function FPLLivePage() {
         ) : (
           leagueData && (
             <div className="space-y-4 lg:space-y-6">
-              {/* Live Border Indicator */}
-              <div className="bg-theme-card rounded-md p-1 border-theme-border theme-transition">
-                <div
-                  className={`w-full h-2 rounded-sm transition-all duration-300 ${
-                    isPolling
-                      ? "bg-green-500 animate-pulse"
-                      : "bg-gray-300 dark:bg-gray-600"
-                  }`}
-                ></div>
-                <div className="text-center mt-2">
-                  <p className="text-xs font-medium text-theme-text-secondary theme-transition">
-                    {isLiveTracking
-                      ? `🔴 ${t("startLivePolling")}`
-                      : `⚪ ${t("startLivePolling")}`}
-                  </p>
-                </div>
-                {/* Live BPS Tracker */}
-                {/* <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-6 border-theme-border theme-transition">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                    <IoFootballOutline size={24} />
-                    <div>
-                      <h3 className="text-base sm:text-lg lg:text-xl font-bold text-theme-foreground theme-transition">
-                        {t("fplLive.liveTrackerTitle")}
-                      </h3>
-                      <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary theme-transition">
-                        Live bonus point system tracking
-                      </p>
-                    </div>
+              {/* Live Status Indicator */}
+              <div className="bg-theme-card rounded-md p-3 border-theme-border theme-transition">
+                <div className="flex items-center justify-center gap-3">
+                  <div
+                    className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                      isLiveTracking
+                        ? "bg-green-500 animate-pulse shadow-lg shadow-green-500/30"
+                        : "bg-red-500 shadow-lg shadow-red-500/30"
+                    }`}
+                  ></div>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-theme-foreground theme-transition">
+                      {isLiveTracking
+                        ? "LIVE TRACKING ACTIVE"
+                        : "LIVE TRACKING INACTIVE"}
+                    </p>
+                    <p className="text-xs text-theme-text-secondary theme-transition">
+                      {isLiveTracking
+                        ? "Data is being tracked in real-time"
+                        : "Click 'Start Live' to begin tracking"}
+                    </p>
                   </div>
-                  <LiveTracker gameweek={gameweek} isPolling={isLiveTracking} />
-                </div> */}
+                </div>
               </div>
               <LeagueTables
                 managerId={managerId || undefined}

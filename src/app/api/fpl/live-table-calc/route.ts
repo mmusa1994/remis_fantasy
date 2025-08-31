@@ -98,6 +98,10 @@ interface ManagerData {
     total_points: number;
     rank: number;
     overall_rank: number;
+    event_transfers: number;
+    event_transfers_cost: number;
+    bank: number;
+    value: number;
   };
 }
 
@@ -119,6 +123,21 @@ interface ProcessedTeam {
   players_to_play: number;
   active_chip?: string;
   picks: ManagerPick[];
+  event_transfers: number;
+  event_transfers_cost: number;
+  team_value: number;
+  bank: number;
+  player_details: Array<{
+    element: number;
+    points: number;
+    live_points: number;
+    multiplier: number;
+    position: number;
+    is_captain: boolean;
+    is_vice_captain: boolean;
+    opponent?: string;
+    is_home?: boolean;
+  }>;
 }
 
 export async function GET(request: NextRequest) {
@@ -189,25 +208,54 @@ export async function GET(request: NextRequest) {
         if (bpsStats) {
           const allBps = [...bpsStats.a, ...bpsStats.h].sort((a, b) => b.value - a.value);
           
-          // Award provisional bonus points
-          let currentRank = 1;
-          let prevValue = -1;
-          let bonusPoints = 3;
-          
-          for (let i = 0; i < allBps.length && bonusPoints > 0; i++) {
-            if (allBps[i].value !== prevValue) {
-              currentRank = i + 1;
-              if (currentRank > 3) break;
-              
-              if (currentRank === 1) bonusPoints = 3;
-              else if (currentRank === 2) bonusPoints = 2;
-              else if (currentRank === 3) bonusPoints = 1;
-              
-              prevValue = allBps[i].value;
+          // Create groups by BPS value
+          const bpsGroups: { [value: number]: number[] } = {};
+          allBps.forEach(player => {
+            if (!bpsGroups[player.value]) {
+              bpsGroups[player.value] = [];
             }
-            
-            liveBonusPoints[allBps[i].element] = bonusPoints;
-          }
+            bpsGroups[player.value].push(player.element);
+          });
+
+          // Sort unique BPS values in descending order
+          const uniqueBpsValues = Object.keys(bpsGroups).map(Number).sort((a, b) => b - a);
+          
+          let rank = 1;
+          let bonusRemaining = [3, 2, 1]; // Available bonus points
+
+          uniqueBpsValues.forEach(bpsValue => {
+            const playersAtThisBps = bpsGroups[bpsValue];
+            const playersCount = playersAtThisBps.length;
+
+            if (rank <= 3 && bonusRemaining.length > 0) {
+              // Calculate how many bonus points to distribute
+              let bonusToDistribute = 0;
+              for (let i = 0; i < playersCount && rank + i <= 3; i++) {
+                bonusToDistribute += bonusRemaining[rank + i - 1] || 0;
+              }
+
+              // Distribute bonus equally among tied players
+              const bonusPerPlayer = Math.floor(bonusToDistribute / playersCount);
+              
+              if (bonusPerPlayer > 0) {
+                playersAtThisBps.forEach(playerId => {
+                  liveBonusPoints[playerId] = bonusPerPlayer;
+                });
+              }
+
+              // Update rank and remove distributed bonus
+              rank += playersCount;
+              bonusRemaining = bonusRemaining.slice(playersCount);
+            }
+          });
+        }
+      } else if (fixture.finished) {
+        // Game is finished, use official bonus points
+        const bonusStats = fixture.stats.find(s => s.identifier === 'bonus');
+        if (bonusStats) {
+          [...bonusStats.a, ...bonusStats.h].forEach(player => {
+            liveBonusPoints[player.element] = player.value;
+          });
         }
       }
     });
@@ -226,6 +274,17 @@ export async function GET(request: NextRequest) {
         let livePoints = 0;
         let playersToPlay = 0;
         let captain = { name: '', points: 0 };
+        const playerDetails: Array<{
+          element: number;
+          points: number;
+          live_points: number;
+          multiplier: number;
+          position: number;
+          is_captain: boolean;
+          is_vice_captain: boolean;
+          opponent?: string;
+          is_home?: boolean;
+        }> = [];
 
         // Calculate live points for each pick
         managerData.picks.forEach(pick => {
@@ -234,27 +293,33 @@ export async function GET(request: NextRequest) {
           
           if (!element || !liveElement) return;
 
-          let playerPoints = liveElement.stats.total_points;
+          const originalPoints = liveElement.stats.total_points;
+          let playerLivePoints = originalPoints;
           
-          // Add provisional bonus if game is live
-          if (liveBonusPoints[pick.element]) {
-            playerPoints += liveBonusPoints[pick.element];
+          // Add provisional bonus ONLY if there's a live game (not finished)
+          const playerHasLiveFixture = fixtures.some(f => 
+            (f.team_h === element.team || f.team_a === element.team) && 
+            f.started && !f.finished
+          );
+          
+          if (playerHasLiveFixture && liveBonusPoints[pick.element]) {
+            playerLivePoints += liveBonusPoints[pick.element];
           }
 
           // Track captain info BEFORE applying multiplier
           if (pick.is_captain) {
             captain = {
               name: element.web_name,
-              points: playerPoints * pick.multiplier
+              points: playerLivePoints * pick.multiplier
             };
           }
 
-          // Apply captain/vice-captain multiplier
-          playerPoints *= pick.multiplier;
-
-          livePoints += playerPoints;
-
-          // Check if player still has games to play
+          // Check if player still has games to play and get opponent info
+          const upcomingFixture = fixtures.find(f => 
+            (f.team_h === element.team || f.team_a === element.team) && 
+            !f.finished
+          );
+          
           const hasPlayedAll = liveElement.stats.minutes > 0 || 
             fixtures.some(f => 
               (f.team_h === element.team || f.team_a === element.team) && 
@@ -264,6 +329,35 @@ export async function GET(request: NextRequest) {
           if (!hasPlayedAll) {
             playersToPlay++;
           }
+
+          let opponent = undefined;
+          let isHome = undefined;
+          
+          if (upcomingFixture) {
+            const opponentTeamId = upcomingFixture.team_h === element.team ? upcomingFixture.team_a : upcomingFixture.team_h;
+            const opponentTeam = teams.find(t => t.id === opponentTeamId);
+            if (opponentTeam) {
+              opponent = opponentTeam.short_name;
+              isHome = upcomingFixture.team_h === element.team;
+            }
+          }
+
+          // Store player details
+          playerDetails.push({
+            element: pick.element,
+            points: originalPoints,
+            live_points: playerLivePoints,
+            multiplier: pick.multiplier,
+            position: pick.position,
+            is_captain: pick.is_captain,
+            is_vice_captain: pick.is_vice_captain,
+            opponent,
+            is_home: isHome
+          });
+
+          // Apply captain/vice-captain multiplier for total
+          const multipliedPoints = playerLivePoints * pick.multiplier;
+          livePoints += multipliedPoints;
         });
 
         const rankChange = standing.last_rank - standing.rank;
@@ -282,7 +376,12 @@ export async function GET(request: NextRequest) {
           captain,
           players_to_play: playersToPlay,
           active_chip: managerData.active_chip,
-          picks: managerData.picks
+          picks: managerData.picks,
+          event_transfers: managerData.entry_history.event_transfers,
+          event_transfers_cost: managerData.entry_history.event_transfers_cost,
+          team_value: managerData.entry_history.value,
+          bank: managerData.entry_history.bank,
+          player_details: playerDetails
         });
 
       } catch (error) {
