@@ -296,13 +296,17 @@ export async function GET(request: NextRequest) {
           const originalPoints = liveElement.stats.total_points;
           let playerLivePoints = originalPoints;
           
-          // Add provisional bonus ONLY if there's a live game (not finished)
+          // Add provisional bonus ONLY if:
+          // 1. There's a live game (not finished)
+          // 2. Player doesn't already have bonus points (from finished games)
           const playerHasLiveFixture = fixtures.some(f => 
             (f.team_h === element.team || f.team_a === element.team) && 
             f.started && !f.finished
           );
           
-          if (playerHasLiveFixture && liveBonusPoints[pick.element]) {
+          const currentBonus = liveElement.stats.bonus || 0;
+          
+          if (playerHasLiveFixture && liveBonusPoints[pick.element] && currentBonus === 0) {
             playerLivePoints += liveBonusPoints[pick.element];
           }
 
