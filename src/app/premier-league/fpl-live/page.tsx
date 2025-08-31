@@ -410,6 +410,9 @@ export default function FPLLivePage() {
       setIsLiveTracking(true);
       // setIsPolling(true);
 
+      // Automatically switch to leagues tab when starting live tracking
+      handleTabChange("leagues");
+
       showSuccess("Pokrenuto je uživo praćenje za sve komponente");
     } else {
       // Stop live tracking - Visual only
