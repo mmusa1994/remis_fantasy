@@ -76,9 +76,11 @@ interface LeagueTablesProps {
   gameweek: number;
   leagueId?: string;
   isPolling?: boolean;
+  currentUserData?: any;
 }
 
 export default function LeagueTables({
+  currentUserData,
   managerId,
   gameweek,
   leagueId,
@@ -90,6 +92,8 @@ export default function LeagueTables({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedTeams, setExpandedTeams] = useState<Set<number>>(new Set());
+  const [currentUserExpanded, setCurrentUserExpanded] =
+    useState<boolean>(false);
   const [selectedLeagueId, setSelectedLeagueId] = useState(leagueId || "");
   const [leagues, setLeagues] = useState<any[]>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
@@ -213,6 +217,207 @@ export default function LeagueTables({
 
   const getPlayerElement = (elementId: number) => {
     return data?.elements.find((e) => e.id === elementId);
+  };
+
+  const getCaptainInfo = () => {
+    if (!currentUserData?.captain || !data?.elements) return null;
+
+    const captainElement = data.elements.find(
+      (e) => e.id === currentUserData.captain.player_id
+    );
+    if (!captainElement) return null;
+
+    return {
+      name: captainElement.web_name,
+      points:
+        (currentUserData.captain.stats?.total_points || 0) *
+        (currentUserData.captain.multiplier || 1),
+    };
+  };
+
+  const getTeamName = () => {
+    // Debug log to see what's available
+    console.log("currentUserData structure:", currentUserData);
+    console.log("currentUserData.manager:", currentUserData?.manager);
+
+    return currentUserData?.manager?.name || "Your Team";
+  };
+
+  const renderCurrentUserTeamBreakdown = () => {
+    if (!currentUserData?.team_with_stats) return null;
+
+    const startingXI = currentUserData.team_with_stats.filter(
+      (p: any) => p.position <= 11
+    );
+    const bench = currentUserData.team_with_stats.filter(
+      (p: any) => p.position > 11
+    );
+
+    return (
+      <div className="mt-2 mx-2 mb-4 p-3 bg-theme-card-secondary rounded-lg border border-theme-border md:mt-4 md:mx-4 md:p-4">
+        <h4 className="font-semibold text-theme-foreground mb-3 flex items-center gap-2 text-sm md:text-base">
+          <IoFootballOutline className="w-4 h-4" />
+          {t("leagueTables.squadBreakdown")}
+        </h4>
+
+        {/* Starting XI - Mobile Optimized */}
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 md:gap-3">
+          {startingXI.map((playerDetail: any) => {
+            const teamColors = getTeamColors(playerDetail.player?.team || 1);
+            const displayPoints =
+              (playerDetail.live_stats?.total_points || 0) *
+              (playerDetail.multiplier || 1);
+
+            return (
+              <div
+                key={playerDetail.player_id}
+                className={`p-2 rounded border text-xs md:p-3 md:text-sm ${
+                  playerDetail.is_captain
+                    ? "border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20"
+                    : playerDetail.is_vice_captain
+                    ? "border-gray-400 bg-gray-50 dark:bg-gray-900/20"
+                    : "border-theme-border bg-theme-card"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1 mb-1">
+                      <div
+                        className="w-2 h-2 rounded-sm flex-shrink-0 md:w-3 md:h-3"
+                        style={{ backgroundColor: teamColors.primary }}
+                      ></div>
+                      <p className="font-bold text-theme-foreground truncate text-xs md:text-sm">
+                        {playerDetail.player?.web_name || "Unknown"}
+                        {playerDetail.is_captain && (
+                          <span className="ml-1 text-xs bg-yellow-500 text-white px-1 py-0.5 rounded">
+                            C
+                          </span>
+                        )}
+                        {playerDetail.is_vice_captain && (
+                          <span className="ml-1 text-xs bg-gray-500 text-white px-1 py-0.5 rounded">
+                            V
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-theme-text-secondary truncate">
+                        {playerDetail.player?.first_name || ""}
+                      </p>
+                      {playerDetail.player?.opponent_short && (
+                        <span className="text-xs text-theme-text-secondary/70 ml-2">
+                          {playerDetail.player.opponent_short}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right ml-2">
+                    <div className="text-sm font-bold text-green-600 dark:text-green-400">
+                      {displayPoints}
+                    </div>
+                    {(playerDetail.multiplier || 1) > 1 && (
+                      <div className="text-xs text-theme-text-secondary">
+                        ×{playerDetail.multiplier}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Bench Players - Mobile Optimized */}
+        <div className="mt-4">
+          <h5 className="text-sm font-bold text-theme-text-secondary mb-2 flex items-center gap-2">
+            <span>⚽</span>
+            {t("leagueTables.bench")}
+          </h5>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+            {bench.map((playerDetail: any) => {
+              const teamColors = getTeamColors(playerDetail.player?.team || 1);
+
+              return (
+                <div
+                  key={playerDetail.player_id}
+                  className="p-2 rounded border border-theme-border bg-theme-card text-xs"
+                >
+                  <div className="flex items-center gap-1 mb-1">
+                    <div
+                      className="w-2 h-2 rounded-sm flex-shrink-0"
+                      style={{ backgroundColor: teamColors.primary }}
+                    ></div>
+                    <p className="font-medium text-theme-foreground truncate">
+                      {playerDetail.player?.web_name || "Unknown"}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-theme-text-secondary truncate">
+                      {playerDetail.player?.first_name || ""}
+                    </p>
+                    <span className="text-xs font-bold text-theme-foreground">
+                      {playerDetail.live_stats?.total_points || 0}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Team Summary - Mobile Only */}
+        <div className="mt-3 pt-3 border-t border-theme-border/50 md:hidden">
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span className="text-theme-text-secondary">
+                {t("leagueTables.played")}:{" "}
+              </span>
+              <span className="font-medium text-theme-foreground">
+                {11 -
+                  (currentUserData?.team_with_stats?.filter(
+                    (p: any) => p.is_playing_this_round && !p.has_played
+                  ).length || 0)}
+                /11
+              </span>
+            </div>
+            <div>
+              <span className="text-theme-text-secondary">
+                {t("leagueTables.transfers")}:{" "}
+              </span>
+              <span className="font-medium text-theme-foreground">
+                {currentUserData?.entry_history?.event_transfers || 0}
+                {(currentUserData?.entry_history?.event_transfers_cost || 0) >
+                  0 && (
+                  <span className="text-red-500">
+                    {" "}
+                    (-{currentUserData?.entry_history?.event_transfers_cost})
+                  </span>
+                )}
+              </span>
+            </div>
+            <div>
+              <span className="text-theme-text-secondary">
+                {t("leagueTables.teamValue")}:{" "}
+              </span>
+              <span className="font-medium text-theme-foreground">
+                £
+                {((currentUserData?.entry_history?.value || 0) / 10).toFixed(1)}
+                m
+              </span>
+            </div>
+            <div>
+              <span className="text-theme-text-secondary">
+                {t("leagueTables.bank")}:{" "}
+              </span>
+              <span className="font-medium text-theme-foreground">
+                £{((currentUserData?.entry_history?.bank || 0) / 10).toFixed(1)}
+                m
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const renderPlayerBreakdown = (team: ProcessedTeam) => {
@@ -675,6 +880,183 @@ export default function LeagueTables({
                 </div>
               );
             })}
+
+            {/* Current Manager Row - Display if not in main table */}
+            {(() => {
+              const currentUserInTable = data.teams.find(
+                (team) => team.id === managerId
+              );
+              if (!!currentUserInTable) return null;
+
+              // Find the current manager's league entry rank for display
+              const currentUserLeague = leagues.find(
+                (league) => league.id.toString() === selectedLeagueId.toString()
+              );
+
+              if (!currentUserLeague) return null;
+
+              return (
+                <>
+                  <div className="border-t-4 border-purple-300 dark:border-purple-600"></div>
+                  <div className="bg-purple-50/50 dark:bg-purple-900/20 border-t border-theme-border">
+                    <div className="p-2 text-center">
+                      <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                        {t("leagueTables.yourPositionInLeague")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-r from-purple-100/80 to-violet-100/80 dark:from-purple-900/30 dark:to-violet-900/30 shadow-md border-l-4 border-purple-500 dark:border-purple-400 transition-colors">
+                    <div
+                      className="p-4 cursor-pointer transition-all duration-300 group"
+                      onClick={() =>
+                        setCurrentUserExpanded(!currentUserExpanded)
+                      }
+                    >
+                      <div className="grid grid-cols-12 gap-4 items-center text-sm">
+                        {/* Rank & Change */}
+                        <div className="col-span-1 flex items-center gap-2 hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50 dark:hover:from-green-900/20 dark:hover:to-emerald-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
+                          <span className="font-bold text-purple-700 dark:text-purple-300">
+                            {currentUserLeague.entry_rank || "Unranked"}
+                          </span>
+                          <MdRemove className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        </div>
+
+                        {/* Team Name */}
+                        <div className="col-span-3 min-w-0 rounded-lg px-3 py-2 transition-all duration-200">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white shadow-sm">
+                              YOU
+                            </span>
+                            <p className="font-semibold truncate text-purple-800 dark:text-purple-200">
+                              {getTeamName()}
+                            </p>
+                          </div>
+                          <p className="text-xs truncate text-purple-700 dark:text-purple-300">
+                            {currentUserData?.manager?.player_first_name}{" "}
+                            {currentUserData?.manager?.player_last_name}
+                          </p>
+                        </div>
+
+                        {/* Yet (Players to Play) */}
+                        <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-orange-50 hover:to-yellow-50 dark:hover:from-orange-900/20 dark:hover:to-yellow-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
+                          <span className="font-medium text-theme-foreground">
+                            {currentUserData?.team_with_stats?.filter(
+                              (p: any) =>
+                                p.is_playing_this_round && !p.has_played
+                            ).length || 0}
+                          </span>
+                        </div>
+
+                        {/* Captain */}
+                        <div className="col-span-2 min-w-0 hover:bg-gradient-to-br hover:from-yellow-50 hover:to-amber-50 dark:hover:from-yellow-900/20 dark:hover:to-amber-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
+                          <p className="font-medium text-theme-foreground truncate">
+                            {getCaptainInfo()?.name || "N/A"} (C)
+                          </p>
+                          <p className="text-xs text-theme-text-secondary">
+                            {getCaptainInfo()?.points || 0} pts
+                          </p>
+                        </div>
+
+                        {/* GW Points */}
+                        <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-green-50 hover:to-teal-50 dark:hover:from-green-900/20 dark:hover:to-teal-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
+                          <span className="font-bold text-green-600 dark:text-green-400">
+                            {currentUserData?.entry_history?.points || 0}
+                          </span>
+                        </div>
+
+                        {/* Total Points */}
+                        <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
+                          <span className="font-bold text-theme-foreground">
+                            {currentUserData?.entry_history?.total_points || 0}
+                          </span>
+                        </div>
+
+                        {/* Chip */}
+                        <div className="col-span-1 text-center">
+                          {currentUserData?.active_chip && (
+                            <div
+                              className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold text-white transition-transform hover:scale-110 ${getChipColor(
+                                getChipAbbreviation(currentUserData.active_chip)
+                              )}`}
+                            >
+                              {getChipAbbreviation(currentUserData.active_chip)}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Expand Indicator */}
+                        <div className="col-span-2 flex justify-end items-center gap-2">
+                          <span className="text-xs text-theme-text-secondary">
+                            {t("leagueTables.rank")}: #
+                            {currentUserLeague.entry_rank ||
+                              t("leagueTables.unranked")}
+                          </span>
+                          <MdExpandMore
+                            className={`w-5 h-5 text-theme-text-secondary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-all duration-300 hover:scale-110 ${
+                              currentUserExpanded ? "rotate-180" : ""
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Transfer Info Row */}
+                      <div className="mt-3 pt-3 border-t border-purple-200/50 dark:border-purple-700/50">
+                        <div className="flex items-center justify-between text-xs text-purple-700 dark:text-purple-300">
+                          <div className="flex items-center gap-4">
+                            <span>
+                              {t("leagueTables.played")}:{" "}
+                              {11 -
+                                (currentUserData?.team_with_stats?.filter(
+                                  (p: any) =>
+                                    p.is_playing_this_round && !p.has_played
+                                ).length || 0)}
+                              /11
+                            </span>
+                            <span>
+                              {t("leagueTables.teamValue")}: £
+                              {(
+                                (currentUserData?.entry_history?.value || 0) /
+                                10
+                              ).toFixed(1)}
+                              m
+                            </span>
+                            <span>
+                              {t("leagueTables.bank")}: £
+                              {(
+                                (currentUserData?.entry_history?.bank || 0) / 10
+                              ).toFixed(1)}
+                              m
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span>
+                              {t("leagueTables.transfers")}:{" "}
+                              {currentUserData?.entry_history
+                                ?.event_transfers || 0}
+                              {(currentUserData?.entry_history
+                                ?.event_transfers_cost || 0) > 0 && (
+                                <span className="text-red-500">
+                                  {" "}
+                                  (-
+                                  {
+                                    currentUserData?.entry_history
+                                      ?.event_transfers_cost
+                                  }
+                                  )
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expanded Content for Current User */}
+                  {currentUserExpanded && renderCurrentUserTeamBreakdown()}
+                </>
+              );
+            })()}
           </div>
 
           {/* Mobile Table */}
@@ -781,6 +1163,125 @@ export default function LeagueTables({
                 </div>
               );
             })}
+
+            {/* Current Manager Row - Mobile - Display if not in main table */}
+            {(() => {
+              const currentUserInTable = data.teams.find(
+                (team) => team.id === managerId
+              );
+              if (currentUserInTable) return null;
+
+              // Find the current manager's league entry rank for display
+              const currentUserLeague = leagues.find(
+                (league) => league.id.toString() === selectedLeagueId.toString()
+              );
+
+              if (!currentUserLeague) return null;
+
+              return (
+                <>
+                  <div className="border-t-4 border-purple-300 dark:border-purple-600"></div>
+                  <div className="bg-purple-50/50 dark:bg-purple-900/20 border-t border-theme-border">
+                    <div className="p-2 text-center">
+                      <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                        {t("leagueTables.yourPositionInLeague")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border-l-2 border-purple-400 transition-colors">
+                    <div
+                      className="p-2 cursor-pointer transition-all duration-200"
+                      onClick={() =>
+                        setCurrentUserExpanded(!currentUserExpanded)
+                      }
+                    >
+                      <div className="grid grid-cols-6 gap-1 items-center text-xs">
+                        {/* Rank */}
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="font-bold text-purple-700 dark:text-purple-300 text-sm">
+                            {currentUserLeague.entry_rank || "N/A"}
+                          </span>
+                          <MdRemove className="w-3 h-3 text-gray-400" />
+                        </div>
+
+                        {/* Team Name */}
+                        <div className="col-span-2 min-w-0">
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-xs font-bold bg-purple-500 text-white px-1 py-0.5 rounded">
+                              YOU
+                            </span>
+                          </div>
+                          <p className="font-semibold text-xs truncate text-purple-700 dark:text-purple-300">
+                            {getTeamName()}
+                          </p>
+                          <p className="text-xs text-purple-600 dark:text-purple-400 truncate">
+                            {currentUserData?.manager?.player_first_name}{" "}
+                            {currentUserData?.manager?.player_last_name}
+                          </p>
+                        </div>
+
+                        {/* Yet */}
+                        <div className="text-center">
+                          <span className="font-bold text-theme-foreground text-sm">
+                            {currentUserData?.team_with_stats?.filter(
+                              (p: any) =>
+                                p.is_playing_this_round && !p.has_played
+                            ).length || 0}
+                          </span>
+                        </div>
+
+                        {/* GW Points */}
+                        <div className="text-center">
+                          <span className="font-bold text-green-600 dark:text-green-400 text-sm">
+                            {currentUserData?.entry_history?.points || 0}
+                          </span>
+                        </div>
+
+                        {/* Total Points */}
+                        <div className="text-center">
+                          <span className="font-bold text-theme-foreground text-sm">
+                            {currentUserData?.entry_history?.total_points || 0}
+                          </span>
+                          {currentUserData?.active_chip && (
+                            <div
+                              className={`inline-flex items-center justify-center w-4 h-4 rounded text-xs font-bold text-white ml-1 ${getChipColor(
+                                getChipAbbreviation(currentUserData.active_chip)
+                              )}`}
+                            >
+                              {getChipAbbreviation(currentUserData.active_chip)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Captain Info - Mobile */}
+                      <div className="mt-2 pt-2 border-t border-purple-200/50 dark:border-purple-700/50">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-purple-700 dark:text-purple-300">
+                            {t("leagueTables.rank")}: #
+                            {currentUserLeague.entry_rank ||
+                              t("leagueTables.unranked")}
+                          </span>
+                          <span className="text-xs text-purple-600 dark:text-purple-400">
+                            {t("leagueTables.captain")}:{" "}
+                            {getCaptainInfo()?.name || "N/A"} (
+                            {getCaptainInfo()?.points || 0}pts)
+                          </span>
+                          <MdExpandMore
+                            className={`w-4 h-4 text-theme-text-secondary transition-transform ${
+                              currentUserExpanded ? "rotate-180" : ""
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expanded Content for Current User */}
+                  {currentUserExpanded && renderCurrentUserTeamBreakdown()}
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

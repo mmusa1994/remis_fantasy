@@ -70,7 +70,9 @@
     "total": "Total",
     "chip": "Chip",
     "freeTransfers": "FT",
-    "teamValue": "TV",
+    "teamValue": "Team Value",
+    "bank": "Bank",
+    "transfers": "Transfers",
     "played": "Played",
     "lastTransfer": "Last Transfer",
     "squadBreakdown": "Squad Breakdown",
@@ -78,7 +80,8 @@
     "loadManagerFirst": "Please load a manager first to view league tables",
     "noLeagueSelected": "No league selected",
     "errorLoadingTable": "Error loading league table",
-    "unranked": "Unranked"
+    "unranked": "Unranked",
+    "yourPositionInLeague": "Your Position in League"
   },
   "startLivePolling": "Start live polling to see real-time updates",
   "howToUse": "How to use FPL Live",

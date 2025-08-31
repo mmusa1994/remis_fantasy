@@ -70,7 +70,9 @@
     "total": "Ukupno",
     "chip": "Chip",
     "freeTransfers": "SB",
-    "teamValue": "VT",
+    "teamValue": "Vrijednost Tima",
+    "bank": "Banka", 
+    "transfers": "Transferi",
     "played": "Odigrano",
     "lastTransfer": "Poslednji Transfer",
     "squadBreakdown": "Sastav Tima",
@@ -78,7 +80,8 @@
     "loadManagerFirst": "Molimo prvo učitajte menadžera da vidite tabele liga",
     "noLeagueSelected": "Nije odabrana liga",
     "errorLoadingTable": "Greška pri učitavanju tabele lige",
-    "unranked": "Bez ranga"
+    "unranked": "Bez ranga",
+    "yourPositionInLeague": "Vaša Pozicija u Ligi"
   },
   "startLivePolling": "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu",
   "howToUse": "Kako koristiti FPL Live",

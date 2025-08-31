@@ -441,16 +441,15 @@ export default function FPLLivePage() {
     };
 
     if (showTabDropdown) {
-      document.addEventListener('click', handleClickOutside);
-      window.addEventListener('resize', handleResize);
-      
+      document.addEventListener("click", handleClickOutside);
+      window.addEventListener("resize", handleResize);
+
       return () => {
-        document.removeEventListener('click', handleClickOutside);
-        window.removeEventListener('resize', handleResize);
+        document.removeEventListener("click", handleClickOutside);
+        window.removeEventListener("resize", handleResize);
       };
     }
   }, [showTabDropdown]);
-
 
   const handleTabChange = (newTab: TabType) => {
     setTabLoading(true);
@@ -579,6 +578,7 @@ export default function FPLLivePage() {
                 </div>
               </div>
               <LeagueTables
+                currentUserData={data}
                 managerId={managerId || undefined}
                 gameweek={gameweek}
                 isPolling={isLiveTracking}
@@ -839,7 +839,7 @@ export default function FPLLivePage() {
                       {showTabDropdown && (
                         <>
                           {/* Overlay to close dropdown when clicking outside */}
-                          <div 
+                          <div
                             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 sm:hidden"
                             onClick={() => setShowTabDropdown(false)}
                           />
@@ -859,10 +859,16 @@ export default function FPLLivePage() {
                                       isActive
                                         ? "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-r-2 border-purple-500"
                                         : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700"
-                                    } ${index === 0 ? 'rounded-t-lg' : ''} ${index === tabs.slice(3).length - 1 ? 'rounded-b-lg' : ''}`}
+                                    } ${index === 0 ? "rounded-t-lg" : ""} ${
+                                      index === tabs.slice(3).length - 1
+                                        ? "rounded-b-lg"
+                                        : ""
+                                    }`}
                                   >
                                     <Icon className="w-5 h-5 flex-shrink-0" />
-                                    <span className="truncate">{tab.label}</span>
+                                    <span className="truncate">
+                                      {tab.label}
+                                    </span>
                                   </button>
                                 );
                               })}
@@ -919,7 +925,7 @@ export default function FPLLivePage() {
                       {showTabDropdown && (
                         <>
                           {/* Overlay to close dropdown when clicking outside - Tablet */}
-                          <div 
+                          <div
                             className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 md:hidden"
                             onClick={() => setShowTabDropdown(false)}
                           />
@@ -939,10 +945,16 @@ export default function FPLLivePage() {
                                       isActive
                                         ? "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-r-2 border-purple-500"
                                         : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700"
-                                    } ${index === 0 ? 'rounded-t-lg' : ''} ${index === tabs.slice(4).length - 1 ? 'rounded-b-lg' : ''}`}
+                                    } ${index === 0 ? "rounded-t-lg" : ""} ${
+                                      index === tabs.slice(4).length - 1
+                                        ? "rounded-b-lg"
+                                        : ""
+                                    }`}
                                   >
                                     <Icon className="w-5 h-5 flex-shrink-0" />
-                                    <span className="truncate">{tab.label}</span>
+                                    <span className="truncate">
+                                      {tab.label}
+                                    </span>
                                   </button>
                                 );
                               })}
@@ -982,7 +994,6 @@ export default function FPLLivePage() {
                 {renderTabContent()}
               </div>
             </div>
-
           </div>
         )}
       </div>
