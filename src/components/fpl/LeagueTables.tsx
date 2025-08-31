@@ -220,13 +220,14 @@ export default function LeagueTables({
     const bench = team.player_details?.filter(p => p.position > 11) || [];
 
     return (
-      <div className="mt-4 p-4 bg-theme-card-secondary rounded-lg border border-theme-border">
-        <h4 className="font-semibold text-theme-foreground mb-3 flex items-center gap-2">
+      <div className="mt-2 mx-2 mb-4 p-3 bg-theme-card-secondary rounded-lg border border-theme-border md:mt-4 md:mx-4 md:p-4">
+        <h4 className="font-semibold text-theme-foreground mb-3 flex items-center gap-2 text-sm md:text-base">
           <IoFootballOutline className="w-4 h-4" />
-          {t("leagueTables.squadBreakdown")}
+          Squad
         </h4>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {/* Starting XI - Mobile Optimized */}
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 md:gap-3">
           {startingXI.map((playerDetail) => {
             const element = getPlayerElement(playerDetail.element);
             if (!element) return null;
@@ -237,51 +238,53 @@ export default function LeagueTables({
             return (
               <div
                 key={playerDetail.element}
-                className={`p-3 rounded-lg border-2 shadow-sm hover:shadow-md transition-all ${
+                className={`p-2 rounded border text-xs md:p-3 md:text-sm ${
                   playerDetail.is_captain
-                    ? "border-yellow-400 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/20"
+                    ? "border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20"
                     : playerDetail.is_vice_captain
-                    ? "border-gray-400 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/30 dark:to-gray-800/20"
-                    : "border-theme-border bg-gradient-to-br from-theme-card to-theme-card-secondary hover:border-purple-300 dark:hover:border-purple-600"
+                    ? "border-gray-400 bg-gray-50 dark:bg-gray-900/20"
+                    : "border-theme-border bg-theme-card"
                 }`}
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-1 mb-1">
                       <div 
-                        className="w-3 h-3 rounded-sm flex-shrink-0"
+                        className="w-2 h-2 rounded-sm flex-shrink-0 md:w-3 md:h-3"
                         style={{ backgroundColor: teamColors.primary }}
                       ></div>
-                      <p className="text-sm font-bold text-theme-foreground truncate">
+                      <p className="font-bold text-theme-foreground truncate text-xs md:text-sm">
                         {element.web_name}
                         {playerDetail.is_captain && (
-                          <span className="ml-1 text-xs bg-yellow-500 text-white px-1 rounded">
+                          <span className="ml-1 text-xs bg-yellow-500 text-white px-1 py-0.5 rounded">
                             C
                           </span>
                         )}
                         {playerDetail.is_vice_captain && (
-                          <span className="ml-1 text-xs bg-gray-500 text-white px-1 rounded">
+                          <span className="ml-1 text-xs bg-gray-500 text-white px-1 py-0.5 rounded">
                             V
                           </span>
                         )}
                       </p>
                     </div>
-                    <p className="text-xs text-theme-text-secondary leading-tight">
-                      {element.first_name} {element.second_name}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-theme-text-secondary truncate">
+                        {element.first_name}
+                      </p>
+                      {playerDetail.opponent && (
+                        <span className="text-xs text-theme-text-secondary/70 ml-2">
+                          {playerDetail.opponent}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-right ml-2">
-                    <div className="text-sm font-bold text-theme-foreground">
-                      {displayPoints} pts
+                    <div className="text-sm font-bold text-green-600 dark:text-green-400">
+                      {displayPoints}
                     </div>
                     {playerDetail.multiplier > 1 && (
                       <div className="text-xs text-theme-text-secondary">
-                        {playerDetail.live_points} × {playerDetail.multiplier}
-                      </div>
-                    )}
-                    {playerDetail.opponent && (
-                      <div className="text-xs text-theme-text-secondary/70">
-                        {playerDetail.opponent} ({playerDetail.is_home ? 'H' : 'A'})
+                        ×{playerDetail.multiplier}
                       </div>
                     )}
                   </div>
@@ -291,13 +294,13 @@ export default function LeagueTables({
           })}
         </div>
 
-        {/* Bench Players */}
-        <div className="mt-6">
-          <h5 className="text-sm font-bold text-theme-text-secondary mb-3 flex items-center gap-2">
+        {/* Bench Players - Mobile Optimized */}
+        <div className="mt-4">
+          <h5 className="text-sm font-bold text-theme-text-secondary mb-2 flex items-center gap-2">
             <span>⚽</span>
-            {t("leagueTables.bench")}
+            Bench
           </h5>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
             {bench.map((playerDetail) => {
               const element = getPlayerElement(playerDetail.element);
               if (!element) return null;
@@ -307,31 +310,61 @@ export default function LeagueTables({
               return (
                 <div
                   key={playerDetail.element}
-                  className="p-3 rounded-lg border border-theme-border bg-theme-card hover:bg-theme-card-secondary transition-colors"
+                  className="p-2 rounded border border-theme-border bg-theme-card text-xs"
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-1 mb-1">
                     <div 
-                      className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+                      className="w-2 h-2 rounded-sm flex-shrink-0"
                       style={{ backgroundColor: teamColors.primary }}
                     ></div>
-                    <p className="text-xs font-medium text-theme-foreground truncate">
+                    <p className="font-medium text-theme-foreground truncate">
                       {element.web_name}
                     </p>
                   </div>
-                  <p className="text-xs text-theme-text-secondary truncate mb-1">
-                    {element.first_name}
-                  </p>
-                  <div className="text-xs font-bold text-theme-foreground">
-                    {playerDetail.live_points} pts
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-theme-text-secondary truncate">
+                      {element.first_name}
+                    </p>
+                    <span className="text-xs font-bold text-theme-foreground">
+                      {playerDetail.live_points}
+                    </span>
                   </div>
-                  {playerDetail.opponent && (
-                    <div className="text-xs text-theme-text-secondary/70 mt-1">
-                      {playerDetail.opponent} ({playerDetail.is_home ? 'H' : 'A'})
-                    </div>
-                  )}
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Team Summary - Mobile Only */}
+        <div className="mt-3 pt-3 border-t border-theme-border/50 md:hidden">
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span className="text-theme-text-secondary">Played: </span>
+              <span className="font-medium text-theme-foreground">
+                {11 - (team.players_to_play || 0)}/11
+              </span>
+            </div>
+            <div>
+              <span className="text-theme-text-secondary">Transfers: </span>
+              <span className="font-medium text-theme-foreground">
+                {team.event_transfers}
+                {team.event_transfers_cost > 0 && (
+                  <span className="text-red-500"> (-{team.event_transfers_cost})</span>
+                )}
+              </span>
+            </div>
+            <div>
+              <span className="text-theme-text-secondary">Team Value: </span>
+              <span className="font-medium text-theme-foreground">
+                £{(team.team_value / 10).toFixed(1)}m
+              </span>
+            </div>
+            <div>
+              <span className="text-theme-text-secondary">Bank: </span>
+              <span className="font-medium text-theme-foreground">
+                £{(team.bank / 10).toFixed(1)}m
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -429,14 +462,19 @@ export default function LeagueTables({
                   <FaTrophy className="w-5 h-5 text-yellow-500" />
                   {data.league.name}
                 </h3>
-                <p className="text-sm text-theme-text-secondary">
+                <div className="text-sm text-theme-text-secondary">
                   Gameweek {data.gameweek} • {t("leagueTables.liveTable")}
                   {isPolling && (
-                    <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
-                      🔴 {t("leagueTables.live")}
-                    </span>
+                    <div>
+                      <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
+                        🔴 {t("leagueTables.live")}
+                      </span>
+                      <span>
+                        {t("leagueTables.liveAddingBonusPoints")}
+                      </span>
+                    </div>
                   )}
-                </p>
+                </div>
               </div>
               <div className="text-right">
                 <p className="text-xs text-theme-text-secondary">
@@ -447,10 +485,9 @@ export default function LeagueTables({
             </div>
           </div>
 
-          {/* Horizontal scroll container for mobile */}
-          <div className="overflow-x-auto">
-            {/* Table Headers */}
-            <div className="bg-theme-card-secondary border-b-2 border-theme-border min-w-[800px]">
+          {/* Desktop Table Headers */}
+          <div className="hidden md:block">
+            <div className="bg-theme-card-secondary border-b-2 border-theme-border">
               <div className="grid grid-cols-12 gap-4 items-center px-4 py-3 text-xs font-bold text-theme-text-secondary uppercase tracking-wider">
                 <div className="col-span-1">{t("leagueTables.rank")}</div>
                 <div className="col-span-3">{t("leagueTables.team")}</div>
@@ -462,9 +499,23 @@ export default function LeagueTables({
                 <div className="col-span-2"></div>
               </div>
             </div>
+          </div>
+          
+          {/* Mobile Table Headers */}
+          <div className="md:hidden bg-theme-card-secondary border-b-2 border-theme-border">
+            <div className="px-3 py-2">
+              <div className="grid grid-cols-6 gap-1 text-xs font-bold text-theme-text-secondary uppercase">
+                <div className="text-center">{t("leagueTables.position")}</div>
+                <div className="col-span-2">{t("leagueTables.team")}</div>
+                <div className="text-center">{t("leagueTables.yet")}</div>
+                <div className="text-center">GW</div>
+                <div className="text-center">{t("leagueTables.total")}</div>
+              </div>
+            </div>
+          </div>
 
-            {/* Table */}
-            <div className="divide-y divide-theme-border min-w-[800px]">
+            {/* Desktop Table */}
+            <div className="hidden md:block divide-y divide-theme-border">
               {data.teams.map((team) => {
                 const isCurrentUser = managerId === team.id;
                 return (
@@ -564,8 +615,8 @@ export default function LeagueTables({
                       </div>
                     </div>
 
-                    {/* Transfer Info Row - Hidden on mobile */}
-                    <div className="mt-3 pt-3 border-t border-theme-border/50 hidden md:block">
+                    {/* Transfer Info Row */}
+                    <div className="mt-3 pt-3 border-t border-theme-border/50">
                       <div className="flex items-center justify-between text-xs text-theme-text-secondary">
                         <div className="flex items-center gap-4">
                           <span>
@@ -593,7 +644,99 @@ export default function LeagueTables({
                 );
               })}
             </div>
-          </div>
+
+            {/* Mobile Table */}
+            <div className="md:hidden divide-y divide-theme-border">
+              {data.teams.map((team) => {
+                const isCurrentUser = managerId === team.id;
+                return (
+                  <div key={team.id} className="transition-colors">
+                    {/* Main Row - Compact Mobile Layout */}
+                    <div 
+                      className={`p-2 cursor-pointer transition-all duration-200 ${
+                        isCurrentUser 
+                          ? "bg-purple-50 dark:bg-purple-900/20 border-l-2 border-purple-400" 
+                          : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                      }`}
+                      onClick={() => toggleTeamExpansion(team.id)}
+                    >
+                      <div className="grid grid-cols-6 gap-1 items-center text-xs">
+                        {/* Rank */}
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="font-bold text-theme-foreground text-sm">
+                            {team.rank}
+                          </span>
+                          {getRankChangeIcon(team.rank_change)}
+                        </div>
+
+                        {/* Team Name */}
+                        <div className="col-span-2 min-w-0">
+                          <div className="flex items-center gap-1 mb-1">
+                            {isCurrentUser && (
+                              <span className="text-xs font-bold bg-purple-500 text-white px-1 py-0.5 rounded">
+                                YOU
+                              </span>
+                            )}
+                          </div>
+                          <p className={`font-semibold text-xs truncate ${
+                            isCurrentUser ? "text-purple-700 dark:text-purple-300" : "text-theme-foreground"
+                          }`}>
+                            {team.entry_name || "N/A"}
+                          </p>
+                          <p className="text-xs text-theme-text-secondary truncate">
+                            {team.player_name || "Unknown"}
+                          </p>
+                        </div>
+
+                        {/* Yet */}
+                        <div className="text-center">
+                          <span className="font-bold text-theme-foreground text-sm">
+                            {team.players_to_play || 0}
+                          </span>
+                        </div>
+
+                        {/* GW Points */}
+                        <div className="text-center">
+                          <span className="font-bold text-green-600 dark:text-green-400 text-sm">
+                            {team.live_points || team.event_total || 0}
+                          </span>
+                        </div>
+
+                        {/* Total Points */}
+                        <div className="text-center">
+                          <span className="font-bold text-theme-foreground text-sm">
+                            {team.live_total || team.total || 0}
+                          </span>
+                          {team.active_chip && (
+                            <div className={`inline-flex items-center justify-center w-4 h-4 rounded text-xs font-bold text-white ml-1 ${getChipColor(getChipAbbreviation(team.active_chip))}`}>
+                              {getChipAbbreviation(team.active_chip)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Captain Info - Mobile */}
+                      <div className="mt-2 pt-2 border-t border-theme-border/30">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-theme-text-secondary">
+                            Captain: <span className="font-medium text-theme-foreground">{team.captain?.name || "N/A"}</span>
+                            <span className="text-green-600 dark:text-green-400 ml-1">({team.captain?.points || 0}pts)</span>
+                          </span>
+                          <MdExpandMore
+                            className={`w-4 h-4 text-theme-text-secondary transition-transform ${
+                              expandedTeams.has(team.id) ? "rotate-180" : ""
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Expanded Content */}
+                    {expandedTeams.has(team.id) && renderPlayerBreakdown(team)}
+                  </div>
+                );
+              })}
+            </div>
         </div>
       )}
     </div>

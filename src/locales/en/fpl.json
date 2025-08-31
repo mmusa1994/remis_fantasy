@@ -48,8 +48,9 @@
   "matchResults": "Match Results",
   "liveEvents": "LIVE BPS Tracker",
   "noEventsYet": "No events yet",
-  
+
   "leagueTables": {
+    "liveAddingBonusPoints": "Live adding bonus points",
     "title": "League Tables",
     "selectLeague": "Select League",
     "chooseLeague": "Choose a league...",

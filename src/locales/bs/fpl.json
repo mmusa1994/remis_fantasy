@@ -48,8 +48,9 @@
   "matchResults": "Rezultati utakmica",
   "liveEvents": "UŽIVO BPS Tracker",
   "noEventsYet": "Još nema događaja",
-  
+
   "leagueTables": {
+    "liveAddingBonusPoints": "Uživo dodavanje bonus bodova",
     "title": "Tabele Liga",
     "selectLeague": "Odaberite Ligu",
     "chooseLeague": "Odaberite ligu...",
