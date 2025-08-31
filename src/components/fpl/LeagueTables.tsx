@@ -680,7 +680,7 @@ export default function LeagueTables({
                   Gameweek {data.gameweek} • {t("leagueTables.liveTable")}
                   {isPolling && (
                     <div>
-                      <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
+                      <span className="inline-flex items-center pr-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
                         🔴 {t("leagueTables.live")}
                       </span>
                       <span>{t("leagueTables.liveAddingBonusPoints")}</span>
