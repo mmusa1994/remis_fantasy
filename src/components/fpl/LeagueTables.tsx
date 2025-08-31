@@ -237,9 +237,6 @@ export default function LeagueTables({
 
   const getTeamName = () => {
     // Debug log to see what's available
-    console.log("currentUserData structure:", currentUserData);
-    console.log("currentUserData.manager:", currentUserData?.manager);
-
     return currentUserData?.manager?.name || "Your Team";
   };
 
@@ -960,7 +957,16 @@ export default function LeagueTables({
                         {/* GW Points */}
                         <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-green-50 hover:to-teal-50 dark:hover:from-green-900/20 dark:hover:to-teal-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                           <span className="font-bold text-green-600 dark:text-green-400">
-                            {currentUserData?.entry_history?.points || 0}
+                            {(() => {
+                              const startingXI = currentUserData?.team_with_stats?.filter((p: any) => p.position <= 11) || [];
+                              const totalPoints = startingXI.reduce((sum: number, player: any) => {
+                                const playerPoints = player.player?.event_points || 0;
+                                const multiplier = player.multiplier || 1;
+                                const points = playerPoints * multiplier;
+                                return sum + points;
+                              }, 0);
+                              return totalPoints;
+                            })()}
                           </span>
                         </div>
 
@@ -1233,7 +1239,16 @@ export default function LeagueTables({
                         {/* GW Points */}
                         <div className="text-center">
                           <span className="font-bold text-green-600 dark:text-green-400 text-sm">
-                            {currentUserData?.entry_history?.points || 0}
+                            {(() => {
+                              const startingXI = currentUserData?.team_with_stats?.filter((p: any) => p.position <= 11) || [];
+                              const totalPoints = startingXI.reduce((sum: number, player: any) => {
+                                const playerPoints = player.player?.event_points || 0;
+                                const multiplier = player.multiplier || 1;
+                                const points = playerPoints * multiplier;
+                                return sum + points;
+                              }, 0);
+                              return totalPoints;
+                            })()}
                           </span>
                         </div>
 
