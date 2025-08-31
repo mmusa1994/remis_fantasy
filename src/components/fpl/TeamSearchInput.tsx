@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { MdSearch, MdClose } from "react-icons/md";
-import { useTranslation } from "react-i18next";
+// import { useTranslation } from "react-i18next";
 
 interface TeamSearchInputProps {
   onManagerIdFound: (managerId: number) => void;

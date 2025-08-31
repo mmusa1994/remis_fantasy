@@ -67,7 +67,7 @@ export default function FPLLivePage() {
   // Core state
   const [managerId, setManagerId] = useState<number | null>(null);
   const [gameweek, setGameweek] = useState(1);
-  const [isPolling, setIsPolling] = useState(false);
+  // const [isPolling, setIsPolling] = useState(false);
   const [loading, setLoading] = useState(false);
   const [teamDataLoading, setTeamDataLoading] = useState(false);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
@@ -78,9 +78,9 @@ export default function FPLLivePage() {
   const [leagueData, setLeagueData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
-    null
-  );
+  // const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
+    // null
+  // );
 
   // Master live tracking state
   const [isLiveTracking, setIsLiveTracking] = useState(false);
@@ -408,13 +408,13 @@ export default function FPLLivePage() {
       }
 
       setIsLiveTracking(true);
-      setIsPolling(true);
+      // setIsPolling(true);
 
       showSuccess("Pokrenuto je uživo praćenje za sve komponente");
     } else {
       // Stop live tracking - Visual only
       setIsLiveTracking(false);
-      setIsPolling(false);
+      // setIsPolling(false);
 
       showSuccess("Zaustavljen je uživo praćenje");
     }
@@ -422,13 +422,13 @@ export default function FPLLivePage() {
 
   // Legacy functions removed - now using toggleLiveTracking directly
 
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
+  // useEffect(() => {
+  //   return () => {
+  //     if (pollingInterval) {
+  //       clearInterval(pollingInterval);
+  //     }
+  //   };
+  // }, [pollingInterval]);
 
   // Close dropdown when clicking outside or on window resize
   useEffect(() => {

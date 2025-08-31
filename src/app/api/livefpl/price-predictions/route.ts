@@ -11,7 +11,7 @@ const POSITION_MAPPINGS: { [key: number]: string } = {
 export async function GET() {
   try {
     // Get data from Fantasy Football Hub APIs
-    const [playerDataResponse, fixturesResponse] = await Promise.all([
+    const [playerDataResponse] = await Promise.all([
       fetch(
         "https://www.fantasyfootballhub.co.uk/player-data/player-data.json",
         {
@@ -25,21 +25,7 @@ export async function GET() {
           },
           next: { revalidate: 60 }, // Cache for 1 minute
         }
-      ),
-      fetch(
-        "https://www.fantasyfootballhub.co.uk/api/fixtures?showCurrent=false&usePredictedFixtures=false",
-        {
-          headers: {
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            Accept: "application/json",
-            "Accept-Language": "en-US,en;q=0.9",
-            Referer: "https://www.fantasyfootballhub.co.uk/",
-            Origin: "https://www.fantasyfootballhub.co.uk",
-          },
-          next: { revalidate: 300 }, // Cache for 5 minutes
-        }
-      ),
+      )
     ]);
 
     if (!playerDataResponse.ok) {

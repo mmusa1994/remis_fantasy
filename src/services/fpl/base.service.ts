@@ -79,17 +79,24 @@ export abstract class BaseFPLService {
     retryCount = 0
   ): Promise<T> {
     try {
+      // First try direct FPL API call
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*',
           'Accept-Encoding': 'gzip, deflate, br',
           'Accept-Language': 'en-US,en;q=0.9',
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache',
+          'Referer': 'https://fantasy.premierleague.com/',
+          'Origin': 'https://fantasy.premierleague.com',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-origin',
+          'X-Requested-With': 'XMLHttpRequest',
         },
         signal: controller.signal,
       });
@@ -97,6 +104,12 @@ export abstract class BaseFPLService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        // On 403 Forbidden, try proxy fallback (for production deployment)
+        if (response.status === 403 && (typeof window === 'undefined' || process.env.FPL_USE_PROXY === 'true')) {
+          console.log(`🔄 FPL direct call failed (${response.status}), trying proxy fallback...`);
+          return this.tryProxyFallback<T>(endpoint, cacheConfig);
+        }
+
         if (response.status === 429 && retryCount < this.config.max_retries) {
           const delay = this.calculateRetryDelay(retryCount);
           await this.sleep(delay);
@@ -147,6 +160,63 @@ export abstract class BaseFPLService {
         error instanceof Error ? error : undefined
       );
     }
+  }
+
+  private async tryProxyFallback<T>(
+    endpoint: string,
+    cacheConfig?: FPLCacheConfig
+  ): Promise<T> {
+    // Try multiple proxy methods
+    const proxyMethods = [
+      `/api/fpl/proxy?endpoint=${encodeURIComponent(endpoint)}`,
+      `/api/fpl/cors-proxy?endpoint=${encodeURIComponent(endpoint)}`,
+    ];
+
+    let lastError: Error | null = null;
+
+    for (const proxyUrl of proxyMethods) {
+      try {
+        console.log(`🔄 Trying proxy: ${proxyUrl.split('?')[0]}`);
+        
+        const response = await fetch(proxyUrl, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(15000), // 15 second timeout for proxies
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Proxy returned unsuccessful response');
+        }
+
+        console.log(`✅ Proxy success: ${proxyUrl.split('?')[0]}`);
+
+        // Cache the successful response
+        if (cacheConfig) {
+          this.setCache(cacheConfig.key || endpoint, result.data, cacheConfig.ttl);
+        }
+
+        return result.data as T;
+      } catch (error) {
+        console.warn(`❌ Proxy failed: ${proxyUrl.split('?')[0]}`, error);
+        lastError = error instanceof Error ? error : new Error('Unknown proxy error');
+        continue; // Try next proxy
+      }
+    }
+
+    // All proxy methods failed
+    throw new FPLAPIError(
+      `All proxy fallbacks failed. Last error: ${lastError?.message || 'Unknown error'}`,
+      500,
+      endpoint,
+      lastError || undefined
+    );
   }
 
   /**

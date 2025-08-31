@@ -28,7 +28,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
 }: AdvancedStatisticsProps) {
   const { t } = useTranslation("fpl");
   const [historyData, setHistoryData] = React.useState<any>(null);
-  const [historyLoading, setHistoryLoading] = React.useState(false);
+  // const [historyLoading, setHistoryLoading] = React.useState(false);
   const [captainHistory, setCaptainHistory] = React.useState<any[]>([]);
   const [captainLoading, setCaptainLoading] = React.useState(false);
   const [allPlayers, setAllPlayers] = React.useState<any[]>([]);
@@ -38,7 +38,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
     const fetchHistory = async () => {
       if (!managerId) return;
 
-      setHistoryLoading(true);
+      // setHistoryLoading(true);
       try {
         const response = await fetch(`/api/fpl/entry/${managerId}/history`);
         if (response.ok) {
@@ -50,7 +50,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
       } catch (error) {
         console.error("Failed to fetch manager history:", error);
       } finally {
-        setHistoryLoading(false);
+        // setHistoryLoading(false);
       }
     };
 
@@ -237,7 +237,8 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
     };
 
     fetchCaptainData();
-  }, [managerId, historyData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [managerId, historyData, allPlayers, gameweek]);
 
   if (loading) {
     return (
@@ -394,22 +395,22 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
     return { weeks, values, color };
   };
 
-  const getCaptainPointsHistory = () => {
-    // Use the fetched captain history data
-    if (captainHistory.length > 0) {
-      const gameweeks = captainHistory.map((c) => c.event);
-      const captainPoints = captainHistory.map((c) => c.captainPoints);
-      return { gameweeks, captainPoints };
-    }
+  // const getCaptainPointsHistory = () => {
+  //   // Use the fetched captain history data
+  //   if (captainHistory.length > 0) {
+  //     const gameweeks = captainHistory.map((c) => c.event);
+  //     const captainPoints = captainHistory.map((c) => c.captainPoints);
+  //     return { gameweeks, captainPoints };
+  //   }
 
-    // Fallback - show current gameweek captain data if available
-    const gameweeks = [gameweek];
-    const captain = teamStats.find((p: any) => p.is_captain);
-    const currentCaptainPoints = captain?.live_stats?.total_points || 0;
-    const captainPoints = [currentCaptainPoints * 2]; // Captain gets double points
+  //   // Fallback - show current gameweek captain data if available
+  //   const gameweeks = [gameweek];
+  //   const captain = teamStats.find((p: any) => p.is_captain);
+  //   const currentCaptainPoints = captain?.live_stats?.total_points || 0;
+  //   const captainPoints = [currentCaptainPoints * 2]; // Captain gets double points
 
-    return { gameweeks, captainPoints };
-  };
+  //   return { gameweeks, captainPoints };
+  // };
 
   const getPointsOnBenchHistory = () => {
     // Get points on bench from history data
@@ -578,7 +579,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
   const pointsData = getPointsDistribution();
   const trendData = getGameweekTrend();
   const valueData = getTeamValueHistory();
-  const captainData = getCaptainPointsHistory();
+  // const captainData = getCaptainPointsHistory();
   const benchData = getPointsOnBenchHistory();
   const transfersData = getTransfersHistory();
   const seasonData = getSeasonRankings();
