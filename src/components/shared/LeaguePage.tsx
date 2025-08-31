@@ -124,13 +124,19 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
 
       {/* Stats Section */}
       <section className="py-8 md:py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <StatsGrid
-            stats={config.stats}
-            theme={config.primaryColor}
-            className="max-w-4xl mx-auto"
-            leagueType={leagueId}
-          />
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12 transition-all duration-300">
+            {config.stats.map((stat: any, index: number) => (
+              <div key={`stat-${index}`}>
+                <StatsGrid
+                  stats={[stat]}
+                  theme={config.primaryColor}
+                  className="w-full"
+                  leagueType={leagueId}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

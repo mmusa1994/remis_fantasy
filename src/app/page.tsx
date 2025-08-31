@@ -379,19 +379,19 @@ export default function Home() {
           </div>
 
           {/* Dynamic Stats Section */}
-          <div className="mt-12 md:mt-20 max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 transition-all duration-300">
+          <div className="mt-12 md:mt-20 max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12 transition-all duration-300">
               {typedStats.map((stat, index) => {
                 // Assign different colors to each stat card
                 const colors = ['purple', 'blue', 'red', 'orange'];
                 const colorTheme = colors[index % colors.length];
                 
                 return (
-                  <div key={`stat-${index}`}>
+                  <div key={`stat-${index}`} className="h-full">
                     <StatsGrid
                       stats={[stat]}
                       theme={colorTheme}
-                      className=""
+                      className="w-full h-full"
                     />
                   </div>
                 );

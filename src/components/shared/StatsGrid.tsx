@@ -203,9 +203,7 @@ export default function StatsGrid({
   const defaultThemeColors = theme === "dark" ? colors.dark : colors.light;
 
   return (
-    <div
-      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-8 lg:gap-10 ${className}`}
-    >
+    <div className={`${className}`}>
       {stats.map((stat, index) => {
         const IconComponent = getIconComponent(stat.icon);
         const dynamicColors = getDynamicColors(stat.color);
@@ -218,7 +216,7 @@ export default function StatsGrid({
         return (
           <motion.div
             key={`${stat.label}-${index}`}
-            className={`p-8 lg:p-10 rounded-3xl border-2 ${themeColors.bg} ${themeColors.border} ${themeColors.shadow} shadow-xl backdrop-blur-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:border-opacity-60`}
+            className={`h-full p-8 lg:p-10 rounded-3xl border-2 ${themeColors.bg} ${themeColors.border} ${themeColors.shadow} shadow-xl backdrop-blur-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:border-opacity-60`}
             style={{
               backgroundImage: `linear-gradient(135deg, ${themeColors.bg.includes('dark') ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'} 0%, transparent 100%)`,
             }}
