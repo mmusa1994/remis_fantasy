@@ -1,0 +1,28 @@
+{
+  "title": "AI Analiza Tima",
+  "subtitle": "Dobijte stručne savjete za Fantasy Premier League uz pomoć AI",
+  "freeQuestions": "Besplatna Pitanja",
+  "remaining": "preostalo",
+  "resetsOn": "Resetuje se",
+  "useOwnApiKey": "Koristi Svoj OpenAI API Ključ (Opciono)",
+  "show": "Prikaži",
+  "hide": "Sakrij",
+  "enterApiKey": "Unesite svoj OpenAI API ključ (sk-...)",
+  "apiKeyDescription": "Korišćenje vašeg API ključa uklanja nedeljno ograničenje i omogućava neograničena pitanja.",
+  "readyToHelp": "Spreman sam da pomognem sa vašim FPL timom!",
+  "askAboutStrategies": "Pitate me o igračima, transferima, kapitenima ili strategijama za sezonu 2025/26.",
+  "inputPlaceholder": "Pitate o FPL igračima, transferima, kapitenima...",
+  "send": "Pošalji",
+  "exampleQuestionsTitle": "💡 Primeri Pitanja:",
+  "exampleQuestions": {
+    "0": "Koga da postavim za kapitena ovog kola?",
+    "1": "Koji branići su najbolji odnos cijene i kvaliteta?",
+    "2": "Da li da koristim wildcard ovu nedjelju?",
+    "3": "Koji su najbolji diferentni izbori?",
+    "4": "Analiziraj Arsenal mečeve za sledećih 5 kola"
+  },
+  "loadingTitle": "Učitavam AI Analizu Tima",
+  "loadingDescription": "Priprema vašeg FPL asistenta...",
+  "errorMessage": "Izvinjavam se, došlo je do greške. Molim pokušajte ponovo.",
+  "rateLimitMessage": "Nedeljno ograničenje je dosegnuto. Molim koristite svoj OpenAI API ključ da nastavite."
+}

@@ -32,6 +32,12 @@ export default function PremierLeagueLayout({
       showOnMobile: true
     },
     {
+      name: t("aiTeamAnalysis"),
+      href: "/premier-league/ai-team-analysis",
+      icon: "FaMagic",
+      showOnMobile: true
+    },
+    {
       name: t("prices"),
       href: "/premier-league/cijene",
       icon: "DollarSign",

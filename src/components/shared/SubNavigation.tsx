@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { TbHome2 } from "react-icons/tb";
 import { GrDiamond } from "react-icons/gr";
+import { FaMagic } from "react-icons/fa";
 // Unused - commenting out to avoid ESLint warning
 // const ChevronDownIcon = ({ className }: { className?: string }) => (
 //   <svg
@@ -59,6 +60,7 @@ const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } =
     UserPlus,
     Camera,
     DollarSign,
+    FaMagic,
   };
 
 const getIcon = (iconName?: string) => {

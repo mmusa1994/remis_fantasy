@@ -7,8 +7,11 @@ import commonBS from "@/locales/bs/common.json";
 import fplEN from "@/locales/en/fpl.json";
 import fplBS from "@/locales/bs/fpl.json";
 import heroEN from "@/locales/en/hero.json";
+import heroBS from "@/locales/bs/hero.json";
 import navigationEN from "@/locales/en/navigation.json";
 import navigationBS from "@/locales/bs/navigation.json";
+import aiEN from "@/locales/en/ai.json";
+import aiBS from "@/locales/bs/ai.json";
 
 const resources = {
   en: {
@@ -16,11 +19,14 @@ const resources = {
     fpl: fplEN,
     hero: heroEN,
     navigation: navigationEN,
+    ai: aiEN,
   },
   bs: {
     common: commonBS,
     fpl: fplBS,
+    hero: heroBS,
     navigation: navigationBS,
+    ai: aiBS,
   },
 };
 
@@ -32,7 +38,7 @@ i18n
     fallbackLng: "en",
     debug: false,
     defaultNS: "common",
-    ns: ["common", "fpl", "hero", "navigation"],
+    ns: ["common", "fpl", "hero", "navigation", "ai"],
 
     interpolation: {
       escapeValue: false,

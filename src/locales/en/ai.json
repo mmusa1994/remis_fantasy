@@ -1,0 +1,28 @@
+{
+  "title": "AI Team Analysis",
+  "subtitle": "Get expert Fantasy Premier League advice powered by AI",
+  "freeQuestions": "Free Questions",
+  "remaining": "remaining",
+  "resetsOn": "Resets on",
+  "useOwnApiKey": "Use Your Own OpenAI API Key (Optional)",
+  "show": "Show",
+  "hide": "Hide",
+  "enterApiKey": "Enter your OpenAI API key (sk-...)",
+  "apiKeyDescription": "Using your own API key removes the weekly limit and provides unlimited questions.",
+  "readyToHelp": "Ready to help with your FPL team!",
+  "askAboutStrategies": "Ask me about players, transfers, captains, or strategies for the 2025/26 season.",
+  "inputPlaceholder": "Ask about FPL players, transfers, captains...",
+  "send": "Send",
+  "exampleQuestionsTitle": "💡 Example Questions:",
+  "exampleQuestions": {
+    "0": "Who should I captain this gameweek?",
+    "1": "Which defenders are best value for money?",
+    "2": "Should I use my wildcard this week?",
+    "3": "What are the best differential picks?",
+    "4": "Analyze Arsenal's fixtures for the next 5 gameweeks"
+  },
+  "loadingTitle": "Loading AI Team Analysis",
+  "loadingDescription": "Preparing your FPL assistant...",
+  "errorMessage": "Sorry, I encountered an error. Please try again.",
+  "rateLimitMessage": "Weekly limit exceeded. Please use your own OpenAI API key to continue."
+}
