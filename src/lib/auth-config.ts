@@ -239,13 +239,13 @@ export const authOptions = {
         token.subscription = user.subscription;
       }
 
-      // If this is a Google OAuth sign in, fetch user data from DB
+      // If this is a Google OAuth sign in, fetch user data from DB using email
       if (account?.provider === "google" && token.email) {
         const { data: dbUser } = await supabase
           .from("users")
           .select(`
             *,
-            subscriptions (
+            subscriptions!subscriptions_user_id_fkey (
               id,
               plan_id,
               status,
@@ -259,8 +259,21 @@ export const authOptions = {
           .single();
 
         if (dbUser) {
-          token.id = dbUser.id;
+          token.id = dbUser.id; // Use the database UUID, not Google ID
           token.subscription = dbUser.subscriptions?.[0] || null;
+        }
+      }
+
+      // Always ensure we have the correct user ID from database for any provider
+      if (!token.id || typeof token.id !== 'string' || token.id.length < 36) {
+        const { data: dbUser } = await supabase
+          .from("users")
+          .select("id")
+          .eq("email", token.email)
+          .single();
+
+        if (dbUser) {
+          token.id = dbUser.id;
         }
       }
 

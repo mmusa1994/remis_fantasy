@@ -1,5 +1,5 @@
 {
-  "title": "AI Team Analysis",
+  "title": "AI Fantasy Guru",
   "subtitle": "Get expert Fantasy Premier League advice powered by AI",
   "authenticationRequired": "Sign in required",
   "signInToAccess": "Please sign in to access AI-powered FPL analysis",
@@ -11,6 +11,7 @@
   "personalizedAdvice": "Personalized FPL advice",
   "realTimeData": "Real-time player data",
   "freeQuestions": "Free Questions",
+  "weeklyAllowance": "Weekly allowance",
   "remaining": "remaining",
   "resetsOn": "Resets on",
   "useOwnApiKey": "Use Your Own OpenAI API Key (Optional)",
@@ -30,7 +31,7 @@
     "3": "What are the best differential picks?",
     "4": "Analyze Arsenal's fixtures for the next 5 gameweeks"
   },
-  "loadingTitle": "Loading AI Team Analysis",
+  "loadingTitle": "Loading AI Fantasy Guru",
   "loadingDescription": "Preparing your FPL assistant...",
   "errorMessage": "Sorry, I encountered an error. Please try again.",
   "rateLimitMessage": "Weekly limit exceeded. Please use your own OpenAI API key to continue."

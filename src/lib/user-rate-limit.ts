@@ -9,6 +9,20 @@ interface UserUsage {
   period_end: string;
 }
 
+interface SubscriptionPlan {
+  ai_queries_limit: number;
+}
+
+interface Subscription {
+  id: string;
+  status: string;
+  subscription_plans: SubscriptionPlan;
+}
+
+interface UserWithSubscriptions {
+  subscriptions: Subscription[];
+}
+
 export async function getUserFromRequest(req: Request): Promise<string | null> {
   try {
     // Try to get session from NextAuth
@@ -122,7 +136,7 @@ async function getUserSubscriptionLimits(userId: string): Promise<number> {
     const { data, error } = await supabaseServer
       .from('users')
       .select(`
-        subscriptions (
+        subscriptions!subscriptions_user_id_fkey (
           id,
           status,
           subscription_plans (
@@ -137,8 +151,9 @@ async function getUserSubscriptionLimits(userId: string): Promise<number> {
       return 3; // Default limit if user not found
     }
 
-    const activeSubscription = data.subscriptions?.find(
-      (sub: any) => sub.status === 'active'
+    const userData = data as UserWithSubscriptions;
+    const activeSubscription = userData.subscriptions?.find(
+      (sub: Subscription) => sub.status === 'active'
     );
 
     if (activeSubscription?.subscription_plans?.ai_queries_limit) {

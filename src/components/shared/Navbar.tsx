@@ -9,7 +9,7 @@ import { Menu, X, Home, User, LogIn, LogOut } from "lucide-react";
 import { SiPremierleague } from "react-icons/si";
 import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
-import { FaUser, FaGoogle } from "react-icons/fa";
+import { FaUser, FaGoogle, FaCreditCard } from "react-icons/fa";
 import ThemeToggle from "../ThemeToggle";
 import LanguageSelector from "./LanguageSelector";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -64,6 +64,17 @@ const Navbar = React.memo(function Navbar() {
     return () => unsubscribe();
   }, [scrollY]);
 
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setUserMenuOpen(false);
+    };
+    if (userMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [userMenuOpen]);
+
   // Wait for i18n to be ready
   if (!ready) {
     return (
@@ -100,17 +111,6 @@ const Navbar = React.memo(function Navbar() {
   const handleGoogleSignIn = async () => {
     await signIn("google", { callbackUrl: pathname });
   };
-
-  // Close user menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setUserMenuOpen(false);
-    };
-    if (userMenuOpen) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [userMenuOpen]);
 
   // UserMenu Component
   const UserMenu = () => {
@@ -198,6 +198,17 @@ const Navbar = React.memo(function Navbar() {
                   }`}>
                     <User className="w-4 h-4" />
                     {t('myProfile')}
+                  </div>
+                </Link>
+
+                <Link href="/billing-plans" onClick={() => setUserMenuOpen(false)}>
+                  <div className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
+                    theme === 'dark' 
+                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }`}>
+                    <FaCreditCard className="w-4 h-4 text-purple-500" />
+                    {t('billingPlans')}
                   </div>
                 </Link>
                 
@@ -681,6 +692,29 @@ const Navbar = React.memo(function Navbar() {
                     </motion.div>
                   </Link>
 
+                  <Link href="/billing-plans">
+                    <motion.div
+                      onClick={handleMobileNavClick}
+                      className={`w-full text-center font-semibold py-4 px-4 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{
+                        opacity: isOpen ? 1 : 0,
+                        y: isOpen ? 0 : 20,
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        delay: isOpen ? (navItems.length + 2) * 0.1 : 0,
+                      }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="relative flex items-center justify-center gap-3">
+                        <FaCreditCard className="w-5 h-5 text-purple-500" />
+                        <span>{t('billingPlans')}</span>
+                      </div>
+                    </motion.div>
+                  </Link>
+
                   <motion.div
                     onClick={() => {
                       handleSignOut();
@@ -694,7 +728,7 @@ const Navbar = React.memo(function Navbar() {
                     }}
                     transition={{
                       duration: 0.3,
-                      delay: isOpen ? (navItems.length + 2) * 0.1 : 0,
+                      delay: isOpen ? (navItems.length + 3) * 0.1 : 0,
                     }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}

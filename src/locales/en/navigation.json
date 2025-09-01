@@ -3,7 +3,7 @@
   "premierLeague": "Premier League",
   "championsLeague": "Champions League",
   "f1Fantasy": "F1 Fantasy",
-  "aiTeamAnalysis": "AI Team Analysis",
+  "aiTeamAnalysis": "AI Fantasy Guru",
   "tables": "Tables",
   "miniLeagues": "Mini Leagues",
   "fplLive": "FPL Live",
@@ -16,6 +16,7 @@
   "signIn": "Sign In",
   "signOut": "Sign Out",
   "myProfile": "My Profile",
+  "billingPlans": "Billing Plans",
   "aiAnalysis": "AI Analysis",
   "createAccount": "Create Account"
 }

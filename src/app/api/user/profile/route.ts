@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       .from('users')
       .select(`
         *,
-        subscriptions (
+        subscriptions!subscriptions_user_id_fkey (
           id,
           status,
           plan_id,
@@ -100,7 +100,7 @@ export async function PATCH(req: NextRequest) {
       .eq('id', session.user.id)
       .select(`
         *,
-        subscriptions (
+        subscriptions!subscriptions_user_id_fkey (
           id,
           status,
           plan_id,

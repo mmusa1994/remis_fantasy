@@ -78,9 +78,10 @@ export async function validateQuery(input: string, vocab: FplVocab): Promise<Val
       {
         role: "system",
         content:
-          `You validate if a question is about Fantasy Premier League (FPL) for the English Premier League ` +
-          `and the 2025/26 season. Consider "this season" or "next GW" as 2025/26. ` +
-          `If the query is strategic (captaincy, differentials, wildcard, value defenders, fixtures analysis), treat it as in scope.`
+          `You are a STRICT validator for Fantasy Premier League (FPL) 2025/26 season questions ONLY. ` +
+          `REJECT any questions about: general football, other sports, real transfers, politics, personal advice, weather, coding, etc. ` +
+          `ONLY ACCEPT questions specifically about FPL 2025/26: team selection, captaincy, player points, gameweeks, differentials, chips, transfers within FPL game. ` +
+          `Consider "this season" or "next GW" as 2025/26. Be very strict - set confidence to 0.3 or lower for non-FPL questions.`
       },
       {
         role: "user",
@@ -98,8 +99,10 @@ export async function validateQuery(input: string, vocab: FplVocab): Promise<Val
     throw new Error("Validator JSON did not match schema");
   }
 
-  // 4) combine: enforce permissive term evidence + model opinion + season hint
-  const is_in_scope = parsed.data.is_in_scope && (hits.length > 0 || seasonHint);
+  // 4) combine: enforce stricter validation but not too strict to avoid empty responses
+  const hasHighConfidence = parsed.data.confidence >= 0.6; // Model is reasonably confident it's FPL
+  
+  const is_in_scope = parsed.data.is_in_scope && hasHighConfidence;
   const season_ok = parsed.data.season_ok || seasonHint || vocab.seasonLabel.includes("2025");
 
   return {

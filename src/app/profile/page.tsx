@@ -19,6 +19,7 @@ import {
 } from "react-icons/fa";
 import { BiEdit, BiSave, BiX } from "react-icons/bi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { TbTaxEuro } from "react-icons/tb";
 import LoadingCard from "@/components/shared/LoadingCard";
 
 interface Usage {
@@ -77,9 +78,15 @@ export default function ProfilePage() {
         setProfile(data);
         setEditName(data.name);
       } else {
-        setError(t('failedToLoadProfile'));
+        console.error('Profile API error:', response.status, response.statusText);
+        if (response.status === 401) {
+          router.push("/login");
+        } else {
+          setError(t('failedToLoadProfile'));
+        }
       }
     } catch (error) {
+      console.error('Profile fetch error:', error);
       setError(t('failedToLoadProfile'));
     } finally {
       setIsLoading(false);
@@ -359,7 +366,7 @@ export default function ProfilePage() {
               <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                 theme === 'dark' ? 'text-white' : 'text-gray-900'
               }`}>
-                <FaCrown className="text-yellow-500" />
+                <TbTaxEuro className="text-blue-500" />
                 {t('subscription')}
               </h3>
 
@@ -400,16 +407,26 @@ export default function ProfilePage() {
                   </div>
 
                   {profile.subscription.plan.name === 'Free' && (
-                    <button className="w-full mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                      <FaCreditCard />
-                      {t('upgradeNow')}
-                    </button>
+                    <Link href="/billing-plans">
+                      <button className="w-full mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                        <FaCreditCard />
+                        {t('upgradeNow')}
+                      </button>
+                    </Link>
                   )}
                 </div>
               ) : (
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {t('noActiveSubscription')}
-                </p>
+                <div>
+                  <p className={`text-sm mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {t('noActiveSubscription')}
+                  </p>
+                  <Link href="/billing-plans">
+                    <button className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                      <FaCreditCard />
+                      {t('choosePlan')}
+                    </button>
+                  </Link>
+                </div>
               )}
             </div>
 

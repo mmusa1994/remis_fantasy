@@ -6,7 +6,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Email configuration
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT || "587"),
   secure: process.env.SMTP_SECURE === "true",
@@ -20,7 +20,11 @@ export function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-export async function sendOTPEmail(email: string, otp: string, name?: string): Promise<boolean> {
+export async function sendOTPEmail(
+  email: string,
+  otp: string,
+  name?: string
+): Promise<boolean> {
   try {
     const emailTemplate = `
     <!DOCTYPE html>
@@ -46,7 +50,7 @@ export async function sendOTPEmail(email: string, otp: string, name?: string): P
           <h2>Email Verification</h2>
         </div>
         <div class="content">
-          <h3>Hello${name ? ` ${name}` : ''}!</h3>
+          <h3>Hello${name ? ` ${name}` : ""}!</h3>
           <p>Thank you for joining Remis Fantasy! To complete your registration, please verify your email address using the OTP code below:</p>
           
           <div class="otp-code">
@@ -67,7 +71,9 @@ export async function sendOTPEmail(email: string, otp: string, name?: string): P
     </html>`;
 
     const mailOptions = {
-      from: `"Remis Fantasy" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      from: `"Remis Fantasy" <${
+        process.env.SMTP_FROM || process.env.SMTP_USER
+      }>`,
       to: email,
       subject: "Verify Your Email - Remis Fantasy",
       html: emailTemplate,
@@ -81,7 +87,9 @@ export async function sendOTPEmail(email: string, otp: string, name?: string): P
   }
 }
 
-export async function createEmailVerification(email: string): Promise<{ otp: string; success: boolean }> {
+export async function createEmailVerification(
+  email: string
+): Promise<{ otp: string; success: boolean }> {
   try {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -98,19 +106,14 @@ export async function createEmailVerification(email: string): Promise<{ otp: str
     }
 
     // Clean up old verifications for this email
-    await supabase
-      .from("email_verifications")
-      .delete()
-      .eq("user_id", email); // We'll use email as temp user_id for pending verifications
+    await supabase.from("email_verifications").delete().eq("user_id", email); // We'll use email as temp user_id for pending verifications
 
     // Create verification record
-    const { error } = await supabase
-      .from("email_verifications")
-      .insert({
-        user_id: email, // Temporary - will be updated when user is created
-        otp,
-        expires_at: expiresAt.toISOString(),
-      });
+    const { error } = await supabase.from("email_verifications").insert({
+      user_id: email, // Temporary - will be updated when user is created
+      otp,
+      expires_at: expiresAt.toISOString(),
+    });
 
     if (error) {
       console.error("Error creating verification:", error);
@@ -142,7 +145,10 @@ export async function verifyOTP(email: string, otp: string): Promise<boolean> {
   }
 }
 
-export async function sendWelcomeEmail(email: string, name: string): Promise<void> {
+export async function sendWelcomeEmail(
+  email: string,
+  name: string
+): Promise<void> {
   try {
     const welcomeTemplate = `
     <!DOCTYPE html>
@@ -170,7 +176,7 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<voi
           <p>Welcome to the ultimate Fantasy Premier League companion! Your account has been successfully created and you're ready to take your FPL game to the next level.</p>
           
           <div class="feature">
-            <h4>🤖 AI Team Analysis</h4>
+            <h4>🤖 AI Fantasy Guru</h4>
             <p>Get personalized FPL advice powered by real-time data and advanced AI. Make smarter transfers, captaincy choices, and strategic decisions.</p>
           </div>
           
@@ -185,7 +191,9 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<voi
           </div>
           
           <div style="text-align: center;">
-            <a href="${process.env.NEXTAUTH_URL}/premier-league/ai-team-analysis" class="button">Start Using AI Analysis</a>
+            <a href="${
+              process.env.NEXTAUTH_URL
+            }/premier-league/ai-team-analysis" class="button">Start Using AI Analysis</a>
           </div>
           
           <p>Ready to dominate your mini-leagues? Log in and start exploring all the features Remis Fantasy has to offer!</p>
@@ -198,7 +206,9 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<voi
     </html>`;
 
     const mailOptions = {
-      from: `"Remis Fantasy" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      from: `"Remis Fantasy" <${
+        process.env.SMTP_FROM || process.env.SMTP_USER
+      }>`,
       to: email,
       subject: "Welcome to Remis Fantasy! 🏆",
       html: welcomeTemplate,

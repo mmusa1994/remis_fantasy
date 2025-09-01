@@ -120,8 +120,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Increment usage for this request
-      await incrementUserUsage(userId);
     }
 
     // Validate using new implementation
@@ -285,6 +283,14 @@ ${fplContext}${detailedPlayerContext}`,
     const response =
       completion.choices[0]?.message?.content ||
       "Sorry, I could not generate a response.";
+
+    // Only increment usage after successful OpenAI response
+    if (!userApiKey && response !== "Sorry, I could not generate a response.") {
+      const userId = session?.user?.id || (await getUserFromRequest(req));
+      if (userId) {
+        await incrementUserUsage(userId);
+      }
+    }
 
     return NextResponse.json({ response });
   } catch (error: any) {
