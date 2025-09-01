@@ -12,5 +12,10 @@
   "registration": "Registracija",
   "gallery": "Galerija",
   "diamond": "Dijamant",
-  "quickNavigation": "Brza Navigacija"
+  "quickNavigation": "Brza Navigacija",
+  "signIn": "Prijava",
+  "signOut": "Odjava",
+  "myProfile": "Moj profil",
+  "aiAnalysis": "AI Analiza",
+  "createAccount": "Napravi račun"
 }

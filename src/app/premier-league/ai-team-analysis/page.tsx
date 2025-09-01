@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession, signIn } from "next-auth/react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { FaWandMagicSparkles } from "react-icons/fa6";
+import { FaWandMagicSparkles, FaGoogle, FaEnvelope } from "react-icons/fa6";
 import { HiChatBubbleLeftEllipsis, HiKey } from "react-icons/hi2";
-import { BiSend } from "react-icons/bi";
+import { BiSend, BiUserPlus } from "react-icons/bi";
 import { AiOutlineRobot } from "react-icons/ai";
 import { FaUser } from "react-icons/fa";
 import LoadingCard from "@/components/shared/LoadingCard";
+import Link from "next/link";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -24,6 +26,7 @@ interface Usage {
 }
 
 export default function AITeamAnalysis() {
+  const { data: session, status } = useSession();
   const { theme } = useTheme();
   const { t, ready } = useTranslation('ai');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,22 +36,32 @@ export default function AITeamAnalysis() {
   const [userApiKey, setUserApiKey] = useState("");
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [usageLoading, setUsageLoading] = useState(true);
+  const [authRequired, setAuthRequired] = useState(false);
 
-  // Fetch usage information
+  // Check if user is authenticated and fetch usage information
   useEffect(() => {
-    fetchUsage();
-  }, []);
+    if (status === "authenticated" && session?.user) {
+      fetchUsage();
+    } else if (status === "unauthenticated") {
+      setUsageLoading(false);
+      setAuthRequired(true);
+    }
+  }, [status, session]);
 
   const fetchUsage = async () => {
     try {
       setUsageLoading(true);
-      const response = await fetch('/api/ai-usage');
+      const response = await fetch('/api/user/usage');
       if (response.ok) {
         const data = await response.json();
         setUsage(data);
+        setAuthRequired(false);
+      } else if (response.status === 401) {
+        setAuthRequired(true);
       }
     } catch (error) {
       console.error('Failed to fetch usage:', error);
+      setAuthRequired(true);
     } finally {
       setUsageLoading(false);
     }
@@ -83,6 +96,18 @@ export default function AITeamAnalysis() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401 && data.requiresAuth) {
+          // Authentication required
+          setAuthRequired(true);
+          const errorMessage: Message = {
+            role: 'assistant',
+            content: data.message || t('authenticationRequired'),
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          return;
+        }
+        
         if (response.status === 429) {
           // Rate limit exceeded
           const errorMessage: Message = {
@@ -91,6 +116,9 @@ export default function AITeamAnalysis() {
             timestamp: new Date()
           };
           setMessages(prev => [...prev, errorMessage]);
+          if (data.requiresAuth) {
+            setAuthRequired(true);
+          }
           fetchUsage(); // Refresh usage info
           return;
         }
@@ -123,7 +151,7 @@ export default function AITeamAnalysis() {
     }
   };
 
-  if (!ready) {
+  if (!ready || status === "loading") {
     return (
       <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
         <div className="flex items-center justify-center min-h-screen">
@@ -132,6 +160,133 @@ export default function AITeamAnalysis() {
             description={t('loadingDescription')}
             className="w-full max-w-md mx-auto"
           />
+        </div>
+      </main>
+    );
+  }
+
+  // Show authentication required screen
+  if (authRequired && !userApiKey) {
+    return (
+      <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <FaWandMagicSparkles className="w-8 h-8 text-purple-500" />
+              <h1 className={`text-3xl md:text-4xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
+                {t('title')}
+              </h1>
+            </div>
+            <p className={`text-lg ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+              {t('subtitle')}
+            </p>
+          </div>
+
+          {/* Authentication Required Card */}
+          <div className={`max-w-md mx-auto p-8 rounded-xl border ${
+            theme === 'dark' 
+              ? 'bg-gray-800/50 border-gray-700' 
+              : 'bg-white/50 border-gray-200'
+          } text-center`}>
+            <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900 mb-6">
+              <BiUserPlus className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+            </div>
+            
+            <h3 className={`text-xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              {t('authenticationRequired')}
+            </h3>
+            
+            <p className={`text-sm mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+              {t('signInToAccess')}
+            </p>
+
+            <div className="space-y-3">
+              {/* Google Sign In */}
+              <button
+                onClick={() => signIn("google", { callbackUrl: "/premier-league/ai-team-analysis" })}
+                className={`w-full flex items-center justify-center gap-3 px-4 py-3 border ${
+                  theme === 'dark' 
+                    ? 'border-gray-700 hover:bg-gray-800' 
+                    : 'border-gray-300 hover:bg-gray-50'
+                } rounded-lg text-sm font-medium transition-colors`}
+              >
+                <FaGoogle className="text-red-500" />
+                {t('signInWithGoogle')}
+              </button>
+
+              {/* Email Sign In */}
+              <Link
+                href="/login"
+                className={`w-full flex items-center justify-center gap-3 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors`}
+              >
+                <FaEnvelope />
+                {t('signInWithEmail')}
+              </Link>
+
+              {/* Sign Up */}
+              <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                {t('dontHaveAccount')}{' '}
+                <Link href="/signup" className="text-purple-600 hover:text-purple-500 font-medium">
+                  {t('createFreeAccount')}
+                </Link>
+              </div>
+            </div>
+
+            {/* Benefits */}
+            <div className={`mt-6 pt-6 border-t ${
+              theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+            }`}>
+              <h4 className={`text-sm font-medium mb-3 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                {t('freeAccountIncludes')}
+              </h4>
+              <ul className={`text-xs space-y-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                <li>• {t('freeQueries')} AI questions per week</li>
+                <li>• {t('personalizedAdvice')}</li>
+                <li>• {t('realTimeData')}</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* API Key Option */}
+          <div className={`mt-6 p-4 rounded-lg border ${
+            theme === 'dark' 
+              ? 'bg-gray-800/30 border-gray-700' 
+              : 'bg-blue-50 border-blue-200'
+          } max-w-md mx-auto`}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <HiKey className="w-4 h-4 text-purple-500" />
+                <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  {t('useOwnApiKey')}
+                </span>
+              </div>
+              <button
+                onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+                className="text-xs text-purple-500 hover:text-purple-600 transition-colors"
+              >
+                {showApiKeyInput ? t('hide') : t('show')}
+              </button>
+            </div>
+            
+            {showApiKeyInput && (
+              <div className="space-y-2">
+                <input
+                  type="password"
+                  placeholder={t('enterApiKey')}
+                  value={userApiKey}
+                  onChange={(e) => setUserApiKey(e.target.value)}
+                  className={`w-full px-3 py-2 rounded-lg border text-sm ${
+                    theme === 'dark'
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  }`}
+                />
+                <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {t('apiKeyDescription')}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     );

@@ -1,4 +1,5 @@
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { createClient } from "@supabase/supabase-js";
 
@@ -6,6 +7,8 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
 if (!supabaseUrl) {
   throw new Error("Missing env var NEXT_PUBLIC_SUPABASE_URL");
@@ -23,42 +26,145 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export const authOptions = {
   providers: [
+    // Google OAuth Provider
+    GoogleProvider({
+      clientId: googleClientId!,
+      clientSecret: googleClientSecret!,
+    }),
+    // Email/Password Provider
     CredentialsProvider({
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        action: { label: "Action", type: "text" }, // 'login' or 'register'
+        name: { label: "Name", type: "text" },
+        otp: { label: "OTP", type: "text" }
       },
       async authorize(credentials: any) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.email || !credentials?.action) {
           return null;
         }
 
-        // Check admin users table
-        const { data: admin, error } = await supabase
-          .from("admin_users")
-          .select("*")
-          .eq("email", credentials.email)
-          .single();
+        // Handle login
+        if (credentials.action === 'login') {
+          if (!credentials.password) return null;
 
-        if (error || !admin) {
-          return null;
+          // First check admin users (for existing admin functionality)
+          const { data: admin } = await supabase
+            .from("admin_users")
+            .select("*")
+            .eq("email", credentials.email)
+            .single();
+
+          if (admin) {
+            const passwordMatch = await bcrypt.compare(
+              credentials.password,
+              admin.password_hash
+            );
+            if (passwordMatch) {
+              return {
+                id: admin.id,
+                email: admin.email,
+                name: admin.name,
+                isAdmin: true,
+              };
+            }
+          }
+
+          // Check regular users
+          const { data: user } = await supabase
+            .from("users")
+            .select(`
+              *,
+              subscriptions (
+                id,
+                plan_id,
+                status,
+                subscription_plans (
+                  name,
+                  ai_queries_limit
+                )
+              )
+            `)
+            .eq("email", credentials.email)
+            .eq("provider", "email")
+            .single();
+
+          if (!user || !user.password_hash) return null;
+
+          const passwordMatch = await bcrypt.compare(
+            credentials.password,
+            user.password_hash
+          );
+
+          if (!passwordMatch) return null;
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            emailVerified: user.email_verified,
+            subscription: user.subscriptions?.[0] || null,
+            isAdmin: false,
+          };
         }
 
-        const passwordMatch = await bcrypt.compare(
-          credentials.password,
-          admin.password_hash
-        );
+        // Handle registration with OTP verification
+        if (credentials.action === 'register') {
+          if (!credentials.password || !credentials.name || !credentials.otp) {
+            return null;
+          }
 
-        if (!passwordMatch) {
-          return null;
+          // Verify OTP
+          const { data: verification } = await supabase
+            .from("email_verifications")
+            .select("*")
+            .eq("otp", credentials.otp)
+            .gt("expires_at", new Date().toISOString())
+            .is("verified_at", null)
+            .single();
+
+          if (!verification) {
+            throw new Error("Invalid or expired OTP");
+          }
+
+          // Hash password
+          const hashedPassword = await bcrypt.hash(credentials.password, 12);
+
+          // Create user
+          const { data: newUser, error } = await supabase
+            .from("users")
+            .insert({
+              email: credentials.email,
+              name: credentials.name,
+              password_hash: hashedPassword,
+              email_verified: true,
+              provider: "email"
+            })
+            .select()
+            .single();
+
+          if (error) {
+            throw new Error("Failed to create user");
+          }
+
+          // Mark OTP as verified
+          await supabase
+            .from("email_verifications")
+            .update({ verified_at: new Date().toISOString() })
+            .eq("id", verification.id);
+
+          return {
+            id: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
+            emailVerified: true,
+            isAdmin: false,
+          };
         }
 
-        return {
-          id: admin.id,
-          email: admin.email,
-          name: admin.name,
-        };
+        return null;
       },
     }),
   ],
@@ -66,8 +172,9 @@ export const authOptions = {
     strategy: "jwt" as const,
   },
   pages: {
-    signIn: "/admin",
-    error: "/admin",
+    signIn: "/login",
+    signUp: "/signup",
+    error: "/auth/error",
   },
   useSecureCookies: process.env.NODE_ENV === "production",
   cookies: {
@@ -85,15 +192,85 @@ export const authOptions = {
     },
   },
   callbacks: {
-    async jwt({ token, user }: any) {
+    async signIn({ user, account, profile }: any) {
+      // Handle Google OAuth
+      if (account?.provider === "google") {
+        const { data: existingUser } = await supabase
+          .from("users")
+          .select("*")
+          .eq("email", user.email!)
+          .single();
+
+        if (!existingUser) {
+          // Create new user from Google OAuth
+          const { error } = await supabase
+            .from("users")
+            .insert({
+              email: user.email!,
+              name: user.name!,
+              avatar_url: user.image,
+              email_verified: true,
+              provider: "google",
+              provider_id: user.id,
+            });
+
+          if (error) {
+            console.error("Error creating Google user:", error);
+            return false;
+          }
+        } else {
+          // Update last login
+          await supabase
+            .from("users")
+            .update({ 
+              last_login: new Date().toISOString(),
+              avatar_url: user.image 
+            })
+            .eq("id", existingUser.id);
+        }
+      }
+
+      return true;
+    },
+    async jwt({ token, user, account }: any) {
       if (user) {
         token.id = user.id;
+        token.isAdmin = user.isAdmin || false;
+        token.subscription = user.subscription;
       }
+
+      // If this is a Google OAuth sign in, fetch user data from DB
+      if (account?.provider === "google" && token.email) {
+        const { data: dbUser } = await supabase
+          .from("users")
+          .select(`
+            *,
+            subscriptions (
+              id,
+              plan_id,
+              status,
+              subscription_plans (
+                name,
+                ai_queries_limit
+              )
+            )
+          `)
+          .eq("email", token.email)
+          .single();
+
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.subscription = dbUser.subscriptions?.[0] || null;
+        }
+      }
+
       return token;
     },
     async session({ session, token }: any) {
       if (session?.user) {
         session.user.id = token.id as string;
+        session.user.isAdmin = token.isAdmin as boolean;
+        session.user.subscription = token.subscription;
       }
       return session;
     },

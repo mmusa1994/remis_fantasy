@@ -5,14 +5,16 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home } from "lucide-react";
+import { Menu, X, Home, User, LogIn, LogOut } from "lucide-react";
 import { SiPremierleague } from "react-icons/si";
 import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
+import { FaUser, FaGoogle } from "react-icons/fa";
 import ThemeToggle from "../ThemeToggle";
 import LanguageSelector from "./LanguageSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 interface NavItem {
   name: string;
@@ -42,9 +44,11 @@ const getNavItems = (t: any): NavItem[] => [
 const Navbar = React.memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { scrollY } = useScroll();
   const { theme } = useTheme();
   const { t, ready } = useTranslation("navigation");
+  const { data: session, status } = useSession();
   const pathname = usePathname();
 
   const backdropBlur = useTransform(
@@ -86,6 +90,225 @@ const Navbar = React.memo(function Navbar() {
 
   const isActiveLink = (href: string) => {
     return pathname === href;
+  };
+
+  const handleSignOut = async () => {
+    setUserMenuOpen(false);
+    await signOut({ callbackUrl: "/" });
+  };
+
+  const handleGoogleSignIn = async () => {
+    await signIn("google", { callbackUrl: pathname });
+  };
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setUserMenuOpen(false);
+    };
+    if (userMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [userMenuOpen]);
+
+  // UserMenu Component
+  const UserMenu = () => {
+    if (status === "loading") {
+      return (
+        <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+      );
+    }
+
+    if (status === "authenticated" && session?.user) {
+      return (
+        <div className="relative">
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              setUserMenuOpen(!userMenuOpen);
+            }}
+            className={`flex items-center justify-center w-10 h-10 rounded-full overflow-hidden border-2 transition-all duration-300 ${
+              userMenuOpen 
+                ? 'border-purple-500 shadow-lg' 
+                : theme === 'dark' 
+                  ? 'border-gray-600 hover:border-purple-400' 
+                  : 'border-gray-300 hover:border-purple-500'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {session.user.image ? (
+              <img 
+                src={session.user.image} 
+                alt={session.user.name || 'User'} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <FaUser className={`w-5 h-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`} />
+            )}
+          </motion.button>
+
+          {/* Dropdown Menu */}
+          {userMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className={`absolute right-0 mt-2 w-64 rounded-xl border shadow-xl z-50 ${
+                theme === 'dark' 
+                  ? 'bg-gray-800 border-gray-700' 
+                  : 'bg-white border-gray-200'
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* User Info */}
+              <div className={`px-4 py-3 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden">
+                    {session.user.image ? (
+                      <img 
+                        src={session.user.image} 
+                        alt={session.user.name || 'User'} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                        <FaUser className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                      {session.user.name}
+                    </p>
+                    <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {session.user.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Menu Items */}
+              <div className="py-2">
+                <Link href="/profile" onClick={() => setUserMenuOpen(false)}>
+                  <div className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
+                    theme === 'dark' 
+                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }`}>
+                    <User className="w-4 h-4" />
+                    {t('myProfile')}
+                  </div>
+                </Link>
+                
+                <Link href="/premier-league/ai-team-analysis" onClick={() => setUserMenuOpen(false)}>
+                  <div className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
+                    theme === 'dark' 
+                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }`}>
+                    <FaUser className="w-4 h-4" />
+                    {t('aiAnalysis')}
+                  </div>
+                </Link>
+
+                <div className={`border-t my-2 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
+                
+                <button 
+                  onClick={handleSignOut}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
+                    theme === 'dark' 
+                      ? 'text-red-400 hover:bg-red-900/20' 
+                      : 'text-red-600 hover:bg-red-50'
+                  }`}
+                >
+                  <LogOut className="w-4 h-4" />
+                  {t('signOut')}
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      );
+    }
+
+    // Not authenticated - show unified login button
+    return (
+      <div className="relative">
+        <motion.button
+          onClick={(e) => {
+            e.stopPropagation();
+            setUserMenuOpen(!userMenuOpen);
+          }}
+          className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
+            userMenuOpen 
+              ? 'bg-purple-500 text-white shadow-lg' 
+              : theme === 'dark' 
+                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+          }`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <LogIn className="w-5 h-5" />
+        </motion.button>
+
+        {/* Login Options Dropdown */}
+        {userMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className={`absolute right-0 mt-2 w-56 rounded-xl border shadow-xl z-50 ${
+              theme === 'dark' 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-gray-200'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="py-2">
+              <button
+                onClick={() => {
+                  handleGoogleSignIn();
+                  setUserMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                  theme === 'dark' 
+                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <FaGoogle className="w-4 h-4 text-red-500" />
+                {t('signIn')} with Google
+              </button>
+              
+              <Link href="/login" onClick={() => setUserMenuOpen(false)}>
+                <div className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                  theme === 'dark' 
+                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                }`}>
+                  <LogIn className="w-4 h-4" />
+                  {t('signIn')} with Email
+                </div>
+              </Link>
+
+              <div className={`border-t my-2 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
+              
+              <Link href="/signup" onClick={() => setUserMenuOpen(false)}>
+                <div className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                  theme === 'dark' 
+                    ? 'text-purple-400 hover:bg-purple-900/20' 
+                    : 'text-purple-600 hover:bg-purple-50'
+                }`}>
+                  <User className="w-4 h-4" />
+                  {t('createAccount')}
+                </div>
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -314,12 +537,16 @@ const Navbar = React.memo(function Navbar() {
 
             {/* Theme Toggle */}
             <ThemeToggle />
+
+            {/* User Menu */}
+            <UserMenu />
           </div>
 
-          {/* Mobile Menu Button, Language Selector and Theme Toggle */}
+          {/* Mobile Menu Button, Language Selector, Theme Toggle and User Menu */}
           <div className="md:hidden flex items-center space-x-3">
             <LanguageSelector />
             <ThemeToggle />
+            <UserMenu />
             <motion.button
               onClick={() => setIsOpen(!isOpen)}
               className="relative text-theme-text-secondary hover:text-theme-foreground transition-colors duration-300 p-3 minimal-radius backdrop-blur-sm bg-theme-secondary border border-theme-border theme-transition"
@@ -359,6 +586,38 @@ const Navbar = React.memo(function Navbar() {
         >
           <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex flex-col space-y-3">
+              {/* User Info in Mobile Menu */}
+              {status === "authenticated" && session?.user && (
+                <div className={`p-4 rounded-lg mb-4 ${
+                  theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-100/50'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                      {session.user.image ? (
+                        <img 
+                          src={session.user.image} 
+                          alt={session.user.name || 'User'} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                          <FaUser className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                        {session.user.name}
+                      </p>
+                      <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {session.user.email}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Items */}
               {navItems.map((item, index) => {
                 const isActive = isActiveLink(item.href);
                 return (
@@ -395,6 +654,120 @@ const Navbar = React.memo(function Navbar() {
                   </Link>
                 );
               })}
+
+              {/* User Actions in Mobile Menu */}
+              {status === "authenticated" && session?.user && (
+                <>
+                  <Link href="/profile">
+                    <motion.div
+                      onClick={handleMobileNavClick}
+                      className={`w-full text-center font-semibold py-4 px-4 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{
+                        opacity: isOpen ? 1 : 0,
+                        y: isOpen ? 0 : 20,
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        delay: isOpen ? (navItems.length + 1) * 0.1 : 0,
+                      }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="relative flex items-center justify-center gap-3">
+                        <User className="w-5 h-5" />
+                        <span>{t('myProfile')}</span>
+                      </div>
+                    </motion.div>
+                  </Link>
+
+                  <motion.div
+                    onClick={() => {
+                      handleSignOut();
+                      handleMobileNavClick();
+                    }}
+                    className={`w-full text-center font-semibold py-4 px-4 minimal-radius bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo cursor-pointer relative text-red-500 hover:text-red-400`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{
+                      opacity: isOpen ? 1 : 0,
+                      y: isOpen ? 0 : 20,
+                    }}
+                    transition={{
+                      duration: 0.3,
+                      delay: isOpen ? (navItems.length + 2) * 0.1 : 0,
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="relative flex items-center justify-center gap-3">
+                      <LogOut className="w-5 h-5" />
+                      <span>{t('signOut')}</span>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+
+              {/* Login options for unauthenticated users */}
+              {status === "unauthenticated" && (
+                <div className={`p-4 rounded-lg mb-4 ${
+                  theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-100/50'
+                }`}>
+                  <p className={`text-center text-sm mb-3 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {t('signIn')} to access all features
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <motion.button
+                      onClick={() => {
+                        handleGoogleSignIn();
+                        handleMobileNavClick();
+                      }}
+                      className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg border transition-colors ${
+                        theme === 'dark'
+                          ? 'border-gray-600 hover:bg-gray-600 text-gray-300'
+                          : 'border-gray-300 hover:bg-gray-100 text-gray-700'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <FaGoogle className="w-4 h-4 text-red-500" />
+                      <span className="text-sm font-medium">Google</span>
+                    </motion.button>
+
+                    <Link href="/login">
+                      <motion.div
+                        onClick={handleMobileNavClick}
+                        className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg border transition-colors ${
+                          theme === 'dark'
+                            ? 'border-purple-500/50 hover:bg-purple-500/10 text-purple-400'
+                            : 'border-purple-500/50 hover:bg-purple-50 text-purple-600'
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <LogIn className="w-4 h-4" />
+                        <span className="text-sm font-medium">Email</span>
+                      </motion.div>
+                    </Link>
+
+                    <Link href="/signup">
+                      <motion.div
+                        onClick={handleMobileNavClick}
+                        className={`w-full flex items-center justify-center gap-3 py-2 px-4 rounded-lg transition-colors ${
+                          theme === 'dark'
+                            ? 'hover:bg-gray-600/50 text-gray-400 hover:text-gray-300'
+                            : 'hover:bg-gray-100 text-gray-600 hover:text-gray-700'
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <User className="w-4 h-4" />
+                        <span className="text-sm">{t('createAccount')}</span>
+                      </motion.div>
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

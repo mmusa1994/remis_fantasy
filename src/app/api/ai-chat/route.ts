@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { checkRateLimit, incrementUsage, getUserId } from "@/lib/ai-rate-limit";
+import { checkUserRateLimit, incrementUserUsage, getUserFromRequest } from "@/lib/user-rate-limit";
 import { loadFplVocab } from "@/lib/fplVocab";
 import { validateQuery } from "@/lib/validator";
 import { route } from "@/lib/router";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-config";
 
 // System prompt for FPL 25/26 season specialization
 const SYSTEM_PROMPT = `You are an AI assistant specialized in Fantasy Premier League (FPL) for the 2025/26 season. You provide expert analysis, team suggestions, player recommendations, and strategic advice.
@@ -71,25 +73,55 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Get session to check if user is authenticated
+    const session = await getServerSession(authOptions);
+
+    // Require authentication for AI features
+    if (!session && !userApiKey) {
+      return NextResponse.json(
+        {
+          error: "Authentication required",
+          message: "Please sign in to use AI analysis features. Create a free account to get 3 weekly questions or sign in with Google.",
+          requiresAuth: true,
+        },
+        { status: 401 }
+      );
+    }
+
     // Get user ID and check rate limit (only if not using own API key)
     if (!userApiKey) {
-      const userId = getUserId(req);
-      const { allowed, resetDate } = await checkRateLimit(userId);
+      const userId = session?.user?.id || await getUserFromRequest(req);
+      
+      if (!userId) {
+        return NextResponse.json(
+          { error: "Unable to identify user" },
+          { status: 400 }
+        );
+      }
+
+      const { allowed, resetDate, remaining, total } = await checkUserRateLimit(userId);
 
       if (!allowed) {
+        const isAuthenticated = !!session?.user?.id;
+        const upgradeMessage = isAuthenticated 
+          ? "Upgrade your subscription to get more AI queries."
+          : "Create a free account or sign in to continue using AI features.";
+
         return NextResponse.json(
           {
-            error: "Weekly limit exceeded",
-            message: `You have used all 3 free questions this week. Limit resets on ${resetDate.toLocaleDateString()}. You can use your own OpenAI API key to continue asking questions.`,
+            error: "Rate limit exceeded",
+            message: `You have used all ${total} AI questions for this period. Limit resets on ${resetDate.toLocaleDateString()}. ${upgradeMessage}`,
             resetDate: resetDate.toISOString(),
             remaining: 0,
+            total,
+            requiresAuth: !isAuthenticated,
           },
           { status: 429 }
         );
       }
 
       // Increment usage for this request
-      await incrementUsage(userId);
+      await incrementUserUsage(userId);
     }
 
     // Validate using new implementation

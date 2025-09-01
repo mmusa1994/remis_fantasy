@@ -12,5 +12,10 @@
   "registration": "Registration",
   "gallery": "Gallery",
   "diamond": "Diamond",
-  "quickNavigation": "Quick Navigation"
+  "quickNavigation": "Quick Navigation",
+  "signIn": "Sign In",
+  "signOut": "Sign Out",
+  "myProfile": "My Profile",
+  "aiAnalysis": "AI Analysis",
+  "createAccount": "Create Account"
 }
