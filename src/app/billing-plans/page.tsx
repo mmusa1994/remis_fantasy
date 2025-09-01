@@ -328,16 +328,16 @@ export default function BillingPlansPage() {
                     {/* Enhanced Action Button */}
                     <button
                       onClick={() => handleSelectPlan(plan.id)}
-                      disabled={isCurrentPlan || isProcessing}
+                      disabled={isCurrentPlan || isProcessing || !isFree}
                       className={`w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center shadow-lg relative overflow-hidden group/button ${
                         isCurrentPlan
                           ? 'bg-green-500 text-white cursor-not-allowed shadow-green-200'
                           : isProcessing
                           ? 'bg-gray-400 text-white cursor-not-allowed'
-                          : isFree
-                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-blue-200 hover:shadow-blue-300'
-                          : 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-purple-200 hover:shadow-purple-300'
-                      } hover:shadow-xl transform hover:scale-105`}
+                          : !isFree
+                          ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+                          : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-blue-200 hover:shadow-blue-300'
+                      } ${isFree && !isCurrentPlan && !isProcessing ? 'hover:shadow-xl transform hover:scale-105' : ''}`}
                     >
                       <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
                       {isProcessing ? (
@@ -353,7 +353,7 @@ export default function BillingPlansPage() {
                       ) : (
                         <>
                           <FaCreditCard className="w-5 h-5 mr-2" />
-                          {isFree ? t('selectPlan', 'Get Started') : t('upgrade', 'Upgrade Now')}
+                          {isFree ? t('selectPlan', 'Get Started') : t('comingSoon', 'Coming Soon')}
                         </>
                       )}
                     </button>
