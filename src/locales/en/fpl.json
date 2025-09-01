@@ -183,6 +183,7 @@
     "captainLong": "Captain",
     "finishedWith": "finished with",
     "pointsAboveAverage": "points above average",
+    "pointsBelowAverage": "points below average",
     "offline": "Offline",
     "enterManagerId": "Enter Manager ID",
     "currentManagerId": "Current Manager ID",

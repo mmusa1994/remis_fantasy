@@ -335,14 +335,12 @@ const GameweekStatus = React.memo(function GameweekStatus({
                       : "text-red-600 dark:text-red-300"
                   }`}
                 >
-                  {t("fplLive.pointsAboveAverage", {
-                    points: Math.abs(
-                      gameweekStatus.captain_analysis.points_above_average
-                    ).toFixed(2),
-                    direction: gameweekStatus.captain_analysis.is_above_average
-                      ? t("fplLive.higher")
-                      : t("fplLive.lower"),
-                  })}
+                  {Math.abs(
+                    gameweekStatus.captain_analysis.points_above_average
+                  ).toFixed(1)}{" "}
+                  {gameweekStatus.captain_analysis.is_above_average
+                    ? t("fplLive.pointsAboveAverage")
+                    : t("fplLive.pointsBelowAverage")}
                 </div>
               </div>
               <div className="text-2xl">
