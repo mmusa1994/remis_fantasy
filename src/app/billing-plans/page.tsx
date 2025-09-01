@@ -1,24 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { 
-  FaCrown, 
   FaRobot, 
   FaCheck, 
   FaCreditCard, 
   FaSpinner,
   FaStar,
-  FaLightbulb,
   FaGift,
-  FaRocket,
-  FaFire
+  FaRocket
 } from "react-icons/fa";
 import { BiDiamond } from "react-icons/bi";
-import { MdPayment, MdBusinessCenter } from "react-icons/md";
+import { MdPayment } from "react-icons/md";
 import { RiVipCrownFill } from "react-icons/ri";
 import { HiSparkles } from "react-icons/hi";
 import LoadingCard from "@/components/shared/LoadingCard";
@@ -50,15 +47,7 @@ export default function BillingPlansPage() {
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    } else if (status === "authenticated" && session?.user) {
-      fetchPlans();
-    }
-  }, [status, session, router]);
-
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     try {
       const response = await fetch('/api/billing/plans');
       if (response.ok) {
@@ -68,12 +57,20 @@ export default function BillingPlansPage() {
       } else {
         setError(t('failedToLoadPlans', 'Failed to load subscription plans'));
       }
-    } catch (error) {
+    } catch (_error) {
       setError(t('failedToLoadPlans', 'Failed to load subscription plans'));
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    } else if (status === "authenticated" && session?.user) {
+      fetchPlans();
+    }
+  }, [status, session, router, fetchPlans]);
 
   const handleSelectPlan = async (planId: string) => {
     if (processingPlanId || planId === currentPlanId) return;
@@ -101,7 +98,7 @@ export default function BillingPlansPage() {
         // Show the logged message for now
         alert(data.message || t('paymentProcessingError', 'Payment processing error. Please try again.'));
       }
-    } catch (error) {
+    } catch (_error) {
       alert(t('paymentProcessingError', 'Payment processing error. Please try again.'));
     } finally {
       setProcessingPlanId(null);

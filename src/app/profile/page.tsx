@@ -9,7 +9,6 @@ import Link from "next/link";
 import { 
   FaUser, 
   FaEnvelope, 
-  FaCrown, 
   FaRobot, 
   FaSignOutAlt,
   FaGoogle,

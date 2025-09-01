@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 import { FaWandMagicSparkles, FaGoogle, FaEnvelope } from "react-icons/fa6";
 import { HiChatBubbleLeftEllipsis, HiKey } from "react-icons/hi2";
 import { BiSend, BiUserPlus } from "react-icons/bi";
-import { AiOutlineRobot } from "react-icons/ai";
 import { FaUser } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingCard from "@/components/shared/LoadingCard";
@@ -652,11 +651,11 @@ export default function AITeamAnalysis() {
                             ? "bg-gradient-to-br from-gray-800/90 to-gray-900/90 text-gray-100 border-purple-500/20"
                             : "bg-gradient-to-br from-white/90 to-gray-50/90 text-gray-900 border-purple-200/30"
                         }`}
-                        whileHover={{ scale: 1.02 }}
                         initial={{
                           boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                         }}
                         whileHover={{
+                          scale: 1.02,
                           boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
                         }}
                       >

@@ -198,7 +198,7 @@ export async function loadFplVocab(): Promise<FplVocab> {
         // Fetch player history
         const historyData = await fetchJson(
           `${base}/element-summary/${player.id}/`
-        );
+        ) as any;
         return historyData?.history || [];
       } catch (error) {
         console.error("Error fetching player history:", error);
@@ -219,7 +219,7 @@ export async function loadFplVocab(): Promise<FplVocab> {
       playerTeams,
       transfers,
       playerData,
-      dreamTeam: dreamTeam || [],
+      dreamTeam: (dreamTeam as any[]) || [],
       topPlayers: {
         byPrice: topPlayersByPrice,
         byOwnership: topPlayersByOwnership,

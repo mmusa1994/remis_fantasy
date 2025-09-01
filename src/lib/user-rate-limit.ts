@@ -16,7 +16,7 @@ interface SubscriptionPlan {
 interface Subscription {
   id: string;
   status: string;
-  subscription_plans: SubscriptionPlan;
+  subscription_plans: SubscriptionPlan[];
 }
 
 interface UserWithSubscriptions {
@@ -156,8 +156,8 @@ async function getUserSubscriptionLimits(userId: string): Promise<number> {
       (sub: Subscription) => sub.status === 'active'
     );
 
-    if (activeSubscription?.subscription_plans?.ai_queries_limit) {
-      return activeSubscription.subscription_plans.ai_queries_limit;
+    if (activeSubscription?.subscription_plans?.[0]?.ai_queries_limit) {
+      return activeSubscription.subscription_plans[0].ai_queries_limit;
     }
 
     return 3; // Default free tier limit

@@ -51,7 +51,7 @@ export default function LoginPage() {
       } else {
         router.push("/premier-league");
       }
-    } catch (error: any) {
+    } catch (_error: any) {
       setError(t('loginError'));
     } finally {
       setIsLoading(false);
@@ -67,7 +67,7 @@ export default function LoginPage() {
       await signIn("google", {
         callbackUrl: "/premier-league",
       });
-    } catch (error: any) {
+    } catch (_error: any) {
       setError(t('googleSignInError'));
       setIsLoading(false);
     }
