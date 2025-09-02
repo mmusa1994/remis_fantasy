@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import {
   LogOut,
@@ -75,7 +75,6 @@ const getIndicatorColor = (color: string) => {
 
 export default function AdminTablesCleanPage() {
   const { status } = useSession();
-  const router = useRouter();
   const [tables, setTables] = useState<LeagueTables | null>(null);
   const [selectedLeague, setSelectedLeague] =
     useState<keyof LeagueTables>("premiumLeague");
@@ -101,20 +100,21 @@ export default function AdminTablesCleanPage() {
     type: "success" | "error";
   }>({ show: false, message: "", type: "success" });
   const [updatingFromFPL, setUpdatingFromFPL] = useState<string | null>(null);
+  const [showLoginRedirect, setShowLoginRedirect] = useState(false);
 
   // Load tables when component mounts and session is ready
   useEffect(() => {
     if (status === "loading") return; // Wait for session to load
 
     if (status === "unauthenticated") {
-      router.push("/admin");
+      setShowLoginRedirect(true);
       return;
     }
 
     if (status === "authenticated") {
       loadTables();
     }
-  }, [status, router]);
+  }, [status]);
 
   const loadTables = async () => {
     try {
@@ -424,6 +424,22 @@ export default function AdminTablesCleanPage() {
     return ""; // Default - no special background
   };
 
+  if (showLoginRedirect) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="mb-4 text-gray-800">Redirecting to admin login...</p>
+          <Link 
+            href="/admin"
+            className="bg-gradient-to-r from-amber-600 to-red-600 text-white px-6 py-2 rounded-lg hover:from-amber-700 hover:to-red-700 transition-colors"
+          >
+            Go to Admin Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   // Show loading state while checking authentication
   if (status === "loading") {
     return (
@@ -449,14 +465,14 @@ export default function AdminTablesCleanPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3 sm:py-4">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <button
-                onClick={() => router.push("/admin/dashboard")}
+              <Link
+                href="/admin/dashboard"
                 className="bg-white/20 hover:bg-white/30 p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation"
                 title="Back to dashboard"
                 aria-label="Back to dashboard"
               >
                 <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
+              </Link>
               <Image
                 src="/images/rf-logo.svg"
                 alt="REMIS Fantasy Logo"

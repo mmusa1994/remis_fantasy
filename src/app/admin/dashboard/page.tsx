@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import Image from "next/image";
 import {
@@ -50,7 +50,6 @@ interface Registration {
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [filteredRegistrations, setFilteredRegistrations] = useState<
     Registration[]
@@ -89,13 +88,15 @@ export default function AdminDashboard() {
     type: "success" | "error";
   }>({ show: false, message: "", type: "success" });
 
+  const [showLoginRedirect, setShowLoginRedirect] = useState(false);
+
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/admin");
+      setShowLoginRedirect(true);
     } else if (status === "authenticated" && session) {
       console.info("User authenticated:", session.user);
     }
-  }, [status, session, router]);
+  }, [status, session]);
 
   const applyFilters = useCallback(() => {
     let filtered = [...registrations];
@@ -448,6 +449,22 @@ export default function AdminDashboard() {
     }
   };
 
+  if (showLoginRedirect) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="mb-4 text-gray-800">Redirecting to admin login...</p>
+          <Link 
+            href="/admin"
+            className="bg-gradient-to-r from-amber-600 to-red-600 text-white px-6 py-2 rounded-lg hover:from-amber-700 hover:to-red-700 transition-colors"
+          >
+            Go to Admin Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -485,22 +502,22 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => router.push("/admin/visitors")}
+              <Link
+                href="/admin/visitors"
                 className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
                 title="Visitor Analytics"
               >
                 <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span className="hidden sm:inline">Visitors</span>
-              </button>
-              <button
-                onClick={() => router.push("/admin/dashboard/tabele")}
+              </Link>
+              <Link
+                href="/admin/dashboard/tabele"
                 className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
                 title="Upravljanje tabelama"
               >
                 <Table2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span className="hidden sm:inline">Tabele</span>
-              </button>
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"

@@ -127,7 +127,7 @@ export default function SubNavigation({
       },
       hover: {
         light: "text-black hover:text-purple-600 hover:bg-purple-50",
-        dark: "text-black hover:text-purple-400 hover:bg-gray-800/50",
+        dark: "text-white hover:text-purple-400 hover:bg-gray-800/50",
       },
       indicator: {
         light: "bg-purple-500",
@@ -217,9 +217,11 @@ export default function SubNavigation({
                         ? colors.active.dark
                         : colors.active.light
                       : theme === "dark"
-                      ? colors.hover.dark
+                      ? baseColor === "purple"
+                        ? colors.hover.dark
+                        : colors.hover.dark
                       : baseColor === "purple" 
-                        ? `text-black ${colors.hover.light}`
+                        ? colors.hover.light
                         : `text-gray-600 ${colors.hover.light}`
                   }`}
                 >
@@ -276,9 +278,11 @@ export default function SubNavigation({
                           ? colors.active.dark
                           : colors.active.light
                         : theme === "dark"
-                        ? colors.hover.dark
+                        ? baseColor === "purple"
+                          ? colors.hover.dark
+                          : colors.hover.dark
                         : baseColor === "purple"
-                          ? `text-black ${colors.hover.light}`
+                          ? colors.hover.light
                           : `text-gray-600 ${colors.hover.light}`
                     }`}
                   >
@@ -375,9 +379,11 @@ export default function SubNavigation({
                             ? colors.active.dark
                             : colors.active.light
                           : theme === "dark"
-                          ? colors.hover.dark
+                          ? baseColor === "purple"
+                            ? colors.hover.dark
+                            : colors.hover.dark
                           : baseColor === "purple"
-                            ? `text-black ${colors.hover.light}`
+                            ? colors.hover.light
                             : `text-gray-600 ${colors.hover.light}`
                       }`}
                     >

@@ -86,10 +86,10 @@ CREATE TABLE user_sessions (
 
 -- Insert default subscription plans
 INSERT INTO subscription_plans (name, description, price_eur, ai_queries_limit) VALUES
-('Free', 'Free tier with 3 AI queries per week', 0.00, 3),
-('Starter', 'Perfect for casual FPL managers', 0.99, 10),
-('Pro', 'For serious FPL competitors', 2.99, 15),
-('Premium', 'Unlimited access for professionals', 9.99, 50);
+('Free', 'Free tier with 3 AI queries per week', 0.00, 1),
+('Starter', 'Perfect for casual FPL managers', 0.99, 5),
+('Pro', 'For serious FPL competitors', 2.99, 10),
+('Premium', 'Unlimited access for professionals', 9.99, 30);
 
 -- Create indexes for better performance
 CREATE INDEX idx_users_email ON users(email);

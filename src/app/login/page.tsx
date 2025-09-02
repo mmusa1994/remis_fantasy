@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
@@ -20,7 +19,6 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 export default function LoginPage() {
   const { theme } = useTheme();
   const { t, ready } = useTranslation("auth");
-  const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,16 +27,17 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     // Check if user is already logged in
     getSession().then((session) => {
       if (session) {
-        router.push("/premier-league/tabele");
+        setLoginSuccess(true);
       }
     });
-  }, [router]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +57,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError(t("invalidCredentials"));
       } else {
-        router.push("/premier-league/tabele");
+        setLoginSuccess(true);
       }
     } catch (_error: any) {
       setError(t("loginError"));
@@ -73,9 +72,12 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await signIn("google", {
-        callbackUrl: "/premier-league/tabele",
+      const result = await signIn("google", {
+        redirect: false,
       });
+      if (result?.ok) {
+        setLoginSuccess(true);
+      }
     } catch (_error: any) {
       setError(t("googleSignInError"));
       setIsLoading(false);
@@ -94,6 +96,25 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-red-800" />
+      </div>
+    );
+  }
+
+  if (loginSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-red-800 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className={`mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            Login successful! Redirecting...
+          </p>
+          <Link 
+            href="/premier-league/tabele"
+            className="bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white px-6 py-2 rounded-lg transition-all duration-300"
+          >
+            Go to Dashboard
+          </Link>
+        </div>
       </div>
     );
   }

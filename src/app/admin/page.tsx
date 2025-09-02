@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -11,7 +10,7 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +27,7 @@ export default function AdminLogin() {
       if (result?.error) {
         setError("Invalid email or password.");
       } else if (result?.ok) {
-        router.push("/admin/dashboard");
+        setLoginSuccess(true);
       } else {
         setError("An error occurred. Please try again.");
       }
@@ -39,6 +38,25 @@ export default function AdminLogin() {
       setLoading(false);
     }
   };
+
+  if (loginSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-900 via-red-900 to-amber-900">
+        <div className="text-center text-white">
+          <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p>Login successful! Redirecting...</p>
+          <div className="mt-4">
+            <Link 
+              href="/admin/dashboard"
+              className="bg-white/20 px-6 py-2 rounded-lg hover:bg-white/30 transition-colors"
+            >
+              Go to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-red-900 to-amber-900">

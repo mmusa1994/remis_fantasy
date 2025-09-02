@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
@@ -20,7 +19,6 @@ interface FormData {
 export default function SignUpPage() {
   const { theme } = useTheme();
   const { t, ready } = useTranslation('auth');
-  const router = useRouter();
   const [step, setStep] = useState<'form' | 'otp'>('form');
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -34,15 +32,16 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
     getSession().then((session) => {
       if (session) {
-        router.push("/premier-league/tabele");
+        setSignupSuccess(true);
       }
     });
-  }, [router]);
+  }, []);
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
@@ -140,7 +139,7 @@ export default function SignUpPage() {
         throw new Error(result.error);
       }
 
-      router.push("/premier-league");
+      setSignupSuccess(true);
     } catch (error: any) {
       setError(error.message || t('registrationError'));
     } finally {
@@ -154,9 +153,12 @@ export default function SignUpPage() {
     setError("");
 
     try {
-      await signIn("google", {
-        callbackUrl: "/premier-league/tabele",
+      const result = await signIn("google", {
+        redirect: false,
       });
+      if (result?.ok) {
+        setSignupSuccess(true);
+      }
     } catch (error: any) {
       setError(t('googleSignInError'));
       setIsLoading(false);
@@ -206,6 +208,27 @@ export default function SignUpPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-theme-background">
         <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    );
+  }
+
+  if (signupSuccess) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 ${
+        theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
+      }`}>
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-red-800 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className={`mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            Signup successful! Redirecting...
+          </p>
+          <Link 
+            href="/premier-league/tabele"
+            className="bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white px-6 py-2 rounded-lg transition-all duration-300"
+          >
+            Go to Dashboard
+          </Link>
+        </div>
       </div>
     );
   }

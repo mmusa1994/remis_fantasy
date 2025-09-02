@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { 
@@ -38,7 +38,7 @@ interface BillingPlansResponse {
 
 export default function BillingPlansPage() {
   const { data: session, status } = useSession();
-  const router = useRouter();
+  const [showLoginRedirect, setShowLoginRedirect] = useState(false);
   const { theme } = useTheme();
   const { t, ready } = useTranslation('billing');
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -66,11 +66,11 @@ export default function BillingPlansPage() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/login");
+      setShowLoginRedirect(true);
     } else if (status === "authenticated" && session?.user) {
       fetchPlans();
     }
-  }, [status, session, router, fetchPlans]);
+  }, [status, session, fetchPlans]);
 
   const handleSelectPlan = async (planId: string) => {
     if (processingPlanId || planId === currentPlanId) return;

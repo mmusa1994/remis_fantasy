@@ -150,14 +150,29 @@ class PLDatasetLoader {
     }
 
     try {
-      const response = await fetch('/pl-datasets/player_stats_2024_2025_season.csv');
-      if (!response.ok) throw new Error('Failed to load player stats');
-      
-      const csvContent = await response.text();
-      this.playerStatsCache = this.parseCSV(csvContent) as PlayerStats[];
-      this.lastCacheTime = Date.now();
-      
-      return this.playerStatsCache;
+      // Server-side: read file directly
+      if (typeof window === 'undefined') {
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        const filePath = path.join(process.cwd(), 'public/pl-datasets/player_stats_2024_2025_season.csv');
+        const csvContent = fs.readFileSync(filePath, 'utf8');
+        
+        this.playerStatsCache = this.parseCSV(csvContent) as PlayerStats[];
+        this.lastCacheTime = Date.now();
+        
+        return this.playerStatsCache;
+      } else {
+        // Client-side: use fetch with full URL
+        const response = await fetch('/pl-datasets/player_stats_2024_2025_season.csv');
+        if (!response.ok) throw new Error('Failed to load player stats');
+        
+        const csvContent = await response.text();
+        this.playerStatsCache = this.parseCSV(csvContent) as PlayerStats[];
+        this.lastCacheTime = Date.now();
+        
+        return this.playerStatsCache;
+      }
     } catch (error) {
       console.error('Error loading player stats:', error);
       return [];
@@ -170,14 +185,29 @@ class PLDatasetLoader {
     }
 
     try {
-      const response = await fetch('/pl-datasets/premier_player_info.csv');
-      if (!response.ok) throw new Error('Failed to load player info');
-      
-      const csvContent = await response.text();
-      this.playerInfoCache = this.parseCSV(csvContent) as PlayerInfo[];
-      this.lastCacheTime = Date.now();
-      
-      return this.playerInfoCache;
+      // Server-side: read file directly
+      if (typeof window === 'undefined') {
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        const filePath = path.join(process.cwd(), 'public/pl-datasets/premier_player_info.csv');
+        const csvContent = fs.readFileSync(filePath, 'utf8');
+        
+        this.playerInfoCache = this.parseCSV(csvContent) as PlayerInfo[];
+        this.lastCacheTime = Date.now();
+        
+        return this.playerInfoCache;
+      } else {
+        // Client-side: use fetch
+        const response = await fetch('/pl-datasets/premier_player_info.csv');
+        if (!response.ok) throw new Error('Failed to load player info');
+        
+        const csvContent = await response.text();
+        this.playerInfoCache = this.parseCSV(csvContent) as PlayerInfo[];
+        this.lastCacheTime = Date.now();
+        
+        return this.playerInfoCache;
+      }
     } catch (error) {
       console.error('Error loading player info:', error);
       return [];
@@ -193,16 +223,32 @@ class PLDatasetLoader {
     }
 
     try {
-      const response = await fetch(`/pl-datasets/club_stats/${targetSeason}_season_club_stats.csv`);
-      if (!response.ok) throw new Error(`Failed to load club stats for ${targetSeason}`);
-      
-      const csvContent = await response.text();
-      const clubStats = this.parseCSV(csvContent) as ClubStats[];
-      
-      this.clubStatsCache.set(cacheKey, clubStats);
-      this.lastCacheTime = Date.now();
-      
-      return clubStats;
+      // Server-side: read file directly
+      if (typeof window === 'undefined') {
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        const filePath = path.join(process.cwd(), `public/pl-datasets/club_stats/${targetSeason}_season_club_stats.csv`);
+        const csvContent = fs.readFileSync(filePath, 'utf8');
+        
+        const clubStats = this.parseCSV(csvContent) as ClubStats[];
+        this.clubStatsCache.set(cacheKey, clubStats);
+        this.lastCacheTime = Date.now();
+        
+        return clubStats;
+      } else {
+        // Client-side: use fetch
+        const response = await fetch(`/pl-datasets/club_stats/${targetSeason}_season_club_stats.csv`);
+        if (!response.ok) throw new Error(`Failed to load club stats for ${targetSeason}`);
+        
+        const csvContent = await response.text();
+        const clubStats = this.parseCSV(csvContent) as ClubStats[];
+        
+        this.clubStatsCache.set(cacheKey, clubStats);
+        this.lastCacheTime = Date.now();
+        
+        return clubStats;
+      }
     } catch (error) {
       console.error(`Error loading club stats for ${targetSeason}:`, error);
       return [];

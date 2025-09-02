@@ -78,10 +78,11 @@ export async function validateQuery(input: string, vocab: FplVocab): Promise<Val
       {
         role: "system",
         content:
-          `You are a STRICT validator for Fantasy Premier League (FPL) 2025/26 season questions ONLY. ` +
-          `REJECT any questions about: general football, other sports, real transfers, politics, personal advice, weather, coding, etc. ` +
-          `ONLY ACCEPT questions specifically about FPL 2025/26: team selection, captaincy, player points, gameweeks, differentials, chips, transfers within FPL game. ` +
-          `Consider "this season" or "next GW" as 2025/26. Be very strict - set confidence to 0.3 or lower for non-FPL questions.`
+          `You are a validator for Fantasy Premier League (FPL) 2025/26 season questions. ` +
+          `ALWAYS ACCEPT questions about: FPL team selection, captaincy, player points, gameweeks, differentials, chips, FPL transfers, ANY Premier League players, ANY Premier League teams/clubs (Arsenal, Chelsea, Manchester United, Liverpool, etc), player performance, team form, fixtures, player stats, injury updates, price changes, league positions, historical performance. ` +
+          `REJECT questions about: other sports leagues (except Premier League/FPL), politics, personal advice, weather, coding, completely unrelated topics. ` +
+          `Premier League clubs and players are ALWAYS RELEVANT to FPL - historical performance helps with team selection. ` +
+          `Questions about Arsenal, Manchester City, Liverpool etc. finishing positions are FPL-relevant. Be very permissive for any football/Premier League content.`
       },
       {
         role: "user",
@@ -100,7 +101,7 @@ export async function validateQuery(input: string, vocab: FplVocab): Promise<Val
   }
 
   // 4) combine: enforce stricter validation but not too strict to avoid empty responses
-  const hasHighConfidence = parsed.data.confidence >= 0.6; // Model is reasonably confident it's FPL
+  const hasHighConfidence = parsed.data.confidence >= 0.4; // More permissive for Premier League content
   
   const is_in_scope = parsed.data.is_in_scope && hasHighConfidence;
   const season_ok = parsed.data.season_ok || seasonHint || vocab.seasonLabel.includes("2025");
