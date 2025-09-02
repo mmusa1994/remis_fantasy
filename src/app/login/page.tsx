@@ -6,13 +6,20 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
-import { FaGoogle, FaEye, FaEyeSlash, FaEnvelope, FaLock } from "react-icons/fa";
-import { BiUser } from "react-icons/bi";
+import { motion } from "framer-motion";
+import {
+  FaGoogle,
+  FaEye,
+  FaEyeSlash,
+  FaEnvelope,
+  FaLock,
+  FaUserCircle,
+} from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 export default function LoginPage() {
   const { theme } = useTheme();
-  const { t, ready } = useTranslation('auth');
+  const { t, ready } = useTranslation("auth");
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
@@ -21,8 +28,10 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Check if user is already logged in
     getSession().then((session) => {
       if (session) {
@@ -47,12 +56,12 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(t('invalidCredentials'));
+        setError(t("invalidCredentials"));
       } else {
         router.push("/premier-league");
       }
     } catch (_error: any) {
-      setError(t('loginError'));
+      setError(t("loginError"));
     } finally {
       setIsLoading(false);
     }
@@ -68,212 +77,283 @@ export default function LoginPage() {
         callbackUrl: "/premier-league",
       });
     } catch (_error: any) {
-      setError(t('googleSignInError'));
+      setError(t("googleSignInError"));
       setIsLoading(false);
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  if (!ready) {
+  if (!ready || !mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-theme-background">
-        <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-purple-500" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-red-800" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-theme-background px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
-            <BiUser className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-          </div>
-          <h2 className={`mt-6 text-3xl font-extrabold ${
-            theme === 'dark' ? 'text-white' : 'text-gray-900'
-          }`}>
-            {t('signInToAccount')}
-          </h2>
-          <p className={`mt-2 text-sm ${
-            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-          }`}>
-            {t('dontHaveAccount')}{' '}
-            <Link href="/signup" className="font-medium text-purple-600 hover:text-purple-500">
-              {t('signUp')}
-            </Link>
-          </p>
+    <div className="min-h-screen flex bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-red-800 via-red-900 to-gray-900 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzAgMzBjMC0xMS4wNDYtOC45NTQtMjAtMjAtMjBzLTIwIDguOTU0LTIwIDIwIDguOTU0IDIwIDIwIDIwIDIwLTguOTU0IDIwLTIwem0tMzAgMGMwLTUuNTIzIDQuNDc3LTEwIDEwLTEwczEwIDQuNDc3IDEwIDEwLTQuNDc3IDEwLTEwIDEwLTEwLTQuNDc3LTEwLTEweiIvPjwvZz48L2c+PC9zdmc+')] bg-repeat" />
         </div>
 
-        {/* Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <input type="hidden" name="remember" value="true" />
-          <div className="space-y-4">
-            {/* Email Input */}
-            <div>
-              <label htmlFor="email" className="sr-only">
-                {t('emailAddress')}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaEnvelope className={`h-5 w-5 ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-400'
-                  }`} />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={`appearance-none relative block w-full pl-10 pr-3 py-3 border ${
-                    theme === 'dark'
-                      ? 'border-gray-700 bg-gray-800 text-white placeholder-gray-400'
-                      : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
-                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                  placeholder={t('emailAddress')}
-                />
-              </div>
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center items-center text-center text-white p-12">
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-8"
+          >
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+              <FaUserCircle className="w-12 h-12 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold mb-4">
+              Welcome to REMIS Fantasy
+            </h1>
+            <p className="text-xl text-red-100 mb-8">
+              The ultimate Fantasy Premier League experience awaits
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="space-y-4"
+          >
+            <div className="flex items-center text-red-100">
+              <div className="w-2 h-2 bg-red-300 rounded-full mr-3"></div>
+              Live FPL tracking & analysis
+            </div>
+            <div className="flex items-center text-red-100">
+              <div className="w-2 h-2 bg-red-300 rounded-full mr-3"></div>
+              AI-powered team recommendations
+            </div>
+            <div className="flex items-center text-red-100">
+              <div className="w-2 h-2 bg-red-300 rounded-full mr-3"></div>
+              Advanced statistics & insights
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Right Side - Login Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md"
+        >
+          <div
+            className={`rounded-2xl shadow-2xl p-8 ${
+              theme === "dark"
+                ? "bg-gray-800/90 backdrop-blur-sm border border-gray-700/50"
+                : "bg-white/90 backdrop-blur-sm border border-gray-200/50"
+            }`}
+          >
+            {/* Header */}
+            <div className="text-center mb-8">
+              <motion.h2
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className={`text-3xl font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Sign In
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className={`mt-2 text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Access your Fantasy Premier League dashboard
+              </motion.p>
             </div>
 
-            {/* Password Input */}
-            <div>
-              <label htmlFor="password" className="sr-only">
-                {t('password')}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaLock className={`h-5 w-5 ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-400'
-                  }`} />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className={`appearance-none relative block w-full pl-10 pr-10 py-3 border ${
-                    theme === 'dark'
-                      ? 'border-gray-700 bg-gray-800 text-white placeholder-gray-400'
-                      : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
-                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                  placeholder={t('password')}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <FaEyeSlash className={`h-5 w-5 ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-400'
-                    }`} />
-                  ) : (
-                    <FaEye className={`h-5 w-5 ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-400'
-                    }`} />
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50"
+              >
+                <p className="text-sm text-red-800 dark:text-red-300 text-center">
+                  {error}
+                </p>
+              </motion.div>
+            )}
 
-          {/* Error Message */}
-          {error && (
-            <div className="rounded-md bg-red-50 dark:bg-red-900/50 p-4">
-              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-            </div>
-          )}
-
-          {/* Remember Me & Forgot Password */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className={`ml-2 block text-sm ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-900'
-              }`}>
-                {t('rememberMe')}
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <Link href="/forgot-password" className="font-medium text-purple-600 hover:text-purple-500">
-                {t('forgotPassword')}
-              </Link>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {isLoading && (
-                <AiOutlineLoading3Quarters className="w-5 h-5 mr-2 animate-spin" />
-              )}
-              {t('signIn')}
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className={`w-full border-t ${
-                  theme === 'dark' ? 'border-gray-700' : 'border-gray-300'
-                }`} />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className={`px-2 ${
-                  theme === 'dark' ? 'bg-gray-900 text-gray-400' : 'bg-white text-gray-500'
-                }`}>
-                  {t('orContinueWith')}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Google Sign In */}
-          <div>
-            <button
-              type="button"
+            {/* Google Sign In Button */}
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className={`group relative w-full flex justify-center py-3 px-4 border ${
-                theme === 'dark' 
-                  ? 'border-gray-700 hover:bg-gray-800' 
-                  : 'border-gray-300 hover:bg-gray-50'
-              } text-sm font-medium rounded-lg ${
-                theme === 'dark' ? 'text-white' : 'text-gray-700'
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all`}
+              className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border-2 transition-all duration-300 ${
+                theme === "dark"
+                  ? "border-gray-600 bg-gray-700/50 hover:bg-gray-600/50 text-white"
+                  : "border-gray-300 bg-white hover:bg-gray-50 text-gray-900"
+              } disabled:opacity-50 disabled:cursor-not-allowed group`}
             >
-              {!isLoading && <FaGoogle className="w-5 h-5 mr-2 text-red-500" />}
-              {isLoading && (
-                <AiOutlineLoading3Quarters className="w-5 h-5 mr-2 animate-spin" />
+              {isLoading ? (
+                <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <FaGoogle className="w-5 h-5 text-red-500" />
+                  <span className="font-medium">Continue with Google</span>
+                </>
               )}
-              {t('signInWithGoogle')}
-            </button>
+            </motion.button>
+
+            {/* Divider */}
+            <div className="my-6 flex items-center">
+              <div
+                className={`flex-1 h-px ${
+                  theme === "dark" ? "bg-gray-600" : "bg-gray-300"
+                }`}
+              />
+              <span
+                className={`mx-4 text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                or sign in with email
+              </span>
+              <div
+                className={`flex-1 h-px ${
+                  theme === "dark" ? "bg-gray-600" : "bg-gray-300"
+                }`}
+              />
+            </div>
+
+            {/* Email/Password Form */}
+            <motion.form
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
+              {/* Email Field */}
+              <div>
+                <div className="relative">
+                  <FaEnvelope
+                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Email address"
+                    className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+                      theme === "dark"
+                        ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-red-500 focus:bg-gray-700"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-red-800 focus:bg-gray-50"
+                    } focus:outline-none focus:ring-0`}
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div>
+                <div className="relative">
+                  <FaLock
+                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Password"
+                    className={`w-full pl-12 pr-12 py-3 rounded-xl border-2 transition-all duration-300 ${
+                      theme === "dark"
+                        ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-red-500 focus:bg-gray-700"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-red-800 focus:bg-gray-50"
+                    } focus:outline-none focus:ring-0`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
+                      theme === "dark"
+                        ? "text-gray-400 hover:text-gray-300"
+                        : "text-gray-500 hover:text-gray-600"
+                    } transition-colors`}
+                  >
+                    {showPassword ? (
+                      <FaEyeSlash className="w-5 h-5" />
+                    ) : (
+                      <FaEye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Sign In Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-4 bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              >
+                {isLoading ? (
+                  <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin mx-auto" />
+                ) : (
+                  "Sign In"
+                )}
+              </motion.button>
+            </motion.form>
+
+            {/* Footer */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="mt-6 text-center"
+            >
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Dont have an account?{" "}
+                <Link
+                  href="/signup"
+                  className="font-semibold text-red-800 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                >
+                  Sign up here
+                </Link>
+              </p>
+            </motion.div>
           </div>
-        </form>
+        </motion.div>
       </div>
     </div>
   );

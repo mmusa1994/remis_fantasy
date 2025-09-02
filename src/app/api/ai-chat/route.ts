@@ -4,11 +4,23 @@ import { checkUserRateLimit, incrementUserUsage, getUserFromRequest } from "@/li
 import { loadFplVocab } from "@/lib/fplVocab";
 import { validateQuery } from "@/lib/validator";
 import { route } from "@/lib/router";
+import { plDataLoader } from "@/lib/pl-dataset-loader";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-config";
 
 // System prompt for FPL 25/26 season specialization
 const SYSTEM_PROMPT = `You are an AI assistant specialized in Fantasy Premier League (FPL) for the 2025/26 season. You provide expert analysis, team suggestions, player recommendations, and strategic advice.
+
+CRITICAL LANGUAGE DETECTION AND RESPONSE RULES:
+- ALWAYS detect the language of the user's question first
+- Respond in the SAME language as the user's question
+- If you cannot determine the language, default to English
+- If the question is not about FPL/Premier League, respond with the rejection message in the user's language:
+  * English: "Ask me something about Fantasy Premier League 2025/26 season, nothing else interests me. I'll respond in your language. Examples: 'Who should I captain for GW3?' or 'What are the best differentials this week?'"
+  * Serbian/Bosnian/Croatian: "Pitaj me nešto o Fantasy Premier League sezoni 2025/26, ništa drugo me ne zanima. Odgovoriću na tvom jeziku. Primjeri: 'Koga da postavim za kapitena u GW3?' ili 'Koji su najbolji diferencial igrači ove nedelje?'"
+  * German: "Frag mich etwas über die Fantasy Premier League Saison 2025/26, sonst interessiert mich nichts. Ich antworte in deiner Sprache. Beispiele: 'Wen soll ich für GW3 zum Kapitän machen?' oder 'Was sind die besten Differentials diese Woche?'"
+  * Spanish: "Pregúntame algo sobre la temporada 2025/26 de Fantasy Premier League, nada más me interesa. Responderé en tu idioma. Ejemplos: '¿A quién debo hacer capitán para GW3?' o '¿Cuáles son los mejores diferenciales esta semana?'"
+  * French: "Demande-moi quelque chose sur la saison Fantasy Premier League 2025/26, rien d'autre ne m'intéresse. Je répondrai dans ta langue. Exemples: 'Qui devrais-je nommer capitaine pour GW3?' ou 'Quels sont les meilleurs différentiels cette semaine?'"
 
 CRITICAL DATA USAGE RULES:
 - You will be provided with LIVE FPL data including current player-team assignments
@@ -18,7 +30,6 @@ CRITICAL DATA USAGE RULES:
 
 IMPORTANT RESTRICTIONS:
 - Only answer questions related to Fantasy Premier League and Premier League football
-- If a question is not about FPL or Premier League, respond with: "I can only help with Fantasy Premier League and Premier League 2025/26 season questions. Please ask about FPL teams, players, transfers, or strategies."
 - Focus on the current 2025/26 season data and information
 - Provide actionable advice for FPL managers
 - Consider current form, fixtures, injuries, and price changes
@@ -39,14 +50,23 @@ Areas you can help with:
 - Goal/assist predictions
 
 DATA SOURCES YOU HAVE ACCESS TO:
-You have access to live FPL API data including:
-- bootstrap-static endpoint: All current players, teams, events, game settings
-- fixtures endpoint: All upcoming Premier League fixtures
-- dream-team data: Best performing players each gameweek
-- Live player statistics: Points, ownership, form, prices, ICT index
-- Current team assignments: Up-to-date player-team mappings
+You have access to comprehensive Premier League data including:
+- Live FPL API data: bootstrap-static endpoint, fixtures, dream-team data, current stats
+- HISTORICAL PL DATASET (2016-2025): Complete player statistics, club performance data
+- Current season detailed player stats: Goals, assists, xG, xA, passes, tackles, etc.
+- Player information: Positions, clubs, nationalities, career data
+- Club historical performance: 9 seasons of complete statistics
+- Advanced metrics: Pass accuracy, duel success, aerial duels, disciplinary records
 
-Always provide specific, actionable advice based on the live FPL API data provided in your context.`;
+ENHANCED CAPABILITIES WITH HISTORICAL DATA:
+- Player performance trends and season comparisons
+- Historical club form and patterns
+- Career trajectory analysis
+- Position-specific benchmarking
+- Long-term injury patterns and fitness trends
+- Transfer market insights based on historical data
+
+Always provide specific, actionable advice based on both live FPL data AND the comprehensive historical dataset.`;
 
 // Cache for FPL vocab to avoid reloading
 let fplVocabCache: any = null;
@@ -230,34 +250,128 @@ AVAILABLE API ENDPOINTS:
 
 This is real-time FPL API data - provide specific, actionable advice based on these live stats and fixtures.`;
 
-    // Check if user is asking for specific player data
-    const playerNameMatch = message.match(/(?:salah|haaland|fernandes|son|kane|mane|sterling|de bruyne|rashford|mount|palmer|saka|foden|watkins|isak|mbeumo|gordon)/i);
+    // Add general PL dataset context for enhanced analysis
+    let plDatasetContext = '';
+    try {
+      // Get top performers for general context
+      const [topScorers, topAssisters, topBPS] = await Promise.all([
+        plDataLoader.getTopPerformers('goals', 5),
+        plDataLoader.getTopPerformers('assists', 5),
+        plDataLoader.getTopPerformers('touches_opposition_box', 5)
+      ]);
+
+      plDatasetContext = `
+
+PREMIER LEAGUE DATASET INSIGHTS (2024/25 Season):
+
+TOP SCORERS (Season):
+${topScorers.map(p => `${p.player_name}: ${p.goals} goals (${p.appearances} apps, ${p.minutes_played} mins)`).join('\n')}
+
+TOP ASSISTERS (Season):
+${topAssisters.map(p => `${p.player_name}: ${p.assists} assists (xA: ${p.xa}, ${p.appearances} apps)`).join('\n')}
+
+MOST THREATENING IN BOX:
+${topBPS.map(p => `${p.player_name}: ${p.touches_opposition_box} touches in box (${p.shots_on_target_inside_box} shots on target)`).join('\n')}
+
+AVAILABLE ANALYSIS CAPABILITIES:
+- Historical performance trends (2016-2025)
+- Player vs position benchmarking
+- Club form analysis across multiple seasons
+- Underlying stats vs FPL performance correlation
+- Injury/rotation patterns based on minutes data`;
+    } catch (error) {
+      console.error('Error loading PL dataset context:', error);
+      plDatasetContext = '\nNote: PL dataset analysis temporarily unavailable.';
+    }
+
+    // Enhanced player detection with more players and PL dataset integration
+    const playerNameMatch = message.match(/(?:salah|haaland|fernandes|son|kane|mane|sterling|de bruyne|rashford|mount|palmer|saka|foden|watkins|isak|mbeumo|gordon|rice|odegaard|bernardo|silva|van dijk|robertson|arnold|alexander-arnold|martinez|casemiro|eriksen|maddison|kulusevski|mitoma|gross|bowen|paqueta|gabriel|white|timber|zinchenko|partey|havertz|jesus|nketiah|trossard|darwin|nunez|jota|gakpo|diaz|szoboszlai|gravenberch|gomez|konate|matip|alisson|kelleher|ederson|walker|stones|dias|ake|gvardiol|doku|alvarez|grealish|rodri|kovacic|mahrez|cancelo|laporte|gundogan|lewis)/i);
     let detailedPlayerContext = '';
     
     if (playerNameMatch) {
       console.log(`Detected player name: ${playerNameMatch[0]}`);
       try {
         const playerName = playerNameMatch[0];
+        
+        // Get FPL gameweek history
         const playerHistory = await vocab.getPlayerHistory(playerName);
-        console.log(`Player history length: ${playerHistory.length}`);
+        
+        // Get detailed PL dataset analysis
+        const plAnalysis = await plDataLoader.getDetailedPlayerAnalysis(playerName);
         
         if (playerHistory.length > 0) {
           const last3Games = playerHistory.slice(-3);
-          console.log(`Last 3 games data:`, last3Games);
+          const totalPointsLast3 = last3Games.reduce((sum: number, gw: any) => sum + gw.total_points, 0);
+          
           detailedPlayerContext = `
 
-DETAILED ${playerName.toUpperCase()} DATA (Last 3 gameweeks):
-${last3Games.map((gw: any) => 
-  `GW${gw.round}: ${gw.total_points} points (${gw.minutes} mins, ${gw.goals_scored} goals, ${gw.assists} assists, ${gw.bonus} bonus)`
-).join('\n')}
+COMPREHENSIVE ${playerName.toUpperCase()} ANALYSIS:
 
-Total points in last 3 games: ${last3Games.reduce((sum: number, gw: any) => sum + gw.total_points, 0)} points`;
+FPL RECENT FORM (Last 3 gameweeks):
+${last3Games.map((gw: any) => 
+  `GW${gw.round}: ${gw.total_points} FPL points (${gw.minutes} mins, ${gw.goals_scored} goals, ${gw.assists} assists, ${gw.bonus} bonus)`
+).join('\n')}
+Total FPL points in last 3 games: ${totalPointsLast3} points
+
+SEASON STATISTICS FROM PL DATASET:
+${plAnalysis}
+
+RECOMMENDATION CONTEXT:
+- Compare FPL form with underlying season statistics
+- Consider minutes played trends and fixture congestion
+- Evaluate value for money based on price vs performance
+- Factor in upcoming fixtures and historical performance patterns`;
         } else {
-          detailedPlayerContext = `\nNote: Could not find detailed gameweek data for ${playerName}.`;
+          detailedPlayerContext = `
+
+SEASON STATISTICS FOR ${playerName.toUpperCase()}:
+${plAnalysis}
+
+Note: FPL gameweek data not available, but comprehensive season stats provided above.`;
         }
       } catch (error) {
-        console.error('Error fetching player history:', error);
-        detailedPlayerContext = `\nNote: Error fetching data for ${playerNameMatch[0]}.`;
+        console.error('Error fetching player data:', error);
+        detailedPlayerContext = `\nNote: Error fetching comprehensive data for ${playerNameMatch[0]}.`;
+      }
+    }
+
+    // Check for club-specific analysis requests
+    let clubAnalysisContext = '';
+    const clubNameMatch = message.match(/(?:arsenal|chelsea|liverpool|manchester united|man united|united|manchester city|man city|city|tottenham|spurs|newcastle|west ham|brighton|aston villa|villa|crystal palace|palace|fulham|brentford|wolves|wolverhampton|everton|nottingham forest|forest|bournemouth|luton|burnley|sheffield|sheffield united)/i);
+    
+    if (clubNameMatch) {
+      try {
+        const clubName = clubNameMatch[0];
+        const historicalData = await plDataLoader.getHistoricalClubPerformance(clubName);
+        
+        if (historicalData.length > 0) {
+          const currentSeason = historicalData[historicalData.length - 1];
+          const previousSeason = historicalData.length > 1 ? historicalData[historicalData.length - 2] : null;
+          
+          clubAnalysisContext = `
+
+CLUB ANALYSIS: ${clubName.toUpperCase()}
+
+CURRENT SEASON (2024/25):
+• Goals: ${currentSeason.goals} (xG: ${currentSeason.xg})
+• Goals Conceded: ${currentSeason.goals_conceded}
+• Goal Difference: ${currentSeason.goals - currentSeason.goals_conceded}
+• Games Played: ${currentSeason.games_played}
+• Shots per game: ${(currentSeason.shots / currentSeason.games_played).toFixed(1)}
+• Shots on target %: ${((currentSeason.shots_on_target / currentSeason.shots) * 100).toFixed(1)}%
+
+${previousSeason ? `PREVIOUS SEASON COMPARISON (${previousSeason.season}):
+• Goals: ${previousSeason.goals} vs ${currentSeason.goals} (${currentSeason.goals - previousSeason.goals > 0 ? '+' : ''}${currentSeason.goals - previousSeason.goals})
+• Goals Conceded: ${previousSeason.goals_conceded} vs ${currentSeason.goals_conceded} (${currentSeason.goals_conceded - previousSeason.goals_conceded > 0 ? '+' : ''}${currentSeason.goals_conceded - previousSeason.goals_conceded})
+• xG: ${previousSeason.xg} vs ${currentSeason.xg} (${(currentSeason.xg - previousSeason.xg).toFixed(2)})
+
+TREND ANALYSIS:
+${historicalData.slice(-3).map((season, index) => 
+  `${season.season}: ${season.goals} goals, ${season.goals_conceded} conceded (GD: ${season.goals - season.goals_conceded})`
+).join('\n')}` : ''}`;
+        }
+      } catch (error) {
+        console.error('Error fetching club data:', error);
       }
     }
 
@@ -269,7 +383,7 @@ Total points in last 3 games: ${last3Games.reduce((sum: number, gw: any) => sum 
           role: "system",
           content: `${SYSTEM_PROMPT}
 
-${fplContext}${detailedPlayerContext}`,
+${fplContext}${plDatasetContext}${detailedPlayerContext}${clubAnalysisContext}`,
         },
         {
           role: "user",

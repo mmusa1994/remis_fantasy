@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { safeLogout } from "@/lib/session-utils";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
@@ -20,6 +21,7 @@ import { BiEdit, BiSave, BiX } from "react-icons/bi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { TbTaxEuro } from "react-icons/tb";
 import LoadingCard from "@/components/shared/LoadingCard";
+import PhotoUpload from "@/components/shared/PhotoUpload";
 
 interface Usage {
   remaining: number;
@@ -142,7 +144,11 @@ export default function ProfilePage() {
   };
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/" });
+    await safeLogout("/");
+  };
+
+  const handlePhotoUpdate = (photoUrl: string | null) => {
+    setProfile(prev => prev ? { ...prev, avatar_url: photoUrl || undefined } : null);
   };
 
   if (!ready || status === "loading" || isLoading) {
@@ -164,7 +170,7 @@ export default function ProfilePage() {
           theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
         }`}>
           <h2 className="text-xl font-bold mb-4">{t('profileNotFound')}</h2>
-          <Link href="/login" className="text-purple-600 hover:text-purple-500">
+          <Link href="/login" className="text-red-800 hover:text-red-700">
             {t('backToLogin')}
           </Link>
         </div>
@@ -209,21 +215,11 @@ export default function ProfilePage() {
               {/* Avatar and Basic Info */}
               <div className="flex items-start gap-6 mb-6">
                 <div className="flex-shrink-0">
-                  <div className={`w-20 h-20 rounded-full flex items-center justify-center ${
-                    profile.avatar_url 
-                      ? 'bg-transparent' 
-                      : 'bg-purple-100 dark:bg-purple-900'
-                  }`}>
-                    {profile.avatar_url ? (
-                      <img 
-                        src={profile.avatar_url} 
-                        alt={profile.name} 
-                        className="w-20 h-20 rounded-full object-cover"
-                      />
-                    ) : (
-                      <FaUser className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                    )}
-                  </div>
+                  <PhotoUpload
+                    currentPhotoUrl={profile.avatar_url}
+                    onPhotoUpdate={handlePhotoUpdate}
+                    className=""
+                  />
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -244,7 +240,7 @@ export default function ProfilePage() {
                             theme === 'dark'
                               ? 'bg-gray-700 border-gray-600 text-white'
                               : 'bg-white border-gray-300 text-gray-900'
-                          } focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                          } focus:ring-2 focus:ring-red-800 focus:border-transparent`}
                         />
                         <button
                           onClick={handleSaveName}
@@ -407,7 +403,7 @@ export default function ProfilePage() {
 
                   {profile.subscription.plan.name === 'Free' && (
                     <Link href="/billing-plans">
-                      <button className="w-full mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                      <button className="w-full mt-4 px-4 py-2 bg-red-800 hover:bg-red-900 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                         <FaCreditCard />
                         {t('upgradeNow')}
                       </button>
@@ -420,7 +416,7 @@ export default function ProfilePage() {
                     {t('noActiveSubscription')}
                   </p>
                   <Link href="/billing-plans">
-                    <button className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <button className="w-full px-4 py-2 bg-red-800 hover:bg-red-900 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                       <FaCreditCard />
                       {t('choosePlan')}
                     </button>
@@ -439,7 +435,7 @@ export default function ProfilePage() {
                 <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                   theme === 'dark' ? 'text-white' : 'text-gray-900'
                 }`}>
-                  <FaRobot className="text-purple-500" />
+                  <FaRobot className="text-red-800" />
                   {t('aiUsage')}
                 </h3>
 
@@ -496,7 +492,7 @@ export default function ProfilePage() {
                       : 'border-gray-300 hover:bg-gray-50'
                   } text-sm transition-colors`}
                 >
-                  <FaRobot className="text-purple-500" />
+                  <FaRobot className="text-red-800" />
                   {t('useAiAnalysis')}
                 </Link>
 

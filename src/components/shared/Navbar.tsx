@@ -15,6 +15,7 @@ import LanguageSelector from "./LanguageSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { safeLogout } from "@/lib/session-utils";
 
 interface NavItem {
   name: string;
@@ -105,7 +106,7 @@ const Navbar = React.memo(function Navbar() {
 
   const handleSignOut = async () => {
     setUserMenuOpen(false);
-    await signOut({ callbackUrl: "/" });
+    await safeLogout("/");
   };
 
   const handleGoogleSignIn = async () => {
@@ -130,10 +131,10 @@ const Navbar = React.memo(function Navbar() {
             }}
             className={`flex items-center justify-center w-10 h-10 rounded-full overflow-hidden border-2 transition-all duration-300 ${
               userMenuOpen 
-                ? 'border-purple-500 shadow-lg' 
+                ? 'border-red-800 shadow-lg' 
                 : theme === 'dark' 
-                  ? 'border-gray-600 hover:border-purple-400' 
-                  : 'border-gray-300 hover:border-purple-500'
+                  ? 'border-gray-600 hover:border-red-700' 
+                  : 'border-gray-300 hover:border-red-800'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -172,8 +173,8 @@ const Navbar = React.memo(function Navbar() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                        <FaUser className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      <div className="w-full h-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                        <FaUser className="w-5 h-5 text-red-800 dark:text-red-400" />
                       </div>
                     )}
                   </div>
@@ -207,7 +208,7 @@ const Navbar = React.memo(function Navbar() {
                       ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}>
-                    <FaCreditCard className="w-4 h-4 text-purple-500" />
+                    <FaCreditCard className="w-4 h-4 text-red-800" />
                     {t('billingPlans')}
                   </div>
                 </Link>
@@ -253,7 +254,7 @@ const Navbar = React.memo(function Navbar() {
           }}
           className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
             userMenuOpen 
-              ? 'bg-purple-500 text-white shadow-lg' 
+              ? 'bg-red-800 text-white shadow-lg' 
               : theme === 'dark' 
                 ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
@@ -308,8 +309,8 @@ const Navbar = React.memo(function Navbar() {
               <Link href="/signup" onClick={() => setUserMenuOpen(false)}>
                 <div className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
                   theme === 'dark' 
-                    ? 'text-purple-400 hover:bg-purple-900/20' 
-                    : 'text-purple-600 hover:bg-purple-50'
+                    ? 'text-red-400 hover:bg-red-900/20' 
+                    : 'text-red-800 hover:bg-red-50'
                 }`}>
                   <User className="w-4 h-4" />
                   {t('createAccount')}
@@ -430,8 +431,8 @@ const Navbar = React.memo(function Navbar() {
                   <motion.div
                     className={`relative group font-semibold transition-all duration-500 text-sm uppercase tracking-widest font-russo theme-transition px-4 py-2 cursor-pointer ${
                       isActive
-                        ? "text-purple-600 dark:text-purple-400"
-                        : "text-theme-text-secondary hover:text-purple-600 dark:hover:text-purple-400"
+                        ? "text-red-800 dark:text-red-400"
+                        : "text-theme-text-secondary hover:text-red-800 dark:hover:text-red-400"
                     }`}
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -443,8 +444,8 @@ const Navbar = React.memo(function Navbar() {
                     <motion.div
                       className={`absolute inset-0 minimal-radius backdrop-blur-sm ${
                         theme === "light"
-                          ? "bg-purple-500/10 shadow-lg"
-                          : "bg-purple-400/10"
+                          ? "bg-red-800/10 shadow-lg"
+                          : "bg-red-700/10"
                       }`}
                       initial={{ opacity: 0, scale: 0.85 }}
                       whileHover={{ opacity: 1, scale: 1 }}
@@ -453,7 +454,7 @@ const Navbar = React.memo(function Navbar() {
 
                     {/* Subtle inner glow - purple */}
                     <motion.div
-                      className="absolute inset-0 minimal-radius bg-gradient-to-r from-transparent via-purple-500/5 to-transparent"
+                      className="absolute inset-0 minimal-radius bg-gradient-to-r from-transparent via-red-800/5 to-transparent"
                       initial={{ opacity: 0 }}
                       whileHover={{ opacity: 1 }}
                       transition={{ duration: 0.4, delay: 0.1 }}
@@ -472,7 +473,7 @@ const Navbar = React.memo(function Navbar() {
                     {/* Active page indicator - purple line */}
                     {isActive && (
                       <motion.div
-                        className="absolute -bottom-2 left-0 right-0 h-0.5 origin-center bg-gradient-to-r from-transparent via-purple-600 to-transparent"
+                        className="absolute -bottom-2 left-0 right-0 h-0.5 origin-center bg-gradient-to-r from-transparent via-red-800 to-transparent"
                         initial={{ scaleX: 0, opacity: 0 }}
                         animate={{ scaleX: 1, opacity: 1 }}
                         transition={{ duration: 0.6, ease: "easeOut" }}
@@ -482,7 +483,7 @@ const Navbar = React.memo(function Navbar() {
                     {/* Sophisticated underline - purple */}
                     {!isActive && (
                       <motion.div
-                        className="absolute -bottom-1 left-2 right-2 h-0.5 origin-center bg-gradient-to-r from-transparent via-purple-600/60 to-transparent"
+                        className="absolute -bottom-1 left-2 right-2 h-0.5 origin-center bg-gradient-to-r from-transparent via-red-800/60 to-transparent"
                         initial={{ scaleX: 0, opacity: 0 }}
                         whileHover={{ scaleX: 1, opacity: 1 }}
                         transition={{ duration: 0.4, ease: "easeOut" }}
@@ -611,8 +612,8 @@ const Navbar = React.memo(function Navbar() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                          <FaUser className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        <div className="w-full h-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                          <FaUser className="w-5 h-5 text-red-800 dark:text-red-400" />
                         </div>
                       )}
                     </div>
@@ -709,7 +710,7 @@ const Navbar = React.memo(function Navbar() {
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="relative flex items-center justify-center gap-3">
-                        <FaCreditCard className="w-5 h-5 text-purple-500" />
+                        <FaCreditCard className="w-5 h-5 text-red-800" />
                         <span>{t('billingPlans')}</span>
                       </div>
                     </motion.div>
@@ -717,7 +718,7 @@ const Navbar = React.memo(function Navbar() {
 
                   <motion.div
                     onClick={() => {
-                      handleSignOut();
+                      safeLogout("/");
                       handleMobileNavClick();
                     }}
                     className={`w-full text-center font-semibold py-4 px-4 minimal-radius bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo cursor-pointer relative text-red-500 hover:text-red-400`}
@@ -773,8 +774,8 @@ const Navbar = React.memo(function Navbar() {
                         onClick={handleMobileNavClick}
                         className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg border transition-colors ${
                           theme === 'dark'
-                            ? 'border-purple-500/50 hover:bg-purple-500/10 text-purple-400'
-                            : 'border-purple-500/50 hover:bg-purple-50 text-purple-600'
+                            ? 'border-red-800/50 hover:bg-red-800/10 text-red-400'
+                            : 'border-red-800/50 hover:bg-red-50 text-red-800'
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
