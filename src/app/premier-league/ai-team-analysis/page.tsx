@@ -105,6 +105,10 @@ export default function AITeamAnalysis() {
         body: JSON.stringify({
           message: userMessage.content,
           userApiKey: userApiKey || undefined,
+          chatHistory: messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
         }),
       });
 

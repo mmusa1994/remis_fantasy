@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { checkUserRateLimit, incrementUserUsage, getUserFromRequest } from "@/lib/user-rate-limit";
+import {
+  checkUserRateLimit,
+  incrementUserUsage,
+  getUserFromRequest,
+} from "@/lib/user-rate-limit";
 import { loadFplVocab } from "@/lib/fplVocab";
 import { validateQuery } from "@/lib/validator";
 import { route } from "@/lib/router";
@@ -27,6 +31,28 @@ CRITICAL DATA USAGE RULES:
 - ALWAYS use the live data provided in the context, NOT any pre-trained knowledge about player teams
 - Player transfers happen frequently - a player's current team is ONLY what's shown in the live data
 - When mentioning players, ALWAYS reference their CURRENT team from the live data provided
+- EXAMPLE CORRECTION: If user says "Xhaka and Crystal Palace vs Sunderland" but data shows Xhaka plays FOR Sunderland, immediately correct this
+- Never assume player teams - always verify against the provided player database
+
+RESPONSE STYLE GUIDELINES:
+- Write in a natural, conversational tone as if talking to a friend who shares your passion for FPL
+- Avoid formal numbered lists or bullet points unless specifically requested
+- Use flowing, narrative sentences that connect ideas naturally
+- Express opinions with confidence but acknowledge uncertainty when data is limited
+- Mix analysis with casual observations and personal insights
+- Use phrases like "Looking at", "What's interesting is", "I'd say", "Worth noting", "Honestly", "The way I see it"
+- Make responses feel like a knowledgeable friend giving advice over coffee, not a formal report
+- Vary sentence structure and length to create natural rhythm
+- Include relevant context and reasoning naturally within the flow of conversation
+
+PLAYER DATA ACCESS:
+- You have access to ALL 700+ players from bootstrap-static with complete stats
+- When user mentions any player name (Hugo Ekitike, Ballard, Xhaka etc.), you will receive EXACT player data if found
+- CRITICAL: If player data is provided in context, use ONLY that data - never contradict it
+- If no specific player data appears in context, say "I need to check current data for [player name]"
+- NEVER guess player teams, stats, or positions - only use provided data
+- NEVER use pre-trained knowledge about players - ONLY use live context data
+- If user corrects you about a player's team, acknowledge the correction immediately
 
 IMPORTANT RESTRICTIONS:
 - Only answer questions related to Fantasy Premier League and Premier League football
@@ -75,7 +101,7 @@ const VOCAB_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
 async function getCachedVocab() {
   const now = Date.now();
-  if (!fplVocabCache || (now - vocabCacheTime) > VOCAB_CACHE_DURATION) {
+  if (!fplVocabCache || now - vocabCacheTime > VOCAB_CACHE_DURATION) {
     fplVocabCache = await loadFplVocab();
     vocabCacheTime = now;
   }
@@ -84,7 +110,7 @@ async function getCachedVocab() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, userApiKey } = await req.json();
+    const { message, userApiKey, chatHistory = [] } = await req.json();
 
     if (!message) {
       return NextResponse.json(
@@ -101,7 +127,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: "Authentication required",
-          message: "Please sign in to use AI analysis features. Create a free account to get 3 weekly questions or sign in with Google.",
+          message:
+            "Please sign in to use AI analysis features. Create a free account to get 3 weekly questions or sign in with Google.",
           requiresAuth: true,
         },
         { status: 401 }
@@ -110,8 +137,8 @@ export async function POST(req: NextRequest) {
 
     // Get user ID and check rate limit (only if not using own API key)
     if (!userApiKey) {
-      const userId = session?.user?.id || await getUserFromRequest(req);
-      
+      const userId = session?.user?.id || (await getUserFromRequest(req));
+
       if (!userId) {
         return NextResponse.json(
           { error: "Unable to identify user" },
@@ -123,7 +150,7 @@ export async function POST(req: NextRequest) {
 
       if (!allowed) {
         const isAuthenticated = !!session?.user?.id;
-        const upgradeMessage = isAuthenticated 
+        const upgradeMessage = isAuthenticated
           ? "Upgrade your subscription to get more AI queries."
           : "Create a free account or sign in to continue using AI features.";
 
@@ -139,14 +166,13 @@ export async function POST(req: NextRequest) {
           { status: 429 }
         );
       }
-
     }
 
     // Validate using new implementation
     const vocab = await getCachedVocab();
     const validation = await validateQuery(message, vocab);
     const routing = route(validation);
-    
+
     if (routing.action === "clarify") {
       return NextResponse.json({
         response: routing.message,
@@ -174,206 +200,173 @@ export async function POST(req: NextRequest) {
       teamMap[index + 1] = team;
     });
 
-    const upcomingFixtures = vocab.nextFixtures.slice(0, 15).map((f: any) => {
-      const homeTeam = teamMap[f.team_h] || 'Team ' + f.team_h;
-      const awayTeam = teamMap[f.team_a] || 'Team ' + f.team_a;
-      return `GW${f.event}: ${homeTeam} vs ${awayTeam}`;
-    }).join(", ");
+    const upcomingFixtures = vocab.nextFixtures
+      .slice(0, 6)
+      .map((f: any) => {
+        const homeTeam = teamMap[f.team_h] || "Team " + f.team_h;
+        const awayTeam = teamMap[f.team_a] || "Team " + f.team_a;
+        return `GW${f.event}: ${homeTeam} vs ${awayTeam}`;
+      })
+      .join(", ");
 
-    // Create comprehensive FPL context with all live data
+    // Create compact FPL context
     const topPlayersByPoints = vocab.topPlayers.byPoints
-      .slice(0, 8)
+      .slice(0, 4)
       .map((p: any) => `${p.name} (${p.team}) - ${p.points} pts`)
       .join(", ");
 
     const topPlayersByOwnership = vocab.topPlayers.byOwnership
-      .slice(0, 8)  
+      .slice(0, 4)
       .map((p: any) => `${p.name} (${p.team}) - ${p.ownership}%`)
       .join(", ");
 
-    const mostExpensivePlayers = vocab.topPlayers.byPrice
-      .slice(0, 8)
-      .map((p: any) => `${p.name} (${p.team}) - £${p.price}m`)
-      .join(", ");
-
-    // Sample differential picks (low ownership players)
     const differentials = vocab.playerData
       .filter((p: any) => p.selected_by_percent < 10 && p.total_points > 20)
       .sort((a: any, b: any) => b.total_points - a.total_points)
-      .slice(0, 10)
-      .map((p: any) => `${p.name} (${p.team}) - ${p.selected_by_percent}% owned, ${p.total_points} pts`)
+      .slice(0, 5)
+      .map(
+        (p: any) => `${p.name} (${p.team}) - ${p.selected_by_percent}% owned`
+      )
       .join(", ");
 
-    // Top form players (last 5 gameweeks)
     const topFormPlayers = vocab.playerData
       .sort((a: any, b: any) => parseFloat(b.form) - parseFloat(a.form))
-      .slice(0, 10)
-      .map((p: any) => `${p.name} (${p.team}) - Form: ${p.form}`)
+      .slice(0, 5)
+      .map((p: any) => `${p.name} (${p.team}) - ${p.form}`)
       .join(", ");
 
     const fplContext = `
-=== LIVE FPL DATA FOR ${vocab.seasonLabel} SEASON ===
+=== FPL ${vocab.seasonLabel} - GW${vocab.currentGameweek} ===
 
-SEASON STATUS:
-- Current Gameweek: ${vocab.currentGameweek}
-- Total Teams: ${vocab.teams.length} 
-- Active Players: ${vocab.players.length}
-- Positions: ${vocab.positions.join(", ")}
+FIXTURES: ${upcomingFixtures}
+TOP POINTS: ${topPlayersByPoints}
+MOST OWNED: ${topPlayersByOwnership}
+DIFFERENTIALS: ${differentials}
+FORM: ${topFormPlayers}
 
-UPCOMING FIXTURES (Next 3 gameweeks):
-${upcomingFixtures}
+ALL PLAYERS DATABASE: ${vocab.playerData.length} active players available with full stats (points, form, price, ownership, team, position).
 
-TOP PERFORMERS THIS SEASON:
-Highest Points: ${topPlayersByPoints}
-Most Owned: ${topPlayersByOwnership}  
-Most Expensive: ${mostExpensivePlayers}
+Use only current season data. Check player database for any mentioned player. Provide concise, actionable advice.`;
 
-DIFFERENTIAL PICKS (Low ownership, good points):
-${differentials}
+    // Simplified context to save tokens
+    const plDatasetContext = "";
 
-BEST CURRENT FORM (Last 5 GWs):
-${topFormPlayers}
+    // Enhanced player detection with better matching
+    let playerNameMatch = null;
+    let matchedPlayerName = "";
+    let exactPlayerData = null;
 
-=== CRITICAL INSTRUCTIONS ===
-1. Use ONLY this live ${vocab.seasonLabel} season data
-2. Player teams are current as of today - ignore any pre-trained knowledge
-3. Base recommendations on actual upcoming fixtures shown above
-4. Consider form, ownership, and price when suggesting players
-5. All player statistics are from the actual ongoing season
-6. For detailed player analysis, I can access specific gameweek-by-gameweek data for any player
+    // First, try to find exact matches in player data
+    const messageWords = message.toLowerCase().split(/\s+/);
 
-AVAILABLE API ENDPOINTS:
-- Player detailed history: Can fetch individual gameweek points for any player
-- Live gameweek data: Current season performance statistics
-- Fixtures data: Upcoming matches for all teams
-- Ownership data: Real-time player ownership percentages
+    for (const player of vocab.playerData) {
+      const playerNameLower = player.name.toLowerCase();
+      const playerWords = playerNameLower.split(" ");
 
-This is real-time FPL API data - provide specific, actionable advice based on these live stats and fixtures.`;
-
-    // Add general PL dataset context for enhanced analysis
-    let plDatasetContext = '';
-    try {
-      // Get top performers for general context
-      const [topScorers, topAssisters, topBPS] = await Promise.all([
-        plDataLoader.getTopPerformers('goals', 5),
-        plDataLoader.getTopPerformers('assists', 5),
-        plDataLoader.getTopPerformers('touches_opposition_box', 5)
-      ]);
-
-      plDatasetContext = `
-
-PREMIER LEAGUE DATASET INSIGHTS (2024/25 Season):
-
-TOP SCORERS (Season):
-${topScorers.map(p => `${p.player_name}: ${p.goals} goals (${p.appearances} apps, ${p.minutes_played} mins)`).join('\n')}
-
-TOP ASSISTERS (Season):
-${topAssisters.map(p => `${p.player_name}: ${p.assists} assists (xA: ${p.xa}, ${p.appearances} apps)`).join('\n')}
-
-MOST THREATENING IN BOX:
-${topBPS.map(p => `${p.player_name}: ${p.touches_opposition_box} touches in box (${p.shots_on_target_inside_box} shots on target)`).join('\n')}
-
-AVAILABLE ANALYSIS CAPABILITIES:
-- Historical performance trends (2016-2025)
-- Player vs position benchmarking
-- Club form analysis across multiple seasons
-- Underlying stats vs FPL performance correlation
-- Injury/rotation patterns based on minutes data`;
-    } catch (error) {
-      console.error('Error loading PL dataset context:', error);
-      plDatasetContext = '\nNote: PL dataset analysis temporarily unavailable.';
+      // Check if any part of player name appears in message
+      for (const playerWord of playerWords) {
+        if (playerWord.length > 3) {
+          for (const messageWord of messageWords) {
+            if (
+              messageWord.includes(playerWord) ||
+              playerWord.includes(messageWord)
+            ) {
+              playerNameMatch = [playerWord];
+              matchedPlayerName = player.name;
+              exactPlayerData = player;
+              break;
+            }
+          }
+        }
+        if (playerNameMatch) break;
+      }
+      if (playerNameMatch) break;
     }
 
-    // Enhanced player detection with more players and PL dataset integration
-    const playerNameMatch = message.match(/(?:salah|haaland|fernandes|son|kane|mane|sterling|de bruyne|rashford|mount|palmer|saka|foden|watkins|isak|mbeumo|gordon|rice|odegaard|bernardo|silva|van dijk|robertson|arnold|alexander-arnold|martinez|casemiro|eriksen|maddison|kulusevski|mitoma|gross|bowen|paqueta|gabriel|white|timber|zinchenko|partey|havertz|jesus|nketiah|trossard|darwin|nunez|jota|gakpo|diaz|szoboszlai|gravenberch|gomez|konate|matip|alisson|kelleher|ederson|walker|stones|dias|ake|gvardiol|doku|alvarez|grealish|rodri|kovacic|mahrez|cancelo|laporte|gundogan|lewis)/i);
-    let detailedPlayerContext = '';
-    
-    if (playerNameMatch) {
-      console.log(`Detected player name: ${playerNameMatch[0]}`);
-      try {
-        const playerName = playerNameMatch[0];
-        
-        // Get FPL gameweek history
-        const playerHistory = await vocab.getPlayerHistory(playerName);
-        
-        // Get detailed PL dataset analysis
-        const plAnalysis = await plDataLoader.getDetailedPlayerAnalysis(playerName);
-        
-        if (playerHistory.length > 0) {
-          const last3Games = playerHistory.slice(-3);
-          const totalPointsLast3 = last3Games.reduce((sum: number, gw: any) => sum + gw.total_points, 0);
-          
-          detailedPlayerContext = `
-
-COMPREHENSIVE ${playerName.toUpperCase()} ANALYSIS:
-
-FPL RECENT FORM (Last 3 gameweeks):
-${last3Games.map((gw: any) => 
-  `GW${gw.round}: ${gw.total_points} FPL points (${gw.minutes} mins, ${gw.goals_scored} goals, ${gw.assists} assists, ${gw.bonus} bonus)`
-).join('\n')}
-Total FPL points in last 3 games: ${totalPointsLast3} points
-
-SEASON STATISTICS FROM PL DATASET:
-${plAnalysis}
-
-RECOMMENDATION CONTEXT:
-- Compare FPL form with underlying season statistics
-- Consider minutes played trends and fixture congestion
-- Evaluate value for money based on price vs performance
-- Factor in upcoming fixtures and historical performance patterns`;
-        } else {
-          detailedPlayerContext = `
-
-SEASON STATISTICS FOR ${playerName.toUpperCase()}:
-${plAnalysis}
-
-Note: FPL gameweek data not available, but comprehensive season stats provided above.`;
+    // Fallback to less precise matching
+    if (!playerNameMatch) {
+      for (const player of vocab.players) {
+        const playerWords = player.toLowerCase().split(" ");
+        for (const word of playerWords) {
+          if (word.length > 3 && message.toLowerCase().includes(word)) {
+            playerNameMatch = [word];
+            matchedPlayerName = player;
+            // Try to find this player in playerData
+            exactPlayerData = vocab.playerData.find((p: any) =>
+              p.name.toLowerCase().includes(matchedPlayerName.toLowerCase())
+            );
+            break;
+          }
         }
-      } catch (error) {
-        console.error('Error fetching player data:', error);
-        detailedPlayerContext = `\nNote: Error fetching comprehensive data for ${playerNameMatch[0]}.`;
+        if (playerNameMatch) break;
       }
+    }
+    let detailedPlayerContext = "";
+
+    if (playerNameMatch && exactPlayerData) {
+      console.log(`Detected player name: ${matchedPlayerName}`);
+      try {
+        const teamName =
+          teamMap[exactPlayerData.team] || `Team ${exactPlayerData.team}`;
+        const positionName =
+          vocab.positions[exactPlayerData.element_type - 1] ||
+          exactPlayerData.element_type;
+
+        detailedPlayerContext = `
+PLAYER FOUND: ${exactPlayerData.name.toUpperCase()} 
+CURRENT TEAM: ${teamName}
+POSITION: ${positionName}
+TOTAL POINTS: ${exactPlayerData.total_points}
+FORM: ${exactPlayerData.form}
+PRICE: £${(exactPlayerData.now_cost / 10).toFixed(1)}m
+OWNERSHIP: ${exactPlayerData.selected_by_percent}%
+MINUTES: ${exactPlayerData.minutes || 0}
+GOALS: ${exactPlayerData.goals_scored || 0}
+ASSISTS: ${exactPlayerData.assists || 0}
+
+CRITICAL: Use ONLY this exact data. Do NOT use any pre-trained knowledge about this player's team or stats.`;
+      } catch (error) {
+        console.error("Error processing player data:", error);
+        detailedPlayerContext = `\nError processing data for ${matchedPlayerName}.`;
+      }
+    } else if (playerNameMatch) {
+      detailedPlayerContext = `\nPlayer "${matchedPlayerName}" mentioned but not found in current FPL database. Verify player name or check if active this season.`;
     }
 
     // Check for club-specific analysis requests
-    let clubAnalysisContext = '';
-    const clubNameMatch = message.match(/(?:arsenal|chelsea|liverpool|manchester united|man united|united|manchester city|man city|city|tottenham|spurs|newcastle|west ham|brighton|aston villa|villa|crystal palace|palace|fulham|brentford|wolves|wolverhampton|everton|nottingham forest|forest|bournemouth|luton|burnley|sheffield|sheffield united)/i);
-    
+    let clubAnalysisContext = "";
+    const clubNameMatch = message.match(
+      /(?:arsenal|chelsea|liverpool|manchester united|man united|united|manchester city|man city|city|tottenham|spurs|newcastle|west ham|brighton|aston villa|villa|crystal palace|palace|fulham|brentford|wolves|wolverhampton|everton|nottingham forest|forest|bournemouth|luton|burnley|sheffield|sheffield united)/i
+    );
+
     if (clubNameMatch) {
       try {
         const clubName = clubNameMatch[0];
-        const historicalData = await plDataLoader.getHistoricalClubPerformance(clubName);
-        
+        const historicalData = await plDataLoader.getHistoricalClubPerformance(
+          clubName
+        );
+
         if (historicalData.length > 0) {
           const currentSeason = historicalData[historicalData.length - 1];
-          const previousSeason = historicalData.length > 1 ? historicalData[historicalData.length - 2] : null;
-          
+
           clubAnalysisContext = `
-
-CLUB ANALYSIS: ${clubName.toUpperCase()}
-
-CURRENT SEASON (2024/25):
-• Goals: ${currentSeason.goals} (xG: ${currentSeason.xg})
-• Goals Conceded: ${currentSeason.goals_conceded}
-• Goal Difference: ${currentSeason.goals - currentSeason.goals_conceded}
-• Games Played: ${currentSeason.games_played}
-• Shots per game: ${(currentSeason.shots / currentSeason.games_played).toFixed(1)}
-• Shots on target %: ${((currentSeason.shots_on_target / currentSeason.shots) * 100).toFixed(1)}%
-
-${previousSeason ? `PREVIOUS SEASON COMPARISON (${previousSeason.season}):
-• Goals: ${previousSeason.goals} vs ${currentSeason.goals} (${currentSeason.goals - previousSeason.goals > 0 ? '+' : ''}${currentSeason.goals - previousSeason.goals})
-• Goals Conceded: ${previousSeason.goals_conceded} vs ${currentSeason.goals_conceded} (${currentSeason.goals_conceded - previousSeason.goals_conceded > 0 ? '+' : ''}${currentSeason.goals_conceded - previousSeason.goals_conceded})
-• xG: ${previousSeason.xg} vs ${currentSeason.xg} (${(currentSeason.xg - previousSeason.xg).toFixed(2)})
-
-TREND ANALYSIS:
-${historicalData.slice(-3).map((season) => 
-  `${season.season}: ${season.goals} goals, ${season.goals_conceded} conceded (GD: ${season.goals - season.goals_conceded})`
-).join('\n')}` : ''}`;
+${clubName.toUpperCase()}: ${currentSeason.goals} goals, ${
+            currentSeason.goals_conceded
+          } conceded (xG: ${currentSeason.xg}).`;
         }
       } catch (error) {
-        console.error('Error fetching club data:', error);
+        console.error("Error fetching club data:", error);
       }
     }
+
+    // Prepare optimized chat history (last 4 messages max to save tokens)
+    const recentHistory = chatHistory.slice(-4).map((msg: any) => ({
+      role: msg.role,
+      content:
+        msg.content.length > 150
+          ? msg.content.substring(0, 150) + "..."
+          : msg.content,
+    }));
 
     // Make request to GPT-4o
     const completion = await client.chat.completions.create({
@@ -385,12 +378,13 @@ ${historicalData.slice(-3).map((season) =>
 
 ${fplContext}${plDatasetContext}${detailedPlayerContext}${clubAnalysisContext}`,
         },
+        ...recentHistory,
         {
           role: "user",
           content: message,
         },
       ],
-      max_tokens: 1000,
+      max_tokens: 400,
       temperature: 0.7,
     });
 

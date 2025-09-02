@@ -79,10 +79,12 @@ export async function validateQuery(input: string, vocab: FplVocab): Promise<Val
         role: "system",
         content:
           `You are a validator for Fantasy Premier League (FPL) 2025/26 season questions. ` +
-          `ALWAYS ACCEPT questions about: FPL team selection, captaincy, player points, gameweeks, differentials, chips, FPL transfers, ANY Premier League players, ANY Premier League teams/clubs (Arsenal, Chelsea, Manchester United, Liverpool, etc), player performance, team form, fixtures, player stats, injury updates, price changes, league positions, historical performance. ` +
-          `REJECT questions about: other sports leagues (except Premier League/FPL), politics, personal advice, weather, coding, completely unrelated topics. ` +
-          `Premier League clubs and players are ALWAYS RELEVANT to FPL - historical performance helps with team selection. ` +
-          `Questions about Arsenal, Manchester City, Liverpool etc. finishing positions are FPL-relevant. Be very permissive for any football/Premier League content.`
+          `ALWAYS ACCEPT questions about these Premier League teams: ${vocab.teams.join(', ')}. ` +
+          `ALWAYS ACCEPT: team performance, league positions, historical data, past seasons, player statistics, transfers, injuries, form analysis, fixtures, any Premier League related content. ` +
+          `HISTORICAL QUESTIONS ARE ALWAYS VALID: "how did team X perform in last 5 seasons", "team X results last year", etc. ` +
+          `Any question mentioning these teams or players is ALWAYS VALID for FPL analysis. ` +
+          `REJECT only: politics, weather, coding, completely unrelated non-football topics. ` +
+          `If a question mentions ANY Premier League team name, nickname, or inflected form, ALWAYS set is_in_scope to true.`
       },
       {
         role: "user",
@@ -101,9 +103,71 @@ export async function validateQuery(input: string, vocab: FplVocab): Promise<Val
   }
 
   // 4) combine: enforce stricter validation but not too strict to avoid empty responses
-  const hasHighConfidence = parsed.data.confidence >= 0.4; // More permissive for Premier League content
+  const hasHighConfidence = parsed.data.confidence >= 0.3; // Very permissive for Premier League content
   
-  const is_in_scope = parsed.data.is_in_scope && hasHighConfidence;
+  // Create dynamic regex from actual team names in vocabulary
+  const teamNamesPattern = vocab.teams
+    .map(team => team.toLowerCase().replace(/\s+/g, '\\s+')) // Handle spaces in team names
+    .join('|');
+  const dynamicTeamRegex = new RegExp(`\\b(${teamNamesPattern})\\b`, 'i');
+  
+  // Complete Premier League team nicknames database
+  const premierLeagueNicknames = [
+    { club: "Arsenal", nicknames: ["gunners"] },
+    { club: "Aston Villa", nicknames: ["villans"] },
+    { club: "Bournemouth", nicknames: ["cherries"] },
+    { club: "Brentford", nicknames: ["bees"] },
+    { club: "Brighton & Hove Albion", nicknames: ["seagulls"] },
+    { club: "Burnley", nicknames: ["clarets"] },
+    { club: "Chelsea", nicknames: ["blues"] },
+    { club: "Crystal Palace", nicknames: ["eagles"] },
+    { club: "Everton", nicknames: ["toffees", "blues", "peoples club", "school of science"] },
+    { club: "Fulham", nicknames: ["cottagers"] },
+    { club: "Leeds United", nicknames: ["whites", "united"] },
+    { club: "Liverpool", nicknames: ["reds"] },
+    { club: "Manchester City", nicknames: ["citizens", "sky blues", "city"] },
+    { club: "Manchester United", nicknames: ["red devils", "united"] },
+    { club: "Newcastle United", nicknames: ["magpies", "toon army", "geordies"] },
+    { club: "Nottingham Forest", nicknames: ["forest", "garibaldis", "reds", "tricky trees"] },
+    { club: "Southampton", nicknames: ["saints"] },
+    { club: "Sunderland", nicknames: ["black cats", "mackems"] },
+    { club: "Tottenham Hotspur", nicknames: ["spurs"] },
+    { club: "West Ham United", nicknames: ["hammers", "irons"] },
+    { club: "Wolverhampton Wanderers", nicknames: ["wolves"] }
+  ];
+  
+  // Extract all nicknames into a flat array
+  const allNicknames = premierLeagueNicknames
+    .flatMap(team => team.nicknames)
+    .concat(['arsenal', 'chelsea', 'liverpool', 'city', 'united', 'spurs', 'everton']); // Add common short names
+  
+  const nicknamePattern = allNicknames.join('|');
+  const nicknameRegex = new RegExp(`\\b(${nicknamePattern})\\b`, 'i');
+  
+  // Add flexible team name matching for inflected forms and partial matches
+  const baseTeamNames = [
+    'arsenal', 'chelsea', 'liverpool', 'manchester', 'tottenham', 'leeds', 'aston', 'villa',
+    'newcastle', 'brighton', 'west', 'ham', 'crystal', 'palace', 'leicester', 'wolves',
+    'southampton', 'burnley', 'norwich', 'watford', 'brentford', 'bournemouth', 'fulham',
+    'nottingham', 'forest', 'everton', 'sheffield'
+  ];
+  
+  // Create flexible regex that matches team name stems (handles inflected forms like "leedsa")
+  const flexibleTeamPattern = baseTeamNames
+    .map(name => `${name}[a-z]{0,3}`) // Allow up to 3 additional characters for inflections
+    .join('|');
+  const flexibleTeamRegex = new RegExp(`\\b(${flexibleTeamPattern})\\b`, 'i');
+  
+  // Also check for player names from the vocab
+  const playerNamesPattern = vocab.players.slice(0, 50) // Top 50 players to avoid too long regex
+    .map(player => player.toLowerCase().replace(/\s+/g, '\\s+'))
+    .join('|');
+  const playerRegex = new RegExp(`\\b(${playerNamesPattern})\\b`, 'i');
+  
+  // Override: Always accept Premier League team/player questions regardless of model output
+  const shouldOverrideScope = dynamicTeamRegex.test(input) || nicknameRegex.test(input) || 
+                             flexibleTeamRegex.test(input) || playerRegex.test(input);
+  const is_in_scope = shouldOverrideScope || (parsed.data.is_in_scope && hasHighConfidence);
   const season_ok = parsed.data.season_ok || seasonHint || vocab.seasonLabel.includes("2025");
 
   return {
