@@ -12,12 +12,6 @@ export default function PremierLeagueLayout({
 
   const premierLeagueNavItems = [
     { 
-      name: t("home"),
-      href: "/premier-league",
-      icon: "TbHome2",
-      showOnMobile: true
-    },
-    { 
       name: t("tables"), 
       subtitle: t("miniLeagues"),
       href: "/premier-league/tabele",
@@ -44,9 +38,15 @@ export default function PremierLeagueLayout({
       showOnMobile: true
     },
     {
-      name: t("diamond"),
-      href: "/premier-league/diamond",
-      icon: "GrDiamond",
+      name: t("bestDifferentials"),
+      href: "/premier-league/best-differentials", 
+      icon: "TrendingUp",
+      showOnMobile: false
+    },
+    {
+      name: t("teamNews"),
+      href: "/premier-league/team-news",
+      icon: "Newspaper", 
       showOnMobile: false
     },
     { 

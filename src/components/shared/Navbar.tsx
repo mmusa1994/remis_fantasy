@@ -27,17 +27,17 @@ const getNavItems = (t: any): NavItem[] => [
   { name: t("home", "Home"), href: "/", icon: Home },
   {
     name: t("premierLeague", "Premier League"),
-    href: "/premier-league",
+    href: "/premier-league/tabele",
     icon: SiPremierleague,
   },
   {
     name: t("championsLeague", "Champions League"),
-    href: "/champions-league",
+    href: "/champions-league/tabele",
     icon: PiSoccerBall,
   },
   {
     name: t("f1Fantasy", "F1 Fantasy"),
-    href: "/f1-fantasy",
+    href: "/f1-fantasy/tabele",
     icon: GiF1Car,
   },
 ];

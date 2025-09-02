@@ -12,6 +12,8 @@ import {
   UserPlus,
   Camera,
   DollarSign,
+  TrendingUp,
+  Newspaper,
 } from "lucide-react";
 import { TbHome2 } from "react-icons/tb";
 import { GrDiamond } from "react-icons/gr";
@@ -61,6 +63,8 @@ const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } =
     Camera,
     DollarSign,
     FaMagic,
+    TrendingUp,
+    Newspaper,
   };
 
 const getIcon = (iconName?: string) => {
@@ -122,8 +126,8 @@ export default function SubNavigation({
         dark: "text-purple-400 bg-purple-500/20 shadow-lg shadow-purple-500/20",
       },
       hover: {
-        light: "text-purple-600 hover:bg-purple-50",
-        dark: "text-gray-300 hover:text-purple-400 hover:bg-gray-800/50",
+        light: "text-black hover:text-purple-600 hover:bg-purple-50",
+        dark: "text-black hover:text-purple-400 hover:bg-gray-800/50",
       },
       indicator: {
         light: "bg-purple-500",
@@ -214,7 +218,9 @@ export default function SubNavigation({
                         : colors.active.light
                       : theme === "dark"
                       ? colors.hover.dark
-                      : `text-gray-600 ${colors.hover.light}`
+                      : baseColor === "purple" 
+                        ? `text-black ${colors.hover.light}`
+                        : `text-gray-600 ${colors.hover.light}`
                   }`}
                 >
                   <div className="flex flex-col items-center space-y-0.5">
@@ -271,7 +277,9 @@ export default function SubNavigation({
                           : colors.active.light
                         : theme === "dark"
                         ? colors.hover.dark
-                        : `text-gray-600 ${colors.hover.light}`
+                        : baseColor === "purple"
+                          ? `text-black ${colors.hover.light}`
+                          : `text-gray-600 ${colors.hover.light}`
                     }`}
                   >
                     <div className="flex flex-col items-center space-y-1 text-center">
@@ -368,7 +376,9 @@ export default function SubNavigation({
                             : colors.active.light
                           : theme === "dark"
                           ? colors.hover.dark
-                          : `text-gray-600 ${colors.hover.light}`
+                          : baseColor === "purple"
+                            ? `text-black ${colors.hover.light}`
+                            : `text-gray-600 ${colors.hover.light}`
                       }`}
                     >
                       <div className="flex items-center space-x-2">

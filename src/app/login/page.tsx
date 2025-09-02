@@ -35,7 +35,7 @@ export default function LoginPage() {
     // Check if user is already logged in
     getSession().then((session) => {
       if (session) {
-        router.push("/premier-league");
+        router.push("/premier-league/tabele");
       }
     });
   }, [router]);
@@ -58,7 +58,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError(t("invalidCredentials"));
       } else {
-        router.push("/premier-league");
+        router.push("/premier-league/tabele");
       }
     } catch (_error: any) {
       setError(t("loginError"));
@@ -74,7 +74,7 @@ export default function LoginPage() {
 
     try {
       await signIn("google", {
-        callbackUrl: "/premier-league",
+        callbackUrl: "/premier-league/tabele",
       });
     } catch (_error: any) {
       setError(t("googleSignInError"));
