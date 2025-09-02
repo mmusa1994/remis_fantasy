@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { plDataLoader } from "@/lib/pl-dataset-loader";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // Test basic functionality
     const [topScorers, sampleClub] = await Promise.all([

@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { safeLogout } from "@/lib/session-utils";
-import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { 
-  FaUser, 
   FaEnvelope, 
   FaRobot, 
   FaSignOutAlt,
@@ -51,7 +49,6 @@ interface UserProfile {
 
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
-  const router = useRouter();
   const { theme } = useTheme();
   const { t, ready } = useTranslation('profile');
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -61,15 +58,17 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showLoginRedirect, setShowLoginRedirect] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/login");
+      setShowLoginRedirect(true);
     } else if (status === "authenticated" && session?.user) {
       fetchProfile();
       fetchUsage();
     }
-  }, [status, session, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session]);
 
   const fetchProfile = async () => {
     try {
@@ -81,7 +80,7 @@ export default function ProfilePage() {
       } else {
         console.error('Profile API error:', response.status, response.statusText);
         if (response.status === 401) {
-          router.push("/login");
+          setShowLoginRedirect(true);
         } else {
           setError(t('failedToLoadProfile'));
         }
@@ -150,6 +149,25 @@ export default function ProfilePage() {
   const handlePhotoUpdate = (photoUrl: string | null) => {
     setProfile(prev => prev ? { ...prev, avatar_url: photoUrl || undefined } : null);
   };
+
+  if (showLoginRedirect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-theme-background">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-red-800 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className={`mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            Redirecting to login...
+          </p>
+          <Link 
+            href="/login"
+            className="bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white px-6 py-2 rounded-lg transition-all duration-300"
+          >
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!ready || status === "loading" || isLoading) {
     return (

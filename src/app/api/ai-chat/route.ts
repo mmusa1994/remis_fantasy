@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const { allowed, resetDate, remaining, total } = await checkUserRateLimit(userId);
+      const { allowed, resetDate, total } = await checkUserRateLimit(userId);
 
       if (!allowed) {
         const isAuthenticated = !!session?.user?.id;
@@ -366,7 +366,7 @@ ${previousSeason ? `PREVIOUS SEASON COMPARISON (${previousSeason.season}):
 • xG: ${previousSeason.xg} vs ${currentSeason.xg} (${(currentSeason.xg - previousSeason.xg).toFixed(2)})
 
 TREND ANALYSIS:
-${historicalData.slice(-3).map((season, index) => 
+${historicalData.slice(-3).map((season) => 
   `${season.season}: ${season.goals} goals, ${season.goals_conceded} conceded (GD: ${season.goals - season.goals_conceded})`
 ).join('\n')}` : ''}`;
         }

@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-config";
 import { getRemainingQuestions } from "@/lib/user-rate-limit";
 
-export async function GET(_req: NextRequest) {
+export async function GET(_: NextRequest) {
   try {
     // Get session to check if user is authenticated
     const session = await getServerSession(authOptions);

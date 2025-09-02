@@ -192,7 +192,7 @@ export const authOptions = {
     },
   },
   callbacks: {
-    async signIn({ user, account, profile }: any) {
+    async signIn({ user, account }: any) {
       // Handle Google OAuth
       if (account?.provider === "google") {
         const { data: existingUser } = await supabase

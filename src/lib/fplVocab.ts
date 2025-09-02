@@ -22,16 +22,14 @@ export async function loadFplVocab(): Promise<FplVocab> {
   const base = "https://fantasy.premierleague.com/api";
 
   try {
-    const [bs, fixtures, gameSettings] = await Promise.all([
+    const [bs, fixtures] = await Promise.all([
       fetchJson(`${base}/bootstrap-static/`), // teams, players (elements), events, element_types, stat labels
       fetchJson(`${base}/fixtures/`), // basic fixture meta
-      fetchJson(`${base}/game-settings/`).catch(() => null), // game settings (optional)
     ]);
 
     // Try to get additional data
-    const [dreamTeam, topPlayers] = await Promise.all([
+    const [dreamTeam] = await Promise.all([
       fetchJson(`${base}/dream-team/1/`).catch(() => []), // Current gameweek dream team
-      Promise.resolve(null), // We'll get top players from bootstrap data
     ]);
 
     const bootstrapData = bs as any;

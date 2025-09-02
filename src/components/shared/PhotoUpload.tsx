@@ -69,7 +69,7 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
       }
 
       // Upload new photo
-      const { data, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('profile-photos')
         .upload(filePath, file, {
           cacheControl: '3600',

@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-config";
 import { resetUserUsage } from "@/lib/user-rate-limit";
 
-export async function POST(_req: NextRequest) {
+export async function POST(_: NextRequest) {
   try {
     // Only run in development
     if (process.env.NODE_ENV !== 'development') {

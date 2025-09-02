@@ -59,7 +59,7 @@ export default function LoginPage() {
       } else {
         setLoginSuccess(true);
       }
-    } catch (_error: any) {
+    } catch {
       setError(t("loginError"));
     } finally {
       setIsLoading(false);
@@ -78,7 +78,7 @@ export default function LoginPage() {
       if (result?.ok) {
         setLoginSuccess(true);
       }
-    } catch (_error: any) {
+    } catch {
       setError(t("googleSignInError"));
       setIsLoading(false);
     }

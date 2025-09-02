@@ -287,7 +287,7 @@ class PLDatasetLoader {
     const playerStats = await this.loadCurrentSeasonPlayerStats();
     
     return playerStats
-      .filter(p => p[stat] !== undefined && p[stat] > 0)
+      .filter(p => p[stat] !== undefined && typeof p[stat] === 'number' && (p[stat] as number) > 0)
       .sort((a, b) => (b[stat] as number) - (a[stat] as number))
       .slice(0, limit);
   }
@@ -307,7 +307,7 @@ class PLDatasetLoader {
         if (clubData) {
           historicalData.push(clubData);
         }
-      } catch (error) {
+      } catch {
         console.warn(`Could not load ${season} data for ${clubName}`);
       }
     }

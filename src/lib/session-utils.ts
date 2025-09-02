@@ -25,7 +25,6 @@ export async function checkSessionValidity(): Promise<SessionCheckResult> {
     }
 
     // Check if session is expired
-    const now = Math.floor(Date.now() / 1000);
     if (session.expires && new Date(session.expires).getTime() < Date.now()) {
       // Session is expired
       await performLogout();

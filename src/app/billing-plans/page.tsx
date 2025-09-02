@@ -167,6 +167,25 @@ export default function BillingPlansPage() {
     );
   }
 
+  if (showLoginRedirect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-theme-background">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-red-800 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className={`mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            Redirecting to login...
+          </p>
+          <Link 
+            href="/login"
+            className="bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white px-6 py-2 rounded-lg transition-all duration-300"
+          >
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-theme-background py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
