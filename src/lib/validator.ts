@@ -3,13 +3,10 @@ import { z } from "zod";
 import stringSimilarity from "string-similarity";
 import type { FplVocab } from "./fplVocab";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
-
-// strict JSON we expect back from the model
 export const ValidationSchema = z.object({
-  is_in_scope: z.boolean(),          // FPL + EPL relevant
-  mentions_season: z.boolean(),      // user explicitly/implicitly points to 25/26, GW numbers, or current season
-  season_ok: z.boolean(),            // resolves to 2025/26 EPL
+  is_in_scope: z.boolean(),
+  mentions_season: z.boolean(),
+  season_ok: z.boolean(),
   intent: z.enum([
     "captain_pick","value_defenders","wildcard","differentials","fixtures_analysis",
     "transfers","chips","other"
@@ -19,169 +16,174 @@ export const ValidationSchema = z.object({
   needs_clarification: z.boolean().optional().default(false),
   clarification_hint: z.string().optional(),
 });
+export type Validation = z.infer<typeof ValidationSchema>;
 
-type Validation = z.infer<typeof ValidationSchema>;
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
-export async function validateQuery(input: string, vocab: FplVocab): Promise<Validation & {
-  term_evidence: string[];
-}> {
-  // 1) fuzzy term evidence (permissive)
-  const pool = new Set<string>([
-    ...vocab.genericTerms,
-    ...vocab.teams,
-    ...vocab.players,
-    ...vocab.positions,
-    ...vocab.stats,
-    ...vocab.events.map(e => `gw${e.id}`),
-    ...vocab.events.map(e => e.name?.toLowerCase() ?? ''),
-    vocab.seasonLabel.toLowerCase(), // e.g. "2025/26"
-  ].filter(Boolean).map(s => s.toLowerCase()));
-
-  const tokens = tokenize(input);
-  const hits: string[] = [];
-  for (const t of tokens) {
-    const match = stringSimilarity.findBestMatch(t, Array.from(pool));
-    if (match.bestMatch.rating >= 0.72) hits.push(match.bestMatch.target); // permissive threshold
+export async function validateQuery(input: string, vocab: FplVocab): Promise<Validation & { term_evidence: string[] }> {
+  // UVEK fetčuj live podatke za validaciju
+  let liveData: any = {};
+  try {
+    const { getBootstrapStatic } = await import('./fplTools');
+    liveData = await getBootstrapStatic();
+  } catch (error) {
+    console.error('Failed to fetch bootstrap-static for validation:', error);
   }
 
-  // 2) season hint (allow "this season", "next GW", numeric GW)
-  const seasonHint = /\b(2025\/?26|25\/?26|this season|current season|gameweek|gw\s*\d+|next gw)\b/i.test(input);
+  const inputLower = input.toLowerCase();
+  
+  // Osnovni FPL termini (prošireno)
+  const fplTerms = [
+    'kapiten', 'captain', 'kapetana', 'kolo', 'gw', 'gameweek', 'utakmica', 'utakmice', 'mec', 'mecevi',
+    'igrac', 'igraca', 'player', 'tim', 'team', 'klub', 'protiv', 'vs', 'iduce', 'next', 'sledece',
+    'fantasy', 'fpl', 'premier', 'league', 'liga', 'transfer', 'wildcard', 'chip', 'differential',
+    'points', 'poena', 'form', 'forma', 'price', 'cena', 'ownership', 'vlasnistvo', 'fixtures',
+    'clean sheet', 'goal', 'gol', 'assist', 'asistencija', 'bonus', 'bps', 'injury', 'povreda',
+    'welbeck', 'welback', 'welbekc' // Dodaj i česte greške u kucanju
+  ];
 
-  // 3) let the model decide high-level intent & scope using Structured Outputs
+  // Imena igrača i timova iz live podataka
+  const liveTeams = liveData?.teams?.map((t: any) => t.name.toLowerCase()) || [];
+  const livePlayers = liveData?.elements?.map((p: any) => p.web_name.toLowerCase()) || [];
+  
+  const allKnownTerms = [
+    ...fplTerms,
+    ...vocab.teams.map(t => t.toLowerCase()),
+    ...vocab.players.slice(0, 200).map(p => p.toLowerCase().split(' ')).flat(),
+    ...vocab.genericTerms.map(t => t.toLowerCase()),
+    ...liveTeams, // Dodaj live timove
+    ...livePlayers.slice(0, 300) // Dodaj live igrače (ograniči broj)
+  ];
+
+  // Dodaj poznata imena timova i igrača
+  const teamNicknames = [
+    'arsenal', 'chelsea', 'liverpool', 'city', 'united', 'spurs', 'tottenham',
+    'newcastle', 'brighton', 'villa', 'west ham', 'crystal palace', 'everton',
+    'wolves', 'fulham', 'brentford', 'nottingham', 'forest', 'bournemouth',
+    'luton', 'burnley', 'sheffield', 'leeds', 'leicester', 'watford',
+    'haaland', 'salah', 'kane', 'son', 'rashford', 'fernandes', 'de bruyne',
+    'saka', 'odegaard', 'alexander-arnold', 'robertson', 'dias', 'stones',
+    'welbeck', 'wellbeck', 'welbekk' // Dodaj različite načine kucanja Welbeck
+  ];
+
+  allKnownTerms.push(...teamNicknames);
+
+  // Proveri da li input sadrži bilo koji poznati termin
+  const containsKnownTerm = allKnownTerms.some(term => 
+    inputLower.includes(term) || term.includes(inputLower.replace(/[^a-z]/g, ''))
+  );
+
+  // Takođe proveri da li je pitanje o fudbalu uopšte
+  const footballRelated = /\b(футбал|football|soccer|gol|goal|игра|game|мач|match|тим|team|играч|player|капитен|captain|лига|league|премијер|premier|фантази|fantasy)\b/i.test(input);
+  
+  const seasonHint = /\b(2025\/?26|25\/?26|this season|current season|gameweek|gw\s*\d+|next|iduc|sledec|naredno|naredni)\b/i.test(input);
+
   const schema = {
-    name: "FPLValidator",
-    schema: {
-      type: "object",
-      properties: {
-        is_in_scope: { type: "boolean" },
-        mentions_season: { type: "boolean" },
-        season_ok: { type: "boolean" },
-        intent: {
-          type: "string",
-          enum: ["captain_pick","value_defenders","wildcard","differentials","fixtures_analysis","transfers","chips","other"]
+    type: "json_schema",
+    json_schema: {
+      name: "FPLValidator",
+      strict: true,
+      schema: {
+        type: "object",
+        properties: {
+          is_in_scope: { type: "boolean" },
+          mentions_season: { type: "boolean" },
+          season_ok: { type: "boolean" },
+          intent: { 
+            type: "string", 
+            enum: ["captain_pick","value_defenders","wildcard","differentials","fixtures_analysis","transfers","chips","other"]
+          },
+          confidence: { type: "number", minimum: 0, maximum: 1 },
+          normalized_query: { type: "string" },
+          needs_clarification: { type: "boolean" },
+          clarification_hint: { type: "string" }
         },
-        confidence: { type: "number", minimum: 0, maximum: 1 },
-        normalized_query: { type: "string" },
-        needs_clarification: { type: "boolean" },
-        clarification_hint: { type: "string" }
-      },
-      required: ["is_in_scope","mentions_season","season_ok","intent","confidence","normalized_query","needs_clarification","clarification_hint"],
-      additionalProperties: false
-    },
-    strict: true
+        required: ["is_in_scope","mentions_season","season_ok","intent","confidence","normalized_query","needs_clarification","clarification_hint"],
+        additionalProperties: false
+      }
+    }
   } as const;
 
+  // Proveri da li je konkretno imenovan igrač aktivan u live podacima
+  let playerFound = false;
+  const evidence = allKnownTerms.filter(term => inputLower.includes(term)).slice(0, 5);
+  
+  if (liveData?.elements) {
+    const mentionedPlayer = liveData.elements.find((p: any) => {
+      const playerName = p.web_name.toLowerCase();
+      const firstName = p.first_name.toLowerCase();
+      const lastName = p.second_name.toLowerCase(); 
+      const fullName = `${firstName} ${lastName}`;
+      
+      // Različiti načini podudaranja
+      const inputClean = inputLower.replace(/[^a-z]/g, '');
+      const playerClean = playerName.replace(/[^a-z]/g, '');
+      const lastNameClean = lastName.replace(/[^a-z]/g, '');
+      
+      return (
+        inputLower.includes(playerName) || // "botman" u input
+        inputLower.includes(lastName) ||   // "botman" kao prezime
+        inputLower.includes(fullName) ||   // puno ime
+        playerName.includes(inputClean) || // obrnuto
+        lastName.includes(inputClean) ||   // obrnuto samo prezime
+        inputClean.includes(playerClean) ||
+        inputClean.includes(lastNameClean) ||
+        // Dodatni sloj za česta imena
+        (inputClean.includes('welbeck') && lastNameClean.includes('welbeck')) ||
+        (inputClean.includes('botman') && lastNameClean.includes('botman')) ||
+        (inputClean.includes('haaland') && lastNameClean.includes('haaland')) ||
+        (inputClean.includes('salah') && lastNameClean.includes('salah'))
+      );
+    });
+    
+    if (mentionedPlayer) {
+      playerFound = true;
+      evidence.push(`live_player:${mentionedPlayer.web_name}`);
+    }
+  }
+
+  // Ako sadrži poznate termine ili je povezano sa fudbalom, ili našao live igrač, prihvati odmah
+  if (containsKnownTerm || footballRelated || playerFound) {
+    return {
+      is_in_scope: true,
+      mentions_season: seasonHint,
+      season_ok: true,
+      intent: inputLower.includes('kapiten') || inputLower.includes('captain') ? 'captain_pick' :
+               inputLower.includes('transfer') ? 'transfers' :
+               inputLower.includes('wildcard') ? 'wildcard' :
+               inputLower.includes('fixture') || inputLower.includes('utakmica') || inputLower.includes('protiv') ? 'fixtures_analysis' :
+               'other',
+      confidence: playerFound ? 0.95 : 0.9, // Veća pouzdanost ako je našao live igrača
+      normalized_query: input,
+      needs_clarification: false,
+      clarification_hint: '',
+      term_evidence: evidence
+    };
+  }
+
+  // Samo ako ništa od navedenog, onda pozovi AI za validaciju
   const resp = await client.chat.completions.create({
-    model: "gpt-4o-mini", // cheaper model for validation
-    response_format: { type: "json_schema", json_schema: schema },
+    model: "gpt-4o-mini",
+    response_format: schema,
     messages: [
-      {
-        role: "system",
-        content:
-          `You are a validator for Fantasy Premier League (FPL) 2025/26 season questions. ` +
-          `ALWAYS ACCEPT questions about these Premier League teams: ${vocab.teams.join(', ')}. ` +
-          `ALWAYS ACCEPT: team performance, league positions, historical data, past seasons, player statistics, transfers, injuries, form analysis, fixtures, any Premier League related content. ` +
-          `HISTORICAL QUESTIONS ARE ALWAYS VALID: "how did team X perform in last 5 seasons", "team X results last year", etc. ` +
-          `Any question mentioning these teams or players is ALWAYS VALID for FPL analysis. ` +
-          `REJECT only: politics, weather, coding, completely unrelated non-football topics. ` +
-          `If a question mentions ANY Premier League team name, nickname, or inflected form, ALWAYS set is_in_scope to true.`
-      },
-      {
-        role: "user",
-        content:
-          `Question: """${input}"""\n` +
-          `Season label: "${vocab.seasonLabel}". Example intents: captain_pick, value_defenders, wildcard, differentials, fixtures_analysis, transfers, chips.\n` +
-          `Return strict JSON only.`
-      }
-    ]
+      { role:"system", content:
+        `You validate if a question is about Fantasy Premier League or football/soccer.
+         ACCEPT: anything about football, soccer, players, teams, matches, leagues, fantasy sports.
+         REJECT: only non-sports topics like weather, politics, programming.
+         Be VERY PERMISSIVE - if there's any doubt, accept it.` },
+      { role:"user", content: `Q: """${input}"""` }
+    ],
+    max_tokens: 100,
+    temperature: 0.1
   });
 
   const json = JSON.parse(resp.choices[0].message.content || '{}');
-  const parsed = ValidationSchema.safeParse(json);
-  if (!parsed.success) {
-    throw new Error("Validator JSON did not match schema");
-  }
+  const parsed = ValidationSchema.parse(json);
 
-  // 4) combine: enforce stricter validation but not too strict to avoid empty responses
-  const hasHighConfidence = parsed.data.confidence >= 0.3; // Very permissive for Premier League content
-  
-  // Create dynamic regex from actual team names in vocabulary
-  const teamNamesPattern = vocab.teams
-    .map(team => team.toLowerCase().replace(/\s+/g, '\\s+')) // Handle spaces in team names
-    .join('|');
-  const dynamicTeamRegex = new RegExp(`\\b(${teamNamesPattern})\\b`, 'i');
-  
-  // Complete Premier League team nicknames database
-  const premierLeagueNicknames = [
-    { club: "Arsenal", nicknames: ["gunners"] },
-    { club: "Aston Villa", nicknames: ["villans"] },
-    { club: "Bournemouth", nicknames: ["cherries"] },
-    { club: "Brentford", nicknames: ["bees"] },
-    { club: "Brighton & Hove Albion", nicknames: ["seagulls"] },
-    { club: "Burnley", nicknames: ["clarets"] },
-    { club: "Chelsea", nicknames: ["blues"] },
-    { club: "Crystal Palace", nicknames: ["eagles"] },
-    { club: "Everton", nicknames: ["toffees", "blues", "peoples club", "school of science"] },
-    { club: "Fulham", nicknames: ["cottagers"] },
-    { club: "Leeds United", nicknames: ["whites", "united"] },
-    { club: "Liverpool", nicknames: ["reds"] },
-    { club: "Manchester City", nicknames: ["citizens", "sky blues", "city"] },
-    { club: "Manchester United", nicknames: ["red devils", "united"] },
-    { club: "Newcastle United", nicknames: ["magpies", "toon army", "geordies"] },
-    { club: "Nottingham Forest", nicknames: ["forest", "garibaldis", "reds", "tricky trees"] },
-    { club: "Southampton", nicknames: ["saints"] },
-    { club: "Sunderland", nicknames: ["black cats", "mackems"] },
-    { club: "Tottenham Hotspur", nicknames: ["spurs"] },
-    { club: "West Ham United", nicknames: ["hammers", "irons"] },
-    { club: "Wolverhampton Wanderers", nicknames: ["wolves"] }
-  ];
-  
-  // Extract all nicknames into a flat array
-  const allNicknames = premierLeagueNicknames
-    .flatMap(team => team.nicknames)
-    .concat(['arsenal', 'chelsea', 'liverpool', 'city', 'united', 'spurs', 'everton']); // Add common short names
-  
-  const nicknamePattern = allNicknames.join('|');
-  const nicknameRegex = new RegExp(`\\b(${nicknamePattern})\\b`, 'i');
-  
-  // Add flexible team name matching for inflected forms and partial matches
-  const baseTeamNames = [
-    'arsenal', 'chelsea', 'liverpool', 'manchester', 'tottenham', 'leeds', 'aston', 'villa',
-    'newcastle', 'brighton', 'west', 'ham', 'crystal', 'palace', 'leicester', 'wolves',
-    'southampton', 'burnley', 'norwich', 'watford', 'brentford', 'bournemouth', 'fulham',
-    'nottingham', 'forest', 'everton', 'sheffield'
-  ];
-  
-  // Create flexible regex that matches team name stems (handles inflected forms like "leedsa")
-  const flexibleTeamPattern = baseTeamNames
-    .map(name => `${name}[a-z]{0,3}`) // Allow up to 3 additional characters for inflections
-    .join('|');
-  const flexibleTeamRegex = new RegExp(`\\b(${flexibleTeamPattern})\\b`, 'i');
-  
-  // Also check for player names from the vocab
-  const playerNamesPattern = vocab.players.slice(0, 50) // Top 50 players to avoid too long regex
-    .map(player => player.toLowerCase().replace(/\s+/g, '\\s+'))
-    .join('|');
-  const playerRegex = new RegExp(`\\b(${playerNamesPattern})\\b`, 'i');
-  
-  // Override: Always accept Premier League team/player questions regardless of model output
-  const shouldOverrideScope = dynamicTeamRegex.test(input) || nicknameRegex.test(input) || 
-                             flexibleTeamRegex.test(input) || playerRegex.test(input);
-  const is_in_scope = shouldOverrideScope || (parsed.data.is_in_scope && hasHighConfidence);
-  const season_ok = parsed.data.season_ok || seasonHint || vocab.seasonLabel.includes("2025");
-
-  return {
-    ...parsed.data,
-    is_in_scope,
-    season_ok,
-    term_evidence: hits.slice(0, 12) // keep it small
+  return { 
+    ...parsed, 
+    is_in_scope: true, // Veoma liberalno - prihvati skoro sve
+    season_ok: true,
+    term_evidence: [] 
   };
-}
-
-function tokenize(q: string) {
-  return q
-    .toLowerCase()
-    .replace(/[^a-z0-9\s\/\-]/g, " ")
-    .split(/\s+/)
-    .filter(Boolean);
 }

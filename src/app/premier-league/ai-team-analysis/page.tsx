@@ -8,6 +8,8 @@ import { FaWandMagicSparkles, FaGoogle, FaEnvelope } from "react-icons/fa6";
 import { HiChatBubbleLeftEllipsis, HiKey } from "react-icons/hi2";
 import { BiSend, BiUserPlus } from "react-icons/bi";
 import { FaUser } from "react-icons/fa";
+import { SiCodemagic } from "react-icons/si";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingCard from "@/components/shared/LoadingCard";
 import Link from "next/link";
@@ -28,7 +30,7 @@ interface Usage {
 export default function AITeamAnalysis() {
   const { data: session, status } = useSession();
   const { theme } = useTheme();
-  const { t, ready } = useTranslation("ai");
+  const { t, ready, i18n } = useTranslation("ai");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +39,8 @@ export default function AITeamAnalysis() {
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [usageLoading, setUsageLoading] = useState(true);
   const [authRequired, setAuthRequired] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -86,9 +90,17 @@ export default function AITeamAnalysis() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    // Show confirmation modal
+    setPendingMessage(input.trim());
+    setShowConfirmModal(true);
+  };
+
+  const confirmAndSend = async () => {
+    setShowConfirmModal(false);
+
     const userMessage: Message = {
       role: "user",
-      content: input.trim(),
+      content: pendingMessage,
       timestamp: new Date(),
     };
 
@@ -103,11 +115,11 @@ export default function AITeamAnalysis() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: userMessage.content,
+          message: pendingMessage,
           userApiKey: userApiKey || undefined,
-          chatHistory: messages.map(msg => ({
+          chatHistory: messages.map((msg) => ({
             role: msg.role,
-            content: msg.content
+            content: msg.content,
           })),
         }),
       });
@@ -166,6 +178,7 @@ export default function AITeamAnalysis() {
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setPendingMessage("");
     }
   };
 
@@ -584,7 +597,7 @@ export default function AITeamAnalysis() {
                       ease: "easeInOut",
                     }}
                   >
-                    <FaWandMagicSparkles
+                    <SiCodemagic
                       className={`w-16 h-16 mx-auto mb-6 ${
                         theme === "dark" ? "text-purple-400" : "text-purple-500"
                       }`}
@@ -617,7 +630,7 @@ export default function AITeamAnalysis() {
                     }`}
                   >
                     <motion.div
-                      className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
+                      className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-lg overflow-hidden ${
                         message.role === "user"
                           ? "bg-gradient-to-br from-purple-500 to-purple-600"
                           : "bg-gradient-to-br from-indigo-500 to-purple-600"
@@ -626,7 +639,17 @@ export default function AITeamAnalysis() {
                       whileTap={{ scale: 0.95 }}
                     >
                       {message.role === "user" ? (
-                        <FaUser className="w-4 h-4 text-white" />
+                        session?.user?.image ? (
+                          <Image
+                            src={session.user.image}
+                            alt={session.user.name || "User"}
+                            width={40}
+                            height={40}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <FaUser className="w-4 h-4 text-white" />
+                        )
                       ) : (
                         <motion.div
                           animate={{ rotate: 360 }}
@@ -636,7 +659,7 @@ export default function AITeamAnalysis() {
                             ease: "linear",
                           }}
                         >
-                          <FaWandMagicSparkles className="w-4 h-4 text-white" />
+                          <SiCodemagic className="w-4 h-4 text-white" />
                         </motion.div>
                       )}
                     </motion.div>
@@ -704,12 +727,12 @@ export default function AITeamAnalysis() {
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{
-                      duration: 2,
+                      duration: 1.5,
                       repeat: Infinity,
                       ease: "linear",
                     }}
                   >
-                    <FaWandMagicSparkles className="w-4 h-4 text-white" />
+                    <SiCodemagic className="w-4 h-4 text-white" />
                   </motion.div>
                 </motion.div>
                 <div className="flex-1">
@@ -760,13 +783,13 @@ export default function AITeamAnalysis() {
                         }}
                       />
                       <span
-                        className={`text-sm ml-2 ${
+                        className={`text-sm ml-2 font-medium ${
                           theme === "dark"
                             ? "text-purple-300"
                             : "text-purple-600"
                         }`}
                       >
-                        ✨ Guru Typing...
+                        {t("analyzing", "Analiziram...")}
                       </span>
                     </div>
                   </motion.div>
@@ -824,12 +847,12 @@ export default function AITeamAnalysis() {
                   }}
                 >
                   {isLoading ? (
-                    <FaWandMagicSparkles className="w-4 h-4" />
+                    <SiCodemagic className="w-4 h-4" />
                   ) : (
                     <BiSend className="w-4 h-4" />
                   )}
                 </motion.div>
-                {isLoading ? "Magija..." : t("send")}
+                {isLoading ? t("analyzing", "Analiziram...") : t("send")}
               </motion.button>
             </div>
           </motion.form>
@@ -862,6 +885,128 @@ export default function AITeamAnalysis() {
             <li>• {t("exampleQuestions.4")}</li>
           </ul>
         </div>
+
+        {/* Confirmation Modal */}
+        <AnimatePresence>
+          {showConfirmModal && (
+            <motion.div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowConfirmModal(false)}
+            >
+              <motion.div
+                className={`max-w-md w-full rounded-2xl border shadow-2xl p-6 ${
+                  theme === "dark"
+                    ? "bg-gray-900 border-gray-700"
+                    : "bg-white border-gray-200"
+                }`}
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-center mb-6">
+                  <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/50 mb-4">
+                    <HiChatBubbleLeftEllipsis className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+
+                  <h3
+                    className={`text-lg font-semibold mb-2 ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {t(
+                      "confirmQuestion",
+                      ready && i18n.language === "bs"
+                        ? "Potvrdi pitanje"
+                        : "Confirm Question"
+                    )}
+                  </h3>
+
+                  <p
+                    className={`text-sm mb-4 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    {t(
+                      "confirmDescription",
+                      ready && i18n.language === "bs"
+                        ? "Da li si siguran da je tvoje pitanje vezano za Fantasy Premier League sezonu 2025/26?"
+                        : "Are you sure your question is related to Fantasy Premier League season 2025/26?"
+                    )}
+                  </p>
+
+                  <div
+                    className={`p-3 rounded-lg border-2 border-yellow-300 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 mb-4`}
+                  >
+                    <p
+                      className={`text-xs font-medium text-yellow-800 dark:text-yellow-200`}
+                    >
+                      ⚠️{" "}
+                      {t(
+                        "warningMessage",
+                        ready && i18n.language === "bs"
+                          ? "Upozorenje: Ako pitanje nije vezano za Fantasy, izgubit ćeš besplatne tokene a nećeš dobiti odgovor vezan za Fantasy od našeg FPL Guru-a. On samo odgovara na pitanja vezana za FPL sezonu 2025/26."
+                          : "Warning: If your question is not Fantasy-related, you'll lose free tokens without getting a Fantasy-related answer from our FPL Guru. He only answers questions about FPL season 2025/26."
+                      )}
+                    </p>
+                  </div>
+
+                  <div
+                    className={`text-xs p-2 rounded bg-gray-100 dark:bg-gray-800 mb-4`}
+                  >
+                    <strong>
+                      {ready && i18n.language === "bs"
+                        ? "Tvoje pitanje:"
+                        : "Your question:"}
+                    </strong>
+                    <p
+                      className={`mt-1 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      &ldquo;{pendingMessage}&rdquo;
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <motion.button
+                    onClick={() => setShowConfirmModal(false)}
+                    className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
+                      theme === "dark"
+                        ? "border-gray-600 hover:bg-gray-800 text-gray-300"
+                        : "border-gray-300 hover:bg-gray-50 text-gray-700"
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {t(
+                      "cancel",
+                      ready && i18n.language === "bs" ? "Otkaži" : "Cancel"
+                    )}
+                  </motion.button>
+
+                  <motion.button
+                    onClick={confirmAndSend}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {t(
+                      "confirm",
+                      ready && i18n.language === "bs"
+                        ? "Potvrdi & Pošalji"
+                        : "Confirm & Send"
+                    )}
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </main>
   );

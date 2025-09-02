@@ -140,9 +140,11 @@ const Navbar = React.memo(function Navbar() {
             whileTap={{ scale: 0.95 }}
           >
             {session.user.image ? (
-              <img 
+              <Image 
                 src={session.user.image} 
                 alt={session.user.name || 'User'} 
+                width={40}
+                height={40}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -167,9 +169,11 @@ const Navbar = React.memo(function Navbar() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden">
                     {session.user.image ? (
-                      <img 
+                      <Image 
                         src={session.user.image} 
                         alt={session.user.name || 'User'} 
+                        width={40}
+                        height={40}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -606,9 +610,11 @@ const Navbar = React.memo(function Navbar() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden">
                       {session.user.image ? (
-                        <img 
+                        <Image 
                           src={session.user.image} 
                           alt={session.user.name || 'User'} 
+                          width={40}
+                          height={40}
                           className="w-full h-full object-cover"
                         />
                       ) : (
