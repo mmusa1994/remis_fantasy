@@ -10,5 +10,95 @@
   "registeredPlayers": "Registrovani Igrači",
   "availableLeagues": "Dostupne Lige",
   "totalPrizePool": "Ukupan Nagradni Fond",
-  "yearsOfExperience": "Godine Iskustva"
+  "yearsOfExperience": "Godine Iskustva",
+  "features": {
+    "title": "Sve Što Vam Je Potrebno Za Dominaciju FPL-a",
+    "subtitle": "Moćni alati, podaci u realnom vremenu i uvidi zasnovani na AI za ultimativnu prednost u fantasy fudbalu.",
+    "aiGuru": {
+      "title": "AI Fantasy Guru",
+      "description": "Dobijte personalizovanu analizu tima, prijedloge transfera i strateške uvide pokretane naprednom AI."
+    },
+    "fplLive": {
+      "title": "FPL Uživo Praćenje",
+      "description": "Pratite utakmice uživo sa ažuriranjima bodova u realnom vremenu, promjenama kapetana i napretkom gameweek-a."
+    },
+    "analytics": {
+      "title": "Napredna Analitika",
+      "description": "Duboka statistička analiza, trendovi performansi igrača i sveobuhvatni podaci o ligi."
+    },
+    "prices": {
+      "title": "Cijene i Vrijednosti Igrača",
+      "description": "Cijene igrača u realnom vremenu, predviđanja vrijednosti i optimalne prilike za kupovinu/prodaju."
+    },
+    "differentials": {
+      "title": "Najbolji Diferencijali",
+      "description": "Otkrijte skrivene dragulje i igrače s niskim vlasništvom koji vam mogu dati konkurentsku prednost."
+    },
+    "teamNews": {
+      "title": "Timske Vijesti i Ažuriranja",
+      "description": "Najnoviji izvještaji o povredama, predviđanja sastava i bitne timske vijesti za informisane odluke."
+    },
+    "tryNow": "Probaj Sada",
+    "watchLive": "Gledaj Uživo",
+    "viewStats": "Pogledaj Statistike",
+    "checkPrices": "Provjeri Cijene",
+    "findGems": "Pronađi Dragulje",
+    "readNews": "Čitaj Vijesti"
+  },
+  "aiGuru": {
+    "premium": "PREMIUM",
+    "cta": {
+      "title": "Upoznajte Svog AI Fantasy Gurua",
+      "description": "Revolucionarna AI tehnologija koja analizira milione podataka kako bi pružila personalizovane FPL strategije, preporuke za transfere i pobjedničke uvide.",
+      "tryFree": "Probaj Besplatno Sada",
+      "upgrade": "Nadogradi na Pro"
+    },
+    "features": {
+      "realTime": "Analiza u Realnom Vremenu",
+      "personalized": "Personalizirani Savjeti",
+      "datadriven": "Uvidi Zasnovani na Podacima",
+      "winMore": "Osvoji Više Bodova"
+    }
+  },
+  "pricing": {
+    "title": "Odaberite Svoj Plan",
+    "subtitle": "Otključajte puni potencijal vašeg fantasy nogometnog putovanja s našim fleksibilnim planovima cijena.",
+    "popular": "Najpopularniji",
+    "month": "mjesec",
+    "getStarted": "Počni",
+    "choosePlan": "Odaberi Plan",
+    "guarantee": "30-dnevna garancija povrata novca",
+    "free": {
+      "title": "Besplatno",
+      "price": "$0",
+      "features": {
+        "analytics": "Osnovna analitika i statistike",
+        "live": "Praćenje utakmica uživo",
+        "prices": "Cijene i vrijednosti igrača",
+        "basicAI": "3 AI konsultacije/dan"
+      }
+    },
+    "pro": {
+      "title": "Pro",
+      "price": "$9.99",
+      "features": {
+        "unlimited": "Neograničene AI konsultacije",
+        "advanced": "Napredna analiza tima",
+        "personal": "Lično planiranje strategije",
+        "priority": "Prioritetna podrška",
+        "insights": "Ekskluzivni uvidi i savjeti"
+      }
+    },
+    "premium": {
+      "title": "Premium",
+      "price": "$19.99",
+      "features": {
+        "everything": "Sve iz Pro plana",
+        "exclusive": "Ekskluzivne premium funkcije",
+        "earlyAccess": "Rani pristup novim alatima",
+        "customAnalysis": "Prilagođena analiza tima",
+        "support": "24/7 premium podrška"
+      }
+    }
+  }
 }

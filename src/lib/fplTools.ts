@@ -42,3 +42,17 @@ export async function getUserPicks(managerId: string, gameweek: number) {
   if (res.statusCode! >= 400) throw new Error(`picks failed for manager ${managerId} GW${gameweek}`);
   return await res.body.json();
 }
+
+// get user's current team with transfers and bank
+export async function getMyTeam(managerId: string) {
+  const res = await request(`${BASE}/my-team/${managerId}/`);
+  if (res.statusCode! >= 400) throw new Error(`my-team failed for manager ${managerId}`);
+  return await res.body.json();
+}
+
+// get user's team history 
+export async function getTeamHistory(managerId: string) {
+  const res = await request(`${BASE}/entry/${managerId}/history/`);
+  if (res.statusCode! >= 400) throw new Error(`history failed for manager ${managerId}`);
+  return await res.body.json();
+}

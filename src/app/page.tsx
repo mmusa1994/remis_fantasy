@@ -14,6 +14,20 @@ import { useTranslation } from "react-i18next";
 import { MdLiveTv } from "react-icons/md";
 import { RiLiveLine } from "react-icons/ri";
 import { IoPlayCircle } from "react-icons/io5";
+import { 
+  FaBrain, 
+  FaStar, 
+  FaChartBar, 
+  FaMoneyBillWave, 
+  FaGem, 
+  FaNewspaper,
+  FaCrown,
+  FaBolt,
+  FaBullseye,
+  FaTrophy,
+  FaRocket
+} from "react-icons/fa";
+import BillingPlansSection from "@/components/billing/BillingPlansSection";
 // TypeScript types for league and stat data
 interface LeagueCard {
   id: string;
@@ -50,8 +64,8 @@ export default function Home() {
       <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
         <div className="flex items-center justify-center min-h-screen">
           <LoadingCard
-            title={t("common.loading")}
-            description={t("common.loadingHomepage")}
+            title="Loading..."
+            description="Loading homepage data..."
             className="w-full max-w-md mx-auto"
           />
         </div>
@@ -64,7 +78,7 @@ export default function Home() {
       <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <p className="text-red-500 mb-4">{t("common.error")}</p>
+            <p className="text-red-500 mb-4">Error loading page</p>
             <p className="text-theme-text-secondary">{error}</p>
           </div>
         </div>
@@ -150,13 +164,13 @@ export default function Home() {
               theme === "dark" ? "text-white" : "text-gray-800"
             }`}
           >
-            {t("hero.title")}
+            {t("hero:title")}
             <span
               className={`block text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-5xl mt-2 md:mt-4 font-normal ${
                 theme === "dark" ? "text-orange-400" : "text-orange-600"
               }`}
             >
-              {t("hero.season")}
+              {t("hero:season")}
             </span>
           </h1>
 
@@ -165,7 +179,7 @@ export default function Home() {
               theme === "dark" ? "text-gray-300" : "text-gray-600"
             }`}
           >
-            {t("hero.subtitle")}
+            {t("hero:subtitle")}
           </p>
 
           {/* LIVE FPL Section */}
@@ -190,7 +204,7 @@ export default function Home() {
               <div className="absolute -top-3 left-6 flex items-center gap-2">
                 <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-bold animate-pulse">
                   <RiLiveLine className="w-3 h-3" />
-                  {t("hero.live")}
+                  {t("hero:live")}
                 </div>
               </div>
 
@@ -214,7 +228,7 @@ export default function Home() {
                     theme === "dark" ? "text-white" : "text-gray-800"
                   }`}
                 >
-                  {t("hero.liveFpl")}
+                  {t("hero:liveFpl")}
                 </h2>
 
                 <p
@@ -222,7 +236,7 @@ export default function Home() {
                     theme === "dark" ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  {t("hero.liveFplDescription")}
+                  {t("hero:liveFplDescription")}
                 </p>
 
                 <Link href="/premier-league/fpl-live">
@@ -234,7 +248,7 @@ export default function Home() {
                     }`}
                   >
                     <IoPlayCircle className="w-5 h-5" />
-                    {t("hero.watchLive")}
+                    {t("hero:watchLive")}
                   </div>
                 </Link>
               </div>
@@ -354,7 +368,7 @@ export default function Home() {
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
-                      {t("hero.openLeague")}
+                      {t("hero:openLeague")}
                       <svg
                         className="w-4 h-4 ml-2"
                         fill="none"
@@ -399,6 +413,303 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Features Showcase Section */}
+        <section className="py-20 px-4 bg-theme-background relative overflow-hidden">
+          {/* Background decorations */}
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+          
+          <div className="max-w-7xl mx-auto">
+            {/* Section Header */}
+            <div className="text-center mb-16">
+              <h2 className={`text-4xl md:text-5xl lg:text-6xl font-black mb-6 ${
+                theme === "dark" ? "text-white" : "text-gray-800"
+              }`}>
+                {t("features.title")}
+              </h2>
+              <p className={`text-xl md:text-2xl leading-relaxed max-w-4xl mx-auto ${
+                theme === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}>
+                {t("features.subtitle")}
+              </p>
+            </div>
+
+            {/* Features Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+              {/* AI Fantasy Guru */}
+              <div className={`group relative p-8 rounded-2xl backdrop-blur-lg border-2 transition-all duration-500 hover:scale-105 cursor-pointer ${
+                theme === "dark" 
+                  ? "bg-gradient-to-br from-purple-900/20 via-gray-800/50 to-purple-800/20 border-purple-500/50 hover:border-purple-400"
+                  : "bg-gradient-to-br from-purple-100/70 via-white/80 to-purple-200/70 border-purple-300 hover:border-purple-400"
+              } shadow-2xl hover:shadow-purple-500/25`}>
+                <Link href="/premier-league/ai-team-analysis">
+                  <div className="text-center">
+                    <div className="mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
+                      <div className="relative">
+                        <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                          <FaBrain className="text-2xl text-white" />
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                          <FaStar className="text-xs text-yellow-900" />
+                        </div>
+                      </div>
+                    </div>
+                    <h3 className={`text-2xl font-bold mb-4 ${
+                      theme === "dark" ? "text-white" : "text-gray-800"
+                    }`}>
+                      {t("hero:features.aiGuru.title")}
+                    </h3>
+                    <p className={`text-base leading-relaxed mb-6 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}>
+                      {t("hero:features.aiGuru.description")}
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-purple-500 font-semibold group-hover:gap-3 transition-all duration-300">
+                      {t("hero:features.tryNow")} →
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              {/* FPL Live */}
+              <div className={`group relative p-8 rounded-2xl backdrop-blur-lg border-2 transition-all duration-500 hover:scale-105 cursor-pointer ${
+                theme === "dark" 
+                  ? "bg-gradient-to-br from-red-900/20 via-gray-800/50 to-red-800/20 border-red-500/50 hover:border-red-400"
+                  : "bg-gradient-to-br from-red-100/70 via-white/80 to-red-200/70 border-red-300 hover:border-red-400"
+              } shadow-2xl hover:shadow-red-500/25`}>
+                <Link href="/premier-league/fpl-live">
+                  <div className="text-center">
+                    <div className="mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
+                      <div className="relative">
+                        <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
+                          <MdLiveTv className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-ping"></div>
+                      </div>
+                    </div>
+                    <h3 className={`text-2xl font-bold mb-4 ${
+                      theme === "dark" ? "text-white" : "text-gray-800"
+                    }`}>
+                      {t("features.fplLive.title")}
+                    </h3>
+                    <p className={`text-base leading-relaxed mb-6 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}>
+                      {t("features.fplLive.description")}
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-red-500 font-semibold group-hover:gap-3 transition-all duration-300">
+                      {t("features.watchLive")} →
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Analytics */}
+              <div className={`group relative p-8 rounded-2xl backdrop-blur-lg border-2 transition-all duration-500 hover:scale-105 cursor-pointer ${
+                theme === "dark" 
+                  ? "bg-gradient-to-br from-blue-900/20 via-gray-800/50 to-blue-800/20 border-blue-500/50 hover:border-blue-400"
+                  : "bg-gradient-to-br from-blue-100/70 via-white/80 to-blue-200/70 border-blue-300 hover:border-blue-400"
+              } shadow-2xl hover:shadow-blue-500/25`}>
+                <Link href="/premier-league/tabele">
+                  <div className="text-center">
+                    <div className="mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <FaChartBar className="text-2xl text-white" />
+                      </div>
+                    </div>
+                    <h3 className={`text-2xl font-bold mb-4 ${
+                      theme === "dark" ? "text-white" : "text-gray-800"
+                    }`}>
+                      {t("features.analytics.title")}
+                    </h3>
+                    <p className={`text-base leading-relaxed mb-6 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}>
+                      {t("features.analytics.description")}
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-blue-500 font-semibold group-hover:gap-3 transition-all duration-300">
+                      {t("features.viewStats")} →
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Player Prices */}
+              <div className={`group relative p-8 rounded-2xl backdrop-blur-lg border-2 transition-all duration-500 hover:scale-105 cursor-pointer ${
+                theme === "dark" 
+                  ? "bg-gradient-to-br from-green-900/20 via-gray-800/50 to-green-800/20 border-green-500/50 hover:border-green-400"
+                  : "bg-gradient-to-br from-green-100/70 via-white/80 to-green-200/70 border-green-300 hover:border-green-400"
+              } shadow-2xl hover:shadow-green-500/25`}>
+                <Link href="/premier-league/cijene">
+                  <div className="text-center">
+                    <div className="mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <FaMoneyBillWave className="text-2xl text-white" />
+                      </div>
+                    </div>
+                    <h3 className={`text-2xl font-bold mb-4 ${
+                      theme === "dark" ? "text-white" : "text-gray-800"
+                    }`}>
+                      {t("features.prices.title")}
+                    </h3>
+                    <p className={`text-base leading-relaxed mb-6 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}>
+                      {t("features.prices.description")}
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-green-500 font-semibold group-hover:gap-3 transition-all duration-300">
+                      {t("features.checkPrices")} →
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Best Differentials */}
+              <div className={`group relative p-8 rounded-2xl backdrop-blur-lg border-2 transition-all duration-500 hover:scale-105 cursor-pointer ${
+                theme === "dark" 
+                  ? "bg-gradient-to-br from-yellow-900/20 via-gray-800/50 to-yellow-800/20 border-yellow-500/50 hover:border-yellow-400"
+                  : "bg-gradient-to-br from-yellow-100/70 via-white/80 to-yellow-200/70 border-yellow-300 hover:border-yellow-400"
+              } shadow-2xl hover:shadow-yellow-500/25`}>
+                <Link href="/premier-league/best-differentials">
+                  <div className="text-center">
+                    <div className="mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <FaGem className="text-2xl text-white" />
+                      </div>
+                    </div>
+                    <h3 className={`text-2xl font-bold mb-4 ${
+                      theme === "dark" ? "text-white" : "text-gray-800"
+                    }`}>
+                      {t("features.differentials.title")}
+                    </h3>
+                    <p className={`text-base leading-relaxed mb-6 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}>
+                      {t("features.differentials.description")}
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-yellow-500 font-semibold group-hover:gap-3 transition-all duration-300">
+                      {t("features.findGems")} →
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Team News */}
+              <div className={`group relative p-8 rounded-2xl backdrop-blur-lg border-2 transition-all duration-500 hover:scale-105 cursor-pointer ${
+                theme === "dark" 
+                  ? "bg-gradient-to-br from-orange-900/20 via-gray-800/50 to-orange-800/20 border-orange-500/50 hover:border-orange-400"
+                  : "bg-gradient-to-br from-orange-100/70 via-white/80 to-orange-200/70 border-orange-300 hover:border-orange-400"
+              } shadow-2xl hover:shadow-orange-500/25`}>
+                <Link href="/premier-league/team-news">
+                  <div className="text-center">
+                    <div className="mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <FaNewspaper className="text-2xl text-white" />
+                      </div>
+                    </div>
+                    <h3 className={`text-2xl font-bold mb-4 ${
+                      theme === "dark" ? "text-white" : "text-gray-800"
+                    }`}>
+                      {t("features.teamNews.title")}
+                    </h3>
+                    <p className={`text-base leading-relaxed mb-6 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}>
+                      {t("features.teamNews.description")}
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-orange-500 font-semibold group-hover:gap-3 transition-all duration-300">
+                      {t("features.readNews")} →
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            </div>
+
+            {/* AI Guru CTA Section */}
+            <div className={`relative max-w-4xl mx-auto p-8 md:p-12 rounded-3xl backdrop-blur-lg border-2 transition-all duration-500 hover:scale-105 ${
+              theme === "dark"
+                ? "bg-gradient-to-br from-purple-900/30 via-gray-800/50 to-purple-800/30 border-purple-500/50"
+                : "bg-gradient-to-br from-purple-100/70 via-white/80 to-purple-200/70 border-purple-300"
+            } shadow-2xl mb-20`}>
+              
+              {/* Animated background */}
+              <div className={`absolute inset-0 rounded-3xl ${
+                theme === "dark"
+                  ? "bg-gradient-to-r from-purple-500/10 via-transparent to-purple-500/10"
+                  : "bg-gradient-to-r from-purple-400/10 via-transparent to-purple-400/10"
+              } animate-pulse`} />
+
+              {/* Premium badge */}
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-sm font-bold shadow-lg">
+                  <FaCrown className="text-lg" />
+                  {t("aiGuru.premium")}
+                </div>
+              </div>
+
+              <div className="relative z-10 text-center">
+                <div className="mb-6 flex justify-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl">
+                    <FaBrain className="text-3xl text-white" />
+                  </div>
+                </div>
+
+                <h2 className={`text-3xl md:text-4xl font-black mb-6 ${
+                  theme === "dark" ? "text-white" : "text-gray-800"
+                }`}>
+                  {t("aiGuru.cta.title")}
+                </h2>
+
+                <p className={`text-lg md:text-xl leading-relaxed mb-8 max-w-2xl mx-auto ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}>
+                  {t("aiGuru.cta.description")}
+                </p>
+
+                <div className="flex flex-wrap justify-center gap-4 mb-8">
+                  {[
+                    { icon: <FaBolt />, text: t("aiGuru.features.realTime") },
+                    { icon: <FaBullseye />, text: t("aiGuru.features.personalized") },
+                    { icon: <FaChartBar />, text: t("aiGuru.features.datadriven") },
+                    { icon: <FaTrophy />, text: t("aiGuru.features.winMore") }
+                  ].map((feature, index) => (
+                    <div key={index} className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
+                      theme === "dark" 
+                        ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
+                        : "bg-purple-100/50 border-purple-300/50 text-purple-700"
+                    }`}>
+                      <span className="text-sm">{feature.icon}</span>
+                      <span className="text-sm font-medium">{feature.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link href="/premier-league/ai-team-analysis">
+                    <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25">
+                      <FaRocket className="text-xl" />
+                      {t("aiGuru.cta.tryFree")}
+                    </div>
+                  </Link>
+                  <Link href="/billing-plans">
+                    <div className={`inline-flex items-center gap-3 px-8 py-4 border-2 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 ${
+                      theme === "dark"
+                        ? "border-purple-500 text-purple-400 hover:bg-purple-500/10"
+                        : "border-purple-600 text-purple-600 hover:bg-purple-100/50"
+                    }`}>
+                      <FaGem className="text-xl" />
+                      {t("aiGuru.cta.upgrade")}
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Billing Plans Section */}
+        <BillingPlansSection />
 
         {/* Background decorations */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>

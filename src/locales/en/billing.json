@@ -38,5 +38,7 @@
   "paymentProcessingError": "Payment processing error. Please try again.",
   "needHelp": "Need help choosing?",
   "helpDescription": "Contact our support team for personalized recommendations",
-  "contactSupport": "Contact Support"
+  "contactSupport": "Contact Support",
+  "choosePlan": "Choose Plan",
+  "moneyBackGuarantee": "30-day money-back guarantee"
 }

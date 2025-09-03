@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { MdDownload, MdPlayArrow, MdStop } from "react-icons/md";
 import { useTranslation } from "react-i18next";
 import TeamSearchInput from "./TeamSearchInput";
@@ -28,15 +29,11 @@ export default function ControlsBar({
   loading,
 }: ControlsBarProps) {
   const { t } = useTranslation("fpl");
+  const { data: session, status } = useSession();
 
-  // Simple state - only prefill from localStorage on initial load
-  const [localManagerId, setLocalManagerId] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("fpl-manager-id");
-      return stored || "";
-    }
-    return "";
-  });
+  // Simple state - will be populated from localStorage or database
+  const [localManagerId, setLocalManagerId] = useState("");
+  const [isLoadingManagerId, setIsLoadingManagerId] = useState(false);
 
   const [localGameweek, setLocalGameweek] = useState(() => {
     if (typeof window !== "undefined") {
@@ -45,6 +42,44 @@ export default function ControlsBar({
     }
     return "";
   });
+
+  // Load manager ID from localStorage or database
+  useEffect(() => {
+    const loadManagerId = async () => {
+      if (typeof window === "undefined") return;
+
+      // First check localStorage
+      const storedManagerId = localStorage.getItem("fpl-manager-id");
+      if (storedManagerId) {
+        setLocalManagerId(storedManagerId);
+        return;
+      }
+
+      // If not in localStorage and user is authenticated, check database
+      if (status === "authenticated" && session?.user) {
+        setIsLoadingManagerId(true);
+        try {
+          console.log("🔍 Checking database for manager ID...");
+          const response = await fetch("/api/user/manager-id");
+          if (response.ok) {
+            const data = await response.json();
+            if (data.managerId) {
+              console.log("✅ Found manager ID in database:", data.managerId);
+              setLocalManagerId(data.managerId);
+              // Also save to localStorage for future use
+              localStorage.setItem("fpl-manager-id", data.managerId);
+            }
+          }
+        } catch (error) {
+          console.error("❌ Failed to fetch manager ID from database:", error);
+        } finally {
+          setIsLoadingManagerId(false);
+        }
+      }
+    };
+
+    loadManagerId();
+  }, [status, session]);
 
   // Simple handlers - update state and localStorage
   const handleManagerIdChange = (value: string) => {
@@ -136,16 +171,24 @@ export default function ControlsBar({
           >
             {t("fplLive.managerId")}
           </label>
-          <input
-            id="manager-id-input"
-            type="number"
-            value={localManagerId}
-            onChange={(e) => handleManagerIdChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="w-full px-3 py-2 text-center border-2 border-white/30 bg-white/20 text-white rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 placeholder-white/60 backdrop-blur transition-all duration-200"
-            placeholder="133790"
-            title="Press Enter to load team"
-          />
+          <div className="relative w-full">
+            <input
+              id="manager-id-input"
+              type="number"
+              value={localManagerId}
+              onChange={(e) => handleManagerIdChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isLoadingManagerId}
+              className="w-full px-3 py-2 text-center border-2 border-white/30 bg-white/20 text-white rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 placeholder-white/60 backdrop-blur transition-all duration-200 disabled:opacity-50"
+              placeholder={isLoadingManagerId ? "Loading..." : "133790"}
+              title="Press Enter to load team"
+            />
+            {isLoadingManagerId && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Gameweek Input */}

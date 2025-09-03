@@ -1,14 +1,106 @@
 {
-  "title": "REMIS Fantasy",
-  "season": "Season 2025/26",
-  "subtitle": "Welcome to the most exciting fantasy leagues! Choose your league and show your sports knowledge.",
-  "openLeague": "Open League",
-  "liveFpl": "LIVE FPL",
-  "liveFplDescription": "Follow live Premier League matches with real-time updates, scores and fantasy points!",
-  "watchLive": "Watch Live",
-  "live": "LIVE",
-  "registeredPlayers": "Registered Players",
-  "availableLeagues": "Available Leagues",
-  "totalPrizePool": "Total Prize Pool",
-  "yearsOfExperience": "Years of Experience"
+  "hero": {
+    "title": "REMIS Fantasy",
+    "season": "Season 2025/26",
+    "subtitle": "Welcome to the most exciting fantasy leagues! Choose your league and show your sports knowledge.",
+    "openLeague": "Open League",
+    "liveFpl": "LIVE FPL",
+    "liveFplDescription": "Follow live Premier League matches with real-time updates, scores and fantasy points!",
+    "watchLive": "Watch Live",
+    "live": "LIVE",
+    "registeredPlayers": "Registered Players",
+    "availableLeagues": "Available Leagues",
+    "totalPrizePool": "Total Prize Pool",
+    "yearsOfExperience": "Years of Experience"
+  },
+  "features": {
+    "title": "Everything You Need to Dominate FPL",
+    "subtitle": "Powerful tools, real-time data, and AI-powered insights to give you the ultimate fantasy football advantage.",
+    "aiGuru": {
+      "title": "AI Fantasy Guru",
+      "description": "Get personalized team analysis, transfer suggestions, and strategic insights powered by advanced AI."
+    },
+    "fplLive": {
+      "title": "FPL Live Tracking",
+      "description": "Follow live matches with real-time points updates, captaincy changes, and gameweek progress."
+    },
+    "analytics": {
+      "title": "Advanced Analytics",
+      "description": "Deep statistical analysis, player performance trends, and comprehensive league data."
+    },
+    "prices": {
+      "title": "Player Prices & Values",
+      "description": "Real-time player prices, value predictions, and optimal buying/selling opportunities."
+    },
+    "differentials": {
+      "title": "Best Differentials",
+      "description": "Discover hidden gems and low-ownership players that can give you a competitive edge."
+    },
+    "teamNews": {
+      "title": "Team News & Updates",
+      "description": "Latest injury reports, lineup predictions, and essential team news for informed decisions."
+    },
+    "tryNow": "Try Now",
+    "watchLive": "Watch Live",
+    "viewStats": "View Stats",
+    "checkPrices": "Check Prices",
+    "findGems": "Find Gems",
+    "readNews": "Read News"
+  },
+  "aiGuru": {
+    "premium": "PREMIUM",
+    "cta": {
+      "title": "Meet Your AI Fantasy Guru",
+      "description": "Revolutionary AI technology that analyzes millions of data points to provide personalized FPL strategies, transfer recommendations, and winning insights.",
+      "tryFree": "Try Free Now",
+      "upgrade": "Upgrade to Pro"
+    },
+    "features": {
+      "realTime": "Real-time Analysis",
+      "personalized": "Personalized Tips",
+      "datadriven": "Data-driven Insights",
+      "winMore": "Win More Points"
+    }
+  },
+  "pricing": {
+    "title": "Choose Your Plan",
+    "subtitle": "Unlock the full potential of your fantasy football journey with our flexible pricing plans.",
+    "popular": "Most Popular",
+    "month": "month",
+    "getStarted": "Get Started",
+    "choosePlan": "Choose Plan",
+    "guarantee": "30-day money-back guarantee",
+    "free": {
+      "title": "Free",
+      "price": "$0",
+      "features": {
+        "analytics": "Basic analytics & stats",
+        "live": "Live match tracking",
+        "prices": "Player prices & values",
+        "basicAI": "3 AI consultations/day"
+      }
+    },
+    "pro": {
+      "title": "Pro",
+      "price": "$9.99",
+      "features": {
+        "unlimited": "Unlimited AI consultations",
+        "advanced": "Advanced team analysis",
+        "personal": "Personal strategy planning",
+        "priority": "Priority support",
+        "insights": "Exclusive insights & tips"
+      }
+    },
+    "premium": {
+      "title": "Premium",
+      "price": "$19.99",
+      "features": {
+        "everything": "Everything in Pro",
+        "exclusive": "Exclusive premium features",
+        "earlyAccess": "Early access to new tools",
+        "customAnalysis": "Custom team analysis",
+        "support": "24/7 premium support"
+      }
+    }
+  }
 }
