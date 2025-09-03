@@ -14,11 +14,11 @@ interface ManagerIdModalProps {
   isLoading?: boolean;
 }
 
-export default function ManagerIdModal({ 
-  isOpen, 
-  onClose, 
-  onSave, 
-  isLoading = false 
+export default function ManagerIdModal({
+  isOpen,
+  onClose,
+  onSave,
+  isLoading = false,
 }: ManagerIdModalProps) {
   const { t } = useTranslation("ai");
   const [managerId, setManagerId] = useState("");
@@ -26,7 +26,7 @@ export default function ManagerIdModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!managerId.trim()) {
       setError("Manager ID je obavezan");
       return;
@@ -58,7 +58,7 @@ export default function ManagerIdModal({
           className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           onClick={onClose}
         />
-        
+
         {/* Modal */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -99,7 +99,8 @@ export default function ManagerIdModal({
                     Zašto trebam Manager ID?
                   </p>
                   <p className="text-blue-700 dark:text-blue-300 mt-1">
-                    Da analiziram tvoj tim, potreban mi je pristup tvojim igračima, kapitenu i rangovima.
+                    Da analiziram tvoj tim, potreban mi je pristup tvojim
+                    igračima, kapitenu i rangovima.
                   </p>
                 </div>
               </div>
@@ -167,7 +168,8 @@ export default function ManagerIdModal({
           {/* Help text */}
           <div className="px-6 pb-6 text-xs text-gray-500 dark:text-gray-400">
             <p>
-              💡 Manager ID možeš naći na svojoj FPL stranici u URL-u nakon "/entry/"
+              💡 Manager ID možeš naći na svojoj FPL stranici u URL-u nakon
+              /entry/
             </p>
           </div>
         </motion.div>

@@ -19,7 +19,11 @@ interface PhotoUploadProps {
   className?: string;
 }
 
-export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className = "" }: PhotoUploadProps) {
+export default function PhotoUpload({
+  currentPhotoUrl,
+  onPhotoUpdate,
+  className = "",
+}: PhotoUploadProps) {
   const { data: session, update } = useSession();
   const { theme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,20 +70,20 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
 
       // Delete old photo if exists
       if (currentPhotoUrl) {
-        const oldPath = currentPhotoUrl.split('/').pop();
+        const oldPath = currentPhotoUrl.split("/").pop();
         if (oldPath && oldPath !== fileName) {
           await supabase.storage
-            .from('profile-photos')
+            .from("profile-photos")
             .remove([`profile-photos/${oldPath}`]);
         }
       }
 
       // Upload new photo
       const { error: uploadError } = await supabase.storage
-        .from('profile-photos')
+        .from("profile-photos")
         .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
+          cacheControl: "3600",
+          upsert: true,
         });
 
       if (uploadError) {
@@ -88,16 +92,16 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
 
       // Get public URL
       const { data: urlData } = supabase.storage
-        .from('profile-photos')
+        .from("profile-photos")
         .getPublicUrl(filePath);
 
       const photoUrl = urlData.publicUrl;
 
       // Update profile in database
-      const response = await fetch('/api/user/profile', {
-        method: 'PATCH',
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           avatar_url: photoUrl,
@@ -110,10 +114,10 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
 
       // Update display URL immediately
       setDisplayPhotoUrl(photoUrl);
-      
+
       // Force refresh session to update navbar avatar
       await update();
-      
+
       onPhotoUpdate(photoUrl);
     } catch (err: any) {
       setError(err.message || "Failed to upload photo");
@@ -130,18 +134,18 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
 
     try {
       // Extract file path from URL
-      const fileName = currentPhotoUrl.split('/').pop();
+      const fileName = currentPhotoUrl.split("/").pop();
       if (fileName) {
         await supabase.storage
-          .from('profile-photos')
+          .from("profile-photos")
           .remove([`profile-photos/${fileName}`]);
       }
 
       // Update profile in database
-      const response = await fetch('/api/user/profile', {
-        method: 'PATCH',
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           avatar_url: null,
@@ -153,11 +157,10 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
       }
 
       // Update display URL immediately
-      setDisplayPhotoUrl(null);
-      
+      setDisplayPhotoUrl(undefined);
+
       // Force refresh session to update navbar avatar
       await update();
-      
       onPhotoUpdate(null);
     } catch (err: any) {
       setError(err.message || "Failed to delete photo");
@@ -178,17 +181,17 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
 
       {/* Photo Container */}
       <div className="relative group">
-        <div className={`w-20 h-20 rounded-full flex items-center justify-center overflow-hidden ${
-          displayPhotoUrl 
-            ? 'bg-transparent' 
-            : 'bg-red-100 dark:bg-red-900'
-        } border-2 ${
-          theme === 'dark' ? 'border-gray-600' : 'border-gray-300'
-        }`}>
+        <div
+          className={`w-20 h-20 rounded-full flex items-center justify-center overflow-hidden ${
+            displayPhotoUrl ? "bg-transparent" : "bg-red-100 dark:bg-red-900"
+          } border-2 ${
+            theme === "dark" ? "border-gray-600" : "border-gray-300"
+          }`}
+        >
           {displayPhotoUrl ? (
-            <img 
-              src={displayPhotoUrl} 
-              alt="Profile photo" 
+            <img
+              src={displayPhotoUrl}
+              alt="Profile photo"
               className="w-full h-full object-cover"
             />
           ) : (
@@ -197,9 +200,11 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
         </div>
 
         {/* Upload/Edit Overlay */}
-        <div className={`absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${
-          isUploading ? 'opacity-100' : ''
-        }`}>
+        <div
+          className={`absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${
+            isUploading ? "opacity-100" : ""
+          }`}
+        >
           {isUploading ? (
             <AiOutlineLoading3Quarters className="w-6 h-6 text-white animate-spin" />
           ) : (
@@ -233,7 +238,11 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
       )}
 
       {/* Instructions */}
-      <div className={`mt-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+      <div
+        className={`mt-2 text-xs ${
+          theme === "dark" ? "text-gray-400" : "text-gray-600"
+        }`}
+      >
         <p>Click to upload (max 5MB)</p>
         <p>JPG, PNG, GIF supported</p>
       </div>

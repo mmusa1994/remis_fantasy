@@ -1,13 +1,15 @@
 # 📧 SMTP Email Setup Guide
 
-## Option 1: Gmail (Preporučeno) 
+## Option 1: Gmail (Preporučeno)
 
 ### Step 1: Pripremi Gmail Account
+
 1. Otvori [myaccount.google.com](https://myaccount.google.com/)
 2. Idi na **Security**
 3. **Uključi 2-Step Verification** (ako nije već)
 
 ### Step 2: Kreiraj App Password
+
 1. U Security sekciji, idi na **2-Step Verification**
 2. Skrolaj dole do **App passwords**
 3. Klikni **App passwords**
@@ -19,6 +21,7 @@
 7. **KOPIRAJ** 16-character password (format: `abcd efgh ijkl mnop`)
 
 ### Step 3: Gmail SMTP Settings
+
 Koristit ćeš ove settings u environment variables:
 
 ```env
@@ -26,7 +29,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=your-gmail@gmail.com
-SMTP_PASS=abcd efgh ijkl mnop  # App password iz Step 2
+SMTP_PASS=....
 SMTP_FROM=noreply@yourdomain.com  # ili your-gmail@gmail.com
 ```
 
@@ -35,10 +38,12 @@ SMTP_FROM=noreply@yourdomain.com  # ili your-gmail@gmail.com
 ## Option 2: SendGrid (Za production)
 
 ### Step 1: Registruj se na SendGrid
+
 1. Idi na [sendgrid.com](https://sendgrid.com/)
 2. Kreiraj free account (100 emails/day)
 
 ### Step 2: Kreiraj API Key
+
 1. Idi na **Settings > API Keys**
 2. Klikni **Create API Key**
 3. Odaberi **Restricted Access**
@@ -46,6 +51,7 @@ SMTP_FROM=noreply@yourdomain.com  # ili your-gmail@gmail.com
 5. Kopiraj API Key
 
 ### Step 3: SendGrid SMTP Settings
+
 ```env
 SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
@@ -60,14 +66,17 @@ SMTP_FROM=noreply@yourdomain.com
 ## Option 3: Mailgun (Alternative)
 
 ### Step 1: Registruj se na Mailgun
+
 1. Idi na [mailgun.com](https://www.mailgun.com/)
 2. Kreiraj free account
 
 ### Step 2: Dodaj Domain
+
 1. Idi na **Domains**
 2. Dodaj svoj domain i potvrdi DNS records
 
 ### Step 3: Mailgun SMTP Settings
+
 ```env
 SMTP_HOST=smtp.mailgun.org
 SMTP_PORT=587
