@@ -191,5 +191,11 @@
     "errorMessage": "Something went wrong. Please try again.",
     "loadingForm": "Loading Registration Form...",
     "loadingDescription": "Please wait while we prepare the registration form for you."
+  },
+  "featureGate": {
+    "upgrade": "Upgrade Now",
+    "upgradeToAccess": "Upgrade to access this feature",
+    "premiumFeature": "Premium Feature",
+    "unlockFeature": "Unlock this feature with a premium plan and get access to advanced statistics, insights, and exclusive content."
   }
 }

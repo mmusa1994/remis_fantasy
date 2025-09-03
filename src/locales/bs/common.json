@@ -191,5 +191,11 @@
     "errorMessage": "Nešto je pošlo po zlu. Molimo pokušajte ponovo.",
     "loadingForm": "Učitavanje registracijske forme...",
     "loadingDescription": "Molimo sačekajte dok pripremamo registracijsku formu za vas."
+  },
+  "featureGate": {
+    "upgrade": "Unaprijedi Sada",
+    "upgradeToAccess": "Unaprijedi da pristupiš ovoj funkciji",
+    "premiumFeature": "Premium Funkcija",
+    "unlockFeature": "Otključaj ovu funkciju sa premium planom i dobij pristup naprednim statistikama, uvide i ekskluzivni sadržaj."
   }
 }

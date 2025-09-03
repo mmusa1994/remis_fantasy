@@ -155,10 +155,23 @@ export async function POST(req: NextRequest) {
       console.warn("⚠️ KORAK 3 WARNING: Top ownership creation failed:", error);
     }
 
+    // KORAK 3.5: Dohvati sve fixtures za potpunu sezonu
+    console.log("🔄 KORAK 3.5: Fetching all season fixtures...");
+    let allSeasonFixtures = [];
+    try {
+      const allFixturesResponse = await fetch("https://fantasy.premierleague.com/api/fixtures/");
+      allSeasonFixtures = await allFixturesResponse.json();
+      console.log(`✅ KORAK 3.5 ZAVRŠEN: Loaded ${allSeasonFixtures.length} total fixtures`);
+    } catch (error) {
+      console.error("❌ KORAK 3.5 FAILED: Failed to fetch all fixtures:", error);
+      allSeasonFixtures = [];
+    }
+
     // KOMBINOVANJE PODATAKA
     liveData = {
       bootstrap: bootstrapData,
       fixtures: fixturesData,
+      allSeasonFixtures: allSeasonFixtures,
       mostSelected: mostSelectedData,
     };
     
@@ -236,6 +249,14 @@ export async function POST(req: NextRequest) {
         acc[t.id] = t.name;
         return acc;
       }, {}) || {};
+      
+    // Detaljni team strength podaci za analize
+    const teamStrengths =
+      liveData.bootstrap?.teams
+        ?.map((t: any) => 
+          `${t.id}|${t.name}|Pos:${t.position}|Str:${t.strength}|AtkH:${t.strength_attack_home}|AtkA:${t.strength_attack_away}|DefH:${t.strength_defence_home}|DefA:${t.strength_defence_away}|Form:${t.win}-${t.draw}-${t.loss}`
+        )
+        .join("\n") || "";
 
     // Include all players with optimized format for recommendations
     const players =
@@ -249,31 +270,40 @@ export async function POST(req: NextRequest) {
               p.element_type === 3 ? 'MID' : 'FWD'
             }|Form:${p.form}|Pts:${p.total_points}|£${(p.now_cost/10).toFixed(1)}m|${
               p.chance_of_playing_next_round || 100
-            }%fit|Own:${p.selected_by_percent}%`
+            }%fit|Own:${p.selected_by_percent}%|Status:${p.status || 'a'}|News:${p.news || 'None'}`
         )
         .join("\n") || "";
 
     const upcomingFixtures =
-      liveData.fixtures
-        ?.filter((f: any) => !f.finished)
-        .slice(0, 20)
+      liveData.allSeasonFixtures
+        ?.filter((f: any) => f.finished !== true)
+        .sort((a: any, b: any) => new Date(a.kickoff_time).getTime() - new Date(b.kickoff_time).getTime()) // Sort by kickoff time
+        .slice(0, 30)
         .map((f: any) => {
           const homeTeam = teams[f.team_h] || `Team${f.team_h}`;
           const awayTeam = teams[f.team_a] || `Team${f.team_a}`;
           const date = f.kickoff_time ? f.kickoff_time.split('T')[0] : 'TBD';
-          return `GW${f.event}: ${homeTeam} vs ${awayTeam} (${date})`;
+          const kickoffTime = f.kickoff_time ? f.kickoff_time : 'No time';
+          return `GW${f.event}: ${homeTeam} vs ${awayTeam} (${date})|KO:${kickoffTime}|ID:${f.id}`;
         })
         .join("\n") || "";
 
     const finishedFixtures =
-      liveData.fixtures
-        ?.filter((f: any) => f.finished)
-        .slice(-15)
-        .map(
-          (f: any) =>
-            `GW${f.event}|${f.team_h}|${f.team_a}|${f.team_h_score}-${f.team_a_score}`
-        )
+      liveData.allSeasonFixtures
+        ?.filter((f: any) => f.finished === true)
+        .sort((a: any, b: any) => a.event - b.event) // Sort by gameweek
+        .map((f: any) => {
+          const homeTeam = teams[f.team_h] || `Team${f.team_h}`;
+          const awayTeam = teams[f.team_a] || `Team${f.team_a}`;
+          const date = f.kickoff_time ? f.kickoff_time.split('T')[0] : 'TBD';
+          const kickoffTime = f.kickoff_time ? f.kickoff_time : 'No time';
+          return `GW${f.event}|${homeTeam}|${awayTeam}|${f.team_h_score}-${f.team_a_score}|${date}|KO:${kickoffTime}|ID:${f.id}`;
+        })
         .join("\n") || "";
+
+    // Debug log za finished fixtures
+    console.log(`🔍 DEBUG: Found ${liveData.allSeasonFixtures?.filter((f: any) => f.finished)?.length || 0} finished fixtures`);
+    console.log(`🔍 DEBUG: First 5 finished fixtures:`, finishedFixtures.split('\n').slice(0, 5));
 
     const current_event =
       liveData.bootstrap?.events?.find((e: any) => e.is_next)?.id || 1;
@@ -332,22 +362,54 @@ CRITICAL: This user has shared their actual FPL team data. Give specific analysi
 
 LIVE DATA:
 Teams: ${JSON.stringify(teams)}
-TEAM IDs: Arsenal=1, Aston Villa=2, Brentford=3, Brighton=4, Burnley=5, Chelsea=6, Crystal Palace=7, Everton=8, Fulham=9, Ipswich=10, Leicester=11, Liverpool=12, Man City=13, Man Utd=14, Newcastle=15, Nott'm Forest=16, Southampton=17, Spurs=18, West Ham=19, Wolves=20
+Team Strengths: ${teamStrengths}
 Players: ${players}
 Upcoming: ${upcomingFixtures}
-Finished: ${finishedFixtures}
+All Season Results: ${finishedFixtures}
 Event: ${current_event} | Date: ${today}
 Top: ${mostSelected}${userTeamInfo}
 
 FORMAT:
-- Players: id|web_name|full_name|team|pos|Form:X.X|Pts:XX|£X.Xm|XX%fit|Own:X.X%
-- Fixtures: "GW4: Liverpool vs Arsenal (2025-09-14)" format
+- Players: id|web_name|full_name|team|pos|Form:X.X|Pts:XX|£X.Xm|XX%fit|Own:X.X%|Status:x|News:injury_info
+- Team Strengths: id|name|Pos:position|Str:strength|AtkH:attack_home|AtkA:attack_away|DefH:defence_home|DefA:defence_away|Form:W-D-L
+- Upcoming: "GW4: Liverpool vs Arsenal (2025-09-14)|KO:2025-09-14T14:00:00Z|ID:25" format
+- Results: "GW3|Arsenal|Brighton|2-1|2025-08-31|KO:2025-08-31T14:00:00Z|ID:15" format
+
+FIXTURE DATA VALIDATION:
+- GW number from "event" field (GW1 = event:1)
+- KO (kickoff) time for exact scheduling 
+- ID for unique fixture identification
+- finished:true = completed match, finished:false = upcoming
+- Compare kickoff_time with current time to determine if match is past/future
+
+PLAYER DATA INTERPRETATION:
+- Status: "a"=Available, "i"=Injured, "d"=Doubtful, "s"=Suspended
+- News: Contains injury/suspension details (e.g. "Groin Injury - Expected back 13 Sep")
+- XX%fit: Chance of playing next round (0% = definitely out, 100% = fully fit)
+
+TEAM STRENGTH INTERPRETATION:
+- Pos: Current league position (1=1st, 20=20th)
+- Str: Overall strength rating (1-5, higher = stronger)
+- AtkH/AtkA: Attack strength home/away (1050-1380, higher = better attack)
+- DefH/DefA: Defence strength home/away (1050-1380, higher = better defence)
+- Form: Season record (wins-draws-losses)
+- Use for fixture difficulty: Higher opponent strength = harder fixture
 
 READING PLAYER DATA:
-Example: "123|Salah|Mohamed Salah|Liverpool|FWD|Form:8.5|Pts:25|£12.5m|100%fit|Own:45.2%"
-- Form:8.5 = excellent recent form (higher is better)
-- £12.5m = current price
-- Own:45.2% = ownership percentage (lower = better differential)
+Example: "531|Ballard|Daniel Ballard|Sunderland|DEF|Form:6.0|Pts:18|£4.6m|0%fit|Own:4.0%|Status:i|News:Groin Injury - Expected back 13 Sep"
+- Form:6.0 = recent form (higher is better)
+- £4.6m = current price
+- 0%fit = injured (0% chance of playing)
+- Status:i = injured
+- News = injury details and expected return date
+
+PLAYER POSITIONS (CRITICAL):
+- GK = Goalkeeper
+- DEF = Defender (backs, centre-backs, wing-backs)
+- MID = Midfielder (central midfielders, wingers, attacking midfielders)
+- FWD = Forward (strikers, centre-forwards)
+
+NEVER suggest players from wrong positions! If asked for defenders, ONLY suggest players with "DEF" position. If asked for midfielders, ONLY suggest players with "MID" position.
 
 KAKO NAĆI SLJEDEĆEG PROTIVNIKA:
 1. Traži tim u UPCOMING fixtures listi
@@ -361,24 +423,109 @@ Pitanje: "Protiv koga igra Burnley?"
 3. Datum 2025-09-14 >= ${today} = DA
 4. Odgovor: "Burnley igra protiv Liverpool u GW4"
 
-CRITICAL RULES:
-1. Use ONLY data from above - NEVER hallucinate fixtures or team data
-2. For fixtures: Search UPCOMING list for exact team name matches
-3. If USER TEAM INFO section exists: Give personalized analysis for their squad
-4. For captain suggestions: Recommend from their current players when possible
-5. For player stats: respond "PLAYER_SUMMARY_NEEDED:[id]"
-6. Match language of question (Croatian/Serbian/English)
-7. If no data available: Say "Cannot find this information in current data"
+🚨 ABSOLUTE ZERO HALLUCINATION POLICY 🚨
+
+CRITICAL RULES - NEVER HALLUCINATE:
+1. ONLY use data from "All Season Results" and "Players" sections - ZERO exceptions
+2. If asked about team fixtures: Search "All Season Results" line by line for EXACT team name
+3. If team not found in "All Season Results": Say "No matches found for [team] in current data"
+4. NEVER invent scores, dates, opponents, or player teams - ONLY use provided data
+5. For player recommendations: Check player's team in "Players" section - NEVER assume
+6. Before mentioning any player: VERIFY their team from "Players" data
+7. If asked about non-existent team: Say "[Team] not found in Premier League data"
+8. Match language of question (Croatian/Serbian/English)
+
+FIXTURE ANALYSIS PROCESS (MANDATORY):
+1. User asks about Team X fixtures
+2. Search "All Season Results" for EVERY line containing "Team X" - check both home and away
+3. CRITICAL FORMAT: "GW2|HomeTeam|AwayTeam|HomeScore-AwayScore|Date|KO:kickoff_time|ID:fixture_id"
+4. NEVER reverse team positions - EXACT format from data
+5. Example: "GW2|Arsenal|Leeds|5-0|2025-08-23|KO:2025-08-23T14:00:00Z|ID:15" = Arsenal (home) beat Leeds (away) 5-0
+6. Sort by GW number (event field) for chronological order
+7. Use kickoff_time to verify match timing vs current date
+8. If zero matches found: "No finished matches found for Team X in current data"
+9. NEVER guess or assume missing fixtures
+
+TIMING VALIDATION:
+- Compare kickoff_time with current date/time
+- finished:true = match completed
+- finished:false = match upcoming
+- Use EXACT kickoff_time for scheduling questions
+
+SCORE INTERPRETATION RULES:
+- "GW2|Arsenal|Leeds|5-0" means Arsenal 5-0 Leeds (Arsenal won)
+- "GW3|Leeds|Newcastle|0-0" means Leeds 0-0 Newcastle (draw)
+- NEVER swap home/away teams from the data format
+- First team listed is HOME team, second is AWAY team
+
+PLAYER ANALYSIS PROCESS (MANDATORY):
+1. User asks about specific player (e.g. "Dan Ballard")
+2. Search "Players" section for exact name match
+3. Extract ALL available data from player entry:
+   - Price: now_cost ÷ 10 (e.g. 46 = £4.6m)
+   - Team: use team name from teams mapping
+   - Position: element_type (1=GK, 2=DEF, 3=MID, 4=FWD)
+   - Form: form value (higher = better)
+   - Total points: total_points
+   - Injury status: check "news" field and "status" field
+   - Ownership: selected_by_percent
+4. For injury status: 
+   - status="i" = Injured
+   - status="d" = Doubtful  
+   - status="s" = Suspended
+   - status="a" = Available
+   - Check "news" field for injury details
+5. Provide comprehensive analysis with ALL extracted data
+6. If player not found: "Player not found in current data"
+
+TEAM ANALYSIS INSTRUCTIONS:
+- When asked for comprehensive team analysis, search "All Season Results" for the team name
+- ONLY use matches where the team appears in "All Season Results" data
+- Count wins/draws/losses ONLY from provided fixture results
+- If team has no matches in the data, say "No finished matches found for analysis"
+- NEVER assume or invent match results that aren't explicitly listed
+- Be honest about data limitations
 
 PLAYER RECOMMENDATION STRATEGY:
 - FORM is key metric (higher = better recent performance)
 - OWNERSHIP matters for differentials (lower ownership = better differential)
 - PRICE efficiency (good form/price ratio)
-- Look at upcoming fixtures (easier opponents = better picks)
+- FIXTURE DIFFICULTY: Check Team Strengths for opponent analysis
+  - vs weak defence (DefH/DefA < 1150) = good for attackers
+  - vs weak attack (AtkH/AtkA < 1150) = good for defenders/GK
+  - vs strong teams (Str=4-5) = harder fixtures, avoid
+  - vs weak teams (Str=1-2) = easier fixtures, target
 - Consider position scarcity (premium vs budget options)
 
+FIXTURE DIFFICULTY EXAMPLES:
+- Arsenal (AtkH:1350, DefH:1290) vs Burnley (AtkH:1050, DefH:1050) = Easy for Arsenal attackers
+- Liverpool (DefA:1380) vs Man City (AtkA:1250) = Hard fixture for both
+- Sunderland (Str:2, Def:1050) = Easy opponent for any attackers
+
+VALIDATION EXAMPLES:
+
+CORRECT fixture search:
+Q: "Against koga je igrao Leeds?"
+A: Search "All Season Results" for "Leeds":
+   - Found: "GW1|Leeds|Everton|1-0|2025-08-18" = Leeds beat Everton 1-0
+   - Found: "GW2|Arsenal|Leeds|5-0|2025-08-25" = Arsenal beat Leeds 5-0 
+   - Found: "GW3|Leeds|Newcastle|0-0|2025-08-31" = Leeds drew with Newcastle 0-0
+   - Answer: "Leeds je igrao: vs Everton (1-0 win), vs Arsenal (0-5 loss), vs Newcastle (0-0 draw)"
+
+CORRECT player analysis:
+Q: "Dan Ballard da li je dobar izbor?"
+A: Search "Players" for "Ballard":
+   Found: "531|Ballard|Daniel Ballard|Sunderland|DEF|Form:6.0|Pts:18|£4.6m|0%fit|Own:4.0%"
+   Extract: price=46/10=£4.6m, team=Sunderland, position=DEF, form=6.0, points=18, status=i, news="Groin Injury - Expected back 13 Sep"
+   Answer: "Dan Ballard (£4.6m, Sunderland DEF) - Form 6.0, 18 bodova, ali je trenutno povrijeđen (groin injury) do 13. septembra. Nije dobar izbor dok se ne oporavi."
+
+NEVER DO THIS (HALLUCINATION):
+❌ "Leeds je igrao protiv Everton, Newcastle, Fulham"
+❌ "Wood igra za Leeds" (Wood igra za Nott'm Forest)
+❌ Izmišljanje rezultata koji nisu u "All Season Results"
+
 EXAMPLE good recommendation:
-"**Mbeumo** (£7.2m) - Form 8.5, only 15% owned, excellent differential against weak defence"`,
+"**Mbeumo** (£7.2m, Brentford) - Form 8.5, only 15% owned, excellent differential"`,
       },
       // micro history: only last 2 user/assistant msgs to save tokens
       ...chatHistory.slice(-2),
