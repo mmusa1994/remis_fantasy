@@ -69,7 +69,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           },
           body: JSON.stringify({
             managerId: id,
-            gameweek: 3,
+            gameweek: gameweek,
           }),
         });
 
@@ -110,7 +110,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         // Get bootstrap data from our API response (it should include player data)
         if (data.data && data.data.team_with_stats) {
           const playersFromResponse = data.data.team_with_stats
-            .map((teamPlayer) => teamPlayer.player)
+            .map((teamPlayer: any) => teamPlayer.player)
             .filter(Boolean);
           setAllPlayers(playersFromResponse);
         }

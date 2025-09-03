@@ -183,41 +183,7 @@ export default function BillingPlansSection() {
     });
   };
 
-  // Mock plans for when API is not available (unauthenticated users)
-  const mockPlans: SubscriptionPlan[] = [
-    {
-      id: "free",
-      name: "Free",
-      description: "Perfect for getting started with FPL analysis",
-      price_eur: 0,
-      ai_queries_limit: 3,
-      billing_interval: "week",
-      is_active: true,
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: "pro",
-      name: "Pro",
-      description: "Advanced features for serious FPL managers",
-      price_eur: 9,
-      ai_queries_limit: -1,
-      billing_interval: "month",
-      is_active: true,
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: "premium",
-      name: "Premium",
-      description: "Everything you need to dominate FPL",
-      price_eur: 19,
-      ai_queries_limit: -1,
-      billing_interval: "month",
-      is_active: true,
-      created_at: new Date().toISOString(),
-    },
-  ];
-
-  const displayPlans = plans.length > 0 ? plans : mockPlans;
+  const displayPlans = plans.length > 0 ? plans : [];
   const sortedPlans = sortPlans(displayPlans);
 
   if (isLoading) {
@@ -238,14 +204,18 @@ export default function BillingPlansSection() {
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className={`text-4xl md:text-5xl font-black mb-6 ${
-            theme === "dark" ? "text-white" : "text-gray-800"
-          }`}>
+          <h2
+            className={`text-4xl md:text-5xl font-black mb-6 ${
+              theme === "dark" ? "text-white" : "text-gray-800"
+            }`}
+          >
             {t("billingPlans", "Choose Your Plan")}
           </h2>
-          <p className={`text-xl leading-relaxed max-w-3xl mx-auto ${
-            theme === "dark" ? "text-gray-300" : "text-gray-600"
-          }`}>
+          <p
+            className={`text-xl leading-relaxed max-w-3xl mx-auto ${
+              theme === "dark" ? "text-gray-300" : "text-gray-600"
+            }`}
+          >
             {t(
               "choosePlanDescription",
               "Unlock the full potential of your FPL journey with our AI-powered insights"
@@ -254,7 +224,7 @@ export default function BillingPlansSection() {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-8xl mx-auto mb-16">
           {sortedPlans.map((plan, index) => {
             const isCurrentPlan = plan.id === currentPlanId;
             const isProcessing = processingPlanId === plan.id;
@@ -281,7 +251,7 @@ export default function BillingPlansSection() {
                 <div
                   className={`relative h-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 ${
                     theme === "dark"
-                      ? isPro 
+                      ? isPro
                         ? "bg-gradient-to-br from-purple-900/30 to-purple-800/20 border-purple-500/50"
                         : isFree
                         ? "bg-gray-800/50 border-gray-600/50"
@@ -301,37 +271,49 @@ export default function BillingPlansSection() {
                     </div>
                   )}
 
-                  <div className={`p-8 h-full flex flex-col ${isCurrentPlan ? "pt-14" : ""}`}>
+                  <div
+                    className={`p-8 h-full flex flex-col ${
+                      isCurrentPlan ? "pt-14" : ""
+                    }`}
+                  >
                     {/* Plan Header */}
                     <div className="text-center mb-6">
                       {/* Icon */}
-                      <div className={`inline-flex items-center justify-center w-16 h-16 rounded-xl mb-4 ${
-                        isFree
-                          ? "bg-green-100 text-green-600"
-                          : isPro
-                          ? "bg-purple-100 text-purple-600"
-                          : "bg-yellow-100 text-yellow-600"
-                      } ${theme === "dark" ? "bg-opacity-20" : ""}`}>
+                      <div
+                        className={`inline-flex items-center justify-center w-16 h-16 rounded-xl mb-4 ${
+                          isFree
+                            ? "bg-green-100 text-green-600"
+                            : isPro
+                            ? "bg-purple-100 text-purple-600"
+                            : "bg-yellow-100 text-yellow-600"
+                        } ${theme === "dark" ? "bg-opacity-20" : ""}`}
+                      >
                         <div className="text-2xl">{getPlanIcon(plan.name)}</div>
                       </div>
 
-                      <h3 className={`text-2xl font-bold mb-2 ${
-                        theme === "dark" ? "text-white" : "text-gray-800"
-                      }`}>
+                      <h3
+                        className={`text-2xl font-bold mb-2 ${
+                          theme === "dark" ? "text-white" : "text-gray-800"
+                        }`}
+                      >
                         {plan.name}
                       </h3>
 
-                      <p className={`text-sm mb-6 ${
-                        theme === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}>
+                      <p
+                        className={`text-sm mb-6 ${
+                          theme === "dark" ? "text-gray-300" : "text-gray-600"
+                        }`}
+                      >
                         {plan.description}
                       </p>
 
                       {/* Price */}
                       <div className="mb-6">
-                        <div className={`text-4xl font-black ${
-                          theme === "dark" ? "text-white" : "text-gray-800"
-                        }`}>
+                        <div
+                          className={`text-4xl font-black ${
+                            theme === "dark" ? "text-white" : "text-gray-800"
+                          }`}
+                        >
                           {isFree ? (
                             <span className="text-green-500">FREE</span>
                           ) : (
@@ -341,9 +323,13 @@ export default function BillingPlansSection() {
                           )}
                         </div>
                         {!isFree && (
-                          <div className={`text-lg ${
-                            theme === "dark" ? "text-gray-400" : "text-gray-600"
-                          }`}>
+                          <div
+                            className={`text-lg ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }`}
+                          >
                             /{t("perMonth", "month")}
                           </div>
                         )}
@@ -357,9 +343,13 @@ export default function BillingPlansSection() {
                           <div key={idx} className="flex items-center gap-3">
                             <span className="text-green-500">✓</span>
                             <div>
-                              <div className={`font-medium ${
-                                theme === "dark" ? "text-gray-300" : "text-gray-600"
-                              }`}>
+                              <div
+                                className={`font-medium ${
+                                  theme === "dark"
+                                    ? "text-gray-300"
+                                    : "text-gray-600"
+                                }`}
+                              >
                                 {feature.title}
                               </div>
                             </div>
@@ -388,7 +378,14 @@ export default function BillingPlansSection() {
                           : isFree
                           ? "border-2 border-gray-300 text-gray-700 hover:bg-gray-100/50"
                           : "bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-yellow-900 shadow-lg"
-                      } ${theme === "dark" && !isCurrentPlan && !isProcessing && isFree ? "border-gray-600 text-gray-300 hover:bg-gray-700/50" : ""}`}
+                      } ${
+                        theme === "dark" &&
+                        !isCurrentPlan &&
+                        !isProcessing &&
+                        isFree
+                          ? "border-gray-600 text-gray-300 hover:bg-gray-700/50"
+                          : ""
+                      }`}
                     >
                       {isProcessing ? (
                         <>
@@ -416,9 +413,11 @@ export default function BillingPlansSection() {
 
         {/* Money back guarantee */}
         <div className="text-center">
-          <p className={`text-lg ${
-            theme === "dark" ? "text-gray-300" : "text-gray-600"
-          }`}>
+          <p
+            className={`text-lg ${
+              theme === "dark" ? "text-gray-300" : "text-gray-600"
+            }`}
+          >
             💰 {t("moneyBackGuarantee", "30-day money-back guarantee")}
           </p>
         </div>

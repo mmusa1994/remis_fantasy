@@ -102,5 +102,19 @@
         "support": "24/7 premium support"
       }
     }
+  },
+  "leagues": {
+    "premier-league": {
+      "name": "Premier League Fantasy",
+      "description": "The ultimate Premier League fantasy experience with live tracking, AI analysis, and comprehensive tools."
+    },
+    "champions-league": {
+      "name": "Champions League Fantasy",
+      "description": "Compete in Europe's elite competition with advanced analytics and real-time updates."
+    },
+    "f1-fantasy": {
+      "name": "F1 Fantasy Racing",
+      "description": "Experience the thrill of Formula 1 with our comprehensive fantasy racing platform."
+    }
   }
 }

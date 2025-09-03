@@ -1,16 +1,18 @@
 {
-  "title": "REMIS Fantasy",
-  "season": "Sezona 2025/26",
-  "subtitle": "Dobrodošli u najuzbudljivije fantasy lige! Odaberite svoju ligu i pokažite svoje znanje sporta.",
-  "openLeague": "Otvori Ligu",
-  "liveFpl": "UŽIVO FPL",
-  "liveFplDescription": "Pratite uživo Premier Liga utakmice sa ažuriranjima u realnom vremenu, rezultatima i fantasy bodovima!",
-  "watchLive": "Gledaj Uživo",
-  "live": "UŽIVO",
-  "registeredPlayers": "Registrovani Igrači",
-  "availableLeagues": "Dostupne Lige",
-  "totalPrizePool": "Ukupan Nagradni Fond",
-  "yearsOfExperience": "Godine Iskustva",
+  "hero": {
+    "title": "REMIS Fantasy",
+    "season": "Sezona 2025/26",
+    "subtitle": "Dobrodošli u najuzbudljivije fantasy lige! Odaberite svoju ligu i pokažite svoje znanje sporta.",
+    "openLeague": "Otvori Ligu",
+    "liveFpl": "UŽIVO FPL",
+    "liveFplDescription": "Pratite uživo Premier Liga utakmice sa ažuriranjima u realnom vremenu, rezultatima i fantasy bodovima!",
+    "watchLive": "Gledaj Uživo",
+    "live": "UŽIVO",
+    "registeredPlayers": "Registrovani Igrači",
+    "availableLeagues": "Dostupne Lige",
+    "totalPrizePool": "Ukupan Nagradni Fond",
+    "yearsOfExperience": "Godine Iskustva"
+  },
   "features": {
     "title": "Sve Što Vam Je Potrebno Za Dominaciju FPL-a",
     "subtitle": "Moćni alati, podaci u realnom vremenu i uvidi zasnovani na AI za ultimativnu prednost u fantasy fudbalu.",
@@ -99,6 +101,20 @@
         "customAnalysis": "Prilagođena analiza tima",
         "support": "24/7 premium podrška"
       }
+    }
+  },
+  "leagues": {
+    "premier-league": {
+      "name": "Premier Liga Fantasy",
+      "description": "Ultimativno Premier Liga fantasy iskustvo sa uživo praćenjem, AI analizom i sveobuhvatnim alatima."
+    },
+    "champions-league": {
+      "name": "Champions Liga Fantasy",
+      "description": "Takmičite se u elitnoj evropskoj konkurenciji sa naprednom analitikom i ažuriranjima u realnom vremenu."
+    },
+    "f1-fantasy": {
+      "name": "F1 Fantasy Trke",
+      "description": "Doživite uzbuđenje Formule 1 sa našom sveobuhvatnom fantasy trkačkom platformom."
     }
   }
 }
