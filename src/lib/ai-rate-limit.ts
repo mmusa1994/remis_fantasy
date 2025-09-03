@@ -125,12 +125,12 @@ export async function checkRateLimit(userId: string): Promise<{
     await updateUserUsageInDB(userId, newUsage);
 
     const resetDate = new Date(currentWeekStart + 7 * 24 * 60 * 60 * 1000);
-    return { allowed: true, remaining: 3, resetDate };
+    return { allowed: true, remaining: 5, resetDate };
   }
 
-  const remaining = Math.max(0, 3 - userUsage.count);
+  const remaining = Math.max(0, 5 - userUsage.count);
   const resetDate = new Date(userUsage.weekStart + 7 * 24 * 60 * 60 * 1000);
-  const allowed = userUsage.count < 3;
+  const allowed = userUsage.count < 5;
 
   return {
     allowed,

@@ -232,11 +232,37 @@ export const authOptions = {
 
       return true;
     },
-    async jwt({ token, user, account }: any) {
+    async jwt({ token, user, account, trigger }: any) {
       if (user) {
         token.id = user.id;
         token.isAdmin = user.isAdmin || false;
         token.subscription = user.subscription;
+      }
+
+      // Always fetch fresh user data from database when session is updated
+      if (trigger === "update" && token.email) {
+        const { data: dbUser } = await supabase
+          .from("users")
+          .select(`
+            *,
+            subscriptions!subscriptions_user_id_fkey (
+              id,
+              plan_id,
+              status,
+              subscription_plans (
+                name,
+                ai_queries_limit
+              )
+            )
+          `)
+          .eq("email", token.email)
+          .single();
+
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.subscription = dbUser.subscriptions?.[0] || null;
+          token.picture = dbUser.avatar_url;
+        }
       }
 
       // If this is a Google OAuth sign in, fetch user data from DB using email
@@ -261,19 +287,21 @@ export const authOptions = {
         if (dbUser) {
           token.id = dbUser.id; // Use the database UUID, not Google ID
           token.subscription = dbUser.subscriptions?.[0] || null;
+          token.picture = dbUser.avatar_url;
         }
       }
 
-      // Always ensure we have the correct user ID from database for any provider
+      // Always ensure we have the correct user ID and avatar from database for any provider
       if (!token.id || typeof token.id !== 'string' || token.id.length < 36) {
         const { data: dbUser } = await supabase
           .from("users")
-          .select("id")
+          .select("id, avatar_url")
           .eq("email", token.email)
           .single();
 
         if (dbUser) {
           token.id = dbUser.id;
+          token.picture = dbUser.avatar_url;
         }
       }
 
@@ -284,6 +312,7 @@ export const authOptions = {
         session.user.id = token.id as string;
         session.user.isAdmin = token.isAdmin as boolean;
         session.user.subscription = token.subscription;
+        session.user.image = token.picture;
       }
       return session;
     },

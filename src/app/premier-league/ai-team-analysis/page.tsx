@@ -13,6 +13,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingCard from "@/components/shared/LoadingCard";
 import Link from "next/link";
+import ManagerIdModal from "@/components/modals/ManagerIdModal";
 
 interface Message {
   role: "user" | "assistant";
@@ -41,6 +42,9 @@ export default function AITeamAnalysis() {
   const [authRequired, setAuthRequired] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState("");
+  const [showManagerIdModal, setShowManagerIdModal] = useState(false);
+  const [managerId, setManagerId] = useState<string | null>(null);
+  const [managerIdLoading, setManagerIdLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -61,11 +65,32 @@ export default function AITeamAnalysis() {
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       fetchUsage();
+      fetchManagerId();
     } else if (status === "unauthenticated") {
       setUsageLoading(false);
       setAuthRequired(true);
     }
   }, [status, session]);
+
+  // Handle Enter key for confirm modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (showConfirmModal && e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        confirmAndSend();
+      } else if (showConfirmModal && e.key === "Escape") {
+        e.preventDefault();
+        setShowConfirmModal(false);
+      }
+    };
+
+    if (showConfirmModal) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [showConfirmModal]);
 
   const fetchUsage = async () => {
     try {
@@ -86,13 +111,83 @@ export default function AITeamAnalysis() {
     }
   };
 
+  // Fetch manager ID
+  const fetchManagerId = async () => {
+    try {
+      const response = await fetch("/api/user/manager-id");
+      if (response.ok) {
+        const data = await response.json();
+        setManagerId(data.managerId);
+      }
+    } catch (error) {
+      console.error("Failed to fetch manager ID:", error);
+    }
+  };
+
+  // Save manager ID
+  const saveManagerId = async (newManagerId: string) => {
+    try {
+      setManagerIdLoading(true);
+      const response = await fetch("/api/user/manager-id", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ managerId: newManagerId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setManagerId(newManagerId);
+        setShowManagerIdModal(false);
+        // Proceed with AI request
+        proceedWithMessage();
+      } else {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save manager ID");
+      }
+    } catch (error) {
+      console.error("Failed to save manager ID:", error);
+      alert("Greška pri spremanju Manager ID-a: " + (error as Error).message);
+    } finally {
+      setManagerIdLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    // Check if manager ID is available for authenticated users
+    if (session?.user && !managerId) {
+      setPendingMessage(input.trim());
+      setShowManagerIdModal(true);
+      return;
+    }
+
     // Show confirmation modal
     setPendingMessage(input.trim());
     setShowConfirmModal(true);
+  };
+
+  const proceedWithMessage = () => {
+    setShowConfirmModal(true);
+  };
+
+  // Format text with **bold** support
+  const formatMessage = (text: string) => {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const boldText = part.slice(2, -2);
+        return (
+          <span key={index} className="font-bold text-purple-600 dark:text-purple-400">
+            {boldText}
+          </span>
+        );
+      }
+      return part;
+    });
   };
 
   const confirmAndSend = async () => {
@@ -686,9 +781,9 @@ export default function AITeamAnalysis() {
                           boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
                         }}
                       >
-                        <p className="whitespace-pre-wrap leading-relaxed">
-                          {message.content}
-                        </p>
+                        <div className="whitespace-pre-wrap leading-relaxed">
+                          {formatMessage(message.content)}
+                        </div>
                       </motion.div>
                       <p
                         className={`text-xs mt-2 ${
@@ -991,7 +1086,7 @@ export default function AITeamAnalysis() {
 
                   <motion.button
                     onClick={confirmAndSend}
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg transition-all"
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg transition-all relative"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -1007,6 +1102,14 @@ export default function AITeamAnalysis() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Manager ID Modal */}
+        <ManagerIdModal
+          isOpen={showManagerIdModal}
+          onClose={() => setShowManagerIdModal(false)}
+          onSave={saveManagerId}
+          isLoading={managerIdLoading}
+        />
       </div>
     </main>
   );

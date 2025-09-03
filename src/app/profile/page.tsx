@@ -150,10 +150,13 @@ export default function ProfilePage() {
     await safeLogout("/");
   };
 
-  const handlePhotoUpdate = (photoUrl: string | null) => {
+  const handlePhotoUpdate = async (photoUrl: string | null) => {
     setProfile((prev) =>
       prev ? { ...prev, avatar_url: photoUrl || undefined } : null
     );
+    
+    // Force refresh session to get updated avatar from database
+    await update();
   };
 
   if (showLoginRedirect) {

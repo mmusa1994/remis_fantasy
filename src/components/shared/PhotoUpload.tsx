@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { FaCamera, FaTrash, FaSpinner } from "react-icons/fa";
@@ -20,11 +20,17 @@ interface PhotoUploadProps {
 }
 
 export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className = "" }: PhotoUploadProps) {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const { theme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
+  const [displayPhotoUrl, setDisplayPhotoUrl] = useState(currentPhotoUrl);
+
+  // Update display URL when prop changes
+  useEffect(() => {
+    setDisplayPhotoUrl(currentPhotoUrl);
+  }, [currentPhotoUrl]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -102,6 +108,12 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
         throw new Error("Failed to update profile");
       }
 
+      // Update display URL immediately
+      setDisplayPhotoUrl(photoUrl);
+      
+      // Force refresh session to update navbar avatar
+      await update();
+      
       onPhotoUpdate(photoUrl);
     } catch (err: any) {
       setError(err.message || "Failed to upload photo");
@@ -140,6 +152,12 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
         throw new Error("Failed to update profile");
       }
 
+      // Update display URL immediately
+      setDisplayPhotoUrl(null);
+      
+      // Force refresh session to update navbar avatar
+      await update();
+      
       onPhotoUpdate(null);
     } catch (err: any) {
       setError(err.message || "Failed to delete photo");
@@ -161,15 +179,15 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
       {/* Photo Container */}
       <div className="relative group">
         <div className={`w-20 h-20 rounded-full flex items-center justify-center overflow-hidden ${
-          currentPhotoUrl 
+          displayPhotoUrl 
             ? 'bg-transparent' 
             : 'bg-red-100 dark:bg-red-900'
         } border-2 ${
           theme === 'dark' ? 'border-gray-600' : 'border-gray-300'
         }`}>
-          {currentPhotoUrl ? (
+          {displayPhotoUrl ? (
             <img 
-              src={currentPhotoUrl} 
+              src={displayPhotoUrl} 
               alt="Profile photo" 
               className="w-full h-full object-cover"
             />
@@ -193,7 +211,7 @@ export default function PhotoUpload({ currentPhotoUrl, onPhotoUpdate, className 
               >
                 <FaCamera className="w-3 h-3" />
               </button>
-              {currentPhotoUrl && (
+              {displayPhotoUrl && (
                 <button
                   onClick={deletePhoto}
                   className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors"

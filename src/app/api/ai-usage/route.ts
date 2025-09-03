@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     
     return NextResponse.json({
       remaining,
-      total: 3,
+      total: 5,
       resetDate: resetDate.toISOString(),
       resetDateFormatted: resetDate.toLocaleDateString()
     });

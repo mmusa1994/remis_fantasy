@@ -28,3 +28,17 @@ export async function getPlayerSummary(playerId: number) {
   if (res.statusCode! >= 400) throw new Error("element-summary failed");
   return await res.body.json();
 }
+
+// get user FPL team data by manager ID
+export async function getUserTeam(managerId: string) {
+  const res = await request(`${BASE}/entry/${managerId}/`);
+  if (res.statusCode! >= 400) throw new Error(`team data failed for manager ${managerId}`);
+  return await res.body.json();
+}
+
+// get user's current gameweek picks
+export async function getUserPicks(managerId: string, gameweek: number) {
+  const res = await request(`${BASE}/entry/${managerId}/event/${gameweek}/picks/`);
+  if (res.statusCode! >= 400) throw new Error(`picks failed for manager ${managerId} GW${gameweek}`);
+  return await res.body.json();
+}
