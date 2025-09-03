@@ -159,7 +159,7 @@ export default function SignUpPage() {
       if (result?.ok) {
         setSignupSuccess(true);
       }
-    } catch (error: any) {
+    } catch {
       setError(t('googleSignInError'));
       setIsLoading(false);
     }

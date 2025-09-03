@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { FaCamera, FaTrash, FaSpinner } from "react-icons/fa";
+import { FaCamera, FaTrash } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { createClient } from "@supabase/supabase-js";
 

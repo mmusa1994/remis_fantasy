@@ -58,7 +58,7 @@ export default function BillingPlansPage() {
       } else {
         setError(t("failedToLoadPlans", "Failed to load subscription plans"));
       }
-    } catch (_error) {
+    } catch {
       setError(t("failedToLoadPlans", "Failed to load subscription plans"));
     } finally {
       setIsLoading(false);
@@ -105,7 +105,7 @@ export default function BillingPlansPage() {
             )
         );
       }
-    } catch (_error) {
+    } catch {
       alert(
         t(
           "paymentProcessingError",

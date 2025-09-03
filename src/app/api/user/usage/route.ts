@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-config";
 import { getRemainingQuestions } from "@/lib/user-rate-limit";
 
-export async function GET(_: NextRequest) {
+export async function GET() {
   try {
     // Get session to check if user is authenticated
     const session = await getServerSession(authOptions);

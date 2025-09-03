@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-config";
 import { resetUserUsage } from "@/lib/user-rate-limit";
 
-export async function POST(_: NextRequest) {
+export async function POST() {
   try {
     // Only run in development
     if (process.env.NODE_ENV !== 'development') {

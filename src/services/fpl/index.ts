@@ -6,6 +6,20 @@ export { FPLLeagueService } from './league.service';
 export { FPLFixtureService } from './fixture.service';
 export { FPLLiveService } from './live.service';
 export { FPLStatsService } from './stats.service';
+export { FPLOwnershipService } from './ownership.service';
+
+// Optimization Services
+export { SharedBootstrapManager } from './shared-bootstrap-manager';
+export { OwnershipAnalyticsCache } from './ownership-analytics-cache';
+
+// Enhanced Price Prediction Services
+export { WildcardDetectionService } from './wildcard-detection.service';
+export { DynamicThresholdService } from './dynamic-threshold.service';
+export { FlagChangeHandlerService } from './flag-change-handler.service';
+export { MLPredictionModelsService } from './ml-prediction-models.service';
+export { ConfidenceScoringService } from './confidence-scoring.service';
+export { EnhancedPricePredictionService } from './enhanced-price-prediction.service';
+export { AccuracyTrackingService } from './accuracy-tracking.service';
 
 // Export the main orchestrator service
 export { FPLService } from './fpl.service';

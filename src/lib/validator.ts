@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import stringSimilarity from "string-similarity";
 import type { FplVocab } from "./fplVocab";
 
 export const ValidationSchema = z.object({

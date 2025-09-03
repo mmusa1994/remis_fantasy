@@ -9,7 +9,6 @@ import type {
   FPLTransferHistory,
   FPLServiceResponse,
   FPLPlayer,
-  // FPLTeam, // Unused import but kept for future use
 } from "../../types/fpl";
 
 /**

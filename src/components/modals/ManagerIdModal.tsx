@@ -3,24 +3,38 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { HiXMark, HiShieldCheck } from "react-icons/hi2";
-import { BiUser, BiSave } from "react-icons/bi";
-import { FaQuestionCircle } from "react-icons/fa";
+import { HiXMark, HiShieldCheck, HiExclamationTriangle } from "react-icons/hi2";
+import { BiUser, BiSave, BiRefresh } from "react-icons/bi";
+import { FaQuestionCircle, FaTimesCircle } from "react-icons/fa";
+import { ValidationStatus, ErrorType } from "@/types/validation";
+import { getErrorMessage } from "@/utils/error-messages";
 
 interface ManagerIdModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (managerId: string) => void;
+  onSave: (managerId: string, allowUnverified?: boolean) => void;
+  onRetry?: (managerId: string) => void;
+  onSaveUnverified?: (managerId: string) => void;
   isLoading?: boolean;
+  validationStatus?: ValidationStatus;
 }
 
 export default function ManagerIdModal({
   isOpen,
   onClose,
   onSave,
+  onRetry,
+  onSaveUnverified,
   isLoading = false,
+  validationStatus = {
+    isValidating: false,
+    isRetrying: false,
+    retryCount: 0,
+    errorDetails: null,
+    showRetryOption: false,
+    showFallbackOption: false,
+  },
 }: ManagerIdModalProps) {
-  const { t } = useTranslation("ai");
   const [managerId, setManagerId] = useState("");
   const [error, setError] = useState("");
 
@@ -39,6 +53,66 @@ export default function ManagerIdModal({
 
     setError("");
     onSave(managerId.trim());
+  };
+
+  const handleRetry = () => {
+    if (onRetry && managerId.trim()) {
+      setError("");
+      onRetry(managerId.trim());
+    }
+  };
+
+  const handleSaveUnverified = () => {
+    if (onSaveUnverified && managerId.trim()) {
+      setError("");
+      onSaveUnverified(managerId.trim());
+    }
+  };
+
+  const getValidationIcon = () => {
+    if (validationStatus.isValidating || validationStatus.isRetrying) {
+      return (
+        <div className="w-5 h-5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+      );
+    }
+    
+    if (validationStatus.errorDetails) {
+      switch (validationStatus.errorDetails.type) {
+        case ErrorType.INVALID_ID:
+          return <FaTimesCircle className="w-5 h-5 text-red-500" />;
+        case ErrorType.NETWORK_ERROR:
+        case ErrorType.RATE_LIMIT:
+        case ErrorType.TIMEOUT:
+        case ErrorType.SERVER_ERROR:
+          return <HiExclamationTriangle className="w-5 h-5 text-yellow-500" />;
+        default:
+          return <HiExclamationTriangle className="w-5 h-5 text-yellow-500" />;
+      }
+    }
+    
+    return null;
+  };
+
+  const getValidationMessage = () => {
+    if (validationStatus.isValidating) {
+      return "Validating Manager ID with FPL servers...";
+    }
+    
+    if (validationStatus.isRetrying) {
+      return `Retrying validation... (Attempt ${validationStatus.retryCount + 1})`;
+    }
+    
+    if (validationStatus.errorDetails) {
+      const errorInfo = getErrorMessage(validationStatus.errorDetails.type);
+      return {
+        title: errorInfo.title,
+        description: errorInfo.description,
+        suggestions: errorInfo.suggestions,
+        userMessage: validationStatus.errorDetails.userMessage,
+      };
+    }
+    
+    return null;
   };
 
   const handleFindManagerId = () => {
@@ -119,10 +193,75 @@ export default function ManagerIdModal({
                     setError("");
                   }}
                   placeholder="npr. 1234567"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={isLoading}
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    validationStatus.errorDetails?.type === ErrorType.INVALID_ID
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
+                  }`}
+                  disabled={isLoading || validationStatus.isValidating || validationStatus.isRetrying}
                 />
-                {error && (
+                
+                {/* Enhanced Validation Status */}
+                {(validationStatus.isValidating || validationStatus.isRetrying || validationStatus.errorDetails) && (
+                  <div className={`mt-3 p-4 rounded-lg border ${
+                    validationStatus.errorDetails?.type === ErrorType.INVALID_ID
+                      ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                      : validationStatus.errorDetails
+                      ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
+                      : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                  }`}>
+                    <div className="flex items-start space-x-3">
+                      {getValidationIcon()}
+                      <div className="flex-1 min-w-0">
+                        {typeof getValidationMessage() === 'string' ? (
+                          <p className={`text-sm font-medium ${
+                            validationStatus.errorDetails?.type === ErrorType.INVALID_ID
+                              ? "text-red-800 dark:text-red-200"
+                              : validationStatus.errorDetails
+                              ? "text-yellow-800 dark:text-yellow-200"
+                              : "text-blue-800 dark:text-blue-200"
+                          }`}>
+                            {(() => {
+                              const message = getValidationMessage();
+                              return typeof message === 'string' ? message : '';
+                            })()}
+                          </p>
+                        ) : getValidationMessage() && typeof getValidationMessage() === 'object' ? (
+                          <div>
+                            <p className={`text-sm font-medium mb-2 ${
+                              validationStatus.errorDetails?.type === ErrorType.INVALID_ID
+                                ? "text-red-800 dark:text-red-200"
+                                : "text-yellow-800 dark:text-yellow-200"
+                            }`}>
+                              {(getValidationMessage() as any).title}
+                            </p>
+                            <p className={`text-xs mb-2 ${
+                              validationStatus.errorDetails?.type === ErrorType.INVALID_ID
+                                ? "text-red-700 dark:text-red-300"
+                                : "text-yellow-700 dark:text-yellow-300"
+                            }`}>
+                              {(getValidationMessage() as any).description}
+                            </p>
+                            {(getValidationMessage() as any).suggestions && (
+                              <ul className={`text-xs space-y-1 list-disc list-inside ${
+                                validationStatus.errorDetails?.type === ErrorType.INVALID_ID
+                                  ? "text-red-600 dark:text-red-400"
+                                  : "text-yellow-600 dark:text-yellow-400"
+                              }`}>
+                                {(getValidationMessage() as any).suggestions.map((suggestion: string, index: number) => (
+                                  <li key={index}>{suggestion}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Original error display for local validation */}
+                {error && !validationStatus.errorDetails && (
                   <p className="text-sm text-red-600 dark:text-red-400 mt-1">
                     {error}
                   </p>
@@ -145,22 +284,59 @@ export default function ManagerIdModal({
                   type="button"
                   onClick={onClose}
                   className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                  disabled={isLoading}
+                  disabled={isLoading || validationStatus.isValidating || validationStatus.isRetrying}
                 >
                   Odustani
                 </button>
-                <button
-                  type="submit"
-                  disabled={isLoading || !managerId.trim()}
-                  className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
-                >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  ) : (
+                
+                {/* Show retry button if validation failed and retry is available */}
+                {validationStatus.showRetryOption && validationStatus.errorDetails && !validationStatus.isValidating && !validationStatus.isRetrying && (
+                  <button
+                    type="button"
+                    onClick={handleRetry}
+                    disabled={!managerId.trim()}
+                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400 text-white rounded-lg transition-colors"
+                  >
+                    <BiRefresh className="w-4 h-4" />
+                    <span>{getErrorMessage(validationStatus.errorDetails.type).retryText || 'Retry'}</span>
+                  </button>
+                )}
+                
+                {/* Show fallback save button if available */}
+                {validationStatus.showFallbackOption && validationStatus.errorDetails && !validationStatus.isValidating && !validationStatus.isRetrying && (
+                  <button
+                    type="button"
+                    onClick={handleSaveUnverified}
+                    disabled={!managerId.trim()}
+                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white rounded-lg transition-colors"
+                  >
                     <BiSave className="w-4 h-4" />
-                  )}
-                  <span>Spremi ID</span>
-                </button>
+                    <span>{getErrorMessage(validationStatus.errorDetails.type).fallbackText || 'Save Anyway'}</span>
+                  </button>
+                )}
+                
+                {/* Normal save/submit button */}
+                {(!validationStatus.showRetryOption && !validationStatus.showFallbackOption) || validationStatus.isValidating || validationStatus.isRetrying ? (
+                  <button
+                    type="submit"
+                    disabled={isLoading || validationStatus.isValidating || validationStatus.isRetrying || !managerId.trim()}
+                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
+                  >
+                    {(isLoading || validationStatus.isValidating || validationStatus.isRetrying) ? (
+                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <BiSave className="w-4 h-4" />
+                    )}
+                    <span>
+                      {validationStatus.isValidating 
+                        ? 'Validating...' 
+                        : validationStatus.isRetrying 
+                        ? 'Retrying...' 
+                        : 'Spremi ID'
+                      }
+                    </span>
+                  </button>
+                ) : null}
               </div>
             </form>
           </div>

@@ -103,8 +103,6 @@ export function getWeekEnd(): Date {
 
 async function getUserUsageFromDB(userId: string): Promise<UserUsage | null> {
   try {
-    const currentPeriodStart = getWeekStart();
-    
     const { data, error } = await supabaseServer
       .from('user_ai_usage')
       .select('queries_used, queries_limit, period_start, period_end')

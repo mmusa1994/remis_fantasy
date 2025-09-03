@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-config";
 import { supabaseServer } from "@/lib/supabase-server";
 
-export async function GET(_: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 

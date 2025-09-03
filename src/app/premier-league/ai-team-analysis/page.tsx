@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { FaWandMagicSparkles, FaGoogle, FaEnvelope } from "react-icons/fa6";
 import { HiChatBubbleLeftEllipsis, HiKey } from "react-icons/hi2";
 import { BiSend, BiUserPlus } from "react-icons/bi";
-import { FaUser, FaCalendarAlt } from "react-icons/fa";
+import { FaUser } from "react-icons/fa";
 import { SiCodemagic } from "react-icons/si";
 import { MdTransferWithinAStation } from "react-icons/md";
 import Image from "next/image";
@@ -93,7 +93,7 @@ export default function AITeamAnalysis() {
         document.removeEventListener("keydown", handleKeyDown);
       };
     }
-  }, [showConfirmModal]);
+  }, [showConfirmModal, confirmAndSend]);
 
   const fetchUsage = async () => {
     try {
@@ -148,7 +148,7 @@ export default function AITeamAnalysis() {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         setManagerId(newManagerId);
         setShowManagerIdModal(false);
         // Proceed with AI request
@@ -204,7 +204,7 @@ export default function AITeamAnalysis() {
     });
   };
 
-  const confirmAndSend = async () => {
+  async function confirmAndSend() {
     setShowConfirmModal(false);
 
     const userMessage: Message = {
@@ -289,7 +289,7 @@ export default function AITeamAnalysis() {
       setIsLoading(false);
       setPendingMessage("");
     }
-  };
+  }
 
   if (!ready || status === "loading") {
     return (

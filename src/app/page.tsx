@@ -12,8 +12,6 @@ import Image from "next/image";
 import LoadingCard from "@/components/shared/LoadingCard";
 import { useTranslation } from "react-i18next";
 import { MdLiveTv } from "react-icons/md";
-import { RiLiveLine } from "react-icons/ri";
-import { IoPlayCircle } from "react-icons/io5";
 import {
   FaBrain,
   FaStar,

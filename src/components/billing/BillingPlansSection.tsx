@@ -52,7 +52,7 @@ export default function BillingPlansSection() {
         setPlans(data.plans);
         setCurrentPlanId(data.currentPlanId || null);
       }
-    } catch (_error) {
+    } catch {
       // Silently fail for landing page
     } finally {
       setIsLoading(false);
@@ -97,7 +97,7 @@ export default function BillingPlansSection() {
             )
         );
       }
-    } catch (_error) {
+    } catch {
       alert(
         t(
           "paymentProcessingError",
@@ -225,7 +225,7 @@ export default function BillingPlansSection() {
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-8xl mx-auto mb-16">
-          {sortedPlans.map((plan, index) => {
+          {sortedPlans.map((plan) => {
             const isCurrentPlan = plan.id === currentPlanId;
             const isProcessing = processingPlanId === plan.id;
             const isFree = plan.price_eur === 0;

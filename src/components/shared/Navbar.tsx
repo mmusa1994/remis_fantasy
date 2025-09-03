@@ -14,7 +14,7 @@ import ThemeToggle from "../ThemeToggle";
 import LanguageSelector from "./LanguageSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { safeLogout } from "@/lib/session-utils";
 
 interface NavItem {

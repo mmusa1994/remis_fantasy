@@ -14,9 +14,11 @@ import {
   Trash2,
   Table2,
   Users,
+  Terminal,
 } from "lucide-react";
 import Toast from "@/components/shared/Toast";
 import LoadingCard from "@/components/shared/LoadingCard";
+import CommandExecutionPanel from "@/components/admin/CommandExecutionPanel";
 
 interface Registration {
   id: string;
@@ -89,6 +91,7 @@ export default function AdminDashboard() {
   }>({ show: false, message: "", type: "success" });
 
   const [showLoginRedirect, setShowLoginRedirect] = useState(false);
+  const [showCommandPanel, setShowCommandPanel] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -502,6 +505,14 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowCommandPanel(!showCommandPanel)}
+                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                title="Command Execution"
+              >
+                <Terminal className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Commands</span>
+              </button>
               <Link
                 href="/admin/visitors"
                 className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
@@ -1924,6 +1935,23 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Command Execution Panel */}
+      {showCommandPanel && (
+        <div className="mb-8">
+          <CommandExecutionPanel
+            onCommandExecute={(result) => {
+              setToast({
+                show: true,
+                message: result.success 
+                  ? "Command executed successfully!" 
+                  : `Command failed: ${result.error}`,
+                type: result.success ? "success" : "error",
+              });
+            }}
+          />
         </div>
       )}
 

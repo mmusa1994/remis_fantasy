@@ -139,7 +139,7 @@ export default function ProfilePage() {
         const data = await response.json();
         setError(data.error || t("failedToUpdateProfile"));
       }
-    } catch (error) {
+    } catch {
       setError(t("failedToUpdateProfile"));
     } finally {
       setIsSaving(false);

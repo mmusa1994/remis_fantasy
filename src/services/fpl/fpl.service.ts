@@ -8,7 +8,6 @@ import { FPLLiveService } from './live.service';
 import { FPLStatsService } from './stats.service';
 import { FPLServiceError } from './errors';
 import type {
-  FPLServiceConfig,
   FPLServiceResponse,
 } from '../../types/fpl';
 
@@ -27,7 +26,7 @@ export class FPLService {
   public readonly live: FPLLiveService;
   public readonly stats: FPLStatsService;
 
-  private constructor(_config?: Partial<FPLServiceConfig>) {
+  private constructor() {
     // Initialize all service singletons
     this.bootstrap = FPLBootstrapService.getInstance();
     this.player = FPLPlayerService.getInstance();
@@ -38,9 +37,9 @@ export class FPLService {
     this.stats = FPLStatsService.getInstance();
   }
 
-  public static getInstance(config?: Partial<FPLServiceConfig>): FPLService {
+  public static getInstance(): FPLService {
     if (!FPLService.instance) {
-      FPLService.instance = new FPLService(config);
+      FPLService.instance = new FPLService();
     }
     return FPLService.instance;
   }
