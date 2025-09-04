@@ -60,12 +60,9 @@ export default function BillingPlansSection() {
   }, []);
 
   useEffect(() => {
-    if (status === "authenticated" && session?.user) {
-      fetchPlans();
-    } else {
-      setIsLoading(false);
-    }
-  }, [status, session, fetchPlans]);
+    // Always fetch plans for public view; currentPlanId will be set only if authenticated
+    fetchPlans();
+  }, [fetchPlans]);
 
   const handleSelectPlan = async (planId: string) => {
     if (processingPlanId || planId === currentPlanId) return;
@@ -224,7 +221,7 @@ export default function BillingPlansSection() {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-8xl mx-auto mb-16">
+        <div className="grid grid-cols-1 sm:grid-flow-cols-2 md:grid-cols-4  gap-6 max-w-8xl mx-auto mb-16">
           {sortedPlans.map((plan) => {
             const isCurrentPlan = plan.id === currentPlanId;
             const isProcessing = processingPlanId === plan.id;
@@ -240,7 +237,7 @@ export default function BillingPlansSection() {
               >
                 {/* Popular Plan Badge */}
                 {isPro && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
                     <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
                       {t("mostPopular", "Most Popular")}
                     </div>
@@ -385,23 +382,23 @@ export default function BillingPlansSection() {
                         isFree
                           ? "border-gray-600 text-gray-300 hover:bg-gray-700/50"
                           : ""
-                      }`}
+                      } disabled:bg-gray-400 disabled:text-white disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none disabled:hover:scale-100`}
                     >
                       {isProcessing ? (
-                        <>
+                        <span className="flex items-center justify-center">
                           <FaSpinner className="w-4 h-4 mr-2 animate-spin" />
                           {t("processing", "Processing...")}
-                        </>
+                        </span>
                       ) : isCurrentPlan ? (
-                        <>
+                        <span className="flex items-center justify-center">
                           <FaCheck className="w-4 h-4 mr-2" />
                           {t("active", "Active")}
-                        </>
+                        </span>
                       ) : (
-                        <>
+                        <span className="flex items-center justify-center">
                           <FaCreditCard className="w-4 h-4 mr-2" />
                           {t("choosePlan", "Choose Plan")}
-                        </>
+                        </span>
                       )}
                     </button>
                   </div>

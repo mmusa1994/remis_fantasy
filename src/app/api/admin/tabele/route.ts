@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { supabase } from "@/lib/supabase";
 
 // Interface for clean Premier League player
@@ -49,9 +50,9 @@ interface LeagueTables {
 // GET - Fetch premier league tables from clean table
 export async function GET() {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session?.user || !(session.user as any).isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -163,9 +164,9 @@ export async function GET() {
 // POST - Update player points in clean table
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session?.user || !(session.user as any).isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -253,9 +254,9 @@ export async function POST(request: NextRequest) {
 // PATCH - Bulk update multiple players at once
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session?.user || !(session.user as any).isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

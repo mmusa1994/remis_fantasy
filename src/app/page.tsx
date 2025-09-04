@@ -26,6 +26,7 @@ import {
   FaRocket,
 } from "react-icons/fa";
 import BillingPlansSection from "@/components/billing/BillingPlansSection";
+import { GiftIcon } from "lucide-react";
 // TypeScript types for league and stat data
 interface LeagueCard {
   id: string;
@@ -620,6 +621,13 @@ export default function Home() {
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-sm font-bold shadow-lg">
                 <FaCrown className="text-lg" />
                 {t("hero:aiGuru.premium")}
+              </div>
+            </div>
+
+            <div className="absolute -top-4 left-5 transform -translate-x-1/2">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-400 to-green-500 text-white text-sm font-bold shadow-lg">
+                <GiftIcon className="text-lg" />
+                {t("hero:aiGuru.freeForNow")}
               </div>
             </div>
 

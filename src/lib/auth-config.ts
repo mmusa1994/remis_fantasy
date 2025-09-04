@@ -46,7 +46,74 @@ export const authOptions = {
           return null;
         }
 
-        // Handle login
+        // Handle admin-only login
+        if (credentials.action === 'login_admin') {
+          if (!credentials.password) return null;
+
+          const { data: admin } = await supabase
+            .from("admin_users")
+            .select("*")
+            .eq("email", credentials.email)
+            .single();
+
+          if (!admin) return null;
+
+          const passwordMatch = await bcrypt.compare(
+            credentials.password,
+            admin.password_hash
+          );
+          if (!passwordMatch) return null;
+
+          return {
+            id: admin.id,
+            email: admin.email,
+            name: admin.name,
+            isAdmin: true,
+          };
+        }
+
+        // Handle user-only login
+        if (credentials.action === 'login_user') {
+          if (!credentials.password) return null;
+
+          const { data: user } = await supabase
+            .from("users")
+            .select(`
+              *,
+              subscriptions (
+                id,
+                plan_id,
+                status,
+                subscription_plans (
+                  name,
+                  ai_queries_limit
+                )
+              )
+            `)
+            .eq("email", credentials.email)
+            .eq("provider", "email")
+            .single();
+
+          if (!user || !user.password_hash) return null;
+
+          const passwordMatch = await bcrypt.compare(
+            credentials.password,
+            user.password_hash
+          );
+
+          if (!passwordMatch) return null;
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            emailVerified: user.email_verified,
+            subscription: user.subscriptions?.[0] || null,
+            isAdmin: false,
+          };
+        }
+
+        // Backwards-compatible mixed login (admin first, then user)
         if (credentials.action === 'login') {
           if (!credentials.password) return null;
 
@@ -72,7 +139,7 @@ export const authOptions = {
             }
           }
 
-          // Check regular users
+          // Check regular users if not admin
           const { data: user } = await supabase
             .from("users")
             .select(`

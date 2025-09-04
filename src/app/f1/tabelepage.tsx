@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
   MdEmojiEvents,
@@ -22,6 +23,7 @@ interface Entry {
 
 export default function F1TabeleFromDBPage() {
   const { theme } = useTheme();
+  const { t } = useTranslation("f1");
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -68,7 +70,7 @@ export default function F1TabeleFromDBPage() {
     return (
       <div className="min-h-screen bg-theme-background">
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-          <LoadingCard title="Loading leaderboard" />
+          <LoadingCard title={t("leaderboard.loading")} />
         </div>
       </div>
     );
@@ -78,13 +80,13 @@ export default function F1TabeleFromDBPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-theme-background">
         <div className="text-center">
-          <p className="text-red-500 text-lg mb-4">Failed to load leaderboard</p>
+          <p className="text-red-500 text-lg mb-4">{t("leaderboard.error")}</p>
           <p className="text-theme-text-secondary mb-4">{error}</p>
           <button
             onClick={() => location.reload()}
             className="px-4 py-2 bg-theme-primary text-theme-primary-foreground rounded-md font-russo uppercase tracking-wide hover:bg-theme-primary/90 transition-colors"
           >
-            Retry
+            {t("leaderboard.retry")}
           </button>
         </div>
       </div>
@@ -97,26 +99,22 @@ export default function F1TabeleFromDBPage() {
         {/* Header Section */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <h1 className="font-russo uppercase tracking-tight text-4xl md:text-5xl text-[#782e2e]">
-              Remis Fantasy F1 League
-            </h1>
+            <h1 className="font-russo uppercase tracking-tight text-4xl md:text-5xl text-[#782e2e]">{t("pageTitle")}</h1>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <div className="flex flex-col items-center gap-2">
-              <p className="text-theme-text-primary font-russo text-lg">
-                Next: Zandvoort • Last: Hungaroring
-              </p>
-              <p className="text-theme-text-secondary text-sm">Season 2025</p>
-            </div>
+              <p className="text-theme-text-primary font-russo text-lg">{t("nextLast", { next: "Zandvoort", last: "Hungaroring" })}</p>
+              <p className="text-theme-text-secondary text-sm">{t("season")} 2025</p>
           </div>
+        </div>
 
           {/* Prize Pool */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mb-8">
             <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-theme-card border border-theme-border">
               <GiTrophyCup className="text-[#F4CE2A] text-xl" />
               <div className="text-center">
-                <div className="text-[#F4CE2A] font-russo text-lg">1st</div>
+                <div className="text-[#F4CE2A] font-russo text-lg">{t("prizes.first")}</div>
                 <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
                   <FaCoins className="text-[#F4CE2A]" />
                   120 KM
@@ -126,7 +124,7 @@ export default function F1TabeleFromDBPage() {
             <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-theme-card border border-theme-border">
               <MdEmojiEvents className="text-[#9AA6B2] text-xl" />
               <div className="text-center">
-                <div className="text-[#9AA6B2] font-russo text-lg">2nd</div>
+                <div className="text-[#9AA6B2] font-russo text-lg">{t("prizes.second")}</div>
                 <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
                   <FaCoins className="text-[#F4CE2A]" />
                   80 KM
@@ -136,10 +134,10 @@ export default function F1TabeleFromDBPage() {
             <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-theme-card border border-theme-border">
               <MdEmojiEvents className="text-[#B47B36] text-xl" />
               <div className="text-center">
-                <div className="text-[#B47B36] font-russo text-lg">3rd</div>
+                <div className="text-[#B47B36] font-russo text-lg">{t("prizes.third")}</div>
                 <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
                   <FaCoins className="text-[#F4CE2A]" />
-                  60 KM
+                  HAOS
                 </div>
               </div>
             </div>
@@ -243,11 +241,10 @@ export default function F1TabeleFromDBPage() {
         {/* Last Updated */}
         <div className="text-center mt-6">
           <p className="text-theme-text-secondary text-sm">
-            leaderboard.lastUpdated {lastUpdated ? new Date(lastUpdated).toLocaleString("sr-RS") : "N/A"}
+            {t("leaderboard.lastUpdated")} {lastUpdated ? new Date(lastUpdated).toLocaleString("sr-RS") : "N/A"}
           </p>
         </div>
       </div>
     </div>
   );
 }
-

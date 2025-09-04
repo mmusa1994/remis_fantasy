@@ -108,6 +108,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://remis-fantasy.com",
   },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export const viewport = {

@@ -50,7 +50,7 @@ export default function LoginPage() {
       const result = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
-        action: "login",
+        action: "login_user",
         redirect: false,
       });
 

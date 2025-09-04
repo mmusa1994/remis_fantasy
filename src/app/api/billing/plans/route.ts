@@ -7,13 +7,6 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
     const { data: plans, error } = await supabaseServer
       .from('subscription_plans')
       .select('*')
@@ -28,33 +21,32 @@ export async function GET() {
       );
     }
 
-    // Get user's current subscription - use specific relationship
-    const { data: userSubscription, error: subError } = await supabaseServer
-      .from('users')
-      .select(`
-        subscriptions!subscriptions_user_id_fkey (
-          id,
-          status,
-          plan_id,
-          subscription_plans (
+    let currentPlanId: string | undefined = undefined;
+    if (session?.user?.id) {
+      // Get user's current subscription - use specific relationship
+      const { data: userSubscription, error: subError } = await supabaseServer
+        .from('users')
+        .select(`
+          subscriptions!subscriptions_user_id_fkey (
             id,
-            name
+            status,
+            plan_id,
+            subscription_plans (
+              id,
+              name
+            )
           )
-        )
-      `)
-      .eq('id', session.user.id)
-      .single();
+        `)
+        .eq('id', session.user.id)
+        .single();
 
-    if (subError) {
-      console.error('Error fetching user subscription:', subError);
+      if (subError) {
+        console.error('Error fetching user subscription:', subError);
+      }
+      currentPlanId = userSubscription?.subscriptions?.[0]?.plan_id;
     }
 
-    const currentPlanId = userSubscription?.subscriptions?.[0]?.plan_id;
-
-    return NextResponse.json({
-      plans,
-      currentPlanId
-    });
+    return NextResponse.json({ plans, currentPlanId });
 
   } catch (error: any) {
     console.error("Billing plans API error:", error);
