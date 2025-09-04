@@ -45,6 +45,10 @@ export const authOptions = {
         if (!credentials?.email || !credentials?.action) {
           return null;
         }
+        const inputEmail = String(credentials.email).trim();
+        try {
+          console.log("[Auth] Credentials authorize start", { action: credentials.action, email: inputEmail });
+        } catch {}
 
         // Handle admin-only login
         if (credentials.action === 'login_admin') {
@@ -53,7 +57,7 @@ export const authOptions = {
           const { data: admin } = await supabase
             .from("admin_users")
             .select("*")
-            .eq("email", credentials.email)
+            .eq("email", inputEmail)
             .single();
 
           if (!admin) return null;
@@ -76,11 +80,11 @@ export const authOptions = {
         if (credentials.action === 'login_user') {
           if (!credentials.password) return null;
 
-          const { data: user } = await supabase
+          const { data: user, error: userErr } = await supabase
             .from("users")
             .select(`
               *,
-              subscriptions (
+              subscriptions!subscriptions_user_id_fkey (
                 id,
                 plan_id,
                 status,
@@ -90,18 +94,27 @@ export const authOptions = {
                 )
               )
             `)
-            .eq("email", credentials.email)
-            .eq("provider", "email")
+            .ilike("email", inputEmail)
             .single();
 
-          if (!user || !user.password_hash) return null;
+          if (userErr) {
+            try { console.error("[Auth] DB error (login_user)", userErr); } catch {}
+            return null;
+          }
+          if (!user || !user.password_hash) {
+            try { console.warn("[Auth] User not found or no password hash", { email: inputEmail }); } catch {}
+            return null;
+          }
 
           const passwordMatch = await bcrypt.compare(
             credentials.password,
             user.password_hash
           );
 
-          if (!passwordMatch) return null;
+          if (!passwordMatch) {
+            try { console.warn("[Auth] Password mismatch", { email: inputEmail }); } catch {}
+            return null;
+          }
 
           return {
             id: user.id,
@@ -121,7 +134,7 @@ export const authOptions = {
           const { data: admin } = await supabase
             .from("admin_users")
             .select("*")
-            .eq("email", credentials.email)
+            .eq("email", inputEmail)
             .single();
 
           if (admin) {
@@ -140,11 +153,11 @@ export const authOptions = {
           }
 
           // Check regular users if not admin
-          const { data: user } = await supabase
+          const { data: user, error: userErr2 } = await supabase
             .from("users")
             .select(`
               *,
-              subscriptions (
+              subscriptions!subscriptions_user_id_fkey (
                 id,
                 plan_id,
                 status,
@@ -154,18 +167,26 @@ export const authOptions = {
                 )
               )
             `)
-            .eq("email", credentials.email)
-            .eq("provider", "email")
+            .ilike("email", inputEmail)
             .single();
-
-          if (!user || !user.password_hash) return null;
+          if (userErr2) {
+            try { console.error("[Auth] DB error (login)", userErr2); } catch {}
+            return null;
+          }
+          if (!user || !user.password_hash) {
+            try { console.warn("[Auth] User not found or no password hash (login)", { email: inputEmail }); } catch {}
+            return null;
+          }
 
           const passwordMatch = await bcrypt.compare(
             credentials.password,
             user.password_hash
           );
 
-          if (!passwordMatch) return null;
+          if (!passwordMatch) {
+            try { console.warn("[Auth] Password mismatch (login)", { email: inputEmail }); } catch {}
+            return null;
+          }
 
           return {
             id: user.id,

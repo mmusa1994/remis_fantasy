@@ -10,7 +10,7 @@ const isAdminPath = (path: string) => {
 };
 
 const isLoginPanel = (path: string) => {
-  return path.includes("login") || path.includes("signup");
+  return path.includes("login") || path.includes("signup") || path.includes("forgot-password");
 };
 
 export default function LayoutContent({

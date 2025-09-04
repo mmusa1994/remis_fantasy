@@ -48,7 +48,7 @@ export default function LoginPage() {
 
     try {
       const result = await signIn("credentials", {
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password,
         action: "login_user",
         redirect: false,
@@ -339,6 +339,14 @@ export default function LoginPage() {
                       <FaEye className="w-5 h-5" />
                     )}
                   </button>
+                </div>
+                <div className="mt-2 text-right">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm font-medium text-red-800 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                  >
+                    {t("forgotPassword")}
+                  </Link>
                 </div>
               </div>
 
