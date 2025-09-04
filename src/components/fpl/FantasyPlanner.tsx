@@ -147,6 +147,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const [currentGameweek, setCurrentGameweek] = useState(4);
   const [currentView, setCurrentView] = useState<ViewMode>("pitch");
   const [userTeamData, setUserTeamData] = useState<UserTeamData | null>(null);
+  const [originalTeamData, setOriginalTeamData] = useState<UserTeamData | null>(null); // Save original state
+  const [currentTeam, setCurrentTeam] = useState<any[]>([]); // Current working team for transfers
   const [loading, setLoading] = useState(false);
   const [allPlayers, setAllPlayers] = useState<EnhancedPlayerData[]>([]);
   const [allTeams, setAllTeams] = useState<TeamData[]>([]);
@@ -203,6 +205,19 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
       points_budget: 8,
     },
   });
+
+  // Transfer Planning State
+  const [transferMode, setTransferMode] = useState(false);
+  const [pendingTransfers, setPendingTransfers] = useState<{
+    transfersOut: number[];
+    transfersIn: number[];
+  }>({
+    transfersOut: [],
+    transfersIn: []
+  });
+  const [availableBudget, setAvailableBudget] = useState(0);
+  const [freeTransfers, setFreeTransfers] = useState(1);
+  const [transferCost, setTransferCost] = useState(0);
 
   // Enhanced UI State
   const [uiState, setUIState] = useState<EnhancedUIState>({
@@ -447,6 +462,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         const data = await response.json();
         if (data.success && data.data) {
           setUserTeamData(data.data);
+          setOriginalTeamData(data.data); // Save original data for transfer planning
+          setCurrentTeam(data.data.team_with_stats || []); // Initialize current team
+
+          // Initialize budget from team data
+          const bankAmount = data.data.entry_history?.bank || 0;
+          setAvailableBudget(bankAmount);
+          setFreeTransfers(data.data.entry_history?.event_transfers || 1);
 
           // Cache the result
           teamDataCacheRef.current = {
@@ -626,6 +648,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     saveManagerId(managerId, true);
   };
 
+
   // Initialize data on component mount (no function dependency)
   useEffect(() => {
     fetchBootstrapData();
@@ -766,6 +789,311 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     const positions = { 1: "GK", 2: "DEF", 3: "MID", 4: "FWD" };
     return positions[elementType as keyof typeof positions] || "Unknown";
   }, []);
+
+  // Transfer Planning Functions
+  const calculateTransferCost = useCallback((transfersCount: number, freeTransfersAvailable: number) => {
+    const extraTransfers = Math.max(0, transfersCount - freeTransfersAvailable);
+    return extraTransfers * 4; // 4 points per extra transfer
+  }, []);
+
+  const calculateBudgetAfterTransfers = useCallback(() => {
+    if (!originalTeamData) return 0;
+    
+    let budget = originalTeamData.entry_history?.bank || 0;
+    
+    // Add money from players being transferred out
+    pendingTransfers.transfersOut.forEach(playerId => {
+      const player = getPlayerById(playerId);
+      if (player) {
+        budget += player.now_cost;
+      }
+    });
+    
+    // Subtract money for players being transferred in
+    pendingTransfers.transfersIn.forEach(playerId => {
+      const player = getPlayerById(playerId);
+      if (player) {
+        budget -= player.now_cost;
+      }
+    });
+    
+    return budget;
+  }, [originalTeamData, pendingTransfers, getPlayerById]);
+
+  const addPlayerOut = useCallback((playerId: number) => {
+    setPendingTransfers(prev => ({
+      ...prev,
+      transfersOut: prev.transfersOut.includes(playerId) 
+        ? prev.transfersOut 
+        : [...prev.transfersOut, playerId]
+    }));
+  }, []);
+
+  const removePlayerOut = useCallback((playerId: number) => {
+    setPendingTransfers(prev => ({
+      ...prev,
+      transfersOut: prev.transfersOut.filter(id => id !== playerId)
+    }));
+  }, []);
+
+  const addPlayerIn = useCallback((playerId: number) => {
+    // Only add if we have corresponding transfer out and position match
+    setPendingTransfers(prev => {
+      // Check if player is already in transfers in
+      if (prev.transfersIn.includes(playerId)) {
+        return prev;
+      }
+      
+      // Find next available transfer out slot
+      const availableOutIndex = prev.transfersOut.findIndex((outId, index) => !prev.transfersIn[index]);
+      
+      if (availableOutIndex === -1) {
+        // No available slots
+        return prev;
+      }
+
+      // Validate position compatibility
+      const outPlayer = getPlayerById(prev.transfersOut[availableOutIndex]);
+      const inPlayer = getPlayerById(playerId);
+      
+      if (!outPlayer || !inPlayer || outPlayer.element_type !== inPlayer.element_type) {
+        // Position mismatch - can't make this transfer
+        return prev;
+      }
+
+      // Create new transfers in array with player at specific index
+      const newTransfersIn = [...prev.transfersIn];
+      newTransfersIn[availableOutIndex] = playerId;
+
+      return {
+        ...prev,
+        transfersIn: newTransfersIn
+      };
+    });
+  }, [getPlayerById]);
+
+  const removePlayerIn = useCallback((playerId: number) => {
+    setPendingTransfers(prev => {
+      const playerIndex = prev.transfersIn.findIndex(id => id === playerId);
+      if (playerIndex === -1) return prev;
+
+      const newTransfersIn = [...prev.transfersIn];
+      newTransfersIn[playerIndex] = undefined as any; // Remove but keep array structure
+
+      return {
+        ...prev,
+        transfersIn: newTransfersIn
+      };
+    });
+  }, []);
+
+
+  const resetTransfers = useCallback(() => {
+    setPendingTransfers({ transfersOut: [], transfersIn: [] });
+    setCurrentTeam(originalTeamData?.team_with_stats || []);
+    setTransferMode(false);
+  }, [originalTeamData]);
+
+  const enterTransferMode = useCallback(() => {
+    setTransferMode(true);
+    setShowTransferPanel(true);
+  }, []);
+
+  const canAffordPlayer = useCallback((playerId: number) => {
+    const player = getPlayerById(playerId);
+    if (!player) return false;
+    
+    const budgetAfterTransfers = calculateBudgetAfterTransfers();
+    return budgetAfterTransfers >= player.now_cost;
+  }, [getPlayerById, calculateBudgetAfterTransfers]);
+
+  const validateSquad = useCallback(() => {
+    if (!originalTeamData) return { isValid: false, errors: [] };
+
+    // Start with original squad
+    let finalSquad = [...(originalTeamData.team_with_stats || [])];
+    
+    // Apply replacements (same logic as currentTeamForDisplay but locally)
+    pendingTransfers.transfersOut.forEach((outPlayerId, index) => {
+      const transferInPlayerId = pendingTransfers.transfersIn[index];
+      if (transferInPlayerId) {
+        const outPlayerIndex = finalSquad.findIndex(tp => tp.player_id === outPlayerId);
+        const newPlayer = getPlayerById(transferInPlayerId);
+        
+        if (outPlayerIndex >= 0 && newPlayer) {
+          // Replace at same position
+          finalSquad[outPlayerIndex] = {
+            player_id: transferInPlayerId,
+            position: finalSquad[outPlayerIndex].position,
+            total_points: newPlayer.total_points,
+            event_points: newPlayer.event_points,
+            player: newPlayer
+          };
+        }
+      }
+    });
+
+    const errors: string[] = [];
+
+    // Count players by position
+    const positionCounts = { 1: 0, 2: 0, 3: 0, 4: 0 }; // GK, DEF, MID, FWD
+    finalSquad.forEach(tp => {
+      const player = tp.player || getPlayerById(tp.player_id);
+      if (player) {
+        positionCounts[player.element_type as keyof typeof positionCounts]++;
+      }
+    });
+
+    // Validate squad size
+    if (finalSquad.length !== 15) {
+      errors.push(`Squad must have 15 players (currently ${finalSquad.length})`);
+    }
+
+    // Validate position requirements
+    if (positionCounts[1] !== 2) errors.push(`Must have 2 goalkeepers (currently ${positionCounts[1]})`);
+    if (positionCounts[2] !== 5) errors.push(`Must have 5 defenders (currently ${positionCounts[2]})`);
+    if (positionCounts[3] !== 5) errors.push(`Must have 5 midfielders (currently ${positionCounts[3]})`);
+    if (positionCounts[4] !== 3) errors.push(`Must have 3 forwards (currently ${positionCounts[4]})`);
+
+    // Validate budget
+    const budgetAfterTransfers = calculateBudgetAfterTransfers();
+    if (budgetAfterTransfers < 0) {
+      errors.push(`Over budget by £${Math.abs(budgetAfterTransfers / 10).toFixed(1)}m`);
+    }
+
+    // Validate team distribution (max 3 players from same team)
+    const teamCounts: Record<number, number> = {};
+    finalSquad.forEach(tp => {
+      const player = tp.player || getPlayerById(tp.player_id);
+      if (player) {
+        teamCounts[player.team] = (teamCounts[player.team] || 0) + 1;
+      }
+    });
+
+    Object.entries(teamCounts).forEach(([teamId, count]) => {
+      if (count > 3) {
+        const team = getTeamById(Number(teamId));
+        errors.push(`Too many players from ${team?.name || 'team'} (max 3, currently ${count})`);
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      positionCounts,
+      budgetRemaining: budgetAfterTransfers
+    };
+  }, [originalTeamData, pendingTransfers, getPlayerById, calculateBudgetAfterTransfers, getTeamById]);
+
+  const confirmTransfers = useCallback(() => {
+    if (!originalTeamData) return;
+    
+    const validation = validateSquad();
+    if (!validation.isValid) return;
+
+    // Apply transfers to userTeamData
+    let newTeamData = { ...originalTeamData };
+    let newTeamWithStats = [...(originalTeamData.team_with_stats || [])];
+
+    // Replace transferred out players with transferred in players at same positions
+    pendingTransfers.transfersOut.forEach((outPlayerId, index) => {
+      const transferInPlayerId = pendingTransfers.transfersIn[index];
+      if (transferInPlayerId) {
+        const outPlayerIndex = newTeamWithStats.findIndex(tp => tp.player_id === outPlayerId);
+        const newPlayer = getPlayerById(transferInPlayerId);
+        
+        if (outPlayerIndex >= 0 && newPlayer) {
+          // Replace at exact same position
+          newTeamWithStats[outPlayerIndex] = {
+            player_id: transferInPlayerId,
+            position: newTeamWithStats[outPlayerIndex].position, // Keep original position
+            total_points: newPlayer.total_points,
+            event_points: newPlayer.event_points,
+            stats: {
+              total_points: newPlayer.total_points,
+              event_points: newPlayer.event_points,
+            },
+            live_stats: {
+              total_points: newPlayer.total_points,
+              event_points: newPlayer.event_points,
+            },
+            player: newPlayer
+          };
+        }
+      }
+    });
+    
+    // Update bank balance
+    const finalBudget = calculateBudgetAfterTransfers();
+    
+    newTeamData.team_with_stats = newTeamWithStats;
+    newTeamData.entry_history = {
+      ...originalTeamData.entry_history!,
+      bank: finalBudget,
+      event_transfers: (originalTeamData.entry_history?.event_transfers || 0) + pendingTransfers.transfersOut.length,
+      event_transfers_cost: transferCost
+    };
+
+    // Update states
+    setUserTeamData(newTeamData);
+    setOriginalTeamData(newTeamData); // New baseline for future transfers
+    setCurrentTeam(newTeamWithStats);
+    setPendingTransfers({ transfersOut: [], transfersIn: [] });
+    setTransferMode(false);
+  }, [originalTeamData, validateSquad, pendingTransfers, getPlayerById, calculateBudgetAfterTransfers, transferCost]);
+
+  // Update transfer cost when transfers change
+  useEffect(() => {
+    const totalTransfers = pendingTransfers.transfersOut.length;
+    const cost = calculateTransferCost(totalTransfers, freeTransfers);
+    setTransferCost(cost);
+    setAvailableBudget(calculateBudgetAfterTransfers());
+  }, [pendingTransfers, freeTransfers, calculateTransferCost, calculateBudgetAfterTransfers]);
+
+  // Calculate current team state with pending transfers applied
+  const currentTeamForDisplay = useMemo(() => {
+    if (!userTeamData?.team_with_stats) {
+      return [];
+    }
+
+    if (!transferMode) {
+      return userTeamData.team_with_stats;
+    }
+
+    // Start with original team - keep all players visible
+    let teamWithTransfers = [...userTeamData.team_with_stats];
+    
+    // Replace transferred out players with transferred in players at same positions
+    pendingTransfers.transfersOut.forEach((outPlayerId, index) => {
+      const transferInPlayerId = pendingTransfers.transfersIn[index];
+      if (transferInPlayerId) {
+        const outPlayerIndex = teamWithTransfers.findIndex(tp => tp.player_id === outPlayerId);
+        const newPlayer = getPlayerById(transferInPlayerId);
+        
+        if (outPlayerIndex >= 0 && newPlayer) {
+          // Replace at same position - set points to 0 to hide them for new transfers
+          teamWithTransfers[outPlayerIndex] = {
+            player_id: transferInPlayerId,
+            position: teamWithTransfers[outPlayerIndex].position,
+            total_points: 0, // Hide points for transferred in players
+            event_points: 0, // Hide points for transferred in players
+            stats: {
+              total_points: 0,
+              event_points: 0,
+            },
+            live_stats: {
+              total_points: 0,
+              event_points: 0,
+            },
+            player: newPlayer,
+            isTransferIn: true // Mark as transfer in to identify later
+          };
+        }
+      }
+    });
+
+    return teamWithTransfers;
+  }, [userTeamData?.team_with_stats, transferMode, pendingTransfers, getPlayerById]);
 
   return (
     <div
@@ -963,15 +1291,22 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   {/* Action Buttons - Mobile optimized */}
                   <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
                     <button
-                      onClick={() => setShowTransferPanel(!showTransferPanel)}
+                      onClick={() => transferMode ? resetTransfers() : enterTransferMode()}
                       className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors text-sm ${
-                        showTransferPanel
-                          ? "bg-blue-600 text-white"
-                          : "border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        transferMode
+                          ? "bg-red-600 text-white hover:bg-red-700"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
                       }`}
                     >
                       <FaExchangeAlt className="w-4 h-4" />
-                      <span className="hidden sm:inline">{t("teamPlanner.tabs.transfers")}</span>
+                      <span className="hidden sm:inline">
+                        {transferMode ? "Exit Transfers" : t("teamPlanner.tabs.transfers")}
+                      </span>
+                      {transferMode && pendingTransfers.transfersOut.length > 0 && (
+                        <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-xs">
+                          {pendingTransfers.transfersOut.length}
+                        </span>
+                      )}
                     </button>
                     <button className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                       <FaShare className="w-4 h-4" />
@@ -987,11 +1322,31 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   <>
                     <div className="p-4 lg:p-6">
                       <EnhancedPitchView
-                        teamPlayers={userTeamData?.team_with_stats || []}
+                        teamPlayers={currentTeamForDisplay}
                         allPlayers={allPlayers}
-                        onPlayerClick={(player) => setSelectedPlayer(player)}
+                        onPlayerClick={(player) => {
+                          if (transferMode) {
+                            // In transfer mode, toggle selection for transfer out
+                            if (pendingTransfers.transfersOut.includes(player.id)) {
+                              // Already selected for transfer out, deselect
+                              removePlayerOut(player.id);
+                            } else {
+                              // Not selected, mark for transfer out
+                              addPlayerOut(player.id);
+                            }
+                          } else {
+                            setSelectedPlayer(player);
+                          }
+                        }}
                         onPlayerSelect={(player) => {
-                          if (uiState.compareMode) {
+                          if (transferMode) {
+                            // Toggle selection for transfer out
+                            if (pendingTransfers.transfersOut.includes(player.id)) {
+                              removePlayerOut(player.id);
+                            } else {
+                              addPlayerOut(player.id);
+                            }
+                          } else if (uiState.compareMode) {
                             setUIState((prev) => ({
                               ...prev,
                               comparedPlayers: prev.comparedPlayers.includes(
@@ -1006,8 +1361,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                             }));
                           }
                         }}
-                        selectedPlayers={uiState.comparedPlayers}
-                        compareMode={uiState.compareMode}
+                        selectedPlayers={transferMode ? pendingTransfers.transfersOut : uiState.comparedPlayers}
+                        compareMode={transferMode ? true : uiState.compareMode}
                         formation={formation}
                         onFormationChange={handleFormationChange}
                         showStats={true}
@@ -1240,11 +1595,173 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   </div>
                 )}
               </div>
+              {/* Transfer Status Panel */}
+              {transferMode && (
+                <div className="mt-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="text-center sm:text-left">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Transfers Out</p>
+                        <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                          {pendingTransfers.transfersOut.length}
+                        </p>
+                      </div>
+                      <div className="text-center sm:text-left">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Transfers In</p>
+                        <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                          {pendingTransfers.transfersIn.length}
+                        </p>
+                      </div>
+                      <div className="text-center sm:text-left">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Available Budget</p>
+                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          £{(availableBudget / 10).toFixed(1)}m
+                        </p>
+                      </div>
+                      <div className="text-center sm:text-left">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Transfer Cost</p>
+                        <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                          {transferCost} pts
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {pendingTransfers.transfersOut.length > 0 && (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          onClick={resetTransfers}
+                          className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
+                        >
+                          Reset
+                        </button>
+                        <button
+                          disabled={pendingTransfers.transfersOut.length !== pendingTransfers.transfersIn.length || !validateSquad().isValid}
+                          className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-colors"
+                          onClick={confirmTransfers}
+                        >
+                          Confirm Transfers
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Squad Validation */}
+                  {transferMode && pendingTransfers.transfersOut.length > 0 && (
+                    <div className="mt-4">
+                      {(() => {
+                        const validation = validateSquad();
+                        return (
+                          <div className={`p-3 rounded-lg border ${
+                            validation.isValid 
+                              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                          }`}>
+                            <h4 className={`font-semibold text-sm mb-2 ${
+                              validation.isValid 
+                                ? 'text-green-800 dark:text-green-200' 
+                                : 'text-red-800 dark:text-red-200'
+                            }`}>
+                              Squad Validation {validation.isValid ? '✅' : '❌'}
+                            </h4>
+                            {!validation.isValid && validation.errors.length > 0 && (
+                              <ul className="text-xs text-red-700 dark:text-red-300 space-y-1">
+                                {validation.errors.map((error, idx) => (
+                                  <li key={idx}>• {error}</li>
+                                ))}
+                              </ul>
+                            )}
+                            {validation.isValid && (
+                              <p className="text-xs text-green-700 dark:text-green-300">
+                                Squad is valid! Ready to confirm transfers.
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {/* Pending Transfers List */}
+                  {(pendingTransfers.transfersOut.length > 0 || pendingTransfers.transfersIn.length > 0) && (
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Players Out */}
+                      {pendingTransfers.transfersOut.length > 0 && (
+                        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                          <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">Players Out</h4>
+                          <div className="space-y-2">
+                            {pendingTransfers.transfersOut.map(playerId => {
+                              const player = getPlayerById(playerId);
+                              const team = getTeamById(player?.team || 0);
+                              return player ? (
+                                <div key={playerId} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-sm">{player.web_name}</span>
+                                    <span className="text-xs text-gray-500">({team?.short_name})</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium">£{(player.now_cost / 10).toFixed(1)}m</span>
+                                    <button
+                                      onClick={() => removePlayerOut(playerId)}
+                                      className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : null;
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Players In */}
+                      {pendingTransfers.transfersIn.length > 0 && (
+                        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                          <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Players In</h4>
+                          <div className="space-y-2">
+                            {pendingTransfers.transfersIn.map((playerId, index) => {
+                              if (!playerId) return null; // Skip empty slots
+                              const player = getPlayerById(playerId);
+                              const team = getTeamById(player?.team || 0);
+                              const outPlayer = getPlayerById(pendingTransfers.transfersOut[index]);
+                              return player ? (
+                                <div key={`${playerId}-${index}`} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-sm">{player.web_name}</span>
+                                    <span className="text-xs text-gray-500">({team?.short_name})</span>
+                                    {outPlayer && (
+                                      <span className="text-xs text-blue-600 dark:text-blue-400">
+                                        → replaces {outPlayer.web_name}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium">£{(player.now_cost / 10).toFixed(1)}m</span>
+                                    <button
+                                      onClick={() => removePlayerIn(playerId)}
+                                      className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : null;
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Player List below pitch */}
               <div className="mt-2 bg-theme-card border-t border-gray-200 dark:border-gray-700">
                 <div className="p-4 lg:p-6">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
-                    <h3 className="text-lg font-semibold">{t("teamPlanner.transferMarket.title")}</h3>
+                    <h3 className="text-lg font-semibold">
+                      {transferMode ? "Select Players to Buy" : t("teamPlanner.transferMarket.title")}
+                    </h3>
                     <div className="flex items-center space-x-2 w-full sm:w-auto">
                       <div className="relative flex-1 sm:flex-none">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -1309,21 +1826,65 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       {filteredPlayers.slice(0, 100).map((player) => {
                         const team = getTeamById(player.team);
                         const teamColor = getTeamColor(player.team);
-                        const isSelected = uiState.comparedPlayers.includes(
-                          player.id
-                        );
+                        const isSelected = transferMode 
+                          ? pendingTransfers.transfersIn.includes(player.id) || pendingTransfers.transfersOut.includes(player.id)
+                          : uiState.comparedPlayers.includes(player.id);
+                        const isInMyTeam = userTeamData?.team_with_stats?.some(tp => tp.player_id === player.id);
+                        const canAfford = transferMode ? canAffordPlayer(player.id) : true;
+                        const isTransferOut = transferMode && pendingTransfers.transfersOut.includes(player.id);
+                        const isTransferIn = transferMode && pendingTransfers.transfersIn.includes(player.id);
+                        
                         return (
                           <motion.div
                             key={player.id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className={`grid grid-cols-9 gap-2 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
-                              isSelected
+                            className={`grid grid-cols-9 gap-2 px-4 py-3 transition-colors relative ${
+                              transferMode
+                                ? canAfford
+                                  ? "hover:bg-green-50 dark:hover:bg-green-900/20 cursor-pointer"
+                                  : "opacity-60 cursor-not-allowed"
+                                : "hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                            } ${
+                              isSelected || isTransferIn
+                                ? "bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500"
+                                : isTransferOut
+                                ? "bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500"
+                                : isInMyTeam && transferMode
                                 ? "bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500"
                                 : ""
                             }`}
                             onClick={() => {
-                              if (uiState.compareMode) {
+                              if (transferMode) {
+                                if (isInMyTeam && !isTransferOut) {
+                                  // Player is in my team, mark for transfer out
+                                  addPlayerOut(player.id);
+                                } else if (!isInMyTeam && !isTransferIn) {
+                                  // Player not in my team, try to add them
+                                  if (canAffordPlayer(player.id)) {
+                                    // Check if we have transfer out slot for this position
+                                    const hasCompatibleOut = pendingTransfers.transfersOut.some((outId, index) => {
+                                      if (pendingTransfers.transfersIn[index]) return false; // Slot already filled
+                                      const outPlayer = getPlayerById(outId);
+                                      return outPlayer && outPlayer.element_type === player.element_type;
+                                    });
+                                    
+                                    if (hasCompatibleOut) {
+                                      addPlayerIn(player.id);
+                                    } else {
+                                      alert(`No ${getPlayerPosition(player.element_type)} selected for transfer out!`);
+                                    }
+                                  } else {
+                                    alert("Not enough budget for this player!");
+                                  }
+                                } else if (isTransferOut) {
+                                  // Already marked for transfer out, remove from transfer out
+                                  removePlayerOut(player.id);
+                                } else if (isTransferIn) {
+                                  // Already marked for transfer in, remove from transfer in
+                                  removePlayerIn(player.id);
+                                }
+                              } else if (uiState.compareMode) {
                                 setUIState((prev) => ({
                                   ...prev,
                                   comparedPlayers:
@@ -1349,13 +1910,33 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 }}
                               >
                                 {player.web_name.charAt(0)}
-                                {/* Enhanced indicators */}
-                                {player.price_trend === "rising" && (
+                                {/* Transfer Status Indicators */}
+                                {transferMode && (
+                                  <>
+                                    {isTransferOut && (
+                                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                                        <span className="text-white text-xs">-</span>
+                                      </div>
+                                    )}
+                                    {isTransferIn && (
+                                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                        <span className="text-white text-xs">+</span>
+                                      </div>
+                                    )}
+                                    {isInMyTeam && !isTransferOut && !isTransferIn && (
+                                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                        <span className="text-white text-xs">★</span>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                                {/* Enhanced indicators - only show if not in transfer mode */}
+                                {!transferMode && player.price_trend === "rising" && (
                                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
                                     <TrendingUp className="w-1.5 h-1.5 text-white" />
                                   </div>
                                 )}
-                                {player.price_trend === "falling" && (
+                                {!transferMode && player.price_trend === "falling" && (
                                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
                                     <TrendingDown className="w-1.5 h-1.5 text-white" />
                                   </div>
