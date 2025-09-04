@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useSession } from "next-auth/react";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
@@ -140,6 +141,7 @@ interface UserTeamData {
 }
 
 export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
+  const { data: session, status } = useSession();
   const { theme } = useTheme();
   const { t } = useTranslation("fpl");
   const [currentGameweek, setCurrentGameweek] = useState(4);
@@ -483,6 +485,23 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     [] // Remove currentGameweek from dependencies
   );
 
+  // Fetch manager ID from database
+  const fetchManagerId = async () => {
+    try {
+      if (!session?.user) return;
+      
+      const response = await fetch("/api/user/manager-id");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.managerId) {
+          setCurrentManagerId(data.managerId);
+        }
+      }
+    } catch (error) {
+      console.error("❌ Failed to fetch manager ID:", error);
+    }
+  };
+
   // Save manager ID with enhanced error handling
   const saveManagerId = async (
     newManagerId: string,
@@ -527,6 +546,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           showFallbackOption: false,
         });
 
+        // Refresh manager ID from database to get the latest saved value
+        await fetchManagerId();
+        
         // Fetch team data
         fetchTeamData(newManagerId, currentGameweek);
       } else if (response.status === 202) {
@@ -609,6 +631,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     fetchBootstrapData();
   }, []); // Run only on mount
 
+  // Fetch manager ID when user is authenticated
+  useEffect(() => {
+    if (status === "authenticated" && session?.user && !managerId) {
+      fetchManagerId();
+    }
+  }, [status, session, managerId]);
+
   // Fetch fixtures when gameweek changes (no function dependency)
   useEffect(() => {
     if (currentGameweek) {
@@ -618,12 +647,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
   // Check if we need to show manager ID modal or fetch data (no function dependency)
   useEffect(() => {
-    if (!currentManagerId) {
+    // Only show modal if user is authenticated and we don't have a manager ID
+    if (status === "authenticated" && session?.user && !currentManagerId) {
       setShowManagerIdModal(true);
-    } else {
+    } else if (currentManagerId) {
       fetchTeamData(currentManagerId, currentGameweek);
     }
-  }, [currentManagerId, currentGameweek]);
+  }, [currentManagerId, currentGameweek, status, session]);
 
   // Update currentManagerId when prop changes
   useEffect(() => {
