@@ -273,63 +273,88 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   );
 
   // Fetch fixtures data with caching and rate limiting
-  const fixturesCacheRef = useRef<{ gameweek: number; data: any[]; timestamp: number } | null>(null);
-  const fetchFixtures = useCallback(async (gameweek: number = currentGameweek, forceRefresh: boolean = false) => {
-    // Check cache first (5 minute cache)
-    if (!forceRefresh && fixturesCacheRef.current) {
-      const { gameweek: cachedGW, data, timestamp } = fixturesCacheRef.current;
-      const isStale = Date.now() - timestamp > 300000; // 5 minutes
-      if (cachedGW === gameweek && !isStale) {
-        console.log(`📦 Using cached fixtures for GW${gameweek}`);
-        setAllFixtures(data);
-        return;
-      }
-    }
-
-    try {
-      console.log(`🏟️ Fetching fixtures for GW${gameweek}`);
-      const response = await fetch(`/api/fpl/fixtures?event=${gameweek}`);
-              
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          const fixtures = result.data || [];
-          setAllFixtures(fixtures);
-          
-          // Cache the result
-          fixturesCacheRef.current = {
-            gameweek,
-            data: fixtures,
-            timestamp: Date.now()
-          };
-                  
-          // Handle fallback gameweek notification
-          if (result.fallback) {
-            console.log("ℹ️ Showing fixtures for Gameweek", result.gameweek, "as fallback for", gameweek);
-          }
-          return; // Successfully fetched data
+  const fixturesCacheRef = useRef<{
+    gameweek: number;
+    data: any[];
+    timestamp: number;
+  } | null>(null);
+  const fetchFixtures = useCallback(
+    async (
+      gameweek: number = currentGameweek,
+      forceRefresh: boolean = false
+    ) => {
+      // Check cache first (5 minute cache)
+      if (!forceRefresh && fixturesCacheRef.current) {
+        const {
+          gameweek: cachedGW,
+          data,
+          timestamp,
+        } = fixturesCacheRef.current;
+        const isStale = Date.now() - timestamp > 300000; // 5 minutes
+        if (cachedGW === gameweek && !isStale) {
+          console.log(`📦 Using cached fixtures for GW${gameweek}`);
+          setAllFixtures(data);
+          return;
         }
       }
-      
-      // Handle 404 or other errors - immediately try fallback
-      if (gameweek > 3) {
-        console.log(`⬇️ GW${gameweek} fixtures failed, immediately trying GW${gameweek - 1}`);
-        return fetchFixtures(gameweek - 1, forceRefresh);
-      } else {
-        console.warn(`❌ No fixture data available for GW${gameweek} or earlier`);
-        setAllFixtures([]);
+
+      try {
+        console.log(`🏟️ Fetching fixtures for GW${gameweek}`);
+        const response = await fetch(`/api/fpl/fixtures?event=${gameweek}`);
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            const fixtures = result.data || [];
+            setAllFixtures(fixtures);
+
+            // Cache the result
+            fixturesCacheRef.current = {
+              gameweek,
+              data: fixtures,
+              timestamp: Date.now(),
+            };
+
+            // Handle fallback gameweek notification
+            if (result.fallback) {
+              console.log(
+                "ℹ️ Showing fixtures for Gameweek",
+                result.gameweek,
+                "as fallback for",
+                gameweek
+              );
+            }
+            return; // Successfully fetched data
+          }
+        }
+
+        // Handle 404 or other errors - immediately try fallback
+        if (gameweek > 3) {
+          console.log(
+            `⬇️ GW${gameweek} fixtures failed, immediately trying GW${
+              gameweek - 1
+            }`
+          );
+          return fetchFixtures(gameweek - 1, forceRefresh);
+        } else {
+          console.warn(
+            `❌ No fixture data available for GW${gameweek} or earlier`
+          );
+          setAllFixtures([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch fixtures:", error);
+        // Try fallback on any error if possible
+        if (gameweek > 3) {
+          console.log(`🔄 Error occurred, trying fallback GW${gameweek - 1}`);
+          return fetchFixtures(gameweek - 1, forceRefresh);
+        } else {
+          setAllFixtures([]);
+        }
       }
-    } catch (error) {
-      console.error("Failed to fetch fixtures:", error);
-      // Try fallback on any error if possible
-      if (gameweek > 3) {
-        console.log(`🔄 Error occurred, trying fallback GW${gameweek - 1}`);
-        return fetchFixtures(gameweek - 1, forceRefresh);
-      } else {
-        setAllFixtures([]);
-      }
-    }
-  }, []); // Remove currentGameweek from dependencies
+    },
+    []
+  ); // Remove currentGameweek from dependencies
 
   // Enhanced bootstrap data fetching
   const fetchBootstrapData = useCallback(async () => {
@@ -366,32 +391,48 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   }, []); // Remove processEnhancedPlayerData dependency to prevent loops
 
   // Team data cache and rate limiting
-  const teamDataCacheRef = useRef<{ managerId: string; gameweek: number; data: any; timestamp: number } | null>(null);
+  const teamDataCacheRef = useRef<{
+    managerId: string;
+    gameweek: number;
+    data: any;
+    timestamp: number;
+  } | null>(null);
   const teamDataRequestRef = useRef<string | null>(null);
-  
+
   const fetchTeamData = useCallback(
     async (id: string, gameweek?: number, forceRefresh: boolean = false) => {
       const targetGameweek = gameweek || currentGameweek;
       const requestKey = `${id}-${targetGameweek}`;
-      
+
       // Prevent duplicate requests
       if (teamDataRequestRef.current === requestKey && !forceRefresh) {
-        console.log(`⏳ Team data request already in progress for ${requestKey}`);
+        console.log(
+          `⏳ Team data request already in progress for ${requestKey}`
+        );
         return;
       }
-      
+
       // Check cache first (5 minute cache)
       if (!forceRefresh && teamDataCacheRef.current) {
-        const { managerId, gameweek: cachedGW, data, timestamp } = teamDataCacheRef.current;
+        const {
+          managerId,
+          gameweek: cachedGW,
+          data,
+          timestamp,
+        } = teamDataCacheRef.current;
         const isStale = Date.now() - timestamp > 300000; // 5 minutes
         if (managerId === id && cachedGW === targetGameweek && !isStale) {
-          console.log(`📦 Using cached team data for Manager ${id}, GW${targetGameweek}`);
+          console.log(
+            `📦 Using cached team data for Manager ${id}, GW${targetGameweek}`
+          );
           setUserTeamData(data);
           return;
         }
       }
 
-      console.log(`👤 Fetching team data for Manager ID: ${id}, Gameweek: ${targetGameweek}`);
+      console.log(
+        `👤 Fetching team data for Manager ID: ${id}, Gameweek: ${targetGameweek}`
+      );
       setLoading(true);
       teamDataRequestRef.current = requestKey;
 
@@ -409,29 +450,37 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error(`❌ API Response Error: ${response.status} ${response.statusText}`);
+          console.error(
+            `❌ API Response Error: ${response.status} ${response.statusText}`
+          );
           console.error("❌ Error details:", errorText);
 
           // Immediately try fallback for any error if possible
           if (targetGameweek > 3) {
-            console.log(`⬇️ GW${targetGameweek} failed, immediately trying GW${targetGameweek - 1}`);
+            console.log(
+              `⬇️ GW${targetGameweek} failed, immediately trying GW${
+                targetGameweek - 1
+              }`
+            );
             teamDataRequestRef.current = null; // Clear request lock
             return await fetchTeamData(id, targetGameweek - 1, forceRefresh);
           }
 
-          throw new Error(`Failed to fetch team data: ${response.status} - ${errorText}`);
+          throw new Error(
+            `Failed to fetch team data: ${response.status} - ${errorText}`
+          );
         }
 
         const data = await response.json();
         if (data.success && data.data) {
           setUserTeamData(data.data);
-          
+
           // Cache the result
           teamDataCacheRef.current = {
             managerId: id,
             gameweek: targetGameweek,
             data: data.data,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           };
 
           // Get bootstrap data from API response if available
@@ -441,16 +490,20 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               .filter(Boolean);
 
             if (playersFromResponse.length > 0) {
-              setAllPlayers((prev) => prev.length === 0 ? playersFromResponse : prev);
+              setAllPlayers((prev) =>
+                prev.length === 0 ? playersFromResponse : prev
+              );
             }
           }
         }
       } catch (error) {
         console.error("❌ Error fetching team data:", error);
-        
+
         // Try fallback on any error if possible
         if (targetGameweek > 3) {
-          console.log(`🔄 Error occurred, trying fallback GW${targetGameweek - 1}`);
+          console.log(
+            `🔄 Error occurred, trying fallback GW${targetGameweek - 1}`
+          );
           teamDataRequestRef.current = null; // Clear request lock
           return await fetchTeamData(id, targetGameweek - 1, forceRefresh);
         }
@@ -725,244 +778,6 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     return positions[elementType as keyof typeof positions] || "Unknown";
   }, []);
 
-  const getPositionName = useCallback((elementType: number) => {
-    const positions = {
-      1: "Goalkeeper",
-      2: "Defender",
-      3: "Midfielder",
-      4: "Forward",
-    };
-    return positions[elementType as keyof typeof positions] || "Unknown";
-  }, []);
-
-  const getStartingLineup = useCallback(() => {
-    if (!userTeamData?.team_with_stats) return [];
-    return userTeamData.team_with_stats
-      .filter((player) => player.position <= 11)
-      .sort((a, b) => a.position - b.position);
-  }, [userTeamData]);
-
-  const getBench = useCallback(() => {
-    if (!userTeamData?.team_with_stats) return [];
-    return userTeamData.team_with_stats
-      .filter((player) => player.position > 11)
-      .sort((a, b) => a.position - b.position);
-  }, [userTeamData]);
-
-  // Enhanced player rendering function
-  const renderEnhancedPlayer = useCallback(
-    (teamPlayer: any, isOnPitch = true, position = "PLAYER") => {
-      if (!teamPlayer) return null;
-
-      const player = getPlayerById(teamPlayer.player_id);
-      if (!player) return null;
-
-      const isCaptain = teamPlayer.is_captain;
-      const isViceCaptain = teamPlayer.is_vice_captain;
-      const teamColor = getTeamColor(player.team);
-      const points = teamPlayer.live_stats?.total_points || 0;
-
-      return (
-        <motion.div
-          key={teamPlayer.player_id}
-          className="relative group cursor-pointer"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div
-            className={`relative ${
-              isOnPitch ? "w-14 lg:w-16 h-16 lg:h-20" : "w-12 h-14"
-            } mx-1 lg:mx-2 mb-2 ${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
-            } rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 ${
-              isCaptain
-                ? "border-yellow-400 ring-2 ring-yellow-200"
-                : isViceCaptain
-                ? "border-blue-400 ring-2 ring-blue-200"
-                : "border-gray-300 hover:border-gray-400"
-            }`}
-          >
-            {/* Player Kit/Jersey */}
-            <div
-              className={`${
-                isOnPitch ? "w-10 lg:w-12 h-10 lg:h-12" : "w-8 h-8"
-              } mx-auto mt-1 rounded-full flex items-center justify-center shadow-inner transition-transform group-hover:scale-110`}
-              style={{
-                backgroundColor: teamColor.primary,
-                border: `2px solid ${teamColor.secondary}`,
-              }}
-            >
-              <BiFootball
-                className={`${
-                  isOnPitch ? "text-xs lg:text-sm" : "text-xs"
-                } opacity-80`}
-                style={{ color: teamColor.secondary }}
-              />
-            </div>
-
-            {/* Captain/Vice-Captain Badge */}
-            {(isCaptain || isViceCaptain) && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={`absolute -top-1 -right-1 ${
-                  isOnPitch ? "w-5 h-5 lg:w-6 lg:h-6" : "w-4 h-4"
-                } rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg ${
-                  isCaptain ? "bg-yellow-500" : "bg-blue-500"
-                }`}
-              >
-                {isCaptain ? "C" : "V"}
-              </motion.div>
-            )}
-
-            {/* Player Name */}
-            <div
-              className={`${
-                isOnPitch ? "text-xs lg:text-sm" : "text-xs"
-              } font-medium text-center px-1 truncate mt-1`}
-            >
-              {player.web_name}
-            </div>
-
-            {/* Points */}
-            <div
-              className={`${
-                isOnPitch ? "text-xs" : "text-xs"
-              } text-center font-bold`}
-            >
-              <span className="text-green-600">{points}pts</span>
-            </div>
-          </div>
-
-          {/* Enhanced Hover tooltip */}
-          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black/90 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 backdrop-blur-sm">
-            <div className="text-center space-y-1">
-              <div className="font-bold">
-                {player.first_name} {player.second_name}
-              </div>
-              <div className="text-gray-300">
-                {getTeamColor(player.team).name} -{" "}
-                {getPlayerPosition(player.element_type)}
-              </div>
-              <div className="text-green-400">
-                £{(player.now_cost / 10).toFixed(1)}m | {points} pts
-              </div>
-              <div className="text-blue-400">
-                Form: {player.form} | {player.selected_by_percent}% owned
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      );
-    },
-    [getPlayerById, getTeamColor, getPlayerPosition, theme]
-  );
-
-  const renderPlayer = (teamPlayer: any, isOnPitch = true) => {
-    if (!teamPlayer) return null;
-
-    const player = getPlayerById(teamPlayer.player_id);
-    if (!player) return null;
-
-    const isCaptain = teamPlayer.is_captain;
-    const isViceCaptain = teamPlayer.is_vice_captain;
-    const teamColor = getTeamColor(player.team);
-    const points = teamPlayer.live_stats?.total_points || 0;
-
-    return (
-      <div key={teamPlayer.player_id} className="relative group cursor-pointer">
-        <div
-          className={`relative ${
-            isOnPitch ? "w-16 h-20" : "w-12 h-16"
-          } mx-2 mb-2 ${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
-          } rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 ${
-            isCaptain
-              ? "border-yellow-400"
-              : isViceCaptain
-              ? "border-blue-400"
-              : "border-gray-300"
-          }`}
-        >
-          {/* Player Kit/Jersey */}
-          <div
-            className={`${
-              isOnPitch ? "w-12 h-12" : "w-8 h-8"
-            } mx-auto mt-1 rounded-full flex items-center justify-center shadow-inner`}
-            style={{
-              backgroundColor: teamColor.primary,
-              border: `2px solid ${teamColor.secondary}`,
-            }}
-          >
-            <BiFootball
-              className={`${isOnPitch ? "text-xs" : "text-xs"} opacity-80`}
-              style={{ color: teamColor.secondary }}
-            />
-          </div>
-
-          {/* Captain/Vice-Captain Badge */}
-          {(isCaptain || isViceCaptain) && (
-            <div
-              className={`absolute -top-1 -right-1 ${
-                isOnPitch ? "w-5 h-5" : "w-4 h-4"
-              } rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                isCaptain ? "bg-yellow-500" : "bg-blue-500"
-              }`}
-            >
-              {isCaptain ? "C" : "V"}
-            </div>
-          )}
-
-          {/* Multiplier for captain */}
-          {teamPlayer.multiplier > 1 && (
-            <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-xs font-bold text-white">
-              {teamPlayer.multiplier}x
-            </div>
-          )}
-
-          {/* Player Name */}
-          <div
-            className={`${
-              isOnPitch ? "text-xs" : "text-xs"
-            } font-medium text-center px-1 truncate`}
-          >
-            {player.web_name}
-          </div>
-
-          {/* Points */}
-          <div
-            className={`${
-              isOnPitch ? "text-xs" : "text-xs"
-            } text-center font-bold`}
-          >
-            <span className="text-green-600">{points}pts</span>
-          </div>
-        </div>
-
-        {/* Hover tooltip */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-          <div className="text-center">
-            <div className="font-bold">
-              {player.first_name} {player.second_name}
-            </div>
-            <div>
-              {getTeamColor(player.team).name} -{" "}
-              {getPlayerPosition(player.element_type)}
-            </div>
-            <div>
-              £{(player.now_cost / 10).toFixed(1)}m | {points} pts
-            </div>
-            <div>
-              Form: {player.form} | {player.selected_by_percent}% ownership
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div
       className={`min-h-screen p-4 ${
@@ -1084,7 +899,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3">
                 <p className="text-sm text-gray-500">Team Value</p>
                 <p className="font-bold text-lg">
-                  £{((userTeamData.entry_history?.value || 1000) / 10).toFixed(1)}m
+                  £
+                  {((userTeamData.entry_history?.value || 1000) / 10).toFixed(
+                    1
+                  )}
+                  m
                 </p>
               </div>
               <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-3">
@@ -1108,7 +927,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               <div
                 className={`${
                   theme === "dark" ? "bg-gray-800" : "bg-white"
-                } rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700`}
+                } rounded-lg shadow-lg  border border-gray-200 dark:border-gray-700`}
               >
                 {/* Enhanced View Controls */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 lg:p-4 border-b border-gray-200 dark:border-gray-700 space-y-3 sm:space-y-0">
@@ -1150,7 +969,6 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         <span className="text-xs sm:text-sm">Analytics</span>
                       </button>
                     </div>
-
                   </div>
 
                   {/* Action Buttons - Mobile optimized */}
@@ -1220,16 +1038,24 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 </div>
                               </div>
                               <div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">Captain</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  Captain
+                                </p>
                                 <p className="text-sm font-medium">
-                                  {getPlayerById(userTeamData.captain.player_id)?.web_name}
+                                  {
+                                    getPlayerById(
+                                      userTeamData.captain.player_id
+                                    )?.web_name
+                                  }
                                 </p>
                                 <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                                  {userTeamData.captain.stats?.total_points || 0} pts (x2)
+                                  {userTeamData.captain.stats?.total_points ||
+                                    0}{" "}
+                                  pts (x2)
                                 </p>
                               </div>
                             </div>
-                            
+
                             {userTeamData?.vice_captain?.player_id && (
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -1238,12 +1064,20 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   </div>
                                 </div>
                                 <div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">Vice Captain</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    Vice Captain
+                                  </p>
                                   <p className="text-sm font-medium">
-                                    {getPlayerById(userTeamData.vice_captain.player_id)?.web_name}
+                                    {
+                                      getPlayerById(
+                                        userTeamData.vice_captain.player_id
+                                      )?.web_name
+                                    }
                                   </p>
                                   <p className="text-xs text-blue-600 dark:text-blue-400">
-                                    {userTeamData.vice_captain.stats?.total_points || 0} pts
+                                    {userTeamData.vice_captain.stats
+                                      ?.total_points || 0}{" "}
+                                    pts
                                   </p>
                                 </div>
                               </div>
@@ -1257,7 +1091,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     <div className="border-t border-gray-200 dark:border-gray-700">
                       <div className="p-4 lg:p-6">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
-                          <h3 className="text-lg font-semibold">Transfer Market</h3>
+                          <h3 className="text-lg font-semibold">
+                            Transfer Market
+                          </h3>
                           <div className="flex items-center space-x-2 w-full sm:w-auto">
                             <div className="relative flex-1 sm:flex-none">
                               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -1302,7 +1138,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         <div
                           className={`${
                             showFilters ? "mt-6" : ""
-                          } bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700`}
+                          } bg-white dark:bg-gray-800 rounded-lg  border border-gray-200 dark:border-gray-700`}
                         >
                           {/* Table Header */}
                           <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
@@ -1322,9 +1158,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                             {filteredPlayers.slice(0, 100).map((player) => {
                               const team = getTeamById(player.team);
                               const teamColor = getTeamColor(player.team);
-                              const isSelected = uiState.comparedPlayers.includes(
-                                player.id
-                              );
+                              const isSelected =
+                                uiState.comparedPlayers.includes(player.id);
                               return (
                                 <motion.div
                                   key={player.id}
@@ -1340,13 +1175,21 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                       setUIState((prev) => ({
                                         ...prev,
                                         comparedPlayers:
-                                          prev.comparedPlayers.includes(player.id)
+                                          prev.comparedPlayers.includes(
+                                            player.id
+                                          )
                                             ? prev.comparedPlayers.filter(
                                                 (id) => id !== player.id
                                               )
                                             : prev.comparedPlayers.length < 2
-                                            ? [...prev.comparedPlayers, player.id]
-                                            : [prev.comparedPlayers[1], player.id],
+                                            ? [
+                                                ...prev.comparedPlayers,
+                                                player.id,
+                                              ]
+                                            : [
+                                                prev.comparedPlayers[1],
+                                                player.id,
+                                              ],
                                       }));
                                     } else {
                                       setSelectedPlayer(player);
@@ -1357,7 +1200,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   <div className="col-span-3 flex items-center space-x-2">
                                     <div
                                       className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white relative"
-                                      style={{ backgroundColor: teamColor.primary }}
+                                      style={{
+                                        backgroundColor: teamColor.primary,
+                                      }}
                                     >
                                       {player.web_name.charAt(0)}
                                       {/* Enhanced indicators */}
@@ -1413,10 +1258,12 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                               : "text-red-600"
                                           }`}
                                         >
-                                          {player.cost_change_event > 0 ? "+" : ""}
-                                          {(player.cost_change_event / 10).toFixed(
-                                            1
-                                          )}
+                                          {player.cost_change_event > 0
+                                            ? "+"
+                                            : ""}
+                                          {(
+                                            player.cost_change_event / 10
+                                          ).toFixed(1)}
                                         </span>
                                       )}
                                     </div>
@@ -1474,7 +1321,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                         "doubtful" && (
                                         <div className="w-2 h-2 bg-yellow-500 rounded-full" />
                                       )}
-                                      {player.availability_status === "injured" && (
+                                      {player.availability_status ===
+                                        "injured" && (
                                         <div className="w-2 h-2 bg-red-500 rounded-full" />
                                       )}
                                       {player.availability_status ===
@@ -1497,8 +1345,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                           <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-gray-600 dark:text-gray-400">
-                                Showing {Math.min(100, filteredPlayers.length)} of{" "}
-                                {filteredPlayers.length} players
+                                Showing {Math.min(100, filteredPlayers.length)}{" "}
+                                of {filteredPlayers.length} players
                               </span>
                               {uiState.compareMode && (
                                 <span className="text-sm text-blue-600 dark:text-blue-400">
@@ -1551,7 +1399,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                             <span className="font-bold text-green-600">
                               £
                               {(
-                                (userTeamData?.entry_history?.value || 1000) / 10
+                                (userTeamData?.entry_history?.value || 1000) /
+                                10
                               ).toFixed(1)}
                               m
                             </span>
@@ -1589,36 +1438,51 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                           <div className="space-y-2">
                             {["GK", "DEF", "MID", "FWD"].map((pos, idx) => {
                               const positionPlayers =
-                                userTeamData?.team_with_stats?.filter(
-                                  (tp) => {
-                                    const player = getPlayerById(tp.player_id);
-                                    return player?.element_type === idx + 1;
-                                  }
-                                ) || [];
-                              
-                              // Calculate average points from live stats if available, otherwise use total_points
-                              const totalPoints = positionPlayers.reduce((sum, tp) => {
-                                const livePoints = tp.live_stats?.total_points || 0;
-                                const staticPoints = tp.total_points || 0;
-                                return sum + Math.max(livePoints, staticPoints);
-                              }, 0);
-                              
-                              const avgPoints = positionPlayers.length > 0 ? totalPoints / positionPlayers.length : 0;
-                              
-                              // Calculate bench points for this position
-                              const benchPlayers = userTeamData?.team_with_stats?.filter(
-                                (tp) => {
+                                userTeamData?.team_with_stats?.filter((tp) => {
                                   const player = getPlayerById(tp.player_id);
-                                  return player?.element_type === idx + 1 && tp.position > 11;
-                                }
-                              ) || [];
-                              
-                              const benchPoints = benchPlayers.reduce((sum, tp) => {
-                                const livePoints = tp.live_stats?.total_points || 0;
-                                const staticPoints = tp.total_points || 0;
-                                return sum + Math.max(livePoints, staticPoints);
-                              }, 0);
-                              
+                                  return player?.element_type === idx + 1;
+                                }) || [];
+
+                              // Calculate average points from live stats if available, otherwise use total_points
+                              const totalPoints = positionPlayers.reduce(
+                                (sum, tp) => {
+                                  const livePoints =
+                                    tp.live_stats?.total_points || 0;
+                                  const staticPoints = tp.total_points || 0;
+                                  return (
+                                    sum + Math.max(livePoints, staticPoints)
+                                  );
+                                },
+                                0
+                              );
+
+                              const avgPoints =
+                                positionPlayers.length > 0
+                                  ? totalPoints / positionPlayers.length
+                                  : 0;
+
+                              // Calculate bench points for this position
+                              const benchPlayers =
+                                userTeamData?.team_with_stats?.filter((tp) => {
+                                  const player = getPlayerById(tp.player_id);
+                                  return (
+                                    player?.element_type === idx + 1 &&
+                                    tp.position > 11
+                                  );
+                                }) || [];
+
+                              const benchPoints = benchPlayers.reduce(
+                                (sum, tp) => {
+                                  const livePoints =
+                                    tp.live_stats?.total_points || 0;
+                                  const staticPoints = tp.total_points || 0;
+                                  return (
+                                    sum + Math.max(livePoints, staticPoints)
+                                  );
+                                },
+                                0
+                              );
+
                               return (
                                 <div
                                   key={pos}
@@ -1644,8 +1508,6 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     </div>
                   </div>
                 )}
-
-
               </div>
             </motion.div>
 

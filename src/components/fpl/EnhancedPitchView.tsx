@@ -80,15 +80,15 @@ export default function EnhancedPitchView({
       const getSpacing = (playerCount: number) => {
         switch (playerCount) {
           case 2:
-            return { minX: 30, maxX: 70 };
+            return { minX: 25, maxX: 70 };
           case 3:
-            return { minX: 20, maxX: 80 };
+            return { minX: 8, maxX: 80 };
           case 4:
-            return { minX: 15, maxX: 85 };
+            return { minX: 8, maxX: 80 };
           case 5:
-            return { minX: 10, maxX: 90 };
+            return { minX: 8, maxX: 80 };
           default:
-            return { minX: 12, maxX: 88 };
+            return { minX: 7, maxX: 80 };
         }
       };
 
@@ -111,10 +111,10 @@ export default function EnhancedPitchView({
     const GK_Y = 10; // Goalkeeper near our goal
     const DEF_Y = 30; // Defenders
     const MID_Y = 55; // Midfielders
-    const FWD_Y = 75; // Forwards (attacking toward center/opponent goal)
+    const FWD_Y = 78; // Forwards (attacking toward center/opponent goal)
 
     const positions = {
-      goalkeepers: [{ x: 45, y: GK_Y }],
+      goalkeepers: [{ x: 44, y: GK_Y }],
       defenders: distributeX(defCount, DEF_Y),
       midfielders: distributeX(midCount, MID_Y),
       forwards: distributeX(fwdCount, FWD_Y),
@@ -229,7 +229,7 @@ export default function EnhancedPitchView({
   }, []);
 
   return (
-    <div className="relative">
+    <div className="relative overflow-visible">
       {/* Team Stats Header */}
       {teamData && (
         <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
@@ -309,7 +309,7 @@ export default function EnhancedPitchView({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative bg-gradient-to-b from-green-400 via-green-500 to-green-400 rounded-xl shadow-inner overflow-hidden"
+        className="relative bg-gradient-to-b from-green-400 via-green-500 to-green-400 rounded-xl shadow-inner"
         style={{
           minHeight: "600px",
           height: "min(85vh, 800px)", // Increased height for better visibility
@@ -494,7 +494,7 @@ export default function EnhancedPitchView({
           <div className="absolute bottom-12 left-4 text-white/70 text-xs font-medium bg-black/20 px-2 py-1 rounded">
             ATTACK →
           </div>
-          <div className="absolute top-16 right-4 text-white/70 text-xs font-medium bg-black/20 px-2 py-1 rounded">
+          <div className="absolute top-52 right-4 text-white/70 text-xs font-medium bg-black/20 px-2 py-1 rounded">
             ← DEFEND
           </div>
         </div>

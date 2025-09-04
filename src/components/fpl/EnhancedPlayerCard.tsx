@@ -1,24 +1,15 @@
 "use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  AlertTriangle
-} from 'lucide-react';
-import { 
-  FaTshirt, 
-  FaRunning
-} from 'react-icons/fa';
-import { 
-  GiGoalKeeper, 
-  GiSoccerKick
-} from 'react-icons/gi';
-import { useTheme } from '@/contexts/ThemeContext';
-import { getTeamColors } from '@/lib/team-colors';
-import type { EnhancedPlayerData } from '@/types/fpl-enhanced';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { TrendingUp, TrendingDown, Users, AlertTriangle } from "lucide-react";
+import { FaTshirt, FaRunning } from "react-icons/fa";
+import { GiGoalKeeper, GiSoccerKick } from "react-icons/gi";
+import { PiSoccerBallFill } from "react-icons/pi";
+
+import { useTheme } from "@/contexts/ThemeContext";
+import { getTeamColors } from "@/lib/team-colors";
+import type { EnhancedPlayerData } from "@/types/fpl-enhanced";
 
 interface EnhancedPlayerCardProps {
   player: EnhancedPlayerData | any; // Support both enhanced and regular player data
@@ -30,28 +21,37 @@ interface EnhancedPlayerCardProps {
   interactive?: boolean;
   showStats?: boolean;
   showTooltip?: boolean;
-  position?: 'GK' | 'DEF' | 'MID' | 'FWD';
+  position?: "GK" | "DEF" | "MID" | "FWD";
   compact?: boolean;
 }
 
 // Function to get kit icon based on position
-const getKitIcon = (position: 'GK' | 'DEF' | 'MID' | 'FWD' | undefined, elementType?: number) => {
+const getKitIcon = (
+  position: "GK" | "DEF" | "MID" | "FWD" | undefined,
+  elementType?: number
+) => {
   // Use position prop first, then fall back to element_type
-  const pos = position || 
-    (elementType === 1 ? 'GK' : 
-     elementType === 2 ? 'DEF' : 
-     elementType === 3 ? 'MID' : 
-     elementType === 4 ? 'FWD' : 'MID');
+  const pos =
+    position ||
+    (elementType === 1
+      ? "GK"
+      : elementType === 2
+      ? "DEF"
+      : elementType === 3
+      ? "MID"
+      : elementType === 4
+      ? "FWD"
+      : "MID");
 
   switch (pos) {
-    case 'GK':
+    case "GK":
       return GiGoalKeeper;
-    case 'DEF':
-      return FaTshirt;
-    case 'MID':
+    case "DEF":
       return FaRunning;
-    case 'FWD':
+    case "MID":
       return GiSoccerKick;
+    case "FWD":
+      return PiSoccerBallFill;
     default:
       return FaTshirt;
   }
@@ -78,57 +78,85 @@ export default function EnhancedPlayerCard({
   const teamColors = getTeamColors(player.team);
   const points = player.total_points || player.event_points || 0;
   const livePoints = player.live_stats?.total_points || player.points || 0;
-  
+
   // Enhanced data (might not be available for all players)
   const priceChange = player.price_change_24h || player.cost_change_event || 0;
   const ownershipChange = player.ownership_change_24h || 0;
-  const priceTrend = player.price_trend || (priceChange > 0 ? 'rising' : priceChange < 0 ? 'falling' : 'stable');
-  const ownershipTrend = player.ownership_trend || (ownershipChange > 0 ? 'rising' : ownershipChange < 0 ? 'falling' : 'stable');
-  
+  const priceTrend =
+    player.price_trend ||
+    (priceChange > 0 ? "rising" : priceChange < 0 ? "falling" : "stable");
+  const ownershipTrend =
+    player.ownership_trend ||
+    (ownershipChange > 0
+      ? "rising"
+      : ownershipChange < 0
+      ? "falling"
+      : "stable");
+
   // Player status and availability
-  const availabilityStatus = player.availability_status || 
-    (player.status === 'a' ? 'available' : 
-     player.status === 'd' ? 'doubtful' : 
-     player.status === 'i' ? 'injured' : 
-     player.status === 's' ? 'suspended' : 'available');
+  const availabilityStatus =
+    player.availability_status ||
+    (player.status === "a"
+      ? "available"
+      : player.status === "d"
+      ? "doubtful"
+      : player.status === "i"
+      ? "injured"
+      : player.status === "s"
+      ? "suspended"
+      : "available");
 
-  const cardSize = isOnPitch 
-    ? (compact ? "w-16 h-18" : "w-18 lg:w-20 h-20 lg:h-24")
-    : (compact ? "w-16 h-20" : "w-18 lg:w-20 h-22 lg:h-26");
+  const cardSize = isOnPitch
+    ? compact
+      ? "w-16 h-18"
+      : "w-18 lg:w-20 h-20 lg:h-24"
+    : compact
+    ? "w-16 h-20"
+    : "w-18 lg:w-20 h-22 lg:h-26";
 
-  const kitSize = isOnPitch 
-    ? (compact ? "w-10 h-10" : "w-12 lg:w-14 h-12 lg:h-14")
-    : (compact ? "w-10 h-10" : "w-12 lg:w-14 h-12 lg:h-14");
+  const kitSize = isOnPitch
+    ? compact
+      ? "w-10 h-10"
+      : "w-12 lg:w-14 h-12 lg:h-14"
+    : compact
+    ? "w-10 h-10"
+    : "w-12 lg:w-14 h-12 lg:h-14";
 
-  const textSize = isOnPitch 
-    ? (compact ? "text-xs" : "text-sm lg:text-base")
-    : (compact ? "text-sm" : "text-base lg:text-lg");
+  const textSize = isOnPitch
+    ? compact
+      ? "text-xs"
+      : "text-sm lg:text-base"
+    : compact
+    ? "text-sm"
+    : "text-base lg:text-lg";
 
   // Status indicator colors
   const getStatusColor = () => {
     switch (availabilityStatus) {
-      case 'injured': return 'bg-red-500';
-      case 'doubtful': return 'bg-yellow-500';
-      case 'suspended': return 'bg-orange-500';
-      default: return null;
+      case "injured":
+        return "bg-red-500";
+      case "doubtful":
+        return "bg-yellow-500";
+      case "suspended":
+        return "bg-orange-500";
+      default:
+        return null;
     }
   };
 
   // Price change indicator
   const renderPriceIndicator = () => {
     if (!priceChange) return null;
-    
+
     return (
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         className={`absolute -top-1 -left-1 w-4 h-4 rounded-full flex items-center justify-center text-xs ${
-          priceChange > 0 
-            ? 'bg-green-500 text-white' 
-            : 'bg-red-500 text-white'
+          priceChange > 0 ? "bg-green-500 text-white" : "bg-red-500 text-white"
         }`}
       >
-        {priceChange > 0 ? '↗' : '↘'}
+        {priceChange > 0 ? "↗" : "↘"}
       </motion.div>
     );
   };
@@ -136,15 +164,15 @@ export default function EnhancedPlayerCard({
   // Ownership change indicator
   const renderOwnershipIndicator = () => {
     if (!ownershipChange || Math.abs(ownershipChange) < 0.1) return null;
-    
+
     return (
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         className={`absolute -bottom-1 -left-1 w-4 h-4 rounded-full flex items-center justify-center text-xs ${
-          ownershipChange > 0 
-            ? 'bg-blue-500 text-white' 
-            : 'bg-purple-500 text-white'
+          ownershipChange > 0
+            ? "bg-blue-500 text-white"
+            : "bg-purple-500 text-white"
         }`}
       >
         <Users className="w-2 h-2" />
@@ -155,7 +183,7 @@ export default function EnhancedPlayerCard({
   // Captain/Vice-Captain badge
   const renderCaptainBadge = () => {
     if (!isCaptain && !isViceCaptain) return null;
-    
+
     return (
       <motion.div
         initial={{ scale: 0 }}
@@ -175,7 +203,7 @@ export default function EnhancedPlayerCard({
   const renderStatusBadge = () => {
     const statusColor = getStatusColor();
     if (!statusColor) return null;
-    
+
     return (
       <motion.div
         initial={{ scale: 0 }}
@@ -204,7 +232,7 @@ export default function EnhancedPlayerCard({
           <div className="text-gray-300 flex items-center gap-2">
             <span>{teamColors.name}</span>
             <span>•</span>
-            <span>{position || 'Unknown'}</span>
+            <span>{position || "Unknown"}</span>
           </div>
         </div>
 
@@ -215,8 +243,13 @@ export default function EnhancedPlayerCard({
             <div className="font-bold text-green-400">
               £{((player.now_cost || 0) / 10).toFixed(1)}m
               {priceChange !== 0 && (
-                <span className={`ml-1 text-xs ${priceChange > 0 ? 'text-green-300' : 'text-red-300'}`}>
-                  ({priceChange > 0 ? '+' : ''}{(priceChange / 10).toFixed(1)})
+                <span
+                  className={`ml-1 text-xs ${
+                    priceChange > 0 ? "text-green-300" : "text-red-300"
+                  }`}
+                >
+                  ({priceChange > 0 ? "+" : ""}
+                  {(priceChange / 10).toFixed(1)})
                 </span>
               )}
             </div>
@@ -224,10 +257,15 @@ export default function EnhancedPlayerCard({
           <div>
             <div className="text-gray-400">Ownership</div>
             <div className="font-bold text-blue-400">
-              {parseFloat(player.selected_by_percent || '0').toFixed(1)}%
+              {parseFloat(player.selected_by_percent || "0").toFixed(1)}%
               {ownershipChange !== 0 && (
-                <span className={`ml-1 text-xs ${ownershipChange > 0 ? 'text-blue-300' : 'text-purple-300'}`}>
-                  ({ownershipChange > 0 ? '+' : ''}{ownershipChange.toFixed(1)}%)
+                <span
+                  className={`ml-1 text-xs ${
+                    ownershipChange > 0 ? "text-blue-300" : "text-purple-300"
+                  }`}
+                >
+                  ({ownershipChange > 0 ? "+" : ""}
+                  {ownershipChange.toFixed(1)}%)
                 </span>
               )}
             </div>
@@ -241,26 +279,26 @@ export default function EnhancedPlayerCard({
           <div>
             <div className="text-gray-400">Form</div>
             <div className="font-bold">
-              {parseFloat(player.form || '0').toFixed(1)}
+              {parseFloat(player.form || "0").toFixed(1)}
             </div>
           </div>
         </div>
 
         {/* Performance Indicators */}
         <div className="flex items-center gap-2 mb-2 text-xs">
-          {priceTrend === 'rising' && (
+          {priceTrend === "rising" && (
             <div className="flex items-center gap-1 text-green-400">
               <TrendingUp className="w-3 h-3" />
               <span>Price Rising</span>
             </div>
           )}
-          {priceTrend === 'falling' && (
+          {priceTrend === "falling" && (
             <div className="flex items-center gap-1 text-red-400">
               <TrendingDown className="w-3 h-3" />
               <span>Price Falling</span>
             </div>
           )}
-          {ownershipTrend === 'rising' && (
+          {ownershipTrend === "rising" && (
             <div className="flex items-center gap-1 text-blue-400">
               <Users className="w-3 h-3" />
               <span>Popular</span>
@@ -269,7 +307,7 @@ export default function EnhancedPlayerCard({
         </div>
 
         {/* Injury/Availability Status */}
-        {availabilityStatus !== 'available' && (
+        {availabilityStatus !== "available" && (
           <div className="border-t border-white/20 pt-2">
             <div className="flex items-center gap-2 text-yellow-400">
               <AlertTriangle className="w-3 h-3" />
@@ -283,17 +321,32 @@ export default function EnhancedPlayerCard({
           </div>
         )}
 
-        {/* Enhanced metrics - always show captaincy appeal */}
-        <div className="border-t border-white/20 pt-2 mt-2">
-          <div className="text-gray-400 text-xs mb-1">Captaincy Appeal</div>
-          <div className="w-full bg-gray-700 rounded-full h-2">
-            <div 
-              className="bg-yellow-400 h-2 rounded-full transition-all duration-300" 
-              style={{ width: `${Math.min(100, Math.max(0, player.captaincy_appeal || (player.total_points * 2) || 10))}%` }}
-            />
+        {/* Enhanced metrics - captaincy appeal with higher priority */}
+        <div className="border-t border-white/20 pt-2 mt-2 bg-gradient-to-r from-yellow-900/30 to-orange-900/30 -mx-4 px-4 -mb-3 pb-3 rounded-b-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-yellow-400 text-sm font-bold">
+              Captaincy Appeal
+            </span>
+            <span className="text-yellow-300 text-lg font-bold">
+              {Math.round(
+                player.captaincy_appeal || player.total_points * 2 || 10
+              )}
+              %
+            </span>
           </div>
-          <div className="text-xs text-yellow-400 mt-1">
-            {Math.round(player.captaincy_appeal || (player.total_points * 2) || 10)}%
+          <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden shadow-inner">
+            <div
+              className="bg-gradient-to-r from-yellow-400 to-orange-400 h-3 rounded-full transition-all duration-500 shadow-sm"
+              style={{
+                width: `${Math.min(
+                  100,
+                  Math.max(
+                    0,
+                    player.captaincy_appeal || player.total_points * 2 || 10
+                  )
+                )}%`,
+              }}
+            />
           </div>
         </div>
       </motion.div>
@@ -315,7 +368,7 @@ export default function EnhancedPlayerCard({
             : isViceCaptain
             ? "border-blue-400 ring-2 ring-blue-200 dark:ring-blue-800"
             : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500"
-        } ${interactive ? 'cursor-pointer' : ''} overflow-hidden`}
+        } ${interactive ? "cursor-pointer" : ""} overflow-hidden`}
         onMouseEnter={() => showTooltip && setShowAdvancedTooltip(true)}
         onMouseLeave={() => setShowAdvancedTooltip(false)}
       >
@@ -332,7 +385,13 @@ export default function EnhancedPlayerCard({
             const IconComponent = getKitIcon(position, player.element_type);
             return (
               <IconComponent
-                className={`${isOnPitch ? (compact ? "w-4 h-4" : "w-5 h-5 lg:w-6 lg:h-6") : "w-3 h-3"} opacity-90`}
+                className={`${
+                  isOnPitch
+                    ? compact
+                      ? "w-4 h-4"
+                      : "w-5 h-5 lg:w-6 lg:h-6"
+                    : "w-3 h-3"
+                } opacity-90`}
                 style={{ color: teamColors.secondary }}
               />
             );
@@ -349,7 +408,9 @@ export default function EnhancedPlayerCard({
         </div>
 
         {/* Player Name */}
-        <div className={`${textSize} font-medium text-center px-1 truncate mt-1`}>
+        <div
+          className={`${textSize} font-medium text-center px-1 truncate mt-1`}
+        >
           {player.web_name}
         </div>
 
@@ -388,17 +449,17 @@ export default function EnhancedPlayerCard({
           >
             <div className="text-center space-y-1">
               <div>£{((player.now_cost || 0) / 10).toFixed(1)}m</div>
-              <div>{parseFloat(player.selected_by_percent || '0').toFixed(1)}%</div>
-              <div>Form: {parseFloat(player.form || '0').toFixed(1)}</div>
+              <div>
+                {parseFloat(player.selected_by_percent || "0").toFixed(1)}%
+              </div>
+              <div>Form: {parseFloat(player.form || "0").toFixed(1)}</div>
             </div>
           </motion.div>
         )}
       </motion.div>
 
       {/* Enhanced Tooltip Only */}
-      <AnimatePresence>
-        {renderAdvancedTooltip()}
-      </AnimatePresence>
+      <AnimatePresence>{renderAdvancedTooltip()}</AnimatePresence>
     </div>
   );
 }
