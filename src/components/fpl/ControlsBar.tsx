@@ -59,12 +59,10 @@ export default function ControlsBar({
       if (status === "authenticated" && session?.user) {
         setIsLoadingManagerId(true);
         try {
-          console.log("🔍 Checking database for manager ID...");
           const response = await fetch("/api/user/manager-id");
           if (response.ok) {
             const data = await response.json();
             if (data.managerId) {
-              console.log("✅ Found manager ID in database:", data.managerId);
               setLocalManagerId(data.managerId);
               // Also save to localStorage for future use
               localStorage.setItem("fpl-manager-id", data.managerId);
@@ -153,7 +151,9 @@ export default function ControlsBar({
       {/* Team Search */}
       <div className="mb-4">
         <div className="text-center mb-2">
-          <p className="text-white/80 text-sm">{t("fplLive.search.orSearchByTeamName")}</p>
+          <p className="text-white/80 text-sm">
+            {t("fplLive.search.orSearchByTeamName")}
+          </p>
         </div>
         <TeamSearchInput
           onManagerIdFound={handleTeamSearchFound}

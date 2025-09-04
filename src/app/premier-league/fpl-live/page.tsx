@@ -79,7 +79,7 @@ export default function FPLLivePage() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   // const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
-    // null
+  // null
   // );
 
   // Master live tracking state
@@ -375,25 +375,6 @@ export default function FPLLivePage() {
     ]
   );
 
-  // DISABLED: Auto-load team data - user must click Load Team button manually
-  // useEffect(() => {
-  //   // Only auto-load if we have manager ID AND it came from localStorage (not user input)
-  //   const savedManagerId = localStorage.getItem("fpl-manager-id");
-  //   if (
-  //     savedManagerId &&
-  //     managerId &&
-  //     !data.manager &&
-  //     !loading &&
-  //     managerId.toString() === savedManagerId
-  //   ) {
-  //     console.log(
-  //       "🔄 [FRONTEND] Auto-loading team data for saved manager ID:",
-  //       managerId
-  //     );
-  //     loadManagerInfo();
-  //   }
-  // }, [managerId, data.manager, loading, loadManagerInfo]);
-
   const toggleLiveTracking = useCallback(() => {
     if (!isLiveTracking) {
       // Start live tracking - Visual only, no API calls
@@ -408,32 +389,17 @@ export default function FPLLivePage() {
       }
 
       setIsLiveTracking(true);
-      // setIsPolling(true);
 
-      // Automatically switch to leagues tab when starting live tracking
       handleTabChange("leagues");
 
       showSuccess("Pokrenuto je uživo praćenje za sve komponente");
     } else {
-      // Stop live tracking - Visual only
       setIsLiveTracking(false);
-      // setIsPolling(false);
 
       showSuccess("Zaustavljen je uživo praćenje");
     }
   }, [isLiveTracking, managerId, data.manager, t]);
 
-  // Legacy functions removed - now using toggleLiveTracking directly
-
-  // useEffect(() => {
-  //   return () => {
-  //     if (pollingInterval) {
-  //       clearInterval(pollingInterval);
-  //     }
-  //   };
-  // }, [pollingInterval]);
-
-  // Close dropdown when clicking outside or on window resize
   useEffect(() => {
     const handleClickOutside = () => {
       setShowTabDropdown(false);
@@ -604,10 +570,6 @@ export default function FPLLivePage() {
             gameweek={gameweek}
             isPolling={isLiveTracking}
             onManagerSelect={(selectedManagerId) => {
-              console.log(
-                "Manager selected from match results:",
-                selectedManagerId
-              );
               // Future: Load manager-specific data
             }}
           />

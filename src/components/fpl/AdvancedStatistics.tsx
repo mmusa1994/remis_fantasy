@@ -98,7 +98,6 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
               const picksResult = await picksResponse.json();
               if (picksResult.success) {
                 const picksData = picksResult.data;
-                console.log(`GW${gwHistory.event} picks data:`, picksData);
 
                 // Find the captain from picks
                 const captain = picksData.picks?.find(
@@ -106,8 +105,6 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                 );
 
                 if (captain) {
-                  console.log(`GW${gwHistory.event} captain pick:`, captain);
-
                   // Find captain player - first try current team, then all players data
                   const captainPlayer = teamStats.find(
                     (p: any) => p.player_id === captain.element
@@ -144,9 +141,6 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                         );
                         if (gwHistoryEntry) {
                           playerPoints = gwHistoryEntry.total_points || 0;
-                          console.log(
-                            `GW${gwHistory.event} - Found exact points for ${playerName} (${captain.element}): ${playerPoints} points`
-                          );
                         } else {
                           console.warn(
                             `GW${gwHistory.event} - No history entry found for ${playerName}, using fallback`
@@ -178,10 +172,6 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                   }
 
                   const captainPoints = playerPoints * captain.multiplier; // Usually 2 for captain, 3 for TC
-
-                  console.log(
-                    `GW${gwHistory.event} FINAL - Captain ${playerName} (${captain.element}): basePoints=${playerPoints}, multiplier=${captain.multiplier}, totalCaptainPoints=${captainPoints}`
-                  );
 
                   captainData.push({
                     event: gwHistory.event,
@@ -215,20 +205,13 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           }
         }
 
-        console.log("🚀 FINAL CAPTAIN DATA ARRAY:");
         console.table(captainData);
-        console.log("📊 Captain details:");
         captainData.forEach((c) => {
           console.log(
             `GW${c.event}: ${c.playerName} (${c.element}) - Base: ${c.basePoints}, Multiplier: ${c.multiplier}, Total: ${c.captainPoints}`
           );
         });
         setCaptainHistory(captainData);
-        console.log(
-          "✅ Captain history state updated with",
-          captainData.length,
-          "items"
-        );
       } catch (error) {
         console.error("Failed to fetch captain history:", error);
       } finally {

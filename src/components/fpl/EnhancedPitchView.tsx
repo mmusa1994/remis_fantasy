@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 import EnhancedPlayerCard from "./EnhancedPlayerCard";
 import type {
   EnhancedPlayerData,
@@ -43,6 +44,7 @@ export default function EnhancedPitchView({
   teamData,
 }: EnhancedPitchViewProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [hoveredPlayer, setHoveredPlayer] = useState<number | null>(null);
 
   // Get player data with enhanced information
@@ -76,19 +78,40 @@ export default function EnhancedPitchView({
       if (count <= 0) return [];
       if (count === 1) return [{ x: 45, y }];
 
-      // Better spacing for different player counts
+      // Better spacing for different player counts - more compact on mobile
       const getSpacing = (playerCount: number) => {
-        switch (playerCount) {
-          case 2:
-            return { minX: 25, maxX: 70 };
-          case 3:
-            return { minX: 8, maxX: 80 };
-          case 4:
-            return { minX: 8, maxX: 80 };
-          case 5:
-            return { minX: 8, maxX: 80 };
-          default:
-            return { minX: 7, maxX: 80 };
+        // Check if mobile screen (rough approximation)
+        const isMobile =
+          typeof window !== "undefined" && window.innerWidth < 640;
+
+        if (isMobile) {
+          // Tighter spacing on mobile to accommodate larger cards
+          switch (playerCount) {
+            case 2:
+              return { minX: 25, maxX: 70 };
+            case 3:
+              return { minX: 3, maxX: 65 };
+            case 4:
+              return { minX: 3, maxX: 65 };
+            case 5:
+              return { minX: 3, maxX: 72 };
+            default:
+              return { minX: 3, maxX: 72 };
+          }
+        } else {
+          // Original desktop spacing
+          switch (playerCount) {
+            case 2:
+              return { minX: 25, maxX: 70 };
+            case 3:
+              return { minX: 8, maxX: 80 };
+            case 4:
+              return { minX: 8, maxX: 80 };
+            case 5:
+              return { minX: 8, maxX: 80 };
+            default:
+              return { minX: 7, maxX: 80 };
+          }
         }
       };
 
@@ -108,7 +131,7 @@ export default function EnhancedPitchView({
     const fwdCount = Math.max(0, parseInt(fwdStr || "0", 10) || 0);
 
     // Y positions for half-court layout (our defensive half)
-    const GK_Y = 10; // Goalkeeper near our goal
+    const GK_Y = 8; // Goalkeeper near our goal
     const DEF_Y = 30; // Defenders
     const MID_Y = 55; // Midfielders
     const FWD_Y = 78; // Forwards (attacking toward center/opponent goal)
@@ -229,12 +252,12 @@ export default function EnhancedPitchView({
   }, []);
 
   return (
-    <div className="relative overflow-visible">
+    <div className="relative overflow-visible" style={{ zIndex: 1 }}>
       {/* Team Stats Header */}
       {teamData && (
-        <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-4 text-sm">
+        <div className="mb-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 sm:gap-4 text-sm">
               <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="font-medium text-gray-600 dark:text-gray-300">
@@ -279,7 +302,9 @@ export default function EnhancedPitchView({
       {/* Formation Selector */}
       <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <label className="text-sm font-medium">Formation:</label>
+          <label className="text-sm font-medium">
+            {t("pitch.formation", "Formation")}:
+          </label>
           <select
             value={formation}
             onChange={(e) => {
@@ -311,8 +336,8 @@ export default function EnhancedPitchView({
         animate={{ opacity: 1, scale: 1 }}
         className="relative bg-gradient-to-b from-green-400 via-green-500 to-green-400 rounded-xl shadow-inner"
         style={{
-          minHeight: "600px",
-          height: "min(85vh, 800px)", // Increased height for better visibility
+          minHeight: "500px",
+          height: "min(70vh, 600px)", // Optimized for mobile - smaller height
           background:
             theme === "dark"
               ? "linear-gradient(to bottom, #059669, #10b981, #059669)"
@@ -434,7 +459,10 @@ export default function EnhancedPitchView({
         </svg>
 
         {/* Players positioned on pitch */}
-        <div className="absolute inset-0 p-1">
+        <div
+          className="absolute inset-0 p-2 sm:p-1 lg:p-2"
+          style={{ overflow: "visible", zIndex: 10 }}
+        >
           <AnimatePresence>
             {startingLineup.map((positionedPlayer) => {
               const player = getEnhancedPlayer(positionedPlayer.player_id);
@@ -485,17 +513,11 @@ export default function EnhancedPitchView({
 
         {/* Position Labels */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-white/90 text-sm font-bold tracking-wide bg-black/20 px-2 py-1 rounded">
-            OUR GOAL
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 text-white/90 text-sm font-bold tracking-wide bg-black/30 px-2 py-1 rounded w-full text-center">
+            {t("pitch.ourGoal", "OUR GOAL")}
           </div>
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/90 text-sm font-bold tracking-wide bg-black/20 px-2 py-1 rounded">
-            ATTACKING DIRECTION
-          </div>
-          <div className="absolute bottom-12 left-4 text-white/70 text-xs font-medium bg-black/20 px-2 py-1 rounded">
-            ATTACK →
-          </div>
-          <div className="absolute top-52 right-4 text-white/70 text-xs font-medium bg-black/20 px-2 py-1 rounded">
-            ← DEFEND
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-white/90 text-sm font-bold tracking-wide bg-black/30 px-2 py-1 rounded w-full text-center">
+            {t("pitch.attackingDirection", "ATTACKING DIRECTION")}
           </div>
         </div>
       </motion.div>
@@ -511,7 +533,7 @@ export default function EnhancedPitchView({
         <div className="relative bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-600">
           {/* Bench Label Badge */}
           <div className="absolute -top-3 left-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md z-10">
-            SUBSTITUTES BENCH
+            {t("pitch.substitutesBench", "SUBSTITUTES BENCH")}
           </div>
 
           {/* Bench Indicator Line */}
@@ -520,18 +542,19 @@ export default function EnhancedPitchView({
           {/* Bench Stats Summary */}
           <div className="mb-4 flex items-center justify-between text-sm">
             <span className="text-gray-600 dark:text-gray-400">
-              {benchPlayers.length} Substitutes Available
+              {benchPlayers.length}{" "}
+              {t("pitch.substitutesAvailable", "Substitutes Available")}
             </span>
             <div className="flex items-center gap-2 text-xs">
               <span className="flex items-center gap-1">
                 <span className="text-green-500">●</span>
-                Ready
+                {t("pitch.ready", "Ready")}
               </span>
             </div>
           </div>
 
-          {/* Bench Players Grid - More compact */}
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+          {/* Bench Players Grid - Mobile optimized */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-4 sm:gap-3 md:gap-4">
             <AnimatePresence>
               {benchPlayers.map((player, index) => (
                 <motion.div
@@ -581,9 +604,13 @@ export default function EnhancedPitchView({
         className="mt-4 text-center"
       >
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm text-gray-600 dark:text-gray-400">
-          <span>Formation: {formation}</span>
+          <span>
+            {t("pitch.formation", "Formation")}: {formation}
+          </span>
           <span>•</span>
-          <span>{startingLineup.length} players</span>
+          <span>
+            {startingLineup.length} {t("pitch.players", "players")}
+          </span>
         </div>
       </motion.div>
     </div>

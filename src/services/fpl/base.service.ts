@@ -1,5 +1,5 @@
-import { FPLAPIError, FPLServiceError } from './errors';
-import type { FPLServiceConfig, FPLCacheConfig } from '../../types/fpl';
+import { FPLAPIError, FPLServiceError } from "./errors";
+import type { FPLServiceConfig, FPLCacheConfig } from "../../types/fpl";
 
 /**
  * Base service class for all FPL services
@@ -8,11 +8,14 @@ import type { FPLServiceConfig, FPLCacheConfig } from '../../types/fpl';
 export abstract class BaseFPLService {
   protected readonly baseUrl: string;
   protected readonly config: FPLServiceConfig;
-  protected readonly cache: Map<string, { data: any; timestamp: number; ttl: number }>;
+  protected readonly cache: Map<
+    string,
+    { data: any; timestamp: number; ttl: number }
+  >;
   protected readonly requestQueue: Map<string, Promise<any>>;
 
   constructor(config: Partial<FPLServiceConfig> = {}) {
-    this.baseUrl = config.base_url || 'https://fantasy.premierleague.com/api';
+    this.baseUrl = config.base_url || "https://fantasy.premierleague.com/api";
     this.config = {
       base_url: this.baseUrl,
       timeout: config.timeout || 10000,
@@ -32,7 +35,7 @@ export abstract class BaseFPLService {
       },
       ...config,
     };
-    
+
     this.cache = new Map();
     this.requestQueue = new Map();
   }
@@ -61,7 +64,12 @@ export abstract class BaseFPLService {
       return this.requestQueue.get(cacheKey);
     }
 
-    const requestPromise = this.executeRequest<T>(url, endpoint, cacheConfig, retryCount);
+    const requestPromise = this.executeRequest<T>(
+      url,
+      endpoint,
+      cacheConfig,
+      retryCount
+    );
     this.requestQueue.set(cacheKey, requestPromise);
 
     try {
@@ -81,22 +89,26 @@ export abstract class BaseFPLService {
     try {
       // First try direct FPL API call
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        this.config.timeout
+      );
 
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Referer': 'https://fantasy.premierleague.com/',
-          'Origin': 'https://fantasy.premierleague.com',
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'same-origin',
-          'X-Requested-With': 'XMLHttpRequest',
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept: "application/json, text/plain, */*",
+          "Accept-Encoding": "gzip, deflate, br",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+          Referer: "https://fantasy.premierleague.com/",
+          Origin: "https://fantasy.premierleague.com",
+          "Sec-Fetch-Dest": "empty",
+          "Sec-Fetch-Mode": "cors",
+          "Sec-Fetch-Site": "same-origin",
+          "X-Requested-With": "XMLHttpRequest",
         },
         signal: controller.signal,
       });
@@ -105,15 +117,23 @@ export abstract class BaseFPLService {
 
       if (!response.ok) {
         // On 403 Forbidden, try proxy fallback (for production deployment)
-        if (response.status === 403 && (typeof window === 'undefined' || process.env.FPL_USE_PROXY === 'true')) {
-          console.log(`🔄 FPL direct call failed (${response.status}), trying proxy fallback...`);
+        if (
+          response.status === 403 &&
+          (typeof window === "undefined" ||
+            process.env.FPL_USE_PROXY === "true")
+        ) {
           return this.tryProxyFallback<T>(endpoint, cacheConfig);
         }
 
         if (response.status === 429 && retryCount < this.config.max_retries) {
           const delay = this.calculateRetryDelay(retryCount);
           await this.sleep(delay);
-          return this.executeRequest(url, endpoint, cacheConfig, retryCount + 1);
+          return this.executeRequest(
+            url,
+            endpoint,
+            cacheConfig,
+            retryCount + 1
+          );
         }
 
         throw new FPLAPIError(
@@ -123,7 +143,7 @@ export abstract class BaseFPLService {
         );
       }
 
-      const data = await response.json() as T;
+      const data = (await response.json()) as T;
 
       // Cache the successful response
       if (cacheConfig) {
@@ -137,7 +157,7 @@ export abstract class BaseFPLService {
       }
 
       // Handle abort errors
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === "AbortError") {
         throw new FPLAPIError(
           `Request timeout after ${this.config.timeout}ms`,
           408,
@@ -154,7 +174,9 @@ export abstract class BaseFPLService {
       }
 
       throw new FPLAPIError(
-        `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Network error: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         undefined,
         endpoint,
         error instanceof Error ? error : undefined
@@ -176,11 +198,11 @@ export abstract class BaseFPLService {
 
     for (const proxyUrl of proxyMethods) {
       try {
-        console.log(`🔄 Trying proxy: ${proxyUrl.split('?')[0]}`);
-        
+        console.log(`🔄 Trying proxy: ${proxyUrl.split("?")[0]}`);
+
         const response = await fetch(proxyUrl, {
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           signal: AbortSignal.timeout(15000), // 15 second timeout for proxies
         });
@@ -190,29 +212,38 @@ export abstract class BaseFPLService {
         }
 
         const result = await response.json();
-        
+
         if (!result.success) {
-          throw new Error(result.error || 'Proxy returned unsuccessful response');
+          throw new Error(
+            result.error || "Proxy returned unsuccessful response"
+          );
         }
 
-        console.log(`✅ Proxy success: ${proxyUrl.split('?')[0]}`);
+        console.log(`✅ Proxy success: ${proxyUrl.split("?")[0]}`);
 
         // Cache the successful response
         if (cacheConfig) {
-          this.setCache(cacheConfig.key || endpoint, result.data, cacheConfig.ttl);
+          this.setCache(
+            cacheConfig.key || endpoint,
+            result.data,
+            cacheConfig.ttl
+          );
         }
 
         return result.data as T;
       } catch (error) {
-        console.warn(`❌ Proxy failed: ${proxyUrl.split('?')[0]}`, error);
-        lastError = error instanceof Error ? error : new Error('Unknown proxy error');
+        console.warn(`❌ Proxy failed: ${proxyUrl.split("?")[0]}`, error);
+        lastError =
+          error instanceof Error ? error : new Error("Unknown proxy error");
         continue; // Try next proxy
       }
     }
 
     // All proxy methods failed
     throw new FPLAPIError(
-      `All proxy fallbacks failed. Last error: ${lastError?.message || 'Unknown error'}`,
+      `All proxy fallbacks failed. Last error: ${
+        lastError?.message || "Unknown error"
+      }`,
       500,
       endpoint,
       lastError || undefined
@@ -270,7 +301,7 @@ export abstract class BaseFPLService {
       throw new FPLServiceError(
         `Invalid ${fieldName}: must be a positive integer`,
         this.constructor.name,
-        'validation'
+        "validation"
       );
     }
   }
@@ -278,9 +309,9 @@ export abstract class BaseFPLService {
   protected validateGameweek(gameweek: number): void {
     if (!Number.isInteger(gameweek) || gameweek < 1 || gameweek > 38) {
       throw new FPLServiceError(
-        'Invalid gameweek: must be between 1 and 38',
+        "Invalid gameweek: must be between 1 and 38",
         this.constructor.name,
-        'validation'
+        "validation"
       );
     }
   }
@@ -294,24 +325,27 @@ export abstract class BaseFPLService {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
    * Health check method for service monitoring
    */
-  public async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; latency?: number }> {
+  public async healthCheck(): Promise<{
+    status: "healthy" | "unhealthy";
+    latency?: number;
+  }> {
     try {
       const startTime = Date.now();
-      await this.fetchWithRetry('/bootstrap-static/', {
-        key: 'health_check',
+      await this.fetchWithRetry("/bootstrap-static/", {
+        key: "health_check",
         ttl: 5000, // Very short TTL for health checks
       });
       const latency = Date.now() - startTime;
-      
-      return { status: 'healthy', latency };
+
+      return { status: "healthy", latency };
     } catch {
-      return { status: 'unhealthy' };
+      return { status: "unhealthy" };
     }
   }
 

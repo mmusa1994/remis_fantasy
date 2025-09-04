@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, RefreshCw, Star, Target, TrendingUp, Calendar } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
-import type { ChipStrategiesWidgetData } from '@/types/fpl-enhanced';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Zap,
+  RefreshCw,
+  Star,
+  Target,
+  TrendingUp,
+  Calendar,
+} from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import type { ChipStrategiesWidgetData } from "@/types/fpl-enhanced";
 
 interface ChipStrategiesWidgetProps {
   refreshInterval?: number;
@@ -17,74 +24,85 @@ export default function ChipStrategiesWidget({
   showRecommendations = true,
   maxWeeksShown = 5,
 }: ChipStrategiesWidgetProps) {
-  console.log("🎯 ChipStrategiesWidget: Initialized with props", { refreshInterval, showRecommendations, maxWeeksShown });
   const { theme } = useTheme();
   const [data, setData] = useState<ChipStrategiesWidgetData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeChip, setActiveChip] = useState<'wildcard' | 'freehit' | 'benchboost' | 'triplecaptain'>('wildcard');
-  
+  const [activeChip, setActiveChip] = useState<
+    "wildcard" | "freehit" | "benchboost" | "triplecaptain"
+  >("wildcard");
+
   // Cache to prevent redundant requests
-  const cacheRef = useRef<{ data: ChipStrategiesWidgetData; timestamp: number } | null>(null);
+  const cacheRef = useRef<{
+    data: ChipStrategiesWidgetData;
+    timestamp: number;
+  } | null>(null);
   const CACHE_TTL = 1800000; // 30 minutes
 
-  const fetchChipStrategies = useCallback(async (forceRefresh: boolean = false) => {
-    console.log("🔄 ChipStrategiesWidget: Starting fetch", { forceRefresh, loading });
-    // Check cache first
-    if (!forceRefresh && cacheRef.current) {
-      const isStale = Date.now() - cacheRef.current.timestamp > CACHE_TTL;
-      if (!isStale) {
-        console.log('📦 Using cached chip strategies data');
-        setData(cacheRef.current.data);
-        setLastUpdate(new Date(cacheRef.current.timestamp));
-        setLoading(false);
-        return;
+  const fetchChipStrategies = useCallback(
+    async (forceRefresh: boolean = false) => {
+      // Check cache first
+      if (!forceRefresh && cacheRef.current) {
+        const isStale = Date.now() - cacheRef.current.timestamp > CACHE_TTL;
+        if (!isStale) {
+          setData(cacheRef.current.data);
+          setLastUpdate(new Date(cacheRef.current.timestamp));
+          setLoading(false);
+          return;
+        }
       }
-    }
-    try {
-      setError(null);
-      const response = await fetch('/api/fpl/chip-analytics');
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch chip strategies');
-      }
+      try {
+        setError(null);
+        const response = await fetch("/api/fpl/chip-analytics");
 
-      const result = await response.json();
-      if (result.success) {
-        // Transform API data to widget format
-        const widgetData: ChipStrategiesWidgetData = {
-          chips: result.data.strategies.map((strategy: any) => ({
-            type: strategy.chip_type,
-            optimal_weeks: strategy.current_season_trends.slice(0, maxWeeksShown).map((usage: any) => ({
-              week: usage.gameweek,
-              usage_count: usage.usage_count,
-              success_rate: usage.success_rate,
+        if (!response.ok) {
+          throw new Error("Failed to fetch chip strategies");
+        }
+
+        const result = await response.json();
+        if (result.success) {
+          // Transform API data to widget format
+          const widgetData: ChipStrategiesWidgetData = {
+            chips: result.data.strategies.map((strategy: any) => ({
+              type: strategy.chip_type,
+              optimal_weeks: strategy.current_season_trends
+                .slice(0, maxWeeksShown)
+                .map((usage: any) => ({
+                  week: usage.gameweek,
+                  usage_count: usage.usage_count,
+                  success_rate: usage.success_rate,
+                })),
+              current_season_trend: strategy.usage_pattern,
             })),
-            current_season_trend: strategy.usage_pattern,
-          })),
-          recommendations: result.data.personalized_recommendations ? {
-            next_chip: result.data.personalized_recommendations.next_optimal_chip,
-            recommended_week: result.data.personalized_recommendations.recommended_week,
-            confidence: 85, // Mock confidence score
-          } : undefined,
-        };
-        
-        setData(widgetData);
-        setLastUpdate(new Date());
-        
-        // Cache the result
-        cacheRef.current = {
-          data: widgetData,
-          timestamp: Date.now()
-        };
+            recommendations: result.data.personalized_recommendations
+              ? {
+                  next_chip:
+                    result.data.personalized_recommendations.next_optimal_chip,
+                  recommended_week:
+                    result.data.personalized_recommendations.recommended_week,
+                  confidence: 85, // Mock confidence score
+                }
+              : undefined,
+          };
+
+          setData(widgetData);
+          setLastUpdate(new Date());
+
+          // Cache the result
+          cacheRef.current = {
+            data: widgetData,
+            timestamp: Date.now(),
+          };
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch data");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data');
-    } finally {
-      setLoading(false);
-    }
-  }, []); // Remove all dependencies to prevent loops
+    },
+    []
+  ); // Remove all dependencies to prevent loops
 
   const handleManualRefresh = useCallback(() => {
     fetchChipStrategies(true);
@@ -93,43 +111,58 @@ export default function ChipStrategiesWidget({
   useEffect(() => {
     // Fetch data on mount
     fetchChipStrategies();
-    
+
     const interval = setInterval(() => {
       if (!loading) {
         fetchChipStrategies();
       }
     }, refreshInterval);
-    
+
     return () => clearInterval(interval);
   }, [refreshInterval]); // Remove fetchChipStrategies dependency
 
   const getChipIcon = (chipType: string) => {
     switch (chipType) {
-      case 'wildcard': return <Star className="w-4 h-4" />;
-      case 'freehit': return <Target className="w-4 h-4" />;
-      case 'benchboost': return <TrendingUp className="w-4 h-4" />;
-      case 'triplecaptain': return <Zap className="w-4 h-4" />;
-      default: return <Star className="w-4 h-4" />;
+      case "wildcard":
+        return <Star className="w-4 h-4" />;
+      case "freehit":
+        return <Target className="w-4 h-4" />;
+      case "benchboost":
+        return <TrendingUp className="w-4 h-4" />;
+      case "triplecaptain":
+        return <Zap className="w-4 h-4" />;
+      default:
+        return <Star className="w-4 h-4" />;
     }
   };
 
   const getChipColor = (chipType: string) => {
     switch (chipType) {
-      case 'wildcard': return 'text-purple-600 bg-purple-50 dark:bg-purple-900/20';
-      case 'freehit': return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20';
-      case 'benchboost': return 'text-green-600 bg-green-50 dark:bg-green-900/20';
-      case 'triplecaptain': return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20';
-      default: return 'text-gray-600 bg-gray-50 dark:bg-gray-900/20';
+      case "wildcard":
+        return "text-purple-600 bg-purple-50 dark:bg-purple-900/20";
+      case "freehit":
+        return "text-blue-600 bg-blue-50 dark:bg-blue-900/20";
+      case "benchboost":
+        return "text-green-600 bg-green-50 dark:bg-green-900/20";
+      case "triplecaptain":
+        return "text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20";
+      default:
+        return "text-gray-600 bg-gray-50 dark:bg-gray-900/20";
     }
   };
 
   const formatChipName = (chipType: string) => {
     switch (chipType) {
-      case 'wildcard': return 'Wildcard';
-      case 'freehit': return 'Free Hit';
-      case 'benchboost': return 'Bench Boost';
-      case 'triplecaptain': return 'Triple Captain';
-      default: return chipType;
+      case "wildcard":
+        return "Wildcard";
+      case "freehit":
+        return "Free Hit";
+      case "benchboost":
+        return "Bench Boost";
+      case "triplecaptain":
+        return "Triple Captain";
+      default:
+        return chipType;
     }
   };
 
@@ -144,7 +177,11 @@ export default function ChipStrategiesWidget({
 
   if (loading) {
     return (
-      <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}>
+      <div
+        className={`${
+          theme === "dark" ? "bg-gray-800" : "bg-white"
+        } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+      >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
             <Zap className="text-yellow-500 w-5 h-5" />
@@ -165,7 +202,11 @@ export default function ChipStrategiesWidget({
 
   if (error) {
     return (
-      <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}>
+      <div
+        className={`${
+          theme === "dark" ? "bg-gray-800" : "bg-white"
+        } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+      >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
             <Zap className="text-yellow-500 w-5 h-5" />
@@ -193,20 +234,21 @@ export default function ChipStrategiesWidget({
   }
 
   if (!data) {
-    console.log("🔍 ChipStrategiesWidget: No data available", { loading, error });
+    console.error("🔍 ChipStrategiesWidget: No data available", {
+      loading,
+      error,
+    });
     return null;
   }
 
-  console.log("📊 ChipStrategiesWidget: Rendering with data", {
-    hasData: !!data,
-    dataKeys: Object.keys(data || {}),
-    chipsCount: data.chips?.length
-  });
-
-  const activeChipData = data.chips.find(chip => chip.type === activeChip);
+  const activeChipData = data.chips.find((chip) => chip.type === activeChip);
 
   return (
-    <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}>
+    <div
+      className={`${
+        theme === "dark" ? "bg-gray-800" : "bg-white"
+      } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold flex items-center gap-2">
           <Zap className="text-yellow-500 w-5 h-5" />
@@ -236,8 +278,8 @@ export default function ChipStrategiesWidget({
           <div className="text-sm">
             <span className="font-medium">
               {formatChipName(data.recommendations.next_chip)}
-            </span>
-            {' '}in Week {data.recommendations.recommended_week}
+            </span>{" "}
+            in Week {data.recommendations.recommended_week}
           </div>
           <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
             Confidence: {data.recommendations.confidence}%
@@ -254,7 +296,7 @@ export default function ChipStrategiesWidget({
             className={`p-2 rounded-lg text-xs font-medium transition-all ${
               activeChip === chip.type
                 ? getChipColor(chip.type)
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
             <div className="flex items-center justify-center gap-1">
@@ -280,7 +322,9 @@ export default function ChipStrategiesWidget({
                 {getChipIcon(activeChip)}
               </div>
               <div>
-                <h4 className="text-sm font-semibold">{formatChipName(activeChip)}</h4>
+                <h4 className="text-sm font-semibold">
+                  {formatChipName(activeChip)}
+                </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {activeChipData.current_season_trend} usage pattern
                 </p>
@@ -304,7 +348,9 @@ export default function ChipStrategiesWidget({
                     <div className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center">
                       {week.week}
                     </div>
-                    <span className="text-sm font-medium">Week {week.week}</span>
+                    <span className="text-sm font-medium">
+                      Week {week.week}
+                    </span>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-bold">

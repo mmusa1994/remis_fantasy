@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
         if (managerResponse.ok) {
           const managerData = await managerResponse.json();
-          
+
           return NextResponse.json({
             success: true,
             data: {
@@ -44,27 +44,34 @@ export async function GET(request: NextRequest) {
                 country: managerData.player_region_name,
                 started_event: managerData.started_event,
               },
-              directAccess: true
+              directAccess: true,
             },
             timestamp: new Date().toISOString(),
           });
         }
       } catch (error) {
-        console.log("FPL API lookup failed:", error);
+        console.error("FPL API lookup failed:", error);
       }
     }
 
     // Primary search: Azure API for team/player name search
     try {
-      const searchUrl = `https://fontendfunctionsnortheuropenew.azurewebsites.net/api/SearchEntryFunction?teamName=${encodeURIComponent(query)}&teamNameBeginsWith=0&playerName=&playerNameBeginsWith=0&EntryId=null`;
-      
+      const searchUrl = `https://fontendfunctionsnortheuropenew.azurewebsites.net/api/SearchEntryFunction?teamName=${encodeURIComponent(
+        query
+      )}&teamNameBeginsWith=0&playerName=&playerNameBeginsWith=0&EntryId=null`;
+
       const searchResponse = await fetch(searchUrl);
-      
+
       if (searchResponse.ok) {
         const searchData = await searchResponse.json();
-        
+
         // Handle successful Azure API response
-        if (searchData && searchData.Succeeded && searchData.EntryBaseDatas && searchData.EntryBaseDatas.length > 0) {
+        if (
+          searchData &&
+          searchData.Succeeded &&
+          searchData.EntryBaseDatas &&
+          searchData.EntryBaseDatas.length > 0
+        ) {
           return NextResponse.json({
             success: true,
             data: {
@@ -86,7 +93,7 @@ export async function GET(request: NextRequest) {
             timestamp: new Date().toISOString(),
           });
         }
-        
+
         // Handle case where search succeeded but no results found
         if (searchData && searchData.Succeeded) {
           return NextResponse.json({
@@ -94,7 +101,8 @@ export async function GET(request: NextRequest) {
             data: {
               found: false,
               query: query,
-              message: searchData.Message || `No teams found with the name '${query}'`,
+              message:
+                searchData.Message || `No teams found with the name '${query}'`,
               searchInfo: searchData.SearchInfoText,
             },
             timestamp: new Date().toISOString(),
@@ -152,7 +160,8 @@ export async function GET(request: NextRequest) {
         },
         {
           title: "🎯 Advanced Search Tools",
-          description: "Try specialized FPL search websites that may have indexed team names",
+          description:
+            "Try specialized FPL search websites that may have indexed team names",
           searchUrl: `https://www.fplgameweek.com/`,
           steps: [
             "Visit FPLGameweek.com or similar FPL tools",

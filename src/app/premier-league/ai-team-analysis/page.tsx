@@ -117,18 +117,10 @@ export default function AITeamAnalysis() {
   // Fetch manager ID
   const fetchManagerId = async () => {
     try {
-      console.log("🔍 Fetching manager ID from API...");
       const response = await fetch("/api/user/manager-id");
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Manager ID API response:", data);
         setManagerId(data.managerId);
-      } else {
-        console.log(
-          "❌ Manager ID API failed:",
-          response.status,
-          response.statusText
-        );
       }
     } catch (error) {
       console.error("❌ Failed to fetch manager ID:", error);

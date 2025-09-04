@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, TrendingDown, DollarSign, RefreshCw } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
-import { getTeamColors } from '@/lib/team-colors';
-import type { PriceChangesWidgetData } from '@/types/fpl-enhanced';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { TrendingUp, TrendingDown, DollarSign, RefreshCw } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { getTeamColors } from "@/lib/team-colors";
+import type { PriceChangesWidgetData } from "@/types/fpl-enhanced";
 
 interface PriceChangesWidgetProps {
   userTeamPlayerIds?: number[];
@@ -23,85 +23,89 @@ export default function PriceChangesWidget({
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const fetchPriceChanges = useCallback(async (gameweek: number = 4) => {
-    try {
-      setError(null);
-      
-      // Create abort controller
-      abortControllerRef.current = new AbortController();
-      
-      const params = new URLSearchParams();
-      if (userTeamPlayerIds.length > 0) {
-        params.append('teamIds', userTeamPlayerIds.join(','));
-      }
-      params.append('gameweek', gameweek.toString());
-      
-      const response = await fetch(`/api/fpl/price-changes?${params}`, {
-        signal: abortControllerRef.current.signal,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch price changes');
-      }
+  const fetchPriceChanges = useCallback(
+    async (gameweek: number = 4) => {
+      try {
+        setError(null);
 
-      const result = await response.json();
-      if (result.success) {
-        // Transform API data to widget format
-        const widgetData: PriceChangesWidgetData = {
-          risers: result.data.risers.slice(0, maxItems).map((player: any) => ({
-            player_id: player.player_id,
-            web_name: player.web_name,
-            team_name: player.team_name,
-            old_price: player.old_price,
-            new_price: player.new_price,
-            change: player.change_amount,
-            team_colors: getTeamColors(player.team_id || 1), // Fallback to team 1
-          })),
-          fallers: result.data.fallers.slice(0, maxItems).map((player: any) => ({
-            player_id: player.player_id,
-            web_name: player.web_name,
-            team_name: player.team_name,
-            old_price: player.old_price,
-            new_price: player.new_price,
-            change: player.change_amount,
-            team_colors: getTeamColors(player.team_id || 1),
-          })),
-          user_team_impact: result.data.user_team_impact,
-        };
-        
-        setData(widgetData);
-        setLastUpdate(new Date());
-      } else if (gameweek > 3) {
-        // Try fallback to previous gameweek
-        console.log(`[PriceChangesWidget] No data for gameweek ${gameweek}, trying ${gameweek - 1}`);
-        return fetchPriceChanges(gameweek - 1);
-      } else {
-        throw new Error(result.error || 'No data available');
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        // Try fallback to previous gameweek if current one fails
-        if (gameweek > 3) {
-          console.log(`[PriceChangesWidget] Error with gameweek ${gameweek}, trying ${gameweek - 1}`);
-          return fetchPriceChanges(gameweek - 1);
+        // Create abort controller
+        abortControllerRef.current = new AbortController();
+
+        const params = new URLSearchParams();
+        if (userTeamPlayerIds.length > 0) {
+          params.append("teamIds", userTeamPlayerIds.join(","));
         }
-        setError(err.message);
-      } else if (err instanceof Error && err.name === 'AbortError') {
-        console.log('[PriceChangesWidget] Request was aborted');
-      } else {
-        setError('Failed to fetch data');
+        params.append("gameweek", gameweek.toString());
+
+        const response = await fetch(`/api/fpl/price-changes?${params}`, {
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch price changes");
+        }
+
+        const result = await response.json();
+        if (result.success) {
+          // Transform API data to widget format
+          const widgetData: PriceChangesWidgetData = {
+            risers: result.data.risers
+              .slice(0, maxItems)
+              .map((player: any) => ({
+                player_id: player.player_id,
+                web_name: player.web_name,
+                team_name: player.team_name,
+                old_price: player.old_price,
+                new_price: player.new_price,
+                change: player.change_amount,
+                team_colors: getTeamColors(player.team_id || 1), // Fallback to team 1
+              })),
+            fallers: result.data.fallers
+              .slice(0, maxItems)
+              .map((player: any) => ({
+                player_id: player.player_id,
+                web_name: player.web_name,
+                team_name: player.team_name,
+                old_price: player.old_price,
+                new_price: player.new_price,
+                change: player.change_amount,
+                team_colors: getTeamColors(player.team_id || 1),
+              })),
+            user_team_impact: result.data.user_team_impact,
+          };
+
+          setData(widgetData);
+          setLastUpdate(new Date());
+        } else if (gameweek > 3) {
+          // Try fallback to previous gameweek
+          return fetchPriceChanges(gameweek - 1);
+        } else {
+          throw new Error(result.error || "No data available");
+        }
+      } catch (err) {
+        if (err instanceof Error && err.name !== "AbortError") {
+          // Try fallback to previous gameweek if current one fails
+          if (gameweek > 3) {
+            return fetchPriceChanges(gameweek - 1);
+          }
+          setError(err.message);
+        } else if (err instanceof Error && err.name === "AbortError") {
+        } else {
+          setError("Failed to fetch data");
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [userTeamPlayerIds, maxItems]);
+    },
+    [userTeamPlayerIds, maxItems]
+  );
 
   useEffect(() => {
     fetchPriceChanges();
-    
+
     // Set up refresh interval
     const interval = setInterval(() => fetchPriceChanges(), refreshInterval);
     return () => {
@@ -124,7 +128,11 @@ export default function PriceChangesWidget({
 
   if (loading) {
     return (
-      <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}>
+      <div
+        className={`${
+          theme === "dark" ? "bg-gray-800" : "bg-white"
+        } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+      >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
             <DollarSign className="text-green-500 w-5 h-5" />
@@ -145,7 +153,11 @@ export default function PriceChangesWidget({
 
   if (error) {
     return (
-      <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}>
+      <div
+        className={`${
+          theme === "dark" ? "bg-gray-800" : "bg-white"
+        } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+      >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
             <DollarSign className="text-green-500 w-5 h-5" />
@@ -175,7 +187,11 @@ export default function PriceChangesWidget({
   if (!data) return null;
 
   return (
-    <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}>
+    <div
+      className={`${
+        theme === "dark" ? "bg-gray-800" : "bg-white"
+      } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold flex items-center gap-2">
           <DollarSign className="text-green-500 w-5 h-5" />
@@ -196,12 +212,13 @@ export default function PriceChangesWidget({
           animate={{ opacity: 1, y: 0 }}
           className={`mb-4 p-3 rounded-lg ${
             data.user_team_impact.total_value_change >= 0
-              ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800'
-              : 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
+              ? "bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800"
+              : "bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800"
           }`}
         >
           <div className="text-sm font-medium">
-            Your Team Impact: {formatPriceChange(data.user_team_impact.total_value_change)}
+            Your Team Impact:{" "}
+            {formatPriceChange(data.user_team_impact.total_value_change)}
           </div>
           <div className="text-xs text-gray-600 dark:text-gray-400">
             {data.user_team_impact.affected_players} player(s) affected
@@ -236,7 +253,9 @@ export default function PriceChangesWidget({
                         {player.web_name.charAt(0)}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{player.web_name}</p>
+                        <p className="text-sm font-medium truncate">
+                          {player.web_name}
+                        </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {player.team_name}
                         </p>
@@ -244,7 +263,8 @@ export default function PriceChangesWidget({
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-bold text-green-600">
-                        {formatPrice(player.old_price)} → {formatPrice(player.new_price)}
+                        {formatPrice(player.old_price)} →{" "}
+                        {formatPrice(player.new_price)}
                       </div>
                       <div className="text-xs text-green-500">
                         +{formatPriceChange(player.change)}
@@ -283,7 +303,9 @@ export default function PriceChangesWidget({
                         {player.web_name.charAt(0)}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{player.web_name}</p>
+                        <p className="text-sm font-medium truncate">
+                          {player.web_name}
+                        </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {player.team_name}
                         </p>
@@ -291,7 +313,8 @@ export default function PriceChangesWidget({
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-bold text-red-600">
-                        {formatPrice(player.old_price)} → {formatPrice(player.new_price)}
+                        {formatPrice(player.old_price)} →{" "}
+                        {formatPrice(player.new_price)}
                       </div>
                       <div className="text-xs text-red-500">
                         -{formatPriceChange(player.change)}

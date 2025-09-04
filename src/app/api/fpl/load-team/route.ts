@@ -115,7 +115,6 @@ export async function POST(request: NextRequest) {
     } catch (apiError) {
       if (apiError instanceof Error && apiError.message.includes("404")) {
         // Apply fallback logic: try previous gameweeks until we find data
-        console.log(`⬇️ GW${gw} team data failed, trying fallback...`);
 
         const attemptedGameweeks = [gw];
         fallbackApplied = true;
@@ -124,8 +123,6 @@ export async function POST(request: NextRequest) {
         while (currentGw > 1 && attemptedGameweeks.length < 3) {
           currentGw--;
           attemptedGameweeks.push(currentGw);
-
-          console.log(`🔄 Trying fallback to GW${currentGw}`);
 
           try {
             const [fallbackPicksResponse, fallbackLiveResponse] =
@@ -140,7 +137,6 @@ export async function POST(request: NextRequest) {
               fallbackPicksResponse.data &&
               fallbackLiveResponse.data
             ) {
-              console.log(`✅ Found team data in GW${currentGw}`);
               managerPicks = fallbackPicksResponse.data;
               liveData = fallbackLiveResponse.data;
               gw = currentGw; // Update the working gameweek

@@ -292,14 +292,12 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         } = fixturesCacheRef.current;
         const isStale = Date.now() - timestamp > 300000; // 5 minutes
         if (cachedGW === gameweek && !isStale) {
-          console.log(`📦 Using cached fixtures for GW${gameweek}`);
           setAllFixtures(data);
           return;
         }
       }
 
       try {
-        console.log(`🏟️ Fetching fixtures for GW${gameweek}`);
         const response = await fetch(`/api/fpl/fixtures?event=${gameweek}`);
 
         if (response.ok) {
@@ -315,26 +313,12 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               timestamp: Date.now(),
             };
 
-            // Handle fallback gameweek notification
-            if (result.fallback) {
-              console.log(
-                "ℹ️ Showing fixtures for Gameweek",
-                result.gameweek,
-                "as fallback for",
-                gameweek
-              );
-            }
             return; // Successfully fetched data
           }
         }
 
         // Handle 404 or other errors - immediately try fallback
         if (gameweek > 3) {
-          console.log(
-            `⬇️ GW${gameweek} fixtures failed, immediately trying GW${
-              gameweek - 1
-            }`
-          );
           return fetchFixtures(gameweek - 1, forceRefresh);
         } else {
           console.warn(
@@ -346,7 +330,6 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         console.error("Failed to fetch fixtures:", error);
         // Try fallback on any error if possible
         if (gameweek > 3) {
-          console.log(`🔄 Error occurred, trying fallback GW${gameweek - 1}`);
           return fetchFixtures(gameweek - 1, forceRefresh);
         } else {
           setAllFixtures([]);
@@ -406,9 +389,6 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
       // Prevent duplicate requests
       if (teamDataRequestRef.current === requestKey && !forceRefresh) {
-        console.log(
-          `⏳ Team data request already in progress for ${requestKey}`
-        );
         return;
       }
 
@@ -422,17 +402,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         } = teamDataCacheRef.current;
         const isStale = Date.now() - timestamp > 300000; // 5 minutes
         if (managerId === id && cachedGW === targetGameweek && !isStale) {
-          console.log(
-            `📦 Using cached team data for Manager ${id}, GW${targetGameweek}`
-          );
           setUserTeamData(data);
           return;
         }
       }
 
-      console.log(
-        `👤 Fetching team data for Manager ID: ${id}, Gameweek: ${targetGameweek}`
-      );
       setLoading(true);
       teamDataRequestRef.current = requestKey;
 
@@ -457,11 +431,6 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
           // Immediately try fallback for any error if possible
           if (targetGameweek > 3) {
-            console.log(
-              `⬇️ GW${targetGameweek} failed, immediately trying GW${
-                targetGameweek - 1
-              }`
-            );
             teamDataRequestRef.current = null; // Clear request lock
             return await fetchTeamData(id, targetGameweek - 1, forceRefresh);
           }
@@ -501,9 +470,6 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
         // Try fallback on any error if possible
         if (targetGameweek > 3) {
-          console.log(
-            `🔄 Error occurred, trying fallback GW${targetGameweek - 1}`
-          );
           teamDataRequestRef.current = null; // Clear request lock
           return await fetchTeamData(id, targetGameweek - 1, forceRefresh);
         }
@@ -561,15 +527,6 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
         // Fetch team data
         fetchTeamData(newManagerId, currentGameweek);
-
-        // Show success message
-        if (data.isVerified) {
-          // Could add toast notification here
-          console.log("Manager ID verified and saved successfully");
-        } else {
-          // Could add toast notification here
-          console.log("Manager ID saved (unverified):", data.warningMessage);
-        }
       } else if (response.status === 202) {
         // Requires confirmation for unverified save
         setValidationStatus({
@@ -1086,279 +1043,6 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         </div>
                       </div>
                     )}
-
-                    {/* Player List below pitch */}
-                    <div className="border-t border-gray-200 dark:border-gray-700">
-                      <div className="p-4 lg:p-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
-                          <h3 className="text-lg font-semibold">
-                            Transfer Market
-                          </h3>
-                          <div className="flex items-center space-x-2 w-full sm:w-auto">
-                            <div className="relative flex-1 sm:flex-none">
-                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                              <input
-                                type="text"
-                                placeholder="Search..."
-                                value={filters.search}
-                                onChange={(e) =>
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    search: e.target.value,
-                                  }))
-                                }
-                                className="w-full sm:w-auto pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              />
-                            </div>
-                            <button
-                              onClick={() => setShowFilters(!showFilters)}
-                              className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-colors shrink-0 ${
-                                showFilters
-                                  ? "bg-green-600 text-white border-green-600"
-                                  : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                              }`}
-                            >
-                              <Filter className="w-4 h-4" />
-                              <span className="hidden sm:inline">Filters</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Advanced Filter Panel */}
-                        <AdvancedFilterPanel
-                          filters={filters}
-                          onFiltersChange={setFilters}
-                          allPlayers={allPlayers}
-                          allTeams={allTeams}
-                          isVisible={showFilters}
-                          onToggle={() => setShowFilters(!showFilters)}
-                        />
-
-                        {/* Player List Table */}
-                        <div
-                          className={`${
-                            showFilters ? "mt-6" : ""
-                          } bg-white dark:bg-gray-800 rounded-lg  border border-gray-200 dark:border-gray-700`}
-                        >
-                          {/* Table Header */}
-                          <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                            <div className="grid grid-cols-9 gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                              <div className="col-span-3">Player</div>
-                              <div className="col-span-1">Pos</div>
-                              <div className="col-span-1">Price</div>
-                              <div className="col-span-1">Points</div>
-                              <div className="col-span-1">Form</div>
-                              <div className="col-span-1">Own%</div>
-                              <div className="col-span-1">Status</div>
-                            </div>
-                          </div>
-
-                          {/* Table Body */}
-                          <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
-                            {filteredPlayers.slice(0, 100).map((player) => {
-                              const team = getTeamById(player.team);
-                              const teamColor = getTeamColor(player.team);
-                              const isSelected =
-                                uiState.comparedPlayers.includes(player.id);
-                              return (
-                                <motion.div
-                                  key={player.id}
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  className={`grid grid-cols-9 gap-2 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
-                                    isSelected
-                                      ? "bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500"
-                                      : ""
-                                  }`}
-                                  onClick={() => {
-                                    if (uiState.compareMode) {
-                                      setUIState((prev) => ({
-                                        ...prev,
-                                        comparedPlayers:
-                                          prev.comparedPlayers.includes(
-                                            player.id
-                                          )
-                                            ? prev.comparedPlayers.filter(
-                                                (id) => id !== player.id
-                                              )
-                                            : prev.comparedPlayers.length < 2
-                                            ? [
-                                                ...prev.comparedPlayers,
-                                                player.id,
-                                              ]
-                                            : [
-                                                prev.comparedPlayers[1],
-                                                player.id,
-                                              ],
-                                      }));
-                                    } else {
-                                      setSelectedPlayer(player);
-                                    }
-                                  }}
-                                >
-                                  {/* Player Info */}
-                                  <div className="col-span-3 flex items-center space-x-2">
-                                    <div
-                                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white relative"
-                                      style={{
-                                        backgroundColor: teamColor.primary,
-                                      }}
-                                    >
-                                      {player.web_name.charAt(0)}
-                                      {/* Enhanced indicators */}
-                                      {player.price_trend === "rising" && (
-                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
-                                          <TrendingUp className="w-1.5 h-1.5 text-white" />
-                                        </div>
-                                      )}
-                                      {player.price_trend === "falling" && (
-                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
-                                          <TrendingDown className="w-1.5 h-1.5 text-white" />
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="min-w-0">
-                                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                        {player.web_name}
-                                      </p>
-                                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        {team?.short_name}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {/* Position */}
-                                  <div className="col-span-1 flex items-center">
-                                    <span
-                                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                        player.element_type === 1
-                                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
-                                          : player.element_type === 2
-                                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
-                                          : player.element_type === 3
-                                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
-                                      }`}
-                                    >
-                                      {getPlayerPosition(player.element_type)}
-                                    </span>
-                                  </div>
-
-                                  {/* Price */}
-                                  <div className="col-span-1 flex items-center">
-                                    <div className="flex flex-col">
-                                      <span className="text-sm font-medium">
-                                        £{(player.now_cost / 10).toFixed(1)}
-                                      </span>
-                                      {player.cost_change_event !== 0 && (
-                                        <span
-                                          className={`text-xs ${
-                                            player.cost_change_event > 0
-                                              ? "text-green-600"
-                                              : "text-red-600"
-                                          }`}
-                                        >
-                                          {player.cost_change_event > 0
-                                            ? "+"
-                                            : ""}
-                                          {(
-                                            player.cost_change_event / 10
-                                          ).toFixed(1)}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {/* Points */}
-                                  <div className="col-span-1 flex items-center">
-                                    <div className="flex flex-col">
-                                      <span className="text-sm font-bold text-green-600">
-                                        {player.total_points}
-                                      </span>
-                                      <span className="text-xs text-gray-500">
-                                        {player.event_points} GW
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Form */}
-                                  <div className="col-span-1 flex items-center">
-                                    <span className="text-sm font-medium">
-                                      {parseFloat(player.form).toFixed(1)}
-                                    </span>
-                                  </div>
-
-                                  {/* Ownership */}
-                                  <div className="col-span-1 flex items-center">
-                                    <div className="flex flex-col">
-                                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        {parseFloat(
-                                          player.selected_by_percent
-                                        ).toFixed(1)}
-                                        %
-                                      </span>
-                                      {player.ownership_trend === "rising" && (
-                                        <span className="text-xs text-blue-500">
-                                          ↗ Rising
-                                        </span>
-                                      )}
-                                      {player.ownership_trend === "falling" && (
-                                        <span className="text-xs text-purple-500">
-                                          ↘ Falling
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {/* Status */}
-                                  <div className="col-span-1 flex items-center">
-                                    <div className="flex items-center gap-1">
-                                      {player.availability_status ===
-                                        "available" && (
-                                        <div className="w-2 h-2 bg-green-500 rounded-full" />
-                                      )}
-                                      {player.availability_status ===
-                                        "doubtful" && (
-                                        <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-                                      )}
-                                      {player.availability_status ===
-                                        "injured" && (
-                                        <div className="w-2 h-2 bg-red-500 rounded-full" />
-                                      )}
-                                      {player.availability_status ===
-                                        "suspended" && (
-                                        <div className="w-2 h-2 bg-orange-500 rounded-full" />
-                                      )}
-                                      {/* Differential badge */}
-                                      {player.differential_score &&
-                                        player.differential_score > 20 && (
-                                          <Star className="w-3 h-3 text-yellow-500" />
-                                        )}
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              );
-                            })}
-                          </div>
-
-                          {/* Results info */}
-                          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
-                                Showing {Math.min(100, filteredPlayers.length)}{" "}
-                                of {filteredPlayers.length} players
-                              </span>
-                              {uiState.compareMode && (
-                                <span className="text-sm text-blue-600 dark:text-blue-400">
-                                  {uiState.comparedPlayers.length}/2 players
-                                  selected for comparison
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </>
                 )}
 
@@ -1382,14 +1066,23 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                               Average Points/Player
                             </span>
                             <span className="font-bold">
-                              {userTeamData?.team_with_stats
+                              {userTeamData?.team_with_stats &&
+                              userTeamData.team_with_stats.length > 0
                                 ? (
-                                    userTeamData.team_with_stats.reduce(
-                                      (sum, p) => sum + (p.total_points || 0),
-                                      0
-                                    ) / userTeamData.team_with_stats.length
+                                    userTeamData.team_with_stats
+                                      .filter((p) => p.position <= 11) // Only starting XI
+                                      .reduce((sum, p) => {
+                                        const livePoints =
+                                          p.live_stats?.total_points || 0;
+                                        const staticPoints =
+                                          p.total_points || 0;
+                                        return (
+                                          sum +
+                                          Math.max(livePoints, staticPoints)
+                                        );
+                                      }, 0) / 11
                                   ).toFixed(1)
-                                : "0"}
+                                : "0.0"}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -1398,10 +1091,23 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                             </span>
                             <span className="font-bold text-green-600">
                               £
-                              {(
-                                (userTeamData?.entry_history?.value || 1000) /
-                                10
-                              ).toFixed(1)}
+                              {userTeamData?.entry_history?.value
+                                ? (
+                                    userTeamData.entry_history.value / 10
+                                  ).toFixed(1)
+                                : userTeamData?.team_with_stats
+                                ? (
+                                    userTeamData.team_with_stats.reduce(
+                                      (sum, p) => {
+                                        const player = getPlayerById(
+                                          p.player_id
+                                        );
+                                        return sum + (player?.now_cost || 0);
+                                      },
+                                      0
+                                    ) / 10
+                                  ).toFixed(1)
+                                : "100.0"}
                               m
                             </span>
                           </div>
@@ -1443,8 +1149,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   return player?.element_type === idx + 1;
                                 }) || [];
 
-                              // Calculate average points from live stats if available, otherwise use total_points
-                              const totalPoints = positionPlayers.reduce(
+                              // Calculate average points for starting XI only
+                              const startingPlayers = positionPlayers.filter(
+                                (tp) => tp.position <= 11
+                              );
+                              const totalPoints = startingPlayers.reduce(
                                 (sum, tp) => {
                                   const livePoints =
                                     tp.live_stats?.total_points || 0;
@@ -1457,8 +1166,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                               );
 
                               const avgPoints =
-                                positionPlayers.length > 0
-                                  ? totalPoints / positionPlayers.length
+                                startingPlayers.length > 0
+                                  ? totalPoints / startingPlayers.length
                                   : 0;
 
                               // Calculate bench points for this position
@@ -1471,17 +1180,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   );
                                 }) || [];
 
-                              const benchPoints = benchPlayers.reduce(
-                                (sum, tp) => {
-                                  const livePoints =
-                                    tp.live_stats?.total_points || 0;
-                                  const staticPoints = tp.total_points || 0;
-                                  return (
-                                    sum + Math.max(livePoints, staticPoints)
-                                  );
-                                },
-                                0
-                              );
+                              const benchCount = benchPlayers.length;
 
                               return (
                                 <div
@@ -1493,9 +1192,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   </span>
                                   <span className="font-medium">
                                     {avgPoints.toFixed(1)} pts
-                                    {benchPoints > 0 && (
+                                    {benchCount > 0 && (
                                       <span className="text-xs text-gray-500 ml-1">
-                                        ({benchPoints} bench)
+                                        ({benchCount} bench)
                                       </span>
                                     )}
                                   </span>
@@ -1508,6 +1207,261 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     </div>
                   </div>
                 )}
+              </div>
+              {/* Player List below pitch */}
+              <div className="mt-2 bg-theme-card border-t border-gray-200 dark:border-gray-700">
+                <div className="p-4 lg:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
+                    <h3 className="text-lg font-semibold">Transfer Market</h3>
+                    <div className="flex items-center space-x-2 w-full sm:w-auto">
+                      <div className="relative flex-1 sm:flex-none">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          value={filters.search}
+                          onChange={(e) =>
+                            setFilters((prev) => ({
+                              ...prev,
+                              search: e.target.value,
+                            }))
+                          }
+                          className="w-full sm:w-auto pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                      </div>
+                      <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-colors shrink-0 ${
+                          showFilters
+                            ? "bg-green-600 text-white border-green-600"
+                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        }`}
+                      >
+                        <Filter className="w-4 h-4" />
+                        <span className="hidden sm:inline">Filters</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Advanced Filter Panel */}
+                  <AdvancedFilterPanel
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    allPlayers={allPlayers}
+                    allTeams={allTeams}
+                    isVisible={showFilters}
+                    onToggle={() => setShowFilters(!showFilters)}
+                  />
+
+                  {/* Player List Table */}
+                  <div
+                    className={`${
+                      showFilters ? "mt-6" : ""
+                    } bg-white dark:bg-gray-800 rounded-lg  border border-gray-200 dark:border-gray-700`}
+                  >
+                    {/* Table Header */}
+                    <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+                      <div className="grid grid-cols-9 gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <div className="col-span-3">Player</div>
+                        <div className="col-span-1">Pos</div>
+                        <div className="col-span-1">Price</div>
+                        <div className="col-span-1">Points</div>
+                        <div className="col-span-1">Form</div>
+                        <div className="col-span-1">Own%</div>
+                        <div className="col-span-1">Status</div>
+                      </div>
+                    </div>
+
+                    {/* Table Body */}
+                    <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
+                      {filteredPlayers.slice(0, 100).map((player) => {
+                        const team = getTeamById(player.team);
+                        const teamColor = getTeamColor(player.team);
+                        const isSelected = uiState.comparedPlayers.includes(
+                          player.id
+                        );
+                        return (
+                          <motion.div
+                            key={player.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className={`grid grid-cols-9 gap-2 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
+                              isSelected
+                                ? "bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              if (uiState.compareMode) {
+                                setUIState((prev) => ({
+                                  ...prev,
+                                  comparedPlayers:
+                                    prev.comparedPlayers.includes(player.id)
+                                      ? prev.comparedPlayers.filter(
+                                          (id) => id !== player.id
+                                        )
+                                      : prev.comparedPlayers.length < 2
+                                      ? [...prev.comparedPlayers, player.id]
+                                      : [prev.comparedPlayers[1], player.id],
+                                }));
+                              } else {
+                                setSelectedPlayer(player);
+                              }
+                            }}
+                          >
+                            {/* Player Info */}
+                            <div className="col-span-3 flex items-center space-x-2">
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white relative"
+                                style={{
+                                  backgroundColor: teamColor.primary,
+                                }}
+                              >
+                                {player.web_name.charAt(0)}
+                                {/* Enhanced indicators */}
+                                {player.price_trend === "rising" && (
+                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                                    <TrendingUp className="w-1.5 h-1.5 text-white" />
+                                  </div>
+                                )}
+                                {player.price_trend === "falling" && (
+                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+                                    <TrendingDown className="w-1.5 h-1.5 text-white" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                  {player.web_name}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                  {team?.short_name}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Position */}
+                            <div className="col-span-1 flex items-center">
+                              <span
+                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  player.element_type === 1
+                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
+                                    : player.element_type === 2
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
+                                    : player.element_type === 3
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+                                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
+                                }`}
+                              >
+                                {getPlayerPosition(player.element_type)}
+                              </span>
+                            </div>
+
+                            {/* Price */}
+                            <div className="col-span-1 flex items-center">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium">
+                                  £{(player.now_cost / 10).toFixed(1)}
+                                </span>
+                                {player.cost_change_event !== 0 && (
+                                  <span
+                                    className={`text-xs ${
+                                      player.cost_change_event > 0
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                    }`}
+                                  >
+                                    {player.cost_change_event > 0 ? "+" : ""}
+                                    {(player.cost_change_event / 10).toFixed(1)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Points */}
+                            <div className="col-span-1 flex items-center">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-bold text-green-600">
+                                  {player.total_points}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {player.event_points} GW
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Form */}
+                            <div className="col-span-1 flex items-center">
+                              <span className="text-sm font-medium">
+                                {parseFloat(player.form).toFixed(1)}
+                              </span>
+                            </div>
+
+                            {/* Ownership */}
+                            <div className="col-span-1 flex items-center">
+                              <div className="flex flex-col">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  {parseFloat(
+                                    player.selected_by_percent
+                                  ).toFixed(1)}
+                                  %
+                                </span>
+                                {player.ownership_trend === "rising" && (
+                                  <span className="text-xs text-blue-500">
+                                    ↗ Rising
+                                  </span>
+                                )}
+                                {player.ownership_trend === "falling" && (
+                                  <span className="text-xs text-purple-500">
+                                    ↘ Falling
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Status */}
+                            <div className="col-span-1 flex items-center">
+                              <div className="flex items-center gap-1">
+                                {player.availability_status === "available" && (
+                                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                                )}
+                                {player.availability_status === "doubtful" && (
+                                  <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                                )}
+                                {player.availability_status === "injured" && (
+                                  <div className="w-2 h-2 bg-red-500 rounded-full" />
+                                )}
+                                {player.availability_status === "suspended" && (
+                                  <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                                )}
+                                {/* Differential badge */}
+                                {player.differential_score &&
+                                  player.differential_score > 20 && (
+                                    <Star className="w-3 h-3 text-yellow-500" />
+                                  )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Results info */}
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          Showing {Math.min(100, filteredPlayers.length)} of{" "}
+                          {filteredPlayers.length} players
+                        </span>
+                        {uiState.compareMode && (
+                          <span className="text-sm text-blue-600 dark:text-blue-400">
+                            {uiState.comparedPlayers.length}/2 players selected
+                            for comparison
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
 

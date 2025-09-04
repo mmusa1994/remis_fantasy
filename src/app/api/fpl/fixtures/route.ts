@@ -49,7 +49,6 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       // Apply fallback logic: try previous gameweeks until we find data
-      console.log(`⬇️ GW${gameweek} fixtures failed, trying fallback...`);
 
       const attemptedGameweeks = [gameweek];
       fallbackApplied = true;
@@ -57,8 +56,6 @@ export async function GET(request: NextRequest) {
       while (gameweek > 1 && attemptedGameweeks.length < 3) {
         gameweek--;
         attemptedGameweeks.push(gameweek);
-
-        console.log(`🔄 Trying fallback to GW${gameweek}`);
 
         try {
           fixturesResponse = await fixtureService.getGameweekFixtures(gameweek);
@@ -68,7 +65,6 @@ export async function GET(request: NextRequest) {
             fixturesResponse.data &&
             fixturesResponse.data.length > 0
           ) {
-            console.log(`✅ Found fixtures data in GW${gameweek}`);
             break;
           }
         } catch (fallbackError) {

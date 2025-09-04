@@ -108,27 +108,27 @@ export default function EnhancedPlayerCard({
 
   const cardSize = isOnPitch
     ? compact
-      ? "w-16 h-18"
-      : "w-18 lg:w-20 h-20 lg:h-24"
+      ? "w-14 h-16"
+      : "w-14 sm:w-16 lg:w-20 h-18 sm:h-18 lg:h-22" // Smaller on mobile
     : compact
-    ? "w-16 h-20"
-    : "w-18 lg:w-20 h-22 lg:h-26";
+    ? "w-16 h-20" // Bench cards larger
+    : "w-20 sm:w-18 lg:w-20 h-24 sm:h-22 lg:h-24"; // Bench cards bigger
 
   const kitSize = isOnPitch
     ? compact
-      ? "w-10 h-10"
-      : "w-12 lg:w-14 h-12 lg:h-14"
+      ? "w-6 h-6"
+      : "w-8 sm:w-8 lg:w-10 h-8 sm:h-8 lg:h-10" // Even smaller
     : compact
-    ? "w-10 h-10"
-    : "w-12 lg:w-14 h-12 lg:h-14";
+    ? "w-8 h-8"
+    : "w-10 sm:w-10 lg:w-12 h-10 sm:h-10 lg:h-12"; // Bench cards keep larger size
 
   const textSize = isOnPitch
     ? compact
       ? "text-xs"
-      : "text-sm lg:text-base"
+      : "text-xs" // Smaller, cleaner text
     : compact
-    ? "text-sm"
-    : "text-base lg:text-lg";
+    ? "text-xs"
+    : "text-xs";
 
   // Status indicator colors
   const getStatusColor = () => {
@@ -169,7 +169,7 @@ export default function EnhancedPlayerCard({
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        className={`absolute -bottom-1 -left-1 w-4 h-4 rounded-full flex items-center justify-center text-xs ${
+        className={`absolute -bottom-0 -left-0 w-4 h-4 rounded-full flex items-center justify-center text-xs ${
           ownershipChange > 0
             ? "bg-blue-500 text-white"
             : "bg-purple-500 text-white"
@@ -188,8 +188,8 @@ export default function EnhancedPlayerCard({
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        className={`absolute -top-1 -right-1 ${
-          isOnPitch ? "w-5 h-5 lg:w-6 lg:h-6" : "w-4 h-4"
+        className={`absolute -top-0 -right-0 ${
+          isOnPitch ? "w-5 sm:w-5 lg:w-5 h-5 sm:h-5 lg:h-5" : "w-4 h-4"
         } rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg ${
           isCaptain ? "bg-yellow-500" : "bg-blue-500"
         }`}
@@ -208,7 +208,7 @@ export default function EnhancedPlayerCard({
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full ${statusColor}`}
+        className={`absolute -bottom-0 -right-0 w-3 h-3 rounded-full ${statusColor}`}
       />
     );
   };
@@ -222,7 +222,13 @@ export default function EnhancedPlayerCard({
         initial={{ opacity: 0, y: 10, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-        className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-black/95 text-white text-xs rounded-lg shadow-xl backdrop-blur-sm z-50 min-w-64"
+        className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-xl z-[9999] min-w-64 max-w-72 border border-gray-700"
+        style={{
+          position: "fixed",
+          zIndex: 9999,
+          transform: "translate(-50%, -100%)",
+          marginBottom: "8px",
+        }}
       >
         {/* Player Info Header */}
         <div className="border-b border-white/20 pb-2 mb-2">
@@ -321,32 +327,36 @@ export default function EnhancedPlayerCard({
           </div>
         )}
 
-        {/* Enhanced metrics - captaincy appeal with higher priority */}
-        <div className="border-t border-white/20 pt-2 mt-2 bg-gradient-to-r from-yellow-900/30 to-orange-900/30 -mx-4 px-4 -mb-3 pb-3 rounded-b-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-yellow-400 text-sm font-bold">
-              Captaincy Appeal
-            </span>
-            <span className="text-yellow-300 text-lg font-bold">
+        {/* Enhanced metrics - captaincy appeal with elegant design */}
+        <div className="border-t border-white/15 pt-3 mt-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"></div>
+              <span className="text-yellow-400 text-sm font-semibold">
+                Captain Appeal
+              </span>
+            </div>
+            <span className="text-yellow-300 text-sm font-bold bg-yellow-400/10 px-2 py-1 rounded-full">
               {Math.round(
                 player.captaincy_appeal || player.total_points * 2 || 10
               )}
               %
             </span>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden shadow-inner">
+          <div className="relative w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-yellow-400 to-orange-400 h-3 rounded-full transition-all duration-500 shadow-sm"
+              className="bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500 h-2 rounded-full transition-all duration-700 ease-out shadow-sm"
               style={{
                 width: `${Math.min(
                   100,
                   Math.max(
-                    0,
+                    5,
                     player.captaincy_appeal || player.total_points * 2 || 10
                   )
                 )}%`,
               }}
             />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full pointer-events-none"></div>
           </div>
         </div>
       </motion.div>
@@ -389,7 +399,7 @@ export default function EnhancedPlayerCard({
                   isOnPitch
                     ? compact
                       ? "w-4 h-4"
-                      : "w-5 h-5 lg:w-6 lg:h-6"
+                      : "w-4 sm:w-4 lg:w-5 h-4 sm:h-4 lg:h-5" // Smaller, more proportional icon
                     : "w-3 h-3"
                 } opacity-90`}
                 style={{ color: teamColors.secondary }}
@@ -409,17 +419,22 @@ export default function EnhancedPlayerCard({
 
         {/* Player Name */}
         <div
-          className={`${textSize} font-medium text-center px-1 truncate mt-1`}
+          className={`${textSize} font-semibold text-center px-1 truncate mt-1 text-gray-800 dark:text-gray-100`}
+          title={player.web_name}
         >
           {player.web_name}
         </div>
 
         {/* Points Display */}
-        <div className={`${textSize} text-center font-bold`}>
+        <div className={`${textSize} text-center font-bold mb-1`}>
           {livePoints > 0 ? (
-            <span className="text-green-600">{livePoints}pts</span>
+            <span className="text-green-600 bg-green-100 dark:bg-green-900/30 px-1 py-0.5 rounded text-xs">
+              {livePoints}pts
+            </span>
           ) : (
-            <span className="text-gray-500">{points}pts</span>
+            <span className="text-gray-600 dark:text-gray-400 text-xs">
+              {points}pts
+            </span>
           )}
         </div>
 
@@ -434,7 +449,7 @@ export default function EnhancedPlayerCard({
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-xs font-bold text-white"
+            className="absolute top-0 left-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-xs font-bold text-white"
           >
             {player.multiplier}x
           </motion.div>
@@ -443,11 +458,11 @@ export default function EnhancedPlayerCard({
         {/* Quick stats overlay for hover */}
         {isHovered && showStats && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-black/80 rounded-lg flex flex-col justify-center items-center text-white text-xs"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute inset-0 bg-black/85 rounded-lg flex flex-col justify-center items-center text-white text-xs"
           >
-            <div className="text-center space-y-1">
+            <div className="text-center space-y-1.5 p-1">
               <div>£{((player.now_cost || 0) / 10).toFixed(1)}m</div>
               <div>
                 {parseFloat(player.selected_by_percent || "0").toFixed(1)}%
