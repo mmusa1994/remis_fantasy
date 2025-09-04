@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { FaShare, FaExpand, FaList, FaExchangeAlt } from "react-icons/fa";
+import { FaShare, FaExpand, FaList, FaExchangeAlt, FaRobot, FaTimes, FaPaperPlane } from "react-icons/fa";
 import { BiFootball } from "react-icons/bi";
 import {
   Target,
@@ -143,7 +143,7 @@ interface UserTeamData {
 export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const { data: session, status } = useSession();
   const { theme } = useTheme();
-  const { t } = useTranslation("fpl");
+  const { t, i18n } = useTranslation("fpl");
   const [currentGameweek, setCurrentGameweek] = useState(4);
   const [currentView, setCurrentView] = useState<ViewMode>("pitch");
   const [userTeamData, setUserTeamData] = useState<UserTeamData | null>(null);
@@ -157,6 +157,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const [currentManagerId, setCurrentManagerId] = useState<string | null>(
     managerId
   );
+  const [isCheckingManagerId, setIsCheckingManagerId] = useState(false);
   const [managerIdLoading, setManagerIdLoading] = useState(false);
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>({
     isValidating: false,
@@ -218,6 +219,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const [availableBudget, setAvailableBudget] = useState(0);
   const [freeTransfers, setFreeTransfers] = useState(1);
   const [transferCost, setTransferCost] = useState(0);
+
+  // AI Chat Widget State
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [aiChatLoading, setAiChatLoading] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [canUseAI, setCanUseAI] = useState(true);
+  const [lastAIUsage, setLastAIUsage] = useState<string | null>(null);
 
   // Enhanced UI State
   const [uiState, setUIState] = useState<EnhancedUIState>({
@@ -512,15 +520,31 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     try {
       if (!session?.user) return;
       
+      setIsCheckingManagerId(true);
       const response = await fetch("/api/user/manager-id");
       if (response.ok) {
         const data = await response.json();
         if (data.managerId) {
           setCurrentManagerId(data.managerId);
+        } else {
+          // No manager ID found in database - now we can show the modal
+          setTimeout(() => {
+            if (!currentManagerId) {
+              setShowManagerIdModal(true);
+            }
+          }, 300); // Small delay for UX
         }
       }
     } catch (error) {
       console.error("❌ Failed to fetch manager ID:", error);
+      // On error, show modal after delay as fallback
+      setTimeout(() => {
+        if (!currentManagerId) {
+          setShowManagerIdModal(true);
+        }
+      }, 1000);
+    } finally {
+      setIsCheckingManagerId(false);
     }
   };
 
@@ -670,13 +694,12 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
   // Check if we need to show manager ID modal or fetch data (no function dependency)
   useEffect(() => {
-    // Only show modal if user is authenticated and we don't have a manager ID
-    if (status === "authenticated" && session?.user && !currentManagerId) {
-      setShowManagerIdModal(true);
-    } else if (currentManagerId) {
+    // Only fetch data if we have manager ID
+    if (currentManagerId) {
       fetchTeamData(currentManagerId, currentGameweek);
     }
-  }, [currentManagerId, currentGameweek, status, session]);
+    // Modal display is now handled in fetchManagerId function
+  }, [currentManagerId, currentGameweek]);
 
   // Update currentManagerId when prop changes
   useEffect(() => {
@@ -845,7 +868,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
       }
       
       // Find next available transfer out slot
-      const availableOutIndex = prev.transfersOut.findIndex((outId, index) => !prev.transfersIn[index]);
+      const availableOutIndex = prev.transfersOut.findIndex((_, index) => !prev.transfersIn[index]);
       
       if (availableOutIndex === -1) {
         // No available slots
@@ -1049,6 +1072,97 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     setTransferCost(cost);
     setAvailableBudget(calculateBudgetAfterTransfers());
   }, [pendingTransfers, freeTransfers, calculateTransferCost, calculateBudgetAfterTransfers]);
+
+  // AI Team Analysis Functions
+  const checkAIUsageLimit = useCallback(async () => {
+    if (!session?.user?.id) return false;
+
+    try {
+      const response = await fetch('/api/user/ai-usage');
+      if (response.ok) {
+        const data = await response.json();
+        const lastUsage = data.lastAITeamAnalysis;
+        
+        if (lastUsage) {
+          const lastUsageDate = new Date(lastUsage);
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          
+          if (lastUsageDate > weekAgo) {
+            setCanUseAI(false);
+            setLastAIUsage(lastUsage);
+            return false;
+          }
+        }
+        
+        setCanUseAI(true);
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to check AI usage:', error);
+    }
+    return false;
+  }, [session?.user?.id]);
+
+  const requestAIAnalysis = useCallback(async () => {
+    if (!session?.user?.id || !userTeamData || aiChatLoading) return;
+
+    setAiChatLoading(true);
+    setAiAnalysis(null);
+
+    try {
+      // Use i18n from the hook that's already called at component level
+      const isBosnian = i18n.language === 'bs';
+      
+      const analysisPrompt = isBosnian
+        ? "Analiziraj moj FPL tim i predloži poboljšanja za iduće gameweek-ove. Fokusiraj se na transfere, kapetana, formacije i strategiju. Budi konkretan sa preporučenim igračima i objasni zašto."
+        : "Analyze my FPL team and suggest improvements for upcoming gameweeks. Focus on transfers, captain choices, formations, and strategy. Be specific with recommended players and explain why.";
+
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: analysisPrompt,
+          chatHistory: []
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAiAnalysis(data.response);
+        
+        // Update AI usage tracking
+        await fetch('/api/user/ai-usage', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'team_analysis'
+          }),
+        });
+        
+        setCanUseAI(false);
+        setLastAIUsage(new Date().toISOString());
+      } else {
+        throw new Error('Failed to get AI analysis');
+      }
+    } catch (error) {
+      console.error('AI Analysis failed:', error);
+      setAiAnalysis('Došlo je do greške prilikom analize. Pokušajte ponovo później.');
+    } finally {
+      setAiChatLoading(false);
+    }
+  }, [session?.user?.id, userTeamData, aiChatLoading, i18n.language]);
+
+  // Check AI usage on mount
+  useEffect(() => {
+    if (session?.user?.id) {
+      checkAIUsageLimit();
+    }
+  }, [session?.user?.id, checkAIUsageLimit]);
 
   // Calculate current team state with pending transfers applied
   const currentTeamForDisplay = useMemo(() => {
@@ -1314,6 +1428,22 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     <button className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                       <FaExpand className="w-4 h-4" />
                     </button>
+                    
+                    {/* AI Team Analysis Button */}
+                    {session?.user && (
+                      <button
+                        onClick={() => setShowAIChat(true)}
+                        disabled={!canUseAI}
+                        className={`p-2 rounded-lg transition-colors ${
+                          canUseAI
+                            ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+                            : "bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed"
+                        }`}
+                        title={canUseAI ? "AI Analiza Tima (1x weekly)" : "AI Analiza Tima used this week"}
+                      >
+                        <FaRobot className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -2167,6 +2297,20 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         </>
       )}
 
+      {/* Loading overlay while checking manager ID */}
+      {isCheckingManagerId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+              <span className="text-gray-700 dark:text-gray-300">
+                Checking your account...
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Manager ID Modal */}
       <ManagerIdModal
         isOpen={showManagerIdModal}
@@ -2187,6 +2331,111 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         isLoading={managerIdLoading}
         validationStatus={validationStatus}
       />
+
+      {/* AI Team Analysis Modal */}
+      {showAIChat && session?.user && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2">
+                <FaRobot className="w-5 h-5 text-purple-600" />
+                <h3 className="text-lg font-semibold">
+                  AI Analiza Tima
+                  <span className="text-sm font-normal text-gray-500 ml-2">
+                    (1x weekly)
+                  </span>
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowAIChat(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <FaTimes className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 max-h-96 overflow-y-auto">
+              {!aiAnalysis && !aiChatLoading && canUseAI && (
+                <div className="text-center py-8">
+                  <div className="bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-lg p-6 mb-4">
+                    <FaRobot className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+                    <h4 className="text-lg font-semibold mb-2">
+                      {i18n.language === 'bs' ? 'AI Analiza Tima' : 'AI Team Analysis'}
+                    </h4>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      {i18n.language === 'bs' 
+                        ? 'Dobijte personalizovanu analizu vašeg FPL tima sa preporukama za poboljšanja.'
+                        : 'Get personalized analysis of your FPL team with improvement recommendations.'
+                      }
+                    </p>
+                    <button
+                      onClick={requestAIAnalysis}
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105"
+                    >
+                      <FaPaperPlane className="w-4 h-4 inline mr-2" />
+                      {i18n.language === 'bs' ? 'Analiziraj Moj Tim' : 'Analyze My Team'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {aiChatLoading && (
+                <div className="text-center py-12">
+                  <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {i18n.language === 'bs' ? 'Analiziram vaš tim...' : 'Analyzing your team...'}
+                  </p>
+                </div>
+              )}
+
+              {aiAnalysis && (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FaRobot className="w-5 h-5 text-green-600" />
+                      <h4 className="font-semibold text-green-800 dark:text-green-200">
+                        {i18n.language === 'bs' ? 'AI Preporuke' : 'AI Recommendations'}
+                      </h4>
+                    </div>
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <div 
+                        className="whitespace-pre-wrap font-sans text-sm leading-relaxed"
+                        dangerouslySetInnerHTML={{
+                          __html: aiAnalysis?.replace(
+                            /\*\*(.*?)\*\*/g, 
+                            '<strong class="font-bold text-gray-900 dark:text-white">$1</strong>'
+                          )
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!canUseAI && lastAIUsage && (
+                <div className="text-center py-8">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-6">
+                    <div className="text-yellow-600 dark:text-yellow-400 mb-4">
+                      <FaRobot className="w-8 h-8 mx-auto mb-2" />
+                      <h4 className="font-semibold">
+                        {i18n.language === 'bs' ? 'Sedmični Limit Dostignut' : 'Weekly Limit Reached'}
+                      </h4>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      {i18n.language === 'bs' 
+                        ? `Koristili ste AI analizu ove sedmice. Sledeca analiza dostupna ${new Date(new Date(lastAIUsage).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}.`
+                        : `You've used AI analysis this week. Next analysis available ${new Date(new Date(lastAIUsage).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}.`
+                      }
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

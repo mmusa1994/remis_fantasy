@@ -267,7 +267,7 @@ export default function PriceChangesWidget({
                         {formatPrice(player.new_price)}
                       </div>
                       <div className="text-xs text-green-500">
-                        +{formatPriceChange(player.change)}
+                        {formatPriceChange(player.change)}
                       </div>
                     </div>
                   </motion.div>
@@ -317,7 +317,7 @@ export default function PriceChangesWidget({
                         {formatPrice(player.new_price)}
                       </div>
                       <div className="text-xs text-red-500">
-                        -{formatPriceChange(player.change)}
+                        {formatPriceChange(player.change)}
                       </div>
                     </div>
                   </motion.div>
