@@ -28,4 +28,7 @@
   },
   "season": "Sezona",
   "grandPrix": "Grand Prix"
+  ,
+  "pageTitle": "Remis Fantasy F1 Liga",
+  "nextLast": "Sljedeće: {{next}} • Posljednje: {{last}}"
 }

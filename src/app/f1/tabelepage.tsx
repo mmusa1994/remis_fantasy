@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
   MdEmojiEvents,
@@ -14,74 +12,38 @@ import { GiTrophyCup } from "react-icons/gi";
 import { FaCoins } from "react-icons/fa";
 import LoadingCard from "@/components/shared/LoadingCard";
 
-interface LeaderboardEntry {
+interface Entry {
   rank: number;
-  entry_id: number;
-  player_name: string;
   team_name: string;
-  total_points: number;
-  event_total: number;
-  last_rank: number;
+  manager_name: string;
+  points: number;
+  last_rank: number | null;
 }
 
-interface LeaderboardData {
-  league: {
-    name: string;
-    code: string;
-    lastUpdated: string;
-    totalEntries: number;
-  };
-  standings: LeaderboardEntry[];
-  prizes: {
-    first: string;
-    second: string;
-    third: string;
-  };
-  currentGrandPrix: string;
-  season: string;
-}
-
-export default function F1FantasyTabelePage() {
-  const { t } = useTranslation(["f1", "common"]);
+export default function F1TabeleFromDBPage() {
   const { theme } = useTheme();
-  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<LeaderboardData | null>(null);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Get league ID from URL params or use default
-  const leagueId = searchParams.get("league") || "7206907";
-
-  const fetchLeaderboard = useCallback(
-    async (customLeagueId?: string) => {
-      const currentLeagueId = customLeagueId || leagueId;
-      setLoading(true);
-      setError(null);
-
+  useEffect(() => {
+    const load = async () => {
       try {
-        const response = await fetch(
-          `/api/f1/leaderboard?league=${currentLeagueId}`
-        );
-        const result = await response.json();
-
-        if (!result.success) {
-          throw new Error(result.error || "Failed to fetch leaderboard");
-        }
-
-        setData(result.data);
-      } catch (err) {
-        console.error("Failed to fetch F1 leaderboard:", err);
-        setError(err instanceof Error ? err.message : "Failed to load data");
+        setLoading(true);
+        const res = await fetch("/api/f1/table");
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || "Failed to fetch");
+        setEntries(json.data.standings || []);
+        setLastUpdated(json.data.lastUpdated || null);
+      } catch (e: any) {
+        setError(e.message || "Failed to load data");
       } finally {
         setLoading(false);
       }
-    },
-    [leagueId]
-  );
-
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [leagueId, fetchLeaderboard]);
+    };
+    load();
+  }, []);
 
   const getRankStripeColor = (rank: number) => {
     switch (rank) {
@@ -92,24 +54,21 @@ export default function F1FantasyTabelePage() {
       case 3:
         return "#B47B36"; // Bronze
       default:
-        return theme === "dark" ? "#2C3E55" : "#E5E7EB"; // Theme-aware neutral
+        return theme === "dark" ? "#2C3E55" : "#E5E7EB";
     }
   };
 
-  const getRankMovement = (rank: number, lastRank: number) => {
-    if (rank < lastRank) {
-      return { type: "up", change: lastRank - rank };
-    } else if (rank > lastRank) {
-      return { type: "down", change: rank - lastRank };
-    }
-    return { type: "same", change: 0 };
+  const getMovement = (rank: number, lastRank: number | null) => {
+    if (!lastRank || lastRank === rank) return { type: "same" as const, change: 0 };
+    if (rank < lastRank) return { type: "up" as const, change: lastRank - rank };
+    return { type: "down" as const, change: rank - lastRank };
   };
 
-  if (loading && !data) {
+  if (loading && !entries.length) {
     return (
       <div className="min-h-screen bg-theme-background">
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-          <LoadingCard title={t("f1:leaderboard.loading")} />
+          <LoadingCard title="Loading leaderboard" />
         </div>
       </div>
     );
@@ -119,15 +78,13 @@ export default function F1FantasyTabelePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-theme-background">
         <div className="text-center">
-          <p className="text-red-500 text-lg mb-4">
-            {t("f1:leaderboard.error")}
-          </p>
+          <p className="text-red-500 text-lg mb-4">Failed to load leaderboard</p>
           <p className="text-theme-text-secondary mb-4">{error}</p>
           <button
-            onClick={() => fetchLeaderboard()}
+            onClick={() => location.reload()}
             className="px-4 py-2 bg-theme-primary text-theme-primary-foreground rounded-md font-russo uppercase tracking-wide hover:bg-theme-primary/90 transition-colors"
           >
-            {t("f1:leaderboard.retry")}
+            Retry
           </button>
         </div>
       </div>
@@ -141,18 +98,16 @@ export default function F1FantasyTabelePage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-4">
             <h1 className="font-russo uppercase tracking-tight text-4xl md:text-5xl text-[#782e2e]">
-              {t("f1:pageTitle")}
+              Remis Fantasy F1 League
             </h1>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <div className="flex flex-col items-center gap-2">
               <p className="text-theme-text-primary font-russo text-lg">
-                {t("f1:nextLast", { next: "Monza", last: "Zandvoort" })}
+                Next: Zandvoort • Last: Hungaroring
               </p>
-              <p className="text-theme-text-secondary text-sm">
-                {t("f1:season")} {data?.season}
-              </p>
+              <p className="text-theme-text-secondary text-sm">Season 2025</p>
             </div>
           </div>
 
@@ -161,30 +116,30 @@ export default function F1FantasyTabelePage() {
             <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-theme-card border border-theme-border">
               <GiTrophyCup className="text-[#F4CE2A] text-xl" />
               <div className="text-center">
-                <div className="text-[#F4CE2A] font-russo text-lg">{t("f1:prizes.first")}</div>
+                <div className="text-[#F4CE2A] font-russo text-lg">1st</div>
                 <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
                   <FaCoins className="text-[#F4CE2A]" />
-                  {data?.prizes.first}
+                  120 KM
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-theme-card border border-theme-border">
               <MdEmojiEvents className="text-[#9AA6B2] text-xl" />
               <div className="text-center">
-                <div className="text-[#9AA6B2] font-russo text-lg">{t("f1:prizes.second")}</div>
+                <div className="text-[#9AA6B2] font-russo text-lg">2nd</div>
                 <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
                   <FaCoins className="text-[#F4CE2A]" />
-                  {data?.prizes.second}
+                  80 KM
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-theme-card border border-theme-border">
               <MdEmojiEvents className="text-[#B47B36] text-xl" />
               <div className="text-center">
-                <div className="text-[#B47B36] font-russo text-lg">{t("f1:prizes.third")}</div>
+                <div className="text-[#B47B36] font-russo text-lg">3rd</div>
                 <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
                   <FaCoins className="text-[#F4CE2A]" />
-                  {data?.prizes.third}
+                  60 KM
                 </div>
               </div>
             </div>
@@ -193,13 +148,13 @@ export default function F1FantasyTabelePage() {
 
         {/* Leaderboard */}
         <div className="rounded-xl overflow-hidden bg-theme-card border border-theme-border">
-          {data?.standings.map((entry, index) => {
-            const movement = getRankMovement(entry.rank, entry.last_rank);
+          {entries.map((entry, index) => {
+            const movement = getMovement(entry.rank, entry.last_rank ?? null);
             const isTopThree = entry.rank <= 3;
 
             return (
               <div
-                key={entry.entry_id}
+                key={`${entry.rank}-${entry.team_name}`}
                 className={`relative flex items-center h-[68px] px-4 md:px-6 transition-all duration-200 hover:bg-theme-accent/10 ${
                   index > 0 ? "border-t border-theme-border" : ""
                 } ${
@@ -246,17 +201,13 @@ export default function F1FantasyTabelePage() {
                   {movement.type === "up" && (
                     <div className="flex items-center text-green-400">
                       <MdTrendingUp className="w-4 h-4" />
-                      <span className="text-xs font-russo">
-                        +{movement.change}
-                      </span>
+                      <span className="text-xs font-russo">+{movement.change}</span>
                     </div>
                   )}
                   {movement.type === "down" && (
                     <div className="flex items-center text-red-400">
                       <MdTrendingDown className="w-4 h-4" />
-                      <span className="text-xs font-russo">
-                        -{movement.change}
-                      </span>
+                      <span className="text-xs font-russo">-{movement.change}</span>
                     </div>
                   )}
                   {movement.type === "same" && (
@@ -269,7 +220,7 @@ export default function F1FantasyTabelePage() {
                 {/* Player Name */}
                 <div className="flex-1 min-w-0">
                   <h3 className="font-russo text-theme-text-primary text-lg tracking-wide truncate">
-                    {entry.player_name}
+                    {entry.manager_name}
                   </h3>
                 </div>
 
@@ -282,7 +233,7 @@ export default function F1FantasyTabelePage() {
 
                 {/* Points */}
                 <div className="px-3 py-2 rounded-md font-russo text-theme-text-primary text-lg bg-theme-secondary border border-theme-border">
-                  {entry.total_points.toLocaleString()}
+                  {entry.points.toLocaleString()}
                 </div>
               </div>
             );
@@ -292,13 +243,11 @@ export default function F1FantasyTabelePage() {
         {/* Last Updated */}
         <div className="text-center mt-6">
           <p className="text-theme-text-secondary text-sm">
-            {t("f1:leaderboard.lastUpdated")}{" "}
-            {data?.league.lastUpdated
-              ? new Date(data.league.lastUpdated).toLocaleString("sr-RS")
-              : "N/A"}
+            leaderboard.lastUpdated {lastUpdated ? new Date(lastUpdated).toLocaleString("sr-RS") : "N/A"}
           </p>
         </div>
       </div>
     </div>
   );
 }
+

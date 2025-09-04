@@ -75,6 +75,9 @@ const getIndicatorColor = (color: string) => {
 
 export default function AdminTablesCleanPage() {
   const { status } = useSession();
+  const [mainTab, setMainTab] = useState<"premier" | "champions" | "f1">(
+    "premier"
+  );
   const [tables, setTables] = useState<LeagueTables | null>(null);
   const [selectedLeague, setSelectedLeague] =
     useState<keyof LeagueTables>("premiumLeague");
@@ -111,10 +114,10 @@ export default function AdminTablesCleanPage() {
       return;
     }
 
-    if (status === "authenticated") {
+    if (status === "authenticated" && mainTab === "premier") {
       loadTables();
     }
-  }, [status]);
+  }, [status, mainTab]);
 
   const loadTables = async () => {
     try {
@@ -505,6 +508,99 @@ export default function AdminTablesCleanPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
+        {/* Top-level Tabs */}
+        <div className="bg-white rounded-xl p-2 mb-6 inline-flex gap-2 border border-gray-200">
+          {[
+            { key: "premier", label: "Premier League" },
+            { key: "champions", label: "Champions League" },
+            { key: "f1", label: "F1" },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setMainTab(t.key as any)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                mainTab === (t.key as any)
+                  ? "bg-amber-600 text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Champions League Placeholder */}
+        {mainTab === "champions" && (
+          <div className="bg-white rounded-xl shadow p-8 text-center border border-gray-200">
+            <h3 className="text-2xl font-bold mb-2">Champions League</h3>
+            <p className="text-gray-600">Uskoro — u izgradnji</p>
+          </div>
+        )}
+
+        {/* F1 Bulk Updater */}
+        {mainTab === "f1" && (
+          <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-800">F1 Bulk Updater (2025)</h3>
+              <p className="text-sm text-gray-600">Paste standings text (Rank, Team, Manager, Points) and update Supabase table f1_table_25.</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <textarea
+                className="w-full min-h-[220px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                placeholder={`Paste here. Example:\nRank\tName\tPoints\n1\nSainz & Conquer\nAlmir Softic\n3377\n2\nCosine kamikaze\nAmmar Cosovic\n3307`}
+                value={bulkUpdateData}
+                onChange={(e) => setBulkUpdateData(e.target.value)}
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={async () => {
+                    if (!bulkUpdateData.trim()) {
+                      setToast({ show: true, message: "Please paste standings text", type: "error" });
+                      return;
+                    }
+                    setBulkUpdating(true);
+                    try {
+                      const res = await fetch("/api/admin/f1/bulk-update", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ text: bulkUpdateData }),
+                      });
+                      const json = await res.json();
+                      if (!res.ok || !json.success) throw new Error(json.error || "Update failed");
+                      setToast({ show: true, message: `Updated ${json.count} entries`, type: "success" });
+                    } catch (e: any) {
+                      setToast({ show: true, message: e.message || "Bulk update failed", type: "error" });
+                    } finally {
+                      setBulkUpdating(false);
+                    }
+                  }}
+                  disabled={bulkUpdating}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
+                >
+                  {bulkUpdating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" /> Parse & Update
+                    </>
+                  )}
+                </button>
+                <a
+                  href="/f1/tabelepage"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  target="_blank"
+                >
+                  Open Public Table
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Wrap Premier content to toggle visibility via tab */}
+        <div className={mainTab !== "premier" ? "hidden" : "block"}>
         {/* Control Panel */}
         <div className="bg-white rounded-xl shadow-lg mb-4 sm:mb-6 lg:mb-8 border border-gray-100 overflow-hidden">
           {/* Header Info */}
@@ -1202,6 +1298,7 @@ export default function AdminTablesCleanPage() {
             </div>
           </div>
         )}
+        </div>
       </main>
 
       {/* Toast Component */}

@@ -28,4 +28,7 @@
   },
   "season": "Season",
   "grandPrix": "Grand Prix"
+  ,
+  "pageTitle": "Remis Fantasy F1 League",
+  "nextLast": "Next: {{next}} • Last: {{last}}"
 }

@@ -16,11 +16,14 @@ import authEN from "@/locales/en/auth.json";
 import authBS from "@/locales/bs/auth.json";
 import profileEN from "@/locales/en/profile.json";
 import profileBS from "@/locales/bs/profile.json";
+import f1EN from "@/locales/en/f1.json";
+import f1BS from "@/locales/bs/f1.json";
 
 const resources = {
   en: {
     common: commonEN,
     fpl: fplEN,
+    f1: f1EN,
     hero: heroEN,
     navigation: navigationEN,
     ai: aiEN,
@@ -30,6 +33,7 @@ const resources = {
   bs: {
     common: commonBS,
     fpl: fplBS,
+    f1: f1BS,
     hero: heroBS,
     navigation: navigationBS,
     ai: aiBS,
@@ -46,7 +50,7 @@ i18n
     fallbackLng: "en",
     debug: false,
     defaultNS: "common",
-    ns: ["common", "fpl", "hero", "navigation", "ai", "auth", "profile"],
+    ns: ["common", "fpl", "f1", "hero", "navigation", "ai", "auth", "profile"],
 
     interpolation: {
       escapeValue: false,
