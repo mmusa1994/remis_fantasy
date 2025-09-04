@@ -41,7 +41,7 @@ export default function PremierLeagueLayout({
       name: t("prices"),
       href: "/premier-league/cijene",
       icon: "DollarSign",
-      showOnMobile: true
+      showOnMobile: false
     },
     {
       name: t("bestDifferentials"),

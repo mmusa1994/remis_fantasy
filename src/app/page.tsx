@@ -297,7 +297,7 @@ export default function Home() {
                         e.currentTarget.style.backgroundColor = "transparent";
                       }}
                     >
-                      {t("hero:openLeague")}
+                      {t("hero.openLeague")}
                       <svg
                         className="w-4 h-4 ml-2"
                         fill="none"

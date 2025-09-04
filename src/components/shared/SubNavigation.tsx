@@ -181,16 +181,21 @@ export default function SubNavigation({
 
   // Filter visible items for mobile
   // If we have 4 or fewer items total, show all on mobile
-  // Otherwise, use the showOnMobile logic
+  // Otherwise, use the showOnMobile logic, but limit to 3 items if there are dropdown items
   const shouldShowAllOnMobile = allItems.length <= 4;
-  const mobileItems = shouldShowAllOnMobile
+  const allMobileItems = shouldShowAllOnMobile
     ? allItems
     : allItems.filter((item) => item.showOnMobile);
   const desktopItems = allItems;
   const dropdownItems = shouldShowAllOnMobile
     ? []
     : allItems.filter((item) => !item.showOnMobile);
-  const hasDropdownItems = dropdownItems.length > 0;
+  
+  // Show all mobile items (4 items) - we'll handle the "More..." button separately
+  const mobileItems = allMobileItems;
+  
+  // Only non-mobile items go to dropdown
+  const finalDropdownItems = dropdownItems;
 
   return (
     <nav
@@ -264,7 +269,7 @@ export default function SubNavigation({
 
           {/* Mobile: Show only showOnMobile items + dropdown for rest */}
           <div className="flex sm:hidden items-center w-full">
-            <div className="grid grid-cols-4 gap-1 w-full">
+            <div className="flex gap-1 w-full">
               {mobileItems.map((item) => {
                 const isActive = pathname === item.href;
                 const IconComponent = getIcon(item.icon);
@@ -273,7 +278,7 @@ export default function SubNavigation({
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`relative px-1 py-2 rounded-lg font-semibold text-xs transition-all duration-300 flex flex-col items-center ${
+                    className={`relative px-1 py-2 rounded-lg font-semibold text-xs transition-all duration-300 flex flex-col items-center flex-1 ${
                       isActive
                         ? theme === "dark"
                           ? colors.active.dark
@@ -334,29 +339,28 @@ export default function SubNavigation({
             </div>
 
             {/* More button for remaining items */}
-            {hasDropdownItems && (
-              <div className="ml-2">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`flex items-center px-2 py-2 rounded-lg font-semibold text-xs transition-all duration-300 ${
-                    theme === "dark"
-                      ? colors.hover.dark
-                      : `text-gray-600 ${colors.hover.light}`
-                  }`}
+            {finalDropdownItems.length > 0 && (
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className={`flex flex-col items-center px-1 py-2 rounded-lg font-semibold text-xs transition-all duration-300 ${
+                  theme === "dark"
+                    ? colors.hover.dark
+                    : `text-gray-600 ${colors.hover.light}`
+                }`}
+              >
+                <svg
+                  className="w-4 h-4 mb-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                </button>
-              </div>
+                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+                <span className="text-xs">More</span>
+              </button>
             )}
 
             {/* Dropdown for additional items */}
-            {hasDropdownItems && isDropdownOpen && (
+            {finalDropdownItems.length > 0 && isDropdownOpen && (
               <div
                 ref={dropdownRef}
                 className={`absolute right-4 top-full mt-1 min-w-[140px] rounded-lg shadow-lg border z-50 ${
@@ -365,7 +369,7 @@ export default function SubNavigation({
                     : `bg-white ${colors.border.light}`
                 }`}
               >
-                {dropdownItems.map((item) => {
+                {finalDropdownItems.map((item) => {
                   const isActive = pathname === item.href;
                   const IconComponent = getIcon(item.icon);
 
