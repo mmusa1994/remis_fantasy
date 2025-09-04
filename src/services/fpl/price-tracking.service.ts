@@ -67,7 +67,7 @@ export class FPLPriceTrackingService extends BaseFPLService {
           position: this.getPositionName(player.element_type),
           old_price: player.now_cost - player.cost_change_event,
           new_price: player.now_cost,
-          change_amount: Math.abs(player.cost_change_event),
+          change_amount: player.cost_change_event,
           change_time: new Date().toISOString(),
           change_type: 'fall' as const,
           predicted: false,

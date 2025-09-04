@@ -11,6 +11,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 import type { ChipStrategiesWidgetData } from "@/types/fpl-enhanced";
 
 interface ChipStrategiesWidgetProps {
@@ -25,6 +26,7 @@ export default function ChipStrategiesWidget({
   maxWeeksShown = 5,
 }: ChipStrategiesWidgetProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation("fpl");
   const [data, setData] = useState<ChipStrategiesWidgetData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -154,13 +156,13 @@ export default function ChipStrategiesWidget({
   const formatChipName = (chipType: string) => {
     switch (chipType) {
       case "wildcard":
-        return "Wildcard";
+        return t("teamPlanner.widgets.wildcard");
       case "freehit":
-        return "Free Hit";
+        return t("teamPlanner.widgets.freeHit");
       case "benchboost":
-        return "Bench Boost";
+        return t("teamPlanner.widgets.benchBoost");
       case "triplecaptain":
-        return "Triple Captain";
+        return t("teamPlanner.widgets.tripleCaptain");
       default:
         return chipType;
     }
@@ -185,7 +187,7 @@ export default function ChipStrategiesWidget({
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
             <Zap className="text-yellow-500 w-5 h-5" />
-            Chip Strategies
+            {t("teamPlanner.widgets.chipStrategies")}
           </h3>
           <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
         </div>
@@ -210,7 +212,7 @@ export default function ChipStrategiesWidget({
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
             <Zap className="text-yellow-500 w-5 h-5" />
-            Chip Strategies
+            {t("teamPlanner.widgets.chipStrategies")}
           </h3>
           <button
             onClick={handleManualRefresh}
@@ -272,17 +274,17 @@ export default function ChipStrategiesWidget({
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-4 h-4 text-yellow-600" />
             <span className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
-              Recommendation
+              {t("teamPlanner.widgets.recommendation")}
             </span>
           </div>
           <div className="text-sm">
             <span className="font-medium">
               {formatChipName(data.recommendations.next_chip)}
             </span>{" "}
-            in Week {data.recommendations.recommended_week}
+            {t("teamPlanner.widgets.inWeek", { week: data.recommendations.recommended_week })}
           </div>
           <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-            Confidence: {data.recommendations.confidence}%
+            {t("teamPlanner.widgets.confidence")}: {data.recommendations.confidence}%
           </div>
         </motion.div>
       )}
@@ -334,7 +336,7 @@ export default function ChipStrategiesWidget({
             <div className="space-y-2">
               <h5 className="text-sm font-medium flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
-                Popular Weeks
+                {t("teamPlanner.widgets.popularWeeks")}
               </h5>
               {activeChipData.optimal_weeks.map((week, index) => (
                 <motion.div
@@ -349,7 +351,7 @@ export default function ChipStrategiesWidget({
                       {week.week}
                     </div>
                     <span className="text-sm font-medium">
-                      Week {week.week}
+                      {t("teamPlanner.widgets.week")} {week.week}
                     </span>
                   </div>
                   <div className="text-right">
@@ -358,7 +360,7 @@ export default function ChipStrategiesWidget({
                     </div>
                     {week.success_rate && (
                       <div className="text-xs text-green-600">
-                        {week.success_rate}% success
+                        {week.success_rate}% {t("teamPlanner.widgets.success")}
                       </div>
                     )}
                   </div>

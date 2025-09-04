@@ -468,8 +468,20 @@
     "viceCaptain": "Vice Captain",
     "tabs": {
       "pitch": "Pitch",
+      "list": "List",
       "analytics": "Analytics",
       "transfers": "Transfers"
+    },
+    "list": {
+      "formation": "Formation",
+      "totalPlayers": "Total Players",
+      "startingXI": "Starting XI",
+      "substitutes": "Substitutes",
+      "substituteSelected": "Players selected for substitution",
+      "makeSubstitution": "Make Substitution"
+    },
+    "validation": {
+      "minimumDefenders": "Must have at least 3 defenders in starting XI"
     },
     "transferMarket": {
       "title": "Transfer Market",
@@ -512,6 +524,8 @@
       "tripleCaptain": "Triple Captain",
       "popularWeeks": "Popular Weeks",
       "week": "Week",
+      "inWeek": "in Week {{week}}",
+      "transfers": "Transfers",
       "success": "success",
       "earlyUsagePattern": "early usage pattern"
     },

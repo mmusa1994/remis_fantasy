@@ -11,6 +11,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 import { getTeamColors } from "@/lib/team-colors";
 import type { TransferTrendsWidgetData } from "@/types/fpl-enhanced";
 
@@ -39,6 +40,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
     showFutureWeeks = true,
   }: TransferTrendsWidgetProps) {
     const { theme } = useTheme();
+    const { t } = useTranslation("fpl");
     const [data, setData] = useState<TransferTrendsWidgetData | null>(null);
     const [loading, setLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -297,7 +299,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold flex items-center gap-2">
               <ArrowRightLeft className="text-purple-500 w-5 h-5" />
-              Transfer Trends
+              {t("teamPlanner.widgets.transferTrends")}
             </h3>
             <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
           </div>
@@ -322,7 +324,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold flex items-center gap-2">
               <ArrowRightLeft className="text-purple-500 w-5 h-5" />
-              Transfer Trends
+              {t("teamPlanner.widgets.transferTrends")}
             </h3>
             <button
               onClick={handleManualRefresh}
@@ -383,7 +385,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                 : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
-            Swaps
+            {t("teamPlanner.widgets.swaps")}
           </button>
           <button
             onClick={() => setActiveTab("players_in")}
@@ -393,7 +395,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                 : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
-            In
+            {t("teamPlanner.widgets.in")}
           </button>
           <button
             onClick={() => setActiveTab("players_out")}
@@ -403,7 +405,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                 : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
-            Out
+            {t("teamPlanner.widgets.out")}
           </button>
           {showFutureWeeks && (
             <button
@@ -414,7 +416,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                   : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
-              Future
+              {t("teamPlanner.widgets.future")}
             </button>
           )}
         </div>
@@ -431,7 +433,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                 className="space-y-2"
               >
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Top Transfers (GW{currentGameweek})
+                  {t("teamPlanner.widgets.topTransfers", { gw: currentGameweek })}
                 </h4>
                 {data.current_transfers.map((transfer, index) => (
                   <div
@@ -466,7 +468,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
               >
                 <h4 className="text-sm font-semibold text-green-600 flex items-center gap-1">
                   <TrendingUp className="w-4 h-4" />
-                  Top Transfers In
+                  {t("teamPlanner.widgets.topTransfers")} {t("teamPlanner.widgets.in")}
                 </h4>
                 {data.top_players_in.map((player) => (
                   <div
@@ -508,7 +510,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
               >
                 <h4 className="text-sm font-semibold text-red-600 flex items-center gap-1">
                   <TrendingDown className="w-4 h-4" />
-                  Top Transfers Out
+                  {t("teamPlanner.widgets.topTransfers")} {t("teamPlanner.widgets.out")}
                 </h4>
                 {data.top_players_out.map((player) => (
                   <div
@@ -552,7 +554,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                 >
                   <h4 className="text-sm font-semibold text-blue-600 flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    Future Transfers
+                    {t("teamPlanner.widgets.future")} Transfers
                   </h4>
                   {Object.entries(data.future_transfers)
                     .slice(0, 3)
@@ -591,10 +593,10 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
           {/* Last Update */}
           {lastUpdate && (
             <div className="text-xs text-gray-500 dark:text-gray-400 text-center pt-2 border-t border-gray-200 dark:border-gray-700 flex items-center justify-center gap-1">
-              <span>Last updated: {lastUpdate.toLocaleTimeString()}</span>
+              <span>{t("teamPlanner.widgets.lastUpdated")}: {lastUpdate.toLocaleTimeString()}</span>
               {cacheRef.current && isCacheValid(cacheRef.current) && (
                 <span className="text-green-500" title="Data from cache">
-                  (cached)
+                  ({t("teamPlanner.widgets.cached")})
                 </span>
               )}
             </div>

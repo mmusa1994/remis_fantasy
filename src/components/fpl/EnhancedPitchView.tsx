@@ -66,6 +66,7 @@ export default function EnhancedPitchView({
     },
     [allPlayers, teamPlayers]
   );
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
   // Calculate formation layout for half-court (our half only)
   // y% grows downward: goalkeeper at top, forwards at bottom (attacking upward)
@@ -76,41 +77,37 @@ export default function EnhancedPitchView({
       y: number
     ): Array<{ x: number; y: number }> => {
       if (count <= 0) return [];
-      if (count === 1) return [{ x: 45, y }];
+      if (count === 1) return [{ x: isMobile ? 40 : 50, y }];
 
       // Better spacing for different player counts - more compact on mobile
       const getSpacing = (playerCount: number) => {
-        // Check if mobile screen (rough approximation)
-        const isMobile =
-          typeof window !== "undefined" && window.innerWidth < 640;
-
         if (isMobile) {
           // Tighter spacing on mobile to accommodate larger cards
           switch (playerCount) {
             case 2:
-              return { minX: 25, maxX: 70 };
+              return { minX: 22, maxX: 70 };
             case 3:
-              return { minX: 3, maxX: 65 };
+              return { minX: 8, maxX: 71 };
             case 4:
-              return { minX: 3, maxX: 65 };
+              return { minX: 7, maxX: 71 };
             case 5:
-              return { minX: 3, maxX: 72 };
+              return { minX: 8, maxX: 75 };
             default:
-              return { minX: 3, maxX: 72 };
+              return { minX: 8, maxX: 75 };
           }
         } else {
           // Original desktop spacing
           switch (playerCount) {
             case 2:
-              return { minX: 25, maxX: 70 };
+              return { minX: 26, maxX: 70 };
             case 3:
-              return { minX: 8, maxX: 80 };
+              return { minX: 8, maxX: 82 };
             case 4:
-              return { minX: 8, maxX: 80 };
+              return { minX: 8, maxX: 82 };
             case 5:
-              return { minX: 8, maxX: 80 };
+              return { minX: 8, maxX: 82 };
             default:
-              return { minX: 7, maxX: 80 };
+              return { minX: 7, maxX: 82 };
           }
         }
       };
@@ -137,7 +134,7 @@ export default function EnhancedPitchView({
     const FWD_Y = 78; // Forwards (attacking toward center/opponent goal)
 
     const positions = {
-      goalkeepers: [{ x: 44, y: GK_Y }],
+      goalkeepers: [{ x: isMobile ? 39 : 44.5, y: GK_Y }],
       defenders: distributeX(defCount, DEF_Y),
       midfielders: distributeX(midCount, MID_Y),
       forwards: distributeX(fwdCount, FWD_Y),
@@ -569,7 +566,7 @@ export default function EnhancedPitchView({
                     stiffness: 200,
                   }}
                   onClick={() => player && handlePlayerClick(player)}
-                  className="cursor-pointer touch-manipulation transform hover:scale-105 transition-transform duration-200 relative"
+                  className="w-max cursor-pointer touch-manipulation transform hover:scale-105 transition-transform duration-200 relative"
                 >
                   {player && (
                     <>

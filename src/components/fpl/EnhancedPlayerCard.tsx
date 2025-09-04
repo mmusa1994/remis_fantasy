@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, TrendingDown, Users, AlertTriangle } from "lucide-react";
-import { FaTshirt, FaRunning } from "react-icons/fa";
-import { GiGoalKeeper, GiSoccerKick } from "react-icons/gi";
-import { PiSoccerBallFill } from "react-icons/pi";
+import { PiTShirtFill } from "react-icons/pi";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { getTeamColors } from "@/lib/team-colors";
@@ -25,36 +23,9 @@ interface EnhancedPlayerCardProps {
   compact?: boolean;
 }
 
-// Function to get kit icon based on position
-const getKitIcon = (
-  position: "GK" | "DEF" | "MID" | "FWD" | undefined,
-  elementType?: number
-) => {
-  // Use position prop first, then fall back to element_type
-  const pos =
-    position ||
-    (elementType === 1
-      ? "GK"
-      : elementType === 2
-      ? "DEF"
-      : elementType === 3
-      ? "MID"
-      : elementType === 4
-      ? "FWD"
-      : "MID");
-
-  switch (pos) {
-    case "GK":
-      return GiGoalKeeper;
-    case "DEF":
-      return FaRunning;
-    case "MID":
-      return GiSoccerKick;
-    case "FWD":
-      return PiSoccerBallFill;
-    default:
-      return FaTshirt;
-  }
+// Function to get kit icon - now always returns team jersey
+const getKitIcon = () => {
+  return PiTShirtFill;
 };
 
 export default function EnhancedPlayerCard({
@@ -72,6 +43,51 @@ export default function EnhancedPlayerCard({
 }: EnhancedPlayerCardProps) {
   const { theme } = useTheme();
   const [showAdvancedTooltip, setShowAdvancedTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState<
+    "left" | "right" | "center"
+  >("center");
+  const [isMobile, setIsMobile] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Screen size and positioning detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+
+    const updateTooltipPosition = () => {
+      if (!cardRef.current) return;
+
+      const rect = cardRef.current.getBoundingClientRect();
+      const screenWidth = window.innerWidth;
+      const tooltipWidth = isMobile ? 280 : 320; // Smaller on mobile
+
+      // Check if tooltip would overflow on the right
+      if (rect.left + tooltipWidth / 2 > screenWidth - 20) {
+        setTooltipPosition("left");
+      }
+      // Check if tooltip would overflow on the left
+      else if (rect.left - tooltipWidth / 2 < 20) {
+        setTooltipPosition("right");
+      } else {
+        setTooltipPosition("center");
+      }
+    };
+
+    checkScreenSize();
+    updateTooltipPosition();
+
+    window.addEventListener("resize", checkScreenSize);
+    window.addEventListener("resize", updateTooltipPosition);
+    window.addEventListener("scroll", updateTooltipPosition);
+
+    return () => {
+      window.removeEventListener("resize", checkScreenSize);
+      window.removeEventListener("resize", updateTooltipPosition);
+      window.removeEventListener("scroll", updateTooltipPosition);
+    };
+  }, [isMobile, showAdvancedTooltip]);
 
   if (!player) return null;
 
@@ -112,15 +128,7 @@ export default function EnhancedPlayerCard({
       : "w-14 sm:w-16 lg:w-20 h-18 sm:h-18 lg:h-22" // Smaller on mobile
     : compact
     ? "w-16 h-20" // Bench cards larger
-    : "w-20 sm:w-18 lg:w-20 h-24 sm:h-22 lg:h-24"; // Bench cards bigger
-
-  const kitSize = isOnPitch
-    ? compact
-      ? "w-6 h-6"
-      : "w-8 sm:w-8 lg:w-10 h-8 sm:h-8 lg:h-10" // Even smaller
-    : compact
-    ? "w-8 h-8"
-    : "w-10 sm:w-10 lg:w-12 h-10 sm:h-10 lg:h-12"; // Bench cards keep larger size
+    : "w-14 sm:w-18 lg:w-20 h-18 sm:h-22 lg:h-24"; // Bench cards bigger
 
   const textSize = isOnPitch
     ? compact
@@ -213,21 +221,50 @@ export default function EnhancedPlayerCard({
     );
   };
 
-  // Advanced tooltip
+  // Advanced responsive tooltip
   const renderAdvancedTooltip = () => {
     if (!showTooltip || !showAdvancedTooltip) return null;
+
+    // Dynamic positioning classes
+    const getPositionClasses = () => {
+      switch (tooltipPosition) {
+        case "left":
+          return "bottom-full right-0 mb-2";
+        case "right":
+          return "bottom-full left-0 mb-2";
+        default:
+          return "bottom-full left-1/2 transform -translate-x-1/2 mb-2";
+      }
+    };
+
+    // Dynamic transform style
+    const getTransformStyle = () => {
+      switch (tooltipPosition) {
+        case "left":
+          return "translateY(-100%)";
+        case "right":
+          return "translateY(-100%)";
+        default:
+          return "translate(-50%, -100%)";
+      }
+    };
+
+    // Responsive size classes
+    const sizeClasses = isMobile
+      ? "px-3 py-2 text-2xs min-w-[260px] max-w-[280px]"
+      : "px-4 py-3 text-xs min-w-64 max-w-72";
 
     return (
       <motion.div
         initial={{ opacity: 0, y: 10, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-        className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-xl z-[9999] min-w-64 max-w-72 border border-gray-700"
+        className={`absolute ${getPositionClasses()} ${sizeClasses} bg-gray-900 dark:bg-gray-800 text-white rounded-lg shadow-xl z-[9999] border border-gray-700`}
         style={{
           position: "fixed",
           zIndex: 9999,
-          transform: "translate(-50%, -100%)",
-          marginBottom: "8px",
+          transform: getTransformStyle(),
+          marginBottom: isMobile ? "4px" : "8px",
         }}
       >
         {/* Player Info Header */}
@@ -366,10 +403,11 @@ export default function EnhancedPlayerCard({
   return (
     <div className="relative group">
       <motion.div
+        ref={cardRef}
         whileHover={interactive ? { scale: 1.05 } : {}}
         whileTap={interactive ? { scale: 0.95 } : {}}
         className={`relative ${cardSize} mx-1 lg:mx-2 mb-2 ${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
+          theme === "dark" ? "bg-black/50" : "bg-white/50"
         } rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 ${
           isSelected
             ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800"
@@ -379,30 +417,51 @@ export default function EnhancedPlayerCard({
             ? "border-blue-400 ring-2 ring-blue-200 dark:ring-blue-800"
             : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500"
         } ${interactive ? "cursor-pointer" : ""} overflow-hidden`}
-        onMouseEnter={() => showTooltip && setShowAdvancedTooltip(true)}
+        onMouseEnter={() => {
+          if (showTooltip) {
+            setShowAdvancedTooltip(true);
+            // Update position when tooltip shows
+            if (cardRef.current) {
+              const rect = cardRef.current.getBoundingClientRect();
+              const screenWidth = window.innerWidth;
+              const tooltipWidth = isMobile ? 280 : 320;
+
+              if (rect.left + tooltipWidth / 2 > screenWidth - 20) {
+                setTooltipPosition("left");
+              } else if (rect.left - tooltipWidth / 2 < 20) {
+                setTooltipPosition("right");
+              } else {
+                setTooltipPosition("center");
+              }
+            }
+          }
+        }}
         onMouseLeave={() => setShowAdvancedTooltip(false)}
       >
-        {/* Player Kit/Jersey */}
+        {/* Player Kit/Jersey - Clean Team Colors Only */}
         <div
-          className={`${kitSize} mx-auto mt-1 rounded-full flex items-center justify-center shadow-inner transition-transform group-hover:scale-110 relative`}
-          style={{
-            backgroundColor: teamColors.primary,
-            border: `2px solid ${teamColors.secondary}`,
-          }}
+          className={`mx-auto mt-1 flex items-center justify-center transition-transform duration-300 group-hover:scale-105 relative`}
         >
           {/* Kit icon based on position */}
           {(() => {
-            const IconComponent = getKitIcon(position, player.element_type);
+            const IconComponent = getKitIcon();
             return (
               <IconComponent
                 className={`${
                   isOnPitch
                     ? compact
-                      ? "w-4 h-4"
-                      : "w-4 sm:w-4 lg:w-5 h-4 sm:h-4 lg:h-5" // Smaller, more proportional icon
-                    : "w-3 h-3"
-                } opacity-90`}
-                style={{ color: teamColors.secondary }}
+                      ? "w-10 h-10 lg:w-16 lg:h-20"
+                      : "w-5 h-5 lg:h-10 lg:w-10" // Match !isOnPitch size - larger jerseys
+                    : "w-5 h-5 lg:h-10 lg:w-10" // Match !isOnPitch size - larger jerseys
+                } transition-colors duration-200`}
+                style={
+                  {
+                    color: teamColors.primary,
+                    "--pi-primary": teamColors.primary,
+                    "--pi-secondary": teamColors.secondary || "#FFFFFF",
+                    filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.2))",
+                  } as React.CSSProperties
+                }
               />
             );
           })()}

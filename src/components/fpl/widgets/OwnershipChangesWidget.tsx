@@ -11,6 +11,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 import { getTeamColors } from "@/lib/team-colors";
 import type { OwnershipChangesWidgetData } from "@/types/fpl-enhanced";
 
@@ -40,6 +41,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
     timeframe = "1h",
   }: OwnershipChangesWidgetProps) {
     const { theme } = useTheme();
+    const { t } = useTranslation("fpl");
     const [data, setData] = useState<OwnershipChangesWidgetData | null>(null);
     const [loading, setLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -345,7 +347,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold flex items-center gap-2">
               <Users className="text-blue-500 w-5 h-5" />
-              Ownership Changes
+              {t("teamPlanner.widgets.ownershipChanges")}
             </h3>
             <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
           </div>
@@ -370,7 +372,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold flex items-center gap-2">
               <Users className="text-blue-500 w-5 h-5" />
-              Ownership Changes
+              {t("teamPlanner.widgets.ownershipChanges")}
             </h3>
             <button
               onClick={handleManualRefresh}
@@ -447,7 +449,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
             <div>
               <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-green-600">
                 <TrendingUp className="w-4 h-4" />
-                Risers ({getTimeframeLabel(data.timeframe)})
+                {t("teamPlanner.widgets.risers")} ({getTimeframeLabel(data.timeframe)})
               </h4>
               <div className="space-y-2">
                 <AnimatePresence>
@@ -498,7 +500,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
             <div>
               <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-red-600">
                 <TrendingDown className="w-4 h-4" />
-                Fallers ({getTimeframeLabel(data.timeframe)})
+                {t("teamPlanner.widgets.fallers")} ({getTimeframeLabel(data.timeframe)})
               </h4>
               <div className="space-y-2">
                 <AnimatePresence>
@@ -534,7 +536,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
                           {formatOwnership(player.ownership)}
                         </div>
                         <div className="text-xs text-red-500">
-                          -{formatOwnershipChange(player.change)}
+                          {formatOwnershipChange(player.change)}
                         </div>
                       </div>
                     </motion.div>
@@ -548,10 +550,10 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
           {lastUpdate && (
             <div className="text-xs text-gray-500 dark:text-gray-400 text-center pt-2 border-t border-gray-200 dark:border-gray-700 flex items-center justify-center gap-1">
               <Clock className="w-3 h-3" />
-              <span>Last updated: {lastUpdate.toLocaleTimeString()}</span>
+              <span>{t("teamPlanner.widgets.lastUpdated")}: {lastUpdate.toLocaleTimeString()}</span>
               {cacheRef.current && isCacheValid(cacheRef.current) && (
                 <span className="text-green-500" title="Data from cache">
-                  (cached)
+                  ({t("teamPlanner.widgets.cached")})
                 </span>
               )}
             </div>

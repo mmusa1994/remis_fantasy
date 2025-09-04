@@ -446,8 +446,20 @@
     "viceCaptain": "Potkapiten",
     "tabs": {
       "pitch": "Teren",
+      "list": "Lista",
       "analytics": "Analitika",
       "transfers": "Transferi"
+    },
+    "list": {
+      "formation": "Formacija",
+      "totalPlayers": "Ukupno Igrača",
+      "startingXI": "Početna XI",
+      "substitutes": "Rezerve",
+      "substituteSelected": "Igrači odabrani za zamjenu",
+      "makeSubstitution": "Izvršiti Zamjenu"
+    },
+    "validation": {
+      "minimumDefenders": "Mora imati najmanje 3 odbrana u početnoj XI"
     },
     "transferMarket": {
       "title": "Transfer Market",
@@ -490,6 +502,8 @@
       "tripleCaptain": "Triple Captain",
       "popularWeeks": "Popularne Sedmice",
       "week": "Sedmica",
+      "inWeek": "u Sedmici {{week}}",
+      "transfers": "Transferi",
       "success": "uspjeh",
       "earlyUsagePattern": "rani uzorak korištenja"
     },

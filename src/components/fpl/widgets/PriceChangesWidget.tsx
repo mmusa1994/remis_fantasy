@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, TrendingDown, DollarSign, RefreshCw } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 import { getTeamColors } from "@/lib/team-colors";
 import type { PriceChangesWidgetData } from "@/types/fpl-enhanced";
 
@@ -19,6 +20,7 @@ export default function PriceChangesWidget({
   maxItems = 10,
 }: PriceChangesWidgetProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation("fpl");
   const [data, setData] = useState<PriceChangesWidgetData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -136,7 +138,7 @@ export default function PriceChangesWidget({
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
             <DollarSign className="text-green-500 w-5 h-5" />
-            Price Changes
+            {t("teamPlanner.widgets.priceChanges")}
           </h3>
           <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
         </div>
@@ -161,7 +163,7 @@ export default function PriceChangesWidget({
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
             <DollarSign className="text-green-500 w-5 h-5" />
-            Price Changes
+            {t("teamPlanner.widgets.priceChanges")}
           </h3>
           <button
             onClick={() => fetchPriceChanges()}
@@ -217,11 +219,11 @@ export default function PriceChangesWidget({
           }`}
         >
           <div className="text-sm font-medium">
-            Your Team Impact:{" "}
+            {t("teamPlanner.widgets.yourTeamImpact")}:{" "}
             {formatPriceChange(data.user_team_impact.total_value_change)}
           </div>
           <div className="text-xs text-gray-600 dark:text-gray-400">
-            {data.user_team_impact.affected_players} player(s) affected
+            {data.user_team_impact.affected_players} {t("teamPlanner.widgets.playersAffected")}
           </div>
         </motion.div>
       )}
@@ -232,7 +234,7 @@ export default function PriceChangesWidget({
           <div>
             <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-green-600">
               <TrendingUp className="w-4 h-4" />
-              Risers
+              {t("teamPlanner.widgets.risers")}
             </h4>
             <div className="space-y-2">
               <AnimatePresence>
@@ -282,7 +284,7 @@ export default function PriceChangesWidget({
           <div>
             <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-red-600">
               <TrendingDown className="w-4 h-4" />
-              Fallers
+              {t("teamPlanner.widgets.fallers")}
             </h4>
             <div className="space-y-2">
               <AnimatePresence>
@@ -330,7 +332,7 @@ export default function PriceChangesWidget({
         {/* Last Update */}
         {lastUpdate && (
           <div className="text-xs text-gray-500 dark:text-gray-400 text-center pt-2 border-t border-gray-200 dark:border-gray-700">
-            Last updated: {lastUpdate.toLocaleTimeString()}
+            {t("teamPlanner.widgets.lastUpdated")}: {lastUpdate.toLocaleTimeString()}
           </div>
         )}
       </div>

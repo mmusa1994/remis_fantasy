@@ -5,7 +5,15 @@ import { useSession } from "next-auth/react";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { FaShare, FaExpand, FaList, FaExchangeAlt, FaRobot, FaTimes, FaPaperPlane } from "react-icons/fa";
+import {
+  FaShare,
+  FaExpand,
+  FaList,
+  FaExchangeAlt,
+  FaRobot,
+  FaTimes,
+  FaPaperPlane,
+} from "react-icons/fa";
 import { BiFootball } from "react-icons/bi";
 import {
   Target,
@@ -147,7 +155,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const [currentGameweek, setCurrentGameweek] = useState(4);
   const [currentView, setCurrentView] = useState<ViewMode>("pitch");
   const [userTeamData, setUserTeamData] = useState<UserTeamData | null>(null);
-  const [originalTeamData, setOriginalTeamData] = useState<UserTeamData | null>(null); // Save original state
+  const [originalTeamData, setOriginalTeamData] = useState<UserTeamData | null>(
+    null
+  ); // Save original state
   const [currentTeam, setCurrentTeam] = useState<any[]>([]); // Current working team for transfers
   const [loading, setLoading] = useState(false);
   const [allPlayers, setAllPlayers] = useState<EnhancedPlayerData[]>([]);
@@ -214,7 +224,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     transfersIn: number[];
   }>({
     transfersOut: [],
-    transfersIn: []
+    transfersIn: [],
   });
   const [availableBudget, setAvailableBudget] = useState(0);
   const [freeTransfers, setFreeTransfers] = useState(1);
@@ -519,7 +529,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const fetchManagerId = async () => {
     try {
       if (!session?.user) return;
-      
+
       setIsCheckingManagerId(true);
       const response = await fetch("/api/user/manager-id");
       if (response.ok) {
@@ -594,7 +604,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
         // Refresh manager ID from database to get the latest saved value
         await fetchManagerId();
-        
+
         // Fetch team data
         fetchTeamData(newManagerId, currentGameweek);
       } else if (response.status === 202) {
@@ -671,7 +681,6 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const saveUnverifiedManagerId = (managerId: string) => {
     saveManagerId(managerId, true);
   };
-
 
   // Initialize data on component mount (no function dependency)
   useEffect(() => {
@@ -814,90 +823,105 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   }, []);
 
   // Transfer Planning Functions
-  const calculateTransferCost = useCallback((transfersCount: number, freeTransfersAvailable: number) => {
-    const extraTransfers = Math.max(0, transfersCount - freeTransfersAvailable);
-    return extraTransfers * 4; // 4 points per extra transfer
-  }, []);
+  const calculateTransferCost = useCallback(
+    (transfersCount: number, freeTransfersAvailable: number) => {
+      const extraTransfers = Math.max(
+        0,
+        transfersCount - freeTransfersAvailable
+      );
+      return extraTransfers * 4; // 4 points per extra transfer
+    },
+    []
+  );
 
   const calculateBudgetAfterTransfers = useCallback(() => {
     if (!originalTeamData) return 0;
-    
+
     let budget = originalTeamData.entry_history?.bank || 0;
-    
+
     // Add money from players being transferred out
-    pendingTransfers.transfersOut.forEach(playerId => {
+    pendingTransfers.transfersOut.forEach((playerId) => {
       const player = getPlayerById(playerId);
       if (player) {
         budget += player.now_cost;
       }
     });
-    
+
     // Subtract money for players being transferred in
-    pendingTransfers.transfersIn.forEach(playerId => {
+    pendingTransfers.transfersIn.forEach((playerId) => {
       const player = getPlayerById(playerId);
       if (player) {
         budget -= player.now_cost;
       }
     });
-    
+
     return budget;
   }, [originalTeamData, pendingTransfers, getPlayerById]);
 
   const addPlayerOut = useCallback((playerId: number) => {
-    setPendingTransfers(prev => ({
+    setPendingTransfers((prev) => ({
       ...prev,
-      transfersOut: prev.transfersOut.includes(playerId) 
-        ? prev.transfersOut 
-        : [...prev.transfersOut, playerId]
+      transfersOut: prev.transfersOut.includes(playerId)
+        ? prev.transfersOut
+        : [...prev.transfersOut, playerId],
     }));
   }, []);
 
   const removePlayerOut = useCallback((playerId: number) => {
-    setPendingTransfers(prev => ({
+    setPendingTransfers((prev) => ({
       ...prev,
-      transfersOut: prev.transfersOut.filter(id => id !== playerId)
+      transfersOut: prev.transfersOut.filter((id) => id !== playerId),
     }));
   }, []);
 
-  const addPlayerIn = useCallback((playerId: number) => {
-    // Only add if we have corresponding transfer out and position match
-    setPendingTransfers(prev => {
-      // Check if player is already in transfers in
-      if (prev.transfersIn.includes(playerId)) {
-        return prev;
-      }
-      
-      // Find next available transfer out slot
-      const availableOutIndex = prev.transfersOut.findIndex((_, index) => !prev.transfersIn[index]);
-      
-      if (availableOutIndex === -1) {
-        // No available slots
-        return prev;
-      }
+  const addPlayerIn = useCallback(
+    (playerId: number) => {
+      // Only add if we have corresponding transfer out and position match
+      setPendingTransfers((prev) => {
+        // Check if player is already in transfers in
+        if (prev.transfersIn.includes(playerId)) {
+          return prev;
+        }
 
-      // Validate position compatibility
-      const outPlayer = getPlayerById(prev.transfersOut[availableOutIndex]);
-      const inPlayer = getPlayerById(playerId);
-      
-      if (!outPlayer || !inPlayer || outPlayer.element_type !== inPlayer.element_type) {
-        // Position mismatch - can't make this transfer
-        return prev;
-      }
+        // Find next available transfer out slot
+        const availableOutIndex = prev.transfersOut.findIndex(
+          (_, index) => !prev.transfersIn[index]
+        );
 
-      // Create new transfers in array with player at specific index
-      const newTransfersIn = [...prev.transfersIn];
-      newTransfersIn[availableOutIndex] = playerId;
+        if (availableOutIndex === -1) {
+          // No available slots
+          return prev;
+        }
 
-      return {
-        ...prev,
-        transfersIn: newTransfersIn
-      };
-    });
-  }, [getPlayerById]);
+        // Validate position compatibility
+        const outPlayer = getPlayerById(prev.transfersOut[availableOutIndex]);
+        const inPlayer = getPlayerById(playerId);
+
+        if (
+          !outPlayer ||
+          !inPlayer ||
+          outPlayer.element_type !== inPlayer.element_type
+        ) {
+          // Position mismatch - can't make this transfer
+          return prev;
+        }
+
+        // Create new transfers in array with player at specific index
+        const newTransfersIn = [...prev.transfersIn];
+        newTransfersIn[availableOutIndex] = playerId;
+
+        return {
+          ...prev,
+          transfersIn: newTransfersIn,
+        };
+      });
+    },
+    [getPlayerById]
+  );
 
   const removePlayerIn = useCallback((playerId: number) => {
-    setPendingTransfers(prev => {
-      const playerIndex = prev.transfersIn.findIndex(id => id === playerId);
+    setPendingTransfers((prev) => {
+      const playerIndex = prev.transfersIn.findIndex((id) => id === playerId);
       if (playerIndex === -1) return prev;
 
       const newTransfersIn = [...prev.transfersIn];
@@ -905,11 +929,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
       return {
         ...prev,
-        transfersIn: newTransfersIn
+        transfersIn: newTransfersIn,
       };
     });
   }, []);
-
 
   const resetTransfers = useCallback(() => {
     setPendingTransfers({ transfersOut: [], transfersIn: [] });
@@ -922,27 +945,32 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     setShowTransferPanel(true);
   }, []);
 
-  const canAffordPlayer = useCallback((playerId: number) => {
-    const player = getPlayerById(playerId);
-    if (!player) return false;
-    
-    const budgetAfterTransfers = calculateBudgetAfterTransfers();
-    return budgetAfterTransfers >= player.now_cost;
-  }, [getPlayerById, calculateBudgetAfterTransfers]);
+  const canAffordPlayer = useCallback(
+    (playerId: number) => {
+      const player = getPlayerById(playerId);
+      if (!player) return false;
+
+      const budgetAfterTransfers = calculateBudgetAfterTransfers();
+      return budgetAfterTransfers >= player.now_cost;
+    },
+    [getPlayerById, calculateBudgetAfterTransfers]
+  );
 
   const validateSquad = useCallback(() => {
     if (!originalTeamData) return { isValid: false, errors: [] };
 
     // Start with original squad
-    let finalSquad = [...(originalTeamData.team_with_stats || [])];
-    
+    const finalSquad = [...(originalTeamData.team_with_stats || [])];
+
     // Apply replacements (same logic as currentTeamForDisplay but locally)
     pendingTransfers.transfersOut.forEach((outPlayerId, index) => {
       const transferInPlayerId = pendingTransfers.transfersIn[index];
       if (transferInPlayerId) {
-        const outPlayerIndex = finalSquad.findIndex(tp => tp.player_id === outPlayerId);
+        const outPlayerIndex = finalSquad.findIndex(
+          (tp) => tp.player_id === outPlayerId
+        );
         const newPlayer = getPlayerById(transferInPlayerId);
-        
+
         if (outPlayerIndex >= 0 && newPlayer) {
           // Replace at same position
           finalSquad[outPlayerIndex] = {
@@ -950,7 +978,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             position: finalSquad[outPlayerIndex].position,
             total_points: newPlayer.total_points,
             event_points: newPlayer.event_points,
-            player: newPlayer
+            player: newPlayer,
           };
         }
       }
@@ -960,7 +988,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
     // Count players by position
     const positionCounts = { 1: 0, 2: 0, 3: 0, 4: 0 }; // GK, DEF, MID, FWD
-    finalSquad.forEach(tp => {
+    finalSquad.forEach((tp) => {
       const player = tp.player || getPlayerById(tp.player_id);
       if (player) {
         positionCounts[player.element_type as keyof typeof positionCounts]++;
@@ -969,24 +997,32 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
     // Validate squad size
     if (finalSquad.length !== 15) {
-      errors.push(`Squad must have 15 players (currently ${finalSquad.length})`);
+      errors.push(
+        `Squad must have 15 players (currently ${finalSquad.length})`
+      );
     }
 
     // Validate position requirements
-    if (positionCounts[1] !== 2) errors.push(`Must have 2 goalkeepers (currently ${positionCounts[1]})`);
-    if (positionCounts[2] !== 5) errors.push(`Must have 5 defenders (currently ${positionCounts[2]})`);
-    if (positionCounts[3] !== 5) errors.push(`Must have 5 midfielders (currently ${positionCounts[3]})`);
-    if (positionCounts[4] !== 3) errors.push(`Must have 3 forwards (currently ${positionCounts[4]})`);
+    if (positionCounts[1] !== 2)
+      errors.push(`Must have 2 goalkeepers (currently ${positionCounts[1]})`);
+    if (positionCounts[2] !== 5)
+      errors.push(`Must have 5 defenders (currently ${positionCounts[2]})`);
+    if (positionCounts[3] !== 5)
+      errors.push(`Must have 5 midfielders (currently ${positionCounts[3]})`);
+    if (positionCounts[4] !== 3)
+      errors.push(`Must have 3 forwards (currently ${positionCounts[4]})`);
 
     // Validate budget
     const budgetAfterTransfers = calculateBudgetAfterTransfers();
     if (budgetAfterTransfers < 0) {
-      errors.push(`Over budget by £${Math.abs(budgetAfterTransfers / 10).toFixed(1)}m`);
+      errors.push(
+        `Over budget by £${Math.abs(budgetAfterTransfers / 10).toFixed(1)}m`
+      );
     }
 
     // Validate team distribution (max 3 players from same team)
     const teamCounts: Record<number, number> = {};
-    finalSquad.forEach(tp => {
+    finalSquad.forEach((tp) => {
       const player = tp.player || getPlayerById(tp.player_id);
       if (player) {
         teamCounts[player.team] = (teamCounts[player.team] || 0) + 1;
@@ -996,7 +1032,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     Object.entries(teamCounts).forEach(([teamId, count]) => {
       if (count > 3) {
         const team = getTeamById(Number(teamId));
-        errors.push(`Too many players from ${team?.name || 'team'} (max 3, currently ${count})`);
+        errors.push(
+          `Too many players from ${
+            team?.name || "team"
+          } (max 3, currently ${count})`
+        );
       }
     });
 
@@ -1004,27 +1044,35 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
       isValid: errors.length === 0,
       errors,
       positionCounts,
-      budgetRemaining: budgetAfterTransfers
+      budgetRemaining: budgetAfterTransfers,
     };
-  }, [originalTeamData, pendingTransfers, getPlayerById, calculateBudgetAfterTransfers, getTeamById]);
+  }, [
+    originalTeamData,
+    pendingTransfers,
+    getPlayerById,
+    calculateBudgetAfterTransfers,
+    getTeamById,
+  ]);
 
   const confirmTransfers = useCallback(() => {
     if (!originalTeamData) return;
-    
+
     const validation = validateSquad();
     if (!validation.isValid) return;
 
     // Apply transfers to userTeamData
-    let newTeamData = { ...originalTeamData };
-    let newTeamWithStats = [...(originalTeamData.team_with_stats || [])];
+    const newTeamData = { ...originalTeamData };
+    const newTeamWithStats = [...(originalTeamData.team_with_stats || [])];
 
     // Replace transferred out players with transferred in players at same positions
     pendingTransfers.transfersOut.forEach((outPlayerId, index) => {
       const transferInPlayerId = pendingTransfers.transfersIn[index];
       if (transferInPlayerId) {
-        const outPlayerIndex = newTeamWithStats.findIndex(tp => tp.player_id === outPlayerId);
+        const outPlayerIndex = newTeamWithStats.findIndex(
+          (tp) => tp.player_id === outPlayerId
+        );
         const newPlayer = getPlayerById(transferInPlayerId);
-        
+
         if (outPlayerIndex >= 0 && newPlayer) {
           // Replace at exact same position
           newTeamWithStats[outPlayerIndex] = {
@@ -1040,21 +1088,23 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               total_points: newPlayer.total_points,
               event_points: newPlayer.event_points,
             },
-            player: newPlayer
+            player: newPlayer,
           };
         }
       }
     });
-    
+
     // Update bank balance
     const finalBudget = calculateBudgetAfterTransfers();
-    
+
     newTeamData.team_with_stats = newTeamWithStats;
     newTeamData.entry_history = {
       ...originalTeamData.entry_history!,
       bank: finalBudget,
-      event_transfers: (originalTeamData.entry_history?.event_transfers || 0) + pendingTransfers.transfersOut.length,
-      event_transfers_cost: transferCost
+      event_transfers:
+        (originalTeamData.entry_history?.event_transfers || 0) +
+        pendingTransfers.transfersOut.length,
+      event_transfers_cost: transferCost,
     };
 
     // Update states
@@ -1063,7 +1113,14 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     setCurrentTeam(newTeamWithStats);
     setPendingTransfers({ transfersOut: [], transfersIn: [] });
     setTransferMode(false);
-  }, [originalTeamData, validateSquad, pendingTransfers, getPlayerById, calculateBudgetAfterTransfers, transferCost]);
+  }, [
+    originalTeamData,
+    validateSquad,
+    pendingTransfers,
+    getPlayerById,
+    calculateBudgetAfterTransfers,
+    transferCost,
+  ]);
 
   // Update transfer cost when transfers change
   useEffect(() => {
@@ -1071,35 +1128,40 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     const cost = calculateTransferCost(totalTransfers, freeTransfers);
     setTransferCost(cost);
     setAvailableBudget(calculateBudgetAfterTransfers());
-  }, [pendingTransfers, freeTransfers, calculateTransferCost, calculateBudgetAfterTransfers]);
+  }, [
+    pendingTransfers,
+    freeTransfers,
+    calculateTransferCost,
+    calculateBudgetAfterTransfers,
+  ]);
 
   // AI Team Analysis Functions
   const checkAIUsageLimit = useCallback(async () => {
     if (!session?.user?.id) return false;
 
     try {
-      const response = await fetch('/api/user/ai-usage');
+      const response = await fetch("/api/user/ai-usage");
       if (response.ok) {
         const data = await response.json();
         const lastUsage = data.lastAITeamAnalysis;
-        
+
         if (lastUsage) {
           const lastUsageDate = new Date(lastUsage);
           const weekAgo = new Date();
           weekAgo.setDate(weekAgo.getDate() - 7);
-          
+
           if (lastUsageDate > weekAgo) {
             setCanUseAI(false);
             setLastAIUsage(lastUsage);
             return false;
           }
         }
-        
+
         setCanUseAI(true);
         return true;
       }
     } catch (error) {
-      console.error('Failed to check AI usage:', error);
+      console.error("Failed to check AI usage:", error);
     }
     return false;
   }, [session?.user?.id]);
@@ -1112,46 +1174,48 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
     try {
       // Use i18n from the hook that's already called at component level
-      const isBosnian = i18n.language === 'bs';
-      
+      const isBosnian = i18n.language === "bs";
+
       const analysisPrompt = isBosnian
         ? "Analiziraj moj FPL tim i predloži poboljšanja za iduće gameweek-ove. Fokusiraj se na transfere, kapetana, formacije i strategiju. Budi konkretan sa preporučenim igračima i objasni zašto."
         : "Analyze my FPL team and suggest improvements for upcoming gameweeks. Focus on transfers, captain choices, formations, and strategy. Be specific with recommended players and explain why.";
 
-      const response = await fetch('/api/ai-chat', {
-        method: 'POST',
+      const response = await fetch("/api/ai-chat", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           message: analysisPrompt,
-          chatHistory: []
+          chatHistory: [],
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
         setAiAnalysis(data.response);
-        
+
         // Update AI usage tracking
-        await fetch('/api/user/ai-usage', {
-          method: 'POST',
+        await fetch("/api/user/ai-usage", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            type: 'team_analysis'
+            type: "team_analysis",
           }),
         });
-        
+
         setCanUseAI(false);
         setLastAIUsage(new Date().toISOString());
       } else {
-        throw new Error('Failed to get AI analysis');
+        throw new Error("Failed to get AI analysis");
       }
     } catch (error) {
-      console.error('AI Analysis failed:', error);
-      setAiAnalysis('Došlo je do greške prilikom analize. Pokušajte ponovo później.');
+      console.error("AI Analysis failed:", error);
+      setAiAnalysis(
+        "Došlo je do greške prilikom analize. Pokušajte ponovo później."
+      );
     } finally {
       setAiChatLoading(false);
     }
@@ -1175,15 +1239,17 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     }
 
     // Start with original team - keep all players visible
-    let teamWithTransfers = [...userTeamData.team_with_stats];
-    
+    const teamWithTransfers = [...userTeamData.team_with_stats];
+
     // Replace transferred out players with transferred in players at same positions
     pendingTransfers.transfersOut.forEach((outPlayerId, index) => {
       const transferInPlayerId = pendingTransfers.transfersIn[index];
       if (transferInPlayerId) {
-        const outPlayerIndex = teamWithTransfers.findIndex(tp => tp.player_id === outPlayerId);
+        const outPlayerIndex = teamWithTransfers.findIndex(
+          (tp) => tp.player_id === outPlayerId
+        );
         const newPlayer = getPlayerById(transferInPlayerId);
-        
+
         if (outPlayerIndex >= 0 && newPlayer) {
           // Replace at same position - set points to 0 to hide them for new transfers
           teamWithTransfers[outPlayerIndex] = {
@@ -1200,14 +1266,19 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               event_points: 0,
             },
             player: newPlayer,
-            isTransferIn: true // Mark as transfer in to identify later
+            isTransferIn: true, // Mark as transfer in to identify later
           };
         }
       }
     });
 
     return teamWithTransfers;
-  }, [userTeamData?.team_with_stats, transferMode, pendingTransfers, getPlayerById]);
+  }, [
+    userTeamData?.team_with_stats,
+    transferMode,
+    pendingTransfers,
+    getPlayerById,
+  ]);
 
   return (
     <div
@@ -1251,9 +1322,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     </span>
                   )}
                 </p>
-                <p className="text-gray-500">
-                  {t("teamPlanner.subtitle")}
-                </p>
+                <p className="text-gray-500">{t("teamPlanner.subtitle")}</p>
               </div>
               <div className="text-right">
                 <p
@@ -1262,7 +1331,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   } cursor-pointer hover:text-blue-500"`}
                   onClick={() => setShowManagerIdModal(true)}
                 >
-                  {t("teamPlanner.managerId")} {currentManagerId} - {t("teamPlanner.clickToChange")}
+                  {t("teamPlanner.managerId")} {currentManagerId} -{" "}
+                  {t("teamPlanner.clickToChange")}
                   {managerIdVerified === false && (
                     <span className="block text-xs text-yellow-600 dark:text-yellow-400">
                       (Unverified - click to retry)
@@ -1312,23 +1382,31 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             {/* Enhanced Team Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <p className="text-sm text-gray-500">{t("teamPlanner.gameweek")}</p>
+                <p className="text-sm text-gray-500">
+                  {t("teamPlanner.gameweek")}
+                </p>
                 <p className="font-bold text-lg">{currentGameweek}</p>
               </div>
               <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">{t("teamPlanner.gwPoints")}</p>
+                <p className="text-sm text-gray-500">
+                  {t("teamPlanner.gwPoints")}
+                </p>
                 <p className="font-bold text-lg text-green-600">
                   {userTeamData.team_totals?.total_points_final || 0}
                 </p>
               </div>
               <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">{t("teamPlanner.totalPoints")}</p>
+                <p className="text-sm text-gray-500">
+                  {t("teamPlanner.totalPoints")}
+                </p>
                 <p className="font-bold text-lg">
                   {userTeamData.manager?.summary_overall_points?.toLocaleString()}
                 </p>
               </div>
               <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">{t("teamPlanner.teamValue")}</p>
+                <p className="text-sm text-gray-500">
+                  {t("teamPlanner.teamValue")}
+                </p>
                 <p className="font-bold text-lg">
                   £
                   {((userTeamData.entry_history?.value || 1000) / 10).toFixed(
@@ -1380,7 +1458,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }`}
                       >
                         <Target className="w-4 h-4" />
-                        <span className="text-xs sm:text-sm">{t("teamPlanner.tabs.pitch")}</span>
+                        <span className="text-xs sm:text-sm">
+                          {t("teamPlanner.tabs.pitch")}
+                        </span>
                       </button>
                       <button
                         onClick={() => {
@@ -1397,7 +1477,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }`}
                       >
                         <BarChart3 className="w-4 h-4" />
-                        <span className="text-xs sm:text-sm">{t("teamPlanner.tabs.analytics")}</span>
+                        <span className="text-xs sm:text-sm">
+                          {t("teamPlanner.tabs.analytics")}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -1405,7 +1487,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   {/* Action Buttons - Mobile optimized */}
                   <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
                     <button
-                      onClick={() => transferMode ? resetTransfers() : enterTransferMode()}
+                      onClick={() =>
+                        transferMode ? resetTransfers() : enterTransferMode()
+                      }
                       className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors text-sm ${
                         transferMode
                           ? "bg-red-600 text-white hover:bg-red-700"
@@ -1414,13 +1498,16 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     >
                       <FaExchangeAlt className="w-4 h-4" />
                       <span className="hidden sm:inline">
-                        {transferMode ? "Exit Transfers" : t("teamPlanner.tabs.transfers")}
+                        {transferMode
+                          ? "Exit Transfers"
+                          : t("teamPlanner.tabs.transfers")}
                       </span>
-                      {transferMode && pendingTransfers.transfersOut.length > 0 && (
-                        <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-xs">
-                          {pendingTransfers.transfersOut.length}
-                        </span>
-                      )}
+                      {transferMode &&
+                        pendingTransfers.transfersOut.length > 0 && (
+                          <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-xs">
+                            {pendingTransfers.transfersOut.length}
+                          </span>
+                        )}
                     </button>
                     <button className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                       <FaShare className="w-4 h-4" />
@@ -1428,7 +1515,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     <button className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                       <FaExpand className="w-4 h-4" />
                     </button>
-                    
+
                     {/* AI Team Analysis Button */}
                     {session?.user && (
                       <button
@@ -1439,7 +1526,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                             ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
                             : "bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed"
                         }`}
-                        title={canUseAI ? "AI Analiza Tima (1x weekly)" : "AI Analiza Tima used this week"}
+                        title={
+                          canUseAI
+                            ? "AI Analiza Tima (1x weekly)"
+                            : "AI Analiza Tima used this week"
+                        }
                       >
                         <FaRobot className="w-4 h-4" />
                       </button>
@@ -1457,7 +1548,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         onPlayerClick={(player) => {
                           if (transferMode) {
                             // In transfer mode, toggle selection for transfer out
-                            if (pendingTransfers.transfersOut.includes(player.id)) {
+                            if (
+                              pendingTransfers.transfersOut.includes(player.id)
+                            ) {
                               // Already selected for transfer out, deselect
                               removePlayerOut(player.id);
                             } else {
@@ -1471,7 +1564,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         onPlayerSelect={(player) => {
                           if (transferMode) {
                             // Toggle selection for transfer out
-                            if (pendingTransfers.transfersOut.includes(player.id)) {
+                            if (
+                              pendingTransfers.transfersOut.includes(player.id)
+                            ) {
                               removePlayerOut(player.id);
                             } else {
                               addPlayerOut(player.id);
@@ -1491,7 +1586,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                             }));
                           }
                         }}
-                        selectedPlayers={transferMode ? pendingTransfers.transfersOut : uiState.comparedPlayers}
+                        selectedPlayers={
+                          transferMode
+                            ? pendingTransfers.transfersOut
+                            : uiState.comparedPlayers
+                        }
                         compareMode={transferMode ? true : uiState.compareMode}
                         formation={formation}
                         onFormationChange={handleFormationChange}
@@ -1731,31 +1830,39 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="text-center sm:text-left">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Transfers Out</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Transfers Out
+                        </p>
                         <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                           {pendingTransfers.transfersOut.length}
                         </p>
                       </div>
                       <div className="text-center sm:text-left">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Transfers In</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Transfers In
+                        </p>
                         <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                           {pendingTransfers.transfersIn.length}
                         </p>
                       </div>
                       <div className="text-center sm:text-left">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Available Budget</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Available Budget
+                        </p>
                         <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                           £{(availableBudget / 10).toFixed(1)}m
                         </p>
                       </div>
                       <div className="text-center sm:text-left">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Transfer Cost</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Transfer Cost
+                        </p>
                         <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                           {transferCost} pts
                         </p>
                       </div>
                     </div>
-                    
+
                     {pendingTransfers.transfersOut.length > 0 && (
                       <div className="flex flex-col sm:flex-row gap-2">
                         <button
@@ -1765,7 +1872,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                           Reset
                         </button>
                         <button
-                          disabled={pendingTransfers.transfersOut.length !== pendingTransfers.transfersIn.length || !validateSquad().isValid}
+                          disabled={
+                            pendingTransfers.transfersOut.length !==
+                              pendingTransfers.transfersIn.length ||
+                            !validateSquad().isValid
+                          }
                           className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-colors"
                           onClick={confirmTransfers}
                         >
@@ -1774,32 +1885,38 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Squad Validation */}
                   {transferMode && pendingTransfers.transfersOut.length > 0 && (
                     <div className="mt-4">
                       {(() => {
                         const validation = validateSquad();
                         return (
-                          <div className={`p-3 rounded-lg border ${
-                            validation.isValid 
-                              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                          }`}>
-                            <h4 className={`font-semibold text-sm mb-2 ${
-                              validation.isValid 
-                                ? 'text-green-800 dark:text-green-200' 
-                                : 'text-red-800 dark:text-red-200'
-                            }`}>
-                              Squad Validation {validation.isValid ? '✅' : '❌'}
+                          <div
+                            className={`p-3 rounded-lg border ${
+                              validation.isValid
+                                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                                : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                            }`}
+                          >
+                            <h4
+                              className={`font-semibold text-sm mb-2 ${
+                                validation.isValid
+                                  ? "text-green-800 dark:text-green-200"
+                                  : "text-red-800 dark:text-red-200"
+                              }`}
+                            >
+                              Squad Validation{" "}
+                              {validation.isValid ? "✅" : "❌"}
                             </h4>
-                            {!validation.isValid && validation.errors.length > 0 && (
-                              <ul className="text-xs text-red-700 dark:text-red-300 space-y-1">
-                                {validation.errors.map((error, idx) => (
-                                  <li key={idx}>• {error}</li>
-                                ))}
-                              </ul>
-                            )}
+                            {!validation.isValid &&
+                              validation.errors.length > 0 && (
+                                <ul className="text-xs text-red-700 dark:text-red-300 space-y-1">
+                                  {validation.errors.map((error, idx) => (
+                                    <li key={idx}>• {error}</li>
+                                  ))}
+                                </ul>
+                              )}
                             {validation.isValid && (
                               <p className="text-xs text-green-700 dark:text-green-300">
                                 Squad is valid! Ready to confirm transfers.
@@ -1812,24 +1929,36 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   )}
 
                   {/* Pending Transfers List */}
-                  {(pendingTransfers.transfersOut.length > 0 || pendingTransfers.transfersIn.length > 0) && (
+                  {(pendingTransfers.transfersOut.length > 0 ||
+                    pendingTransfers.transfersIn.length > 0) && (
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Players Out */}
                       {pendingTransfers.transfersOut.length > 0 && (
                         <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
-                          <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">Players Out</h4>
+                          <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">
+                            Players Out
+                          </h4>
                           <div className="space-y-2">
-                            {pendingTransfers.transfersOut.map(playerId => {
+                            {pendingTransfers.transfersOut.map((playerId) => {
                               const player = getPlayerById(playerId);
                               const team = getTeamById(player?.team || 0);
                               return player ? (
-                                <div key={playerId} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2">
+                                <div
+                                  key={playerId}
+                                  className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2"
+                                >
                                   <div className="flex items-center gap-2">
-                                    <span className="font-medium text-sm">{player.web_name}</span>
-                                    <span className="text-xs text-gray-500">({team?.short_name})</span>
+                                    <span className="font-medium text-sm">
+                                      {player.web_name}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      ({team?.short_name})
+                                    </span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">£{(player.now_cost / 10).toFixed(1)}m</span>
+                                    <span className="text-sm font-medium">
+                                      £{(player.now_cost / 10).toFixed(1)}m
+                                    </span>
                                     <button
                                       onClick={() => removePlayerOut(playerId)}
                                       className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
@@ -1843,40 +1972,55 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Players In */}
                       {pendingTransfers.transfersIn.length > 0 && (
                         <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                          <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Players In</h4>
+                          <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">
+                            Players In
+                          </h4>
                           <div className="space-y-2">
-                            {pendingTransfers.transfersIn.map((playerId, index) => {
-                              if (!playerId) return null; // Skip empty slots
-                              const player = getPlayerById(playerId);
-                              const team = getTeamById(player?.team || 0);
-                              const outPlayer = getPlayerById(pendingTransfers.transfersOut[index]);
-                              return player ? (
-                                <div key={`${playerId}-${index}`} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium text-sm">{player.web_name}</span>
-                                    <span className="text-xs text-gray-500">({team?.short_name})</span>
-                                    {outPlayer && (
-                                      <span className="text-xs text-blue-600 dark:text-blue-400">
-                                        → replaces {outPlayer.web_name}
+                            {pendingTransfers.transfersIn.map(
+                              (playerId, index) => {
+                                if (!playerId) return null; // Skip empty slots
+                                const player = getPlayerById(playerId);
+                                const team = getTeamById(player?.team || 0);
+                                const outPlayer = getPlayerById(
+                                  pendingTransfers.transfersOut[index]
+                                );
+                                return player ? (
+                                  <div
+                                    key={`${playerId}-${index}`}
+                                    className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium text-sm">
+                                        {player.web_name}
                                       </span>
-                                    )}
+                                      <span className="text-xs text-gray-500">
+                                        ({team?.short_name})
+                                      </span>
+                                      {outPlayer && (
+                                        <span className="text-xs text-blue-600 dark:text-blue-400">
+                                          → replaces {outPlayer.web_name}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium">
+                                        £{(player.now_cost / 10).toFixed(1)}m
+                                      </span>
+                                      <button
+                                        onClick={() => removePlayerIn(playerId)}
+                                        className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">£{(player.now_cost / 10).toFixed(1)}m</span>
-                                    <button
-                                      onClick={() => removePlayerIn(playerId)}
-                                      className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : null;
-                            })}
+                                ) : null;
+                              }
+                            )}
                           </div>
                         </div>
                       )}
@@ -1890,7 +2034,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                 <div className="p-4 lg:p-6">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
                     <h3 className="text-lg font-semibold">
-                      {transferMode ? "Select Players to Buy" : t("teamPlanner.transferMarket.title")}
+                      {transferMode
+                        ? "Select Players to Buy"
+                        : t("teamPlanner.transferMarket.title")}
                     </h3>
                     <div className="flex items-center space-x-2 w-full sm:w-auto">
                       <div className="relative flex-1 sm:flex-none">
@@ -1917,7 +2063,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }`}
                       >
                         <Filter className="w-4 h-4" />
-                        <span className="hidden sm:inline">{t("teamPlanner.transferMarket.filters")}</span>
+                        <span className="hidden sm:inline">
+                          {t("teamPlanner.transferMarket.filters")}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -1939,15 +2087,39 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     } bg-white dark:bg-gray-800 rounded-lg  border border-gray-200 dark:border-gray-700`}
                   >
                     {/* Table Header */}
-                    <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                      <div className="grid grid-cols-9 gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        <div className="col-span-3">{t("teamPlanner.transferMarket.player")}</div>
-                        <div className="col-span-1">{t("teamPlanner.transferMarket.pos")}</div>
-                        <div className="col-span-1">{t("teamPlanner.transferMarket.price")}</div>
-                        <div className="col-span-1">{t("teamPlanner.transferMarket.points")}</div>
-                        <div className="col-span-1">{t("teamPlanner.transferMarket.form")}</div>
-                        <div className="col-span-1">{t("teamPlanner.transferMarket.ownership")}</div>
-                        <div className="col-span-1">{t("teamPlanner.transferMarket.status")}</div>
+                    <div className="bg-gray-50 dark:bg-gray-700 px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 dark:border-gray-600">
+                      {/* Desktop Header */}
+                      <div className="hidden sm:grid sm:grid-cols-9 sm:gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <div className="col-span-3">
+                          {t("teamPlanner.transferMarket.player")}
+                        </div>
+                        <div className="col-span-1">
+                          {t("teamPlanner.transferMarket.pos")}
+                        </div>
+                        <div className="col-span-1">
+                          {t("teamPlanner.transferMarket.price")}
+                        </div>
+                        <div className="col-span-1">
+                          {t("teamPlanner.transferMarket.points")}
+                        </div>
+                        <div className="col-span-1">
+                          {t("teamPlanner.transferMarket.form")}
+                        </div>
+                        <div className="col-span-1">
+                          {t("teamPlanner.transferMarket.ownership")}
+                        </div>
+                        <div className="col-span-1">
+                          {t("teamPlanner.transferMarket.status")}
+                        </div>
+                      </div>
+                      {/* Mobile Header - More compact */}
+                      <div className="flex sm:hidden justify-between text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-tight px-1">
+                        <div className="flex-1 text-left">
+                          {t("teamPlanner.transferMarket.player")}
+                        </div>
+                        <div className="w-12 text-center">Pts</div>
+                        <div className="w-12 text-center">£</div>
+                        <div className="w-8 text-center">%</div>
                       </div>
                     </div>
 
@@ -1956,20 +2128,29 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       {filteredPlayers.slice(0, 100).map((player) => {
                         const team = getTeamById(player.team);
                         const teamColor = getTeamColor(player.team);
-                        const isSelected = transferMode 
-                          ? pendingTransfers.transfersIn.includes(player.id) || pendingTransfers.transfersOut.includes(player.id)
+                        const isSelected = transferMode
+                          ? pendingTransfers.transfersIn.includes(player.id) ||
+                            pendingTransfers.transfersOut.includes(player.id)
                           : uiState.comparedPlayers.includes(player.id);
-                        const isInMyTeam = userTeamData?.team_with_stats?.some(tp => tp.player_id === player.id);
-                        const canAfford = transferMode ? canAffordPlayer(player.id) : true;
-                        const isTransferOut = transferMode && pendingTransfers.transfersOut.includes(player.id);
-                        const isTransferIn = transferMode && pendingTransfers.transfersIn.includes(player.id);
-                        
+                        const isInMyTeam = userTeamData?.team_with_stats?.some(
+                          (tp) => tp.player_id === player.id
+                        );
+                        const canAfford = transferMode
+                          ? canAffordPlayer(player.id)
+                          : true;
+                        const isTransferOut =
+                          transferMode &&
+                          pendingTransfers.transfersOut.includes(player.id);
+                        const isTransferIn =
+                          transferMode &&
+                          pendingTransfers.transfersIn.includes(player.id);
+
                         return (
                           <motion.div
                             key={player.id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className={`grid grid-cols-9 gap-2 px-4 py-3 transition-colors relative ${
+                            className={`transition-colors relative ${
                               transferMode
                                 ? canAfford
                                   ? "hover:bg-green-50 dark:hover:bg-green-900/20 cursor-pointer"
@@ -1993,16 +2174,31 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   // Player not in my team, try to add them
                                   if (canAffordPlayer(player.id)) {
                                     // Check if we have transfer out slot for this position
-                                    const hasCompatibleOut = pendingTransfers.transfersOut.some((outId, index) => {
-                                      if (pendingTransfers.transfersIn[index]) return false; // Slot already filled
-                                      const outPlayer = getPlayerById(outId);
-                                      return outPlayer && outPlayer.element_type === player.element_type;
-                                    });
-                                    
+                                    const hasCompatibleOut =
+                                      pendingTransfers.transfersOut.some(
+                                        (outId, index) => {
+                                          if (
+                                            pendingTransfers.transfersIn[index]
+                                          )
+                                            return false; // Slot already filled
+                                          const outPlayer =
+                                            getPlayerById(outId);
+                                          return (
+                                            outPlayer &&
+                                            outPlayer.element_type ===
+                                              player.element_type
+                                          );
+                                        }
+                                      );
+
                                     if (hasCompatibleOut) {
                                       addPlayerIn(player.id);
                                     } else {
-                                      alert(`No ${getPlayerPosition(player.element_type)} selected for transfer out!`);
+                                      alert(
+                                        `No ${getPlayerPosition(
+                                          player.element_type
+                                        )} selected for transfer out!`
+                                      );
                                     }
                                   } else {
                                     alert("Not enough budget for this player!");
@@ -2031,156 +2227,313 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                               }
                             }}
                           >
-                            {/* Player Info */}
-                            <div className="col-span-3 flex items-center space-x-2">
-                              <div
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white relative"
-                                style={{
-                                  backgroundColor: teamColor.primary,
-                                }}
-                              >
-                                {player.web_name.charAt(0)}
-                                {/* Transfer Status Indicators */}
-                                {transferMode && (
-                                  <>
-                                    {isTransferOut && (
-                                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                                        <span className="text-white text-xs">-</span>
-                                      </div>
-                                    )}
-                                    {isTransferIn && (
-                                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                                        <span className="text-white text-xs">+</span>
-                                      </div>
-                                    )}
-                                    {isInMyTeam && !isTransferOut && !isTransferIn && (
-                                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                        <span className="text-white text-xs">★</span>
-                                      </div>
-                                    )}
-                                  </>
-                                )}
-                                {/* Enhanced indicators - only show if not in transfer mode */}
-                                {!transferMode && player.price_trend === "rising" && (
-                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
-                                    <TrendingUp className="w-1.5 h-1.5 text-white" />
-                                  </div>
-                                )}
-                                {!transferMode && player.price_trend === "falling" && (
-                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
-                                    <TrendingDown className="w-1.5 h-1.5 text-white" />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                  {player.web_name}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                  {team?.short_name}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Position */}
-                            <div className="col-span-1 flex items-center">
-                              <span
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                  player.element_type === 1
-                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
-                                    : player.element_type === 2
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
-                                    : player.element_type === 3
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
-                                }`}
-                              >
-                                {getPlayerPosition(player.element_type)}
-                              </span>
-                            </div>
-
-                            {/* Price */}
-                            <div className="col-span-1 flex items-center">
-                              <div className="flex flex-col">
-                                <span className="text-sm font-medium">
-                                  £{(player.now_cost / 10).toFixed(1)}
-                                </span>
-                                {player.cost_change_event !== 0 && (
-                                  <span
-                                    className={`text-xs ${
-                                      player.cost_change_event > 0
-                                        ? "text-green-600"
-                                        : "text-red-600"
-                                    }`}
-                                  >
-                                    {player.cost_change_event > 0 ? "+" : ""}
-                                    {(player.cost_change_event / 10).toFixed(1)}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Points */}
-                            <div className="col-span-1 flex items-center">
-                              <div className="flex flex-col">
-                                <span className="text-sm font-bold text-green-600">
-                                  {player.total_points}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  {player.event_points} GW
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Form */}
-                            <div className="col-span-1 flex items-center">
-                              <span className="text-sm font-medium">
-                                {parseFloat(player.form).toFixed(1)}
-                              </span>
-                            </div>
-
-                            {/* Ownership */}
-                            <div className="col-span-1 flex items-center">
-                              <div className="flex flex-col">
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  {parseFloat(
-                                    player.selected_by_percent
-                                  ).toFixed(1)}
-                                  %
-                                </span>
-                                {player.ownership_trend === "rising" && (
-                                  <span className="text-xs text-blue-500">
-                                    ↗ {t("teamPlanner.transferMarket.rising")}
-                                  </span>
-                                )}
-                                {player.ownership_trend === "falling" && (
-                                  <span className="text-xs text-purple-500">
-                                    ↘ {t("teamPlanner.transferMarket.falling")}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Status */}
-                            <div className="col-span-1 flex items-center">
-                              <div className="flex items-center gap-1">
-                                {player.availability_status === "available" && (
-                                  <div className="w-2 h-2 bg-green-500 rounded-full" />
-                                )}
-                                {player.availability_status === "doubtful" && (
-                                  <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-                                )}
-                                {player.availability_status === "injured" && (
-                                  <div className="w-2 h-2 bg-red-500 rounded-full" />
-                                )}
-                                {player.availability_status === "suspended" && (
-                                  <div className="w-2 h-2 bg-orange-500 rounded-full" />
-                                )}
-                                {/* Differential badge */}
-                                {player.differential_score &&
-                                  player.differential_score > 20 && (
-                                    <Star className="w-3 h-3 text-yellow-500" />
+                            {/* Desktop Layout */}
+                            <div className="hidden sm:grid sm:grid-cols-9 sm:gap-2 px-4 py-3">
+                              {/* Player Info */}
+                              <div className="col-span-3 flex items-center space-x-2">
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white relative"
+                                  style={{
+                                    backgroundColor: teamColor.primary,
+                                  }}
+                                >
+                                  {player.web_name.charAt(0)}
+                                  {/* Transfer Status Indicators */}
+                                  {transferMode && (
+                                    <>
+                                      {isTransferOut && (
+                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                                          <span className="text-white text-xs">
+                                            -
+                                          </span>
+                                        </div>
+                                      )}
+                                      {isTransferIn && (
+                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                          <span className="text-white text-xs">
+                                            +
+                                          </span>
+                                        </div>
+                                      )}
+                                      {isInMyTeam &&
+                                        !isTransferOut &&
+                                        !isTransferIn && (
+                                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-xs">
+                                              ★
+                                            </span>
+                                          </div>
+                                        )}
+                                    </>
                                   )}
+                                  {/* Enhanced indicators - only show if not in transfer mode */}
+                                  {!transferMode &&
+                                    player.price_trend === "rising" && (
+                                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                                        <TrendingUp className="w-1.5 h-1.5 text-white" />
+                                      </div>
+                                    )}
+                                  {!transferMode &&
+                                    player.price_trend === "falling" && (
+                                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+                                        <TrendingDown className="w-1.5 h-1.5 text-white" />
+                                      </div>
+                                    )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    {player.web_name}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    {team?.short_name}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Position */}
+                              <div className="col-span-1 flex items-center">
+                                <span
+                                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                    player.element_type === 1
+                                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
+                                      : player.element_type === 2
+                                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
+                                      : player.element_type === 3
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+                                      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
+                                  }`}
+                                >
+                                  {getPlayerPosition(player.element_type)}
+                                </span>
+                              </div>
+
+                              {/* Price */}
+                              <div className="col-span-1 flex items-center">
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium">
+                                    £{(player.now_cost / 10).toFixed(1)}
+                                  </span>
+                                  {player.cost_change_event !== 0 && (
+                                    <span
+                                      className={`text-xs ${
+                                        player.cost_change_event > 0
+                                          ? "text-green-600"
+                                          : "text-red-600"
+                                      }`}
+                                    >
+                                      {player.cost_change_event > 0 ? "+" : ""}
+                                      {(player.cost_change_event / 10).toFixed(
+                                        1
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Points */}
+                              <div className="col-span-1 flex items-center">
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold text-green-600">
+                                    {player.total_points}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {player.event_points} GW
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Form */}
+                              <div className="col-span-1 flex items-center">
+                                <span className="text-sm font-medium">
+                                  {parseFloat(player.form).toFixed(1)}
+                                </span>
+                              </div>
+
+                              {/* Ownership */}
+                              <div className="col-span-1 flex items-center">
+                                <div className="flex flex-col">
+                                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    {parseFloat(
+                                      player.selected_by_percent
+                                    ).toFixed(1)}
+                                    %
+                                  </span>
+                                  {player.ownership_trend === "rising" && (
+                                    <span className="text-xs text-blue-500">
+                                      ↗ {t("teamPlanner.transferMarket.rising")}
+                                    </span>
+                                  )}
+                                  {player.ownership_trend === "falling" && (
+                                    <span className="text-xs text-purple-500">
+                                      ↘{" "}
+                                      {t("teamPlanner.transferMarket.falling")}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Status */}
+                              <div className="col-span-1 flex items-center">
+                                <div className="flex items-center gap-1">
+                                  {player.availability_status ===
+                                    "available" && (
+                                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                                  )}
+                                  {player.availability_status ===
+                                    "doubtful" && (
+                                    <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                                  )}
+                                  {player.availability_status === "injured" && (
+                                    <div className="w-2 h-2 bg-red-500 rounded-full" />
+                                  )}
+                                  {player.availability_status ===
+                                    "suspended" && (
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                                  )}
+                                  {/* Differential badge */}
+                                  {player.differential_score &&
+                                    player.differential_score > 20 && (
+                                      <Star className="w-3 h-3 text-yellow-500" />
+                                    )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Mobile Layout - Compact */}
+                            <div className="flex sm:hidden items-center justify-between px-2 py-2">
+                              {/* Player Info - Left side */}
+                              <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                <div
+                                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white relative flex-shrink-0"
+                                  style={{
+                                    backgroundColor: teamColor.primary,
+                                  }}
+                                >
+                                  {player.web_name.charAt(0)}
+                                  {/* Mobile Transfer Status Indicators */}
+                                  {transferMode && (
+                                    <>
+                                      {isTransferOut && (
+                                        <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+                                          <span className="text-white text-xs">
+                                            -
+                                          </span>
+                                        </div>
+                                      )}
+                                      {isTransferIn && (
+                                        <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                                          <span className="text-white text-xs">
+                                            +
+                                          </span>
+                                        </div>
+                                      )}
+                                      {isInMyTeam &&
+                                        !isTransferOut &&
+                                        !isTransferIn && (
+                                          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-xs">
+                                              ★
+                                            </span>
+                                          </div>
+                                        )}
+                                    </>
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1">
+                                    <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                                      {player.web_name}
+                                    </p>
+                                    <span
+                                      className={`inline-flex items-center px-1 rounded text-xs font-medium ${
+                                        player.element_type === 1
+                                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
+                                          : player.element_type === 2
+                                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
+                                          : player.element_type === 3
+                                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+                                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
+                                      }`}
+                                    >
+                                      {getPlayerPosition(player.element_type)}
+                                    </span>
+                                    {/* Status indicator */}
+                                    {player.availability_status ===
+                                      "available" && (
+                                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                                    )}
+                                    {player.availability_status ===
+                                      "doubtful" && (
+                                      <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
+                                    )}
+                                    {player.availability_status ===
+                                      "injured" && (
+                                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                      {team?.short_name}
+                                    </p>
+                                    <span className="text-xs text-gray-400">
+                                      F:{parseFloat(player.form).toFixed(1)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Stats - Right side */}
+                              <div className="flex items-center gap-3 flex-shrink-0">
+                                {/* Points */}
+                                <div className="text-center w-12">
+                                  <div className="text-xs font-bold text-green-600">
+                                    {player.total_points}
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    {player.event_points}
+                                  </div>
+                                </div>
+
+                                {/* Price */}
+                                <div className="text-center w-12">
+                                  <div className="text-xs font-medium">
+                                    {(player.now_cost / 10).toFixed(1)}
+                                  </div>
+                                  {player.cost_change_event !== 0 && (
+                                    <div
+                                      className={`text-xs ${
+                                        player.cost_change_event > 0
+                                          ? "text-green-600"
+                                          : "text-red-600"
+                                      }`}
+                                    >
+                                      {player.cost_change_event > 0 ? "+" : ""}
+                                      {(player.cost_change_event / 10).toFixed(
+                                        1
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Ownership */}
+                                <div className="text-center w-8">
+                                  <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                    {parseFloat(
+                                      player.selected_by_percent
+                                    ).toFixed(0)}
+                                    %
+                                  </div>
+                                  {player.ownership_trend === "rising" && (
+                                    <div className="text-xs text-blue-500">
+                                      ↗
+                                    </div>
+                                  )}
+                                  {player.ownership_trend === "falling" && (
+                                    <div className="text-xs text-purple-500">
+                                      ↘
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </motion.div>
@@ -2194,7 +2547,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         <span className="text-sm text-gray-600 dark:text-gray-400">
                           {t("teamPlanner.transferMarket.showingPlayers", {
                             current: Math.min(100, filteredPlayers.length),
-                            total: filteredPlayers.length
+                            total: filteredPlayers.length,
                           })}
                         </span>
                         {uiState.compareMode && (
@@ -2362,20 +2715,23 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   <div className="bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-lg p-6 mb-4">
                     <FaRobot className="w-12 h-12 text-purple-600 mx-auto mb-4" />
                     <h4 className="text-lg font-semibold mb-2">
-                      {i18n.language === 'bs' ? 'AI Analiza Tima' : 'AI Team Analysis'}
+                      {i18n.language === "bs"
+                        ? "AI Analiza Tima"
+                        : "AI Team Analysis"}
                     </h4>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      {i18n.language === 'bs' 
-                        ? 'Dobijte personalizovanu analizu vašeg FPL tima sa preporukama za poboljšanja.'
-                        : 'Get personalized analysis of your FPL team with improvement recommendations.'
-                      }
+                      {i18n.language === "bs"
+                        ? "Dobijte personalizovanu analizu vašeg FPL tima sa preporukama za poboljšanja."
+                        : "Get personalized analysis of your FPL team with improvement recommendations."}
                     </p>
                     <button
                       onClick={requestAIAnalysis}
                       className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105"
                     >
                       <FaPaperPlane className="w-4 h-4 inline mr-2" />
-                      {i18n.language === 'bs' ? 'Analiziraj Moj Tim' : 'Analyze My Team'}
+                      {i18n.language === "bs"
+                        ? "Analiziraj Moj Tim"
+                        : "Analyze My Team"}
                     </button>
                   </div>
                 </div>
@@ -2385,7 +2741,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                 <div className="text-center py-12">
                   <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
                   <p className="text-gray-600 dark:text-gray-400">
-                    {i18n.language === 'bs' ? 'Analiziram vaš tim...' : 'Analyzing your team...'}
+                    {i18n.language === "bs"
+                      ? "Analiziram vaš tim..."
+                      : "Analyzing your team..."}
                   </p>
                 </div>
               )}
@@ -2396,17 +2754,19 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     <div className="flex items-center gap-2 mb-3">
                       <FaRobot className="w-5 h-5 text-green-600" />
                       <h4 className="font-semibold text-green-800 dark:text-green-200">
-                        {i18n.language === 'bs' ? 'AI Preporuke' : 'AI Recommendations'}
+                        {i18n.language === "bs"
+                          ? "AI Preporuke"
+                          : "AI Recommendations"}
                       </h4>
                     </div>
                     <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <div 
+                      <div
                         className="whitespace-pre-wrap font-sans text-sm leading-relaxed"
                         dangerouslySetInnerHTML={{
                           __html: aiAnalysis?.replace(
-                            /\*\*(.*?)\*\*/g, 
+                            /\*\*(.*?)\*\*/g,
                             '<strong class="font-bold text-gray-900 dark:text-white">$1</strong>'
-                          )
+                          ),
                         }}
                       />
                     </div>
@@ -2420,14 +2780,21 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     <div className="text-yellow-600 dark:text-yellow-400 mb-4">
                       <FaRobot className="w-8 h-8 mx-auto mb-2" />
                       <h4 className="font-semibold">
-                        {i18n.language === 'bs' ? 'Sedmični Limit Dostignut' : 'Weekly Limit Reached'}
+                        {i18n.language === "bs"
+                          ? "Sedmični Limit Dostignut"
+                          : "Weekly Limit Reached"}
                       </h4>
                     </div>
                     <p className="text-gray-600 dark:text-gray-400 text-sm">
-                      {i18n.language === 'bs' 
-                        ? `Koristili ste AI analizu ove sedmice. Sledeca analiza dostupna ${new Date(new Date(lastAIUsage).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}.`
-                        : `You've used AI analysis this week. Next analysis available ${new Date(new Date(lastAIUsage).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}.`
-                      }
+                      {i18n.language === "bs"
+                        ? `Koristili ste AI analizu ove sedmice. Sledeca analiza dostupna ${new Date(
+                            new Date(lastAIUsage).getTime() +
+                              7 * 24 * 60 * 60 * 1000
+                          ).toLocaleDateString()}.`
+                        : `You've used AI analysis this week. Next analysis available ${new Date(
+                            new Date(lastAIUsage).getTime() +
+                              7 * 24 * 60 * 60 * 1000
+                          ).toLocaleDateString()}.`}
                     </p>
                   </div>
                 </div>
