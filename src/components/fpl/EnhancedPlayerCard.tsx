@@ -93,16 +93,16 @@ export default function EnhancedPlayerCard({
      player.status === 's' ? 'suspended' : 'available');
 
   const cardSize = isOnPitch 
-    ? (compact ? "w-12 h-14" : "w-14 lg:w-16 h-16 lg:h-20")
-    : (compact ? "w-10 h-12" : "w-12 h-16");
+    ? (compact ? "w-16 h-18" : "w-18 lg:w-20 h-20 lg:h-24")
+    : (compact ? "w-16 h-20" : "w-18 lg:w-20 h-22 lg:h-26");
 
   const kitSize = isOnPitch 
-    ? (compact ? "w-8 h-8" : "w-10 lg:w-12 h-10 lg:h-12")
-    : (compact ? "w-6 h-6" : "w-8 h-8");
+    ? (compact ? "w-10 h-10" : "w-12 lg:w-14 h-12 lg:h-14")
+    : (compact ? "w-10 h-10" : "w-12 lg:w-14 h-12 lg:h-14");
 
   const textSize = isOnPitch 
-    ? (compact ? "text-xs" : "text-xs lg:text-sm")
-    : "text-xs";
+    ? (compact ? "text-xs" : "text-sm lg:text-base")
+    : (compact ? "text-sm" : "text-base lg:text-lg");
 
   // Status indicator colors
   const getStatusColor = () => {
@@ -283,18 +283,19 @@ export default function EnhancedPlayerCard({
           </div>
         )}
 
-        {/* Enhanced metrics (if available) */}
-        {player.captaincy_appeal && (
-          <div className="border-t border-white/20 pt-2 mt-2">
-            <div className="text-gray-400 text-xs mb-1">Captaincy Appeal</div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div 
-                className="bg-yellow-400 h-2 rounded-full" 
-                style={{ width: `${player.captaincy_appeal}%` }}
-              />
-            </div>
+        {/* Enhanced metrics - always show captaincy appeal */}
+        <div className="border-t border-white/20 pt-2 mt-2">
+          <div className="text-gray-400 text-xs mb-1">Captaincy Appeal</div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div 
+              className="bg-yellow-400 h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${Math.min(100, Math.max(0, player.captaincy_appeal || (player.total_points * 2) || 10))}%` }}
+            />
           </div>
-        )}
+          <div className="text-xs text-yellow-400 mt-1">
+            {Math.round(player.captaincy_appeal || (player.total_points * 2) || 10)}%
+          </div>
+        </div>
       </motion.div>
     );
   };
@@ -315,7 +316,7 @@ export default function EnhancedPlayerCard({
             ? "border-blue-400 ring-2 ring-blue-200 dark:ring-blue-800"
             : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500"
         } ${interactive ? 'cursor-pointer' : ''} overflow-hidden`}
-        onMouseEnter={() => setShowAdvancedTooltip(true)}
+        onMouseEnter={() => showTooltip && setShowAdvancedTooltip(true)}
         onMouseLeave={() => setShowAdvancedTooltip(false)}
       >
         {/* Player Kit/Jersey */}
@@ -394,30 +395,10 @@ export default function EnhancedPlayerCard({
         )}
       </motion.div>
 
-      {/* Advanced Tooltip */}
+      {/* Enhanced Tooltip Only */}
       <AnimatePresence>
         {renderAdvancedTooltip()}
       </AnimatePresence>
-
-      {/* Simple Tooltip (fallback) */}
-      {showTooltip && !showAdvancedTooltip && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black/90 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 backdrop-blur-sm">
-          <div className="text-center space-y-1">
-            <div className="font-bold">
-              {player.first_name} {player.second_name}
-            </div>
-            <div className="text-gray-300">
-              {teamColors.name} - {position || 'Unknown'}
-            </div>
-            <div className="text-green-400">
-              £{((player.now_cost || 0) / 10).toFixed(1)}m | {points} pts
-            </div>
-            <div className="text-blue-400">
-              Form: {parseFloat(player.form || '0').toFixed(1)} | {parseFloat(player.selected_by_percent || '0').toFixed(1)}% owned
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

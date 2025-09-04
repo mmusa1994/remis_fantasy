@@ -32,6 +32,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(function 
   maxItems = 5,
   timeframe = '1h',
 }: OwnershipChangesWidgetProps) {
+  console.log("🎯 OwnershipChangesWidget: Initialized with props", { userTeamPlayerIds: userTeamPlayerIds.length, refreshInterval, maxItems, timeframe });
   const { theme } = useTheme();
   const [data, setData] = useState<OwnershipChangesWidgetData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,9 +44,9 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(function 
   const cacheRef = useRef<OwnershipCache | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   
-  // Cache configuration
-  const CACHE_TTL = 300000; // 5 minutes
-  const MIN_REFRESH_INTERVAL = 180000; // 3 minutes minimum between requests
+  // Cache configuration - reduced caching for fresh data
+  const CACHE_TTL = 60000; // 1 minute only
+  const MIN_REFRESH_INTERVAL = 30000; // 30 seconds minimum between requests
 
   /**
    * Generate cache key for request deduplication
@@ -72,7 +73,76 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(function 
   /**
    * Optimized fetch function with request deduplication and caching
    */
-  const fetchOwnershipChanges = useCallback(async (forceRefresh: boolean = false) => {
+  const fetchOwnershipChanges = useCallback(async (forceRefresh: boolean = false, gameweek: number = 4) => {
+    console.log("🔄 OwnershipChangesWidget: Starting fetch", { gameweek, forceRefresh, loading });
+    // Inline handler functions to avoid dependency issues
+    const handleSuccessfulResponse = (result: any) => {
+      if (result.success && result.data) {
+        // Handle two different API response formats:
+        // 1. General analytics: { top_risers: [...], top_fallers: [...] }
+        // 2. Player-specific trends: [...] (flat array)
+        
+        let risers: any[] = [];
+        let fallers: any[] = [];
+        
+        if (Array.isArray(result.data)) {
+          // Player-specific format - separate into risers and fallers
+          result.data.forEach((player: any) => {
+            // Add team colors for rendering
+            const playerWithColors = {
+              ...player,
+              team_colors: getTeamColors(player.team_name),
+              change: player.ownership_change_24h || player.ownership_change_1h || 0,
+              ownership: player.current_ownership
+            };
+            
+            if (player.ownership_trend === 'rising') {
+              risers.push(playerWithColors);
+            } else if (player.ownership_trend === 'falling') {
+              fallers.push(playerWithColors);
+            }
+          });
+        } else {
+          // General analytics format - add team colors if missing
+          risers = (result.data.top_risers || result.data.risers || []).map((player: any) => ({
+            ...player,
+            team_colors: player.team_colors || getTeamColors(player.team_name),
+            change: player.ownership_change_24h || player.ownership_change_1h || 0,
+            ownership: player.current_ownership
+          }));
+          fallers = (result.data.top_fallers || result.data.fallers || []).map((player: any) => ({
+            ...player,
+            team_colors: player.team_colors || getTeamColors(player.team_name),
+            change: player.ownership_change_24h || player.ownership_change_1h || 0,
+            ownership: player.current_ownership
+          }));
+        }
+
+        const ownershipData = {
+          risers,
+          fallers,
+          timeframe: currentTimeframe,
+        };
+        
+        setData(ownershipData);
+        setLastUpdate(new Date());
+        setError(null);
+        
+        // Update cache
+        cacheRef.current = {
+          data: ownershipData,
+          timestamp: Date.now(),
+          timeframe: currentTimeframe,
+          playerIds: userTeamPlayerIds.sort().join(','),
+        };
+      }
+    };
+
+    const handleErrorResponse = (err: any) => {
+      console.error('[OwnershipChangesWidget] Error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch ownership data');
+    };
+
     // Check cache first
     if (!forceRefresh && isCacheValid(cacheRef.current)) {
       setData(cacheRef.current!.data);
@@ -110,15 +180,12 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(function 
         setLoading(true);
       }
 
-      // Cancel previous request if still pending
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      
+      // Create new abort controller
       abortControllerRef.current = new AbortController();
       
       const params = new URLSearchParams({
         timeframe: currentTimeframe,
+        gameweek: gameweek.toString(),
       });
 
       if (userTeamPlayerIds.length > 0) {
@@ -144,91 +211,56 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(function 
       handleSuccessfulResponse(result);
       
     } catch (err) {
-      // Only handle error if request wasn't aborted
+      // Handle fallback to previous gameweek if no data
+      if (err instanceof Error && err.message === 'no_data_fallback' && gameweek > 3) {
+        console.log(`[OwnershipChangesWidget] Trying fallback to gameweek ${gameweek - 1}`);
+        return fetchOwnershipChanges(forceRefresh, gameweek - 1);
+      }
+      
+      // Only handle other errors if request wasn't aborted
       if (err instanceof Error && err.name !== 'AbortError') {
         handleErrorResponse(err);
+      } else if (err instanceof Error && err.name === 'AbortError') {
+        console.log('[OwnershipChangesWidget] Request was aborted');
       }
     } finally {
       pendingOwnershipRequests.delete(cacheKey);
       setLoading(false);
     }
-  }, [currentTimeframe, userTeamPlayerIds, isCacheValid, getCacheKey, maxItems, MIN_REFRESH_INTERVAL]);
+  }, []); // Remove all dependencies to prevent loops
+
 
   /**
-   * Handle successful API response
-   */
-  const handleSuccessfulResponse = useCallback((result: any) => {
-    if (result.success) {
-      // Transform API data to widget format
-      const widgetData: OwnershipChangesWidgetData = {
-        risers: result.data.top_risers.slice(0, maxItems).map((player: any) => ({
-          player_id: player.player_id,
-          web_name: player.web_name,
-          team_name: player.team_name,
-          ownership: player.current_ownership,
-          change: currentTimeframe === '1h' ? player.ownership_change_1h : player.ownership_change_24h,
-          team_colors: getTeamColors(player.team_id || 1),
-        })),
-        fallers: result.data.top_fallers.slice(0, maxItems).map((player: any) => ({
-          player_id: player.player_id,
-          web_name: player.web_name,
-          team_name: player.team_name,
-          ownership: player.current_ownership,
-          change: Math.abs(currentTimeframe === '1h' ? player.ownership_change_1h : player.ownership_change_24h),
-          team_colors: getTeamColors(player.team_id || 1),
-        })),
-        timeframe: currentTimeframe,
-      };
-      
-      // Update cache
-      const now = Date.now();
-      cacheRef.current = {
-        data: widgetData,
-        timestamp: now,
-        timeframe: currentTimeframe,
-        playerIds: userTeamPlayerIds.sort().join(','),
-      };
-      
-      setData(widgetData);
-      setLastUpdate(new Date(now));
-    } else {
-      throw new Error(result.error || 'API returned unsuccessful response');
-    }
-  }, [maxItems, currentTimeframe, userTeamPlayerIds]);
-
-  /**
-   * Handle API error response
-   */
-  const handleErrorResponse = useCallback((err: any) => {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data';
-    console.error('[OwnershipChangesWidget] Fetch error:', errorMessage);
-    setError(errorMessage);
-  }, []);
-
-  /**
-   * Manual refresh function for user-triggered updates
+   * Manual refresh function for user-triggered updates - always fetch fresh data
    */
   const handleManualRefresh = useCallback(() => {
+    // Clear all cache and force fresh fetch
+    cacheRef.current = null;
+    pendingOwnershipRequests.clear();
+    setData(null);
+    setLoading(true);
+    setError(null);
     fetchOwnershipChanges(true);
-  }, [fetchOwnershipChanges]);
+  }, []); // Remove fetchOwnershipChanges dependency
 
   // Auto-refresh effect with intelligent caching
   useEffect(() => {
-    fetchOwnershipChanges();
+    // Fetch data on mount - force fresh data
+    fetchOwnershipChanges(true);
     
     // Set up interval for automatic refresh
     const interval = setInterval(() => {
-      fetchOwnershipChanges();
+      if (!loading) {
+        fetchOwnershipChanges();
+      }
     }, Math.max(refreshInterval, MIN_REFRESH_INTERVAL));
     
     return () => {
       clearInterval(interval);
-      // Cancel any pending request when component unmounts
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      // Don't abort on cleanup to prevent "signal is aborted without reason"
+      // The controller will naturally timeout or complete
     };
-  }, [fetchOwnershipChanges, refreshInterval, MIN_REFRESH_INTERVAL]);
+  }, [refreshInterval, MIN_REFRESH_INTERVAL]); // Remove fetchOwnershipChanges dependency
 
   // Cleanup on dependency change
   useEffect(() => {
@@ -239,7 +271,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(function 
       setLoading(true);
       fetchOwnershipChanges();
     }
-  }, [currentTimeframe, userTeamPlayerIds, fetchOwnershipChanges, isCacheValid]);
+  }, [currentTimeframe, userTeamPlayerIds]); // Remove fetchOwnershipChanges and isCacheValid dependencies
 
   const formatOwnership = (ownership: number) => {
     return `${ownership.toFixed(1)}%`;
@@ -310,7 +342,20 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(function 
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    console.log("🔍 OwnershipChangesWidget: No data available", { loading, error });
+    return null;
+  }
+
+  console.log("📊 OwnershipChangesWidget: Rendering with data", {
+    risers: data.risers?.length,
+    fallers: data.fallers?.length,
+    timeframe: data.timeframe,
+    sampleRiser: data.risers?.[0]?.web_name,
+    sampleFaller: data.fallers?.[0]?.web_name,
+    hasRisers: data.risers && data.risers.length > 0,
+    hasFallers: data.fallers && data.fallers.length > 0
+  });
 
   return (
     <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}>

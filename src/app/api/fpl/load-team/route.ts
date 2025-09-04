@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const managerIdNum = parseInt(managerId, 10);
-    const gw = parseInt(gameweek, 10);
+    let gw = parseInt(gameweek, 10);
 
     if (isNaN(managerIdNum) || isNaN(gw)) {
       return NextResponse.json(
@@ -90,8 +90,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Priority 1: Get critical data first (manager picks + live data)
+    // Priority 1: Get critical data first (manager picks + live data) with fallback
     let managerPicks, liveData;
+    const originalGameweek = gw;
+    let fallbackApplied = false;
 
     try {
       const [picksResponse, liveResponse] = await Promise.all([
@@ -112,15 +114,61 @@ export async function POST(request: NextRequest) {
       liveData = liveResponse.data;
     } catch (apiError) {
       if (apiError instanceof Error && apiError.message.includes("404")) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: `Gameweek ${gw} data not available yet`,
-          },
-          { status: 404 }
-        );
+        // Apply fallback logic: try previous gameweeks until we find data
+        console.log(`⬇️ GW${gw} team data failed, trying fallback...`);
+
+        const attemptedGameweeks = [gw];
+        fallbackApplied = true;
+        let currentGw = gw;
+
+        while (currentGw > 1 && attemptedGameweeks.length < 3) {
+          currentGw--;
+          attemptedGameweeks.push(currentGw);
+
+          console.log(`🔄 Trying fallback to GW${currentGw}`);
+
+          try {
+            const [fallbackPicksResponse, fallbackLiveResponse] =
+              await Promise.all([
+                teamService.getManagerPicks(managerIdNum, currentGw),
+                liveService.getLiveData(currentGw),
+              ]);
+
+            if (
+              fallbackPicksResponse.success &&
+              fallbackLiveResponse.success &&
+              fallbackPicksResponse.data &&
+              fallbackLiveResponse.data
+            ) {
+              console.log(`✅ Found team data in GW${currentGw}`);
+              managerPicks = fallbackPicksResponse.data;
+              liveData = fallbackLiveResponse.data;
+              gw = currentGw; // Update the working gameweek
+              break;
+            }
+          } catch (fallbackError) {
+            console.log(`❌ GW${currentGw} also failed:`, fallbackError);
+            continue;
+          }
+        }
+
+        // If all fallback attempts failed
+        if (!managerPicks || !liveData) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Gameweek ${originalGameweek} data not available yet. Tried fallback to gameweeks: ${attemptedGameweeks.join(
+                ", "
+              )}`,
+              attempted_gameweeks: attemptedGameweeks,
+              original_gameweek: originalGameweek,
+            },
+            { status: 404 }
+          );
+        }
+      } else {
+        throw apiError;
       }
-      throw apiError;
     }
 
     // Priority 2: Get player data from services

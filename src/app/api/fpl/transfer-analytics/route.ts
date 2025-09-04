@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     if (getSwaps) {
       // Get popular transfer swaps
-      const swaps = await transferService.getPopularTransferSwaps(limit);
+      const swaps = await transferService.getPopularTransferSwaps(limit, currentGameweek);
       
       if (!swaps.success) {
         return NextResponse.json({

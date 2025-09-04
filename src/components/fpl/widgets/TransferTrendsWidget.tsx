@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRightLeft, TrendingUp, TrendingDown, RefreshCw, Calendar } from 'lucide-react';
@@ -31,6 +31,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(function Tran
   maxItems = 5,
   showFutureWeeks = true,
 }: TransferTrendsWidgetProps) {
+  console.log("🎯 TransferTrendsWidget: Initialized with props", { currentGameweek, refreshInterval, maxItems });
   const { theme } = useTheme();
   const [data, setData] = useState<TransferTrendsWidgetData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,7 +70,8 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(function Tran
   /**
    * Optimized fetch function with request deduplication and caching
    */
-  const fetchTransferTrends = useCallback(async (forceRefresh: boolean = false) => {
+  const fetchTransferTrends = useCallback(async (forceRefresh: boolean = false, gameweek: number = 4) => {
+    console.log("🔄 TransferTrendsWidget: Starting fetch", { gameweek, forceRefresh, loading });
     // Check cache first
     if (!forceRefresh && isCacheValid(cacheRef.current)) {
       setData(cacheRef.current!.data);
@@ -90,13 +92,72 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(function Tran
 
     const cacheKey = getCacheKey(currentGameweek);
     
+    // Helper functions for this request
+    const processSuccessfulResponse = (result: any, fallbackGameweek?: number) => {
+      if (result.success) {
+        // Transform API data to widget format
+        const widgetData = {
+          current_transfers: result.data.current_week.popular_swaps.slice(0, maxItems).map((swap: any) => ({
+            player_in: {
+              id: swap.player_in_id,
+              name: swap.player_in_name,
+              team: 'Unknown',
+            },
+            player_out: {
+              id: swap.player_out_id,
+              name: swap.player_out_name,
+              team: 'Unknown',
+            },
+            count: swap.transfer_count,
+          })),
+          top_players_in: result.data.current_week.top_transfers_in.slice(0, maxItems).map((player: any) => ({
+            player_id: player.player_id,
+            web_name: player.web_name,
+            team_name: player.team_name,
+            transfers_count: player.transfers_in_count,
+            team_colors: getTeamColors(player.team_id || 1),
+          })),
+          top_players_out: result.data.current_week.top_transfers_out.slice(0, maxItems).map((player: any) => ({
+            player_id: player.player_id,
+            web_name: player.web_name,
+            team_name: player.team_name,
+            transfers_count: player.transfers_out_count,
+            team_colors: getTeamColors(player.team_id || 1),
+          })),
+          future_transfers: result.data.future_weeks,
+        };
+        
+        // Update cache
+        const now = Date.now();
+        cacheRef.current = {
+          data: widgetData,
+          timestamp: now,
+          gameweek: currentGameweek,
+        };
+        
+        setData(widgetData);
+        setLastUpdate(new Date(now));
+      } else if (fallbackGameweek) {
+        console.log(`[TransferTrendsWidget] No data for current request, trying fallback gameweek ${fallbackGameweek}`);
+        throw new Error('no_data_fallback');
+      } else {
+        throw new Error(result.error || 'API returned unsuccessful response');
+      }
+    };
+
+    const processErrorResponse = (err: any) => {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data';
+      console.error('[TransferTrendsWidget] Fetch error:', errorMessage);
+      setError(errorMessage);
+    };
+
     // Check if request is already pending (request deduplication)
     if (pendingRequests.has(cacheKey)) {
       try {
         const result = await pendingRequests.get(cacheKey);
-        handleSuccessfulResponse(result);
+        processSuccessfulResponse(result);
       } catch (err) {
-        handleErrorResponse(err);
+        processErrorResponse(err);
       }
       return;
     }
@@ -107,15 +168,11 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(function Tran
         setLoading(true);
       }
 
-      // Cancel previous request if still pending
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      
+      // Create new abort controller (don't cancel previous to avoid "signal is aborted without reason")
       abortControllerRef.current = new AbortController();
       
       // Create and cache the request promise
-      const requestPromise = fetch(`/api/fpl/transfer-analytics?gameweek=${currentGameweek}`, {
+      const requestPromise = fetch(`/api/fpl/transfer-analytics?gameweek=${gameweek}`, {
         signal: abortControllerRef.current.signal,
         headers: {
           'Cache-Control': 'no-cache',
@@ -130,104 +187,53 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(function Tran
       pendingRequests.set(cacheKey, requestPromise);
       
       const result = await requestPromise;
-      handleSuccessfulResponse(result);
+      processSuccessfulResponse(result, gameweek > 3 ? gameweek - 1 : undefined);
       
     } catch (err) {
-      // Only handle error if request wasn't aborted
+      // Handle fallback to previous gameweek if no data
+      if (err instanceof Error && err.message === 'no_data_fallback' && gameweek > 3) {
+        console.log(`[TransferTrendsWidget] Trying fallback to gameweek ${gameweek - 1}`);
+        return fetchTransferTrends(forceRefresh, gameweek - 1);
+      }
+      
+      // Only handle other errors if request wasn't aborted
       if (err instanceof Error && err.name !== 'AbortError') {
-        handleErrorResponse(err);
+        processErrorResponse(err);
+      } else if (err instanceof Error && err.name === 'AbortError') {
+        console.log('[TransferTrendsWidget] Request was aborted');
       }
     } finally {
       pendingRequests.delete(cacheKey);
       setLoading(false);
     }
-  }, [currentGameweek, isCacheValid, getCacheKey, maxItems, MIN_REFRESH_INTERVAL]);
+  }, []); // Remove all dependencies to prevent loops
 
-  /**
-   * Handle successful API response
-   */
-  const handleSuccessfulResponse = useCallback((result: any) => {
-    if (result.success) {
-      // Transform API data to widget format
-      const widgetData: TransferTrendsWidgetData = {
-        current_transfers: result.data.current_week.popular_swaps.slice(0, maxItems).map((swap: any) => ({
-          player_in: {
-            id: swap.player_in_id,
-            name: swap.player_in_name,
-            team: 'Unknown', // Would need team mapping
-          },
-          player_out: {
-            id: swap.player_out_id,
-            name: swap.player_out_name,
-            team: 'Unknown',
-          },
-          count: swap.transfer_count,
-        })),
-        top_players_in: result.data.current_week.top_transfers_in.slice(0, maxItems).map((player: any) => ({
-          player_id: player.player_id,
-          web_name: player.web_name,
-          team_name: player.team_name,
-          transfers_count: player.transfers_in_count,
-          team_colors: getTeamColors(player.team_id || 1),
-        })),
-        top_players_out: result.data.current_week.top_transfers_out.slice(0, maxItems).map((player: any) => ({
-          player_id: player.player_id,
-          web_name: player.web_name,
-          team_name: player.team_name,
-          transfers_count: player.transfers_out_count,
-          team_colors: getTeamColors(player.team_id || 1),
-        })),
-        future_transfers: result.data.future_weeks,
-      };
-      
-      // Update cache
-      const now = Date.now();
-      cacheRef.current = {
-        data: widgetData,
-        timestamp: now,
-        gameweek: currentGameweek,
-      };
-      
-      setData(widgetData);
-      setLastUpdate(new Date(now));
-    } else {
-      throw new Error(result.error || 'API returned unsuccessful response');
-    }
-  }, [maxItems, currentGameweek]);
-
-  /**
-   * Handle API error response
-   */
-  const handleErrorResponse = useCallback((err: any) => {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data';
-    console.error('[TransferTrendsWidget] Fetch error:', errorMessage);
-    setError(errorMessage);
-  }, []);
 
   /**
    * Manual refresh function for user-triggered updates
    */
   const handleManualRefresh = useCallback(() => {
     fetchTransferTrends(true);
-  }, [fetchTransferTrends]);
+  }, []); // Remove fetchTransferTrends dependency
 
   // Auto-refresh effect with intelligent caching
   useEffect(() => {
+    // Fetch data on mount
     fetchTransferTrends();
     
     // Set up interval for automatic refresh
     const interval = setInterval(() => {
-      fetchTransferTrends();
+      if (!loading) {
+        fetchTransferTrends();
+      }
     }, Math.max(refreshInterval, MIN_REFRESH_INTERVAL));
     
     return () => {
       clearInterval(interval);
-      // Cancel any pending request when component unmounts
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      // Don't abort on cleanup to prevent "signal is aborted without reason"
+      // The controller will naturally timeout or complete
     };
-  }, [fetchTransferTrends, refreshInterval, MIN_REFRESH_INTERVAL]);
+  }, [refreshInterval, MIN_REFRESH_INTERVAL]); // Remove fetchTransferTrends dependency
 
   // Cleanup on gameweek change
   useEffect(() => {
@@ -238,7 +244,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(function Tran
       setLoading(true);
       fetchTransferTrends();
     }
-  }, [currentGameweek, fetchTransferTrends]);
+  }, [currentGameweek]); // Remove fetchTransferTrends dependency
 
   const formatTransferCount = (count: number) => {
     if (count >= 1000000) {
@@ -300,7 +306,16 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(function Tran
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    console.log("🔍 TransferTrendsWidget: No data available", { loading, error });
+    return null;
+  }
+
+  console.log("📊 TransferTrendsWidget: Rendering with data", {
+    hasData: !!data,
+    dataKeys: Object.keys(data || {}),
+    dataType: typeof data
+  });
 
   return (
     <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}>

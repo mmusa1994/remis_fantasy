@@ -43,7 +43,7 @@ export class FPLTransferAnalyticsService extends BaseFPLService {
       const positionsMap = new Map(element_types.map(et => [et.id, et.singular_name_short]));
 
       // Get current week transfer data
-      const currentWeekData = this.analyzeCurrentWeekTransfers(players, teamsMap, positionsMap);
+      const currentWeekData = this.analyzeCurrentWeekTransfers(players, teamsMap, positionsMap, currentGameweek);
       
       // Get future week predictions
       const futureWeeksData = this.analyzeFutureTransfers(players, teamsMap, currentGameweek);
@@ -77,7 +77,7 @@ export class FPLTransferAnalyticsService extends BaseFPLService {
   /**
    * Get popular transfer combinations (swaps)
    */
-  public async getPopularTransferSwaps(limit: number = 10): Promise<EnhancedFPLResponse<TransferTrend[]>> {
+  public async getPopularTransferSwaps(limit: number = 10, currentGameweek: number = 4): Promise<EnhancedFPLResponse<TransferTrend[]>> {
     try {
       const bootstrapResponse = await this.bootstrapService.getBootstrapStatic();
       if (!bootstrapResponse.success || !bootstrapResponse.data) {
@@ -113,7 +113,7 @@ export class FPLTransferAnalyticsService extends BaseFPLService {
               player_out_name: playerOut.web_name,
               transfer_count: Math.min(playerOut.transfers_out_event, playerIn.transfers_in_event) * 0.3,
               percentage_of_transfers: Math.random() * 5 + 1, // Mock percentage
-              gameweek: 4, // Current gameweek
+              gameweek: currentGameweek || 4, // Current gameweek
               trend_type: 'current',
             });
           }
@@ -185,7 +185,8 @@ export class FPLTransferAnalyticsService extends BaseFPLService {
   private analyzeCurrentWeekTransfers(
     players: any[],
     teamsMap: Map<number, string>,
-    positionsMap: Map<number, string>
+    positionsMap: Map<number, string>,
+    currentGameweek: number = 4
   ) {
     const top_transfers_in: PlayerTransferData[] = players
       .filter(p => p.transfers_in_event > 0)
@@ -218,7 +219,7 @@ export class FPLTransferAnalyticsService extends BaseFPLService {
       }));
 
     // Mock popular swaps
-    const popular_swaps: TransferTrend[] = this.generateMockSwaps(players);
+    const popular_swaps: TransferTrend[] = this.generateMockSwaps(players, currentGameweek);
 
     return {
       top_transfers_in,
@@ -303,7 +304,7 @@ export class FPLTransferAnalyticsService extends BaseFPLService {
   /**
    * Generate mock transfer swaps
    */
-  private generateMockSwaps(players: any[]): TransferTrend[] {
+  private generateMockSwaps(players: any[], currentGameweek: number = 4): TransferTrend[] {
     const swaps: TransferTrend[] = [];
     
     // Mock some popular swaps based on the data provided
@@ -327,7 +328,7 @@ export class FPLTransferAnalyticsService extends BaseFPLService {
           player_out_name: swap.out,
           transfer_count: swap.count,
           percentage_of_transfers: (swap.count / 10000) * 100, // Mock percentage
-          gameweek: 4,
+          gameweek: currentGameweek,
           trend_type: 'current',
         });
       }

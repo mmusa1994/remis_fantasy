@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown, DollarSign, RefreshCw } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -23,12 +23,25 @@ export default function PriceChangesWidget({
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const fetchPriceChanges = async () => {
+  const fetchPriceChanges = useCallback(async (gameweek: number = 4) => {
     try {
       setError(null);
-      const teamIdsParam = userTeamPlayerIds.length > 0 ? `?teamIds=${userTeamPlayerIds.join(',')}` : '';
-      const response = await fetch(`/api/fpl/price-changes${teamIdsParam}`);
+      
+      // Create abort controller
+      abortControllerRef.current = new AbortController();
+      
+      const params = new URLSearchParams();
+      if (userTeamPlayerIds.length > 0) {
+        params.append('teamIds', userTeamPlayerIds.join(','));
+      }
+      params.append('gameweek', gameweek.toString());
+      
+      const response = await fetch(`/api/fpl/price-changes?${params}`, {
+        signal: abortControllerRef.current.signal,
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch price changes');
@@ -61,21 +74,44 @@ export default function PriceChangesWidget({
         
         setData(widgetData);
         setLastUpdate(new Date());
+      } else if (gameweek > 3) {
+        // Try fallback to previous gameweek
+        console.log(`[PriceChangesWidget] No data for gameweek ${gameweek}, trying ${gameweek - 1}`);
+        return fetchPriceChanges(gameweek - 1);
+      } else {
+        throw new Error(result.error || 'No data available');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      if (err instanceof Error && err.name !== 'AbortError') {
+        // Try fallback to previous gameweek if current one fails
+        if (gameweek > 3) {
+          console.log(`[PriceChangesWidget] Error with gameweek ${gameweek}, trying ${gameweek - 1}`);
+          return fetchPriceChanges(gameweek - 1);
+        }
+        setError(err.message);
+      } else if (err instanceof Error && err.name === 'AbortError') {
+        console.log('[PriceChangesWidget] Request was aborted');
+      } else {
+        setError('Failed to fetch data');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [userTeamPlayerIds, maxItems]);
 
   useEffect(() => {
     fetchPriceChanges();
     
     // Set up refresh interval
-    const interval = setInterval(fetchPriceChanges, refreshInterval);
-    return () => clearInterval(interval);
-  }, [fetchPriceChanges, userTeamPlayerIds, refreshInterval]);
+    const interval = setInterval(() => fetchPriceChanges(), refreshInterval);
+    return () => {
+      clearInterval(interval);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, [fetchPriceChanges, refreshInterval]);
 
   const formatPrice = (price: number) => {
     return `£${(price / 10).toFixed(1)}`;
@@ -116,7 +152,7 @@ export default function PriceChangesWidget({
             Price Changes
           </h3>
           <button
-            onClick={fetchPriceChanges}
+            onClick={() => fetchPriceChanges()}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <RefreshCw className="w-4 h-4" />
@@ -126,7 +162,7 @@ export default function PriceChangesWidget({
           {error}
           <br />
           <button
-            onClick={fetchPriceChanges}
+            onClick={() => fetchPriceChanges()}
             className="text-blue-500 hover:text-blue-600 underline mt-2"
           >
             Try again
@@ -146,7 +182,7 @@ export default function PriceChangesWidget({
           Price Changes
         </h3>
         <button
-          onClick={fetchPriceChanges}
+          onClick={() => fetchPriceChanges()}
           className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />

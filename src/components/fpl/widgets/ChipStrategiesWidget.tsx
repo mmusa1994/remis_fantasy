@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, RefreshCw, Star, Target, TrendingUp, Calendar } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -17,14 +17,31 @@ export default function ChipStrategiesWidget({
   showRecommendations = true,
   maxWeeksShown = 5,
 }: ChipStrategiesWidgetProps) {
+  console.log("🎯 ChipStrategiesWidget: Initialized with props", { refreshInterval, showRecommendations, maxWeeksShown });
   const { theme } = useTheme();
   const [data, setData] = useState<ChipStrategiesWidgetData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeChip, setActiveChip] = useState<'wildcard' | 'freehit' | 'benchboost' | 'triplecaptain'>('wildcard');
+  
+  // Cache to prevent redundant requests
+  const cacheRef = useRef<{ data: ChipStrategiesWidgetData; timestamp: number } | null>(null);
+  const CACHE_TTL = 1800000; // 30 minutes
 
-  const fetchChipStrategies = async () => {
+  const fetchChipStrategies = useCallback(async (forceRefresh: boolean = false) => {
+    console.log("🔄 ChipStrategiesWidget: Starting fetch", { forceRefresh, loading });
+    // Check cache first
+    if (!forceRefresh && cacheRef.current) {
+      const isStale = Date.now() - cacheRef.current.timestamp > CACHE_TTL;
+      if (!isStale) {
+        console.log('📦 Using cached chip strategies data');
+        setData(cacheRef.current.data);
+        setLastUpdate(new Date(cacheRef.current.timestamp));
+        setLoading(false);
+        return;
+      }
+    }
     try {
       setError(null);
       const response = await fetch('/api/fpl/chip-analytics');
@@ -55,20 +72,36 @@ export default function ChipStrategiesWidget({
         
         setData(widgetData);
         setLastUpdate(new Date());
+        
+        // Cache the result
+        cacheRef.current = {
+          data: widgetData,
+          timestamp: Date.now()
+        };
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch data');
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Remove all dependencies to prevent loops
+
+  const handleManualRefresh = useCallback(() => {
+    fetchChipStrategies(true);
+  }, []);
 
   useEffect(() => {
+    // Fetch data on mount
     fetchChipStrategies();
     
-    const interval = setInterval(fetchChipStrategies, refreshInterval);
+    const interval = setInterval(() => {
+      if (!loading) {
+        fetchChipStrategies();
+      }
+    }, refreshInterval);
+    
     return () => clearInterval(interval);
-  }, [fetchChipStrategies, refreshInterval]);
+  }, [refreshInterval]); // Remove fetchChipStrategies dependency
 
   const getChipIcon = (chipType: string) => {
     switch (chipType) {
@@ -139,7 +172,7 @@ export default function ChipStrategiesWidget({
             Chip Strategies
           </h3>
           <button
-            onClick={fetchChipStrategies}
+            onClick={handleManualRefresh}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <RefreshCw className="w-4 h-4" />
@@ -149,7 +182,7 @@ export default function ChipStrategiesWidget({
           {error}
           <br />
           <button
-            onClick={fetchChipStrategies}
+            onClick={handleManualRefresh}
             className="text-blue-500 hover:text-blue-600 underline mt-2"
           >
             Try again
@@ -159,7 +192,16 @@ export default function ChipStrategiesWidget({
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    console.log("🔍 ChipStrategiesWidget: No data available", { loading, error });
+    return null;
+  }
+
+  console.log("📊 ChipStrategiesWidget: Rendering with data", {
+    hasData: !!data,
+    dataKeys: Object.keys(data || {}),
+    chipsCount: data.chips?.length
+  });
 
   const activeChipData = data.chips.find(chip => chip.type === activeChip);
 
@@ -171,7 +213,7 @@ export default function ChipStrategiesWidget({
           Chip Strategies
         </h3>
         <button
-          onClick={fetchChipStrategies}
+          onClick={handleManualRefresh}
           className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
