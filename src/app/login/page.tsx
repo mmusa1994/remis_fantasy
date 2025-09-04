@@ -5,6 +5,7 @@ import { signIn, getSession } from "next-auth/react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   FaGoogle,
@@ -12,7 +13,6 @@ import {
   FaEyeSlash,
   FaEnvelope,
   FaLock,
-  FaUserCircle,
 } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
@@ -105,14 +105,18 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-red-800 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className={`mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            Login successful! Redirecting...
+          <p
+            className={`mb-4 ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {t("loginSuccessRedirect")}
           </p>
-          <Link 
+          <Link
             href="/premier-league/tabele"
             className="bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white px-6 py-2 rounded-lg transition-all duration-300"
           >
-            Go to Dashboard
+            {t("goToDashboard")}
           </Link>
         </div>
       </div>
@@ -129,22 +133,24 @@ export default function LoginPage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center items-center text-center text-white p-12">
+        <div className="relative z-10 flex flex-col justify-center items-center text-center text-white p-12 w-full">
           <motion.div
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="mb-8"
+            className="mb-8 flex flex-col justify-center items-center"
           >
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
-              <FaUserCircle className="w-12 h-12 text-white" />
-            </div>
+            <Image
+              src="/images/rf-logo.svg"
+              alt="REMIS Fantasy Logo"
+              width={300}
+              height={300}
+              className="object-cover"
+            />
             <h1 className="text-4xl font-bold mb-4">
-              Welcome to REMIS Fantasy
+              {t("welcomeToRemisFantasy")}
             </h1>
-            <p className="text-xl text-red-100 mb-8">
-              The ultimate Fantasy Premier League experience awaits
-            </p>
+            <p className="text-xl text-red-100 mb-8">{t("experienceAwaits")}</p>
           </motion.div>
 
           <motion.div
@@ -155,15 +161,15 @@ export default function LoginPage() {
           >
             <div className="flex items-center text-red-100">
               <div className="w-2 h-2 bg-red-300 rounded-full mr-3"></div>
-              Live FPL tracking & analysis
+              {t("liveFplTracking")}
             </div>
             <div className="flex items-center text-red-100">
               <div className="w-2 h-2 bg-red-300 rounded-full mr-3"></div>
-              AI-powered team recommendations
+              {t("aiPoweredRecommendations")}
             </div>
             <div className="flex items-center text-red-100">
               <div className="w-2 h-2 bg-red-300 rounded-full mr-3"></div>
-              Advanced statistics & insights
+              {t("advancedStatsAndInsights")}
             </div>
           </motion.div>
         </div>
@@ -194,7 +200,7 @@ export default function LoginPage() {
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
-                Sign In
+                {t("signIn")}
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: -20 }}
@@ -204,7 +210,7 @@ export default function LoginPage() {
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                Access your Fantasy Premier League dashboard
+                {t("loginSubtitle")}
               </motion.p>
             </div>
 
@@ -239,7 +245,7 @@ export default function LoginPage() {
               ) : (
                 <>
                   <FaGoogle className="w-5 h-5 text-red-500" />
-                  <span className="font-medium">Continue with Google</span>
+                  <span className="font-medium">{t("continueWithGoogle")}</span>
                 </>
               )}
             </motion.button>
@@ -256,7 +262,7 @@ export default function LoginPage() {
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                or sign in with email
+                {t("orSignInWithEmail")}
               </span>
               <div
                 className={`flex-1 h-px ${
@@ -287,7 +293,7 @@ export default function LoginPage() {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    placeholder="Email address"
+                    placeholder={t("emailAddress")}
                     className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-300 ${
                       theme === "dark"
                         ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-red-500 focus:bg-gray-700"
@@ -311,7 +317,7 @@ export default function LoginPage() {
                     value={formData.password}
                     onChange={handleInputChange}
                     required
-                    placeholder="Password"
+                    placeholder={t("password")}
                     className={`w-full pl-12 pr-12 py-3 rounded-xl border-2 transition-all duration-300 ${
                       theme === "dark"
                         ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-red-500 focus:bg-gray-700"
@@ -347,7 +353,7 @@ export default function LoginPage() {
                 {isLoading ? (
                   <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin mx-auto" />
                 ) : (
-                  "Sign In"
+                  t("signIn")
                 )}
               </motion.button>
             </motion.form>
@@ -364,12 +370,12 @@ export default function LoginPage() {
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                Dont have an account?{" "}
+                {t("dontHaveAccount")}{" "}
                 <Link
                   href="/signup"
                   className="font-semibold text-red-800 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                 >
-                  Sign up here
+                  {t("signUpHere")}
                 </Link>
               </p>
             </motion.div>

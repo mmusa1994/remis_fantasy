@@ -9,6 +9,10 @@ const isAdminPath = (path: string) => {
   return path.includes("admin") || path.includes("dashboard");
 };
 
+const isLoginPanel = (path: string) => {
+  return path.includes("login") || path.includes("signup");
+};
+
 export default function LayoutContent({
   children,
 }: {
@@ -16,9 +20,17 @@ export default function LayoutContent({
 }) {
   const pathname = usePathname();
   const isAdmin = isAdminPath(pathname);
+  const isLoginPanelBool = isLoginPanel(pathname);
 
   if (isAdmin) {
     return <main>{children}</main>;
+  } else if (isLoginPanelBool) {
+    return (
+      <main>
+        <Navbar />
+        {children}
+      </main>
+    );
   }
 
   return (

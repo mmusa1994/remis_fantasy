@@ -21,6 +21,7 @@ export default function AdminLogin() {
       const result = await signIn("credentials", {
         email,
         password,
+        action: "login",
         redirect: false,
       });
 

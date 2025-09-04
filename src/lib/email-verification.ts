@@ -105,15 +105,20 @@ export async function createEmailVerification(
       return { otp: "", success: false };
     }
 
-    // Clean up old verifications for this email
-    await supabase.from("email_verifications").delete().eq("user_id", email); // We'll use email as temp user_id for pending verifications
+    // Clean up expired verifications (no email column available to scope by email)
+    await supabase
+      .from("email_verifications")
+      .delete()
+      .lt("expires_at", new Date().toISOString());
 
     // Create verification record
-    const { error } = await supabase.from("email_verifications").insert({
-      user_id: email, // Temporary - will be updated when user is created
-      otp,
-      expires_at: expiresAt.toISOString(),
-    });
+    // Note: email_verifications.user_id is a uuid; do not store email there
+    const { error } = await supabase
+      .from("email_verifications")
+      .insert({
+        otp,
+        expires_at: expiresAt.toISOString(),
+      });
 
     if (error) {
       console.error("Error creating verification:", error);
@@ -129,16 +134,18 @@ export async function createEmailVerification(
 
 export async function verifyOTP(email: string, otp: string): Promise<boolean> {
   try {
-    const { data: verification } = await supabase
+    const { data: verifications } = await supabase
       .from("email_verifications")
       .select("*")
-      .eq("user_id", email) // email is used as temp user_id
+      // We cannot filter by email because the table has no email column
       .eq("otp", otp)
       .gt("expires_at", new Date().toISOString())
       .is("verified_at", null)
-      .single();
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-    return !!verification;
+    const verification = Array.isArray(verifications) ? verifications[0] : null;
+    return Boolean(verification);
   } catch (error) {
     console.error("Error verifying OTP:", error);
     return false;

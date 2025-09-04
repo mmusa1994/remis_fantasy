@@ -116,14 +116,17 @@ export const authOptions = {
             return null;
           }
 
-          // Verify OTP
-          const { data: verification } = await supabase
+          // Verify OTP (get the most recent matching record)
+          const { data: verifications } = await supabase
             .from("email_verifications")
             .select("*")
             .eq("otp", credentials.otp)
             .gt("expires_at", new Date().toISOString())
             .is("verified_at", null)
-            .single();
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          const verification = Array.isArray(verifications) ? verifications[0] : null;
 
           if (!verification) {
             throw new Error("Invalid or expired OTP");
