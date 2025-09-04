@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 import { FaShare, FaExpand, FaList, FaExchangeAlt } from "react-icons/fa";
 import { BiFootball } from "react-icons/bi";
 import {
@@ -140,6 +141,7 @@ interface UserTeamData {
 
 export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation("fpl");
   const [currentGameweek, setCurrentGameweek] = useState(4);
   const [currentView, setCurrentView] = useState<ViewMode>("pitch");
   const [userTeamData, setUserTeamData] = useState<UserTeamData | null>(null);
@@ -778,7 +780,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   )}
                 </p>
                 <p className="text-gray-500">
-                  Plan future transfers, chips, subs etc.
+                  {t("teamPlanner.subtitle")}
                 </p>
               </div>
               <div className="text-right">
@@ -788,7 +790,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   } cursor-pointer hover:text-blue-500"`}
                   onClick={() => setShowManagerIdModal(true)}
                 >
-                  ID {currentManagerId} - Click to change
+                  {t("teamPlanner.managerId")} {currentManagerId} - {t("teamPlanner.clickToChange")}
                   {managerIdVerified === false && (
                     <span className="block text-xs text-yellow-600 dark:text-yellow-400">
                       (Unverified - click to retry)
@@ -796,7 +798,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   )}
                 </p>
                 <p className="text-xs text-gray-500">
-                  Overall Rank: #
+                  {t("teamPlanner.overallRank")}: #
                   {userTeamData.manager?.summary_overall_rank?.toLocaleString()}
                 </p>
               </div>
@@ -838,23 +840,23 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             {/* Enhanced Team Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <p className="text-sm text-gray-500">Gameweek</p>
+                <p className="text-sm text-gray-500">{t("teamPlanner.gameweek")}</p>
                 <p className="font-bold text-lg">{currentGameweek}</p>
               </div>
               <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">GW Points</p>
+                <p className="text-sm text-gray-500">{t("teamPlanner.gwPoints")}</p>
                 <p className="font-bold text-lg text-green-600">
                   {userTeamData.team_totals?.total_points_final || 0}
                 </p>
               </div>
               <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">Total Points</p>
+                <p className="text-sm text-gray-500">{t("teamPlanner.totalPoints")}</p>
                 <p className="font-bold text-lg">
                   {userTeamData.manager?.summary_overall_points?.toLocaleString()}
                 </p>
               </div>
               <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">Team Value</p>
+                <p className="text-sm text-gray-500">{t("teamPlanner.teamValue")}</p>
                 <p className="font-bold text-lg">
                   £
                   {((userTeamData.entry_history?.value || 1000) / 10).toFixed(
@@ -864,7 +866,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                 </p>
               </div>
               <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">Bank</p>
+                <p className="text-sm text-gray-500">{t("teamPlanner.bank")}</p>
                 <p className="font-bold text-lg">
                   £{((userTeamData.entry_history?.bank || 0) / 10).toFixed(1)}m
                 </p>
@@ -906,7 +908,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }`}
                       >
                         <Target className="w-4 h-4" />
-                        <span className="text-xs sm:text-sm">Pitch</span>
+                        <span className="text-xs sm:text-sm">{t("teamPlanner.tabs.pitch")}</span>
                       </button>
                       <button
                         onClick={() => {
@@ -923,7 +925,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }`}
                       >
                         <BarChart3 className="w-4 h-4" />
-                        <span className="text-xs sm:text-sm">Analytics</span>
+                        <span className="text-xs sm:text-sm">{t("teamPlanner.tabs.analytics")}</span>
                       </button>
                     </div>
                   </div>
@@ -939,7 +941,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       }`}
                     >
                       <FaExchangeAlt className="w-4 h-4" />
-                      <span className="hidden sm:inline">Transfers</span>
+                      <span className="hidden sm:inline">{t("teamPlanner.tabs.transfers")}</span>
                     </button>
                     <button className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                       <FaShare className="w-4 h-4" />
@@ -1212,13 +1214,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               <div className="mt-2 bg-theme-card border-t border-gray-200 dark:border-gray-700">
                 <div className="p-4 lg:p-6">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
-                    <h3 className="text-lg font-semibold">Transfer Market</h3>
+                    <h3 className="text-lg font-semibold">{t("teamPlanner.transferMarket.title")}</h3>
                     <div className="flex items-center space-x-2 w-full sm:w-auto">
                       <div className="relative flex-1 sm:flex-none">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <input
                           type="text"
-                          placeholder="Search..."
+                          placeholder={t("teamPlanner.transferMarket.search")}
                           value={filters.search}
                           onChange={(e) =>
                             setFilters((prev) => ({
@@ -1238,7 +1240,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }`}
                       >
                         <Filter className="w-4 h-4" />
-                        <span className="hidden sm:inline">Filters</span>
+                        <span className="hidden sm:inline">{t("teamPlanner.transferMarket.filters")}</span>
                       </button>
                     </div>
                   </div>
@@ -1262,13 +1264,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     {/* Table Header */}
                     <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
                       <div className="grid grid-cols-9 gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        <div className="col-span-3">Player</div>
-                        <div className="col-span-1">Pos</div>
-                        <div className="col-span-1">Price</div>
-                        <div className="col-span-1">Points</div>
-                        <div className="col-span-1">Form</div>
-                        <div className="col-span-1">Own%</div>
-                        <div className="col-span-1">Status</div>
+                        <div className="col-span-3">{t("teamPlanner.transferMarket.player")}</div>
+                        <div className="col-span-1">{t("teamPlanner.transferMarket.pos")}</div>
+                        <div className="col-span-1">{t("teamPlanner.transferMarket.price")}</div>
+                        <div className="col-span-1">{t("teamPlanner.transferMarket.points")}</div>
+                        <div className="col-span-1">{t("teamPlanner.transferMarket.form")}</div>
+                        <div className="col-span-1">{t("teamPlanner.transferMarket.ownership")}</div>
+                        <div className="col-span-1">{t("teamPlanner.transferMarket.status")}</div>
                       </div>
                     </div>
 
@@ -1407,12 +1409,12 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 </span>
                                 {player.ownership_trend === "rising" && (
                                   <span className="text-xs text-blue-500">
-                                    ↗ Rising
+                                    ↗ {t("teamPlanner.transferMarket.rising")}
                                   </span>
                                 )}
                                 {player.ownership_trend === "falling" && (
                                   <span className="text-xs text-purple-500">
-                                    ↘ Falling
+                                    ↘ {t("teamPlanner.transferMarket.falling")}
                                   </span>
                                 )}
                               </div>
@@ -1449,8 +1451,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Showing {Math.min(100, filteredPlayers.length)} of{" "}
-                          {filteredPlayers.length} players
+                          {t("teamPlanner.transferMarket.showingPlayers", {
+                            current: Math.min(100, filteredPlayers.length),
+                            total: filteredPlayers.length
+                          })}
                         </span>
                         {uiState.compareMode && (
                           <span className="text-sm text-blue-600 dark:text-blue-400">

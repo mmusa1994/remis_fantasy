@@ -9,13 +9,11 @@ import { HiChatBubbleLeftEllipsis, HiKey } from "react-icons/hi2";
 import { BiSend, BiUserPlus } from "react-icons/bi";
 import { FaUser } from "react-icons/fa";
 import { SiCodemagic } from "react-icons/si";
-import { MdTransferWithinAStation } from "react-icons/md";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingCard from "@/components/shared/LoadingCard";
 import Link from "next/link";
 import ManagerIdModal from "@/components/modals/ManagerIdModal";
-import FantasyPlanner from "@/components/fpl/FantasyPlanner";
 
 interface Message {
   role: "user" | "assistant";
@@ -47,7 +45,6 @@ export default function AITeamAnalysis() {
   const [showManagerIdModal, setShowManagerIdModal] = useState(false);
   const [managerId, setManagerId] = useState<string | null>(null);
   const [managerIdLoading, setManagerIdLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chat" | "planner">("chat");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -496,46 +493,10 @@ export default function AITeamAnalysis() {
             {t("subtitle")}
           </p>
 
-          {/* Tab Navigation */}
-          <div className="flex justify-center mb-8">
-            <div
-              className={`flex p-1 rounded-xl ${
-                theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-              }`}
-            >
-              <button
-                onClick={() => setActiveTab("chat")}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === "chat"
-                    ? "bg-purple-600 text-white shadow-lg"
-                    : theme === "dark"
-                    ? "text-gray-300 hover:text-white hover:bg-gray-700"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-200"
-                }`}
-              >
-                <HiChatBubbleLeftEllipsis className="w-5 h-5" />
-                Chat with Guru
-              </button>
-              <button
-                onClick={() => setActiveTab("planner")}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === "planner"
-                    ? "bg-green-600 text-white shadow-lg"
-                    : theme === "dark"
-                    ? "text-gray-300 hover:text-white hover:bg-gray-700"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-200"
-                }`}
-              >
-                <MdTransferWithinAStation className="w-5 h-5" />
-                Transfer Planner
-              </button>
-            </div>
-          </div>
         </div>
 
-        {/* Tab Content */}
-        {activeTab === "chat" ? (
-          <div className="max-w-4xl mx-auto">
+        {/* Chat Content */}
+        <div className="max-w-4xl mx-auto">
             {/* Beautiful Usage Card */}
             {!userApiKey && (
               <div
@@ -1173,9 +1134,6 @@ export default function AITeamAnalysis() {
               )}
             </AnimatePresence>
           </div>
-        ) : (
-          <FantasyPlanner managerId={managerId} />
-        )}
 
         {/* Manager ID Modal */}
         <ManagerIdModal

@@ -26,6 +26,12 @@ export default function PremierLeagueLayout({
       showOnMobile: true
     },
     {
+      name: t("fantasyCommand"),
+      href: "/premier-league/team-planner",
+      icon: "TbPresentationAnalytics",
+      showOnMobile: true
+    },
+    {
       name: t("aiTeamAnalysis"),
       href: "/premier-league/ai-team-analysis",
       icon: "FaMagic",

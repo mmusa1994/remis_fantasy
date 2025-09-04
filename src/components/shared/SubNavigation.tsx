@@ -15,7 +15,7 @@ import {
   TrendingUp,
   Newspaper,
 } from "lucide-react";
-import { TbHome2 } from "react-icons/tb";
+import { TbHome2, TbPresentationAnalytics } from "react-icons/tb";
 import { GrDiamond } from "react-icons/gr";
 import { FaMagic } from "react-icons/fa";
 // Unused - commenting out to avoid ESLint warning
@@ -57,6 +57,7 @@ const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } =
     TbHome2,
     BarChart3,
     Activity,
+    TbPresentationAnalytics,
     GrDiamond,
     Trophy,
     UserPlus,
