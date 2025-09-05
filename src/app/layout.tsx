@@ -11,13 +11,19 @@ import JsonLd, {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://remis-fantasy.com"),
-  title:
-    "REMIS Fantasy - Best FPL Analytics Platform | Live Mini League Tables, Team News, Differentials & Advanced Statistics",
+  title: {
+    default:
+      "REMIS Fantasy – Best FPL Analytics Platform | Live Mini League Tables, Team News, Differentials & Advanced Statistics",
+    template: "%s | REMIS Fantasy",
+  },
   description:
     "REMIS Fantasy - The ultimate FPL analytics platform with live mini league tables, AI-powered team recommendations, advanced player statistics, team news, best differentials, gameweek analysis, captain picks, transfer suggestions, fixture difficulty ratings, bonus points prediction, price change alerts, and comprehensive Premier League data. Join thousands of FPL managers using our cutting-edge tools to dominate their leagues!",
   keywords: [
     "REMIS Fantasy",
     "Remis Fantasy", 
+    "REMIS FPL",
+    "Remis FPL",
+    "remis fpl",
     "remis-fantasy.com",
     "FPL Live",
     "Fantasy Premier League Live",

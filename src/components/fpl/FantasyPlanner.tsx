@@ -8,13 +8,11 @@ import { useTranslation } from "react-i18next";
 import {
   FaShare,
   FaExpand,
-  FaList,
   FaExchangeAlt,
   FaRobot,
   FaTimes,
   FaPaperPlane,
 } from "react-icons/fa";
-import { BiFootball } from "react-icons/bi";
 import {
   Target,
   BarChart3,

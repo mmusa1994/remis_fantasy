@@ -1,0 +1,82 @@
+{
+  "welcome": {
+    "title": "Welcome to Fantasy Command Center!",
+    "subtitle": "Your ultimate FPL companion",
+    "description": "Let us guide you through the most powerful fantasy football analysis platform. Get personalized insights, AI-powered recommendations, and live tracking tools.",
+    "getStarted": "Let's Get Started"
+  },
+  "managerIdStep": {
+    "title": "Set Your Manager ID",
+    "subtitle": "For personalized FPL analysis",
+    "whyNeeded": "Why do I need Manager ID?",
+    "whyDescription": "To analyze your team, I need access to your players, captain, and rankings.",
+    "placeholder": "e.g., 1234567",
+    "howToFind": "How to find Manager ID?",
+    "howToFindDescription": "You can find your Manager ID on your FPL page in the URL after /entry/",
+    "urlExample": "https://fantasy.premierleague.com/entry/YOUR_ID/event/",
+    "cancel": "Skip for now",
+    "save": "Save ID",
+    "tip": "💡 Manager ID can be found on your FPL page in URL after /entry/. You can change it later in profile settings.",
+    "success": "Manager ID saved successfully!",
+    "error": "Please enter a valid Manager ID"
+  },
+  "featuresStep": {
+    "title": "Explore Key Features",
+    "subtitle": "Everything you need for FPL success",
+    "features": {
+      "aiAnalysis": {
+        "title": "🤖 AI Team Analysis",
+        "description": "Get personalized team recommendations and transfer suggestions powered by advanced AI"
+      },
+      "liveTracking": {
+        "title": "📊 FPL Live Tracking",
+        "description": "Real-time gameweek tracking with live scores, captain choices, and league positions"
+      },
+      "transfers": {
+        "title": "🔄 Transfer Planner",
+        "description": "Plan your transfers with pitch view, list view, and price change predictions"
+      },
+      "widgets": {
+        "title": "📈 Performance Widgets",
+        "description": "Track your performance with various widgets including differentials, team news, and rankings"
+      }
+    },
+    "next": "Continue Tour"
+  },
+  "navigationStep": {
+    "title": "Navigate Like a Pro",
+    "subtitle": "Master the interface",
+    "tips": {
+      "commandCenter": {
+        "title": "Fantasy Command Center",
+        "description": "Your main dashboard with all tools in one place"
+      },
+      "quickAccess": {
+        "title": "Profile Dropdown",
+        "description": "Quick access to your Manager ID, billing, and AI analysis"
+      },
+      "mobileReady": {
+        "title": "Mobile Optimized",
+        "description": "Full functionality on all devices - manage your team anywhere"
+      }
+    },
+    "next": "Almost Done"
+  },
+  "completeStep": {
+    "title": "You're All Set!",
+    "subtitle": "Ready to dominate FPL",
+    "message": "You now have access to the most comprehensive FPL analysis platform. Start by exploring your personalized dashboard or get AI recommendations for your next transfer.",
+    "actions": {
+      "dashboard": "Go to Dashboard",
+      "aiAnalysis": "Try AI Analysis"
+    }
+  },
+  "navigation": {
+    "skip": "Skip Tour",
+    "dontShowAgain": "Don't show again",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "stepOf": "Step {{current}} of {{total}}"
+  }
+}

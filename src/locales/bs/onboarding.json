@@ -1,0 +1,82 @@
+{
+  "welcome": {
+    "title": "Dobro došli u Fantasy Command Center!",
+    "subtitle": "Vaš ultimatni FPL saputnik",
+    "description": "Dozvolite da vas provedemo kroz najmoćniju platformu za analizu fantasy footballa. Dobijte personalizirane uvide, AI preporuke i alate za praćenje uživo.",
+    "getStarted": "Počnimo"
+  },
+  "managerIdStep": {
+    "title": "Postavite Vaš Manager ID",
+    "subtitle": "Za personaliziranu FPL analizu",
+    "whyNeeded": "Zašto trebam Manager ID?",
+    "whyDescription": "Da analiziram vaš tim, potreban mi je pristup vašim igračima, kapitenu i rangovima.",
+    "placeholder": "npr. 1234567",
+    "howToFind": "Kako naći Manager ID?",
+    "howToFindDescription": "Manager ID možete naći na svojoj FPL stranici u URL-u nakon /entry/",
+    "urlExample": "https://fantasy.premierleague.com/entry/VAŠ_ID/event/",
+    "cancel": "Preskoči za sada",
+    "save": "Spremi ID",
+    "tip": "💡 Manager ID možete naći na svojoj FPL stranici u URL-u nakon /entry/. Možete ga promijeniti kasnije u postavkama profila.",
+    "success": "Manager ID uspješno spremljen!",
+    "error": "Molimo unesite važeći Manager ID"
+  },
+  "featuresStep": {
+    "title": "Istražite Ključne Funkcije",
+    "subtitle": "Sve što vam treba za FPL uspjeh",
+    "features": {
+      "aiAnalysis": {
+        "title": "🤖 AI Analiza Tima",
+        "description": "Dobijte personalizirane preporuke za tim i prijedloge transfera pokretane naprednom AI"
+      },
+      "liveTracking": {
+        "title": "📊 FPL Praćenje Uživo",
+        "description": "Praćenje gameweek-a u realnom vremenu sa live rezultatima, izborima kapetana i pozicijama u ligi"
+      },
+      "transfers": {
+        "title": "🔄 Planer Transfera",
+        "description": "Planirajte transfere sa pogledom na teren, pogledom na listu i predikcijama promjena cijena"
+      },
+      "widgets": {
+        "title": "📈 Widget-i za Performanse",
+        "description": "Pratite svoje performanse sa različitim widget-ima uključujući diferent ijale, vijesti o timu i rangove"
+      }
+    },
+    "next": "Nastavi Tour"
+  },
+  "navigationStep": {
+    "title": "Navigirajte Kao Profesionalac",
+    "subtitle": "Osvojite interfejs",
+    "tips": {
+      "commandCenter": {
+        "title": "Fantasy Command Center",
+        "description": "Vaša glavna kontrolna tabla sa svim alatima na jednom mjestu"
+      },
+      "quickAccess": {
+        "title": "Dropdown Profila",
+        "description": "Brz pristup vašem Manager ID-u, naplati i AI analizi"
+      },
+      "mobileReady": {
+        "title": "Optimizirano za Mobilne",
+        "description": "Puna funkcionalnost na svim uređajima - upravljajte timom bilo gdje"
+      }
+    },
+    "next": "Skoro Završeno"
+  },
+  "completeStep": {
+    "title": "Sve je Spremno! 🎉",
+    "subtitle": "Spremni za dominaciju u FPL-u",
+    "message": "Sada imate pristup najsveobuhvatnijoj FPL analitičkoj platformi. Počnite istraživanjem svoje personalizirane kontrolne table ili dobijte AI preporuke za svoj sljedeći transfer.",
+    "actions": {
+      "dashboard": "Idi na Kontrolnu Tablu",
+      "aiAnalysis": "Probaj AI Analizu"
+    }
+  },
+  "navigation": {
+    "skip": "Preskoči Tour",
+    "dontShowAgain": "Ne prikazuj više",
+    "back": "Nazad",
+    "next": "Sljedeći",
+    "close": "Zatvori",
+    "stepOf": "Korak {{current}} od {{total}}"
+  }
+}

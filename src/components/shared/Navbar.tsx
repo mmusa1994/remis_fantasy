@@ -430,19 +430,20 @@ const Navbar = React.memo(function Navbar() {
       <div className="w-full px-4 sm:px-6 lg:px-8 py-2 relative z-10">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo - Left */}
-          <motion.div
-            className="flex items-center"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
+          <Link href="/">
             <motion.div
-              className="relative w-16 h-16 transition-all duration-500"
-              whileHover={{
-                scale: 1.15,
-                transition: { duration: 0.3, ease: "easeOut" },
-              }}
+              className="flex items-center cursor-pointer"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
             >
+              <motion.div
+                className="relative w-16 h-16 transition-all duration-500"
+                whileHover={{
+                  scale: 1.15,
+                  transition: { duration: 0.3, ease: "easeOut" },
+                }}
+              >
               {/* Sophisticated glow effect */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-br from-red-900/40 via-gray-600/30 to-red-800/40 force-circle blur-xl"
@@ -486,8 +487,9 @@ const Navbar = React.memo(function Navbar() {
                   ease: "linear",
                 }}
               />
+              </motion.div>
             </motion.div>
-          </motion.div>
+          </Link>
 
           {/* Navigation Links - Right */}
           <div className="hidden md:flex items-center space-x-4 lg:space-x-6">

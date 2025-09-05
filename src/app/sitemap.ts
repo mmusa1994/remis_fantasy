@@ -9,6 +9,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
+      url: "https://remis-fantasy.com/premier-league/tabele",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
       url: "https://remis-fantasy.com/premier-league",
       lastModified: new Date(),
       changeFrequency: "daily",
