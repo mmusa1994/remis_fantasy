@@ -16,6 +16,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { useSession, signIn } from "next-auth/react";
 import { safeLogout } from "@/lib/session-utils";
+import { Edit } from "lucide-react";
 
 interface NavItem {
   name: string;
@@ -46,6 +47,11 @@ const Navbar = React.memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [managerData, setManagerData] = useState<{
+    managerId: string | null;
+    isVerified: boolean;
+    verificationNote: string | null;
+  } | null>(null);
   const { scrollY } = useScroll();
   const { theme } = useTheme();
   const { t, ready } = useTranslation("navigation");
@@ -75,6 +81,26 @@ const Navbar = React.memo(function Navbar() {
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [userMenuOpen]);
+
+  // Fetch manager data when user is authenticated
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetch('/api/user/manager-id')
+        .then(res => res.json())
+        .then(data => {
+          if (!data.error) {
+            setManagerData({
+              managerId: data.managerId,
+              isVerified: data.isVerified,
+              verificationNote: data.verificationNote
+            });
+          }
+        })
+        .catch(console.error);
+    } else {
+      setManagerData(null);
+    }
+  }, [session?.user?.id]);
 
   // Wait for i18n to be ready
   if (!ready) {
@@ -227,6 +253,43 @@ const Navbar = React.memo(function Navbar() {
                     {t('aiAnalysis')}
                   </div>
                 </Link>
+
+                {/* Manager ID Section */}
+                <div className={`px-4 py-2 text-sm ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-medium">Manager ID:</span>
+                      <span className={`text-xs font-mono ${
+                        managerData?.isVerified === false 
+                          ? (theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600') 
+                          : (theme === 'dark' ? 'text-green-400' : 'text-green-600')
+                      } truncate`}>
+                        {managerData?.managerId || 'Not set'}
+                      </span>
+                    </div>
+                    <Link 
+                      href="/profile?tab=manager-id" 
+                      onClick={() => setUserMenuOpen(false)}
+                      className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
+                        theme === 'dark' 
+                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`}
+                    >
+                      <Edit className="w-3 h-3" />
+                      Edit
+                    </Link>
+                  </div>
+                  {managerData?.verificationNote && (
+                    <p className={`text-xs mt-1 ${
+                      theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'
+                    }`}>
+                      {managerData.verificationNote}
+                    </p>
+                  )}
+                </div>
 
                 <div className={`border-t my-2 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
                 

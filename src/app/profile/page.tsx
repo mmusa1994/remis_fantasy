@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { safeLogout } from "@/lib/session-utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
@@ -17,6 +18,7 @@ import {
 } from "react-icons/fa";
 import { BiEdit, BiSave, BiX } from "react-icons/bi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { MdVerified, MdWarning } from "react-icons/md";
 import { TbTaxEuro } from "react-icons/tb";
 import LoadingCard from "@/components/shared/LoadingCard";
 import PhotoUpload from "@/components/shared/PhotoUpload";
@@ -51,6 +53,7 @@ export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const { theme } = useTheme();
   const { t, ready } = useTranslation("profile");
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -59,6 +62,20 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [showLoginRedirect, setShowLoginRedirect] = useState(false);
+  
+  // Manager ID states
+  const [managerData, setManagerData] = useState<{
+    managerId: string | null;
+    isVerified: boolean;
+    verificationNote: string | null;
+  } | null>(null);
+  const [isEditingManagerId, setIsEditingManagerId] = useState(false);
+  const [editManagerId, setEditManagerId] = useState("");
+  const [isSavingManagerId, setIsSavingManagerId] = useState(false);
+  const [managerIdError, setManagerIdError] = useState("");
+  
+  // Check if we should focus on manager ID section
+  const shouldFocusManagerId = searchParams?.get('tab') === 'manager-id';
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -66,9 +83,17 @@ export default function ProfilePage() {
     } else if (status === "authenticated" && session?.user) {
       fetchProfile();
       fetchUsage();
+      fetchManagerData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session]);
+
+  // Auto-focus manager ID editing when coming from navbar
+  useEffect(() => {
+    if (shouldFocusManagerId && managerData !== null && !isEditingManagerId) {
+      setIsEditingManagerId(true);
+    }
+  }, [shouldFocusManagerId, managerData, isEditingManagerId]);
 
   const fetchProfile = async () => {
     try {
@@ -109,6 +134,25 @@ export default function ProfilePage() {
     }
   };
 
+  const fetchManagerData = async () => {
+    try {
+      const response = await fetch("/api/user/manager-id");
+      if (response.ok) {
+        const data = await response.json();
+        if (!data.error) {
+          setManagerData({
+            managerId: data.managerId,
+            isVerified: data.isVerified,
+            verificationNote: data.verificationNote
+          });
+          setEditManagerId(data.managerId || "");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch manager data:", error);
+    }
+  };
+
   const handleSaveName = async () => {
     if (!editName.trim()) return;
 
@@ -143,6 +187,46 @@ export default function ProfilePage() {
       setError(t("failedToUpdateProfile"));
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveManagerId = async () => {
+    if (!editManagerId.trim()) {
+      setManagerIdError("Manager ID cannot be empty");
+      return;
+    }
+
+    setIsSavingManagerId(true);
+    setManagerIdError("");
+
+    try {
+      const response = await fetch("/api/user/manager-id", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          managerId: editManagerId.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setManagerData({
+          managerId: data.managerId,
+          isVerified: data.isVerified,
+          verificationNote: data.verificationNote
+        });
+        setIsEditingManagerId(false);
+        setManagerIdError("");
+      } else {
+        setManagerIdError(data.error || "Failed to update Manager ID");
+      }
+    } catch {
+      setManagerIdError("Failed to update Manager ID");
+    } finally {
+      setIsSavingManagerId(false);
     }
   };
 
@@ -410,6 +494,107 @@ export default function ProfilePage() {
                         </>
                       )}
                     </div>
+                  </div>
+
+                  {/* Manager ID */}
+                  <div className="mb-4">
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      FPL Manager ID
+                    </label>
+                    {isEditingManagerId ? (
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <input
+                            type="text"
+                            value={editManagerId}
+                            onChange={(e) => setEditManagerId(e.target.value)}
+                            placeholder="e.g., 123456"
+                            className={`flex-1 min-w-0 px-3 py-2 rounded-lg border text-sm ${
+                              theme === "dark"
+                                ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                                : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                            } focus:ring-2 focus:ring-red-800 focus:border-transparent`}
+                          />
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              onClick={handleSaveManagerId}
+                              disabled={isSavingManagerId || !editManagerId.trim()}
+                              className="p-2 text-green-600 hover:text-green-700 disabled:opacity-50"
+                              title="Save"
+                            >
+                              {isSavingManagerId ? (
+                                <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <BiSave className="w-4 h-4" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsEditingManagerId(false);
+                                setEditManagerId(managerData?.managerId || "");
+                                setManagerIdError("");
+                              }}
+                              className="p-2 text-gray-600 hover:text-gray-700"
+                              title="Cancel"
+                            >
+                              <BiX className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <p className={`text-xs leading-relaxed ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}>
+                          Find your ID in your FPL URL:<br />
+                          <span className="font-mono text-xs">fantasy.premierleague.com/entry/YOUR_ID/event/</span>
+                        </p>
+                        {managerIdError && (
+                          <p className="text-xs text-red-600 dark:text-red-400">
+                            {managerIdError}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className={`font-mono text-sm ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            {managerData?.managerId || "Not set"}
+                          </span>
+                          {managerData?.managerId && (
+                            <>
+                              {managerData.isVerified ? (
+                                <MdVerified className="w-4 h-4 text-green-500" title="Verified" />
+                              ) : (
+                                <MdWarning className="w-4 h-4 text-yellow-500" title="Not verified" />
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => setIsEditingManagerId(true)}
+                          className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0"
+                          title="Edit Manager ID"
+                        >
+                          <BiEdit className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    {managerData?.verificationNote && !isEditingManagerId && (
+                      <div className={`mt-2 p-2 rounded text-xs ${
+                        theme === "dark" 
+                          ? "bg-yellow-900/20 text-yellow-400" 
+                          : "bg-yellow-50 text-yellow-700"
+                      }`}>
+                        {managerData.verificationNote}
+                      </div>
+                    )}
                   </div>
 
                   {/* Member Since */}
