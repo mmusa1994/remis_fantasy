@@ -9,7 +9,7 @@
     "deadline": "Registration Deadline: August 15, 2025",
     "maxParticipants": "Limited to 50 participants",
     "registerTitle": "REGISTRATION 2025/26",
-    "prizesSummary": "🏆 CHAMPIONS LEAGUE PRIZES 2025/26 🏆",
+    "prizesSummary": "CHAMPIONS LEAGUE PRIZES 2025/26",
     "entryFeeLabel": "Entry Fee:"
   },
   "form": {
@@ -89,25 +89,25 @@
       "title": "1ST PLACE",
       "subtitle": "Champions League Champion",
       "description": "The ultimate Champions League Fantasy champion receives the biggest prize",
-      "amount": "120 KM"
+      "amount": "50%"
     },
     "secondPlace": {
       "title": "2ND PLACE",
       "subtitle": "Champions League Runner-Up",
       "description": "An impressive second place finish deserves recognition",
-      "amount": "80 KM"
+      "amount": "30%"
     },
     "thirdPlace": {
       "title": "3RD PLACE",
       "subtitle": "Champions League Bronze Medal",
       "description": "A podium finish in the Champions League is a remarkable achievement",
-      "amount": "60 KM"
+      "amount": "20%"
     },
-    "totalPrizePool": "260 KM Total Prize Pool"
+    "totalPrizePool": " 100% Total Prize Pool"
   },
   "features": [
     "15 KM/ 8 EUR Entry Fee",
-    "260 KM Total Prize Pool",
+    "100% Total Prize Pool",
     "Limited to 50 Participants",
     "Champions League Teams Only",
     "Weekly Prizes Available",

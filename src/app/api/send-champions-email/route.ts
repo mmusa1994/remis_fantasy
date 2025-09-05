@@ -83,8 +83,8 @@ export async function POST(request: NextRequest) {
               <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 10px; margin: 25px 0; text-align: left;">
                 <h4 style="color: #fbbf24; margin-top: 0;">📋 Podaci o registraciji:</h4>
                 <p><strong>Ime i prezime:</strong> ${userData.first_name} ${
-                  userData.last_name
-                }</p>
+          userData.last_name
+        }</p>
                 <p><strong>Email:</strong> ${userData.email}</p>
                 <p><strong>Telefon:</strong> ${userData.phone}</p>
                 <p><strong>Način plaćanja:</strong> ${
@@ -227,18 +227,18 @@ export async function POST(request: NextRequest) {
                 <h4 style="color: #fbbf24; margin-top: 0; font-size: 18px;">🔑 KODOVI ZA LIGU:</h4>
                 <div style="background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 10px; margin: 15px 0;">
                   <p style="margin: 5px 0; font-family: monospace; font-size: 16px;">
-                    <strong>Liga ID:</strong> <span style="color: #22c55e;">tbh7vp</span>
+                    <strong>REMIS CL Paid:</strong> <span style="color: #22c55e;">D2hqC1</span>
                   </p>
                 </div>
               </div>
               
               <div style="background: rgba(34, 197, 94, 0.2); padding: 20px; border-radius: 10px; margin: 25px 0; border-left: 4px solid #22c55e; text-align: left;">
                 <h4 style="color: #22c55e; margin-top: 0;">📱 Kako da se priključite:</h4>
-                <p style="margin: 5px 0;">1. Idite na <strong>fantasy.premierleague.com</strong></p>
+                <p style="margin: 5px 0;">1. Idite na <strong>fhttps://gaming.uefa.com/en/uclfantasy/leagues</strong></p>
                 <p style="margin: 5px 0;">2. Napravite vaš tim (ako već nemate)</p>
                 <p style="margin: 5px 0;">3. Idite na <strong>"Leagues & Cups"</strong></p>
                 <p style="margin: 5px 0;">4. Kliknite <strong>"Join private league"</strong></p>
-                <p style="margin: 5px 0;">5. Unesite kod: <strong style="color: #fbbf24;">tbh7vp</strong></p>
+                <p style="margin: 5px 0;">5. Unesite kod: <strong style="color: #fbbf24;">D2hqC1</strong></p>
                 <p style="margin: 5px 0;">6. Potvrdite pristup ligi! 🚀</p>
               </div>
               
@@ -251,15 +251,16 @@ export async function POST(request: NextRequest) {
               
               <div style="background: rgba(34, 197, 94, 0.2); padding: 20px; border-radius: 10px; margin: 25px 0;">
                 <h4 style="color: #22c55e; margin-top: 0;">🏆 PODSETNIK NAGRADA:</h4>
-                <p>🥇 <strong>1. mesto:</strong> 120 KM</p>
-                <p>🥈 <strong>2. mesto:</strong> 80 KM</p>
-                <p>🥉 <strong>3. mesto:</strong> 60 KM</p>
+                <p>🥇 <strong>1. mesto:</strong> 50%</p>
+                <p>🥈 <strong>2. mesto:</strong> 30%</p>
+                <p>🥉 <strong>3. mesto:</strong> 20%</p>
               </div>
               
               <div style="margin-top: 30px;">
                 <p style="font-size: 14px; opacity: 0.9;">
                   Za pitanja ili pomoć kontaktirajte: <strong>muhamed.musa1994@gmail.com</strong>
                 </p>
+                <p>ili remis_fantasy DM na instagramu</p>
                 <p style="font-size: 12px; opacity: 0.7; margin-top: 20px;">
                   REMIS Fantasy - Champions League Season 2025/26<br>
                   Srećno u novoj sezoni! 🍀

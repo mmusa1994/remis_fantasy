@@ -170,30 +170,49 @@ async function createOrUpdateUserUsage(
   queries_used: number, 
   queries_limit: number
 ): Promise<void> {
+  console.log('🔧 createOrUpdateUserUsage called:', {
+    userId,
+    queries_used,
+    queries_limit
+  });
   try {
     const currentPeriodStart = getWeekStart();
     const currentPeriodEnd = getWeekEnd();
 
+    const updateData = {
+      user_id: userId,
+      queries_used,
+      queries_limit,
+      period_start: currentPeriodStart.toISOString(),
+      period_end: currentPeriodEnd.toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    console.log('💾 About to upsert data:', updateData);
+
     // Use upsert to create or update the record
-    const { error } = await supabaseServer
+    const { data, error } = await supabaseServer
       .from('user_ai_usage')
-      .upsert({
-        user_id: userId,
-        queries_used,
-        queries_limit,
-        period_start: currentPeriodStart.toISOString(),
-        period_end: currentPeriodEnd.toISOString(),
-        updated_at: new Date().toISOString(),
-      }, {
+      .upsert(updateData, {
         onConflict: 'user_id,period_start',
         ignoreDuplicates: false
-      });
+      })
+      .select('*');
 
     if (error) {
-      console.error('Error updating user usage:', error);
+      console.error('❌ Supabase upsert error:', error);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error details:', error.details);
+    } else {
+      console.log('✅ Supabase upsert successful, returned data:', data);
     }
   } catch (error) {
-    console.error('Error in createOrUpdateUserUsage:', error);
+    console.error('❌ Exception in createOrUpdateUserUsage:', error);
+    console.error('❌ Exception details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
   }
 }
 
@@ -238,22 +257,45 @@ export async function checkUserRateLimit(userId: string): Promise<{
 }
 
 export async function incrementUserUsage(userId: string): Promise<void> {
+  console.log('🔄 incrementUserUsage called for userId:', userId);
   try {
     const userUsage = await getUserUsageFromDB(userId);
     const subscriptionLimit = await getUserSubscriptionLimits(userId);
+    
+    console.log('📊 Current usage data:', {
+      userId,
+      currentUsage: userUsage?.queries_used || 0,
+      limit: userUsage?.queries_limit || subscriptionLimit,
+      subscriptionLimit,
+      hasExistingUsage: !!userUsage
+    });
     
     const currentPeriodStart = getWeekStart();
 
     if (!userUsage || new Date(userUsage.period_start) < currentPeriodStart) {
       // Create new usage period with 1 query used
+      console.log('✨ Creating NEW usage period with 1 query');
       await createOrUpdateUserUsage(userId, 1, subscriptionLimit);
+      console.log('✅ NEW usage period created');
     } else {
       // Increment existing usage
       const newCount = userUsage.queries_used + 1;
+      console.log('⬆️ Incrementing existing usage:', {
+        oldCount: userUsage.queries_used,
+        newCount,
+        limit: userUsage.queries_limit
+      });
       await createOrUpdateUserUsage(userId, newCount, userUsage.queries_limit);
+      console.log('✅ Usage incremented successfully');
     }
+    console.log('🎉 incrementUserUsage completed successfully');
   } catch (error) {
-    console.error('Error incrementing usage:', error);
+    console.error('❌ Error incrementing usage:', error);
+    console.error('❌ Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      userId
+    });
   }
 }
 

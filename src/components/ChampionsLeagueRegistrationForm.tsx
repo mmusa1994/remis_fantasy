@@ -7,6 +7,8 @@ import Toast from "./shared/Toast";
 import { supabase } from "@/lib/supabase";
 import ReCAPTCHA from "react-google-recaptcha";
 import { CheckCircle, AlertCircle, Trophy, Star, Crown } from "lucide-react";
+import Image from "next/image";
+import ClCover from "../../public/images/cl-cover.png";
 
 interface FormData {
   first_name: string;
@@ -295,11 +297,16 @@ const ChampionsLeagueRegistrationForm = React.memo(
 
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-6xl">
             {/* Champions League Header */}
-            <div className="text-center mb-8 xs:mb-10 sm:mb-12 animate-fade-in-up">
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <Crown className="w-8 h-8 md:w-12 md:h-12 text-blue-500" />
-                <Trophy className="w-10 h-10 md:w-16 md:h-16 text-purple-500" />
-                <Star className="w-8 h-8 md:w-12 md:h-12 text-blue-500" />
+            <div className="flex justify-center items-center flex-col mb-8 xs:mb-10 sm:mb-12 animate-fade-in-up">
+              <div className="flex items-center justify-center gap-4 mb-6 border drop-shadow-xl shadow-blue-500 w-max">
+                <Image
+                  src={ClCover}
+                  alt="cl-cover"
+                  priority
+                  height={250}
+                  width={250}
+                  quality={100}
+                />
               </div>
 
               <h2 className="text-2xl xs:text-3xl md:text-5xl lg:text-6xl font-black mb-3 xs:mb-4 text-balance leading-tight font-russo animate-scale-in animate-delay-200">
@@ -314,7 +321,7 @@ const ChampionsLeagueRegistrationForm = React.memo(
 
               <p className="text-theme-text-secondary text-xs xs:text-sm md:text-base lg:text-lg w-full max-w-3xl mx-auto leading-relaxed font-medium theme-transition animate-fade-in animate-delay-500 px-2">
                 {t("champions:registration.description")}{" "}
-                <span className="font-bold text-blue-500">260 KM</span>.
+                <span className="font-bold text-blue-500">100%</span>.
               </p>
             </div>
 

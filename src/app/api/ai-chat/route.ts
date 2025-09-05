@@ -580,7 +580,25 @@ Odgovori na pitanje koristeći ove podatke.`,
 
     if (!userApiKey && response !== "No answer.") {
       const userId = session?.user?.id || (await getUserFromRequest(req));
-      if (userId) await incrementUserUsage(userId);
+      console.log('🎯 About to increment usage:', {
+        hasUserApiKey: !!userApiKey,
+        responseIsNotEmpty: response !== "No answer.",
+        userId,
+        sessionUserId: session?.user?.id
+      });
+      if (userId) {
+        console.log('✅ Calling incrementUserUsage for userId:', userId);
+        await incrementUserUsage(userId);
+        console.log('✅ incrementUserUsage call completed');
+      } else {
+        console.log('❌ No userId found - cannot increment usage');
+      }
+    } else {
+      console.log('⏭️ Skipping usage increment:', {
+        hasUserApiKey: !!userApiKey,
+        responseIsNotEmpty: response !== "No answer.",
+        reason: userApiKey ? 'Using user API key' : 'Empty response'
+      });
     }
 
     return NextResponse.json({ response });
