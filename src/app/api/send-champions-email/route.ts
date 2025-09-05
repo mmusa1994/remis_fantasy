@@ -101,9 +101,9 @@ export async function POST(request: NextRequest) {
               
               <div style="background: rgba(34, 197, 94, 0.2); padding: 20px; border-radius: 10px; margin: 25px 0; border-left: 4px solid #22c55e;">
                 <h4 style="color: #22c55e; margin-top: 0;">🏆 NAGRADE 2025/26:</h4>
-                <p>🥇 <strong>1. mesto:</strong> 120 KM</p>
-                <p>🥈 <strong>2. mesto:</strong> 80 KM</p>
-                <p>🥉 <strong>3. mesto:</strong> 60 KM</p>
+                <p>🥇 <strong>1. mesto:</strong> 50%</p>
+                <p>🥈 <strong>2. mesto:</strong> 30%</p>
+                <p>🥉 <strong>3. mesto:</strong> 20%</p>
               </div>
               
               <div style="background: rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 10px; margin: 25px 0; border-left: 4px solid #ef4444;">
