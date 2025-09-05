@@ -29,7 +29,7 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
       }
 
       try {
-        const response = await fetch("/api/user/onboarding-status");
+        const response = await fetch("/api/user/onboarding");
         if (response.ok) {
           const data = await response.json();
           console.log("🧪 Onboarding status check:", data);

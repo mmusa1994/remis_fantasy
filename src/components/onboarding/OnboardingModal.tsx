@@ -711,8 +711,19 @@ const OnboardingModal = ({
 
       <div className="flex flex-col sm:flex-row gap-3">
         <button
-          onClick={() => {
-            handleComplete();
+          onClick={async () => {
+            try {
+              await fetch("/api/user/onboarding", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ completed: true }),
+              });
+            } catch (error) {
+              console.error("Error marking onboarding as completed:", error);
+            }
+            onComplete();
             window.location.href = "/";
           }}
           className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-colors ${
@@ -724,8 +735,19 @@ const OnboardingModal = ({
           {t("completeStep.actions.dashboard")}
         </button>
         <button
-          onClick={() => {
-            handleComplete();
+          onClick={async () => {
+            try {
+              await fetch("/api/user/onboarding", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ completed: true }),
+              });
+            } catch (error) {
+              console.error("Error marking onboarding as completed:", error);
+            }
+            onComplete();
             window.location.href = "/premier-league/ai-team-analysis";
           }}
           className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-colors ${
