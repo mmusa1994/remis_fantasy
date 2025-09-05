@@ -776,7 +776,7 @@ const OnboardingModal = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-2 sm:p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -800,13 +800,13 @@ const OnboardingModal = ({
           >
             {/* Header */}
             <div
-              className={`flex items-center justify-between p-4 sm:p-6 border-b ${
+              className={`flex items-center justify-between p-3 sm:p-6 border-b ${
                 theme === "dark" ? "border-gray-700" : "border-gray-200"
               }`}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
                 <div
-                  className={`text-sm font-medium ${
+                  className={`text-xs sm:text-sm font-medium ${
                     theme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
@@ -820,7 +820,7 @@ const OnboardingModal = ({
                   {Array.from({ length: totalSteps + 1 }).map((_, index) => (
                     <div
                       key={index}
-                      className={`w-2 h-2 rounded-full transition-colors ${
+                      className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-colors ${
                         index <= currentStep
                           ? theme === "dark"
                             ? "bg-red-500"
@@ -834,10 +834,10 @@ const OnboardingModal = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <button
                   onClick={skipTour}
-                  className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                  className={`text-xs sm:text-sm px-2 sm:px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                     theme === "dark"
                       ? "text-gray-400 hover:text-white hover:bg-gray-800"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
@@ -847,7 +847,7 @@ const OnboardingModal = ({
                 </button>
                 <button
                   onClick={handleDontShowAgain}
-                  className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                  className={`hidden sm:block text-xs sm:text-sm px-2 sm:px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                     theme === "dark"
                       ? "text-red-400 hover:text-red-300 hover:bg-red-900/20"
                       : "text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -857,13 +857,13 @@ const OnboardingModal = ({
                 </button>
                 <button
                   onClick={onClose}
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0 ${
                     theme === "dark"
                       ? "text-gray-400 hover:text-white hover:bg-gray-800"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                   }`}
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </div>
