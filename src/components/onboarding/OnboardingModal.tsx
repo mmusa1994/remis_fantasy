@@ -16,7 +16,6 @@ import {
   Monitor,
   Sparkles,
   Trophy,
-  Target,
 } from "lucide-react";
 import Image from "next/image";
 import { FaRobot } from "react-icons/fa";
@@ -43,6 +42,27 @@ const OnboardingModal = ({
   const managerIdInputRef = useRef<HTMLInputElement>(null);
 
   const totalSteps = 4;
+
+  // Load existing Manager ID from database when modal opens
+  useEffect(() => {
+    const loadExistingManagerId = async () => {
+      if (!isOpen) return;
+
+      try {
+        const response = await fetch("/api/user/manager-id");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.managerId) {
+            setManagerIdInput(data.managerId);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load existing Manager ID:", error);
+      }
+    };
+
+    loadExistingManagerId();
+  }, [isOpen]);
 
   // Focus input when manager ID step is loaded
   useEffect(() => {
@@ -148,19 +168,13 @@ const OnboardingModal = ({
     <div className="text-center space-y-6">
       <div className="relative">
         <div
-          className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center ${
-            theme === "dark"
-              ? "bg-gradient-to-r from-red-900 to-red-800"
-              : "bg-gradient-to-r from-red-600 to-red-700"
-          }`}
+          className={`w-52 h-48 mx-auto flex items-center justify-center border border-red-800 overflow-hidden`}
         >
-          <Trophy className="w-10 h-10 text-white" />
           <Image
             src="/sc/fantasy_command_center.png"
             alt="REMIS Fantasy Logo"
-            width={40}
-            height={40}
-            className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
+            width={250}
+            height={250}
             priority
           />
         </div>
@@ -209,17 +223,13 @@ const OnboardingModal = ({
   const ManagerIdStep = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <div
-          className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-            theme === "dark"
-              ? "bg-blue-900/50 border border-blue-700"
-              : "bg-blue-50 border border-blue-200"
-          }`}
-        >
-          <Target
-            className={`w-8 h-8 ${
-              theme === "dark" ? "text-blue-400" : "text-blue-600"
-            }`}
+        <div className={`w-52 h-52 mx-auto flex items-center justify-center`}>
+          <Image
+            src="/images/path.png"
+            alt="path"
+            width={1000}
+            height={1000}
+            priority
           />
         </div>
         <h2
