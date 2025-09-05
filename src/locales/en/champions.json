@@ -1,0 +1,116 @@
+{
+  "title": "Champions League Fantasy",
+  "subtitle": "European Elite Competition",
+  "description": "The most prestigious fantasy football league featuring Europe's best teams and players",
+  "registration": {
+    "title": "Champions League Registration",
+    "description": "Join Europe's most exciting fantasy league! Register for Champions League Fantasy and compete for prizes worth",
+    "entryFee": "Entry Fee: 15 KM/ 8 EUR",
+    "deadline": "Registration Deadline: August 15, 2025",
+    "maxParticipants": "Limited to 50 participants",
+    "registerTitle": "REGISTRATION 2025/26",
+    "prizesSummary": "🏆 CHAMPIONS LEAGUE PRIZES 2025/26 🏆",
+    "entryFeeLabel": "Entry Fee:"
+  },
+  "form": {
+    "personalInfo": "Personal Information",
+    "contactInfo": "Contact Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "paymentMethod": "Payment Method",
+    "paymentProof": "Payment Proof",
+    "notes": "Additional Notes (optional)",
+    "notesPlaceholder": "Enter additional notes or comments...",
+    "uploadProof": "Upload Payment Proof",
+    "uploadInstructions": "Drag and drop file or click to select",
+    "submitButton": "REGISTER FOR CHAMPIONS LEAGUE",
+    "submitting": "Submitting registration...",
+    "required": "*",
+    "optional": "(optional)"
+  },
+  "payment": {
+    "instructions": "💰 Payment Instructions",
+    "paypal": "PayPal",
+    "wise": "Wise",
+    "bank": "Bank",
+    "cash": "Cash",
+    "amount": "Amount:",
+    "note": "Note:",
+    "account": "Account:",
+    "bankName": "Bank:",
+    "purpose": "Payment Purpose:",
+    "location": "Location:",
+    "contact": "For cash payment, first contact instagram account remis_fantasy",
+    "bankNote": "Payment Purpose: Fantasy Football Payment",
+    "personalDetails": "Personal Details:",
+    "personalInfo": "Muhamed Musa, Marcela Snajdera 4b, 71000, Sarajevo, Phone: 062 211 128",
+    "bankAccounts": "Bank Accounts:",
+    "unicreditAccount": "Uni Credit - 3385702526328703",
+    "raiffeisenAccount": "Raiffeisen - 1613000045433885",
+    "asaAccount": "ASA Bank - 1341055000007711",
+    "unicreditIban": "Unicredit IBAN for EUR payments",
+    "swift": "SWIFT - BA393387502800979069",
+    "swiftCode": "UNCRBA22XXX",
+    "paypalNote": "PayPal sent to @Majda598 (Majda Ahmeckovic)",
+    "arrangement": "Arrangement via phone/message"
+  },
+  "validation": {
+    "firstNameRequired": "First name is required",
+    "lastNameRequired": "Last name is required",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email",
+    "phoneRequired": "Phone number is required",
+    "phoneInvalid": "Please enter a valid phone number (minimum 8 digits)",
+    "paymentMethodRequired": "Please select a payment method",
+    "paymentProofRequired": "Payment proof is required",
+    "recaptchaRequired": "Please verify you are not a robot",
+    "fileSizeError": "File size must be less than 10MB",
+    "fileTypeError": "Only images and PDF files are allowed"
+  },
+  "success": {
+    "title": "REGISTRATION SUCCESSFUL!",
+    "message": "Champions League registration successful! Check your email for confirmation.",
+    "welcome": "Welcome to Champions League Fantasy 2025/26!",
+    "emailSent": "We've sent you a confirmation email.",
+    "codesInfo": "League access codes will be sent after payment verification."
+  },
+  "error": {
+    "title": "REGISTRATION ERROR",
+    "message": "An error occurred. Please try again.",
+    "general": "Registration error. Please try again.",
+    "emailExists": "Email address is already registered for Champions League. Please use a different email address."
+  },
+  "prizes": {
+    "title": "Champions League Prizes",
+    "subtitle": "Win amazing prizes throughout the Champions League season",
+    "firstPlace": {
+      "title": "1ST PLACE",
+      "subtitle": "Champions League Champion",
+      "description": "The ultimate Champions League Fantasy champion receives the biggest prize",
+      "amount": "120 KM"
+    },
+    "secondPlace": {
+      "title": "2ND PLACE",
+      "subtitle": "Champions League Runner-Up",
+      "description": "An impressive second place finish deserves recognition",
+      "amount": "80 KM"
+    },
+    "thirdPlace": {
+      "title": "3RD PLACE",
+      "subtitle": "Champions League Bronze Medal",
+      "description": "A podium finish in the Champions League is a remarkable achievement",
+      "amount": "60 KM"
+    },
+    "totalPrizePool": "260 KM Total Prize Pool"
+  },
+  "features": [
+    "15 KM/ 8 EUR Entry Fee",
+    "260 KM Total Prize Pool",
+    "Limited to 50 Participants",
+    "Champions League Teams Only",
+    "Weekly Prizes Available",
+    "Live Match Updates"
+  ]
+}

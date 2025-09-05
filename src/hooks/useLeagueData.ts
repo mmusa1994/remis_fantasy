@@ -218,20 +218,11 @@ export const useLeaguePrizes = (leagueType: string) => {
                 break;
               case "champions-league":
               case "champions":
-                // For now, fallback to basic data - can add champions JSON file later
-                prizesData = [
-                  {
-                    id: 1,
-                    title: t("prizes.firstPlace"),
-                    subtitle: "Champions League Winner",
-                    image: "/images/prizes/champions-first.png",
-                    description: t("prizes.firstPlaceDesc"),
-                    tier: "premium",
-                    league: "champions",
-                    price: "1500 KM",
-                    features: ["Trophy", "Medal", "Certificate"],
-                  },
-                ];
+                // Import the Champions League prizes JSON file
+                const championsPrizes = await import(
+                  "@/data/champions-league/prizes.json"
+                );
+                prizesData = championsPrizes.default;
                 break;
               case "f1-fantasy":
               case "f1":

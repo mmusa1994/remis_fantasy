@@ -1,1 +1,105 @@
-[]
+[
+  {
+    "id": 1,
+    "title": "1st Place",
+    "subtitle": "Champions League Winner 🏆",
+    "image": "/images/cl/champions-trophy.png",
+    "description": "The ultimate prize for the Champions League Fantasy champion! Dominate Europe's elite competition and claim your victory.",
+    "tier": "champions",
+    "league": "champions",
+    "price": "120 KM",
+    "features": [
+      "120 KM Cash Prize",
+      "Champions League Fantasy Champion Trophy",
+      "Digital Certificate of Achievement", 
+      "Free Entry to Next Season",
+      "Hall of Fame Recognition",
+      "Special Winner's Badge"
+    ]
+  },
+  {
+    "id": 2,
+    "title": "2nd Place",
+    "subtitle": "Champions League Runner-Up 🥈",
+    "image": "/images/cl/runner-up-medal.png",
+    "description": "An impressive second place finish in Europe's most prestigious fantasy competition deserves recognition and reward.",
+    "tier": "premium",
+    "league": "champions",
+    "price": "80 KM",
+    "features": [
+      "80 KM Cash Prize",
+      "Runner-Up Medal",
+      "Digital Certificate",
+      "50% Discount for Next Season",
+      "Silver Badge Recognition"
+    ]
+  },
+  {
+    "id": 3,
+    "title": "3rd Place",
+    "subtitle": "Champions League Bronze Medal 🥉",
+    "image": "/images/cl/bronze-medal.png", 
+    "description": "A podium finish in the Champions League Fantasy competition is a remarkable achievement worthy of celebration.",
+    "tier": "standard",
+    "league": "champions",
+    "price": "60 KM",
+    "features": [
+      "60 KM Cash Prize",
+      "Bronze Medal",
+      "Digital Certificate",
+      "25% Discount for Next Season",
+      "Bronze Badge Recognition"
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Top Gameweek Performance",
+    "subtitle": "Best Single Gameweek Score 🌟",
+    "image": "/images/cl/gameweek-star.png",
+    "description": "Special recognition for the manager who achieves the highest single gameweek score during the Champions League season.",
+    "tier": "h2h",
+    "league": "champions", 
+    "price": "Special Recognition",
+    "features": [
+      "Hall of Fame Entry",
+      "Special Gameweek Winner Badge",
+      "Social Media Feature",
+      "Digital Certificate",
+      "Bragging Rights for Life"
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Most Transfer Points",
+    "subtitle": "Transfer Market Master 📈",
+    "image": "/images/cl/transfer-master.png",
+    "description": "For the strategic manager who maximizes points through intelligent transfer decisions throughout the season.",
+    "tier": "free",
+    "league": "champions",
+    "price": "Recognition Award",
+    "features": [
+      "Transfer Master Badge",
+      "Strategic Excellence Certificate", 
+      "Featured Strategy Analysis",
+      "Special Mention in Season Review",
+      "Expert Tactician Recognition"
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Captain's Choice Champion",
+    "subtitle": "Best Captain Selection Record ⚽",
+    "image": "/images/cl/captain-crown.png",
+    "description": "Awarded to the manager with the most successful captain selections throughout the Champions League campaign.",
+    "tier": "intro",
+    "league": "champions",
+    "price": "Honor Badge",
+    "features": [
+      "Captain's Crown Badge",
+      "Leadership Excellence Award",
+      "Captain Statistics Highlight",
+      "Tactical Genius Recognition",
+      "Season Strategy Showcase"
+    ]
+  }
+]

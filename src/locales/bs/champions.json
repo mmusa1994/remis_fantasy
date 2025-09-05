@@ -1,0 +1,116 @@
+{
+  "title": "Champions League Fantasy",
+  "subtitle": "Evropska Elitna Konkurencija",
+  "description": "Najprestižnija fantasy liga koja uključuje najbolje evropske timove i igrače",
+  "registration": {
+    "title": "Champions League Registracija",
+    "description": "Pridružite se najuzbudljivijoj evropskoj fantasy ligi! Registrujte se za Champions League Fantasy i takmičite se za nagrade od",
+    "entryFee": "Kotizacija: 15 KM/ 8 EUR",
+    "deadline": "Krajnji rok registracije: 16. septembar 2025.",
+    "maxParticipants": "Ograničeno na 50 učesnika",
+    "registerTitle": "REGISTRACIJA 2025/26",
+    "prizesSummary": "🏆 NAGRADE CHAMPIONS LEAGUE 2025/26 🏆",
+    "entryFeeLabel": "Entry Fee:"
+  },
+  "form": {
+    "personalInfo": "Lični podaci",
+    "contactInfo": "Kontakt podaci",
+    "firstName": "Ime",
+    "lastName": "Prezime",
+    "email": "Email adresa",
+    "phone": "Broj telefona",
+    "paymentMethod": "Način plaćanja",
+    "paymentProof": "Dokaz o uplati",
+    "notes": "Dodatne napomene (opciono)",
+    "notesPlaceholder": "Unesite dodatne napomene ili komentare...",
+    "uploadProof": "Otpremite dokaz o uplati",
+    "uploadInstructions": "Povucite i otpustite fajl ili kliknite da odaberete",
+    "submitButton": "REGISTRUJ SE ZA CHAMPIONS LEAGUE",
+    "submitting": "Slanje registracije...",
+    "required": "*",
+    "optional": "(opciono)"
+  },
+  "payment": {
+    "instructions": "💰 Instrukcije za plaćanje",
+    "paypal": "PayPal",
+    "wise": "Wise",
+    "bank": "Banka",
+    "cash": "Keš",
+    "amount": "Iznos:",
+    "note": "Napomena:",
+    "account": "Račun:",
+    "bankName": "Banka:",
+    "purpose": "Svrha uplate:",
+    "location": "Lokacija:",
+    "contact": "Za keš plaćanje prvo kontaktirajte instagram racun remis_fantasy",
+    "bankNote": "Svrha uplate: Uplata za Fantasy Football",
+    "personalDetails": "Osobni podaci:",
+    "personalInfo": "Muhamed Musa, Marcela Snajdera 4b, 71000, Sarajevo, Mob: 062 211 128",
+    "bankAccounts": "Bankovni racuni:",
+    "unicreditAccount": "Uni Credit - 3385702526328703",
+    "raiffeisenAccount": "Raiffeisen - 1613000045433885",
+    "asaAccount": "ASA Banka - 1341055000007711",
+    "unicreditIban": "Unicredit IBAN za uplate u Eurima",
+    "swift": "SWIFT - BA393387502800979069",
+    "swiftCode": "UNCRBA22XXX",
+    "paypalNote": "PayPal se šalje na @Majda598 (Majda Ahmeckovic)",
+    "arrangement": "Dogovor preko telefona/poruke"
+  },
+  "validation": {
+    "firstNameRequired": "Ime je obavezno",
+    "lastNameRequired": "Prezime je obavezno",
+    "emailRequired": "Email je obavezan",
+    "emailInvalid": "Molimo unesite valjan email",
+    "phoneRequired": "Broj telefona je obavezan",
+    "phoneInvalid": "Molimo unesite valjan broj telefona (minimum 8 cifara)",
+    "paymentMethodRequired": "Molimo odaberite način plaćanja",
+    "paymentProofRequired": "Dokaz o uplati je obavezan",
+    "recaptchaRequired": "Molimo potvrdite da niste robot",
+    "fileSizeError": "Veličina fajla mora biti manja od 10MB",
+    "fileTypeError": "Dozvoljene su samo slike i PDF fajlovi"
+  },
+  "success": {
+    "title": "REGISTRACIJA USPEŠNA!",
+    "message": "Registracija za Champions League uspešna! Proverite email za potvrdu.",
+    "welcome": "Dobrodošli u Champions League Fantasy 2025/26!",
+    "emailSent": "Poslali smo vam email sa potvrdom prijave.",
+    "codesInfo": "Kodovi za pristup ligi će vam biti poslati nakon verifikacije uplate."
+  },
+  "error": {
+    "title": "GREŠKA PRI REGISTRACIJI",
+    "message": "Došlo je do greške. Molimo pokušajte ponovo.",
+    "general": "Greška pri registraciji. Pokušajte ponovo.",
+    "emailExists": "Email adresa je već registrovana za Champions League. Molimo koristite drugu email adresu."
+  },
+  "prizes": {
+    "title": "Champions League Nagrade",
+    "subtitle": "Osvojite nevjerovatne nagrade tokom cijele Champions League sezone",
+    "firstPlace": {
+      "title": "1. MESTO",
+      "subtitle": "Champions League Pobednik",
+      "description": "Ultimativni Champions League Fantasy šampion dobija najveću nagradu",
+      "amount": "120 KM"
+    },
+    "secondPlace": {
+      "title": "2. MESTO",
+      "subtitle": "Champions League Drugoplasiran",
+      "description": "Impresivan drugi rezultat zaslužuje priznanje",
+      "amount": "80 KM"
+    },
+    "thirdPlace": {
+      "title": "3. MESTO",
+      "subtitle": "Champions League Bronzana Medalja",
+      "description": "Podijumsko mesto u Champions League je izuzetan uspeh",
+      "amount": "60 KM"
+    },
+    "totalPrizePool": "260 KM Ukupan Fond Nagrada"
+  },
+  "features": [
+    "15 KM/ 8 EUR Kotizacija",
+    "260 KM Ukupan Fond Nagrada",
+    "Ograničeno na 50 učesnika",
+    "Samo Champions League timovi",
+    "Nedeljne nagrade dostupne",
+    "Pratite mečeve uživo"
+  ]
+}
