@@ -15,19 +15,10 @@ export default function ChampionsLeagueGalerijaPage() {
           <div className="text-center space-y-6">
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
               <h2 className="text-xl sm:text-2xl font-bold mb-2">
-                🏆 Prva nagrada
+                🚧 Stranica u izgradnji
               </h2>
-              <div className="text-3xl sm:text-4xl font-bold mb-2">
-                1500 KM
-              </div>
-              <p className="text-lg font-semibold">
-                Champions League Winner
-              </p>
-            </div>
-            
-            <div className="text-center py-4">
-              <p className="text-theme-text-secondary text-sm sm:text-base">
-                Osvojite glavnu nagradu i postanite prvak najjače evropske fantazi lige!
+              <p className="text-lg">
+                Galerija Champions League Fantasy nagrade je u pripremi. Uskoro ćete moći videti sve dostupne nagrade i trofeje!
               </p>
             </div>
           </div>
