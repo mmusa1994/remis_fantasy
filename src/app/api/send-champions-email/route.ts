@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
               <div style="background: rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 10px; margin: 25px 0; border-left: 4px solid #ef4444;">
                 <p style="margin: 0; font-size: 14px;">
                   <strong>⏳ Sledeći koraci:</strong><br>
-                  Nakon verifikacije vaše uplate, dobićete email sa kodovima za pristup Champions League Fantasy ligi.
+                  Nakon verifikacije vaše uplate, dobićete email sa kodom za pristup Champions League Fantasy ligi.
                   Molimo sačekajte potvrdu (obično u roku od 24h).
                 </p>
               </div>
@@ -207,13 +207,13 @@ export async function POST(request: NextRequest) {
         from: process.env.EMAIL_USER,
         to: userData.email,
         subject:
-          "🔑 Champions League Fantasy - Kodovi za pristup | REMIS Fantasy 2025/26",
+          "🔑 Champions League Fantasy - Kod za pristup | REMIS Fantasy CL Paid 25/26",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%); color: white; border-radius: 20px; overflow: hidden;">
             <div style="padding: 40px 30px; text-align: center;">
               <div style="background: white; color: #1e3a8a; padding: 20px; border-radius: 15px; margin-bottom: 30px;">
                 <h1 style="margin: 0; font-size: 24px; font-weight: bold;">🏆 CHAMPIONS LEAGUE FANTASY 🏆</h1>
-                <h2 style="margin: 10px 0 0 0; color: #7c3aed; font-size: 18px;">Kodovi za pristup - Season 2025/26</h2>
+                <h2 style="margin: 10px 0 0 0; color: #7c3aed; font-size: 18px;">Kod za pristup - Season 2025/26</h2>
               </div>
               
               <h3 style="color: #22c55e; margin: 0 0 20px 0; font-size: 20px;">✅ Vaša uplata je verifikovana!</h3>
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
               </p>
               
               <div style="background: rgba(255, 255, 255, 0.15); padding: 25px; border-radius: 15px; margin: 30px 0; border: 2px solid #fbbf24;">
-                <h4 style="color: #fbbf24; margin-top: 0; font-size: 18px;">🔑 KODOVI ZA LIGU:</h4>
+                <h4 style="color: #fbbf24; margin-top: 0; font-size: 18px;">🔑 KOD ZA LIGU:</h4>
                 <div style="background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 10px; margin: 15px 0;">
                   <p style="margin: 5px 0; font-family: monospace; font-size: 16px;">
                     <strong>REMIS CL Paid:</strong> <span style="color: #22c55e;">D2hqC1</span>

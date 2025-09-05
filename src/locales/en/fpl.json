@@ -529,6 +529,30 @@
       "success": "success",
       "earlyUsagePattern": "early usage pattern"
     },
+    "analytics": {
+      "teamAnalytics": "Team Analytics",
+      "formationAnalysis": "Formation Analysis",
+      "averagePointsPlayer": "Average Points/Player",
+      "teamValue": "Team Value",
+      "weeklyRank": "Weekly Rank",
+      "currentFormation": "Current Formation",
+      "avgPoints": "Avg",
+      "benchCount": "bench"
+    },
+    "transfers": {
+      "transfersOut": "Transfers Out",
+      "transfersIn": "Transfers In", 
+      "availableBudget": "Available Budget",
+      "transferCost": "Transfer Cost",
+      "reset": "Reset",
+      "confirmTransfers": "Confirm Transfers",
+      "squadValidation": "Squad Validation",
+      "squadValid": "Squad is valid! Ready to confirm transfers.",
+      "playersOut": "Players Out",
+      "playersIn": "Players In",
+      "replaces": "replaces",
+      "exitTransfers": "Exit Transfers"
+    },
     "clickToChange": "Click to change",
     "loadingTeam": "Loading team...",
     "enterManagerId": "Enter Manager ID to start",

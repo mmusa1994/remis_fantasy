@@ -507,6 +507,30 @@
       "success": "uspjeh",
       "earlyUsagePattern": "rani uzorak korištenja"
     },
+    "analytics": {
+      "teamAnalytics": "Analitika Tima",
+      "formationAnalysis": "Analiza Formacije",
+      "averagePointsPlayer": "Prosječni Bodovi/Igrač",
+      "teamValue": "Vrijednost Tima",
+      "weeklyRank": "Sedmični Rang",
+      "currentFormation": "Trenutna Formacija",
+      "avgPoints": "Prosjek",
+      "benchCount": "klupa"
+    },
+    "transfers": {
+      "transfersOut": "Transferi Izvan",
+      "transfersIn": "Transferi Unutra", 
+      "availableBudget": "Dostupan Budžet",
+      "transferCost": "Cijena Transfera",
+      "reset": "Resetuj",
+      "confirmTransfers": "Potvrdi Transfere",
+      "squadValidation": "Validacija Sastava",
+      "squadValid": "Sastav je valjan! Spreman za potvrdu transfera.",
+      "playersOut": "Igrači Izvan",
+      "playersIn": "Igrači Unutra",
+      "replaces": "zamjenjuje",
+      "exitTransfers": "Izađi iz Transfera"
+    },
     "clickToChange": "Kliknite za promjenu",
     "loadingTeam": "Učitava se tim...",
     "enterManagerId": "Unesite Manager ID za početak",

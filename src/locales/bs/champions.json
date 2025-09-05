@@ -74,7 +74,7 @@
     "message": "Registracija za Champions League uspešna! Proverite email za potvrdu.",
     "welcome": "Dobrodošli u Champions League Fantasy 2025/26!",
     "emailSent": "Poslali smo vam email sa potvrdom prijave.",
-    "codesInfo": "Kodovi za pristup ligi će vam biti poslati nakon verifikacije uplate."
+    "codesInfo": "Kod za pristup ligi će vam biti poslati nakon verifikacije uplate."
   },
   "error": {
     "title": "GREŠKA PRI REGISTRACIJI",
