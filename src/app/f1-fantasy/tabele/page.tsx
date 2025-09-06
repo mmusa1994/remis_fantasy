@@ -151,7 +151,7 @@ export default function F1TabeleFromDBPage() {
                 </div>
                 <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
                   <FaCoins className="text-[#F4CE2A]" />
-                  HAOS
+                  60 KM
                 </div>
               </div>
             </div>
