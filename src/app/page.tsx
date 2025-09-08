@@ -624,7 +624,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="absolute -top-4 left-5 transform -translate-x-1/2">
+            <div className="absolute -top-4 right-0">
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-400 to-green-500 text-white text-sm font-bold shadow-lg">
                 <GiftIcon className="text-lg" />
                 {t("hero:aiGuru.freeForNow")}

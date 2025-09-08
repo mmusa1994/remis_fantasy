@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
@@ -67,6 +67,67 @@ export default function EnhancedPitchView({
     [allPlayers, teamPlayers]
   );
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+
+  // Calculate allowed formations based on current starting XI
+  const startingCounts = useMemo(() => {
+    const starters = teamPlayers.filter((tp) => tp.position <= 11);
+    let gk = 0,
+      def = 0,
+      mid = 0,
+      fwd = 0;
+    starters.forEach((tp) => {
+      const p = allPlayers.find((ap) => ap.id === tp.player_id);
+      switch (p?.element_type) {
+        case 1:
+          gk++;
+          break;
+        case 2:
+          def++;
+          break;
+        case 3:
+          mid++;
+          break;
+        case 4:
+          fwd++;
+          break;
+      }
+    });
+    return { gk, def, mid, fwd };
+  }, [teamPlayers, allPlayers]);
+
+  const allowedFormations = useMemo(() => {
+    // FPL-valid formations only
+    const byDef: Record<number, string[]> = {
+      3: ["3-4-3", "3-5-2"],
+      4: ["4-3-3", "4-4-2", "4-5-1"],
+      5: ["5-3-2", "5-4-1"],
+    };
+    return byDef[startingCounts.def] || [
+      "3-4-3",
+      "3-5-2",
+      "4-3-3",
+      "4-4-2",
+      "4-5-1",
+      "5-3-2",
+      "5-4-1",
+    ];
+  }, [startingCounts.def]);
+
+  // Auto-adjust formation to exactly match current XI when possible
+  useEffect(() => {
+    const totalStarters =
+      startingCounts.gk + startingCounts.def + startingCounts.mid + startingCounts.fwd;
+    if (totalStarters !== 11) return; // Only auto-adjust when XI is fully known
+
+    const exact = `${startingCounts.def}-${startingCounts.mid}-${startingCounts.fwd}`;
+    if (onFormationChange && allowedFormations.includes(exact) && formation !== exact) {
+      onFormationChange(exact);
+    } else if (onFormationChange && !allowedFormations.includes(formation)) {
+      // Ensure current formation is among allowed ones
+      onFormationChange(allowedFormations[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startingCounts.def, startingCounts.mid, startingCounts.fwd, startingCounts.gk, allowedFormations]);
 
   // Calculate formation layout for half-court (our half only)
   // y% grows downward: goalkeeper at top, forwards at bottom (attacking upward)
@@ -304,19 +365,14 @@ export default function EnhancedPitchView({
           </label>
           <select
             value={formation}
-            onChange={(e) => {
-              if (onFormationChange) {
-                onFormationChange(e.target.value);
-              }
-            }}
+            onChange={(e) => onFormationChange && onFormationChange(e.target.value)}
             className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 flex-1 sm:flex-none"
           >
-            <option value="3-4-3">3-4-3</option>
-            <option value="3-5-2">3-5-2</option>
-            <option value="4-3-3">4-3-3</option>
-            <option value="4-4-2">4-4-2</option>
-            <option value="4-5-1">4-5-1</option>
-            <option value="5-3-2">5-3-2</option>
+            {allowedFormations.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
           </select>
         </div>
 
