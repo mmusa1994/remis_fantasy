@@ -218,8 +218,8 @@ export default function Home() {
                   }}
                 >
                   <Link
-                    href={league.href}
-                    className="block flex flex-col h-full"
+                    href={league.href + "/tabele"}
+                    className=" flex flex-col h-full"
                   >
                     <div className="mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
                       {league.id === "champions-league" ? (
