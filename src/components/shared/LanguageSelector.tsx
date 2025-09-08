@@ -45,45 +45,38 @@ export default function LanguageSelector() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <motion.button
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 ${
           theme === "dark"
             ? "bg-black hover:bg-gray-900 text-white border border-white"
             : "bg-white hover:bg-gray-50 text-black border border-black"
         }`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
       >
         <Globe className="w-4 h-4" />
         <span className={`fi fi-${currentLanguage.flagCode} text-lg`}></span>
         <span className="text-sm font-medium hidden sm:block">
           {currentLanguage.code.toUpperCase()}
         </span>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ChevronDown className="w-4 h-4" />
-        </motion.div>
-      </motion.button>
+        <ChevronDown className="w-4 h-4" />
+      </button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className={`absolute top-full left-0 mt-2 w-48 rounded-xl shadow-2xl border backdrop-blur-xl z-50 ${
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className={`absolute top-full left-0 mt-2 w-48 rounded-xl shadow-2xl border md:backdrop-blur-xl z-50 ${
               theme === "dark"
                 ? "bg-black border-white"
                 : "bg-white border-black"
             }`}
           >
             <div className="py-2">
-              {languages.map((language, index) => (
-                <motion.button
+              {languages.map((language) => (
+                <button
                   key={language.code}
                   onClick={() => handleLanguageChange(language.code)}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 ${
@@ -95,10 +88,6 @@ export default function LanguageSelector() {
                       ? "hover:bg-white/10 text-white hover:text-white"
                       : "hover:bg-black/5 text-black hover:text-black"
                   }`}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ x: 4 }}
                 >
                   <CountryFlag country={language.flagCode} size="xl" />
                   <div className="flex flex-col">
@@ -108,14 +97,13 @@ export default function LanguageSelector() {
                     </span>
                   </div>
                   {i18n.language === language.code && (
-                    <motion.div
+                    <div
                       className={`ml-auto w-2 h-2 rounded-full ${
                         theme === "dark" ? "bg-white" : "bg-black"
                       }`}
-                      layoutId="activeLanguage"
                     />
                   )}
-                </motion.button>
+                </button>
               ))}
             </div>
           </motion.div>
