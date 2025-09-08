@@ -468,7 +468,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
               >
                 <h4 className="text-sm font-semibold text-green-600 flex items-center gap-1">
                   <TrendingUp className="w-4 h-4" />
-                  {t("teamPlanner.widgets.topTransfers")} {t("teamPlanner.widgets.in")}
+                  {t("teamPlanner.widgets.topTransfers", { gw: currentGameweek })} {t("teamPlanner.widgets.in")}
                 </h4>
                 {data.top_players_in.map((player) => (
                   <div
@@ -510,7 +510,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
               >
                 <h4 className="text-sm font-semibold text-red-600 flex items-center gap-1">
                   <TrendingDown className="w-4 h-4" />
-                  {t("teamPlanner.widgets.topTransfers")} {t("teamPlanner.widgets.out")}
+                  {t("teamPlanner.widgets.topTransfers", { gw: currentGameweek })} {t("teamPlanner.widgets.out")}
                 </h4>
                 {data.top_players_out.map((player) => (
                   <div
