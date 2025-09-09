@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { signIn, getSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
@@ -17,6 +18,7 @@ import {
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 export default function LoginPage() {
+  const router = useRouter();
   const { theme } = useTheme();
   const { t, ready } = useTranslation("auth");
   const [formData, setFormData] = useState({
@@ -101,6 +103,11 @@ export default function LoginPage() {
   }
 
   if (loginSuccess) {
+    // Kick off redirect on render to ensure immediate navigation
+    if (typeof window !== "undefined") {
+      // Use replace to avoid back navigation to login
+      router.replace("/");
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center">
@@ -112,12 +119,9 @@ export default function LoginPage() {
           >
             {t("loginSuccessRedirect")}
           </p>
-          <Link
-            href="/premier-league/tabele"
-            className="bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white px-6 py-2 rounded-lg transition-all duration-300"
-          >
-            {t("goToDashboard")}
-          </Link>
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            Redirecting...
+          </span>
         </div>
       </div>
     );

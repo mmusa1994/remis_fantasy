@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -39,6 +41,14 @@ export default function AdminLogin() {
       setLoading(false);
     }
   };
+
+  // Redirect automatically on successful admin login
+  useEffect(() => {
+    if (loginSuccess) {
+      // Use replace to avoid back navigation to login
+      router.replace("/admin/dashboard");
+    }
+  }, [loginSuccess, router]);
 
   if (loginSuccess) {
     return (
