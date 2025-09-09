@@ -191,7 +191,7 @@ export abstract class BaseFPLService {
     // Try multiple proxy methods
     const proxyMethods = [
       `/api/fpl/proxy?endpoint=${encodeURIComponent(endpoint)}`,
-      `/api/fpl/cors-proxy?endpoint=${encodeURIComponent(endpoint)}`,
+      `/api/fpl/cors-proxy?endpoint=${endpoint}`,
     ];
 
     let lastError: Error | null = null;
