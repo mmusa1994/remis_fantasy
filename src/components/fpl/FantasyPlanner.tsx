@@ -29,6 +29,7 @@ import LoadingCard from "@/components/shared/LoadingCard";
 import ManagerIdModal from "@/components/modals/ManagerIdModal";
 import { getTeamColors } from "@/lib/team-colors";
 import { ErrorType, ValidationStatus } from "@/types/validation";
+import FplStatusBanner from "@/components/shared/FplStatusBanner";
 
 // Enhanced Components
 import EnhancedPitchView from "./EnhancedPitchView";
@@ -182,6 +183,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const [verificationWarning, setVerificationWarning] = useState<string | null>(
     null
   );
+  const [fplApiError, setFplApiError] = useState<string | null>(null);
 
   // Enhanced state for filtering and transfer planning
   const [filters, setFilters] = useState<EnhancedFilterState>({
@@ -341,6 +343,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           if (result.success) {
             const fixtures = result.data || [];
             setAllFixtures(fixtures);
+            setFplApiError(null);
 
             // Cache the result
             fixturesCacheRef.current = {
@@ -361,6 +364,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             `❌ No fixture data available for GW${gameweek} or earlier`
           );
           setAllFixtures([]);
+          setFplApiError(
+            "FPL API is currently unavailable or returned no fixtures. Please try again later."
+          );
         }
       } catch (error) {
         console.error("Failed to fetch fixtures:", error);
@@ -369,6 +375,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           return fetchFixtures(gameweek - 1, forceRefresh);
         } else {
           setAllFixtures([]);
+          setFplApiError(
+            "FPL API is currently unavailable. Fixtures could not be loaded."
+          );
         }
       }
     },
@@ -382,6 +391,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
       const response = await fetch("/api/fpl/bootstrap-static");
 
       if (!response.ok) {
+        setFplApiError(
+          "FPL API is currently unavailable. Base data could not be loaded."
+        );
         throw new Error("Failed to fetch bootstrap data");
       }
 
@@ -401,9 +413,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         if (currentEvent) {
           setCurrentGameweek(currentEvent.id);
         }
+        setFplApiError(null);
       }
     } catch (error) {
       console.error("Failed to fetch bootstrap data:", error);
+      setFplApiError(
+        "FPL API is currently unavailable. Some data may be missing."
+      );
     } finally {
       setBootstrapLoading(false);
     }
@@ -471,9 +487,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             return await fetchTeamData(id, targetGameweek - 1, forceRefresh);
           }
 
-          throw new Error(
-            `Failed to fetch team data: ${response.status} - ${errorText}`
+          setFplApiError(
+            "FPL API is currently unavailable. Team data could not be loaded."
           );
+          throw new Error(`Failed to fetch team data: ${response.status}`);
         }
 
         const data = await response.json();
@@ -507,6 +524,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               );
             }
           }
+          setFplApiError(null);
         }
       } catch (error) {
         console.error("❌ Error fetching team data:", error);
@@ -516,6 +534,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           teamDataRequestRef.current = null; // Clear request lock
           return await fetchTeamData(id, targetGameweek - 1, forceRefresh);
         }
+        setFplApiError(
+          "FPL API is currently unavailable. Team data could not be loaded."
+        );
       } finally {
         setLoading(false);
         teamDataRequestRef.current = null; // Clear request lock
@@ -1293,6 +1314,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             description="Fetching your FPL team information and player statistics..."
             className="max-w-md"
           />
+        </div>
+      )}
+
+      {/* Global FPL API status */}
+      {fplApiError && (
+        <div className="mb-4">
+          <FplStatusBanner message={fplApiError} />
         </div>
       )}
 

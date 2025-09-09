@@ -172,9 +172,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
         const handleErrorResponse = (err: any) => {
           console.error("[OwnershipChangesWidget] Error:", err);
           setError(
-            err instanceof Error
-              ? err.message
-              : "Failed to fetch ownership data"
+            "FPL API appears unavailable. Ownership changes could not be loaded."
           );
         };
 
@@ -237,9 +235,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
             }
           ).then(async (response) => {
             if (!response.ok) {
-              throw new Error(
-                `HTTP ${response.status}: ${response.statusText}`
-              );
+              throw new Error("fpl_unavailable");
             }
             return response.json();
           });
@@ -381,15 +377,16 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
-          <div className="text-red-500 text-sm text-center py-4">
+          <div className="text-sm py-3 rounded-md border border-yellow-300 bg-yellow-50 text-yellow-900 text-center">
             {error}
-            <br />
+          </div>
+          <div className="mt-3 flex justify-center">
             <button
               onClick={handleManualRefresh}
-              className="text-blue-500 hover:text-blue-600 underline mt-2"
+              className="text-blue-600 hover:text-blue-700 text-sm underline"
               disabled={loading}
             >
-              {loading ? "Refreshing..." : "Try again"}
+              {loading ? "Refreshing..." : "Retry now"}
             </button>
           </div>
         </div>

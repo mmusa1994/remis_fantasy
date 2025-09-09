@@ -47,7 +47,9 @@ export default function PriceChangesWidget({
         });
 
         if (!response.ok) {
-          throw new Error("Failed to fetch price changes");
+          throw new Error(
+            "FPL API appears unavailable. Price changes could not be loaded."
+          );
         }
 
         const result = await response.json();
@@ -93,10 +95,14 @@ export default function PriceChangesWidget({
           if (gameweek > 3) {
             return fetchPriceChanges(gameweek - 1);
           }
-          setError(err.message);
+          setError(
+            "FPL API appears unavailable. Price changes could not be loaded."
+          );
         } else if (err instanceof Error && err.name === "AbortError") {
         } else {
-          setError("Failed to fetch data");
+          setError(
+            "FPL API appears unavailable. Please try again later."
+          );
         }
       } finally {
         setLoading(false);
@@ -172,14 +178,15 @@ export default function PriceChangesWidget({
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
-        <div className="text-red-500 text-sm text-center py-4">
+        <div className="text-sm py-3 rounded-md border border-yellow-300 bg-yellow-50 text-yellow-900 text-center">
           {error}
-          <br />
+        </div>
+        <div className="mt-3 flex justify-center">
           <button
             onClick={() => fetchPriceChanges()}
-            className="text-blue-500 hover:text-blue-600 underline mt-2"
+            className="text-blue-600 hover:text-blue-700 text-sm underline"
           >
-            Try again
+            Retry now
           </button>
         </div>
       </div>

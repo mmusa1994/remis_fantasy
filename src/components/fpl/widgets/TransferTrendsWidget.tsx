@@ -167,12 +167,15 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
           }
         };
 
-        const processErrorResponse = (err: any) => {
-          const errorMessage =
-            err instanceof Error ? err.message : "Failed to fetch data";
-          console.error("[TransferTrendsWidget] Fetch error:", errorMessage);
-          setError(errorMessage);
-        };
+    const processErrorResponse = (err: any) => {
+      const friendly =
+        "FPL API appears unavailable or returned an error. Please try again later.";
+      console.error(
+        "[TransferTrendsWidget] Fetch error:",
+        err instanceof Error ? err.message : err
+      );
+      setError(friendly);
+    };
 
         // Check if request is already pending (request deduplication)
         if (pendingRequests.has(cacheKey)) {
@@ -333,15 +336,16 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
-          <div className="text-red-500 text-sm text-center py-4">
+          <div className="text-sm py-3 rounded-md border border-yellow-300 bg-yellow-50 text-yellow-900 text-center">
             {error}
-            <br />
+          </div>
+          <div className="mt-3 flex justify-center">
             <button
               onClick={handleManualRefresh}
-              className="text-blue-500 hover:text-blue-600 underline mt-2"
+              className="text-blue-600 hover:text-blue-700 text-sm underline"
               disabled={loading}
             >
-              {loading ? "Refreshing..." : "Try again"}
+              {loading ? "Refreshing..." : "Retry now"}
             </button>
           </div>
         </div>
