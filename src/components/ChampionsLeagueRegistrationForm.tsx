@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import Toast from "./shared/Toast";
 import { supabase } from "@/lib/supabase";
 import ReCAPTCHA from "react-google-recaptcha";
-import { CheckCircle, AlertCircle, Trophy, Star, Crown } from "lucide-react";
+import { CheckCircle, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import ClCover from "../../public/images/cl-cover.png";
 
@@ -910,9 +910,7 @@ const ChampionsLeagueRegistrationForm = React.memo(
                       </div>
                     ) : (
                       <span className="flex items-center justify-center gap-3 animate-fade-in">
-                        <Trophy className="w-5 h-5" />
                         <span>{t("champions:form.submitButton")}</span>
-                        <Trophy className="w-5 h-5" />
                       </span>
                     )}
 
