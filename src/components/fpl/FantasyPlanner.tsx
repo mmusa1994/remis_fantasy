@@ -21,6 +21,8 @@ import {
   TrendingUp,
   TrendingDown,
   Star,
+  Edit3,
+  ExternalLink,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import LoadingCard from "@/components/shared/LoadingCard";
@@ -1320,22 +1322,35 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   )}
                 </p>
                 <p className="text-gray-500">{t("teamPlanner.subtitle")}</p>
+                {/* Inline Manager ID with edit option */}
+                <div className="mt-2 flex items-center gap-2 text-sm">
+                  <span className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
+                    {t("teamPlanner.managerId")} {currentManagerId}
+                  </span>
+                  <button
+                    onClick={() => setShowManagerIdModal(true)}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    title={t("teamPlanner.clickToChange") || "Click to change"}
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>{t("teamPlanner.clickToChange")}</span>
+                  </button>
+                  {currentManagerId && (
+                    <a
+                      href={`https://fantasy.premierleague.com/entry/${currentManagerId}/event/${currentGameweek}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      title="Open on fantasy.premierleague.com"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Open on FPL</span>
+                    </a>
+                  )}
+                </div>
               </div>
               <div className="text-right">
-                <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  } cursor-pointer hover:text-blue-500"`}
-                  onClick={() => setShowManagerIdModal(true)}
-                >
-                  {t("teamPlanner.managerId")} {currentManagerId} -{" "}
-                  {t("teamPlanner.clickToChange")}
-                  {managerIdVerified === false && (
-                    <span className="block text-xs text-yellow-600 dark:text-yellow-400">
-                      (Unverified - click to retry)
-                    </span>
-                  )}
-                </p>
+                {/* Overall rank and meta */}
                 <p className="text-xs text-gray-500">
                   {t("teamPlanner.overallRank")}: #
                   {userTeamData.manager?.summary_overall_rank?.toLocaleString()}
