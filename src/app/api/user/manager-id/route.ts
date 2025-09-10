@@ -20,7 +20,7 @@ export async function GET() {
       .from("users")
       .select("manager_id, manager_id_verified, manager_id_verification_note")
       .eq("id", session.user.id)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Error fetching manager ID:", error);
@@ -28,6 +28,15 @@ export async function GET() {
         { error: "Failed to fetch manager ID" },
         { status: 500 }
       );
+    }
+
+    // Handle case where user doesn't exist in database
+    if (!data) {
+      return NextResponse.json({
+        managerId: null,
+        isVerified: false,
+        verificationNote: null,
+      });
     }
 
     return NextResponse.json({

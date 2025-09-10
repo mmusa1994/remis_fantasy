@@ -1,0 +1,18 @@
+{
+  "modalTitle": "Manager ID Required",
+  "modalSubtitle": "For personalized FPL analysis",
+  "whyNeedTitle": "Why do I need Manager ID?",
+  "whyNeedDescription": "To analyze your team, I need access to your players, captain, and rankings.",
+  "inputLabel": "FPL Manager ID",
+  "inputPlaceholder": "e.g. 1234567",
+  "findManagerIdHelp": "How to find Manager ID?",
+  "cancel": "Cancel",
+  "saveId": "Save ID",
+  "validating": "Validating...",
+  "retrying": "Retrying...",
+  "helpText": "💡 You can find your Manager ID on your FPL page in the URL after /entry/",
+  "errors": {
+    "required": "Manager ID is required",
+    "invalidFormat": "Manager ID must be a number (1-10 digits)"
+  }
+}

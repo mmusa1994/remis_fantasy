@@ -35,6 +35,7 @@ export default function ManagerIdModal({
     showFallbackOption: false,
   },
 }: ManagerIdModalProps) {
+  const { t } = useTranslation("manager");
   const [managerId, setManagerId] = useState("");
   const [error, setError] = useState("");
 
@@ -42,12 +43,12 @@ export default function ManagerIdModal({
     e.preventDefault();
 
     if (!managerId.trim()) {
-      setError("Manager ID je obavezan");
+      setError(t("errors.required"));
       return;
     }
 
     if (!/^\d{1,10}$/.test(managerId.trim())) {
-      setError("Manager ID mora biti broj (1-10 cifara)");
+      setError(t("errors.invalidFormat"));
       return;
     }
 
@@ -148,10 +149,10 @@ export default function ManagerIdModal({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Manager ID potreban
+                  {t("modalTitle")}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Za personaliziranu FPL analizu
+                  {t("modalSubtitle")}
                 </p>
               </div>
             </div>
@@ -170,11 +171,10 @@ export default function ManagerIdModal({
                 <BiUser className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div className="text-sm">
                   <p className="text-blue-800 dark:text-blue-200 font-medium">
-                    Zašto trebam Manager ID?
+                    {t("whyNeedTitle")}
                   </p>
                   <p className="text-blue-700 dark:text-blue-300 mt-1">
-                    Da analiziram tvoj tim, potreban mi je pristup tvojim
-                    igračima, kapitenu i rangovima.
+                    {t("whyNeedDescription")}
                   </p>
                 </div>
               </div>
@@ -183,7 +183,7 @@ export default function ManagerIdModal({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  FPL Manager ID
+                  {t("inputLabel")}
                 </label>
                 <input
                   type="text"
@@ -192,7 +192,7 @@ export default function ManagerIdModal({
                     setManagerId(e.target.value);
                     setError("");
                   }}
-                  placeholder="npr. 1234567"
+                  placeholder={t("inputPlaceholder")}
                   className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     validationStatus.errorDetails?.type === ErrorType.INVALID_ID
                       ? "border-red-300 dark:border-red-600"
@@ -275,7 +275,7 @@ export default function ManagerIdModal({
                   className="flex items-center space-x-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   <FaQuestionCircle className="w-4 h-4" />
-                  <span>Kako naći Manager ID?</span>
+                  <span>{t("findManagerIdHelp")}</span>
                 </button>
               </div>
 
@@ -286,7 +286,7 @@ export default function ManagerIdModal({
                   className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
                   disabled={isLoading || validationStatus.isValidating || validationStatus.isRetrying}
                 >
-                  Odustani
+                  {t("cancel")}
                 </button>
                 
                 {/* Show retry button if validation failed and retry is available */}
@@ -329,10 +329,10 @@ export default function ManagerIdModal({
                     )}
                     <span>
                       {validationStatus.isValidating 
-                        ? 'Validating...' 
+                        ? t("validating")
                         : validationStatus.isRetrying 
-                        ? 'Retrying...' 
-                        : 'Spremi ID'
+                        ? t("retrying")
+                        : t("saveId")
                       }
                     </span>
                   </button>
@@ -344,8 +344,7 @@ export default function ManagerIdModal({
           {/* Help text */}
           <div className="px-6 pb-6 text-xs text-gray-500 dark:text-gray-400">
             <p>
-              💡 Manager ID možeš naći na svojoj FPL stranici u URL-u nakon
-              /entry/
+              {t("helpText")}
             </p>
           </div>
         </motion.div>

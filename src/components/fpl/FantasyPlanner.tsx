@@ -1352,7 +1352,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                 <p className="text-gray-500">{t("teamPlanner.subtitle")}</p>
                 {/* Inline Manager ID with edit option */}
                 <div className="mt-2 flex items-center gap-2 text-sm">
-                  <span className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
+                  <span
+                    className={
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }
+                  >
                     {t("teamPlanner.managerId")} {currentManagerId}
                   </span>
                   <button
@@ -1724,19 +1728,21 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         <Target className="w-5 h-5 text-green-500" />
                         {t("teamPlanner.list.startingXI")} ({formation})
                       </h3>
-                      
+
                       {/* Starting XI Grid */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {currentTeamForDisplay
                           .filter((tp) => tp.position <= 11)
                           .sort((a, b) => a.position - b.position)
                           .map((teamPlayer) => {
-                            const player = teamPlayer.player || getPlayerById(teamPlayer.player_id);
+                            const player =
+                              teamPlayer.player ||
+                              getPlayerById(teamPlayer.player_id);
                             const team = getTeamById(player?.team || 0);
                             const teamColor = getTeamColor(player?.team || 0);
-                            
+
                             if (!player) return null;
-                            
+
                             return (
                               <motion.div
                                 key={teamPlayer.player_id}
@@ -1747,7 +1753,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 } rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-all duration-200 cursor-pointer`}
                                 onClick={() => {
                                   if (transferMode) {
-                                    if (pendingTransfers.transfersOut.includes(player.id)) {
+                                    if (
+                                      pendingTransfers.transfersOut.includes(
+                                        player.id
+                                      )
+                                    ) {
                                       removePlayerOut(player.id);
                                     } else {
                                       addPlayerOut(player.id);
@@ -1764,69 +1774,106 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                         backgroundColor: teamColor.primary,
                                       }}
                                     >
-                                      {player.web_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                                      {player.web_name
+                                        .split(" ")
+                                        .map((n: string) => n[0])
+                                        .join("")
+                                        .slice(0, 2)}
                                     </div>
-                                    
+
                                     {/* Position Badge */}
-                                    <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                                      player.element_type === 1
-                                        ? "bg-yellow-500 text-white"
-                                        : player.element_type === 2
-                                        ? "bg-blue-500 text-white"
-                                        : player.element_type === 3
-                                        ? "bg-green-500 text-white"
-                                        : "bg-red-500 text-white"
-                                    }`}>
-                                      {getPlayerPosition(player.element_type)[0]}
+                                    <div
+                                      className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                                        player.element_type === 1
+                                          ? "bg-yellow-500 text-white"
+                                          : player.element_type === 2
+                                          ? "bg-blue-500 text-white"
+                                          : player.element_type === 3
+                                          ? "bg-green-500 text-white"
+                                          : "bg-red-500 text-white"
+                                      }`}
+                                    >
+                                      {
+                                        getPlayerPosition(
+                                          player.element_type
+                                        )[0]
+                                      }
                                     </div>
 
                                     {/* Transfer Status Indicator */}
-                                    {transferMode && pendingTransfers.transfersOut.includes(player.id) && (
-                                      <div className="absolute -top-1 -left-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                                        <span className="text-white text-xs">-</span>
-                                      </div>
-                                    )}
+                                    {transferMode &&
+                                      pendingTransfers.transfersOut.includes(
+                                        player.id
+                                      ) && (
+                                        <div className="absolute -top-1 -left-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                                          <span className="text-white text-xs">
+                                            -
+                                          </span>
+                                        </div>
+                                      )}
                                   </div>
-                                  
+
                                   {/* Player Info */}
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <h4 className="font-semibold text-sm truncate">{player.web_name}</h4>
-                                      {teamPlayer.player_id === userTeamData?.captain?.player_id && (
+                                      <h4 className="font-semibold text-sm truncate">
+                                        {player.web_name}
+                                      </h4>
+                                      {teamPlayer.player_id ===
+                                        userTeamData?.captain?.player_id && (
                                         <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center">
-                                          <span className="text-white text-xs font-bold">C</span>
+                                          <span className="text-white text-xs font-bold">
+                                            C
+                                          </span>
                                         </div>
                                       )}
-                                      {teamPlayer.player_id === userTeamData?.vice_captain?.player_id && (
+                                      {teamPlayer.player_id ===
+                                        userTeamData?.vice_captain
+                                          ?.player_id && (
                                         <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
-                                          <span className="text-white text-xs font-bold">V</span>
+                                          <span className="text-white text-xs font-bold">
+                                            V
+                                          </span>
                                         </div>
                                       )}
                                     </div>
-                                    
+
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                      {team?.name} • £{(player.now_cost / 10).toFixed(1)}m
+                                      {team?.name} • £
+                                      {(player.now_cost / 10).toFixed(1)}m
                                     </p>
-                                    
+
                                     {/* Stats Row */}
                                     <div className="flex items-center gap-4 text-xs">
                                       <div className="flex items-center gap-1">
                                         <span className="font-medium text-green-600 dark:text-green-400">
-                                          {teamPlayer.isTransferIn ? 0 : (teamPlayer.total_points || player.total_points)}
+                                          {teamPlayer.isTransferIn
+                                            ? 0
+                                            : teamPlayer.total_points ||
+                                              player.total_points}
                                         </span>
-                                        <span className="text-gray-400">pts</span>
+                                        <span className="text-gray-400">
+                                          pts
+                                        </span>
                                       </div>
                                       <div className="flex items-center gap-1">
                                         <span className="font-medium">
                                           {parseFloat(player.form).toFixed(1)}
                                         </span>
-                                        <span className="text-gray-400">form</span>
+                                        <span className="text-gray-400">
+                                          form
+                                        </span>
                                       </div>
                                       <div className="flex items-center gap-1">
                                         <span className="font-medium text-purple-600 dark:text-purple-400">
-                                          {parseFloat(player.selected_by_percent).toFixed(1)}%
+                                          {parseFloat(
+                                            player.selected_by_percent
+                                          ).toFixed(1)}
+                                          %
                                         </span>
-                                        <span className="text-gray-400">own</span>
+                                        <span className="text-gray-400">
+                                          own
+                                        </span>
                                       </div>
                                     </div>
                                   </div>
@@ -1841,23 +1888,27 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     <div>
                       <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                         <div className="w-5 h-5 bg-gray-400 rounded flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">S</span>
+                          <span className="text-white text-xs font-bold">
+                            S
+                          </span>
                         </div>
                         {t("teamPlanner.list.substitutes")}
                       </h3>
-                      
+
                       {/* Substitutes Grid */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                         {currentTeamForDisplay
                           .filter((tp) => tp.position > 11)
                           .sort((a, b) => a.position - b.position)
                           .map((teamPlayer) => {
-                            const player = teamPlayer.player || getPlayerById(teamPlayer.player_id);
+                            const player =
+                              teamPlayer.player ||
+                              getPlayerById(teamPlayer.player_id);
                             const team = getTeamById(player?.team || 0);
                             const teamColor = getTeamColor(player?.team || 0);
-                            
+
                             if (!player) return null;
-                            
+
                             return (
                               <motion.div
                                 key={teamPlayer.player_id}
@@ -1865,11 +1916,17 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.1 }}
                                 className={`${
-                                  theme === "dark" ? "bg-gray-700/50" : "bg-gray-50"
+                                  theme === "dark"
+                                    ? "bg-gray-700/50"
+                                    : "bg-gray-50"
                                 } rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-600 opacity-75 hover:opacity-100 transition-all duration-200 cursor-pointer`}
                                 onClick={() => {
                                   if (transferMode) {
-                                    if (pendingTransfers.transfersOut.includes(player.id)) {
+                                    if (
+                                      pendingTransfers.transfersOut.includes(
+                                        player.id
+                                      )
+                                    ) {
                                       removePlayerOut(player.id);
                                     } else {
                                       addPlayerOut(player.id);
@@ -1886,44 +1943,67 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                         backgroundColor: teamColor.primary,
                                       }}
                                     >
-                                      {player.web_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                                      {player.web_name
+                                        .split(" ")
+                                        .map((n: string) => n[0])
+                                        .join("")
+                                        .slice(0, 2)}
                                     </div>
-                                    
+
                                     {/* Position Badge */}
-                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
-                                      player.element_type === 1
-                                        ? "bg-yellow-500 text-white"
-                                        : player.element_type === 2
-                                        ? "bg-blue-500 text-white"
-                                        : player.element_type === 3
-                                        ? "bg-green-500 text-white"
-                                        : "bg-red-500 text-white"
-                                    }`}>
-                                      {getPlayerPosition(player.element_type)[0]}
+                                    <div
+                                      className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
+                                        player.element_type === 1
+                                          ? "bg-yellow-500 text-white"
+                                          : player.element_type === 2
+                                          ? "bg-blue-500 text-white"
+                                          : player.element_type === 3
+                                          ? "bg-green-500 text-white"
+                                          : "bg-red-500 text-white"
+                                      }`}
+                                    >
+                                      {
+                                        getPlayerPosition(
+                                          player.element_type
+                                        )[0]
+                                      }
                                     </div>
 
                                     {/* Transfer Status Indicator */}
-                                    {transferMode && pendingTransfers.transfersOut.includes(player.id) && (
-                                      <div className="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
-                                        <span className="text-white text-xs">-</span>
-                                      </div>
-                                    )}
+                                    {transferMode &&
+                                      pendingTransfers.transfersOut.includes(
+                                        player.id
+                                      ) && (
+                                        <div className="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+                                          <span className="text-white text-xs">
+                                            -
+                                          </span>
+                                        </div>
+                                      )}
                                   </div>
-                                  
+
                                   {/* Player Info */}
                                   <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-sm truncate">{player.web_name}</h4>
+                                    <h4 className="font-semibold text-sm truncate">
+                                      {player.web_name}
+                                    </h4>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                      {team?.short_name} • £{(player.now_cost / 10).toFixed(1)}m
+                                      {team?.short_name} • £
+                                      {(player.now_cost / 10).toFixed(1)}m
                                     </p>
-                                    
+
                                     {/* Stats Row */}
                                     <div className="flex items-center gap-3 text-xs">
                                       <span className="font-medium text-green-600 dark:text-green-400">
-                                        {teamPlayer.isTransferIn ? 0 : (teamPlayer.total_points || player.total_points)} pts
+                                        {teamPlayer.isTransferIn
+                                          ? 0
+                                          : teamPlayer.total_points ||
+                                            player.total_points}{" "}
+                                        pts
                                       </span>
                                       <span className="text-gray-400">
-                                        {parseFloat(player.form).toFixed(1)} form
+                                        {parseFloat(player.form).toFixed(1)}{" "}
+                                        form
                                       </span>
                                     </div>
                                   </div>
@@ -2084,7 +2164,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                     {avgPoints.toFixed(1)} pts
                                     {benchCount > 0 && (
                                       <span className="text-xs text-gray-500 ml-1">
-                                        ({benchCount} {t("teamPlanner.analytics.benchCount")})
+                                        ({benchCount}{" "}
+                                        {t("teamPlanner.analytics.benchCount")})
                                       </span>
                                     )}
                                   </span>
@@ -2101,170 +2182,125 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                 {/* Transfer Status Panel - Full Width */}
                 {transferMode && (
                   <div className="mt-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 lg:p-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div className="text-center sm:text-left">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {t("teamPlanner.transfers.transfersOut")}
-                        </p>
-                        <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                          {pendingTransfers.transfersOut.length}
-                        </p>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="text-center sm:text-left">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {t("teamPlanner.transfers.transfersOut")}
+                          </p>
+                          <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                            {pendingTransfers.transfersOut.length}
+                          </p>
+                        </div>
+                        <div className="text-center sm:text-left">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {t("teamPlanner.transfers.transfersIn")}
+                          </p>
+                          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                            {pendingTransfers.transfersIn.length}
+                          </p>
+                        </div>
+                        <div className="text-center sm:text-left">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {t("teamPlanner.transfers.availableBudget")}
+                          </p>
+                          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                            £{(availableBudget / 10).toFixed(1)}m
+                          </p>
+                        </div>
+                        <div className="text-center sm:text-left">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {t("teamPlanner.transfers.transferCost")}
+                          </p>
+                          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                            {transferCost} pts
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-center sm:text-left">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {t("teamPlanner.transfers.transfersIn")}
-                        </p>
-                        <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                          {pendingTransfers.transfersIn.length}
-                        </p>
-                      </div>
-                      <div className="text-center sm:text-left">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {t("teamPlanner.transfers.availableBudget")}
-                        </p>
-                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                          £{(availableBudget / 10).toFixed(1)}m
-                        </p>
-                      </div>
-                      <div className="text-center sm:text-left">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {t("teamPlanner.transfers.transferCost")}
-                        </p>
-                        <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                          {transferCost} pts
-                        </p>
-                      </div>
-                    </div>
 
-                    {pendingTransfers.transfersOut.length > 0 && (
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <button
-                          onClick={resetTransfers}
-                          className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
-                        >
-                          {t("teamPlanner.transfers.reset")}
-                        </button>
-                        <button
-                          disabled={
-                            pendingTransfers.transfersOut.length !==
-                              pendingTransfers.transfersIn.length ||
-                            !validateSquad().isValid
-                          }
-                          className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-colors"
-                          onClick={confirmTransfers}
-                        >
-                          {t("teamPlanner.transfers.confirmTransfers")}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Squad Validation */}
-                  {transferMode && pendingTransfers.transfersOut.length > 0 && (
-                    <div className="mt-4">
-                      {(() => {
-                        const validation = validateSquad();
-                        return (
-                          <div
-                            className={`p-3 rounded-lg border ${
-                              validation.isValid
-                                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-                                : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
-                            }`}
-                          >
-                            <h4
-                              className={`font-semibold text-sm mb-2 ${
-                                validation.isValid
-                                  ? "text-green-800 dark:text-green-200"
-                                  : "text-red-800 dark:text-red-200"
-                              }`}
-                            >
-                              {t("teamPlanner.transfers.squadValidation")}{" "}
-                              {validation.isValid ? "✅" : "❌"}
-                            </h4>
-                            {!validation.isValid &&
-                              validation.errors.length > 0 && (
-                                <ul className="text-xs text-red-700 dark:text-red-300 space-y-1">
-                                  {validation.errors.map((error, idx) => (
-                                    <li key={idx}>• {error}</li>
-                                  ))}
-                                </ul>
-                              )}
-                            {validation.isValid && (
-                              <p className="text-xs text-green-700 dark:text-green-300">
-                                {t("teamPlanner.transfers.squadValid")}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {/* Pending Transfers List */}
-                  {(pendingTransfers.transfersOut.length > 0 ||
-                    pendingTransfers.transfersIn.length > 0) && (
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Players Out */}
                       {pendingTransfers.transfersOut.length > 0 && (
-                        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
-                          <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">
-                            {t("teamPlanner.transfers.playersOut")}
-                          </h4>
-                          <div className="space-y-2">
-                            {pendingTransfers.transfersOut.map((playerId) => {
-                              const player = getPlayerById(playerId);
-                              const team = getTeamById(player?.team || 0);
-                              return player ? (
-                                <div
-                                  key={playerId}
-                                  className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2"
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            onClick={resetTransfers}
+                            className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
+                          >
+                            {t("teamPlanner.transfers.reset")}
+                          </button>
+                          <button
+                            disabled={
+                              pendingTransfers.transfersOut.length !==
+                                pendingTransfers.transfersIn.length ||
+                              !validateSquad().isValid
+                            }
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-colors"
+                            onClick={confirmTransfers}
+                          >
+                            {t("teamPlanner.transfers.confirmTransfers")}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Squad Validation */}
+                    {transferMode &&
+                      pendingTransfers.transfersOut.length > 0 && (
+                        <div className="mt-4">
+                          {(() => {
+                            const validation = validateSquad();
+                            return (
+                              <div
+                                className={`p-3 rounded-lg border ${
+                                  validation.isValid
+                                    ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                                    : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                                }`}
+                              >
+                                <h4
+                                  className={`font-semibold text-sm mb-2 ${
+                                    validation.isValid
+                                      ? "text-green-800 dark:text-green-200"
+                                      : "text-red-800 dark:text-red-200"
+                                  }`}
                                 >
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium text-sm">
-                                      {player.web_name}
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                      ({team?.short_name})
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">
-                                      £{(player.now_cost / 10).toFixed(1)}m
-                                    </span>
-                                    <button
-                                      onClick={() => removePlayerOut(playerId)}
-                                      className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : null;
-                            })}
-                          </div>
+                                  {t("teamPlanner.transfers.squadValidation")}{" "}
+                                  {validation.isValid ? "✅" : "❌"}
+                                </h4>
+                                {!validation.isValid &&
+                                  validation.errors.length > 0 && (
+                                    <ul className="text-xs text-red-700 dark:text-red-300 space-y-1">
+                                      {validation.errors.map((error, idx) => (
+                                        <li key={idx}>• {error}</li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                {validation.isValid && (
+                                  <p className="text-xs text-green-700 dark:text-green-300">
+                                    {t("teamPlanner.transfers.squadValid")}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
 
-                      {/* Players In */}
-                      {pendingTransfers.transfersIn.length > 0 && (
-                        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                          <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">
-                            {t("teamPlanner.transfers.playersIn")}
-                          </h4>
-                          <div className="space-y-2">
-                            {pendingTransfers.transfersIn.map(
-                              (playerId, index) => {
-                                if (!playerId) return null; // Skip empty slots
+                    {/* Pending Transfers List */}
+                    {(pendingTransfers.transfersOut.length > 0 ||
+                      pendingTransfers.transfersIn.length > 0) && (
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Players Out */}
+                        {pendingTransfers.transfersOut.length > 0 && (
+                          <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                            <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">
+                              {t("teamPlanner.transfers.playersOut")}
+                            </h4>
+                            <div className="space-y-2">
+                              {pendingTransfers.transfersOut.map((playerId) => {
                                 const player = getPlayerById(playerId);
                                 const team = getTeamById(player?.team || 0);
-                                const outPlayer = getPlayerById(
-                                  pendingTransfers.transfersOut[index]
-                                );
                                 return player ? (
                                   <div
-                                    key={`${playerId}-${index}`}
+                                    key={playerId}
                                     className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2"
                                   >
                                     <div className="flex items-center gap-2">
@@ -2274,18 +2310,15 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                       <span className="text-xs text-gray-500">
                                         ({team?.short_name})
                                       </span>
-                                      {outPlayer && (
-                                        <span className="text-xs text-blue-600 dark:text-blue-400">
-                                          → {t("teamPlanner.transfers.replaces")} {outPlayer.web_name}
-                                        </span>
-                                      )}
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <span className="text-sm font-medium">
                                         £{(player.now_cost / 10).toFixed(1)}m
                                       </span>
                                       <button
-                                        onClick={() => removePlayerIn(playerId)}
+                                        onClick={() =>
+                                          removePlayerOut(playerId)
+                                        }
                                         className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
                                       >
                                         ×
@@ -2293,548 +2326,620 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                     </div>
                                   </div>
                                 ) : null;
-                              }
-                            )}
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        )}
+
+                        {/* Players In */}
+                        {pendingTransfers.transfersIn.length > 0 && (
+                          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                            <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">
+                              {t("teamPlanner.transfers.playersIn")}
+                            </h4>
+                            <div className="space-y-2">
+                              {pendingTransfers.transfersIn.map(
+                                (playerId, index) => {
+                                  if (!playerId) return null; // Skip empty slots
+                                  const player = getPlayerById(playerId);
+                                  const team = getTeamById(player?.team || 0);
+                                  const outPlayer = getPlayerById(
+                                    pendingTransfers.transfersOut[index]
+                                  );
+                                  return player ? (
+                                    <div
+                                      key={`${playerId}-${index}`}
+                                      className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium text-sm">
+                                          {player.web_name}
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                          ({team?.short_name})
+                                        </span>
+                                        {outPlayer && (
+                                          <span className="text-xs text-blue-600 dark:text-blue-400">
+                                            →{" "}
+                                            {t(
+                                              "teamPlanner.transfers.replaces"
+                                            )}{" "}
+                                            {outPlayer.web_name}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium">
+                                          £{(player.now_cost / 10).toFixed(1)}m
+                                        </span>
+                                        <button
+                                          onClick={() =>
+                                            removePlayerIn(playerId)
+                                          }
+                                          className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
+                                        >
+                                          ×
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : null;
+                                }
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
-              {/* Player List below pitch */}
-              <div className="mt-2 bg-theme-card border-t border-gray-200 dark:border-gray-700">
-                <div className="p-4 lg:p-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
-                    <h3 className="text-lg font-semibold">
-                      {transferMode
-                        ? "Select Players to Buy"
-                        : t("teamPlanner.transferMarket.title")}
-                    </h3>
-                    <div className="flex items-center space-x-2 w-full sm:w-auto">
-                      <div className="relative flex-1 sm:flex-none">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <input
-                          type="text"
-                          placeholder={t("teamPlanner.transferMarket.search")}
-                          value={filters.search}
-                          onChange={(e) =>
-                            setFilters((prev) => ({
-                              ...prev,
-                              search: e.target.value,
-                            }))
-                          }
-                          className="w-full sm:w-auto pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        />
-                      </div>
-                      <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-colors shrink-0 ${
-                          showFilters
-                            ? "bg-green-600 text-white border-green-600"
-                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        }`}
-                      >
-                        <Filter className="w-4 h-4" />
-                        <span className="hidden sm:inline">
-                          {t("teamPlanner.transferMarket.filters")}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Advanced Filter Panel */}
-                  <AdvancedFilterPanel
-                    filters={filters}
-                    onFiltersChange={setFilters}
-                    allPlayers={allPlayers}
-                    allTeams={allTeams}
-                    isVisible={showFilters}
-                    onToggle={() => setShowFilters(!showFilters)}
-                  />
-
-                  {/* Player List Table */}
-                  <div
-                    className={`${
-                      showFilters ? "mt-6" : ""
-                    } bg-white dark:bg-gray-800 rounded-lg  border border-gray-200 dark:border-gray-700`}
-                  >
-                    {/* Table Header */}
-                    <div className="bg-gray-50 dark:bg-gray-700 px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 dark:border-gray-600">
-                      {/* Desktop Header */}
-                      <div className="hidden sm:grid sm:grid-cols-9 sm:gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        <div className="col-span-3">
-                          {t("teamPlanner.transferMarket.player")}
+                {/* Player List below pitch */}
+                <div className="mt-2 bg-theme-card border-t border-gray-200 dark:border-gray-700">
+                  <div className="p-4 lg:p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
+                      <h3 className="text-lg font-semibold">
+                        {transferMode
+                          ? "Select Players to Buy"
+                          : t("teamPlanner.transferMarket.title")}
+                      </h3>
+                      <div className="flex items-center space-x-2 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:flex-none">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <input
+                            type="text"
+                            placeholder={t("teamPlanner.transferMarket.search")}
+                            value={filters.search}
+                            onChange={(e) =>
+                              setFilters((prev) => ({
+                                ...prev,
+                                search: e.target.value,
+                              }))
+                            }
+                            className="w-full sm:w-auto pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
                         </div>
-                        <div className="col-span-1">
-                          {t("teamPlanner.transferMarket.pos")}
-                        </div>
-                        <div className="col-span-1">
-                          {t("teamPlanner.transferMarket.price")}
-                        </div>
-                        <div className="col-span-1">
-                          {t("teamPlanner.transferMarket.points")}
-                        </div>
-                        <div className="col-span-1">
-                          {t("teamPlanner.transferMarket.form")}
-                        </div>
-                        <div className="col-span-1">
-                          {t("teamPlanner.transferMarket.ownership")}
-                        </div>
-                        <div className="col-span-1">
-                          {t("teamPlanner.transferMarket.status")}
-                        </div>
-                      </div>
-                      {/* Mobile Header - More compact */}
-                      <div className="flex sm:hidden justify-between text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-tight px-1">
-                        <div className="flex-1 text-left">
-                          {t("teamPlanner.transferMarket.player")}
-                        </div>
-                        <div className="w-12 text-center">Pts</div>
-                        <div className="w-12 text-center">£</div>
-                        <div className="w-8 text-center">%</div>
+                        <button
+                          onClick={() => setShowFilters(!showFilters)}
+                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-colors shrink-0 ${
+                            showFilters
+                              ? "bg-green-600 text-white border-green-600"
+                              : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          <Filter className="w-4 h-4" />
+                          <span className="hidden sm:inline">
+                            {t("teamPlanner.transferMarket.filters")}
+                          </span>
+                        </button>
                       </div>
                     </div>
 
-                    {/* Table Body */}
-                    <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
-                      {filteredPlayers.slice(0, 100).map((player) => {
-                        const team = getTeamById(player.team);
-                        const teamColor = getTeamColor(player.team);
-                        const isSelected = transferMode
-                          ? pendingTransfers.transfersIn.includes(player.id) ||
-                            pendingTransfers.transfersOut.includes(player.id)
-                          : uiState.comparedPlayers.includes(player.id);
-                        const isInMyTeam = userTeamData?.team_with_stats?.some(
-                          (tp) => tp.player_id === player.id
-                        );
-                        const canAfford = transferMode
-                          ? canAffordPlayer(player.id)
-                          : true;
-                        const isTransferOut =
-                          transferMode &&
-                          pendingTransfers.transfersOut.includes(player.id);
-                        const isTransferIn =
-                          transferMode &&
-                          pendingTransfers.transfersIn.includes(player.id);
+                    {/* Advanced Filter Panel */}
+                    <AdvancedFilterPanel
+                      filters={filters}
+                      onFiltersChange={setFilters}
+                      allPlayers={allPlayers}
+                      allTeams={allTeams}
+                      isVisible={showFilters}
+                      onToggle={() => setShowFilters(!showFilters)}
+                    />
 
-                        return (
-                          <motion.div
-                            key={player.id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className={`transition-colors relative ${
-                              transferMode
-                                ? canAfford
-                                  ? "hover:bg-green-50 dark:hover:bg-green-900/20 cursor-pointer"
-                                  : "opacity-60 cursor-not-allowed"
-                                : "hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                            } ${
-                              isSelected || isTransferIn
-                                ? "bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500"
-                                : isTransferOut
-                                ? "bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500"
-                                : isInMyTeam && transferMode
-                                ? "bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500"
-                                : ""
-                            }`}
-                            onClick={() => {
-                              if (transferMode) {
-                                if (isInMyTeam && !isTransferOut) {
-                                  // Player is in my team, mark for transfer out
-                                  addPlayerOut(player.id);
-                                } else if (!isInMyTeam && !isTransferIn) {
-                                  // Player not in my team, try to add them
-                                  if (canAffordPlayer(player.id)) {
-                                    // Check if we have transfer out slot for this position
-                                    const hasCompatibleOut =
-                                      pendingTransfers.transfersOut.some(
-                                        (outId, index) => {
-                                          if (
-                                            pendingTransfers.transfersIn[index]
-                                          )
-                                            return false; // Slot already filled
-                                          const outPlayer =
-                                            getPlayerById(outId);
-                                          return (
-                                            outPlayer &&
-                                            outPlayer.element_type ===
-                                              player.element_type
-                                          );
-                                        }
-                                      );
+                    {/* Player List Table */}
+                    <div
+                      className={`${
+                        showFilters ? "mt-6" : ""
+                      } bg-white dark:bg-gray-800 rounded-lg  border border-gray-200 dark:border-gray-700`}
+                    >
+                      {/* Table Header */}
+                      <div className="bg-gray-50 dark:bg-gray-700 px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 dark:border-gray-600">
+                        {/* Desktop Header */}
+                        <div className="hidden sm:grid sm:grid-cols-9 sm:gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          <div className="col-span-3">
+                            {t("teamPlanner.transferMarket.player")}
+                          </div>
+                          <div className="col-span-1">
+                            {t("teamPlanner.transferMarket.pos")}
+                          </div>
+                          <div className="col-span-1">
+                            {t("teamPlanner.transferMarket.price")}
+                          </div>
+                          <div className="col-span-1">
+                            {t("teamPlanner.transferMarket.points")}
+                          </div>
+                          <div className="col-span-1">
+                            {t("teamPlanner.transferMarket.form")}
+                          </div>
+                          <div className="col-span-1">
+                            {t("teamPlanner.transferMarket.ownership")}
+                          </div>
+                          <div className="col-span-1">
+                            {t("teamPlanner.transferMarket.status")}
+                          </div>
+                        </div>
+                        {/* Mobile Header - More compact */}
+                        <div className="flex sm:hidden justify-between text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-tight px-1">
+                          <div className="flex-1 text-left">
+                            {t("teamPlanner.transferMarket.player")}
+                          </div>
+                          <div className="w-12 text-center">Pts</div>
+                          <div className="w-12 text-center">£</div>
+                          <div className="w-8 text-center">%</div>
+                        </div>
+                      </div>
 
-                                    if (hasCompatibleOut) {
-                                      addPlayerIn(player.id);
+                      {/* Table Body */}
+                      <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
+                        {filteredPlayers.slice(0, 100).map((player) => {
+                          const team = getTeamById(player.team);
+                          const teamColor = getTeamColor(player.team);
+                          const isSelected = transferMode
+                            ? pendingTransfers.transfersIn.includes(
+                                player.id
+                              ) ||
+                              pendingTransfers.transfersOut.includes(player.id)
+                            : uiState.comparedPlayers.includes(player.id);
+                          const isInMyTeam =
+                            userTeamData?.team_with_stats?.some(
+                              (tp) => tp.player_id === player.id
+                            );
+                          const canAfford = transferMode
+                            ? canAffordPlayer(player.id)
+                            : true;
+                          const isTransferOut =
+                            transferMode &&
+                            pendingTransfers.transfersOut.includes(player.id);
+                          const isTransferIn =
+                            transferMode &&
+                            pendingTransfers.transfersIn.includes(player.id);
+
+                          return (
+                            <motion.div
+                              key={player.id}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className={`transition-colors relative ${
+                                transferMode
+                                  ? canAfford
+                                    ? "hover:bg-green-50 dark:hover:bg-green-900/20 cursor-pointer"
+                                    : "opacity-60 cursor-not-allowed"
+                                  : "hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                              } ${
+                                isSelected || isTransferIn
+                                  ? "bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500"
+                                  : isTransferOut
+                                  ? "bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500"
+                                  : isInMyTeam && transferMode
+                                  ? "bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                if (transferMode) {
+                                  if (isInMyTeam && !isTransferOut) {
+                                    // Player is in my team, mark for transfer out
+                                    addPlayerOut(player.id);
+                                  } else if (!isInMyTeam && !isTransferIn) {
+                                    // Player not in my team, try to add them
+                                    if (canAffordPlayer(player.id)) {
+                                      // Check if we have transfer out slot for this position
+                                      const hasCompatibleOut =
+                                        pendingTransfers.transfersOut.some(
+                                          (outId, index) => {
+                                            if (
+                                              pendingTransfers.transfersIn[
+                                                index
+                                              ]
+                                            )
+                                              return false; // Slot already filled
+                                            const outPlayer =
+                                              getPlayerById(outId);
+                                            return (
+                                              outPlayer &&
+                                              outPlayer.element_type ===
+                                                player.element_type
+                                            );
+                                          }
+                                        );
+
+                                      if (hasCompatibleOut) {
+                                        addPlayerIn(player.id);
+                                      } else {
+                                        alert(
+                                          `No ${getPlayerPosition(
+                                            player.element_type
+                                          )} selected for transfer out!`
+                                        );
+                                      }
                                     } else {
                                       alert(
-                                        `No ${getPlayerPosition(
-                                          player.element_type
-                                        )} selected for transfer out!`
+                                        "Not enough budget for this player!"
                                       );
                                     }
-                                  } else {
-                                    alert("Not enough budget for this player!");
+                                  } else if (isTransferOut) {
+                                    // Already marked for transfer out, remove from transfer out
+                                    removePlayerOut(player.id);
+                                  } else if (isTransferIn) {
+                                    // Already marked for transfer in, remove from transfer in
+                                    removePlayerIn(player.id);
                                   }
-                                } else if (isTransferOut) {
-                                  // Already marked for transfer out, remove from transfer out
-                                  removePlayerOut(player.id);
-                                } else if (isTransferIn) {
-                                  // Already marked for transfer in, remove from transfer in
-                                  removePlayerIn(player.id);
+                                } else if (uiState.compareMode) {
+                                  setUIState((prev) => ({
+                                    ...prev,
+                                    comparedPlayers:
+                                      prev.comparedPlayers.includes(player.id)
+                                        ? prev.comparedPlayers.filter(
+                                            (id) => id !== player.id
+                                          )
+                                        : prev.comparedPlayers.length < 2
+                                        ? [...prev.comparedPlayers, player.id]
+                                        : [prev.comparedPlayers[1], player.id],
+                                  }));
+                                } else {
+                                  setSelectedPlayer(player);
                                 }
-                              } else if (uiState.compareMode) {
-                                setUIState((prev) => ({
-                                  ...prev,
-                                  comparedPlayers:
-                                    prev.comparedPlayers.includes(player.id)
-                                      ? prev.comparedPlayers.filter(
-                                          (id) => id !== player.id
-                                        )
-                                      : prev.comparedPlayers.length < 2
-                                      ? [...prev.comparedPlayers, player.id]
-                                      : [prev.comparedPlayers[1], player.id],
-                                }));
-                              } else {
-                                setSelectedPlayer(player);
-                              }
-                            }}
-                          >
-                            {/* Desktop Layout */}
-                            <div className="hidden sm:grid sm:grid-cols-9 sm:gap-2 px-4 py-3">
-                              {/* Player Info */}
-                              <div className="col-span-3 flex items-center space-x-2">
-                                <div
-                                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white relative"
-                                  style={{
-                                    backgroundColor: teamColor.primary,
-                                  }}
-                                >
-                                  {player.web_name.charAt(0)}
-                                  {/* Transfer Status Indicators */}
-                                  {transferMode && (
-                                    <>
-                                      {isTransferOut && (
-                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                                          <span className="text-white text-xs">
-                                            -
-                                          </span>
-                                        </div>
-                                      )}
-                                      {isTransferIn && (
-                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                                          <span className="text-white text-xs">
-                                            +
-                                          </span>
-                                        </div>
-                                      )}
-                                      {isInMyTeam &&
-                                        !isTransferOut &&
-                                        !isTransferIn && (
-                                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                              }}
+                            >
+                              {/* Desktop Layout */}
+                              <div className="hidden sm:grid sm:grid-cols-9 sm:gap-2 px-4 py-3">
+                                {/* Player Info */}
+                                <div className="col-span-3 flex items-center space-x-2">
+                                  <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white relative"
+                                    style={{
+                                      backgroundColor: teamColor.primary,
+                                    }}
+                                  >
+                                    {player.web_name.charAt(0)}
+                                    {/* Transfer Status Indicators */}
+                                    {transferMode && (
+                                      <>
+                                        {isTransferOut && (
+                                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                                             <span className="text-white text-xs">
-                                              ★
+                                              -
                                             </span>
                                           </div>
                                         )}
-                                    </>
-                                  )}
-                                  {/* Enhanced indicators - only show if not in transfer mode */}
-                                  {!transferMode &&
-                                    player.price_trend === "rising" && (
-                                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
-                                        <TrendingUp className="w-1.5 h-1.5 text-white" />
-                                      </div>
-                                    )}
-                                  {!transferMode &&
-                                    player.price_trend === "falling" && (
-                                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
-                                        <TrendingDown className="w-1.5 h-1.5 text-white" />
-                                      </div>
-                                    )}
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                    {player.web_name}
-                                  </p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                    {team?.short_name}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Position */}
-                              <div className="col-span-1 flex items-center">
-                                <span
-                                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                    player.element_type === 1
-                                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
-                                      : player.element_type === 2
-                                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
-                                      : player.element_type === 3
-                                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                                      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
-                                  }`}
-                                >
-                                  {getPlayerPosition(player.element_type)}
-                                </span>
-                              </div>
-
-                              {/* Price */}
-                              <div className="col-span-1 flex items-center">
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-medium">
-                                    £{(player.now_cost / 10).toFixed(1)}
-                                  </span>
-                                  {player.cost_change_event !== 0 && (
-                                    <span
-                                      className={`text-xs ${
-                                        player.cost_change_event > 0
-                                          ? "text-green-600"
-                                          : "text-red-600"
-                                      }`}
-                                    >
-                                      {player.cost_change_event > 0 ? "+" : ""}
-                                      {(player.cost_change_event / 10).toFixed(
-                                        1
-                                      )}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Points */}
-                              <div className="col-span-1 flex items-center">
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-bold text-green-600">
-                                    {player.total_points}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    {player.event_points} GW
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Form */}
-                              <div className="col-span-1 flex items-center">
-                                <span className="text-sm font-medium">
-                                  {parseFloat(player.form).toFixed(1)}
-                                </span>
-                              </div>
-
-                              {/* Ownership */}
-                              <div className="col-span-1 flex items-center">
-                                <div className="flex flex-col">
-                                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    {parseFloat(
-                                      player.selected_by_percent
-                                    ).toFixed(1)}
-                                    %
-                                  </span>
-                                  {player.ownership_trend === "rising" && (
-                                    <span className="text-xs text-blue-500">
-                                      ↗ {t("teamPlanner.transferMarket.rising")}
-                                    </span>
-                                  )}
-                                  {player.ownership_trend === "falling" && (
-                                    <span className="text-xs text-purple-500">
-                                      ↘{" "}
-                                      {t("teamPlanner.transferMarket.falling")}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Status */}
-                              <div className="col-span-1 flex items-center">
-                                <div className="flex items-center gap-1">
-                                  {player.availability_status ===
-                                    "available" && (
-                                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                                  )}
-                                  {player.availability_status ===
-                                    "doubtful" && (
-                                    <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-                                  )}
-                                  {player.availability_status === "injured" && (
-                                    <div className="w-2 h-2 bg-red-500 rounded-full" />
-                                  )}
-                                  {player.availability_status ===
-                                    "suspended" && (
-                                    <div className="w-2 h-2 bg-orange-500 rounded-full" />
-                                  )}
-                                  {/* Differential badge */}
-                                  {player.differential_score &&
-                                    player.differential_score > 20 && (
-                                      <Star className="w-3 h-3 text-yellow-500" />
-                                    )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Mobile Layout - Compact */}
-                            <div className="flex sm:hidden items-center justify-between px-2 py-2">
-                              {/* Player Info - Left side */}
-                              <div className="flex items-center space-x-2 flex-1 min-w-0">
-                                <div
-                                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white relative flex-shrink-0"
-                                  style={{
-                                    backgroundColor: teamColor.primary,
-                                  }}
-                                >
-                                  {player.web_name.charAt(0)}
-                                  {/* Mobile Transfer Status Indicators */}
-                                  {transferMode && (
-                                    <>
-                                      {isTransferOut && (
-                                        <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
-                                          <span className="text-white text-xs">
-                                            -
-                                          </span>
-                                        </div>
-                                      )}
-                                      {isTransferIn && (
-                                        <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
-                                          <span className="text-white text-xs">
-                                            +
-                                          </span>
-                                        </div>
-                                      )}
-                                      {isInMyTeam &&
-                                        !isTransferOut &&
-                                        !isTransferIn && (
-                                          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                                        {isTransferIn && (
+                                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                                             <span className="text-white text-xs">
-                                              ★
+                                              +
                                             </span>
                                           </div>
                                         )}
-                                    </>
-                                  )}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-1">
-                                    <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                                        {isInMyTeam &&
+                                          !isTransferOut &&
+                                          !isTransferIn && (
+                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                              <span className="text-white text-xs">
+                                                ★
+                                              </span>
+                                            </div>
+                                          )}
+                                      </>
+                                    )}
+                                    {/* Enhanced indicators - only show if not in transfer mode */}
+                                    {!transferMode &&
+                                      player.price_trend === "rising" && (
+                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                                          <TrendingUp className="w-1.5 h-1.5 text-white" />
+                                        </div>
+                                      )}
+                                    {!transferMode &&
+                                      player.price_trend === "falling" && (
+                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+                                          <TrendingDown className="w-1.5 h-1.5 text-white" />
+                                        </div>
+                                      )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                                       {player.web_name}
                                     </p>
-                                    <span
-                                      className={`inline-flex items-center px-1 rounded text-xs font-medium ${
-                                        player.element_type === 1
-                                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
-                                          : player.element_type === 2
-                                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
-                                          : player.element_type === 3
-                                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
-                                      }`}
-                                    >
-                                      {getPlayerPosition(player.element_type)}
-                                    </span>
-                                    {/* Status indicator */}
-                                    {player.availability_status ===
-                                      "available" && (
-                                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                                    )}
-                                    {player.availability_status ===
-                                      "doubtful" && (
-                                      <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
-                                    )}
-                                    {player.availability_status ===
-                                      "injured" && (
-                                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                       {team?.short_name}
                                     </p>
-                                    <span className="text-xs text-gray-400">
-                                      F:{parseFloat(player.form).toFixed(1)}
-                                    </span>
                                   </div>
                                 </div>
-                              </div>
 
-                              {/* Stats - Right side */}
-                              <div className="flex items-center gap-3 flex-shrink-0">
-                                {/* Points */}
-                                <div className="text-center w-12">
-                                  <div className="text-xs font-bold text-green-600">
-                                    {player.total_points}
-                                  </div>
-                                  <div className="text-xs text-gray-400">
-                                    {player.event_points}
-                                  </div>
+                                {/* Position */}
+                                <div className="col-span-1 flex items-center">
+                                  <span
+                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                      player.element_type === 1
+                                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
+                                        : player.element_type === 2
+                                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
+                                        : player.element_type === 3
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+                                        : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
+                                    }`}
+                                  >
+                                    {getPlayerPosition(player.element_type)}
+                                  </span>
                                 </div>
 
                                 {/* Price */}
-                                <div className="text-center w-12">
-                                  <div className="text-xs font-medium">
-                                    {(player.now_cost / 10).toFixed(1)}
+                                <div className="col-span-1 flex items-center">
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-medium">
+                                      £{(player.now_cost / 10).toFixed(1)}
+                                    </span>
+                                    {player.cost_change_event !== 0 && (
+                                      <span
+                                        className={`text-xs ${
+                                          player.cost_change_event > 0
+                                            ? "text-green-600"
+                                            : "text-red-600"
+                                        }`}
+                                      >
+                                        {player.cost_change_event > 0
+                                          ? "+"
+                                          : ""}
+                                        {(
+                                          player.cost_change_event / 10
+                                        ).toFixed(1)}
+                                      </span>
+                                    )}
                                   </div>
-                                  {player.cost_change_event !== 0 && (
-                                    <div
-                                      className={`text-xs ${
-                                        player.cost_change_event > 0
-                                          ? "text-green-600"
-                                          : "text-red-600"
-                                      }`}
-                                    >
-                                      {player.cost_change_event > 0 ? "+" : ""}
-                                      {(player.cost_change_event / 10).toFixed(
-                                        1
-                                      )}
-                                    </div>
-                                  )}
+                                </div>
+
+                                {/* Points */}
+                                <div className="col-span-1 flex items-center">
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-bold text-green-600">
+                                      {player.total_points}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {player.event_points} GW
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Form */}
+                                <div className="col-span-1 flex items-center">
+                                  <span className="text-sm font-medium">
+                                    {parseFloat(player.form).toFixed(1)}
+                                  </span>
                                 </div>
 
                                 {/* Ownership */}
-                                <div className="text-center w-8">
-                                  <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                    {parseFloat(
-                                      player.selected_by_percent
-                                    ).toFixed(0)}
-                                    %
+                                <div className="col-span-1 flex items-center">
+                                  <div className="flex flex-col">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                      {parseFloat(
+                                        player.selected_by_percent
+                                      ).toFixed(1)}
+                                      %
+                                    </span>
+                                    {player.ownership_trend === "rising" && (
+                                      <span className="text-xs text-blue-500">
+                                        ↗{" "}
+                                        {t("teamPlanner.transferMarket.rising")}
+                                      </span>
+                                    )}
+                                    {player.ownership_trend === "falling" && (
+                                      <span className="text-xs text-purple-500">
+                                        ↘{" "}
+                                        {t(
+                                          "teamPlanner.transferMarket.falling"
+                                        )}
+                                      </span>
+                                    )}
                                   </div>
-                                  {player.ownership_trend === "rising" && (
-                                    <div className="text-xs text-blue-500">
-                                      ↗
-                                    </div>
-                                  )}
-                                  {player.ownership_trend === "falling" && (
-                                    <div className="text-xs text-purple-500">
-                                      ↘
-                                    </div>
-                                  )}
+                                </div>
+
+                                {/* Status */}
+                                <div className="col-span-1 flex items-center">
+                                  <div className="flex items-center gap-1">
+                                    {player.availability_status ===
+                                      "available" && (
+                                      <div className="w-2 h-2 bg-green-500 rounded-full" />
+                                    )}
+                                    {player.availability_status ===
+                                      "doubtful" && (
+                                      <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                                    )}
+                                    {player.availability_status ===
+                                      "injured" && (
+                                      <div className="w-2 h-2 bg-red-500 rounded-full" />
+                                    )}
+                                    {player.availability_status ===
+                                      "suspended" && (
+                                      <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                                    )}
+                                    {/* Differential badge */}
+                                    {player.differential_score &&
+                                      player.differential_score > 20 && (
+                                        <Star className="w-3 h-3 text-yellow-500" />
+                                      )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
 
-                    {/* Results info */}
-                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {t("teamPlanner.transferMarket.showingPlayers", {
-                            current: Math.min(100, filteredPlayers.length),
-                            total: filteredPlayers.length,
-                          })}
-                        </span>
-                        {uiState.compareMode && (
-                          <span className="text-sm text-blue-600 dark:text-blue-400">
-                            {uiState.comparedPlayers.length}/2 players selected
-                            for comparison
+                              {/* Mobile Layout - Compact */}
+                              <div className="flex sm:hidden items-center justify-between px-2 py-2">
+                                {/* Player Info - Left side */}
+                                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                  <div
+                                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white relative flex-shrink-0"
+                                    style={{
+                                      backgroundColor: teamColor.primary,
+                                    }}
+                                  >
+                                    {player.web_name.charAt(0)}
+                                    {/* Mobile Transfer Status Indicators */}
+                                    {transferMode && (
+                                      <>
+                                        {isTransferOut && (
+                                          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-xs">
+                                              -
+                                            </span>
+                                          </div>
+                                        )}
+                                        {isTransferIn && (
+                                          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-xs">
+                                              +
+                                            </span>
+                                          </div>
+                                        )}
+                                        {isInMyTeam &&
+                                          !isTransferOut &&
+                                          !isTransferIn && (
+                                            <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                                              <span className="text-white text-xs">
+                                                ★
+                                              </span>
+                                            </div>
+                                          )}
+                                      </>
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1">
+                                      <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                                        {player.web_name}
+                                      </p>
+                                      <span
+                                        className={`inline-flex items-center px-1 rounded text-xs font-medium ${
+                                          player.element_type === 1
+                                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
+                                            : player.element_type === 2
+                                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
+                                            : player.element_type === 3
+                                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+                                            : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
+                                        }`}
+                                      >
+                                        {getPlayerPosition(player.element_type)}
+                                      </span>
+                                      {/* Status indicator */}
+                                      {player.availability_status ===
+                                        "available" && (
+                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                                      )}
+                                      {player.availability_status ===
+                                        "doubtful" && (
+                                        <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
+                                      )}
+                                      {player.availability_status ===
+                                        "injured" && (
+                                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {team?.short_name}
+                                      </p>
+                                      <span className="text-xs text-gray-400">
+                                        F:{parseFloat(player.form).toFixed(1)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Stats - Right side */}
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                  {/* Points */}
+                                  <div className="text-center w-12">
+                                    <div className="text-xs font-bold text-green-600">
+                                      {player.total_points}
+                                    </div>
+                                    <div className="text-xs text-gray-400">
+                                      {player.event_points}
+                                    </div>
+                                  </div>
+
+                                  {/* Price */}
+                                  <div className="text-center w-12">
+                                    <div className="text-xs font-medium">
+                                      {(player.now_cost / 10).toFixed(1)}
+                                    </div>
+                                    {player.cost_change_event !== 0 && (
+                                      <div
+                                        className={`text-xs ${
+                                          player.cost_change_event > 0
+                                            ? "text-green-600"
+                                            : "text-red-600"
+                                        }`}
+                                      >
+                                        {player.cost_change_event > 0
+                                          ? "+"
+                                          : ""}
+                                        {(
+                                          player.cost_change_event / 10
+                                        ).toFixed(1)}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Ownership */}
+                                  <div className="text-center w-8">
+                                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                      {parseFloat(
+                                        player.selected_by_percent
+                                      ).toFixed(0)}
+                                      %
+                                    </div>
+                                    {player.ownership_trend === "rising" && (
+                                      <div className="text-xs text-blue-500">
+                                        ↗
+                                      </div>
+                                    )}
+                                    {player.ownership_trend === "falling" && (
+                                      <div className="text-xs text-purple-500">
+                                        ↘
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Results info */}
+                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {t("teamPlanner.transferMarket.showingPlayers", {
+                              current: Math.min(100, filteredPlayers.length),
+                              total: filteredPlayers.length,
+                            })}
                           </span>
-                        )}
+                          {uiState.compareMode && (
+                            <span className="text-sm text-blue-600 dark:text-blue-400">
+                              {uiState.comparedPlayers.length}/2 players
+                              selected for comparison
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
               </div>
             </motion.div>
 
@@ -2969,9 +3074,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               <div className="flex items-center gap-2">
                 <FaRobot className="w-5 h-5 text-purple-600" />
                 <h3 className="text-lg font-semibold">
-                  AI Analiza Tima
+                  {i18n.language === "bs"
+                    ? "AI Analiza Tima"
+                    : "AI Team Analysis"}
                   <span className="text-sm font-normal text-gray-500 ml-2">
-                    (1x weekly)
+                    {i18n.language === "bs" ? "(1x sedmično)" : "(1x weekly)"}
                   </span>
                 </h3>
               </div>

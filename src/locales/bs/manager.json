@@ -1,0 +1,18 @@
+{
+  "modalTitle": "Manager ID potreban",
+  "modalSubtitle": "Za personaliziranu FPL analizu",
+  "whyNeedTitle": "Zašto trebam Manager ID?",
+  "whyNeedDescription": "Da analiziram tvoj tim, potreban mi je pristup tvojim igračima, kapitenu i rangovima.",
+  "inputLabel": "FPL Manager ID",
+  "inputPlaceholder": "npr. 1234567",
+  "findManagerIdHelp": "Kako naći Manager ID?",
+  "cancel": "Odustani",
+  "saveId": "Spremi ID",
+  "validating": "Validating...",
+  "retrying": "Retrying...",
+  "helpText": "💡 Manager ID možeš naći na svojoj FPL stranici u URL-u nakon /entry/",
+  "errors": {
+    "required": "Manager ID je obavezan",
+    "invalidFormat": "Manager ID mora biti broj (1-10 cifara)"
+  }
+}
