@@ -40,7 +40,8 @@ export async function GET(request: NextRequest) {
         }, { status: 400 });
       }
 
-      const trends = await ownershipService.getPlayerOwnershipTrends(ids);
+      // Pass timeframe through to ensure correct period is computed
+      const trends = await ownershipService.getPlayerOwnershipTrends(ids, timeframe);
       
       if (!trends.success) {
         return NextResponse.json({

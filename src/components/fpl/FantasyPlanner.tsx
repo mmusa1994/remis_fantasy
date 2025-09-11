@@ -395,7 +395,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         setFplApiError(
           "FPL API is currently unavailable. Base data could not be loaded."
         );
-        throw new Error("Failed to fetch bootstrap data");
+        return; // Avoid throwing to keep flow stable
       }
 
       const result = await response.json();
@@ -491,7 +491,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           setFplApiError(
             "FPL API is currently unavailable. Team data could not be loaded."
           );
-          throw new Error(`Failed to fetch team data: ${response.status}`);
+          return; // Avoid throwing to keep flow stable
         }
 
         const data = await response.json();
