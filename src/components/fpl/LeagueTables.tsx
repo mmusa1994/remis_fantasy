@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { MdExpandMore, MdRemove, MdRefresh, MdInfo } from "react-icons/md";
 import LoadingCard from "@/components/shared/LoadingCard";
+import FplLoadingSkeleton from "@/components/shared/FplLoadingSkeleton";
 import { FaTrophy, FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { IoFootballOutline } from "react-icons/io5";
 import { getTeamColors } from "@/lib/team-colors";
@@ -97,6 +98,7 @@ export default function LeagueTables({
   const [selectedLeagueId, setSelectedLeagueId] = useState(leagueId || "");
   const [leagues, setLeagues] = useState<any[]>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const fetchManagerLeagues = useCallback(async () => {
     if (!managerId) return;
@@ -153,6 +155,8 @@ export default function LeagueTables({
   useEffect(() => {
     if (managerId) {
       fetchManagerLeagues();
+    } else {
+      setIsInitializing(false);
     }
   }, [managerId, fetchManagerLeagues]);
 
@@ -168,6 +172,36 @@ export default function LeagueTables({
       fetchLeagueTable();
     }
   }, [selectedLeagueId, managerId, leagues.length, fetchLeagueTable]);
+
+  // Update initializing state
+  useEffect(() => {
+    // If we don't have a manager, no skeleton
+    if (!managerId) {
+      setIsInitializing(false);
+      return;
+    }
+
+    // Do NOT show global skeleton while loading leagues list; the select area shows its own loader
+    if (managerId && leagues.length === 0 && leaguesLoading) {
+      setIsInitializing(false);
+      return;
+    }
+
+    // Do NOT show skeleton before a league is selected
+    if (managerId && leagues.length > 0 && !selectedLeagueId && !data) {
+      setIsInitializing(false);
+      return;
+    }
+
+    // Only show skeleton after a league is selected and while table is loading
+    if (selectedLeagueId && loading) {
+      setIsInitializing(true);
+      return;
+    }
+
+    // Otherwise, no skeleton
+    setIsInitializing(false);
+  }, [managerId, leagues.length, leaguesLoading, selectedLeagueId, data, loading]);
 
   // Removed auto-refresh - user will use manual refresh button
 
@@ -643,7 +677,7 @@ export default function LeagueTables({
       </div>
 
       {/* Error Display */}
-      {error && (
+      {error && !isInitializing && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-4 rounded-md">
           <p className="text-sm font-medium">
             {t("leagueTables.errorLoadingTable")}: {error}
@@ -651,19 +685,23 @@ export default function LeagueTables({
         </div>
       )}
 
-      {/* Loading State */}
-      {loading && (
-        <div className="bg-theme-card rounded-lg border border-theme-border p-8">
-          <LoadingCard
-            title={t("leagueTables.loadingLeagues")}
-            description={t("leagueTables.fetchingManagerLeagues")}
-            className="bg-theme-card border-theme-border rounded-md shadow theme-transition"
-          />
-        </div>
+      {/* Unified Loading State */}
+      {isInitializing && (
+        <FplLoadingSkeleton
+          variant="league-table"
+          title={t("leagueTables.loadingLeagues")}
+          description={
+            leaguesLoading
+              ? t("leagueTables.fetchingManagerLeagues")
+              : loading
+              ? "Loading league table..."
+              : "Preparing league data..."
+          }
+        />
       )}
 
       {/* League Table */}
-      {data && !loading && (
+      {data && !isInitializing && (
         <div className="bg-theme-card rounded-lg border border-theme-border overflow-hidden">
           {/* Header */}
           <div className="bg-theme-card-secondary border-b border-theme-border p-4">

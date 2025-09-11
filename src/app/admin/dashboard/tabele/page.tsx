@@ -432,7 +432,7 @@ export default function AdminTablesCleanPage() {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <p className="mb-4 text-gray-800">Redirecting to admin login...</p>
-          <Link 
+          <Link
             href="/admin"
             className="bg-gradient-to-r from-amber-600 to-red-600 text-white px-6 py-2 rounded-lg hover:from-amber-700 hover:to-red-700 transition-colors"
           >
@@ -541,12 +541,17 @@ export default function AdminTablesCleanPage() {
         {mainTab === "f1" && (
           <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-              <h3 className="text-lg font-semibold text-gray-800">F1 Bulk Updater (2025)</h3>
-              <p className="text-sm text-gray-600">Paste standings text (Rank, Team, Manager, Points) and update Supabase table f1_table_25.</p>
+              <h3 className="text-lg font-semibold text-gray-800">
+                F1 Bulk Updater (2025)
+              </h3>
+              <p className="text-sm text-gray-600">
+                Paste standings text (Rank, Team, Manager, Points) and update
+                Supabase table f1_table_25.
+              </p>
             </div>
             <div className="p-6 space-y-4">
               <textarea
-                className="w-full min-h-[220px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="text-gray-800 w-full min-h-[220px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder={`Paste here. Example:\nRank\tName\tPoints\n1\nSainz & Conquer\nAlmir Softic\n3377\n2\nCosine kamikaze\nAmmar Cosovic\n3307`}
                 value={bulkUpdateData}
                 onChange={(e) => setBulkUpdateData(e.target.value)}
@@ -555,7 +560,11 @@ export default function AdminTablesCleanPage() {
                 <button
                   onClick={async () => {
                     if (!bulkUpdateData.trim()) {
-                      setToast({ show: true, message: "Please paste standings text", type: "error" });
+                      setToast({
+                        show: true,
+                        message: "Please paste standings text",
+                        type: "error",
+                      });
                       return;
                     }
                     setBulkUpdating(true);
@@ -566,10 +575,19 @@ export default function AdminTablesCleanPage() {
                         body: JSON.stringify({ text: bulkUpdateData }),
                       });
                       const json = await res.json();
-                      if (!res.ok || !json.success) throw new Error(json.error || "Update failed");
-                      setToast({ show: true, message: `Updated ${json.count} entries`, type: "success" });
+                      if (!res.ok || !json.success)
+                        throw new Error(json.error || "Update failed");
+                      setToast({
+                        show: true,
+                        message: `Updated ${json.count} entries`,
+                        type: "success",
+                      });
                     } catch (e: any) {
-                      setToast({ show: true, message: e.message || "Bulk update failed", type: "error" });
+                      setToast({
+                        show: true,
+                        message: e.message || "Bulk update failed",
+                        type: "error",
+                      });
                     } finally {
                       setBulkUpdating(false);
                     }
@@ -601,590 +619,596 @@ export default function AdminTablesCleanPage() {
 
         {/* Wrap Premier content to toggle visibility via tab */}
         <div className={mainTab !== "premier" ? "hidden" : "block"}>
-        {/* Control Panel */}
-        <div className="bg-white rounded-xl shadow-lg mb-4 sm:mb-6 lg:mb-8 border border-gray-100 overflow-hidden">
-          {/* Header Info */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200">
-            <div className="space-y-3 lg:space-y-0 lg:flex lg:items-center lg:justify-between">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Server className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-base sm:text-lg font-bold text-gray-800 truncate">
-                    Premier League Tables
-                  </h2>
-                  {source && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium whitespace-nowrap">
-                        {source === "clean_table"
-                          ? "Updated Table"
-                          : "Registration Table"}
-                      </span>
-                      {lastUpdated && (
-                        <span className="text-xs text-gray-500 hidden sm:inline truncate">
-                          • {new Date(lastUpdated).toLocaleString("sr-RS")}
+          {/* Control Panel */}
+          <div className="bg-white rounded-xl shadow-lg mb-4 sm:mb-6 lg:mb-8 border border-gray-100 overflow-hidden">
+            {/* Header Info */}
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <div className="space-y-3 lg:space-y-0 lg:flex lg:items-center lg:justify-between">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Server className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-base sm:text-lg font-bold text-gray-800 truncate">
+                      Premier League Tables
+                    </h2>
+                    {source && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium whitespace-nowrap">
+                          {source === "clean_table"
+                            ? "Updated Table"
+                            : "Registration Table"}
                         </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                {/* Main Actions */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowBulkUpdate(true)}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow transition-all duration-200 text-xs sm:text-sm font-medium touch-manipulation"
-                    aria-label="Bulk Update"
-                  >
-                    <Upload className="w-4 h-4 flex-shrink-0" />
-                    <span className="hidden sm:inline">Bulk Update</span>
-                    <span className="sm:hidden">Bulk</span>
-                  </button>
-                  <button
-                    onClick={refreshTables}
-                    disabled={loading}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium touch-manipulation"
-                    aria-label={loading ? "Loading tables" : "Refresh tables"}
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 flex-shrink-0 ${
-                        loading ? "animate-spin" : ""
-                      }`}
-                    />
-                    <span>{loading ? "Loading" : "Refresh"}</span>
-                  </button>
-                </div>
-
-                {/* FPL Sync Buttons */}
-                <div className="flex items-center gap-1 sm:gap-2 p-2 sm:p-0 bg-gray-50 sm:bg-transparent rounded-lg sm:rounded-none sm:ml-2 sm:pl-3 sm:border-l sm:border-gray-300">
-                  <span className="text-xs text-gray-600 font-medium whitespace-nowrap">
-                    FPL:
-                  </span>
-                  <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0">
-                    {fplLeagues.map((league) => (
-                      <button
-                        key={league.key}
-                        onClick={() => updateFromFPL(league.key)}
-                        disabled={updatingFromFPL === league.key || loading}
-                        className={`relative flex items-center gap-1 px-2 py-1 rounded font-medium transition-all duration-150 whitespace-nowrap touch-manipulation ${
-                          updatingFromFPL === league.key
-                            ? "bg-gray-300 cursor-not-allowed text-gray-500"
-                            : `bg-${league.color}-100 hover:bg-${league.color}-200 text-${league.color}-700 hover:text-${league.color}-800 active:bg-${league.color}-300`
-                        } text-xs border border-${
-                          league.color
-                        }-200 hover:border-${league.color}-300`}
-                        title={`Ažuriraj ${league.name} ligu (ID: ${league.id})`}
-                        aria-label={`Ažuriraj ${league.name} ligu`}
-                      >
-                        <RefreshCw
-                          className={`w-3 h-3 flex-shrink-0 ${
-                            updatingFromFPL === league.key ? "animate-spin" : ""
-                          }`}
-                        />
-                        <span className="font-semibold">
-                          {updatingFromFPL === league.key ? "..." : league.name}
-                        </span>
-                        {updatingFromFPL !== league.key && (
-                          <div
-                            className="w-1.5 h-1.5 bg-green-500 rounded-full opacity-60 flex-shrink-0"
-                            aria-hidden="true"
-                          ></div>
+                        {lastUpdated && (
+                          <span className="text-xs text-gray-500 hidden sm:inline truncate">
+                            • {new Date(lastUpdated).toLocaleString("sr-RS")}
+                          </span>
                         )}
-                      </button>
-                    ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                  {/* Main Actions */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowBulkUpdate(true)}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow transition-all duration-200 text-xs sm:text-sm font-medium touch-manipulation"
+                      aria-label="Bulk Update"
+                    >
+                      <Upload className="w-4 h-4 flex-shrink-0" />
+                      <span className="hidden sm:inline">Bulk Update</span>
+                      <span className="sm:hidden">Bulk</span>
+                    </button>
+                    <button
+                      onClick={refreshTables}
+                      disabled={loading}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium touch-manipulation"
+                      aria-label={loading ? "Loading tables" : "Refresh tables"}
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 flex-shrink-0 ${
+                          loading ? "animate-spin" : ""
+                        }`}
+                      />
+                      <span>{loading ? "Loading" : "Refresh"}</span>
+                    </button>
+                  </div>
+
+                  {/* FPL Sync Buttons */}
+                  <div className="flex items-center gap-1 sm:gap-2 p-2 sm:p-0 bg-gray-50 sm:bg-transparent rounded-lg sm:rounded-none sm:ml-2 sm:pl-3 sm:border-l sm:border-gray-300">
+                    <span className="text-xs text-gray-600 font-medium whitespace-nowrap">
+                      FPL:
+                    </span>
+                    <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0">
+                      {fplLeagues.map((league) => (
+                        <button
+                          key={league.key}
+                          onClick={() => updateFromFPL(league.key)}
+                          disabled={updatingFromFPL === league.key || loading}
+                          className={`relative flex items-center gap-1 px-2 py-1 rounded font-medium transition-all duration-150 whitespace-nowrap touch-manipulation ${
+                            updatingFromFPL === league.key
+                              ? "bg-gray-300 cursor-not-allowed text-gray-500"
+                              : `bg-${league.color}-100 hover:bg-${league.color}-200 text-${league.color}-700 hover:text-${league.color}-800 active:bg-${league.color}-300`
+                          } text-xs border border-${
+                            league.color
+                          }-200 hover:border-${league.color}-300`}
+                          title={`Ažuriraj ${league.name} ligu (ID: ${league.id})`}
+                          aria-label={`Ažuriraj ${league.name} ligu`}
+                        >
+                          <RefreshCw
+                            className={`w-3 h-3 flex-shrink-0 ${
+                              updatingFromFPL === league.key
+                                ? "animate-spin"
+                                : ""
+                            }`}
+                          />
+                          <span className="font-semibold">
+                            {updatingFromFPL === league.key
+                              ? "..."
+                              : league.name}
+                          </span>
+                          {updatingFromFPL !== league.key && (
+                            <div
+                              className="w-1.5 h-1.5 bg-green-500 rounded-full opacity-60 flex-shrink-0"
+                              aria-hidden="true"
+                            ></div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* League Filters */}
-          <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                Filteri Liga
-              </h3>
-            </div>
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
-              {leagueTypes.map((league) => {
-                const isSelected = selectedLeague === league.key;
-                const playerCount =
-                  tables?.[league.key as keyof LeagueTables]?.length || 0;
-                return (
-                  <button
-                    key={league.key}
-                    onClick={() => {
-                      setSelectedLeague(league.key as keyof LeagueTables);
-                      setEditingPlayer(null);
-                    }}
-                    className={`group relative flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 touch-manipulation ${
-                      isSelected
-                        ? `bg-${league.color}-500 text-white shadow-lg scale-105`
-                        : `bg-${league.color}-100 text-${league.color}-800 hover:bg-${league.color}-200 active:bg-${league.color}-300 border-2 border-${league.color}-300 hover:border-${league.color}-400`
-                    }`}
-                    aria-label={`Prikaži ${league.name} tabelu`}
-                  >
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        isSelected ? "bg-white" : `bg-${league.color}-600`
-                      }`}
-                    ></div>
-                    <span className="text-xs sm:text-sm font-bold text-center sm:text-left">
-                      {league.name}
-                    </span>
-                    <span
-                      className={`text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-bold ${
-                        isSelected
-                          ? "bg-white/20 text-white"
-                          : `bg-${league.color}-300 text-${league.color}-900`
-                      }`}
-                    >
-                      {playerCount}
-                    </span>
-                    {isSelected && (
-                      <div
-                        className={`absolute -top-1 -right-1 w-3 h-3 ${getIndicatorColor(
-                          league.color
-                        )} rounded-full border-2 border-white`}
-                      ></div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Current League Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-          <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-800">
-                  {currentLeague?.name}
+            {/* League Filters */}
+            <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  Filteri Liga
                 </h3>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1">
-                  <p className="text-sm text-gray-600">
-                    Total players:{" "}
-                    <span className="font-semibold">
-                      {currentPlayers.length}
-                    </span>
-                  </p>
-                  <p className="text-xs text-green-600 flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></span>
-                    <span className="hidden sm:inline">
-                      Automatic sorting and positioning
-                    </span>
-                    <span className="sm:hidden">Auto sort</span>
-                  </p>
+              </div>
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
+                {leagueTypes.map((league) => {
+                  const isSelected = selectedLeague === league.key;
+                  const playerCount =
+                    tables?.[league.key as keyof LeagueTables]?.length || 0;
+                  return (
+                    <button
+                      key={league.key}
+                      onClick={() => {
+                        setSelectedLeague(league.key as keyof LeagueTables);
+                        setEditingPlayer(null);
+                      }}
+                      className={`group relative flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 touch-manipulation ${
+                        isSelected
+                          ? `bg-${league.color}-500 text-white shadow-lg scale-105`
+                          : `bg-${league.color}-100 text-${league.color}-800 hover:bg-${league.color}-200 active:bg-${league.color}-300 border-2 border-${league.color}-300 hover:border-${league.color}-400`
+                      }`}
+                      aria-label={`Prikaži ${league.name} tabelu`}
+                    >
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          isSelected ? "bg-white" : `bg-${league.color}-600`
+                        }`}
+                      ></div>
+                      <span className="text-xs sm:text-sm font-bold text-center sm:text-left">
+                        {league.name}
+                      </span>
+                      <span
+                        className={`text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-bold ${
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : `bg-${league.color}-300 text-${league.color}-900`
+                        }`}
+                      >
+                        {playerCount}
+                      </span>
+                      {isSelected && (
+                        <div
+                          className={`absolute -top-1 -right-1 w-3 h-3 ${getIndicatorColor(
+                            league.color
+                          )} rounded-full border-2 border-white`}
+                        ></div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Current League Table */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+            <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                <div>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                    {currentLeague?.name}
+                  </h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1">
+                    <p className="text-sm text-gray-600">
+                      Total players:{" "}
+                      <span className="font-semibold">
+                        {currentPlayers.length}
+                      </span>
+                    </p>
+                    <p className="text-xs text-green-600 flex items-center gap-1">
+                      <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></span>
+                      <span className="hidden sm:inline">
+                        Automatic sorting and positioning
+                      </span>
+                      <span className="sm:hidden">Auto sort</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-            {loading ? (
-              <div className="flex items-center justify-center py-8 sm:py-12">
-                <LoadingCard
-                  title="Loading Tables"
-                  description="Please wait while we fetch the table data"
-                  className="w-full max-w-md mx-auto"
-                />
-              </div>
-            ) : (
-              <table
-                className="min-w-full divide-y divide-gray-200"
-                role="table"
-                aria-label={`${currentLeague?.name} tabela`}
-              >
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th
-                      className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      scope="col"
-                    >
-                      <span className="hidden sm:inline">Position</span>
-                      <span className="sm:hidden">Pos.</span>
-                    </th>
-                    <th
-                      className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      scope="col"
-                    >
-                      <span className="hidden sm:inline">Name</span>
-                      <span className="sm:hidden">Name</span>
-                    </th>
-                    {selectedLeague !== "freeLeague" && (
-                      <th
-                        className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell"
-                        scope="col"
-                      >
-                        Email
-                      </th>
-                    )}
-                    <th
-                      className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      scope="col"
-                    >
-                      Team
-                    </th>
-                    {selectedLeague === "h2hLeague" ||
-                    selectedLeague === "h2h2League" ? (
-                      <>
-                        <th
-                          className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
-                          scope="col"
-                        >
-                          W/D/L
-                        </th>
-                        <th
-                          className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          scope="col"
-                        >
-                          <span className="hidden sm:inline">
-                            Overall Points
-                          </span>
-                          <span className="sm:hidden">Overall</span>
-                        </th>
-                        <th
-                          className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          scope="col"
-                        >
-                          <span className="hidden sm:inline">H2H Points</span>
-                          <span className="sm:hidden">H2H</span>
-                        </th>
-                      </>
-                    ) : (
+            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              {loading ? (
+                <div className="flex items-center justify-center py-8 sm:py-12">
+                  <LoadingCard
+                    title="Loading Tables"
+                    description="Please wait while we fetch the table data"
+                    className="w-full max-w-md mx-auto"
+                  />
+                </div>
+              ) : (
+                <table
+                  className="min-w-full divide-y divide-gray-200"
+                  role="table"
+                  aria-label={`${currentLeague?.name} tabela`}
+                >
+                  <thead className="bg-gray-50">
+                    <tr>
                       <th
                         className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         scope="col"
                       >
-                        Points
+                        <span className="hidden sm:inline">Position</span>
+                        <span className="sm:hidden">Pos.</span>
                       </th>
-                    )}
-                    <th
-                      className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      scope="col"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentPlayers.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={
-                          selectedLeague === "h2hLeague" ||
-                          selectedLeague === "h2h2League"
-                            ? 8
-                            : selectedLeague === "freeLeague"
-                            ? 5 // Free Liga has one less column (no email)
-                            : 6
-                        }
-                        className="px-3 sm:px-6 py-6 sm:py-8 text-center text-gray-500"
+                      <th
+                        className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        scope="col"
                       >
-                        <div className="flex flex-col items-center">
-                          <Users className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mb-2" />
-                          <p className="text-sm sm:text-base">
-                            Nema igrača u ovoj ligi
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    currentPlayers.map((player, index) => (
-                      <tr
-                        key={player.id}
-                        className={`hover:bg-gray-100 transition-colors ${getRowBackgroundColor(
-                          player.position,
-                          selectedLeague
-                        )}`}
+                        <span className="hidden sm:inline">Name</span>
+                        <span className="sm:hidden">Name</span>
+                      </th>
+                      {selectedLeague !== "freeLeague" && (
+                        <th
+                          className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell"
+                          scope="col"
+                        >
+                          Email
+                        </th>
+                      )}
+                      <th
+                        className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        scope="col"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div
-                            className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                              index === 0
-                                ? "bg-yellow-500 text-white"
-                                : index === 1
-                                ? "bg-gray-400 text-white"
-                                : index === 2
-                                ? "bg-amber-600 text-white"
-                                : "bg-gray-100 text-gray-700"
-                            }`}
+                        Team
+                      </th>
+                      {selectedLeague === "h2hLeague" ||
+                      selectedLeague === "h2h2League" ? (
+                        <>
+                          <th
+                            className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
+                            scope="col"
                           >
-                            <span className="font-bold text-sm">
-                              {player.position}
+                            W/D/L
+                          </th>
+                          <th
+                            className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            scope="col"
+                          >
+                            <span className="hidden sm:inline">
+                              Overall Points
                             </span>
+                            <span className="sm:hidden">Overall</span>
+                          </th>
+                          <th
+                            className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            scope="col"
+                          >
+                            <span className="hidden sm:inline">H2H Points</span>
+                            <span className="sm:hidden">H2H</span>
+                          </th>
+                        </>
+                      ) : (
+                        <th
+                          className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          scope="col"
+                        >
+                          Points
+                        </th>
+                      )}
+                      <th
+                        className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        scope="col"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {currentPlayers.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={
+                            selectedLeague === "h2hLeague" ||
+                            selectedLeague === "h2h2League"
+                              ? 8
+                              : selectedLeague === "freeLeague"
+                              ? 5 // Free Liga has one less column (no email)
+                              : 6
+                          }
+                          className="px-3 sm:px-6 py-6 sm:py-8 text-center text-gray-500"
+                        >
+                          <div className="flex flex-col items-center">
+                            <Users className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mb-2" />
+                            <p className="text-sm sm:text-base">
+                              Nema igrača u ovoj ligi
+                            </p>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            {selectedLeague === "freeLeague" &&
-                            editingFreePlayer === player.id ? (
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  value={freeEditData.firstName}
-                                  onChange={(e) =>
-                                    setFreeEditData({
-                                      ...freeEditData,
-                                      firstName: e.target.value,
-                                    })
-                                  }
-                                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
-                                  placeholder="Ime"
-                                />
-                                <input
-                                  type="text"
-                                  value={freeEditData.lastName}
-                                  onChange={(e) =>
-                                    setFreeEditData({
-                                      ...freeEditData,
-                                      lastName: e.target.value,
-                                    })
-                                  }
-                                  className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
-                                  placeholder="Prezime"
-                                />
-                              </div>
-                            ) : (
-                              <span className="text-sm font-medium text-gray-900">
-                                {player.firstName} {player.lastName}
-                              </span>
-                            )}
-                            {selectedLeague !== "freeLeague" && (
-                              <div className="text-xs text-gray-500">
-                                {player.league_type}{" "}
-                                {player.h2h_category &&
-                                  `+ ${player.h2h_category.toUpperCase()}`}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        {selectedLeague !== "freeLeague" && (
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm text-gray-500 flex items-center gap-1">
-                              <Mail className="w-3 h-3" />
-                              {player.email}
-                            </span>
-                          </td>
-                        )}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {selectedLeague === "freeLeague" &&
-                          editingFreePlayer === player.id ? (
-                            <input
-                              type="text"
-                              value={freeEditData.teamName}
-                              onChange={(e) =>
-                                setFreeEditData({
-                                  ...freeEditData,
-                                  teamName: e.target.value,
-                                })
-                              }
-                              className="w-32 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
-                              placeholder="Naziv tima"
-                            />
-                          ) : (
-                            <span className="text-sm text-gray-500">
-                              {player.teamName}
-                            </span>
-                          )}
-                        </td>
-                        {selectedLeague === "h2hLeague" ||
-                        selectedLeague === "h2h2League" ? (
-                          <>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded font-bold">
-                                  W: {player.h2h_stats?.w || 0}
-                                </span>
-                                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded font-bold">
-                                  D: {player.h2h_stats?.d || 0}
-                                </span>
-                                <span className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded font-bold">
-                                  L: {player.h2h_stats?.l || 0}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="text-sm text-gray-600">
-                                {player.points}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="text-sm font-bold text-blue-600">
-                                {player.h2h_points || 0}
-                              </span>
-                            </td>
-                          </>
-                        ) : (
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {(editingPlayer === player.id &&
-                              selectedLeague !== "freeLeague") ||
-                            (editingFreePlayer === player.id &&
-                              selectedLeague === "freeLeague") ? (
-                              <input
-                                type="number"
-                                value={
-                                  selectedLeague === "freeLeague"
-                                    ? freeEditData.points
-                                    : player.points
-                                }
-                                onChange={(e) => {
-                                  if (selectedLeague === "freeLeague") {
-                                    setFreeEditData({
-                                      ...freeEditData,
-                                      points: e.target.value,
-                                    });
-                                  } else {
-                                    updatePlayer(player.id, {
-                                      points: parseInt(e.target.value) || 0,
-                                    });
-                                  }
-                                }}
-                                className="px-2 py-1 border border-gray-300 rounded text-sm w-20 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-gray-900 font-semibold"
-                              />
-                            ) : (
-                              <span className="text-sm font-semibold text-gray-900">
-                                {player.points}
-                              </span>
-                            )}
-                          </td>
-                        )}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {selectedLeague === "freeLeague" ? (
-                            <div className="flex gap-2">
-                              {editingFreePlayer === player.id ? (
-                                <>
-                                  <button
-                                    onClick={() =>
-                                      handleSaveFreePlayer(player.id)
-                                    }
-                                    className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md bg-green-500 text-white hover:bg-green-600 transition-colors"
-                                  >
-                                    <Check className="w-3 h-3 mr-1" />
-                                    Sačuvaj
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setEditingFreePlayer(null);
-                                      setFreeEditData({
-                                        firstName: "",
-                                        lastName: "",
-                                        teamName: "",
-                                        points: "",
-                                      });
-                                    }}
-                                    className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md bg-gray-500 text-white hover:bg-gray-600 transition-colors"
-                                  >
-                                    <X className="w-3 h-3 mr-1" />
-                                    Otkaži
-                                  </button>
-                                </>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    setEditingFreePlayer(player.id);
-                                    setFreeEditData({
-                                      firstName: player.firstName,
-                                      lastName: player.lastName,
-                                      teamName: player.teamName,
-                                      points: player.points.toString(),
-                                    });
-                                  }}
-                                  className="inline-flex items-center px-4 py-2 text-xs font-medium rounded-md bg-purple-500 text-white hover:bg-purple-600 transition-colors"
-                                >
-                                  <Edit3 className="w-3 h-3 mr-1" />
-                                  Uredi sve
-                                </button>
-                              )}
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() =>
-                                setEditingPlayer(
-                                  editingPlayer === player.id ? null : player.id
-                                )
-                              }
-                              className={`inline-flex items-center px-4 py-2 text-xs font-medium rounded-md transition-colors ${
-                                editingPlayer === player.id
-                                  ? "bg-green-500 text-white hover:bg-green-600"
-                                  : "bg-blue-500 text-white hover:bg-blue-600"
-                              }`}
-                            >
-                              <Edit3 className="w-3 h-3 mr-1" />
-                              {editingPlayer === player.id
-                                ? "Finish"
-                                : "Edit Points"}
-                            </button>
-                          )}
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
+                    ) : (
+                      currentPlayers.map((player, index) => (
+                        <tr
+                          key={player.id}
+                          className={`hover:bg-gray-100 transition-colors ${getRowBackgroundColor(
+                            player.position,
+                            selectedLeague
+                          )}`}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div
+                              className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                                index === 0
+                                  ? "bg-yellow-500 text-white"
+                                  : index === 1
+                                  ? "bg-gray-400 text-white"
+                                  : index === 2
+                                  ? "bg-amber-600 text-white"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              <span className="font-bold text-sm">
+                                {player.position}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              {selectedLeague === "freeLeague" &&
+                              editingFreePlayer === player.id ? (
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={freeEditData.firstName}
+                                    onChange={(e) =>
+                                      setFreeEditData({
+                                        ...freeEditData,
+                                        firstName: e.target.value,
+                                      })
+                                    }
+                                    className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                                    placeholder="Ime"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={freeEditData.lastName}
+                                    onChange={(e) =>
+                                      setFreeEditData({
+                                        ...freeEditData,
+                                        lastName: e.target.value,
+                                      })
+                                    }
+                                    className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                                    placeholder="Prezime"
+                                  />
+                                </div>
+                              ) : (
+                                <span className="text-sm font-medium text-gray-900">
+                                  {player.firstName} {player.lastName}
+                                </span>
+                              )}
+                              {selectedLeague !== "freeLeague" && (
+                                <div className="text-xs text-gray-500">
+                                  {player.league_type}{" "}
+                                  {player.h2h_category &&
+                                    `+ ${player.h2h_category.toUpperCase()}`}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          {selectedLeague !== "freeLeague" && (
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="text-sm text-gray-500 flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {player.email}
+                              </span>
+                            </td>
+                          )}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {selectedLeague === "freeLeague" &&
+                            editingFreePlayer === player.id ? (
+                              <input
+                                type="text"
+                                value={freeEditData.teamName}
+                                onChange={(e) =>
+                                  setFreeEditData({
+                                    ...freeEditData,
+                                    teamName: e.target.value,
+                                  })
+                                }
+                                className="w-32 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                                placeholder="Naziv tima"
+                              />
+                            ) : (
+                              <span className="text-sm text-gray-500">
+                                {player.teamName}
+                              </span>
+                            )}
+                          </td>
+                          {selectedLeague === "h2hLeague" ||
+                          selectedLeague === "h2h2League" ? (
+                            <>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded font-bold">
+                                    W: {player.h2h_stats?.w || 0}
+                                  </span>
+                                  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded font-bold">
+                                    D: {player.h2h_stats?.d || 0}
+                                  </span>
+                                  <span className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded font-bold">
+                                    L: {player.h2h_stats?.l || 0}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="text-sm text-gray-600">
+                                  {player.points}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="text-sm font-bold text-blue-600">
+                                  {player.h2h_points || 0}
+                                </span>
+                              </td>
+                            </>
+                          ) : (
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {(editingPlayer === player.id &&
+                                selectedLeague !== "freeLeague") ||
+                              (editingFreePlayer === player.id &&
+                                selectedLeague === "freeLeague") ? (
+                                <input
+                                  type="number"
+                                  value={
+                                    selectedLeague === "freeLeague"
+                                      ? freeEditData.points
+                                      : player.points
+                                  }
+                                  onChange={(e) => {
+                                    if (selectedLeague === "freeLeague") {
+                                      setFreeEditData({
+                                        ...freeEditData,
+                                        points: e.target.value,
+                                      });
+                                    } else {
+                                      updatePlayer(player.id, {
+                                        points: parseInt(e.target.value) || 0,
+                                      });
+                                    }
+                                  }}
+                                  className="px-2 py-1 border border-gray-300 rounded text-sm w-20 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-gray-900 font-semibold"
+                                />
+                              ) : (
+                                <span className="text-sm font-semibold text-gray-900">
+                                  {player.points}
+                                </span>
+                              )}
+                            </td>
+                          )}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            {selectedLeague === "freeLeague" ? (
+                              <div className="flex gap-2">
+                                {editingFreePlayer === player.id ? (
+                                  <>
+                                    <button
+                                      onClick={() =>
+                                        handleSaveFreePlayer(player.id)
+                                      }
+                                      className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md bg-green-500 text-white hover:bg-green-600 transition-colors"
+                                    >
+                                      <Check className="w-3 h-3 mr-1" />
+                                      Sačuvaj
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEditingFreePlayer(null);
+                                        setFreeEditData({
+                                          firstName: "",
+                                          lastName: "",
+                                          teamName: "",
+                                          points: "",
+                                        });
+                                      }}
+                                      className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md bg-gray-500 text-white hover:bg-gray-600 transition-colors"
+                                    >
+                                      <X className="w-3 h-3 mr-1" />
+                                      Otkaži
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setEditingFreePlayer(player.id);
+                                      setFreeEditData({
+                                        firstName: player.firstName,
+                                        lastName: player.lastName,
+                                        teamName: player.teamName,
+                                        points: player.points.toString(),
+                                      });
+                                    }}
+                                    className="inline-flex items-center px-4 py-2 text-xs font-medium rounded-md bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+                                  >
+                                    <Edit3 className="w-3 h-3 mr-1" />
+                                    Uredi sve
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() =>
+                                  setEditingPlayer(
+                                    editingPlayer === player.id
+                                      ? null
+                                      : player.id
+                                  )
+                                }
+                                className={`inline-flex items-center px-4 py-2 text-xs font-medium rounded-md transition-colors ${
+                                  editingPlayer === player.id
+                                    ? "bg-green-500 text-white hover:bg-green-600"
+                                    : "bg-blue-500 text-white hover:bg-blue-600"
+                                }`}
+                              >
+                                <Edit3 className="w-3 h-3 mr-1" />
+                                {editingPlayer === player.id
+                                  ? "Finish"
+                                  : "Edit Points"}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Bulk Update Modal */}
-        {showBulkUpdate && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                      <Upload className="w-6 h-6 text-green-600" />
-                      Bulk Update
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Update points or H2H categories for multiple players at
-                      once using JSON format
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setShowBulkUpdate(false);
-                      setBulkUpdateData("");
-                    }}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+          {/* Bulk Update Modal */}
+          {showBulkUpdate && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <Upload className="w-6 h-6 text-green-600" />
+                        Bulk Update
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Update points or H2H categories for multiple players at
+                        once using JSON format
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowBulkUpdate(false);
+                        setBulkUpdateData("");
+                      }}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="p-6">
-                {/* Format Example */}
-                <div className="mb-6">
-                  <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Data Format:
-                  </h4>
-                  <div className="bg-gray-100 rounded-lg p-4 text-xs">
-                    <h5 className="font-semibold mb-2 text-gray-800">
-                      For updating points:
-                    </h5>
-                    <pre className="text-gray-700 mb-4">{`{
+                <div className="p-6">
+                  {/* Format Example */}
+                  <div className="mb-6">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Data Format:
+                    </h4>
+                    <div className="bg-gray-100 rounded-lg p-4 text-xs">
+                      <h5 className="font-semibold mb-2 text-gray-800">
+                        For updating points:
+                      </h5>
+                      <pre className="text-gray-700 mb-4">{`{
   "updates": [
     {
       "rank": 1,
@@ -1203,10 +1227,10 @@ export default function AdminTablesCleanPage() {
   ]
 }`}</pre>
 
-                    <h5 className="font-semibold mb-2 text-gray-800">
-                      For updating H2H statistics (W/D/L and H2H points):
-                    </h5>
-                    <pre className="text-gray-700">{`{
+                      <h5 className="font-semibold mb-2 text-gray-800">
+                        For updating H2H statistics (W/D/L and H2H points):
+                      </h5>
+                      <pre className="text-gray-700">{`{
   "updates": [
     { 
       "rank": 1, 
@@ -1240,64 +1264,67 @@ export default function AdminTablesCleanPage() {
     }
   ]
 }`}</pre>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-2 space-y-1">
+                      <p>
+                        • System searches for players by team name and manager
+                      </p>
+                      <p>• For points use total field</p>
+                      <p>
+                        • For H2H statistics use w, d, l (win/draw/loss) and
+                        h2h_pts
+                      </p>
+                      <p>
+                        • score represents overall points, and h2h_pts H2H
+                        points
+                      </p>
+                      <p>
+                        • You can combine different types in the same request
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500 mt-2 space-y-1">
-                    <p>
-                      • System searches for players by team name and manager
-                    </p>
-                    <p>• For points use total field</p>
-                    <p>
-                      • For H2H statistics use w, d, l (win/draw/loss) and
-                      h2h_pts
-                    </p>
-                    <p>
-                      • score represents overall points, and h2h_pts H2H points
-                    </p>
-                    <p>• You can combine different types in the same request</p>
-                  </div>
-                </div>
 
-                {/* JSON Input */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    JSON Data:
-                  </label>
-                  <textarea
-                    value={bulkUpdateData}
-                    onChange={(e) => setBulkUpdateData(e.target.value)}
-                    className="w-full h-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm font-mono text-gray-900 bg-white placeholder-gray-500"
-                    placeholder="Enter JSON data here..."
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={() => {
-                      setShowBulkUpdate(false);
-                      setBulkUpdateData("");
-                    }}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={bulkUpdatePlayers}
-                    disabled={bulkUpdating || !bulkUpdateData.trim()}
-                    className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Upload
-                      className={`w-4 h-4 ${
-                        bulkUpdating ? "animate-pulse" : ""
-                      }`}
+                  {/* JSON Input */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      JSON Data:
+                    </label>
+                    <textarea
+                      value={bulkUpdateData}
+                      onChange={(e) => setBulkUpdateData(e.target.value)}
+                      className="w-full h-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm font-mono text-gray-900 bg-white placeholder-gray-500"
+                      placeholder="Enter JSON data here..."
                     />
-                    {bulkUpdating ? "Updating..." : "Update"}
-                  </button>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => {
+                        setShowBulkUpdate(false);
+                        setBulkUpdateData("");
+                      }}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={bulkUpdatePlayers}
+                      disabled={bulkUpdating || !bulkUpdateData.trim()}
+                      className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Upload
+                        className={`w-4 h-4 ${
+                          bulkUpdating ? "animate-pulse" : ""
+                        }`}
+                      />
+                      {bulkUpdating ? "Updating..." : "Update"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </main>
 

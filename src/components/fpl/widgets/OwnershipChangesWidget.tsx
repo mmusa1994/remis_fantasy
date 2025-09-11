@@ -91,6 +91,32 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
       async (forceRefresh: boolean = false, gameweek: number = 4) => {
         // Inline handler functions to avoid dependency issues
         const handleSuccessfulResponse = (result: any) => {
+          // Helper: pick ownership change based on selected timeframe with safe fallbacks
+          const pickChange = (player: any): number => {
+            if (currentTimeframe === "1h") {
+              return (
+                player.ownership_change_1h ??
+                player.ownership_change_hour ??
+                player.ownership_change ??
+                0
+              );
+            }
+            if (currentTimeframe === "24h") {
+              return (
+                player.ownership_change_24h ??
+                player.ownership_change_day ??
+                player.ownership_change ??
+                0
+              );
+            }
+            // week
+            return (
+              player.ownership_change_week ??
+              player.ownership_change_7d ??
+              player.ownership_change ??
+              0
+            );
+          };
           if (result.success && result.data) {
             // Handle two different API response formats:
             // 1. General analytics: { top_risers: [...], top_fallers: [...] }
@@ -103,19 +129,18 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
               // Player-specific format - separate into risers and fallers
               result.data.forEach((player: any) => {
                 // Add team colors for rendering
+                const change = pickChange(player);
                 const playerWithColors = {
                   ...player,
                   team_colors: getTeamColors(player.team_name),
-                  change:
-                    player.ownership_change_24h ||
-                    player.ownership_change_1h ||
-                    0,
+                  change,
                   ownership: player.current_ownership,
                 };
 
-                if (player.ownership_trend === "rising") {
+                // Use timeframe-based change to decide direction when available
+                if (change > 0 || player.ownership_trend === "rising") {
                   risers.push(playerWithColors);
-                } else if (player.ownership_trend === "falling") {
+                } else if (change < 0 || player.ownership_trend === "falling") {
                   fallers.push(playerWithColors);
                 }
               });
@@ -126,10 +151,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
                   ...player,
                   team_colors:
                     player.team_colors || getTeamColors(player.team_name),
-                  change:
-                    player.ownership_change_24h ||
-                    player.ownership_change_1h ||
-                    0,
+                  change: pickChange(player),
                   ownership: player.current_ownership,
                 })
               );
@@ -141,10 +163,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
                 ...player,
                 team_colors:
                   player.team_colors || getTeamColors(player.team_name),
-                change:
-                  player.ownership_change_24h ||
-                  player.ownership_change_1h ||
-                  0,
+                change: pickChange(player),
                 ownership: player.current_ownership,
               }));
             }

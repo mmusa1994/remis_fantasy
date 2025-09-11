@@ -25,7 +25,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import LoadingCard from "@/components/shared/LoadingCard";
+import FplLoadingSkeleton from "@/components/shared/FplLoadingSkeleton";
 import ManagerIdModal from "@/components/modals/ManagerIdModal";
 import { getTeamColors } from "@/lib/team-colors";
 import { ErrorType, ValidationStatus } from "@/types/validation";
@@ -256,6 +256,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const [showTransferPanel, setShowTransferPanel] = useState(false);
   const [, setSelectedPlayer] = useState<EnhancedPlayerData | null>(null);
   const [bootstrapLoading, setBootstrapLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [formation, setFormation] = useState("3-4-3");
   const handleFormationChange = useCallback((newFormation: string) => {
     setFormation(newFormation);
@@ -734,6 +735,30 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   useEffect(() => {
     setCurrentManagerId(managerId);
   }, [managerId]);
+
+  // Unified loading state management
+  useEffect(() => {
+    const hasAnyLoading = loading || bootstrapLoading || managerIdLoading;
+    const hasRequiredData =
+      currentManagerId && allPlayers.length > 0 && allTeams.length > 0;
+
+    if (hasAnyLoading) {
+      setIsInitialLoading(true);
+    } else if (hasRequiredData) {
+      setIsInitialLoading(false);
+    } else if (!currentManagerId && status !== "loading") {
+      // Show content even without manager ID so user can see the modal
+      setIsInitialLoading(false);
+    }
+  }, [
+    loading,
+    bootstrapLoading,
+    managerIdLoading,
+    currentManagerId,
+    allPlayers.length,
+    allTeams.length,
+    status,
+  ]);
 
   // Filtered and sorted players for list view
   const filteredPlayers = useMemo(() => {
@@ -1307,14 +1332,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
       }`}
     >
       {/* Loading State */}
-      {(loading || bootstrapLoading) && (
-        <div className="flex items-center justify-center min-h-96">
-          <LoadingCard
-            title="Loading Team Data"
-            description="Fetching your FPL team information and player statistics..."
-            className="max-w-md"
-          />
-        </div>
+      {isInitialLoading && (
+        <FplLoadingSkeleton
+          variant="grid"
+          count={6}
+          title="Loading Team Data"
+          description="Fetching your FPL team information and player statistics..."
+        />
       )}
 
       {/* Global FPL API status */}
@@ -1325,7 +1349,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
       )}
 
       {/* Team Data Display */}
-      {!loading && !bootstrapLoading && currentManagerId && userTeamData && (
+      {!isInitialLoading && currentManagerId && userTeamData && (
         <>
           {/* Enhanced Header */}
           <motion.div
