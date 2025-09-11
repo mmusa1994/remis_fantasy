@@ -470,7 +470,8 @@
       "pitch": "Pitch",
       "list": "List",
       "analytics": "Analytics",
-      "transfers": "Transfers"
+      "transfers": "Transfers",
+      "aiAnalyser": "AI Team Analyser"
     },
     "list": {
       "formation": "Formation",

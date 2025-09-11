@@ -1602,18 +1602,21 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       <button
                         onClick={() => setShowAIChat(true)}
                         disabled={!canUseAI}
-                        className={`p-2 rounded-lg transition-colors ${
+                        className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                           canUseAI
-                            ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+                            ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-sm"
                             : "bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed"
                         }`}
                         title={
                           canUseAI
-                            ? "AI Analiza Tima (1x weekly)"
-                            : "AI Analiza Tima used this week"
+                            ? t("teamPlanner.tabs.aiAnalyser") + " (1x weekly)"
+                            : t("teamPlanner.tabs.aiAnalyser") + " used this week"
                         }
                       >
                         <FaRobot className="w-4 h-4" />
+                        <span className="hidden sm:inline">
+                          {t("teamPlanner.tabs.aiAnalyser")}
+                        </span>
                       </button>
                     )}
                   </div>
