@@ -20,7 +20,7 @@ const OnboardingWidget = () => {
   return (
     <>
       {/* Floating Widget */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+      <div className="fixed bottom-20 right-3 z-40 flex flex-col items-end gap-2">
         {/* Tooltip */}
         <AnimatePresence>
           {showTooltip && (
@@ -34,11 +34,17 @@ const OnboardingWidget = () => {
                   : "bg-white text-gray-900 border border-gray-200"
               }`}
             >
-              {t('navigation.skip') ? 'Need help? Take the tour!' : 'Need help? Take the tour!'}
+              {t("navigation.skip")
+                ? "Need help? Take the tour!"
+                : "Need help? Take the tour!"}
               {/* Arrow */}
-              <div className={`absolute bottom-0 right-6 transform translate-y-1/2 rotate-45 w-2 h-2 ${
-                theme === "dark" ? "bg-gray-800 border-r border-b border-gray-700" : "bg-white border-r border-b border-gray-200"
-              }`} />
+              <div
+                className={`absolute bottom-0 right-6 transform translate-y-1/2 rotate-45 w-2 h-2 ${
+                  theme === "dark"
+                    ? "bg-gray-800 border-r border-b border-gray-700"
+                    : "bg-white border-r border-b border-gray-200"
+                }`}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -57,21 +63,21 @@ const OnboardingWidget = () => {
           whileTap={{ scale: 0.95 }}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ 
-            type: "spring", 
-            stiffness: 200, 
+          transition={{
+            type: "spring",
+            stiffness: 200,
             damping: 15,
-            delay: 1 
+            delay: 1,
           }}
         >
           {/* Subtle pulsing background */}
           <motion.div
             className="absolute inset-0 rounded-full bg-red-400 opacity-30"
             animate={{ scale: [1, 1.2, 1] }}
-            transition={{ 
-              duration: 2, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
             }}
           />
 
@@ -83,18 +89,18 @@ const OnboardingWidget = () => {
             >
               <HelpCircle className="w-6 h-6" />
             </motion.div>
-            
+
             {/* Sparkle effect */}
             <motion.div
               className="absolute -top-1 -right-1"
-              animate={{ 
+              animate={{
                 scale: [0.8, 1.2, 0.8],
-                rotate: [0, 180, 360] 
+                rotate: [0, 180, 360],
               }}
-              transition={{ 
-                duration: 2, 
+              transition={{
+                duration: 2,
                 repeat: Infinity,
-                ease: "easeInOut" 
+                ease: "easeInOut",
               }}
             >
               <Sparkles className="w-3 h-3 text-yellow-300" />
