@@ -1348,6 +1348,31 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         </div>
       )}
 
+      {/* Enhanced Error State for Complete API Failure */}
+      {!isInitialLoading && fplApiError && !userTeamData && (
+        <div className={`${theme === "dark" ? "bg-gray-800" : "bg-white"} rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700`}>
+          <div className="text-center py-8">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-6 max-w-md mx-auto">
+              <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                FPL API Currently Not Available
+              </h3>
+              <p className="text-yellow-700 dark:text-yellow-300 text-sm mb-4">
+                The Fantasy Premier League API is temporarily unavailable. This may be due to high traffic or maintenance.
+              </p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors mr-3"
+              >
+                Refresh Page
+              </button>
+              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-3">
+                Or wait a few minutes and try again
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Team Data Display */}
       {!isInitialLoading && currentManagerId && userTeamData && (
         <>

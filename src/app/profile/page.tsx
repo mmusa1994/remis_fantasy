@@ -22,6 +22,7 @@ import { MdVerified, MdWarning } from "react-icons/md";
 import { TbTaxEuro } from "react-icons/tb";
 import LoadingCard from "@/components/shared/LoadingCard";
 import PhotoUpload from "@/components/shared/PhotoUpload";
+import Toast from "@/components/shared/Toast";
 
 interface Usage {
   remaining: number;
@@ -73,6 +74,8 @@ export default function ProfilePage() {
   const [editManagerId, setEditManagerId] = useState("");
   const [isSavingManagerId, setIsSavingManagerId] = useState(false);
   const [managerIdError, setManagerIdError] = useState("");
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   
   // Check if we should focus on manager ID section
   const shouldFocusManagerId = searchParams?.get('tab') === 'manager-id';
@@ -220,6 +223,13 @@ export default function ProfilePage() {
         });
         setIsEditingManagerId(false);
         setManagerIdError("");
+        
+        // Show success toast
+        const message = data.isVerified 
+          ? "Manager ID successfully saved and verified!" 
+          : "Manager ID saved! Verification may take a moment.";
+        setSuccessMessage(message);
+        setShowSuccessToast(true);
       } else {
         setManagerIdError(data.error || "Failed to update Manager ID");
       }
@@ -333,7 +343,7 @@ export default function ProfilePage() {
                   : "bg-white/50 border-gray-200"
               } p-6`}
             >
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <h2
                   className={`text-xl font-semibold ${
                     theme === "dark" ? "text-white" : "text-gray-900"
@@ -343,16 +353,16 @@ export default function ProfilePage() {
                 </h2>
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:text-red-700 transition-colors"
+                  className="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 text-sm text-red-600 hover:text-red-700 transition-colors border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
-                  <FaSignOutAlt />
-                  {t("signOut")}
+                  <FaSignOutAlt className="w-4 h-4" />
+                  <span className="text-xs sm:text-sm">{t("signOut")}</span>
                 </button>
               </div>
 
               {/* Avatar and Basic Info */}
-              <div className="flex items-start gap-6 mb-6">
-                <div className="flex-shrink-0">
+              <div className="flex flex-col sm:flex-row items-start gap-6 mb-6">
+                <div className="flex-shrink-0 w-full sm:w-auto flex justify-center sm:justify-start">
                   <PhotoUpload
                     currentPhotoUrl={profile.avatar_url}
                     onPhotoUpdate={handlePhotoUpdate}
@@ -360,7 +370,7 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 w-full">
                   {/* Name */}
                   <div className="mb-4">
                     <label
@@ -407,7 +417,7 @@ export default function ProfilePage() {
                     ) : (
                       <div className="flex items-center justify-between">
                         <span
-                          className={`text-lg ${
+                          className={`text-lg break-words ${
                             theme === "dark" ? "text-white" : "text-gray-900"
                           }`}
                         >
@@ -415,7 +425,7 @@ export default function ProfilePage() {
                         </span>
                         <button
                           onClick={() => setIsEditing(true)}
-                          className="p-2 text-gray-500 hover:text-gray-700"
+                          className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0 ml-2"
                         >
                           <BiEdit className="w-4 h-4" />
                         </button>
@@ -432,22 +442,22 @@ export default function ProfilePage() {
                     >
                       {t("emailAddress")}
                     </label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <FaEnvelope
-                        className={`w-4 h-4 ${
+                        className={`w-4 h-4 flex-shrink-0 ${
                           theme === "dark" ? "text-gray-400" : "text-gray-500"
                         }`}
                       />
                       <span
-                        className={
+                        className={`break-all min-w-0 ${
                           theme === "dark" ? "text-white" : "text-gray-900"
-                        }
+                        }`}
                       >
                         {profile.email}
                       </span>
                       {profile.email_verified && (
                         <FaCheckCircle
-                          className="w-4 h-4 text-green-500"
+                          className="w-4 h-4 text-green-500 flex-shrink-0"
                           title={t("verified")}
                         />
                       )}
@@ -861,6 +871,14 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+      
+      {/* Success Toast */}
+      <Toast
+        show={showSuccessToast}
+        message={successMessage}
+        type="success"
+        onClose={() => setShowSuccessToast(false)}
+      />
     </div>
   );
 }

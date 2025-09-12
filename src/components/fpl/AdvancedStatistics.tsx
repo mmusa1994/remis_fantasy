@@ -1057,10 +1057,10 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                     .filter((p: any) => p.position <= 11)
                     .sort((a: any, b: any) => a.position - b.position)
                     .map(
-                      (p: any) => p.player?.web_name?.slice(0, 6) || "Unknown"
+                      (p: any) => p.player?.web_name?.slice(0, 8) || "Unknown"
                     ),
                   tickLabelStyle: {
-                    angle: -45,
+                    angle: -35,
                     fontSize: 10,
                   },
                 },
@@ -1080,8 +1080,14 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
                   color: "#10b981",
                 },
               ]}
-              height={320}
-              margin={{ top: 20, right: 30, bottom: 70, left: 50 }}
+              height={380}
+              margin={{ top: 20, right: 40, bottom: 100, left: 60 }}
+              yAxis={[
+                {
+                  tickLabelStyle: { fontSize: "11px" },
+                  min: 0,
+                },
+              ]}
             />
           </div>
         </div>

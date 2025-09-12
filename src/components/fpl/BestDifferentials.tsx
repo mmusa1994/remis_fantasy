@@ -122,11 +122,28 @@ export default function BestDifferentials() {
     return (
       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
         <div className="flex items-center gap-3">
-          <div>
-            <h3 className="font-semibold text-red-800 dark:text-red-300">
+          <div className="w-full">
+            <h3 className="font-semibold text-red-800 dark:text-red-300 mb-2">
               {t("common.error")}
             </h3>
-            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            <p className="text-red-600 dark:text-red-400 text-sm mb-4">{error}</p>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                FPL API Currently Not Available
+              </h4>
+              <p className="text-yellow-700 dark:text-yellow-300 text-xs mb-3">
+                The Fantasy Premier League API is temporarily unavailable. This may be due to high traffic or maintenance.
+              </p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+              >
+                Refresh Page
+              </button>
+              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+                Or wait a few minutes and try again
+              </p>
+            </div>
           </div>
         </div>
       </div>
