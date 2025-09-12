@@ -23,29 +23,29 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
   const { t } = useTranslation("navigation");
 
   const navItems = [
-    { 
-      name: t("home", "Home"), 
-      href: "/", 
+    {
+      name: t("home", "Home"),
+      href: "/",
       icon: Home,
-      id: "home"
+      id: "home",
     },
     {
       name: t("premierLeague", "Premier League"),
       href: "/premier-league/tabele",
       icon: SiPremierleague,
-      id: "premier"
+      id: "premier",
     },
     {
       name: t("championsLeague", "Champions League"),
       href: "/champions-league/tabele",
       icon: PiSoccerBall,
-      id: "champions"
+      id: "champions",
     },
     {
       name: t("f1Fantasy", "F1 Fantasy"),
       href: "/f1-fantasy/tabele",
       icon: GiF1Car,
-      id: "f1"
+      id: "f1",
     },
   ];
 
@@ -64,7 +64,7 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
           : "bg-white/95 border-gray-200"
       }`}
     >
-      <div className="flex items-center justify-around py-2 px-1 safe-area-pb">
+      <div className="flex items-center justify-around pb-2 px-1 safe-area-pb">
         {navItems.map((item) => {
           const isActive = isActiveLink(item.href);
           const IconComponent = item.icon;
@@ -72,7 +72,7 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
           return (
             <Link key={item.id} href={item.href} className="flex-1">
               <motion.div
-                className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 ${
+                className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 ${
                   isActive
                     ? theme === "dark"
                       ? "text-red-400 bg-red-500/10"
@@ -95,7 +95,7 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
                 {isActive && (
                   <motion.div
                     layoutId="bottomNavIndicator"
-                    className={`absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full ${
+                    className={`absolute -top-0.5 left-0 right-0 h-0.5 rounded-full ${
                       theme === "dark" ? "bg-red-400" : "bg-red-600"
                     }`}
                   />

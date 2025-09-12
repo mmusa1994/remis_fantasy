@@ -321,7 +321,7 @@ const OnboardingModal = ({
       </div>
 
       <div
-        className={`text-xs space-y-2 p-3 rounded-lg ${
+        className={`text-xs space-y-2 p-3 rounded-lg overflow-hidden ${
           theme === "dark"
             ? "bg-gray-800 border border-gray-700"
             : "bg-gray-50 border border-gray-200"
@@ -340,7 +340,7 @@ const OnboardingModal = ({
           {t("managerIdStep.howToFindDescription")}
         </p>
         <p
-          className={`font-mono text-xs ${
+          className={`font-mono text-xs break-all ${
             theme === "dark" ? "text-blue-400" : "text-blue-600"
           }`}
         >
