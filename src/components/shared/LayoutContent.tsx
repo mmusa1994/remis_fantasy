@@ -31,11 +31,11 @@ export default function LayoutContent({
   const isLoginPanelBool = isLoginPanel(pathname);
 
   // Determine current section for mobile menu
-  const getCurrentSection = () => {
+  const getCurrentSection = (): string | undefined => {
     if (pathname.startsWith("/premier-league")) return "premier-league";
     if (pathname.startsWith("/champions-league")) return "champions-league";
     if (pathname.startsWith("/f1-fantasy")) return "f1-fantasy";
-    return null;
+    return undefined;
   };
 
   if (isAdmin) {
