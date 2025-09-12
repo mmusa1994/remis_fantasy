@@ -26,7 +26,7 @@ export default function ChampionsLeagueLayout({
         items={championsLeagueNavItems}
         baseColor="blue"
       />
-      <main className="relative pt-28 sm:pt-32 md:pt-36">{children}</main>
+      <main className="relative pt-0 sm:pt-32 md:pt-36">{children}</main>
     </div>
   );
 }

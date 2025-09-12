@@ -1327,7 +1327,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
   return (
     <div
-      className={`min-h-screen p-4 ${
+      className={`min-h-screen p-2 sm:p-4 ${
         theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
@@ -1357,60 +1357,71 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             animate={{ opacity: 1, y: 0 }}
             className={`${
               theme === "dark" ? "bg-gray-800" : "bg-white"
-            } rounded-lg p-6 mb-6 shadow-lg border border-gray-200 dark:border-gray-700`}
+            } rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 shadow-lg border border-gray-200 dark:border-gray-700`}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {userTeamData.manager?.player_first_name}{" "}
-                  {userTeamData.manager?.player_last_name}
-                </h1>
-                <p className="text-lg font-medium text-purple-600">
-                  {userTeamData.manager?.name}
-                  {managerIdVerified === false && (
-                    <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
-                      Unverified
-                    </span>
-                  )}
-                </p>
-                <p className="text-gray-500">{t("teamPlanner.subtitle")}</p>
-                {/* Inline Manager ID with edit option */}
-                <div className="mt-2 flex items-center gap-2 text-sm">
-                  <span
-                    className={
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }
-                  >
+            <div className="flex flex-col space-y-4 mb-4">
+              {/* Mobile-first header layout */}
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="flex-1">
+                  <h1 className="text-xl sm:text-2xl font-bold leading-tight">
+                    {userTeamData.manager?.player_first_name}{" "}
+                    {userTeamData.manager?.player_last_name}
+                  </h1>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                    <p className="text-base sm:text-lg font-medium text-purple-600">
+                      {userTeamData.manager?.name}
+                    </p>
+                    {managerIdVerified === false && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 w-fit">
+                        Unverified
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">{t("teamPlanner.subtitle")}</p>
+                </div>
+                
+                {/* Overall rank - mobile positioned differently */}
+                <div className="sm:text-right">
+                  <p className="text-xs text-gray-500">
+                    {t("teamPlanner.overallRank")}: #
+                    {userTeamData.manager?.summary_overall_rank?.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Manager ID and actions - mobile stack */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
                     {t("teamPlanner.managerId")} {currentManagerId}
                   </span>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setShowManagerIdModal(true)}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
                     title={t("teamPlanner.clickToChange") || "Click to change"}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
-                    <span>{t("teamPlanner.clickToChange")}</span>
+                    <span className="hidden xs:inline">{t("teamPlanner.clickToChange")}</span>
+                    <span className="xs:hidden">Change</span>
                   </button>
+                  
                   {currentManagerId && (
                     <a
                       href={`https://fantasy.premierleague.com/entry/${currentManagerId}/event/${currentGameweek}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
                       title="Open on fantasy.premierleague.com"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
-                      <span>Open on FPL</span>
+                      <span className="hidden xs:inline">Open on FPL</span>
+                      <span className="xs:hidden">FPL</span>
                     </a>
                   )}
                 </div>
-              </div>
-              <div className="text-right">
-                {/* Overall rank and meta */}
-                <p className="text-xs text-gray-500">
-                  {t("teamPlanner.overallRank")}: #
-                  {userTeamData.manager?.summary_overall_rank?.toLocaleString()}
-                </p>
               </div>
             </div>
 
@@ -1447,45 +1458,41 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               </div>
             )}
 
-            {/* Enhanced Team Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+            {/* Enhanced Team Stats - Mobile optimized */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-center">
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500 mb-1">
                   {t("teamPlanner.gameweek")}
                 </p>
-                <p className="font-bold text-lg">{currentGameweek}</p>
+                <p className="font-bold text-base sm:text-lg">{currentGameweek}</p>
               </div>
               <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500 mb-1">
                   {t("teamPlanner.gwPoints")}
                 </p>
-                <p className="font-bold text-lg text-green-600">
+                <p className="font-bold text-base sm:text-lg text-green-600">
                   {userTeamData.team_totals?.total_points_final || 0}
                 </p>
               </div>
-              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">
+              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 col-span-2 sm:col-span-1">
+                <p className="text-xs sm:text-sm text-gray-500 mb-1">
                   {t("teamPlanner.totalPoints")}
                 </p>
-                <p className="font-bold text-lg">
+                <p className="font-bold text-base sm:text-lg">
                   {userTeamData.manager?.summary_overall_points?.toLocaleString()}
                 </p>
               </div>
               <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500 mb-1">
                   {t("teamPlanner.teamValue")}
                 </p>
-                <p className="font-bold text-lg">
-                  £
-                  {((userTeamData.entry_history?.value || 1000) / 10).toFixed(
-                    1
-                  )}
-                  m
+                <p className="font-bold text-base sm:text-lg">
+                  £{((userTeamData.entry_history?.value || 1000) / 10).toFixed(1)}m
                 </p>
               </div>
               <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-3">
-                <p className="text-sm text-gray-500">{t("teamPlanner.bank")}</p>
-                <p className="font-bold text-lg">
+                <p className="text-xs sm:text-sm text-gray-500 mb-1">{t("teamPlanner.bank")}</p>
+                <p className="font-bold text-base sm:text-lg">
                   £{((userTeamData.entry_history?.bank || 0) / 10).toFixed(1)}m
                 </p>
               </div>
@@ -1572,22 +1579,25 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   </div>
 
                   {/* Action Buttons - Mobile optimized */}
-                  <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                  <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 w-full sm:w-auto">
                     <button
                       onClick={() =>
                         transferMode ? resetTransfers() : enterTransferMode()
                       }
-                      className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                      className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium ${
                         transferMode
                           ? "bg-red-600 text-white hover:bg-red-700 shadow-sm"
                           : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
                       }`}
                     >
                       <FaExchangeAlt className="w-4 h-4" />
-                      <span>
+                      <span className="hidden xs:inline">
                         {transferMode
                           ? t("teamPlanner.transfers.exitTransfers")
                           : t("teamPlanner.tabs.transfers")}
+                      </span>
+                      <span className="xs:hidden">
+                        {transferMode ? "Exit" : "Transfers"}
                       </span>
                       {transferMode &&
                         pendingTransfers.transfersOut.length > 0 && (
@@ -1602,7 +1612,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       <button
                         onClick={() => setShowAIChat(true)}
                         disabled={!canUseAI}
-                        className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                        className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium ${
                           canUseAI
                             ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-sm"
                             : "bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed"
@@ -1614,9 +1624,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }
                       >
                         <FaRobot className="w-4 h-4" />
-                        <span className="hidden sm:inline">
+                        <span className="hidden xs:inline">
                           {t("teamPlanner.tabs.aiAnalyser")}
                         </span>
+                        <span className="xs:hidden">AI</span>
                       </button>
                     )}
                   </div>

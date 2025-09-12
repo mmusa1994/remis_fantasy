@@ -143,7 +143,7 @@ export default function Home() {
   return (
     <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pb-20 px-4 pt-24">
+      <section className="relative overflow-hidden pb-24 px-4 pt-5 md:pt-20">
         <div className="max-w-6xl mx-auto text-center">
           {/* Logo */}
           <div

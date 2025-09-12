@@ -199,7 +199,7 @@ export default function SubNavigation({
 
   return (
     <nav
-      className={`fixed top-20 md:top-24 left-0 right-0 z-30 backdrop-blur-lg border-b w-full ${
+      className={`hidden sm:block fixed top-20 md:top-24 left-0 right-0 z-30 backdrop-blur-lg border-b w-full ${
         theme === "dark"
           ? `bg-black/90 ${colors.border.dark}`
           : `bg-white/90 ${colors.border.light}`

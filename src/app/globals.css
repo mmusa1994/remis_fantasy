@@ -5,6 +5,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe Area Support for Mobile Devices */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* Russo One Font */
 @font-face {
   font-family: "Russo One";
