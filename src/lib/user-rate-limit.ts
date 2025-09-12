@@ -190,22 +190,49 @@ async function createOrUpdateUserUsage(
 
     console.log('💾 About to upsert data:', updateData);
 
-    // Use upsert to create or update the record
-    const { data, error } = await supabaseServer
+    // Try update first, then insert if no rows affected
+    const { data: updateResult, error: updateError } = await supabaseServer
       .from('user_ai_usage')
-      .upsert(updateData, {
-        onConflict: 'user_id,period_start',
-        ignoreDuplicates: false
+      .update({
+        queries_used,
+        queries_limit,
+        updated_at: new Date().toISOString(),
       })
+      .eq('user_id', userId)
+      .gte('period_end', new Date().toISOString())
       .select('*');
 
-    if (error) {
-      console.error('❌ Supabase upsert error:', error);
-      console.error('❌ Error code:', error.code);
-      console.error('❌ Error message:', error.message);
-      console.error('❌ Error details:', error.details);
+    if (updateError) {
+      console.log('⚠️ Update failed, trying insert:', updateError.message);
+      
+      // If update failed or no rows affected, try insert
+      const { data: insertResult, error: insertError } = await supabaseServer
+        .from('user_ai_usage')
+        .insert(updateData)
+        .select('*');
+
+      if (insertError) {
+        console.error('❌ Both update and insert failed');
+        console.error('❌ Update error:', updateError);
+        console.error('❌ Insert error:', insertError);
+      } else {
+        console.log('✅ Insert successful:', insertResult);
+      }
+    } else if (!updateResult || updateResult.length === 0) {
+      console.log('⚠️ Update returned no rows, trying insert');
+      
+      const { data: insertResult, error: insertError } = await supabaseServer
+        .from('user_ai_usage')
+        .insert(updateData)
+        .select('*');
+
+      if (insertError) {
+        console.error('❌ Insert after empty update failed:', insertError);
+      } else {
+        console.log('✅ Insert after empty update successful:', insertResult);
+      }
     } else {
-      console.log('✅ Supabase upsert successful, returned data:', data);
+      console.log('✅ Update successful:', updateResult);
     }
   } catch (error) {
     console.error('❌ Exception in createOrUpdateUserUsage:', error);

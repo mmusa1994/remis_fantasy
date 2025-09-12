@@ -243,20 +243,20 @@ export async function POST(req: NextRequest) {
       )
       .join("\n");
 
-    // Recent fixtures only (limit tokens)
+    // Recent fixtures only (limit tokens) - IMPROVED FORMAT
     const completedMatches = fixturesData
       .filter((f: any) => f.finished === true)
       .sort((a: any, b: any) => b.event - a.event)
       .slice(0, 50)
       .map(
         (f: any) =>
-          `GW${f.event}|${teams[f.team_h]}${f.team_h_score}-${f.team_a_score}${
+          `GW${f.event}: ${teams[f.team_h]} ${f.team_h_score}-${f.team_a_score} ${
             teams[f.team_a]
-          }`
+          } (${teams[f.team_h]} played at home)`
       )
       .join("\n");
 
-    // Next fixtures only
+    // Next fixtures only - IMPROVED FORMAT WITH CLEAR HOME/AWAY
     const upcomingMatches = fixturesData
       .filter((f: any) => f.finished !== true)
       .sort(
@@ -265,7 +265,7 @@ export async function POST(req: NextRequest) {
           new Date(b.kickoff_time).getTime()
       )
       .slice(0, 25)
-      .map((f: any) => `GW${f.event}|${teams[f.team_h]}v${teams[f.team_a]}`)
+      .map((f: any) => `GW${f.event}: ${teams[f.team_h]} vs ${teams[f.team_a]} (${teams[f.team_h]} home, ${teams[f.team_a]} away)`)
       .join("\n");
 
     const current_event =
@@ -393,32 +393,34 @@ Ukupan rank: ${userTeamData.info?.summary_overall_rank || "N/A"}`;
       );
     }
 
-    // FPL 2025/26 EXPERT SYSTEM PROMPT
+    // FPL 2025/26 EXPERT SYSTEM PROMPT - IMPROVED
     const aiInput = [
       {
         role: "system" as const,
-        content: `FPL stručnjak 2025/26. Koristi SAMO podatke ispod.
+        content: `Ti si FPL stručnjak za sezonu 2025/26. Koristi ISKLJUČIVO podatke ispod - NE izmišljaj ništa!
 
-TIMOVI: ${JSON.stringify(teams)}
+TIMOVI I ID-ovi: ${JSON.stringify(teams)}
 
-IGRAČI (id|ime|tim|pos|forma|bodovi|cijena|%|status):
+SVIH ${allPlayers.split("\n").length} IGRAČA (id|ime|tim|pozicija|forma|bodovi|cijena|vlasništvo%|status):
 ${allPlayers}
 
-MEČEVI:
-${completedMatches.split("\n").slice(0, 10).join("\n")}
+REZULTATI MEČEVA (format: "GW: Tim1 2-1 Tim2 (Tim1 played at home)"):
+${completedMatches.split("\n").slice(0, 15).join("\n")}
 
-SLEDEĆI:
-${upcomingMatches.split("\n").slice(0, 8).join("\n")}
+SLEDEĆI MEČEVI (format: "GW: Tim1 vs Tim2 (Tim1 home, Tim2 away)"):
+${upcomingMatches.split("\n").slice(0, 12).join("\n")}
 
-GW: ${current_event} | ${today}${
-          userTeamInfo ? "\n\nVAŠ TIM:\n" + userTeamInfo.substring(0, 500) : ""
+TRENUTNO KOLO: GW${current_event} | Datum: ${today}${
+          userTeamInfo ? "\n\nKORISNIKOV TIM:\n" + userTeamInfo.substring(0, 500) : ""
         }
 
-PRAVILA:
-- Cijena = polje 7 (£X.Xm)
-- SAMO igrači iz liste!
-- team_h/a = ID → ime
-- Ako nema igrača: "nije u bazi"`,
+KLJUČNA PRAVILA:
+1. Cijena igrača = polje 7 u formatu (£X.Xm) 
+2. Koristi SAMO igrače iz gornje liste - ako nema igrača, reci "nije u bazi"
+3. Za fixtures: Tim1 home = domaćin, Tim2 away = gost
+4. NE izmišljaj rezultate, protivnike ili podatke
+5. Burnley se možda NIJE kvalificirao za 2025/26 - provjeri da li je u timovima!
+6. Za pitanja o "idućem kolu" - koristi SLEDEĆI MEČEVI sekciju`,
       },
       ...chatHistory.slice(-2),
       { role: "user" as const, content: message },
@@ -578,11 +580,14 @@ Odgovori na pitanje koristeći ove podatke.`,
       }
     }
 
-    if (!userApiKey && response !== "No answer.") {
+    // FIXED: Always increment usage for successful responses (except when using own API key)
+    if (!userApiKey && response && response.trim() !== "" && response !== "No answer.") {
       const userId = session?.user?.id || (await getUserFromRequest(req));
       console.log('🎯 About to increment usage:', {
         hasUserApiKey: !!userApiKey,
-        responseIsNotEmpty: response !== "No answer.",
+        hasResponse: !!response,
+        responseLength: response?.length || 0,
+        responsePreview: response?.substring(0, 50) || "empty",
         userId,
         sessionUserId: session?.user?.id
       });
@@ -596,8 +601,9 @@ Odgovori na pitanje koristeći ove podatke.`,
     } else {
       console.log('⏭️ Skipping usage increment:', {
         hasUserApiKey: !!userApiKey,
-        responseIsNotEmpty: response !== "No answer.",
-        reason: userApiKey ? 'Using user API key' : 'Empty response'
+        hasResponse: !!response,
+        responseLength: response?.length || 0,
+        reason: userApiKey ? 'Using user API key' : 'Empty or invalid response'
       });
     }
 
