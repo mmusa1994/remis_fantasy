@@ -8,6 +8,7 @@ import FplLoadingSkeleton from "@/components/shared/FplLoadingSkeleton";
 import { FaTrophy, FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { IoFootballOutline } from "react-icons/io5";
 import { getTeamColors } from "@/lib/team-colors";
+import { FaShirt } from "react-icons/fa6";
 
 interface ProcessedTeam {
   id: number;
@@ -201,7 +202,14 @@ export default function LeagueTables({
 
     // Otherwise, no skeleton
     setIsInitializing(false);
-  }, [managerId, leagues.length, leaguesLoading, selectedLeagueId, data, loading]);
+  }, [
+    managerId,
+    leagues.length,
+    leaguesLoading,
+    selectedLeagueId,
+    data,
+    loading,
+  ]);
 
   // Removed auto-refresh - user will use manual refresh button
 
@@ -361,7 +369,7 @@ export default function LeagueTables({
         {/* Bench Players - Mobile Optimized */}
         <div className="mt-4">
           <h5 className="text-sm font-bold text-theme-text-secondary mb-2 flex items-center gap-2">
-            <span>⚽</span>
+            <FaShirt className="w-4 h-4" />
             {t("leagueTables.bench")}
           </h5>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
@@ -537,7 +545,9 @@ export default function LeagueTables({
         {/* Bench Players - Mobile Optimized */}
         <div className="mt-4">
           <h5 className="text-sm font-bold text-theme-text-secondary mb-2 flex items-center gap-2">
-            <span>⚽</span>
+            <span>
+              <FaShirt className="w-4 h-4" />
+            </span>
             Bench
           </h5>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
@@ -581,7 +591,7 @@ export default function LeagueTables({
             <div>
               <span className="text-theme-text-secondary">Played: </span>
               <span className="font-medium text-theme-foreground">
-                {11 - (team.players_to_play || 0)}/11
+                {15 - (team.players_to_play || 0)}/15
               </span>
             </div>
             <div>
@@ -626,6 +636,8 @@ export default function LeagueTables({
       </div>
     );
   }
+
+  console.log(data);
 
   return (
     <div className="space-y-4">
@@ -888,7 +900,7 @@ export default function LeagueTables({
                         <div className="flex items-center gap-4">
                           <span>
                             {t("leagueTables.played")}:{" "}
-                            {11 - (team.players_to_play || 0)}/11
+                            {15 - (team.players_to_play || 0)}/15
                           </span>
                           <span>
                             Team Value: £{(team.team_value / 10).toFixed(1)}m
@@ -996,13 +1008,20 @@ export default function LeagueTables({
                         <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-green-50 hover:to-teal-50 dark:hover:from-green-900/20 dark:hover:to-teal-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                           <span className="font-bold text-green-600 dark:text-green-400">
                             {(() => {
-                              const startingXI = currentUserData?.team_with_stats?.filter((p: any) => p.position <= 11) || [];
-                              const totalPoints = startingXI.reduce((sum: number, player: any) => {
-                                const playerPoints = player.player?.event_points || 0;
-                                const multiplier = player.multiplier || 1;
-                                const points = playerPoints * multiplier;
-                                return sum + points;
-                              }, 0);
+                              const startingXI =
+                                currentUserData?.team_with_stats?.filter(
+                                  (p: any) => p.position <= 11
+                                ) || [];
+                              const totalPoints = startingXI.reduce(
+                                (sum: number, player: any) => {
+                                  const playerPoints =
+                                    player.player?.event_points || 0;
+                                  const multiplier = player.multiplier || 1;
+                                  const points = playerPoints * multiplier;
+                                  return sum + points;
+                                },
+                                0
+                              );
                               return totalPoints;
                             })()}
                           </span>
@@ -1278,13 +1297,20 @@ export default function LeagueTables({
                         <div className="text-center">
                           <span className="font-bold text-green-600 dark:text-green-400 text-sm">
                             {(() => {
-                              const startingXI = currentUserData?.team_with_stats?.filter((p: any) => p.position <= 11) || [];
-                              const totalPoints = startingXI.reduce((sum: number, player: any) => {
-                                const playerPoints = player.player?.event_points || 0;
-                                const multiplier = player.multiplier || 1;
-                                const points = playerPoints * multiplier;
-                                return sum + points;
-                              }, 0);
+                              const startingXI =
+                                currentUserData?.team_with_stats?.filter(
+                                  (p: any) => p.position <= 11
+                                ) || [];
+                              const totalPoints = startingXI.reduce(
+                                (sum: number, player: any) => {
+                                  const playerPoints =
+                                    player.player?.event_points || 0;
+                                  const multiplier = player.multiplier || 1;
+                                  const points = playerPoints * multiplier;
+                                  return sum + points;
+                                },
+                                0
+                              );
                               return totalPoints;
                             })()}
                           </span>
