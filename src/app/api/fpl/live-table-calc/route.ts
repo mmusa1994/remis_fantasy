@@ -292,6 +292,7 @@ export async function GET(request: NextRequest) {
           element: number;
           points: number;
           live_points: number;
+          minutes: number;
           multiplier: number;
           position: number;
           is_captain: boolean;
@@ -377,6 +378,7 @@ export async function GET(request: NextRequest) {
             element: pick.element,
             points: originalPoints,
             live_points: playerLivePoints,
+            minutes: liveElement.stats.minutes,
             multiplier: pick.multiplier,
             position: pick.position,
             is_captain: pick.is_captain,

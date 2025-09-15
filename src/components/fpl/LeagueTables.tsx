@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { MdExpandMore, MdRemove, MdRefresh, MdInfo } from "react-icons/md";
 import LoadingCard from "@/components/shared/LoadingCard";
@@ -9,6 +9,7 @@ import { FaTrophy, FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { IoFootballOutline } from "react-icons/io5";
 import { getTeamColors } from "@/lib/team-colors";
 import { FaShirt } from "react-icons/fa6";
+import { applyAutoSubs, SquadPlayer, PositionCode } from "@/utils/fpl/autoSubs";
 
 interface ProcessedTeam {
   id: number;
@@ -42,6 +43,7 @@ interface ProcessedTeam {
     element: number;
     points: number;
     live_points: number;
+    minutes: number;
     multiplier: number;
     position: number;
     is_captain: boolean;
@@ -100,6 +102,162 @@ export default function LeagueTables({
   const [leagues, setLeagues] = useState<any[]>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [includeAutoSubs, setIncludeAutoSubs] = useState(false);
+
+  const fixtures: Array<{
+    id: number;
+    team_h: number;
+    team_a: number;
+    finished: boolean;
+  }> = currentUserData?.fixtures || [];
+
+  const elementsMap = useMemo(() => {
+    const map = new Map<
+      number,
+      { id: number; team: number; element_type: number }
+    >();
+    (data?.elements || []).forEach((el) => map.set(el.id, el as any));
+    return map;
+  }, [data?.elements]);
+
+  const posCode = (elementType: number): PositionCode =>
+    elementType === 1
+      ? "GK"
+      : elementType === 2
+      ? "DEF"
+      : elementType === 3
+      ? "MID"
+      : "FWD";
+
+  const isTeamFixtureFinished = (teamId: number): boolean => {
+    if (!fixtures || fixtures.length === 0) return false;
+    const teamFixtures = fixtures.filter(
+      (f) => f.team_h === teamId || f.team_a === teamId
+    );
+    if (teamFixtures.length === 0) return false;
+    return teamFixtures.every((f) => f.finished === true);
+  };
+
+  const buildSquadFromLeagueTeam = (team: ProcessedTeam): SquadPlayer[] => {
+    // Build lookups for picks and player_details
+    const pickByElement = new Map(team.picks.map((p) => [p.element, p]));
+    const minutesByElement = new Map<number, number>();
+    const livePointsByElement = new Map<number, number>();
+    team.player_details.forEach((pd: any) => {
+      livePointsByElement.set(pd.element, pd.live_points || 0);
+      minutesByElement.set(pd.element, pd.minutes ?? 0);
+    });
+
+    // Determine bench order for outfield bench
+    const benchOutfield = team.picks
+      .filter((p) => p.position > 11)
+      .filter((p) => {
+        const el = elementsMap.get(p.element);
+        return el && el.element_type !== 1; // not GK
+      })
+      .sort((a, b) => a.position - b.position)
+      .map((p, idx) => ({ id: p.element, order: idx + 1 }));
+    const benchOrderMap = new Map(benchOutfield.map((b) => [b.id, b.order]));
+
+    const benchGKElement = team.picks.find(
+      (p) => p.position > 11 && elementsMap.get(p.element)?.element_type === 1
+    );
+
+    const squad: SquadPlayer[] = team.picks.map((p) => {
+      const el = elementsMap.get(p.element);
+      const elementType = el?.element_type || 3;
+      const playerTeamId = el?.team || 0;
+      const minutes = minutesByElement.get(p.element) ?? 0;
+      const livePts = livePointsByElement.get(p.element) ?? 0;
+      const isBenchGK = benchGKElement?.element === p.element;
+
+      return {
+        id: p.element,
+        position: posCode(elementType),
+        isStarter: p.position <= 11,
+        benchOrder: benchOrderMap.get(p.element),
+        isBenchGK,
+        minutes,
+        points: livePts,
+        multiplier: p.multiplier || 1,
+        fixtureFinished: playerTeamId
+          ? isTeamFixtureFinished(playerTeamId)
+          : false,
+      };
+    });
+
+    return squad;
+  };
+
+  const computeAdjustedTotals = (team: ProcessedTeam) => {
+    if (!includeAutoSubs) {
+      return {
+        live_points: team.live_points,
+        live_total: team.live_total,
+        subsApplied: [] as Array<{ outId: number; inId: number }>,
+      };
+    }
+    try {
+      const squad = buildSquadFromLeagueTeam(team);
+      const result = applyAutoSubs(squad);
+      const originalTotal = team.total - team.event_total + team.live_points;
+      const adjustedLivePoints = result.totalPoints;
+      const adjustedLiveTotal =
+        team.total - team.event_total + adjustedLivePoints;
+      return {
+        live_points: adjustedLivePoints,
+        live_total: adjustedLiveTotal,
+        subsApplied: result.subsApplied,
+      };
+    } catch (e) {
+      return {
+        live_points: team.live_points,
+        live_total: team.live_total,
+        subsApplied: [] as any,
+      };
+    }
+  };
+
+  const buildSquadFromCurrentUser = (): {
+    squad: SquadPlayer[];
+    pickByElement: Map<number, any>;
+  } => {
+    const teamWithStats: any[] = currentUserData?.team_with_stats || [];
+    const pickByElement = new Map<number, any>();
+    teamWithStats.forEach((p) => pickByElement.set(p.player_id, p));
+
+    const benchOutfield = teamWithStats
+      .filter((p) => p.position > 11 && p.player?.element_type !== 1)
+      .sort((a, b) => a.position - b.position)
+      .map((p, idx) => ({ id: p.player_id, order: idx + 1 }));
+    const benchOrderMap = new Map(benchOutfield.map((b) => [b.id, b.order]));
+
+    const benchGK = teamWithStats.find(
+      (p) => p.position > 11 && p.player?.element_type === 1
+    );
+
+    const squad: SquadPlayer[] = teamWithStats.map((p) => {
+      const elementType = p.player?.element_type || 3;
+      const playerTeamId = p.player?.team || 0;
+      const minutes = p.live_stats?.minutes ?? 0;
+      const livePts = p.live_stats?.total_points ?? 0;
+      return {
+        id: p.player_id,
+        position: posCode(elementType),
+        isStarter: p.position <= 11,
+        benchOrder: benchOrderMap.get(p.player_id),
+        isBenchGK: benchGK?.player_id === p.player_id,
+        minutes,
+        points: livePts,
+        multiplier: p.multiplier || 1,
+        fixtureFinished: playerTeamId
+          ? isTeamFixtureFinished(playerTeamId)
+          : false,
+      };
+    });
+
+    return { squad, pickByElement };
+  };
 
   const fetchManagerLeagues = useCallback(async () => {
     if (!managerId) return;
@@ -292,6 +450,31 @@ export default function LeagueTables({
       (p: any) => p.position > 11
     );
 
+    // Compute auto subs for current user if enabled
+    let finalIds = new Set<number>();
+    const benchInIds = new Set<number>();
+    const subbedOutIds = new Set<number>();
+    let subsCount = 0;
+
+    if (includeAutoSubs) {
+      try {
+        const { squad } = buildSquadFromCurrentUser();
+        const result = applyAutoSubs(squad);
+        finalIds = new Set(result.appliedTeam.map((p) => p.id));
+        subsCount = result.subsApplied.length;
+        // derive bench-ins and outs
+        const originalStarterIds = new Set(
+          squad.filter((p) => p.isStarter).map((p) => p.id)
+        );
+        result.subsApplied.forEach((s) => {
+          subbedOutIds.add(s.outId);
+          benchInIds.add(s.inId);
+        });
+      } catch (e) {
+        // fail silently
+      }
+    }
+
     return (
       <div className="mt-2 mx-2 mb-4 p-3 bg-theme-card-secondary rounded-lg border border-theme-border md:mt-4 md:mx-4 md:p-4">
         <h4 className="font-semibold text-theme-foreground mb-3 flex items-center gap-2 text-sm md:text-base">
@@ -303,9 +486,13 @@ export default function LeagueTables({
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 md:gap-3">
           {startingXI.map((playerDetail: any) => {
             const teamColors = getTeamColors(playerDetail.player?.team || 1);
-            const displayPoints =
+            const originalPoints =
               (playerDetail.live_stats?.total_points || 0) *
               (playerDetail.multiplier || 1);
+            const isSubbedOut =
+              includeAutoSubs && subbedOutIds.has(playerDetail.player_id);
+            const displayPoints =
+              includeAutoSubs && isSubbedOut ? 0 : originalPoints;
 
             return (
               <div
@@ -325,7 +512,13 @@ export default function LeagueTables({
                         className="w-2 h-2 rounded-sm flex-shrink-0 md:w-3 md:h-3"
                         style={{ backgroundColor: teamColors.primary }}
                       ></div>
-                      <p className="font-bold text-theme-foreground truncate text-xs md:text-sm">
+                      <p
+                        className={`font-bold truncate text-xs md:text-sm ${
+                          isSubbedOut
+                            ? "line-through text-theme-text-secondary"
+                            : "text-theme-foreground"
+                        }`}
+                      >
                         {playerDetail.player?.web_name || "Unknown"}
                         {playerDetail.is_captain && (
                           <span className="ml-1 text-xs bg-yellow-500 text-white px-1 py-0.5 rounded">
@@ -335,6 +528,16 @@ export default function LeagueTables({
                         {playerDetail.is_vice_captain && (
                           <span className="ml-1 text-xs bg-gray-500 text-white px-1 py-0.5 rounded">
                             V
+                          </span>
+                        )}
+                        {isSubbedOut && (
+                          <span className="ml-1 text-xs text-theme-text-secondary">
+                            (
+                            {t(
+                              "leagueTables.subbedOutZeroMin",
+                              "0m, subbed out"
+                            )}
+                            )
                           </span>
                         )}
                       </p>
@@ -354,7 +557,7 @@ export default function LeagueTables({
                     <div className="text-sm font-bold text-green-600 dark:text-green-400">
                       {displayPoints}
                     </div>
-                    {(playerDetail.multiplier || 1) > 1 && (
+                    {!isSubbedOut && (playerDetail.multiplier || 1) > 1 && (
                       <div className="text-xs text-theme-text-secondary">
                         ×{playerDetail.multiplier}
                       </div>
@@ -375,6 +578,8 @@ export default function LeagueTables({
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
             {bench.map((playerDetail: any) => {
               const teamColors = getTeamColors(playerDetail.player?.team || 1);
+              const cameIn =
+                includeAutoSubs && benchInIds.has(playerDetail.player_id);
 
               return (
                 <div
@@ -386,8 +591,19 @@ export default function LeagueTables({
                       className="w-2 h-2 rounded-sm flex-shrink-0"
                       style={{ backgroundColor: teamColors.primary }}
                     ></div>
-                    <p className="font-medium text-theme-foreground truncate">
+                    <p
+                      className={`font-medium truncate ${
+                        cameIn
+                          ? "text-green-700 dark:text-green-300"
+                          : "text-theme-foreground"
+                      }`}
+                    >
                       {playerDetail.player?.web_name || "Unknown"}
+                      {cameIn && (
+                        <span className="ml-1 text-xs text-green-600 dark:text-green-400">
+                          ({t("leagueTables.benchIn", "bench in")})
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
@@ -403,6 +619,12 @@ export default function LeagueTables({
             })}
           </div>
         </div>
+
+        {includeAutoSubs && subsCount > 0 && (
+          <div className="mt-3 text-xs text-theme-text-secondary">
+            {t("leagueTables.subsApplied", "Auto subs applied")}: {subsCount}
+          </div>
+        )}
 
         {/* Team Summary - Mobile Only */}
         <div className="mt-3 pt-3 border-t border-theme-border/50 md:hidden">
@@ -685,6 +907,24 @@ export default function LeagueTables({
               </span>
             </button>
           )}
+          {/* Include Auto Subs toggle */}
+          {data && (
+            <div className="flex items-center gap-2 ml-auto">
+              <input
+                id="include-auto-subs"
+                type="checkbox"
+                checked={includeAutoSubs}
+                onChange={(e) => setIncludeAutoSubs(e.target.checked)}
+                className="h-4 w-4 rounded border-theme-border text-purple-600 focus:ring-purple-500"
+              />
+              <label
+                htmlFor="include-auto-subs"
+                className="text-sm text-theme-foreground select-none"
+              >
+                {t("leagueTables.includeAutoSubs", "Include Auto Subs")}
+              </label>
+            </div>
+          )}
         </div>
       </div>
 
@@ -785,6 +1025,7 @@ export default function LeagueTables({
           <div className="hidden md:block divide-y divide-theme-border">
             {data.teams.map((team) => {
               const isCurrentUser = managerId === team.id;
+              const adjusted = computeAdjustedTotals(team);
               return (
                 <div key={team.id} className="transition-colors">
                   {/* Main Row - Entire row is clickable */}
@@ -860,14 +1101,18 @@ export default function LeagueTables({
                       {/* GW Points */}
                       <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-green-50 hover:to-teal-50 dark:hover:from-green-900/20 dark:hover:to-teal-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-green-700 dark:group-hover:text-green-300 transition-colors">
-                          {team.live_points || team.event_total || 0}
+                          {includeAutoSubs
+                            ? computeAdjustedTotals(team).live_points
+                            : team.live_points || team.event_total || 0}
                         </span>
                       </div>
 
                       {/* Total Points */}
                       <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
-                          {team.live_total || team.total || 0}
+                          {includeAutoSubs
+                            ? computeAdjustedTotals(team).live_total
+                            : team.live_total || team.total || 0}
                         </span>
                       </div>
 
@@ -1126,6 +1371,7 @@ export default function LeagueTables({
           <div className="md:hidden divide-y divide-theme-border">
             {data.teams.map((team) => {
               const isCurrentUser = managerId === team.id;
+              const adjusted = computeAdjustedTotals(team);
               return (
                 <div key={team.id} className="transition-colors">
                   {/* Main Row - Compact Mobile Layout */}
@@ -1179,14 +1425,18 @@ export default function LeagueTables({
                       {/* GW Points */}
                       <div className="text-center">
                         <span className="font-bold text-green-600 dark:text-green-400 text-sm">
-                          {team.live_points || team.event_total || 0}
+                          {includeAutoSubs
+                            ? adjusted.live_points
+                            : team.live_points || team.event_total || 0}
                         </span>
                       </div>
 
                       {/* Total Points */}
                       <div className="text-center">
                         <span className="font-bold text-theme-foreground text-sm">
-                          {team.live_total || team.total || 0}
+                          {includeAutoSubs
+                            ? adjusted.live_total
+                            : team.live_total || team.total || 0}
                         </span>
                         {team.active_chip && (
                           <div
