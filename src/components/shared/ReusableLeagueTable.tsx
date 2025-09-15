@@ -252,17 +252,6 @@ export default function ReusableLeagueTable({
           ? `bg-gradient-to-r from-red-500/20 to-rose-500/10`
           : `bg-gradient-to-r from-red-50 to-rose-50`;
       }
-      if (position <= 11) {
-        return theme === "dark"
-          ? `bg-gradient-to-r from-${colors.light} to-${colors.light.replace(
-              "/20",
-              "/10"
-            )} border-${colors.border}`
-          : `bg-gradient-to-r from-${colors.light} to-${colors.light.replace(
-              "100",
-              "50"
-            )} border-${colors.border}`;
-      }
     } else if (leagueType === "free") {
       // Free liga - jednostavno ljubičasto pozadinsko osencavanje
       if (position === 1) {
