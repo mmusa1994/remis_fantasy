@@ -109,7 +109,7 @@ export default function F1TabeleFromDBPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <div className="flex flex-col items-center gap-2">
               <p className="text-theme-text-primary font-russo text-lg">
-                {t("nextLast", { next: "Zandvoort", last: "Hungaroring" })}
+                {t("nextLast", { next: "Azerbaijan", last: "Monza" })}
               </p>
               <p className="text-theme-text-secondary text-sm">
                 {t("season")} 2025
@@ -119,40 +119,40 @@ export default function F1TabeleFromDBPage() {
 
           {/* Prize Pool */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mb-8">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-theme-card border border-theme-border">
-              <GiTrophyCup className="text-[#F4CE2A] text-xl" />
-              <div className="text-center">
+            <div className="flex flex-col items-center justify-center px-4 py-2 rounded-md bg-theme-card border border-theme-border w-full">
+              <div className="text-center flex flex-row items-center justify-center gap-2">
+                <GiTrophyCup className="text-[#F4CE2A] text-xl" />
                 <div className="text-[#F4CE2A] font-russo text-lg">
                   {t("prizes.first")}
                 </div>
-                <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
-                  <FaCoins className="text-[#F4CE2A]" />
-                  120 KM
-                </div>
+              </div>
+              <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
+                <FaCoins className="text-[#F4CE2A]" />
+                120 KM
               </div>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-theme-card border border-theme-border">
-              <MdEmojiEvents className="text-[#9AA6B2] text-xl" />
-              <div className="text-center">
+            <div className="flex flex-col items-center justify-center px-4 py-2 rounded-md bg-theme-card border border-theme-border w-full">
+              <div className="text-center flex flex-row items-center justify-center gap-2">
+                <MdEmojiEvents className="text-[#9AA6B2] text-xl" />
                 <div className="text-[#9AA6B2] font-russo text-lg">
                   {t("prizes.second")}
                 </div>
-                <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
-                  <FaCoins className="text-[#F4CE2A]" />
-                  80 KM
-                </div>
+              </div>
+              <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
+                <FaCoins className="text-[#F4CE2A]" />
+                80 KM
               </div>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-theme-card border border-theme-border">
-              <MdEmojiEvents className="text-[#B47B36] text-xl" />
-              <div className="text-center">
+            <div className="flex flex-col items-center justify-center px-4 py-2 rounded-md bg-theme-card border border-theme-border w-full">
+              <div className="text-center flex flex-row items-center justify-center gap-2">
+                <MdEmojiEvents className="text-[#B47B36] text-xl" />
                 <div className="text-[#B47B36] font-russo text-lg">
                   {t("prizes.third")}
                 </div>
-                <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
-                  <FaCoins className="text-[#F4CE2A]" />
-                  60 KM
-                </div>
+              </div>
+              <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
+                <FaCoins className="text-[#F4CE2A]" />
+                60 KM
               </div>
             </div>
           </div>
