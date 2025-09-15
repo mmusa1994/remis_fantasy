@@ -1,14 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { MdExpandMore, MdRemove, MdRefresh, MdInfo } from "react-icons/md";
+import {
+  MdExpandMore,
+  MdRemove,
+  MdRefresh,
+  MdInfo,
+  MdSearch,
+} from "react-icons/md";
 import LoadingCard from "@/components/shared/LoadingCard";
 import FplLoadingSkeleton from "@/components/shared/FplLoadingSkeleton";
 import { FaTrophy, FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { IoFootballOutline } from "react-icons/io5";
 import { getTeamColors } from "@/lib/team-colors";
 import { FaShirt } from "react-icons/fa6";
+import { applyAutoSubs, SquadPlayer } from "@/utils/fpl/autoSubs";
+import { getPositionCode } from "@/utils/fpl/positions";
+import Toast from "@/components/shared/Toast";
 
 interface ProcessedTeam {
   id: number;
@@ -42,6 +51,7 @@ interface ProcessedTeam {
     element: number;
     points: number;
     live_points: number;
+    minutes: number;
     multiplier: number;
     position: number;
     is_captain: boolean;
@@ -100,6 +110,237 @@ export default function LeagueTables({
   const [leagues, setLeagues] = useState<any[]>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [includeAutoSubs, setIncludeAutoSubs] = useState(false);
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type?: "success" | "error";
+  }>({ show: false, message: "" });
+  // Player filter UI (draft) and applied state
+  const [filterDraft, setFilterDraft] = useState<{
+    playerQuery: string;
+    playerId: number | null;
+    scope: "startingXI" | "own";
+  }>({ playerQuery: "", playerId: null, scope: "startingXI" });
+  const [filter, setFilter] = useState<typeof filterDraft>({
+    playerQuery: "",
+    playerId: null,
+    scope: "startingXI",
+  });
+
+  const fixtures: Array<{
+    id: number;
+    team_h: number;
+    team_a: number;
+    finished: boolean;
+  }> = currentUserData?.fixtures || [];
+
+  const elementsMap = useMemo(() => {
+    const map = new Map<
+      number,
+      { id: number; team: number; element_type: number }
+    >();
+    (data?.elements || []).forEach((el) => map.set(el.id, el as any));
+    return map;
+  }, [data?.elements]);
+
+  const allPlayersForSelect = useMemo(() => {
+    const list = (data?.elements || []).map((el) => ({
+      id: el.id,
+      label: el.web_name,
+    }));
+    return list.sort((a, b) => a.label.localeCompare(b.label));
+  }, [data?.elements]);
+
+  // Debounce the search query to avoid re-render thrash while typing
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const id = setTimeout(
+      () => setDebouncedQuery(filterDraft.playerQuery),
+      100
+    );
+    return () => clearTimeout(id);
+  }, [filterDraft.playerQuery]);
+
+  const filteredPlayersForSelect = useMemo(() => {
+    const q = debouncedQuery.trim().toLowerCase();
+    if (!q) return allPlayersForSelect.slice(0, 200);
+    return allPlayersForSelect
+      .filter((p) => p.label.toLowerCase().includes(q))
+      .slice(0, 200);
+  }, [allPlayersForSelect, debouncedQuery]);
+
+  // Helper kept simple for performance; remove if not used later
+
+
+  const isTeamFixtureFinished = (teamId: number): boolean => {
+    if (!fixtures || fixtures.length === 0) return false;
+    const teamFixtures = fixtures.filter(
+      (f) => f.team_h === teamId || f.team_a === teamId
+    );
+    if (teamFixtures.length === 0) return false;
+    return teamFixtures.every((f) => f.finished === true);
+  };
+
+  const buildSquadFromLeagueTeam = (team: ProcessedTeam): SquadPlayer[] => {
+    // Build lookups for picks and player_details
+    const pickByElement = new Map(team.picks.map((p) => [p.element, p]));
+    const minutesByElement = new Map<number, number>();
+    const livePointsByElement = new Map<number, number>();
+    team.player_details.forEach((pd: any) => {
+      livePointsByElement.set(pd.element, pd.live_points || 0);
+      minutesByElement.set(pd.element, pd.minutes ?? 0);
+    });
+
+    // Determine bench order for outfield bench
+    const benchOutfield = team.picks
+      .filter((p) => p.position > 11)
+      .filter((p) => {
+        const el = elementsMap.get(p.element);
+        return el && el.element_type !== 1; // not GK
+      })
+      .sort((a, b) => a.position - b.position)
+      .map((p, idx) => ({ id: p.element, order: idx + 1 }));
+    const benchOrderMap = new Map(benchOutfield.map((b) => [b.id, b.order]));
+
+    const benchGKElement = team.picks.find(
+      (p) => p.position > 11 && elementsMap.get(p.element)?.element_type === 1
+    );
+
+    const squad: SquadPlayer[] = team.picks.map((p) => {
+      const el = elementsMap.get(p.element);
+      const elementType = el?.element_type || 3;
+      const playerTeamId = el?.team || 0;
+      const minutes = minutesByElement.get(p.element) ?? 0;
+      const livePts = livePointsByElement.get(p.element) ?? 0;
+      const isBenchGK = benchGKElement?.element === p.element;
+
+      return {
+        id: p.element,
+        position: getPositionCode(elementType),
+        isStarter: p.position <= 11,
+        benchOrder: benchOrderMap.get(p.element),
+        isBenchGK,
+        minutes,
+        points: livePts,
+        multiplier: p.multiplier || 1,
+        fixtureFinished: playerTeamId
+          ? isTeamFixtureFinished(playerTeamId)
+          : false,
+      };
+    });
+
+    return squad;
+  };
+
+  const computeAdjustedTotals = (team: ProcessedTeam) => {
+    if (!includeAutoSubs) {
+      return {
+        live_points: team.live_points,
+        live_total: team.live_total,
+        subsApplied: [] as Array<{ outId: number; inId: number }>,
+      };
+    }
+    try {
+      const squad = buildSquadFromLeagueTeam(team);
+      const result = applyAutoSubs(squad);
+      const originalTotal = team.total - team.event_total + team.live_points;
+      const adjustedLivePoints = result.totalPoints;
+      const adjustedLiveTotal =
+        team.total - team.event_total + adjustedLivePoints;
+      return {
+        live_points: adjustedLivePoints,
+        live_total: adjustedLiveTotal,
+        subsApplied: result.subsApplied,
+      };
+    } catch (e) {
+      return {
+        live_points: team.live_points,
+        live_total: team.live_total,
+        subsApplied: [] as any,
+      };
+    }
+  };
+
+  const buildSquadFromCurrentUser = (): {
+    squad: SquadPlayer[];
+    pickByElement: Map<number, any>;
+  } => {
+    const teamWithStats: any[] = currentUserData?.team_with_stats || [];
+    const pickByElement = new Map<number, any>();
+    teamWithStats.forEach((p) => pickByElement.set(p.player_id, p));
+
+    const benchOutfield = teamWithStats
+      .filter((p) => p.position > 11 && p.player?.element_type !== 1)
+      .sort((a, b) => a.position - b.position)
+      .map((p, idx) => ({ id: p.player_id, order: idx + 1 }));
+    const benchOrderMap = new Map(benchOutfield.map((b) => [b.id, b.order]));
+
+    const benchGK = teamWithStats.find(
+      (p) => p.position > 11 && p.player?.element_type === 1
+    );
+
+    const squad: SquadPlayer[] = teamWithStats.map((p) => {
+      const elementType = p.player?.element_type || 3;
+      const playerTeamId = p.player?.team || 0;
+      const minutes = p.live_stats?.minutes ?? 0;
+      const livePts = p.live_stats?.total_points ?? 0;
+      return {
+        id: p.player_id,
+        position: getPositionCode(elementType),
+        isStarter: p.position <= 11,
+        benchOrder: benchOrderMap.get(p.player_id),
+        isBenchGK: benchGK?.player_id === p.player_id,
+        minutes,
+        points: livePts,
+        multiplier: p.multiplier || 1,
+        fixtureFinished: playerTeamId
+          ? isTeamFixtureFinished(playerTeamId)
+          : false,
+      };
+    });
+
+    return { squad, pickByElement };
+  };
+
+  // Applied filter: which teams match selected player
+  const matchingTeamIds = useMemo(() => {
+    if (!filter.playerId || !data?.teams) return new Set<number>();
+    const set = new Set<number>();
+    for (const team of data.teams) {
+      const has = team.picks.some((p) => {
+        const isStarter = p.position <= 11;
+        if (filter.scope === "startingXI")
+          return isStarter && p.element === filter.playerId;
+        return p.element === filter.playerId; // own
+      });
+      if (has) set.add(team.id);
+    }
+    return set;
+  }, [filter.playerId, filter.scope, data?.teams]);
+
+  const visibleTeams = useMemo(() => {
+    if (!data?.teams) return [] as ProcessedTeam[];
+    // Always show all and highlight matches
+    return data.teams;
+  }, [data?.teams]);
+
+  // Precompute adjusted totals per team to avoid heavy recomputation while typing
+  const adjustedTotalsByTeam = useMemo(() => {
+    if (!data?.teams || !includeAutoSubs)
+      return null as null | Map<
+        number,
+        { live_points: number; live_total: number; subsApplied: any[] }
+      >;
+    const map = new Map<
+      number,
+      { live_points: number; live_total: number; subsApplied: any[] }
+    >();
+    for (const team of data.teams) {
+      map.set(team.id, computeAdjustedTotals(team));
+    }
+    return map;
+  }, [data?.teams, includeAutoSubs, fixtures]);
 
   const fetchManagerLeagues = useCallback(async () => {
     if (!managerId) return;
@@ -292,6 +533,31 @@ export default function LeagueTables({
       (p: any) => p.position > 11
     );
 
+    // Compute auto subs for current user if enabled
+    let finalIds = new Set<number>();
+    const benchInIds = new Set<number>();
+    const subbedOutIds = new Set<number>();
+    let subsCount = 0;
+
+    if (includeAutoSubs) {
+      try {
+        const { squad } = buildSquadFromCurrentUser();
+        const result = applyAutoSubs(squad);
+        finalIds = new Set(result.appliedTeam.map((p) => p.id));
+        subsCount = result.subsApplied.length;
+        // derive bench-ins and outs
+        const originalStarterIds = new Set(
+          squad.filter((p) => p.isStarter).map((p) => p.id)
+        );
+        result.subsApplied.forEach((s) => {
+          subbedOutIds.add(s.outId);
+          benchInIds.add(s.inId);
+        });
+      } catch (e) {
+        // fail silently
+      }
+    }
+
     return (
       <div className="mt-2 mx-2 mb-4 p-3 bg-theme-card-secondary rounded-lg border border-theme-border md:mt-4 md:mx-4 md:p-4">
         <h4 className="font-semibold text-theme-foreground mb-3 flex items-center gap-2 text-sm md:text-base">
@@ -303,9 +569,13 @@ export default function LeagueTables({
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 md:gap-3">
           {startingXI.map((playerDetail: any) => {
             const teamColors = getTeamColors(playerDetail.player?.team || 1);
-            const displayPoints =
+            const originalPoints =
               (playerDetail.live_stats?.total_points || 0) *
               (playerDetail.multiplier || 1);
+            const isSubbedOut =
+              includeAutoSubs && subbedOutIds.has(playerDetail.player_id);
+            const displayPoints =
+              includeAutoSubs && isSubbedOut ? 0 : originalPoints;
 
             return (
               <div
@@ -325,7 +595,13 @@ export default function LeagueTables({
                         className="w-2 h-2 rounded-sm flex-shrink-0 md:w-3 md:h-3"
                         style={{ backgroundColor: teamColors.primary }}
                       ></div>
-                      <p className="font-bold text-theme-foreground truncate text-xs md:text-sm">
+                      <p
+                        className={`font-bold truncate text-xs md:text-sm ${
+                          isSubbedOut
+                            ? "line-through text-theme-text-secondary"
+                            : "text-theme-foreground"
+                        }`}
+                      >
                         {playerDetail.player?.web_name || "Unknown"}
                         {playerDetail.is_captain && (
                           <span className="ml-1 text-xs bg-yellow-500 text-white px-1 py-0.5 rounded">
@@ -335,6 +611,16 @@ export default function LeagueTables({
                         {playerDetail.is_vice_captain && (
                           <span className="ml-1 text-xs bg-gray-500 text-white px-1 py-0.5 rounded">
                             V
+                          </span>
+                        )}
+                        {isSubbedOut && (
+                          <span className="ml-1 text-xs text-theme-text-secondary">
+                            (
+                            {t(
+                              "leagueTables.subbedOutZeroMin",
+                              "0m, subbed out"
+                            )}
+                            )
                           </span>
                         )}
                       </p>
@@ -354,7 +640,7 @@ export default function LeagueTables({
                     <div className="text-sm font-bold text-green-600 dark:text-green-400">
                       {displayPoints}
                     </div>
-                    {(playerDetail.multiplier || 1) > 1 && (
+                    {!isSubbedOut && (playerDetail.multiplier || 1) > 1 && (
                       <div className="text-xs text-theme-text-secondary">
                         ×{playerDetail.multiplier}
                       </div>
@@ -375,6 +661,8 @@ export default function LeagueTables({
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
             {bench.map((playerDetail: any) => {
               const teamColors = getTeamColors(playerDetail.player?.team || 1);
+              const cameIn =
+                includeAutoSubs && benchInIds.has(playerDetail.player_id);
 
               return (
                 <div
@@ -386,8 +674,19 @@ export default function LeagueTables({
                       className="w-2 h-2 rounded-sm flex-shrink-0"
                       style={{ backgroundColor: teamColors.primary }}
                     ></div>
-                    <p className="font-medium text-theme-foreground truncate">
+                    <p
+                      className={`font-medium truncate ${
+                        cameIn
+                          ? "text-green-700 dark:text-green-300"
+                          : "text-theme-foreground"
+                      }`}
+                    >
                       {playerDetail.player?.web_name || "Unknown"}
+                      {cameIn && (
+                        <span className="ml-1 text-xs text-green-600 dark:text-green-400">
+                          ({t("leagueTables.benchIn", "bench in")})
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
@@ -403,6 +702,12 @@ export default function LeagueTables({
             })}
           </div>
         </div>
+
+        {includeAutoSubs && subsCount > 0 && (
+          <div className="mt-3 text-xs text-theme-text-secondary">
+            {t("leagueTables.subsApplied", "Auto subs applied")}: {subsCount}
+          </div>
+        )}
 
         {/* Team Summary - Mobile Only */}
         <div className="mt-3 pt-3 border-t border-theme-border/50 md:hidden">
@@ -637,10 +942,15 @@ export default function LeagueTables({
     );
   }
 
-  console.log(data);
 
   return (
     <div className="space-y-4">
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type || "success"}
+        onClose={() => setToast(t => ({ ...t, show: false }))}
+      />
       {/* League Selection */}
       <div className="bg-theme-card rounded-lg border border-theme-border p-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 sm:gap-4">
@@ -685,8 +995,177 @@ export default function LeagueTables({
               </span>
             </button>
           )}
+          {/* Include Auto Subs toggle */}
+          {data && (
+            <div className="flex items-center gap-2 ml-auto select-none">
+              <span className="text-sm text-theme-foreground">
+                {t("leagueTables.includeAutoSubs", "Include Auto Subs")}
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={includeAutoSubs}
+                onClick={() => setIncludeAutoSubs((v) => !v)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  includeAutoSubs
+                    ? "bg-purple-600"
+                    : "bg-gray-300 dark:bg-gray-700"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    includeAutoSubs ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Filters Panel (improved UI) */}
+      {data && (
+        <div className="bg-theme-card rounded-lg border border-theme-border p-4">
+          {/* Row 1: Player selection */}
+          <div className="flex flex-col md:flex-row gap-3 md:items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-theme-foreground mb-1">
+                {t("leagueTables.filters.searchPlayer", "Search Player")}
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-theme-text-secondary">
+                    <MdSearch className="w-4 h-4" />
+                  </span>
+                  <input
+                    type="text"
+                    value={filterDraft.playerQuery}
+                    onChange={(e) =>
+                      setFilterDraft((s) => ({
+                        ...s,
+                        playerQuery: e.target.value,
+                      }))
+                    }
+                    className="w-full pl-8 pr-3 py-2 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                    placeholder={t(
+                      "leagueTables.filters.searchPlaceholder",
+                      "Search player..."
+                    )}
+                  />
+                </div>
+                <select
+                  value={filterDraft.playerId ?? ""}
+                  onChange={(e) =>
+                    setFilterDraft((s) => ({
+                      ...s,
+                      playerId: e.target.value
+                        ? parseInt(e.target.value, 10)
+                        : null,
+                    }))
+                  }
+                  className="min-w-[200px] px-3 py-2 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                >
+                  <option value="">
+                    {t("leagueTables.filters.all", "All")}
+                  </option>
+                  {filteredPlayersForSelect.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="mt-1 text-xs text-theme-text-secondary">
+                {t("leagueTables.filters.inSample", "In sample")}:{" "}
+                {data.teams.length}
+              </p>
+            </div>
+          </div>
+
+          {/* Row 2: Scope + actions */}
+          <div className="mt-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+            <div className="flex gap-3 flex-wrap">
+              {/* Scope segmented */}
+              <div>
+                <div className="text-xs font-medium text-theme-text-secondary mb-1">
+                  {t("leagueTables.filters.scope", "Match")}
+                </div>
+                <div className="inline-flex rounded-md border border-theme-border overflow-hidden">
+                  <button
+                    type="button"
+                    className={`px-3 py-1.5 text-sm ${
+                      filterDraft.scope === "startingXI"
+                        ? "bg-purple-600 text-white"
+                        : "bg-theme-card text-theme-foreground"
+                    }`}
+                    onClick={() =>
+                      setFilterDraft((s) => ({ ...s, scope: "startingXI" }))
+                    }
+                  >
+                    {t("leagueTables.filters.scopeStartingXI", "Starting XI")}
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-3 py-1.5 text-sm border-l border-theme-border ${
+                      filterDraft.scope === "own"
+                        ? "bg-purple-600 text-white"
+                        : "bg-theme-card text-theme-foreground"
+                    }`}
+                    onClick={() =>
+                      setFilterDraft((s) => ({ ...s, scope: "own" }))
+                    }
+                  >
+                    {t("leagueTables.filters.scopeOwn", "Own (any)")}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilter({ ...filterDraft });
+                  setToast({
+                    show: true,
+                    message: t(
+                      "leagueTables.filters.appliedToast",
+                      "Filter applied"
+                    ),
+                    type: "success",
+                  });
+                }}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm shadow-sm"
+              >
+                {t("leagueTables.filters.apply", "Apply")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = {
+                    playerQuery: "",
+                    playerId: null,
+                    scope: "startingXI" as const,
+                  };
+                  setFilterDraft(next);
+                  setFilter(next);
+                  setToast({
+                    show: true,
+                    message: t(
+                      "leagueTables.filters.clearedToast",
+                      "Filter cleared"
+                    ),
+                    type: "success",
+                  });
+                }}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-theme-foreground rounded-md text-sm"
+              >
+                {t("leagueTables.filters.clear", "Clear")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error Display */}
       {error && !isInitializing && (
@@ -783,16 +1262,40 @@ export default function LeagueTables({
 
           {/* Desktop Table */}
           <div className="hidden md:block divide-y divide-theme-border">
-            {data.teams.map((team) => {
+            {visibleTeams.map((team) => {
               const isCurrentUser = managerId === team.id;
+              const isHighlighted =
+                !!filter.playerId && matchingTeamIds.has(team.id);
+              const adjusted = includeAutoSubs
+                ? adjustedTotalsByTeam?.get(team.id) || {
+                    live_points: team.live_points,
+                    live_total: team.live_total,
+                    subsApplied: [],
+                  }
+                : {
+                    live_points: team.live_points,
+                    live_total: team.live_total,
+                    subsApplied: [],
+                  };
               return (
-                <div key={team.id} className="transition-colors">
+                <div
+                  key={team.id}
+                  className={`transition-colors ${
+                    isHighlighted
+                      ? "ring-2 ring-blue-400/70 rounded bg-blue-50/40 dark:bg-blue-900/10"
+                      : ""
+                  }`}
+                >
                   {/* Main Row - Entire row is clickable */}
                   <div
                     className={`p-4 cursor-pointer transition-all duration-300 group ${
                       isCurrentUser
                         ? "bg-gradient-to-r from-purple-100/80 to-violet-100/80 dark:from-purple-900/30 dark:to-violet-900/30 shadow-md border-l-4 border-purple-500 dark:border-purple-400"
                         : "hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/10 dark:hover:to-blue-900/10 hover:shadow-sm"
+                    } ${
+                      isHighlighted
+                        ? "bg-blue-50/70 dark:bg-blue-900/20 shadow-md shadow-blue-300/40"
+                        : ""
                     }`}
                     onClick={() => toggleTeamExpansion(team.id)}
                   >
@@ -860,14 +1363,18 @@ export default function LeagueTables({
                       {/* GW Points */}
                       <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-green-50 hover:to-teal-50 dark:hover:from-green-900/20 dark:hover:to-teal-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-green-700 dark:group-hover:text-green-300 transition-colors">
-                          {team.live_points || team.event_total || 0}
+                          {includeAutoSubs
+                            ? adjustedTotalsByTeam?.get(team.id)?.live_points ?? team.live_points ?? team.event_total ?? 0
+                            : team.live_points || team.event_total || 0}
                         </span>
                       </div>
 
                       {/* Total Points */}
                       <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
-                          {team.live_total || team.total || 0}
+                          {includeAutoSubs
+                            ? adjustedTotalsByTeam?.get(team.id)?.live_total ?? team.live_total ?? team.total ?? 0
+                            : team.live_total || team.total || 0}
                         </span>
                       </div>
 
@@ -1124,16 +1631,40 @@ export default function LeagueTables({
 
           {/* Mobile Table */}
           <div className="md:hidden divide-y divide-theme-border">
-            {data.teams.map((team) => {
+            {visibleTeams.map((team) => {
               const isCurrentUser = managerId === team.id;
+              const isHighlighted =
+                !!filter.playerId && matchingTeamIds.has(team.id);
+              const adjusted = includeAutoSubs
+                ? adjustedTotalsByTeam?.get(team.id) || {
+                    live_points: team.live_points,
+                    live_total: team.live_total,
+                    subsApplied: [],
+                  }
+                : {
+                    live_points: team.live_points,
+                    live_total: team.live_total,
+                    subsApplied: [],
+                  };
               return (
-                <div key={team.id} className="transition-colors">
+                <div
+                  key={team.id}
+                  className={`transition-colors ${
+                    isHighlighted
+                      ? "ring-2 ring-blue-400/70 rounded bg-blue-50/40 dark:bg-blue-900/10"
+                      : ""
+                  }`}
+                >
                   {/* Main Row - Compact Mobile Layout */}
                   <div
                     className={`p-2 cursor-pointer transition-all duration-200 ${
                       isCurrentUser
                         ? "bg-purple-50 dark:bg-purple-900/20 border-l-2 border-purple-400"
                         : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    } ${
+                      isHighlighted
+                        ? "bg-blue-50/70 dark:bg-blue-900/20 shadow-md shadow-blue-300/40"
+                        : ""
                     }`}
                     onClick={() => toggleTeamExpansion(team.id)}
                   >
@@ -1179,14 +1710,18 @@ export default function LeagueTables({
                       {/* GW Points */}
                       <div className="text-center">
                         <span className="font-bold text-green-600 dark:text-green-400 text-sm">
-                          {team.live_points || team.event_total || 0}
+                          {includeAutoSubs
+                            ? adjusted.live_points
+                            : team.live_points || team.event_total || 0}
                         </span>
                       </div>
 
                       {/* Total Points */}
                       <div className="text-center">
                         <span className="font-bold text-theme-foreground text-sm">
-                          {team.live_total || team.total || 0}
+                          {includeAutoSubs
+                            ? adjusted.live_total
+                            : team.live_total || team.total || 0}
                         </span>
                         {team.active_chip && (
                           <div
