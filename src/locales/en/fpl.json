@@ -50,7 +50,7 @@
   "noEventsYet": "No events yet",
 
   "leagueTables": {
-    "liveAddingBonusPoints": "Live adding bonus points",
+    "liveAddingBonusPoints": " adding bonus points",
     "title": "League Tables",
     "selectLeague": "Select League",
     "chooseLeague": "Choose a league...",
@@ -95,10 +95,24 @@
       "scope": "Match",
       "scopeStartingXI": "Starting XI",
       "scopeOwn": "Own (any)",
+      "noResults": "No players found",
       "apply": "Apply",
       "clear": "Clear",
       "appliedToast": "Filter applied",
       "clearedToast": "Filter cleared"
+    },
+    "sort": {
+      "sort": "Sort",
+      "total": "Total",
+      "gwNet": "GW Net Score",
+      "gwGross": "GW Gross Score",
+      "playersRemaining": "Players Remaining",
+      "leagueRank": "League Rank",
+      "transfers": "Transfers",
+      "teamValue": "Team Value",
+      "activeChip": "Active Chip",
+      "asc": "Ascending",
+      "desc": "Descending"
     }
   },
   "startLivePolling": "Start live polling to see real-time updates",
@@ -560,7 +574,7 @@
     },
     "transfers": {
       "transfersOut": "Transfers Out",
-      "transfersIn": "Transfers In", 
+      "transfersIn": "Transfers In",
       "availableBudget": "Available Budget",
       "transferCost": "Transfer Cost",
       "reset": "Reset",
@@ -581,7 +595,7 @@
 
   "pitch": {
     "formation": "Formation",
-    "ourGoal": "OUR GOAL", 
+    "ourGoal": "OUR GOAL",
     "attackingDirection": "ATTACKING DIRECTION",
     "substitutesBench": "SUBSTITUTES BENCH",
     "substitutesAvailable": "Substitutes Available",

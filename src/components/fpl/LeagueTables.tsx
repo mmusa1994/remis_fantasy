@@ -116,6 +116,8 @@ export default function LeagueTables({
     message: string;
     type?: "success" | "error";
   }>({ show: false, message: "" });
+  const [playerListOpen, setPlayerListOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(0);
   // Player filter UI (draft) and applied state
   const [filterDraft, setFilterDraft] = useState<{
     playerQuery: string;
@@ -171,7 +173,6 @@ export default function LeagueTables({
   }, [allPlayersForSelect, debouncedQuery]);
 
   // Helper kept simple for performance; remove if not used later
-
 
   const isTeamFixtureFinished = (teamId: number): boolean => {
     if (!fixtures || fixtures.length === 0) return false;
@@ -325,7 +326,7 @@ export default function LeagueTables({
     return data.teams;
   }, [data?.teams]);
 
-  // Precompute adjusted totals per team to avoid heavy recomputation while typing
+  // Precompute adjusted totals per team to avoid heavy recomputation
   const adjustedTotalsByTeam = useMemo(() => {
     if (!data?.teams || !includeAutoSubs)
       return null as null | Map<
@@ -341,6 +342,81 @@ export default function LeagueTables({
     }
     return map;
   }, [data?.teams, includeAutoSubs, fixtures]);
+
+  // Sorting controls
+  type SortKey =
+    | "total"
+    | "gwNet"
+    | "gwGross"
+    | "playersRemaining"
+    | "leagueRank"
+    | "transfers"
+    | "teamValue"
+    | "activeChip";
+  const [sortKey, setSortKey] = useState<SortKey>("total");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+
+  const sortedTeams = useMemo(() => {
+    const list = [...visibleTeams];
+    const sign = sortDir === "asc" ? 1 : -1;
+    list.sort((a, b) => {
+      const aAdj = includeAutoSubs
+        ? adjustedTotalsByTeam?.get(a.id) || {
+            live_points: a.live_points,
+            live_total: a.live_total,
+            subsApplied: [],
+          }
+        : {
+            live_points: a.live_points,
+            live_total: a.live_total,
+            subsApplied: [],
+          };
+      const bAdj = includeAutoSubs
+        ? adjustedTotalsByTeam?.get(b.id) || {
+            live_points: b.live_points,
+            live_total: b.live_total,
+            subsApplied: [],
+          }
+        : {
+            live_points: b.live_points,
+            live_total: b.live_total,
+            subsApplied: [],
+          };
+
+      const aVals = {
+        total: aAdj.live_total ?? a.live_total ?? a.total ?? 0,
+        gwNet:
+          (aAdj.live_points ?? a.live_points ?? a.event_total ?? 0) -
+          (a.event_transfers_cost || 0),
+        gwGross: aAdj.live_points ?? a.live_points ?? a.event_total ?? 0,
+        playersRemaining: a.players_to_play || 0,
+        leagueRank: a.rank || 0,
+        transfers: a.event_transfers || 0,
+        teamValue: a.team_value || 0,
+        activeChip: a.active_chip ? 1 : 0,
+      } as const;
+      const bVals = {
+        total: bAdj.live_total ?? b.live_total ?? b.total ?? 0,
+        gwNet:
+          (bAdj.live_points ?? b.live_points ?? b.event_total ?? 0) -
+          (b.event_transfers_cost || 0),
+        gwGross: bAdj.live_points ?? b.live_points ?? b.event_total ?? 0,
+        playersRemaining: b.players_to_play || 0,
+        leagueRank: b.rank || 0,
+        transfers: b.event_transfers || 0,
+        teamValue: b.team_value || 0,
+        activeChip: b.active_chip ? 1 : 0,
+      } as const;
+
+      const av = aVals[sortKey];
+      const bv = bVals[sortKey];
+
+      if (av < bv) return -1 * sign;
+      if (av > bv) return 1 * sign;
+      return 0;
+    });
+    return list;
+  }, [visibleTeams, includeAutoSubs, sortKey, sortDir, adjustedTotalsByTeam]);
 
   const fetchManagerLeagues = useCallback(async () => {
     if (!managerId) return;
@@ -942,14 +1018,13 @@ export default function LeagueTables({
     );
   }
 
-
   return (
     <div className="space-y-4">
       <Toast
         show={toast.show}
         message={toast.message}
         type={toast.type || "success"}
-        onClose={() => setToast(t => ({ ...t, show: false }))}
+        onClose={() => setToast((t) => ({ ...t, show: false }))}
       />
       {/* League Selection */}
       <div className="bg-theme-card rounded-lg border border-theme-border p-4">
@@ -1026,65 +1101,152 @@ export default function LeagueTables({
       {/* Filters Panel (improved UI) */}
       {data && (
         <div className="bg-theme-card rounded-lg border border-theme-border p-4">
-          {/* Row 1: Player selection */}
-          <div className="flex flex-col md:flex-row gap-3 md:items-end">
+          {/* Row 1: Unified Player search (combobox) */}
+          <div className="flex flex-col gap-3">
             <div className="flex-1">
               <label className="block text-sm font-medium text-theme-foreground mb-1">
                 {t("leagueTables.filters.searchPlayer", "Search Player")}
               </label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-theme-text-secondary">
-                    <MdSearch className="w-4 h-4" />
-                  </span>
-                  <input
-                    type="text"
-                    value={filterDraft.playerQuery}
-                    onChange={(e) =>
-                      setFilterDraft((s) => ({
-                        ...s,
-                        playerQuery: e.target.value,
-                      }))
-                    }
-                    className="w-full pl-8 pr-3 py-2 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
-                    placeholder={t(
-                      "leagueTables.filters.searchPlaceholder",
-                      "Search player..."
-                    )}
-                  />
-                </div>
-                <select
-                  value={filterDraft.playerId ?? ""}
-                  onChange={(e) =>
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-theme-text-secondary">
+                  <MdSearch className="w-4 h-4" />
+                </span>
+                <input
+                  type="text"
+                  value={filterDraft.playerQuery}
+                  onFocus={() => setPlayerListOpen(true)}
+                  onChange={(e) => {
                     setFilterDraft((s) => ({
                       ...s,
-                      playerId: e.target.value
-                        ? parseInt(e.target.value, 10)
-                        : null,
-                    }))
-                  }
-                  className="min-w-[200px] px-3 py-2 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
-                >
-                  <option value="">
-                    {t("leagueTables.filters.all", "All")}
-                  </option>
-                  {filteredPlayersForSelect.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
+                      playerQuery: e.target.value,
+                    }));
+                    setPlayerListOpen(true);
+                    setActiveIdx(0);
+                  }}
+                  onKeyDown={(e) => {
+                    if (!playerListOpen) return;
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      setActiveIdx((idx) =>
+                        Math.min(idx + 1, filteredPlayersForSelect.length - 1)
+                      );
+                    } else if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setActiveIdx((idx) => Math.max(idx - 1, 0));
+                    } else if (e.key === "Enter") {
+                      e.preventDefault();
+                      const item = filteredPlayersForSelect[activeIdx];
+                      if (item) {
+                        setFilterDraft({
+                          ...filterDraft,
+                          playerId: item.id,
+                          playerQuery: item.label,
+                        });
+                        setFilter({
+                          ...filterDraft,
+                          playerId: item.id,
+                          playerQuery: item.label,
+                        });
+                        setToast({
+                          show: true,
+                          message: t(
+                            "leagueTables.filters.appliedToast",
+                            "Filter applied"
+                          ),
+                          type: "success",
+                        });
+                        setPlayerListOpen(false);
+                      }
+                    } else if (e.key === "Escape") {
+                      setPlayerListOpen(false);
+                    }
+                  }}
+                  className="w-full pl-8 pr-8 py-2 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                  placeholder={t(
+                    "leagueTables.filters.searchPlaceholder",
+                    "Search player..."
+                  )}
+                />
+                {filterDraft.playerId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = {
+                        playerQuery: "",
+                        playerId: null,
+                        scope: filterDraft.scope,
+                      };
+                      setFilterDraft(next);
+                      setFilter(next);
+                    }}
+                    className="absolute inset-y-0 right-2 flex items-center text-theme-text-secondary hover:text-theme-foreground"
+                    aria-label={t("leagueTables.filters.clear", "Clear")}
+                  >
+                    ×
+                  </button>
+                )}
+
+                {playerListOpen && (
+                  <div
+                    role="listbox"
+                    className="absolute z-10 mt-2 max-h-64 w-full overflow-auto rounded-md border border-theme-border bg-theme-card shadow-xl"
+                    onMouseLeave={() => setActiveIdx((i) => i)}
+                  >
+                    {filteredPlayersForSelect.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-theme-text-secondary">
+                        {t(
+                          "leagueTables.filters.noResults",
+                          "No players found"
+                        )}
+                      </div>
+                    ) : (
+                      filteredPlayersForSelect.map((p, idx) => (
+                        <button
+                          type="button"
+                          key={p.id}
+                          role="option"
+                          aria-selected={idx === activeIdx}
+                          onClick={() => {
+                            setFilterDraft({
+                              ...filterDraft,
+                              playerId: p.id,
+                              playerQuery: p.label,
+                            });
+                            setFilter({
+                              ...filterDraft,
+                              playerId: p.id,
+                              playerQuery: p.label,
+                            });
+                            setToast({
+                              show: true,
+                              message: t(
+                                "leagueTables.filters.appliedToast",
+                                "Filter applied"
+                              ),
+                              type: "success",
+                            });
+                            setPlayerListOpen(false);
+                          }}
+                          onMouseEnter={() => setActiveIdx(idx)}
+                          className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                            idx === activeIdx
+                              ? "bg-purple-600 text-white"
+                              : "text-theme-foreground hover:bg-theme-card-secondary"
+                          }`}
+                        >
+                          {p.label}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
-              <p className="mt-1 text-xs text-theme-text-secondary">
-                {t("leagueTables.filters.inSample", "In sample")}:{" "}
-                {data.teams.length}
-              </p>
             </div>
           </div>
 
-          {/* Row 2: Scope + actions */}
+          {/* Row 2: Scope + sort + actions */}
           <div className="mt-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-4 flex-wrap items-center">
               {/* Scope segmented */}
               <div>
                 <div className="text-xs font-medium text-theme-text-secondary mb-1">
@@ -1119,6 +1281,62 @@ export default function LeagueTables({
                   </button>
                 </div>
               </div>
+
+              {/* Sort control */}
+              <div className="flex items-end gap-2">
+                <div>
+                  <div className="text-xs font-medium text-theme-text-secondary mb-1">
+                    {t("leagueTables.sort.sort", "Sort")}
+                  </div>
+                  <select
+                    value={sortKey}
+                    onChange={(e) => setSortKey(e.target.value as any)}
+                    className="px-3 py-2 border border-theme-border rounded-md bg-theme-card text-theme-foreground text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="total">
+                      {t("leagueTables.sort.total", "Total")}
+                    </option>
+                    <option value="gwNet">
+                      {t("leagueTables.sort.gwNet", "GW Net Score")}
+                    </option>
+                    <option value="gwGross">
+                      {t("leagueTables.sort.gwGross", "GW Gross Score")}
+                    </option>
+                    <option value="playersRemaining">
+                      {t(
+                        "leagueTables.sort.playersRemaining",
+                        "Players Remaining"
+                      )}
+                    </option>
+                    <option value="leagueRank">
+                      {t("leagueTables.sort.leagueRank", "League Rank")}
+                    </option>
+                    <option value="transfers">
+                      {t("leagueTables.sort.transfers", "Transfers")}
+                    </option>
+                    <option value="teamValue">
+                      {t("leagueTables.sort.teamValue", "Team Value")}
+                    </option>
+                    <option value="activeChip">
+                      {t("leagueTables.sort.activeChip", "Active Chip")}
+                    </option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSortDir((d) => (d === "desc" ? "asc" : "desc"))
+                  }
+                  className="px-3 py-2 rounded-md border border-theme-border text-sm bg-theme-card text-theme-foreground hover:bg-theme-card-secondary"
+                  title={
+                    sortDir === "desc"
+                      ? t("leagueTables.sort.desc", "Descending")
+                      : t("leagueTables.sort.asc", "Ascending")
+                  }
+                >
+                  {sortDir === "desc" ? "↓" : "↑"}
+                </button>
+              </div>
             </div>
 
             <div className="flex gap-2">
@@ -1149,6 +1367,9 @@ export default function LeagueTables({
                   };
                   setFilterDraft(next);
                   setFilter(next);
+                  // Reset sorting to defaults when clearing filters
+                  setSortKey("total");
+                  setSortDir("desc");
                   setToast({
                     show: true,
                     message: t(
@@ -1206,7 +1427,7 @@ export default function LeagueTables({
                   Gameweek {data.gameweek} • {t("leagueTables.liveTable")}
                   {isPolling && (
                     <div>
-                      <span className="inline-flex items-center pr-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
                         🔴 {t("leagueTables.live")}
                       </span>
                       <span>{t("leagueTables.liveAddingBonusPoints")}</span>
@@ -1262,7 +1483,7 @@ export default function LeagueTables({
 
           {/* Desktop Table */}
           <div className="hidden md:block divide-y divide-theme-border">
-            {visibleTeams.map((team) => {
+            {sortedTeams.map((team) => {
               const isCurrentUser = managerId === team.id;
               const isHighlighted =
                 !!filter.playerId && matchingTeamIds.has(team.id);
@@ -1364,7 +1585,10 @@ export default function LeagueTables({
                       <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-green-50 hover:to-teal-50 dark:hover:from-green-900/20 dark:hover:to-teal-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-green-700 dark:group-hover:text-green-300 transition-colors">
                           {includeAutoSubs
-                            ? adjustedTotalsByTeam?.get(team.id)?.live_points ?? team.live_points ?? team.event_total ?? 0
+                            ? adjustedTotalsByTeam?.get(team.id)?.live_points ??
+                              team.live_points ??
+                              team.event_total ??
+                              0
                             : team.live_points || team.event_total || 0}
                         </span>
                       </div>
@@ -1373,7 +1597,10 @@ export default function LeagueTables({
                       <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
                           {includeAutoSubs
-                            ? adjustedTotalsByTeam?.get(team.id)?.live_total ?? team.live_total ?? team.total ?? 0
+                            ? adjustedTotalsByTeam?.get(team.id)?.live_total ??
+                              team.live_total ??
+                              team.total ??
+                              0
                             : team.live_total || team.total || 0}
                         </span>
                       </div>
@@ -1631,7 +1858,7 @@ export default function LeagueTables({
 
           {/* Mobile Table */}
           <div className="md:hidden divide-y divide-theme-border">
-            {visibleTeams.map((team) => {
+            {sortedTeams.map((team) => {
               const isCurrentUser = managerId === team.id;
               const isHighlighted =
                 !!filter.playerId && matchingTeamIds.has(team.id);

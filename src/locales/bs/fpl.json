@@ -50,7 +50,7 @@
   "noEventsYet": "Još nema događaja",
 
   "leagueTables": {
-    "liveAddingBonusPoints": "Uživo dodavanje bonus bodova",
+    "liveAddingBonusPoints": " dodavanje bonus bodova",
     "title": "Tabele Liga",
     "selectLeague": "Odaberite Ligu",
     "chooseLeague": "Odaberite ligu...",
@@ -71,7 +71,7 @@
     "chip": "Chip",
     "freeTransfers": "SB",
     "teamValue": "Vrijednost Tima",
-    "bank": "Banka", 
+    "bank": "Banka",
     "transfers": "Transferi",
     "played": "Odigrano",
     "lastTransfer": "Poslednji Transfer",
@@ -95,10 +95,24 @@
       "scope": "Uporedi",
       "scopeStartingXI": "Početna XI",
       "scopeOwn": "Posjeduje (bilo gdje)",
+      "noResults": "Nema pronađenih igrača",
       "apply": "Primijeni",
       "clear": "Očisti",
       "appliedToast": "Filter primijenjen",
       "clearedToast": "Filter uklonjen"
+    },
+    "sort": {
+      "sort": "Sortiraj",
+      "total": "Ukupno",
+      "gwNet": "GW Net Bodovi",
+      "gwGross": "GW Bruto Bodovi",
+      "playersRemaining": "Igrača Preostalo",
+      "leagueRank": "Liga Pozicija",
+      "transfers": "Transferi",
+      "teamValue": "Vrijednost Tima",
+      "activeChip": "Aktivni Čip",
+      "asc": "Rastuće",
+      "desc": "Opadajuće"
     }
   },
   "startLivePolling": "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu",
@@ -538,7 +552,7 @@
     },
     "transfers": {
       "transfersOut": "Transferi Izvan",
-      "transfersIn": "Transferi Unutra", 
+      "transfersIn": "Transferi Unutra",
       "availableBudget": "Dostupan Budžet",
       "transferCost": "Cijena Transfera",
       "reset": "Resetuj",
@@ -559,7 +573,7 @@
 
   "pitch": {
     "formation": "Formacija",
-    "ourGoal": "NAŠ GOAL", 
+    "ourGoal": "NAŠ GOAL",
     "attackingDirection": "SMJER NAPADA",
     "substitutesBench": "KLUPA REZERVA",
     "substitutesAvailable": "Rezerve Dostupne",
