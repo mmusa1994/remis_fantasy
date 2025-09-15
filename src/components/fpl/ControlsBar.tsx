@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { MdDownload, MdPlayArrow, MdStop } from "react-icons/md";
+import { MdDownload } from "react-icons/md";
 import { useTranslation } from "react-i18next";
 import TeamSearchInput from "./TeamSearchInput";
 
@@ -20,12 +20,9 @@ interface ControlsBarProps {
 
 export default function ControlsBar({
   managerId,
-  isPolling,
   onManagerIdChange,
   onGameweekChange,
   onLoadTeam,
-  onStartPolling,
-  onStopPolling,
   loading,
 }: ControlsBarProps) {
   const { t } = useTranslation("fpl");
@@ -240,60 +237,7 @@ export default function ControlsBar({
             </>
           )}
         </button>
-
-        {/* Start/Stop Live Button */}
-        <button
-          type="button"
-          onClick={isPolling ? onStopPolling : onStartPolling}
-          disabled={loading}
-          className={`flex items-center justify-center gap-2 font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 text-white ${
-            isPolling
-              ? "bg-red-600 hover:bg-red-700 disabled:bg-gray-500"
-              : "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500"
-          }`}
-        >
-          {isPolling ? (
-            <>
-              <MdStop className="text-lg" />
-              <span className="text-sm">{t("stopLive")}</span>
-            </>
-          ) : (
-            <>
-              <MdPlayArrow className="text-lg" />
-              <span className="text-sm">{t("startLive")}</span>
-            </>
-          )}
-        </button>
-
-        {/* Status Indicator */}
-        <div
-          className="md:col-span-4 flex items-center justify-center gap-2 mt-2 md:mt-0"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <div
-            className={`w-3 h-3 rounded-full ${
-              isPolling ? "bg-green-400" : "bg-gray-400"
-            }`}
-            aria-hidden="true"
-          ></div>
-          <span
-            className={`text-sm ${
-              isPolling ? "text-green-200" : "text-white/70"
-            }`}
-          >
-            {isPolling ? t("fplLive.livePollingActive") : t("fplLive.offline")}
-          </span>
-        </div>
       </div>
-
-      {isPolling && (
-        <div className="mt-4 p-3 bg-green-500/20 border border-green-400/30 rounded-lg backdrop-blur">
-          <p className="text-center text-sm font-medium text-green-200">
-            🔴 {t("fplLive.livePollingActive")}
-          </p>
-        </div>
-      )}
     </div>
   );
 }

@@ -85,7 +85,21 @@
     "noLeagueSelected": "No league selected",
     "errorLoadingTable": "Error loading league table",
     "unranked": "Unranked",
-    "yourPositionInLeague": "Your Position in League"
+    "yourPositionInLeague": "Your Position in League",
+    "filters": {
+      "searchPlayer": "Search Player",
+      "searchPlaceholder": "Search player...",
+      "choosePlayer": "Choose Player",
+      "inSample": "In sample",
+      "all": "All",
+      "scope": "Match",
+      "scopeStartingXI": "Starting XI",
+      "scopeOwn": "Own (any)",
+      "apply": "Apply",
+      "clear": "Clear",
+      "appliedToast": "Filter applied",
+      "clearedToast": "Filter cleared"
+    }
   },
   "startLivePolling": "Start live polling to see real-time updates",
   "howToUse": "How to use FPL Live",

@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { MdExpandMore, MdRemove, MdRefresh, MdInfo } from "react-icons/md";
+import {
+  MdExpandMore,
+  MdRemove,
+  MdRefresh,
+  MdInfo,
+  MdSearch,
+} from "react-icons/md";
 import LoadingCard from "@/components/shared/LoadingCard";
 import FplLoadingSkeleton from "@/components/shared/FplLoadingSkeleton";
 import { FaTrophy, FaArrowUp, FaArrowDown } from "react-icons/fa";
@@ -10,6 +16,7 @@ import { IoFootballOutline } from "react-icons/io5";
 import { getTeamColors } from "@/lib/team-colors";
 import { FaShirt } from "react-icons/fa6";
 import { applyAutoSubs, SquadPlayer, PositionCode } from "@/utils/fpl/autoSubs";
+import Toast from "@/components/shared/Toast";
 
 interface ProcessedTeam {
   id: number;
@@ -103,6 +110,22 @@ export default function LeagueTables({
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [includeAutoSubs, setIncludeAutoSubs] = useState(false);
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type?: "success" | "error";
+  }>({ show: false, message: "" });
+  // Player filter UI (draft) and applied state
+  const [filterDraft, setFilterDraft] = useState<{
+    playerQuery: string;
+    playerId: number | null;
+    scope: "startingXI" | "own";
+  }>({ playerQuery: "", playerId: null, scope: "startingXI" });
+  const [filter, setFilter] = useState<typeof filterDraft>({
+    playerQuery: "",
+    playerId: null,
+    scope: "startingXI",
+  });
 
   const fixtures: Array<{
     id: number;
@@ -119,6 +142,34 @@ export default function LeagueTables({
     (data?.elements || []).forEach((el) => map.set(el.id, el as any));
     return map;
   }, [data?.elements]);
+
+  const allPlayersForSelect = useMemo(() => {
+    const list = (data?.elements || []).map((el) => ({
+      id: el.id,
+      label: el.web_name,
+    }));
+    return list.sort((a, b) => a.label.localeCompare(b.label));
+  }, [data?.elements]);
+
+  // Debounce the search query to avoid re-render thrash while typing
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const id = setTimeout(
+      () => setDebouncedQuery(filterDraft.playerQuery),
+      100
+    );
+    return () => clearTimeout(id);
+  }, [filterDraft.playerQuery]);
+
+  const filteredPlayersForSelect = useMemo(() => {
+    const q = debouncedQuery.trim().toLowerCase();
+    if (!q) return allPlayersForSelect.slice(0, 200);
+    return allPlayersForSelect
+      .filter((p) => p.label.toLowerCase().includes(q))
+      .slice(0, 200);
+  }, [allPlayersForSelect, debouncedQuery]);
+
+  // Helper kept simple for performance; remove if not used later
 
   const posCode = (elementType: number): PositionCode =>
     elementType === 1
@@ -258,6 +309,45 @@ export default function LeagueTables({
 
     return { squad, pickByElement };
   };
+
+  // Applied filter: which teams match selected player
+  const matchingTeamIds = useMemo(() => {
+    if (!filter.playerId || !data?.teams) return new Set<number>();
+    const set = new Set<number>();
+    for (const team of data.teams) {
+      const has = team.picks.some((p) => {
+        const isStarter = p.position <= 11;
+        if (filter.scope === "startingXI")
+          return isStarter && p.element === filter.playerId;
+        return p.element === filter.playerId; // own
+      });
+      if (has) set.add(team.id);
+    }
+    return set;
+  }, [filter.playerId, filter.scope, data?.teams]);
+
+  const visibleTeams = useMemo(() => {
+    if (!data?.teams) return [] as ProcessedTeam[];
+    // Always show all and highlight matches
+    return data.teams;
+  }, [data?.teams]);
+
+  // Precompute adjusted totals per team to avoid heavy recomputation while typing
+  const adjustedTotalsByTeam = useMemo(() => {
+    if (!data?.teams || !includeAutoSubs)
+      return null as null | Map<
+        number,
+        { live_points: number; live_total: number; subsApplied: any[] }
+      >;
+    const map = new Map<
+      number,
+      { live_points: number; live_total: number; subsApplied: any[] }
+    >();
+    for (const team of data.teams) {
+      map.set(team.id, computeAdjustedTotals(team));
+    }
+    return map;
+  }, [data?.teams, includeAutoSubs, fixtures]);
 
   const fetchManagerLeagues = useCallback(async () => {
     if (!managerId) return;
@@ -859,10 +949,19 @@ export default function LeagueTables({
     );
   }
 
-  console.log(data);
+  // Toast notifications
+  const ToastPortal = (
+    <Toast
+      show={toast.show}
+      message={toast.message}
+      type={(toast.type as any) || "success"}
+      onClose={() => setToast((t) => ({ ...t, show: false }))}
+    />
+  );
 
   return (
     <div className="space-y-4">
+      {ToastPortal}
       {/* League Selection */}
       <div className="bg-theme-card rounded-lg border border-theme-border p-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 sm:gap-4">
@@ -909,24 +1008,170 @@ export default function LeagueTables({
           )}
           {/* Include Auto Subs toggle */}
           {data && (
-            <div className="flex items-center gap-2 ml-auto">
-              <input
-                id="include-auto-subs"
-                type="checkbox"
-                checked={includeAutoSubs}
-                onChange={(e) => setIncludeAutoSubs(e.target.checked)}
-                className="h-4 w-4 rounded border-theme-border text-purple-600 focus:ring-purple-500"
-              />
-              <label
-                htmlFor="include-auto-subs"
-                className="text-sm text-theme-foreground select-none"
-              >
+            <div className="flex items-center gap-2 ml-auto select-none">
+              <span className="text-sm text-theme-foreground">
                 {t("leagueTables.includeAutoSubs", "Include Auto Subs")}
-              </label>
+              </span>
+              <button
+                role="switch"
+                aria-checked={includeAutoSubs}
+                onClick={() => setIncludeAutoSubs((v) => !v)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  includeAutoSubs
+                    ? "bg-purple-600"
+                    : "bg-gray-300 dark:bg-gray-700"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    includeAutoSubs ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Filters Panel (improved UI) */}
+      {data && (
+        <div className="bg-theme-card rounded-lg border border-theme-border p-4">
+          {/* Row 1: Player selection */}
+          <div className="flex flex-col md:flex-row gap-3 md:items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-theme-foreground mb-1">
+                {t("leagueTables.filters.searchPlayer", "Search Player")}
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-theme-text-secondary">
+                    <MdSearch className="w-4 h-4" />
+                  </span>
+                  <input
+                    type="text"
+                    value={filterDraft.playerQuery}
+                    onChange={(e) =>
+                      setFilterDraft((s) => ({
+                        ...s,
+                        playerQuery: e.target.value,
+                      }))
+                    }
+                    className="w-full pl-8 pr-3 py-2 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                    placeholder={t(
+                      "leagueTables.filters.searchPlaceholder",
+                      "Search player..."
+                    )}
+                  />
+                </div>
+                <select
+                  value={filterDraft.playerId ?? ""}
+                  onChange={(e) =>
+                    setFilterDraft((s) => ({
+                      ...s,
+                      playerId: e.target.value
+                        ? parseInt(e.target.value, 10)
+                        : null,
+                    }))
+                  }
+                  className="min-w-[200px] px-3 py-2 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                >
+                  <option value="">
+                    {t("leagueTables.filters.all", "All")}
+                  </option>
+                  {filteredPlayersForSelect.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="mt-1 text-xs text-theme-text-secondary">
+                {t("leagueTables.filters.inSample", "In sample")}:{" "}
+                {data.teams.length}
+              </p>
+            </div>
+          </div>
+
+          {/* Row 2: Scope + actions */}
+          <div className="mt-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+            <div className="flex gap-3 flex-wrap">
+              {/* Scope segmented */}
+              <div>
+                <div className="text-xs font-medium text-theme-text-secondary mb-1">
+                  {t("leagueTables.filters.scope", "Match")}
+                </div>
+                <div className="inline-flex rounded-md border border-theme-border overflow-hidden">
+                  <button
+                    className={`px-3 py-1.5 text-sm ${
+                      filterDraft.scope === "startingXI"
+                        ? "bg-purple-600 text-white"
+                        : "bg-theme-card text-theme-foreground"
+                    }`}
+                    onClick={() =>
+                      setFilterDraft((s) => ({ ...s, scope: "startingXI" }))
+                    }
+                  >
+                    {t("leagueTables.filters.scopeStartingXI", "Starting XI")}
+                  </button>
+                  <button
+                    className={`px-3 py-1.5 text-sm border-l border-theme-border ${
+                      filterDraft.scope === "own"
+                        ? "bg-purple-600 text-white"
+                        : "bg-theme-card text-theme-foreground"
+                    }`}
+                    onClick={() =>
+                      setFilterDraft((s) => ({ ...s, scope: "own" }))
+                    }
+                  >
+                    {t("leagueTables.filters.scopeOwn", "Own (any)")}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setFilter({ ...filterDraft });
+                  setToast({
+                    show: true,
+                    message: t(
+                      "leagueTables.filters.appliedToast",
+                      "Filter applied"
+                    ),
+                    type: "success",
+                  });
+                }}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm shadow-sm"
+              >
+                {t("leagueTables.filters.apply", "Apply")}
+              </button>
+              <button
+                onClick={() => {
+                  const next = {
+                    playerQuery: "",
+                    playerId: null,
+                    scope: "startingXI" as const,
+                  };
+                  setFilterDraft(next);
+                  setFilter(next);
+                  setToast({
+                    show: true,
+                    message: t(
+                      "leagueTables.filters.clearedToast",
+                      "Filter cleared"
+                    ),
+                    type: "success",
+                  });
+                }}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-theme-foreground rounded-md text-sm"
+              >
+                {t("leagueTables.filters.clear", "Clear")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error Display */}
       {error && !isInitializing && (
@@ -1023,17 +1268,40 @@ export default function LeagueTables({
 
           {/* Desktop Table */}
           <div className="hidden md:block divide-y divide-theme-border">
-            {data.teams.map((team) => {
+            {visibleTeams.map((team) => {
               const isCurrentUser = managerId === team.id;
-              const adjusted = computeAdjustedTotals(team);
+              const isHighlighted =
+                !!filter.playerId && matchingTeamIds.has(team.id);
+              const adjusted = includeAutoSubs
+                ? adjustedTotalsByTeam?.get(team.id) || {
+                    live_points: team.live_points,
+                    live_total: team.live_total,
+                    subsApplied: [],
+                  }
+                : {
+                    live_points: team.live_points,
+                    live_total: team.live_total,
+                    subsApplied: [],
+                  };
               return (
-                <div key={team.id} className="transition-colors">
+                <div
+                  key={team.id}
+                  className={`transition-colors ${
+                    isHighlighted
+                      ? "ring-2 ring-blue-400/70 rounded bg-blue-50/40 dark:bg-blue-900/10"
+                      : ""
+                  }`}
+                >
                   {/* Main Row - Entire row is clickable */}
                   <div
                     className={`p-4 cursor-pointer transition-all duration-300 group ${
                       isCurrentUser
                         ? "bg-gradient-to-r from-purple-100/80 to-violet-100/80 dark:from-purple-900/30 dark:to-violet-900/30 shadow-md border-l-4 border-purple-500 dark:border-purple-400"
                         : "hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/10 dark:hover:to-blue-900/10 hover:shadow-sm"
+                    } ${
+                      isHighlighted
+                        ? "bg-blue-50/70 dark:bg-blue-900/20 shadow-md shadow-blue-300/40"
+                        : ""
                     }`}
                     onClick={() => toggleTeamExpansion(team.id)}
                   >
@@ -1369,17 +1637,40 @@ export default function LeagueTables({
 
           {/* Mobile Table */}
           <div className="md:hidden divide-y divide-theme-border">
-            {data.teams.map((team) => {
+            {visibleTeams.map((team) => {
               const isCurrentUser = managerId === team.id;
-              const adjusted = computeAdjustedTotals(team);
+              const isHighlighted =
+                !!filter.playerId && matchingTeamIds.has(team.id);
+              const adjusted = includeAutoSubs
+                ? adjustedTotalsByTeam?.get(team.id) || {
+                    live_points: team.live_points,
+                    live_total: team.live_total,
+                    subsApplied: [],
+                  }
+                : {
+                    live_points: team.live_points,
+                    live_total: team.live_total,
+                    subsApplied: [],
+                  };
               return (
-                <div key={team.id} className="transition-colors">
+                <div
+                  key={team.id}
+                  className={`transition-colors ${
+                    isHighlighted
+                      ? "ring-2 ring-blue-400/70 rounded bg-blue-50/40 dark:bg-blue-900/10"
+                      : ""
+                  }`}
+                >
                   {/* Main Row - Compact Mobile Layout */}
                   <div
                     className={`p-2 cursor-pointer transition-all duration-200 ${
                       isCurrentUser
                         ? "bg-purple-50 dark:bg-purple-900/20 border-l-2 border-purple-400"
                         : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    } ${
+                      isHighlighted
+                        ? "bg-blue-50/70 dark:bg-blue-900/20 shadow-md shadow-blue-300/40"
+                        : ""
                     }`}
                     onClick={() => toggleTeamExpansion(team.id)}
                   >

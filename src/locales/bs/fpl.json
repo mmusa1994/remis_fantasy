@@ -85,7 +85,21 @@
     "noLeagueSelected": "Nije odabrana liga",
     "errorLoadingTable": "Greška pri učitavanju tabele lige",
     "unranked": "Bez ranga",
-    "yourPositionInLeague": "Vaša Pozicija u Ligi"
+    "yourPositionInLeague": "Vaša Pozicija u Ligi",
+    "filters": {
+      "searchPlayer": "Pretraži Igrača",
+      "searchPlaceholder": "Pretraži igrača...",
+      "choosePlayer": "Odaberi Igrača",
+      "inSample": "U uzorku",
+      "all": "Svi",
+      "scope": "Uporedi",
+      "scopeStartingXI": "Početna XI",
+      "scopeOwn": "Posjeduje (bilo gdje)",
+      "apply": "Primijeni",
+      "clear": "Očisti",
+      "appliedToast": "Filter primijenjen",
+      "clearedToast": "Filter uklonjen"
+    }
   },
   "startLivePolling": "Pokrenite uživo praćenje da vidite ažuriranja u realnom vremenu",
   "howToUse": "Kako koristiti FPL Live",
