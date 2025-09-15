@@ -26,13 +26,19 @@ export interface AutoSubResult {
   explanations: string[];
 }
 
+const MIN_DEFENDERS = 3;
+const MIN_MIDFIELDERS = 2;
+const MIN_FORWARDS = 1;
+const REQUIRED_GOALKEEPER = 1;
+const TEAM_SIZE = 11;
+
 /**
  * Apply FPL auto-subs logic to a 15-man squad, respecting formation rules.
  * - Only replace DNP starters whose fixtures finished
  * - GK swaps only GK↔GK
  * - Outfield swaps follow bench order 1→2→3 and must keep DEF≥3 and total=11
  */
-export function applyAutoSubs(squad: SquadPlayer[], initialFormation?: FormationCounts): AutoSubResult {
+export function applyAutoSubs(squad: SquadPlayer[]): AutoSubResult {
   const starters = squad.filter((p) => p.isStarter);
   const benchGK = squad.find((p) => !p.isStarter && p.position === 'GK');
   const benchOutfield = squad
@@ -62,7 +68,7 @@ export function applyAutoSubs(squad: SquadPlayer[], initialFormation?: Formation
     let replaced = false;
     for (const candidate of benchOutfield) {
       if (candidate.minutes <= 0) continue;
-      if (team.find((x) => x.id === candidate.id)) continue; // already in
+      if (team.find((x) => x.id === candidate.id)) continue; // skip candidates already added by prior substitutions
 
       const tentative = swapIn(team, out, candidate);
       if (isValidFormation(tentative)) {
@@ -85,7 +91,7 @@ export function isValidFormation(players: SquadPlayer[]): boolean {
   const def = players.filter((p) => p.position === 'DEF').length;
   const mid = players.filter((p) => p.position === 'MID').length;
   const fwd = players.filter((p) => p.position === 'FWD').length;
-  return players.length === 11 && gk === 1 && def >= 3 && mid >= 2 && fwd >= 1;
+  return players.length === TEAM_SIZE && gk === REQUIRED_GOALKEEPER && def >= MIN_DEFENDERS && mid >= MIN_MIDFIELDERS && fwd >= MIN_FORWARDS;
 }
 
 function swapIn(team: SquadPlayer[], outPlayer: SquadPlayer, inPlayer: SquadPlayer): SquadPlayer[] {

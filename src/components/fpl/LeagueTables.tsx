@@ -15,7 +15,8 @@ import { FaTrophy, FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { IoFootballOutline } from "react-icons/io5";
 import { getTeamColors } from "@/lib/team-colors";
 import { FaShirt } from "react-icons/fa6";
-import { applyAutoSubs, SquadPlayer, PositionCode } from "@/utils/fpl/autoSubs";
+import { applyAutoSubs, SquadPlayer } from "@/utils/fpl/autoSubs";
+import { getPositionCode } from "@/utils/fpl/positions";
 import Toast from "@/components/shared/Toast";
 
 interface ProcessedTeam {
@@ -171,14 +172,6 @@ export default function LeagueTables({
 
   // Helper kept simple for performance; remove if not used later
 
-  const posCode = (elementType: number): PositionCode =>
-    elementType === 1
-      ? "GK"
-      : elementType === 2
-      ? "DEF"
-      : elementType === 3
-      ? "MID"
-      : "FWD";
 
   const isTeamFixtureFinished = (teamId: number): boolean => {
     if (!fixtures || fixtures.length === 0) return false;
@@ -224,7 +217,7 @@ export default function LeagueTables({
 
       return {
         id: p.element,
-        position: posCode(elementType),
+        position: getPositionCode(elementType),
         isStarter: p.position <= 11,
         benchOrder: benchOrderMap.get(p.element),
         isBenchGK,
@@ -294,7 +287,7 @@ export default function LeagueTables({
       const livePts = p.live_stats?.total_points ?? 0;
       return {
         id: p.player_id,
-        position: posCode(elementType),
+        position: getPositionCode(elementType),
         isStarter: p.position <= 11,
         benchOrder: benchOrderMap.get(p.player_id),
         isBenchGK: benchGK?.player_id === p.player_id,
@@ -949,19 +942,15 @@ export default function LeagueTables({
     );
   }
 
-  // Toast notifications
-  const ToastPortal = (
-    <Toast
-      show={toast.show}
-      message={toast.message}
-      type={(toast.type as any) || "success"}
-      onClose={() => setToast((t) => ({ ...t, show: false }))}
-    />
-  );
 
   return (
     <div className="space-y-4">
-      {ToastPortal}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type || "success"}
+        onClose={() => setToast(t => ({ ...t, show: false }))}
+      />
       {/* League Selection */}
       <div className="bg-theme-card rounded-lg border border-theme-border p-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 sm:gap-4">
@@ -1013,6 +1002,7 @@ export default function LeagueTables({
                 {t("leagueTables.includeAutoSubs", "Include Auto Subs")}
               </span>
               <button
+                type="button"
                 role="switch"
                 aria-checked={includeAutoSubs}
                 onClick={() => setIncludeAutoSubs((v) => !v)}
@@ -1102,6 +1092,7 @@ export default function LeagueTables({
                 </div>
                 <div className="inline-flex rounded-md border border-theme-border overflow-hidden">
                   <button
+                    type="button"
                     className={`px-3 py-1.5 text-sm ${
                       filterDraft.scope === "startingXI"
                         ? "bg-purple-600 text-white"
@@ -1114,6 +1105,7 @@ export default function LeagueTables({
                     {t("leagueTables.filters.scopeStartingXI", "Starting XI")}
                   </button>
                   <button
+                    type="button"
                     className={`px-3 py-1.5 text-sm border-l border-theme-border ${
                       filterDraft.scope === "own"
                         ? "bg-purple-600 text-white"
@@ -1131,6 +1123,7 @@ export default function LeagueTables({
 
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={() => {
                   setFilter({ ...filterDraft });
                   setToast({
@@ -1147,6 +1140,7 @@ export default function LeagueTables({
                 {t("leagueTables.filters.apply", "Apply")}
               </button>
               <button
+                type="button"
                 onClick={() => {
                   const next = {
                     playerQuery: "",
@@ -1370,7 +1364,7 @@ export default function LeagueTables({
                       <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-green-50 hover:to-teal-50 dark:hover:from-green-900/20 dark:hover:to-teal-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-green-700 dark:group-hover:text-green-300 transition-colors">
                           {includeAutoSubs
-                            ? computeAdjustedTotals(team).live_points
+                            ? adjustedTotalsByTeam?.get(team.id)?.live_points ?? team.live_points ?? team.event_total ?? 0
                             : team.live_points || team.event_total || 0}
                         </span>
                       </div>
@@ -1379,7 +1373,7 @@ export default function LeagueTables({
                       <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
                           {includeAutoSubs
-                            ? computeAdjustedTotals(team).live_total
+                            ? adjustedTotalsByTeam?.get(team.id)?.live_total ?? team.live_total ?? team.total ?? 0
                             : team.live_total || team.total || 0}
                         </span>
                       </div>
