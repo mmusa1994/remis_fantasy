@@ -529,11 +529,116 @@ export default function AdminTablesCleanPage() {
           ))}
         </div>
 
-        {/* Champions League Placeholder */}
+        {/* Champions League Bulk Updater */}
         {mainTab === "champions" && (
-          <div className="bg-white rounded-xl shadow p-8 text-center border border-gray-200">
-            <h3 className="text-2xl font-bold mb-2">Champions League</h3>
-            <p className="text-gray-600">Uskoro — u izgradnji</p>
+          <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Champions League Bulk Updater (2025/26)
+              </h3>
+              <p className="text-sm text-gray-600">
+                Paste UEFA Champions League HTML content and update the
+                cl_table_25_26 table.
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              <textarea
+                className="text-gray-800 w-full min-h-[300px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                placeholder={`Paste UEFA Champions League HTML content here. Example:\n<div class="si-data-row si-row si-cursor--pointer">\n  <div class="si-block si-name-wrp">\n    <div class="si-cell">\n      <div class="si-rank"><span>1</span><span class="si-rank-icons euro-drop-down si-winner"></span></div>\n      <div class="si-plyr-info-wrap">\n        <div class="si-plyr-info">\n          <div class="si-badge-wrap">\n            <img src="https://gaming.uefa.com/assets/avatars/scarf_19_45@2x.png">\n            <div class="si-member-num"><span>15</span></div>\n          </div>\n          <div class="si-names">\n            <span class="si-name-one">Lightbringer</span>\n            <span class="si-user-name">AmmarĆosović</span>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n  <div class="si-block si-right-data">\n    <div class="si-cell">\n      <div class="si-cell--top"><span>112</span></div>\n    </div>\n  </div>\n</div>`}
+                value={bulkUpdateData}
+                onChange={(e) => setBulkUpdateData(e.target.value)}
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={async () => {
+                    if (!bulkUpdateData.trim()) {
+                      setToast({
+                        show: true,
+                        message: "Please paste Champions League HTML content",
+                        type: "error",
+                      });
+                      return;
+                    }
+                    setBulkUpdating(true);
+                    try {
+                      const res = await fetch(
+                        "/api/admin/champions-league/bulk-update",
+                        {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ htmlContent: bulkUpdateData }),
+                        }
+                      );
+                      const json = await res.json();
+                      if (!res.ok || !json.success)
+                        throw new Error(json.error || "Update failed");
+                      setToast({
+                        show: true,
+                        message: `Successfully updated ${json.count} Champions League entries`,
+                        type: "success",
+                      });
+                      setBulkUpdateData(""); // Clear the textarea after successful update
+                    } catch (e: any) {
+                      setToast({
+                        show: true,
+                        message:
+                          e.message || "Champions League bulk update failed",
+                        type: "error",
+                      });
+                    } finally {
+                      setBulkUpdating(false);
+                    }
+                  }}
+                  disabled={bulkUpdating}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
+                >
+                  {bulkUpdating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" /> Parse & Update
+                    </>
+                  )}
+                </button>
+                <a
+                  href="/champions-league/tabele"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Public Table
+                </a>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Instructions:
+                </h4>
+                <div className="text-sm text-blue-700 space-y-2">
+                  <p>1. Go to the UEFA Champions League fantasy page</p>
+                  <p>
+                    2. Right-click on the leaderboard section and select
+                    &quot;Inspect Element&quot;
+                  </p>
+                  <p>
+                    3. Find the div with class &quot;si-leagues__lb&quot;
+                    containing all player rows
+                  </p>
+                  <p>4. Copy the entire HTML content of that section</p>
+                  <p>
+                    5. Paste it in the textarea above and click &quot;Parse
+                    &amp; Update&quot;
+                  </p>
+                  <p>
+                    <strong>Note:</strong> The parser will extract rank, team
+                    name, user name, avatar, member number, points, and status
+                    (winner/loser/tie) from the HTML.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
