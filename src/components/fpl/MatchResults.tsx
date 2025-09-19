@@ -89,7 +89,7 @@ export default function MatchResults({
   const { t } = useTranslation("fpl");
   const [matchData, setMatchData] = useState<MatchResult[]>([]);
   const [stats, setStats] = useState<GameweekStats | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedMatches, setExpandedMatches] = useState<Set<number>>(
     new Set()
@@ -98,6 +98,7 @@ export default function MatchResults({
   const [selectedManagerId, setSelectedManagerId] = useState<number | null>(
     null
   );
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const toggleMatchExpansion = (fixtureId: number) => {
     const newExpanded = new Set(expandedMatches);
@@ -169,6 +170,7 @@ export default function MatchResults({
       );
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   }, [gameweek, t]);
 
@@ -249,7 +251,7 @@ export default function MatchResults({
     return Object.values(grouped);
   };
 
-  if (loading && matchData.length === 0) {
+  if (isInitialLoad || (loading && matchData.length === 0)) {
     return (
       <div className="space-y-4 lg:space-y-6">
         <LoadingCard title="Loading match results..." />
@@ -377,7 +379,7 @@ export default function MatchResults({
             className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all text-sm sm:text-base w-full sm:w-auto justify-center"
           >
             <MdRefresh className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            {t("fplLive.refresh")}
+            {loading ? t("fplLive.loading") : t("fplLive.refresh")}
           </button>
         </div>
 

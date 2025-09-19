@@ -108,8 +108,9 @@ export default function LeagueTables({
     useState<boolean>(false);
   const [selectedLeagueId, setSelectedLeagueId] = useState(leagueId || "");
   const [leagues, setLeagues] = useState<any[]>([]);
-  const [leaguesLoading, setLeaguesLoading] = useState(false);
+  const [leaguesLoading, setLeaguesLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [leaguesInitiallyLoaded, setLeaguesInitiallyLoaded] = useState(false);
   const [includeAutoSubs, setIncludeAutoSubs] = useState(false);
   const [toast, setToast] = useState<{
     show: boolean;
@@ -421,7 +422,10 @@ export default function LeagueTables({
   const fetchManagerLeagues = useCallback(async () => {
     if (!managerId) return;
 
-    setLeaguesLoading(true);
+    // Only set loading to true if we haven't initially loaded or if this is a refresh
+    if (!leaguesInitiallyLoaded || leagues.length > 0) {
+      setLeaguesLoading(true);
+    }
     try {
       const response = await fetch(`/api/fpl/leagues?managerId=${managerId}`);
       if (!response.ok) {
@@ -437,8 +441,9 @@ export default function LeagueTables({
       console.error("Error fetching manager leagues:", err);
     } finally {
       setLeaguesLoading(false);
+      setLeaguesInitiallyLoaded(true);
     }
-  }, [managerId]);
+  }, [managerId, leaguesInitiallyLoaded, leagues.length]);
 
   const fetchLeagueTable = useCallback(async () => {
     if (!managerId || !selectedLeagueId) return;
@@ -475,6 +480,8 @@ export default function LeagueTables({
       fetchManagerLeagues();
     } else {
       setIsInitializing(false);
+      setLeaguesLoading(false);
+      setLeaguesInitiallyLoaded(true);
     }
   }, [managerId, fetchManagerLeagues]);
 
@@ -793,11 +800,7 @@ export default function LeagueTables({
                 {t("leagueTables.played")}:{" "}
               </span>
               <span className="font-medium text-theme-foreground">
-                {11 -
-                  (currentUserData?.team_with_stats?.filter(
-                    (p: any) => p.is_playing_this_round && !p.has_played
-                  ).length || 0)}
-                /11
+                {15 - (currentUserData?.players_to_play || 0)}/15
               </span>
             </div>
             <div>
@@ -1033,7 +1036,7 @@ export default function LeagueTables({
             <label className="block text-sm font-medium text-theme-foreground mb-2">
               {t("leagueTables.selectLeague")}
             </label>
-            {leaguesLoading ? (
+            {leaguesLoading && !leaguesInitiallyLoaded ? (
               <LoadingCard
                 title={t("leagueTables.loadingLeagues")}
                 description={t("leagueTables.fetchingManagerLeagues")}
@@ -1043,7 +1046,10 @@ export default function LeagueTables({
               <select
                 value={selectedLeagueId}
                 onChange={(e) => setSelectedLeagueId(e.target.value)}
-                className="w-full px-3 py-2.5 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                disabled={leaguesLoading}
+                className={`w-full px-3 py-2.5 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm ${
+                  leaguesLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <option value="">{t("leagueTables.chooseLeague")}</option>
                 {leagues.map((league) => (
@@ -1416,27 +1422,29 @@ export default function LeagueTables({
       {data && !isInitializing && (
         <div className="bg-theme-card rounded-lg border border-theme-border overflow-hidden">
           {/* Header */}
-          <div className="bg-theme-card-secondary border-b border-theme-border p-4">
+          <div className="bg-theme-card-secondary border-b border-theme-border p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-theme-foreground flex items-center gap-2">
-                  <FaTrophy className="w-5 h-5 text-yellow-500" />
+                <h3 className="text-sm sm:text-lg font-bold text-theme-foreground flex items-center gap-1 sm:gap-2">
+                  <FaTrophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
                   {data.league.name}
                 </h3>
-                <div className="text-sm text-theme-text-secondary">
+                <div className="text-xs sm:text-sm text-theme-text-secondary">
                   Gameweek {data.gameweek} • {t("leagueTables.liveTable")}
                   {isPolling && (
-                    <div>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
+                    <div className="mt-1">
+                      <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
                         🔴 {t("leagueTables.live")}
                       </span>
-                      <span>{t("leagueTables.liveAddingBonusPoints")}</span>
+                      <span className="ml-1 text-xs">
+                        {t("leagueTables.liveAddingBonusPoints")}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-xs text-theme-text-secondary">
+                <p className="text-xs sm:text-xs text-theme-text-secondary">
                   {t("leagueTables.updated")}:{" "}
                   {new Date(data.last_updated).toLocaleTimeString()}
                 </p>
@@ -1675,7 +1683,7 @@ export default function LeagueTables({
               );
 
               if (!currentUserLeague) return null;
-
+              console.log(currentUserData);
               return (
                 <>
                   <div className="border-t-4 border-purple-300 dark:border-purple-600"></div>
@@ -1721,10 +1729,7 @@ export default function LeagueTables({
                         {/* Yet (Players to Play) */}
                         <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-orange-50 hover:to-yellow-50 dark:hover:from-orange-900/20 dark:hover:to-yellow-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                           <span className="font-medium text-theme-foreground">
-                            {currentUserData?.team_with_stats?.filter(
-                              (p: any) =>
-                                p.is_playing_this_round && !p.has_played
-                            ).length || 0}
+                            {currentUserData?.players_to_play || 0}
                           </span>
                         </div>
 
@@ -1802,12 +1807,7 @@ export default function LeagueTables({
                           <div className="flex items-center gap-4">
                             <span>
                               {t("leagueTables.played")}:{" "}
-                              {11 -
-                                (currentUserData?.team_with_stats?.filter(
-                                  (p: any) =>
-                                    p.is_playing_this_round && !p.has_played
-                                ).length || 0)}
-                              /11
+                              {15 - (currentUserData?.players_to_play || 0)}/15
                             </span>
                             <span>
                               {t("leagueTables.teamValue")}: £
@@ -2048,10 +2048,7 @@ export default function LeagueTables({
                         {/* Yet */}
                         <div className="text-center">
                           <span className="font-bold text-theme-foreground text-sm">
-                            {currentUserData?.team_with_stats?.filter(
-                              (p: any) =>
-                                p.is_playing_this_round && !p.has_played
-                            ).length || 0}
+                            {currentUserData?.players_to_play || 0}
                           </span>
                         </div>
 

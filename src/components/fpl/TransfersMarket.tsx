@@ -35,9 +35,10 @@ interface TransferData {
 export default function TransfersMarket() {
   const { t } = useTranslation("fpl");
   const [transfersData, setTransfersData] = useState<TransferData>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const fetchTransfers = async () => {
     setLoading(true);
@@ -63,6 +64,7 @@ export default function TransfersMarket() {
       setError(message);
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
@@ -103,8 +105,12 @@ export default function TransfersMarket() {
     return num.toString();
   };
 
-  if (loading && !transfersData.transfers_in) {
-    return <LoadingCard title={t("fplLive.transfers.loading")} />;
+  if (isInitialLoad || (loading && !transfersData.transfers_in && !transfersData.transfers_out)) {
+    return (
+      <div className="space-y-6">
+        <LoadingCard title={t("fplLive.transfers.loading")} />
+      </div>
+    );
   }
 
   if (error) {
@@ -126,15 +132,15 @@ export default function TransfersMarket() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500/90 to-red-600/90 rounded-xl shadow-lg p-6 border border-orange-300/30 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <TbTransfer className="text-2xl text-white" />
-            <div>
-              <h2 className="text-xl font-bold text-white">
+      <div className="bg-gradient-to-r from-orange-500/90 to-red-600/90 rounded-xl shadow-lg p-4 sm:p-6 border border-orange-300/30 backdrop-blur-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <TbTransfer className="text-xl sm:text-2xl text-white flex-shrink-0" />
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold text-white">
                 {t("fplLive.transfers.title")}
               </h2>
-              <p className="text-orange-100 text-sm">
+              <p className="text-orange-100 text-xs sm:text-sm">
                 {t("fplLive.transfers.subtitle")}
               </p>
             </div>
@@ -142,14 +148,14 @@ export default function TransfersMarket() {
           <button
             onClick={fetchTransfers}
             disabled={loading}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 disabled:bg-white/10 text-white font-medium py-2 px-4 rounded-lg backdrop-blur transition-all duration-200"
+            className="flex items-center gap-1.5 sm:gap-2 bg-white/20 hover:bg-white/30 disabled:bg-white/10 text-white font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-lg backdrop-blur transition-all duration-200 text-sm sm:text-base"
           >
-            <MdRefresh className={`text-lg ${loading ? "animate-spin" : ""}`} />
-            <span className="text-sm">{t("fplLive.refresh")}</span>
+            <MdRefresh className={`text-base sm:text-lg ${loading ? "animate-spin" : ""}`} />
+            <span className="text-xs sm:text-sm">{t("fplLive.refresh")}</span>
           </button>
         </div>
         {lastUpdated && (
-          <div className="mt-4 text-sm text-orange-100">
+          <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-orange-100">
             {t("fplLive.lastUpdated")}: {new Date(lastUpdated).toLocaleString()}
           </div>
         )}
