@@ -14,7 +14,7 @@ interface ChampionsLeaguePlayer {
   avatar_url: string;
   member_number: number;
   points: number;
-  md1_points: number;
+  last_md_points: number;
   is_winner: boolean;
   is_loser: boolean;
   is_tie: boolean;
@@ -184,7 +184,7 @@ export default function ChampionsLeagueTable() {
             REMIS CL Paid Liga
           </h3>
           <p className="text-theme-text-secondary text-sm mt-1">
-            Trenutno stanje nakon MD1
+            Trenutno stanje
           </p>
         </div>
 
@@ -194,7 +194,7 @@ export default function ChampionsLeagueTable() {
             <div className="grid grid-cols-12 gap-4 items-center px-6 py-3 text-sm font-bold text-theme-text-secondary uppercase">
               <div className="col-span-1">Rang</div>
               <div className="col-span-6">Igrač</div>
-              <div className="col-span-2 text-center">MD1</div>
+              <div className="col-span-2 text-center">Last MD</div>
               <div className="col-span-2 text-center">Ukupno</div>
               <div className="col-span-1 text-center">Nagrada</div>
             </div>
@@ -259,10 +259,10 @@ export default function ChampionsLeagueTable() {
                     </div>
                   </div>
 
-                  {/* MD1 Points */}
+                  {/* Last MD Points */}
                   <div className="col-span-2 text-center">
                     <span className="font-bold text-lg text-theme-foreground">
-                      {player.md1_points}
+                      {player.last_md_points}
                     </span>
                   </div>
 
@@ -348,9 +348,9 @@ export default function ChampionsLeagueTable() {
 
                 <div className="flex justify-between text-sm">
                   <div>
-                    <span className="text-theme-text-secondary">MD1: </span>
+                    <span className="text-theme-text-secondary">LastMD: </span>
                     <span className="font-bold text-theme-foreground">
-                      {player.md1_points}
+                      {player.last_md_points}
                     </span>
                   </div>
                   <div>

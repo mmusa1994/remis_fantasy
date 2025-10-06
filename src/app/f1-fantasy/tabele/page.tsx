@@ -109,7 +109,7 @@ export default function F1TabeleFromDBPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <div className="flex flex-col items-center gap-2">
               <p className="text-theme-text-primary font-russo text-lg">
-                {t("nextLast", { next: "Singapore", last: "Baku" })}
+                {t("nextLast", { next: "Austin", last: "Singapore" })}
               </p>
               <p className="text-theme-text-secondary text-sm">
                 {t("season")} 2025

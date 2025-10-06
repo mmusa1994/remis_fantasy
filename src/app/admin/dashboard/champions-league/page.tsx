@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Crown, Upload, Eye, Save, Trash2, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  Crown,
+  Upload,
+  Eye,
+  Save,
+  Trash2,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 import Toast from "@/components/shared/Toast";
 import LoadingCard from "@/components/shared/LoadingCard";
 import Link from "next/link";
@@ -16,7 +24,7 @@ interface ChampionsLeaguePlayer {
   avatar_url: string;
   member_number: number;
   points: number;
-  md1_points: number;
+  last_md_points: number;
   is_winner: boolean;
   is_loser: boolean;
   is_tie: boolean;
@@ -66,7 +74,8 @@ export default function ChampionsLeagueAdmin() {
     const parsed: ChampionsLeaguePlayer[] = [];
 
     // Extract table rows using regex pattern for UEFA gaming structure
-    const tableRowPattern = /<tr[^>]*data-testid="league-table-row"[^>]*>(.*?)<\/tr>/gi;
+    const tableRowPattern =
+      /<tr[^>]*data-testid="league-table-row"[^>]*>(.*?)<\/tr>/gi;
     const matches = htmlText.match(tableRowPattern);
 
     if (!matches) {
@@ -76,28 +85,47 @@ export default function ChampionsLeagueAdmin() {
     matches.forEach((row, index) => {
       try {
         // Extract rank
-        const rankMatch = row.match(/data-testid="league-table-rank"[^>]*>(\d+)/);
+        const rankMatch = row.match(
+          /data-testid="league-table-rank"[^>]*>(\d+)/
+        );
         const rank = rankMatch ? parseInt(rankMatch[1]) : index + 1;
 
         // Extract team name
-        const teamNameMatch = row.match(/data-testid="league-table-team-name"[^>]*>([^<]+)/);
-        const team_name = teamNameMatch ? teamNameMatch[1].trim() : `Team ${index + 1}`;
+        const teamNameMatch = row.match(
+          /data-testid="league-table-team-name"[^>]*>([^<]+)/
+        );
+        const team_name = teamNameMatch
+          ? teamNameMatch[1].trim()
+          : `Team ${index + 1}`;
 
         // Extract user name
-        const userNameMatch = row.match(/data-testid="league-table-manager-name"[^>]*>([^<]+)/);
-        const user_name = userNameMatch ? userNameMatch[1].trim() : `User ${index + 1}`;
+        const userNameMatch = row.match(
+          /data-testid="league-table-manager-name"[^>]*>([^<]+)/
+        );
+        const user_name = userNameMatch
+          ? userNameMatch[1].trim()
+          : `User ${index + 1}`;
 
         // Extract points
-        const pointsMatch = row.match(/data-testid="league-table-points"[^>]*>(\d+)/);
+        const pointsMatch = row.match(
+          /data-testid="league-table-points"[^>]*>(\d+)/
+        );
         const points = pointsMatch ? parseInt(pointsMatch[1]) : 0;
 
         // Extract avatar URL
-        const avatarMatch = row.match(/src="([^"]*avatars[^"]*)"/) || row.match(/src="([^"]*avatar[^"]*)"/) || row.match(/src="([^"]*scarf[^"]*)"/) ;
-        const avatar_url = avatarMatch ? avatarMatch[1] : "https://gaming.uefa.com/assets/avatars/scarf_19_45@2x.png";
+        const avatarMatch =
+          row.match(/src="([^"]*avatars[^"]*)"/) ||
+          row.match(/src="([^"]*avatar[^"]*)"/) ||
+          row.match(/src="([^"]*scarf[^"]*)"/);
+        const avatar_url = avatarMatch
+          ? avatarMatch[1]
+          : "https://gaming.uefa.com/assets/avatars/scarf_19_45@2x.png";
 
         // Extract member number (if available)
         const memberMatch = row.match(/member[^>]*>(\d+)/i);
-        const member_number = memberMatch ? parseInt(memberMatch[1]) : Math.floor(Math.random() * 50) + 1;
+        const member_number = memberMatch
+          ? parseInt(memberMatch[1])
+          : Math.floor(Math.random() * 50) + 1;
 
         parsed.push({
           id: index + 1,
@@ -107,7 +135,7 @@ export default function ChampionsLeagueAdmin() {
           avatar_url,
           member_number,
           points,
-          md1_points: points, // Assuming current points are MD1 points for now
+          last_md_points: points, // Assuming current points are MD1 points for now
           is_winner: rank <= 3,
           is_loser: false,
           is_tie: false,
@@ -147,7 +175,9 @@ export default function ChampionsLeagueAdmin() {
       console.error("Error parsing payload:", error);
       setToast({
         show: true,
-        message: `Greška pri parsiranju: ${error instanceof Error ? error.message : 'Nepoznata greška'}`,
+        message: `Greška pri parsiranju: ${
+          error instanceof Error ? error.message : "Nepoznata greška"
+        }`,
         type: "error",
       });
     }
@@ -206,7 +236,9 @@ export default function ChampionsLeagueAdmin() {
   };
 
   const handleClearTable = async () => {
-    if (!confirm("Da li ste sigurni da želite da obrišete sve podatke iz tabele?")) {
+    if (
+      !confirm("Da li ste sigurni da želite da obrišete sve podatke iz tabele?")
+    ) {
       return;
     }
 
@@ -279,7 +311,9 @@ export default function ChampionsLeagueAdmin() {
               <Crown className="w-8 h-8" />
               <div>
                 <h1 className="text-2xl font-bold">Champions League Admin</h1>
-                <p className="text-blue-100 text-sm">Upravljanje Champions League tabelom</p>
+                <p className="text-blue-100 text-sm">
+                  Upravljanje Champions League tabelom
+                </p>
               </div>
             </div>
             <Link
@@ -299,8 +333,12 @@ export default function ChampionsLeagueAdmin() {
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Ukupno igrača</h3>
-                <p className="text-3xl font-bold text-gray-900">{players.length}</p>
+                <h3 className="text-sm font-medium text-gray-500">
+                  Ukupno igrača
+                </h3>
+                <p className="text-3xl font-bold text-gray-900">
+                  {players.length}
+                </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <Crown className="w-6 h-6 text-white" />
@@ -311,7 +349,9 @@ export default function ChampionsLeagueAdmin() {
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Poslednja ažuriranja</h3>
+                <h3 className="text-sm font-medium text-gray-500">
+                  Poslednja ažuriranja
+                </h3>
                 <p className="text-sm text-gray-900">
                   {players.length > 0 ? "Aktuelna sezona" : "Nema podataka"}
                 </p>
@@ -326,15 +366,26 @@ export default function ChampionsLeagueAdmin() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                <p className={`text-sm font-medium ${players.length > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p
+                  className={`text-sm font-medium ${
+                    players.length > 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
                   {players.length > 0 ? "Aktivan" : "Prazan"}
                 </p>
               </div>
-              <div className={`w-12 h-12 bg-gradient-to-r ${players.length > 0 ? 'from-green-500 to-green-600' : 'from-red-500 to-red-600'} rounded-lg flex items-center justify-center`}>
-                {players.length > 0 ?
-                  <CheckCircle className="w-6 h-6 text-white" /> :
+              <div
+                className={`w-12 h-12 bg-gradient-to-r ${
+                  players.length > 0
+                    ? "from-green-500 to-green-600"
+                    : "from-red-500 to-red-600"
+                } rounded-lg flex items-center justify-center`}
+              >
+                {players.length > 0 ? (
+                  <CheckCircle className="w-6 h-6 text-white" />
+                ) : (
                   <AlertCircle className="w-6 h-6 text-white" />
-                }
+                )}
               </div>
             </div>
           </div>
@@ -346,7 +397,9 @@ export default function ChampionsLeagueAdmin() {
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <Upload className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-gray-800">UEFA Payload Import</h2>
+            <h2 className="text-xl font-bold text-gray-800">
+              UEFA Payload Import
+            </h2>
           </div>
 
           <div className="space-y-4">
@@ -361,7 +414,8 @@ export default function ChampionsLeagueAdmin() {
                 placeholder="Ovde nalepite HTML kod sa UEFA gaming stranice..."
               />
               <p className="text-xs text-gray-500 mt-1">
-                Idite na UEFA gaming stranicu → Inspect Element → Copy outer HTML tabele
+                Idite na UEFA gaming stranicu → Inspect Element → Copy outer
+                HTML tabele
               </p>
             </div>
 
@@ -439,7 +493,10 @@ export default function ChampionsLeagueAdmin() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {parsedData.slice(0, 10).map((player) => (
-                    <tr key={player.id} className={player.rank <= 3 ? 'bg-yellow-50' : ''}>
+                    <tr
+                      key={player.id}
+                      className={player.rank <= 3 ? "bg-yellow-50" : ""}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {player.rank}
                       </td>
@@ -509,18 +566,27 @@ export default function ChampionsLeagueAdmin() {
                     <tr
                       key={player.id}
                       className={
-                        player.rank === 1 ? 'bg-yellow-50' :
-                        player.rank === 2 ? 'bg-gray-50' :
-                        player.rank === 3 ? 'bg-orange-50' :
-                        'hover:bg-gray-50'
+                        player.rank === 1
+                          ? "bg-yellow-50"
+                          : player.rank === 2
+                          ? "bg-gray-50"
+                          : player.rank === 3
+                          ? "bg-orange-50"
+                          : "hover:bg-gray-50"
                       }
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         <div className="flex items-center gap-2">
                           {player.rank}
-                          {player.rank === 1 && <span className="text-yellow-500">🏆</span>}
-                          {player.rank === 2 && <span className="text-gray-400">🥈</span>}
-                          {player.rank === 3 && <span className="text-orange-500">🥉</span>}
+                          {player.rank === 1 && (
+                            <span className="text-yellow-500">🏆</span>
+                          )}
+                          {player.rank === 2 && (
+                            <span className="text-gray-400">🥈</span>
+                          )}
+                          {player.rank === 3 && (
+                            <span className="text-orange-500">🥉</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -539,7 +605,7 @@ export default function ChampionsLeagueAdmin() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                        {player.md1_points}
+                        {player.last_md_points}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
                         {player.points}
@@ -557,7 +623,9 @@ export default function ChampionsLeagueAdmin() {
 
         {/* Quick Links */}
         <div className="mt-8 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Links</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Quick Links
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link
               href="/champions-league/tabele"
@@ -566,7 +634,9 @@ export default function ChampionsLeagueAdmin() {
             >
               <Eye className="w-5 h-5 text-blue-600" />
               <div>
-                <div className="font-medium text-blue-800">Pregledaj javnu tabelu</div>
+                <div className="font-medium text-blue-800">
+                  Pregledaj javnu tabelu
+                </div>
                 <div className="text-sm text-blue-600">Otvori u novom tabu</div>
               </div>
             </Link>
@@ -578,7 +648,9 @@ export default function ChampionsLeagueAdmin() {
               <Crown className="w-5 h-5 text-gray-600" />
               <div>
                 <div className="font-medium text-gray-800">Admin Dashboard</div>
-                <div className="text-sm text-gray-600">Nazad na glavni panel</div>
+                <div className="text-sm text-gray-600">
+                  Nazad na glavni panel
+                </div>
               </div>
             </Link>
           </div>

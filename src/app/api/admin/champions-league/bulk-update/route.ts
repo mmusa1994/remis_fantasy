@@ -15,7 +15,7 @@ interface ParsedPlayer {
   avatar_url: string;
   member_number: number;
   points: number;
-  md1_points: number;
+  last_md_points: number;
   is_winner: boolean;
   is_loser: boolean;
   is_tie: boolean;
@@ -93,12 +93,11 @@ function parseChampionsLeagueHTML(htmlContent: string): ParsedPlayer[] {
       const teamName = teamNameMatch[1].trim();
       const userName = userNameMatch[1].trim();
 
-      // Extract points - handle both MD1 and total points
-      let points = 0;
-      let md1Points = 0;
+      // Extract points - Last MD points and Total points
+      let totalPoints = 0;
+      let lastMdPoints = 0;
 
-      // More robust points extraction
-      // First, try to find the si-block si-right-data section with more flexible pattern
+      // Find the si-block si-right-data section
       const rightDataMatch = completeRow.match(
         /<div class="si-block si-right-data">(.*?)$/
       );
@@ -106,78 +105,34 @@ function parseChampionsLeagueHTML(htmlContent: string): ParsedPlayer[] {
       if (rightDataMatch) {
         const rightDataContent = rightDataMatch[1];
 
-        // Debug: log the entire row and right data content for first few entries
-        if (rank <= 3) {
-          console.log(`\n=== Player ${rank} (${teamName}) ===`);
-          console.log("Complete row:", completeRow.substring(0, 400) + "...");
-          console.log("Right data content:", rightDataContent);
-          console.log("Right data length:", rightDataContent.length);
-        }
-      } else {
-        // Debug: log when right data match fails
-        if (rank <= 3) {
-          console.log(
-            `\n=== Player ${rank} (${teamName}) - NO RIGHT DATA MATCH ===`
-          );
-          console.log("Complete row:", completeRow);
+        // Pattern: Last MD has si-cell--top, Total is plain si-cell
+        // <div class="si-cell"><div class="si-cell--top"><span>110</span></div></div><div class="si-cell">222</div>
+        const pointsPattern =
+          /<div class="si-cell"><div class="si-cell--top"><span>(\d+)<\/span><\/div><\/div><div class="si-cell">(\d+)<\/div>/;
+        const pointsMatch = rightDataContent.match(pointsPattern);
 
-          // Try to find si-right-data with simpler pattern
-          const simpleRightData = completeRow.match(
-            /<div class="si-block si-right-data">/
-          );
-          console.log("Simple right data found:", !!simpleRightData);
-
-          if (simpleRightData) {
-            const afterRightData = completeRow.substring(
-              completeRow.indexOf('<div class="si-block si-right-data">')
-            );
-            console.log("After right data:", afterRightData);
-          }
-        }
-      }
-
-      if (rightDataMatch) {
-        const rightDataContent = rightDataMatch[1];
-
-        // Try multiple patterns to extract points
-
-        // Pattern 1: Two separate cells with spans (MD1 and Total)
-        const twoPointsPattern =
-          /<div class="si-cell"><span>(\d+)<\/span><\/div><div class="si-cell"><div class="si-cell--top"><span>(\d+)<\/span><\/div><\/div>/;
-        const twoPointsMatch = rightDataContent.match(twoPointsPattern);
-
-        if (twoPointsMatch) {
-          md1Points = parseInt(twoPointsMatch[1]);
-          points = parseInt(twoPointsMatch[2]);
+        if (pointsMatch) {
+          lastMdPoints = parseInt(pointsMatch[1]);
+          totalPoints = parseInt(pointsMatch[2]);
         } else {
-          // Pattern 2: Single cell with si-cell--top (only total points)
-          const singlePointsPattern =
-            /<div class="si-cell"><div class="si-cell--top"><span>(\d+)<\/span><\/div><\/div>/;
-          const singlePointsMatch = rightDataContent.match(singlePointsPattern);
+          // Fallback: try to extract any two numbers from the right data section
+          const anyNumberPattern = /<span>(\d+)<\/span>|>(\d+)</g;
+          const allNumbers = [];
+          let match;
 
-          if (singlePointsMatch) {
-            points = parseInt(singlePointsMatch[1]);
-            md1Points = points; // Use same value for both
-          } else {
-            // Pattern 3: Just look for any number in span tags
-            const anyNumberPattern = /<span>(\d+)<\/span>/g;
-            const allNumbers = [];
-            let match;
-
-            while ((match = anyNumberPattern.exec(rightDataContent)) !== null) {
-              const num = parseInt(match[1]);
-              if (num > 0) {
-                allNumbers.push(num);
-              }
+          while ((match = anyNumberPattern.exec(rightDataContent)) !== null) {
+            const num = parseInt(match[1] || match[2]);
+            if (num > 0) {
+              allNumbers.push(num);
             }
+          }
 
-            if (allNumbers.length >= 2) {
-              md1Points = allNumbers[0];
-              points = allNumbers[1];
-            } else if (allNumbers.length === 1) {
-              points = allNumbers[0];
-              md1Points = allNumbers[0];
-            }
+          if (allNumbers.length >= 2) {
+            lastMdPoints = allNumbers[0];
+            totalPoints = allNumbers[1];
+          } else if (allNumbers.length === 1) {
+            totalPoints = allNumbers[0];
+            lastMdPoints = allNumbers[0];
           }
         }
       }
@@ -185,7 +140,7 @@ function parseChampionsLeagueHTML(htmlContent: string): ParsedPlayer[] {
       // Debug logging for the first few entries
       if (rank <= 5) {
         console.log(
-          `Parsing player ${rank}: ${teamName} - MD1: ${md1Points}, Total: ${points}`
+          `Parsing player ${rank}: ${teamName} - Last MD: ${lastMdPoints}, Total: ${totalPoints}`
         );
       }
 
@@ -195,8 +150,8 @@ function parseChampionsLeagueHTML(htmlContent: string): ParsedPlayer[] {
         user_name: userName,
         avatar_url: avatarUrl,
         member_number: memberNumber,
-        points,
-        md1_points: md1Points,
+        points: totalPoints,
+        last_md_points: lastMdPoints,
         is_winner: isWinner,
         is_loser: isLoser,
         is_tie: isTie,
