@@ -28,16 +28,28 @@ export default function F1TabeleFromDBPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [nextRace, setNextRace] = useState<string>("Austin");
+  const [lastRace, setLastRace] = useState<string>("Singapore");
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/f1/table");
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || "Failed to fetch");
-        setEntries(json.data.standings || []);
-        setLastUpdated(json.data.lastUpdated || null);
+        const [tableRes, raceInfoRes] = await Promise.all([
+          fetch("/api/f1/table"),
+          fetch("/api/f1/race-info"),
+        ]);
+
+        const tableJson = await tableRes.json();
+        if (!tableJson.success) throw new Error(tableJson.error || "Failed to fetch");
+        setEntries(tableJson.data.standings || []);
+        setLastUpdated(tableJson.data.lastUpdated || null);
+
+        const raceInfoJson = await raceInfoRes.json();
+        if (raceInfoJson.success) {
+          setNextRace(raceInfoJson.data.nextRace);
+          setLastRace(raceInfoJson.data.lastRace);
+        }
       } catch (e: any) {
         setError(e.message || "Failed to load data");
       } finally {
@@ -109,7 +121,7 @@ export default function F1TabeleFromDBPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <div className="flex flex-col items-center gap-2">
               <p className="text-theme-text-primary font-russo text-lg">
-                {t("nextLast", { next: "Austin", last: "Singapore" })}
+                {t("nextLast", { next: nextRace, last: lastRace })}
               </p>
               <p className="text-theme-text-secondary text-sm">
                 {t("season")} 2025

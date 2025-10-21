@@ -687,6 +687,7 @@ export default function AdminTablesCleanPage() {
                         message: `Updated ${json.count} entries`,
                         type: "success",
                       });
+                      setBulkUpdateData(""); // Clear after success
                     } catch (e: any) {
                       setToast({
                         show: true,
@@ -717,6 +718,89 @@ export default function AdminTablesCleanPage() {
                 >
                   Open Public Table
                 </a>
+              </div>
+            </div>
+
+            {/* Race Info Updater */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <h4 className="text-md font-semibold text-gray-800 mb-3">
+                Race Info (Next & Last Race)
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Next Race
+                  </label>
+                  <input
+                    type="text"
+                    id="f1-next-race"
+                    className="text-gray-800 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    placeholder="e.g., Austin"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Last Race
+                  </label>
+                  <input
+                    type="text"
+                    id="f1-last-race"
+                    className="text-gray-800 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    placeholder="e.g., Singapore"
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={async () => {
+                    const nextRaceInput = document.getElementById(
+                      "f1-next-race"
+                    ) as HTMLInputElement;
+                    const lastRaceInput = document.getElementById(
+                      "f1-last-race"
+                    ) as HTMLInputElement;
+
+                    const nextRace = nextRaceInput?.value.trim();
+                    const lastRace = lastRaceInput?.value.trim();
+
+                    if (!nextRace || !lastRace) {
+                      setToast({
+                        show: true,
+                        message: "Please fill in both race fields",
+                        type: "error",
+                      });
+                      return;
+                    }
+
+                    try {
+                      const res = await fetch("/api/admin/f1/race-info", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ nextRace, lastRace }),
+                      });
+                      const json = await res.json();
+                      if (!res.ok || !json.success)
+                        throw new Error(json.error || "Update failed");
+                      setToast({
+                        show: true,
+                        message: "Race info updated successfully",
+                        type: "success",
+                      });
+                      // Clear inputs
+                      nextRaceInput.value = "";
+                      lastRaceInput.value = "";
+                    } catch (e: any) {
+                      setToast({
+                        show: true,
+                        message: e.message || "Race info update failed",
+                        type: "error",
+                      });
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  <Upload className="w-4 h-4" /> Update Race Info
+                </button>
               </div>
             </div>
           </div>
