@@ -3,14 +3,17 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { supabaseServer } from "@/lib/supabase-server";
 
-// Interface for clean Premier League player
+// SEPARATE TABLES:
+// - premier_league_25_26: Premium, Standard, Free (classic scoring)
+// - h2h_league_25_26: H2H, H2H2 (head-to-head scoring)
+
+// Interface for classic Premier League player
 interface PremierLeaguePlayer {
   id: string;
   first_name: string;
   last_name: string;
   team_name: string;
   league_type: string;
-  h2h_category: string | null;
   points: number;
   position: number | null;
   email: string;
@@ -18,11 +21,26 @@ interface PremierLeaguePlayer {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
-  migrated_from_registration_id: string | null;
   last_points_update: string | null;
   admin_notes: string | null;
-  h2h_points: number | null;
+}
+
+// Interface for H2H League player
+interface H2HLeaguePlayer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  team_name: string;
+  h2h_category: "h2h" | "h2h2";
+  h2h_points: number;
   h2h_stats: { w: number; d: number; l: number } | null;
+  points_for: number;
+  email: string | null;
+  phone: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  last_points_update: string | null;
 }
 
 interface LeaguePlayer {
@@ -47,7 +65,7 @@ interface LeagueTables {
   freeLeague: LeaguePlayer[];
 }
 
-// GET - Fetch premier league tables from clean table
+// GET - Fetch premier league tables from SEPARATE tables
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -56,17 +74,32 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch all players from clean Premier League table
-    const { data: players, error } = await supabaseServer
+    // Fetch classic leagues from premier_league_25_26
+    const { data: classicPlayers, error: classicError } = await supabaseServer
       .from("premier_league_25_26")
       .select("*")
       .is("deleted_at", null)
-      .order("points", { ascending: false }); // Order by points descending instead of position
+      .order("points", { ascending: false });
 
-    if (error) {
-      console.error("Supabase error:", error);
+    if (classicError) {
+      console.error("Supabase error (classic):", classicError);
       return NextResponse.json(
-        { error: "Failed to fetch premier league data" },
+        { error: "Failed to fetch classic league data" },
+        { status: 500 }
+      );
+    }
+
+    // Fetch H2H leagues from h2h_league_25_26
+    const { data: h2hPlayers, error: h2hError } = await supabaseServer
+      .from("h2h_league_25_26")
+      .select("*")
+      .is("deleted_at", null)
+      .order("h2h_points", { ascending: false });
+
+    if (h2hError) {
+      console.error("Supabase error (h2h):", h2hError);
+      return NextResponse.json(
+        { error: "Failed to fetch H2H league data" },
         { status: 500 }
       );
     }
@@ -80,7 +113,8 @@ export async function GET() {
       freeLeague: [],
     };
 
-    players?.forEach((player: PremierLeaguePlayer) => {
+    // Process classic league players (premium, standard, free)
+    classicPlayers?.forEach((player: PremierLeaguePlayer) => {
       const leaguePlayer: LeaguePlayer = {
         id: player.id,
         firstName: player.first_name,
@@ -88,72 +122,83 @@ export async function GET() {
         teamName: player.team_name,
         email: player.email,
         points: player.points || 0,
-        position: 0, // Will be calculated after sorting
+        position: 0,
         league_type: player.league_type,
-        h2h_category: player.h2h_category as "h2h" | "h2h2" | null,
-        h2h_points: player.h2h_points || null,
-        h2h_stats: player.h2h_stats || null,
+        h2h_category: null,
+        h2h_points: null,
+        h2h_stats: null,
       };
 
-      // Categorize players based on league type and H2H category
-      // Premium and Standard players show in their main leagues regardless of H2H
       if (player.league_type === "premium") {
         tables.premiumLeague.push(leaguePlayer);
-      }
-      if (player.league_type === "standard") {
+      } else if (player.league_type === "standard") {
         tables.standardLeague.push(leaguePlayer);
-      }
-
-      // H2H players show in H2H leagues (they can also be premium/standard)
-      if (player.h2h_category === "h2h") {
-        tables.h2hLeague.push(leaguePlayer);
-      }
-      if (player.h2h_category === "h2h2") {
-        tables.h2h2League.push(leaguePlayer);
-      }
-
-      // Free league - just one player updated weekly
-      if (player.league_type === "free") {
+      } else if (player.league_type === "free") {
         tables.freeLeague.push(leaguePlayer);
       }
     });
 
-    // Sort each league by points and assign positions
-    Object.keys(tables).forEach((leagueKey) => {
-      const league = tables[leagueKey as keyof LeagueTables];
+    // Process H2H players (h2h, h2h2)
+    h2hPlayers?.forEach((player: H2HLeaguePlayer) => {
+      const leaguePlayer: LeaguePlayer = {
+        id: player.id,
+        firstName: player.first_name,
+        lastName: player.last_name,
+        teamName: player.team_name,
+        email: player.email || "",
+        points: player.points_for || 0,
+        position: 0,
+        league_type: "h2h",
+        h2h_category: player.h2h_category,
+        h2h_points: player.h2h_points || 0,
+        h2h_stats: player.h2h_stats || null,
+      };
 
-      // H2H leagues sort by H2H points first, then by overall points
-      if (leagueKey === "h2hLeague" || leagueKey === "h2h2League") {
-        league.sort((a, b) => {
-          const aH2HPoints = a.h2h_points || 0;
-          const bH2HPoints = b.h2h_points || 0;
-
-          // First sort by H2H points
-          if (bH2HPoints !== aH2HPoints) {
-            return bH2HPoints - aH2HPoints;
-          }
-
-          // If H2H points are equal, sort by overall points
-          return b.points - a.points;
-        });
-      } else {
-        // Regular leagues sort by overall points only
-        league.sort((a, b) => b.points - a.points);
+      if (player.h2h_category === "h2h") {
+        tables.h2hLeague.push(leaguePlayer);
+      } else if (player.h2h_category === "h2h2") {
+        tables.h2h2League.push(leaguePlayer);
       }
+    });
 
+    // Sort each league and assign positions
+    // Classic leagues: sort by points DESC
+    ["premiumLeague", "standardLeague", "freeLeague"].forEach((leagueKey) => {
+      const league = tables[leagueKey as keyof LeagueTables];
+      league.sort((a, b) => b.points - a.points);
       league.forEach((player, index) => {
         player.position = index + 1;
       });
     });
 
+    // H2H leagues: sort by h2h_points DESC, then by points_for DESC
+    ["h2hLeague", "h2h2League"].forEach((leagueKey) => {
+      const league = tables[leagueKey as keyof LeagueTables];
+      league.sort((a, b) => {
+        const aH2HPoints = a.h2h_points || 0;
+        const bH2HPoints = b.h2h_points || 0;
+
+        if (bH2HPoints !== aH2HPoints) {
+          return bH2HPoints - aH2HPoints;
+        }
+        return b.points - a.points;
+      });
+      league.forEach((player, index) => {
+        player.position = index + 1;
+      });
+    });
+
+    const totalPlayers =
+      (classicPlayers?.length || 0) + (h2hPlayers?.length || 0);
+
     return NextResponse.json({
       tables,
-      totalPlayers: players?.length || 0,
+      totalPlayers,
       lastUpdated: new Date().toISOString(),
-      source: "clean_table",
+      source: "separate_tables",
     });
   } catch (error) {
-    console.error("Error fetching clean premier league tables:", error);
+    console.error("Error fetching league tables:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -161,7 +206,7 @@ export async function GET() {
   }
 }
 
-// POST - Update player points in clean table
+// POST - Update player points (determines table based on h2h_category)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -174,10 +219,13 @@ export async function POST(request: NextRequest) {
       playerId,
       points,
       h2h_category,
+      h2h_points,
+      h2h_stats,
       firstName,
       lastName,
       teamName,
       league_type,
+      isH2HTable = false, // Flag to indicate which table to update
     } = await request.json();
 
     if (!playerId) {
@@ -187,33 +235,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Determine which table to update
+    const tableName = isH2HTable ? "h2h_league_25_26" : "premier_league_25_26";
+
     // Prepare update data
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
-    if (typeof points === "number") {
-      updateData.points = points;
-      updateData.last_points_update = new Date().toISOString();
+    if (isH2HTable) {
+      // H2H table updates
+      if (typeof h2h_points === "number") {
+        updateData.h2h_points = h2h_points;
+        updateData.last_points_update = new Date().toISOString();
+      }
+      if (typeof points === "number") {
+        updateData.points_for = points;
+      }
+      if (h2h_stats) {
+        updateData.h2h_stats = h2h_stats;
+      }
+      if (h2h_category) {
+        updateData.h2h_category = h2h_category;
+      }
+    } else {
+      // Classic table updates
+      if (typeof points === "number") {
+        updateData.points = points;
+        updateData.last_points_update = new Date().toISOString();
+      }
+      if (league_type) {
+        updateData.league_type = league_type;
+      }
     }
 
-    if (h2h_category !== undefined) {
-      updateData.h2h_category = h2h_category;
-    }
-
-    // For Free Liga players, allow updating name and team
+    // Common fields
     if (firstName !== undefined) {
       updateData.first_name = firstName;
     }
-
     if (lastName !== undefined) {
       updateData.last_name = lastName;
     }
-
     if (teamName !== undefined) {
       updateData.team_name = teamName;
-    }
-
-    if (league_type !== undefined) {
-      updateData.league_type = league_type;
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -223,9 +285,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update player in clean table
+    // Update player
     const { data, error } = await supabaseServer
-      .from("premier_league_25_26")
+      .from(tableName)
       .update(updateData)
       .eq("id", playerId)
       .select();
@@ -241,6 +303,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: "Player updated successfully",
       player: data?.[0],
+      table: tableName,
     });
   } catch (error) {
     console.error("Error updating player:", error);
@@ -260,7 +323,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { updates } = await request.json();
+    const { updates, isH2HTable = false } = await request.json();
 
     if (!updates || !Array.isArray(updates)) {
       return NextResponse.json(
@@ -269,126 +332,77 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Validate update structure
-    for (const update of updates) {
-      if (!update.team || !update.manager) {
-        return NextResponse.json(
-          { error: "Each update must have team and manager fields" },
-          { status: 400 }
-        );
-      }
-
-      // Check if it's a points update, H2H category update, or H2H stats update
-      if (
-        typeof update.total !== "number" &&
-        !update.h2h_category &&
-        typeof update.h2h_pts !== "number"
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              "Each update must have either total (number), h2h_category, or h2h_pts field",
-          },
-          { status: 400 }
-        );
-      }
-    }
+    const tableName = isH2HTable ? "h2h_league_25_26" : "premier_league_25_26";
 
     let updatedCount = 0;
     const notFoundPlayers: string[] = [];
 
-    // Process each update
     for (const update of updates) {
+      if (!update.team || !update.manager) {
+        continue;
+      }
+
       // Parse manager name
       const managerParts = update.manager.trim().split(" ");
       const firstName = managerParts[0];
-      const lastName = managerParts.slice(1).join(" "); // Handle multiple last names
+      const lastName = managerParts.slice(1).join(" ");
 
-      // Try to find player - prioritize team name search for better accuracy
+      // Find player by team name first
       let players = null;
-      let findError = null;
 
-      // First try: find by team name (more reliable)
-      const { data: playersByTeam, error: teamError } = await supabaseServer
-        .from("premier_league_25_26")
+      const { data: playersByTeam } = await supabaseServer
+        .from(tableName)
         .select("id, team_name, first_name, last_name")
         .eq("team_name", update.team)
         .is("deleted_at", null)
         .limit(1);
 
-      if (!teamError && playersByTeam && playersByTeam.length > 0) {
+      if (playersByTeam && playersByTeam.length > 0) {
         players = playersByTeam;
       } else {
-        // Second try: find by manager name (first_name and last_name)
-        const { data: playersByName, error: nameError } = await supabaseServer
-          .from("premier_league_25_26")
+        // Try by name
+        const { data: playersByName } = await supabaseServer
+          .from(tableName)
           .select("id, team_name, first_name, last_name")
           .eq("first_name", firstName)
           .eq("last_name", lastName)
           .is("deleted_at", null)
           .limit(1);
 
-        if (!nameError && playersByName && playersByName.length > 0) {
-          players = playersByName;
-        } else {
-          // Third try: find by partial name matching (case insensitive)
-          const { data: playersByPartialName, error: partialError } =
-            await supabaseServer
-              .from("premier_league_25_26")
-              .select("id, team_name, first_name, last_name")
-              .ilike("first_name", `%${firstName}%`)
-              .ilike("last_name", `%${lastName}%`)
-              .is("deleted_at", null)
-              .limit(1);
-
-          if (
-            !partialError &&
-            playersByPartialName &&
-            playersByPartialName.length > 0
-          ) {
-            players = playersByPartialName;
-          } else {
-            findError = partialError || nameError || teamError;
-          }
-        }
+        players = playersByName;
       }
 
-      if (findError || !players || players.length === 0) {
+      if (!players || players.length === 0) {
         notFoundPlayers.push(`${update.manager} - ${update.team}`);
         continue;
       }
 
       // Prepare update data
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
 
-      if (typeof update.total === "number") {
-        updateData.points = update.total;
-        updateData.last_points_update = new Date().toISOString();
+      if (isH2HTable) {
+        if (typeof update.h2h_pts === "number") {
+          updateData.h2h_points = update.h2h_pts;
+        }
+        if (typeof update.total === "number") {
+          updateData.points_for = update.total;
+        }
+        if (update.w !== undefined && update.d !== undefined && update.l !== undefined) {
+          updateData.h2h_stats = { w: update.w, d: update.d, l: update.l };
+        }
+        if (update.h2h_category) {
+          updateData.h2h_category = update.h2h_category;
+        }
+      } else {
+        if (typeof update.total === "number") {
+          updateData.points = update.total;
+        }
       }
 
-      if (update.h2h_category !== undefined) {
-        updateData.h2h_category = update.h2h_category;
-      }
+      updateData.last_points_update = new Date().toISOString();
 
-      if (typeof update.h2h_pts === "number") {
-        updateData.h2h_points = update.h2h_pts;
-      }
-
-      if (
-        update.w !== undefined &&
-        update.d !== undefined &&
-        update.l !== undefined
-      ) {
-        updateData.h2h_stats = {
-          w: update.w || 0,
-          d: update.d || 0,
-          l: update.l || 0,
-        };
-      }
-
-      // Update player
       const { error: updateError } = await supabaseServer
-        .from("premier_league_25_26")
+        .from(tableName)
         .update(updateData)
         .eq("id", players[0].id);
 
@@ -404,6 +418,7 @@ export async function PATCH(request: NextRequest) {
       updatedCount,
       totalUpdates: updates.length,
       notFound: notFoundPlayers.length > 0 ? notFoundPlayers : undefined,
+      table: tableName,
     });
   } catch (error) {
     console.error("Error during bulk update:", error);
