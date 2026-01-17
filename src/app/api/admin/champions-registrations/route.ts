@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 
 export async function GET(request: NextRequest) {
   try {
-    const { data: registrations, error } = await supabase
+    const { data: registrations, error } = await supabaseServer
       .from("cl_registrations_25_26")
       .select("*")
       .order("created_at", { ascending: false });
@@ -41,7 +41,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { data: updatedRegistration, error } = await supabase
+    const { data: updatedRegistration, error } = await supabaseServer
       .from("cl_registrations_25_26")
       .update(updates)
       .eq("id", id)
@@ -83,7 +83,7 @@ export async function PATCH(request: NextRequest) {
 
     const updates = { [field]: value };
 
-    const { data: updatedRegistration, error } = await supabase
+    const { data: updatedRegistration, error } = await supabaseServer
       .from("cl_registrations_25_26")
       .update(updates)
       .eq("id", id)
@@ -123,7 +123,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseServer
       .from("cl_registrations_25_26")
       .delete()
       .eq("id", id);

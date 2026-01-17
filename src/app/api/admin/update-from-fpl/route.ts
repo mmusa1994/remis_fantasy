@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 
 const LEAGUE_CONFIGS = {
-  premium: { id: 277005, type: "standings", url_suffix: "standings/c" },
-  h2h: { id: 277479, type: "h2h", url_suffix: "standings/h" },
-  standard: { id: 277449, type: "standings", url_suffix: "standings/c" },
-  h2h2: { id: 451227, type: "h2h", url_suffix: "standings/h" },
+  premium: { id: 277005, type: "standings", dbLeagueType: "premium" },
+  standard: { id: 277449, type: "standings", dbLeagueType: "standard" },
+  h2h: { id: 277479, type: "h2h", dbLeagueType: "standard", h2hCategory: "h2h" },
+  h2h2: { id: 451227, type: "h2h", dbLeagueType: "standard", h2hCategory: "h2h2" },
 } as const;
 
 type LeagueType = keyof typeof LEAGUE_CONFIGS;
@@ -23,23 +23,8 @@ interface FPLPlayer {
   matches_lost?: number;
 }
 
-interface DatabasePlayer {
-  id: string;
-  first_name: string;
-  last_name: string;
-  team_name: string;
-  email: string;
-  league_type: string;
-  points: number;
-  h2h_points?: number;
-  h2h_category?: string;
-}
-
-async function fetchFPLLeagueData(
-  leagueId: number,
-  type: string,
-  maxPlayers: number = 150
-): Promise<FPLPlayer[]> {
+// Fetch ALL players from FPL league (no limit)
+async function fetchAllFPLPlayers(leagueId: number, type: string): Promise<FPLPlayer[]> {
   const isH2H = type === "h2h";
   const baseUrl = isH2H
     ? `https://fantasy.premierleague.com/api/leagues-h2h/${leagueId}/standings/`
@@ -47,220 +32,45 @@ async function fetchFPLLeagueData(
 
   const players: FPLPlayer[] = [];
   let currentPage = 1;
+  let hasMore = true;
 
-  try {
-    while (players.length < maxPlayers) {
-      const url = `${baseUrl}?page_standings=${currentPage}`;
+  while (hasMore) {
+    const url = `${baseUrl}?page_standings=${currentPage}`;
 
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          Accept: "application/json",
-          "Accept-Language": "en-US,en;q=0.9",
-        },
-      });
-
-      if (!response.ok) {
-        console.error(
-          `[FPL-SYNC] API Error: ${response.status} ${response.statusText}`
-        );
-        throw new Error(
-          `FPL API returned ${response.status} for league ${leagueId}, page ${currentPage}`
-        );
-      }
-
-      const data = await response.json();
-
-      let pageResults: FPLPlayer[] = [];
-
-      if (isH2H) {
-        // For H2H, results are in standings.results (not direct results)
-        pageResults = data.standings?.results || [];
-      } else {
-        // For classic leagues, results are in standings.results
-        pageResults = data.standings?.results || [];
-      }
-
-      players.push(...pageResults);
-
-      // Check if we have more pages to fetch
-      if (pageResults.length < 50 || players.length >= maxPlayers) {
-        break;
-      }
-
-      currentPage++;
-    }
-
-    const finalPlayers = players.slice(0, maxPlayers);
-
-    return finalPlayers;
-  } catch (error) {
-    console.error(`[FPL-SYNC] Error fetching league ${leagueId}:`, error);
-    throw error;
-  }
-}
-
-function normalizeString(text: string): string {
-  if (!text) return "";
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[ćč]/g, "c")
-    .replace(/[žz]/g, "z")
-    .replace(/[šs]/g, "s")
-    .replace(/[đd]/g, "d")
-    .replace(/[^a-z0-9\s]/g, "")
-    .replace(/\s+/g, " ");
-}
-
-async function syncPlayersToDatabase(
-  leagueType: LeagueType,
-  fplPlayers: FPLPlayer[]
-) {
-  const { data: dbPlayers, error: fetchError } = await supabase
-    .from("premier_league_25_26")
-    .select("*")
-    .is("deleted_at", null);
-
-  if (fetchError) {
-    console.error(`[FPL-SYNC] Database fetch error:`, fetchError);
-    throw new Error(`Database fetch error: ${fetchError.message}`);
-  }
-
-  const updates: Array<{ id: string; data: any }> = [];
-  const matches: Array<{ fpl: FPLPlayer; db: DatabasePlayer }> = [];
-  const notFound: string[] = [];
-
-  for (const fplPlayer of fplPlayers) {
-    const normalizedFPLName = normalizeString(fplPlayer.player_name);
-    const normalizedFPLTeam = normalizeString(fplPlayer.entry_name);
-
-    const dbPlayer = dbPlayers?.find((player: DatabasePlayer) => {
-      const normalizedDBName = normalizeString(
-        `${player.first_name} ${player.last_name}`
-      );
-      const normalizedDBTeam = normalizeString(player.team_name);
-
-      // Match by name or team
-      const nameMatch = normalizedDBName === normalizedFPLName;
-      const teamMatch = normalizedDBTeam === normalizedFPLTeam;
-      const partialMatch =
-        normalizedDBName.includes(normalizedFPLName.split(" ")[0]) &&
-        normalizedDBTeam === normalizedFPLTeam;
-
-      if (nameMatch || teamMatch || partialMatch) {
-        return true;
-      }
-
-      return false;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        Accept: "application/json",
+      },
+      cache: "no-store",
     });
 
-    if (dbPlayer) {
-      const updateData: any = {
-        points: fplPlayer.total,
-        last_points_update: new Date().toISOString(),
-      };
-
-      // Add H2H data if applicable
-      if (leagueType === "h2h" || leagueType === "h2h2") {
-        // Za H2H:
-        // - points = overall FPL points (total) -> 83
-        // - h2h_points = H2H league points (total from H2H standings) -> 3
-        updateData.h2h_points = fplPlayer.total || 0; // H2H league points (3)
-        updateData.h2h_category = leagueType;
-        updateData.h2h_stats = {
-          w: fplPlayer.matches_won || 0,
-          d: fplPlayer.matches_drawn || 0,
-          l: fplPlayer.matches_lost || 0,
-        };
-        // points ostaju overall FPL points (points_for je 83)
-        updateData.points = fplPlayer.points_for || 0; // Overall points (83)
-      }
-
-      // League type filter for standings leagues
-      const shouldUpdate =
-        leagueType === "h2h" ||
-        leagueType === "h2h2" ||
-        (leagueType === "premium" && dbPlayer.league_type === "premium") ||
-        (leagueType === "standard" && dbPlayer.league_type === "standard");
-
-      if (shouldUpdate) {
-        updates.push({ id: dbPlayer.id, data: updateData });
-        matches.push({ fpl: fplPlayer, db: dbPlayer });
-      } else {
-        console.error(
-          `[FPL-SYNC] Skipping player (wrong league): ${dbPlayer.first_name} ${dbPlayer.last_name} (db: ${dbPlayer.league_type}, sync: ${leagueType})`
-        );
-      }
-    } else {
-      notFound.push(`${fplPlayer.player_name} (${fplPlayer.entry_name})`);
+    if (!response.ok) {
+      throw new Error(`FPL API error: ${response.status}`);
     }
+
+    const data = await response.json();
+    const pageResults: FPLPlayer[] = data.standings?.results || [];
+
+    players.push(...pageResults);
+
+    // Check if there are more pages
+    hasMore = pageResults.length === 50;
+    currentPage++;
   }
 
-  // Execute updates
-  let updateSuccess = 0;
-  let updateErrors = 0;
+  return players;
+}
 
-  for (const update of updates) {
-    try {
-      const { error } = await supabase
-        .from("premier_league_25_26")
-        .update(update.data)
-        .eq("id", update.id);
-
-      if (error) {
-        console.error(`[FPL-SYNC] Update error for ${update.id}:`, error);
-        updateErrors++;
-      } else {
-        updateSuccess++;
-      }
-    } catch (error) {
-      console.error(
-        `[FPL-SYNC] Unexpected error updating ${update.id}:`,
-        error
-      );
-      updateErrors++;
-    }
+// Split name into first and last name
+function splitName(fullName: string): { firstName: string; lastName: string } {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: "" };
   }
-
   return {
-    totalFPLPlayers: fplPlayers.length,
-    matchedPlayers: matches.length,
-    updatedPlayers: updateSuccess,
-    updateErrors,
-    notFoundPlayers: notFound,
-    matches: matches.map((m) => {
-      // Pravilno mapiranje poena za različite tipove liga
-      const isH2HLeague = leagueType === "h2h" || leagueType === "h2h2";
-
-      return {
-        rank: m.fpl.rank,
-        fplName: m.fpl.player_name,
-        fplTeam: m.fpl.entry_name,
-        fplPoints: isH2HLeague ? m.fpl.points_for : m.fpl.total, // Overall FPL points
-        fplH2HPoints: isH2HLeague ? m.fpl.total : undefined, // H2H league points
-        dbId: m.db.id,
-        dbName: `${m.db.first_name} ${m.db.last_name}`,
-        dbTeam: m.db.team_name,
-        dbEmail: m.db.email,
-        oldPoints: m.db.points,
-        oldH2HPoints: m.db.h2h_points,
-        pointsDiff: isH2HLeague
-          ? (m.fpl.points_for || 0) - (m.db.points || 0)
-          : m.fpl.total - (m.db.points || 0),
-        h2hPointsDiff: isH2HLeague
-          ? (m.fpl.total || 0) - (m.db.h2h_points || 0)
-          : undefined,
-        h2hStats: isH2HLeague
-          ? {
-              w: m.fpl.matches_won || 0,
-              d: m.fpl.matches_drawn || 0,
-              l: m.fpl.matches_lost || 0,
-            }
-          : undefined,
-      };
-    }),
+    firstName: parts[0],
+    lastName: parts.slice(1).join(" "),
   };
 }
 
@@ -272,71 +82,191 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-
-    const { leagueType } = body;
+    const { leagueType, fullSync = false } = body;
 
     if (!leagueType || !LEAGUE_CONFIGS[leagueType as LeagueType]) {
       return NextResponse.json(
-        {
-          error: "Invalid or missing leagueType",
-          validTypes: Object.keys(LEAGUE_CONFIGS),
-          received: leagueType,
-        },
+        { error: "Invalid leagueType", validTypes: Object.keys(LEAGUE_CONFIGS) },
         { status: 400 }
       );
     }
 
     const config = LEAGUE_CONFIGS[leagueType as LeagueType];
 
-    try {
-      // Fetch FPL data
-      const fplPlayers = await fetchFPLLeagueData(config.id, config.type, 150);
+    // Fetch ALL players from FPL
+    console.log(`[FPL-SYNC] Fetching ${leagueType} league (ID: ${config.id})...`);
+    const fplPlayers = await fetchAllFPLPlayers(config.id, config.type);
 
-      if (!fplPlayers || fplPlayers.length === 0) {
-        return NextResponse.json(
-          {
-            error: "No players fetched from FPL API",
-            leagueType,
-            leagueId: config.id,
-          },
-          { status: 500 }
-        );
+    if (!fplPlayers.length) {
+      return NextResponse.json({ error: "No players found in FPL league" }, { status: 500 });
+    }
+
+    console.log(`[FPL-SYNC] Fetched ${fplPlayers.length} players from FPL`);
+
+    const isH2H = config.type === "h2h";
+    let inserted = 0;
+    let updated = 0;
+    let errors = 0;
+
+    if (fullSync) {
+      // FULL SYNC MODE: Delete existing and insert fresh
+      console.log(`[FPL-SYNC] Full sync mode - clearing existing ${leagueType} data...`);
+
+      // For standard/premium leagues, delete by league_type
+      // For H2H, we update h2h fields on existing players (don't delete)
+      if (!isH2H) {
+        const { error: deleteError } = await supabaseServer
+          .from("premier_league_25_26")
+          .delete()
+          .eq("league_type", config.dbLeagueType);
+
+        if (deleteError) {
+          console.error("[FPL-SYNC] Delete error:", deleteError);
+          return NextResponse.json({ error: "Failed to clear existing data" }, { status: 500 });
+        }
       }
 
-      // Sync to database
-      const syncResult = await syncPlayersToDatabase(
-        leagueType as LeagueType,
-        fplPlayers
-      );
+      // Insert all players from FPL
+      for (const fplPlayer of fplPlayers) {
+        const { firstName, lastName } = splitName(fplPlayer.player_name);
+
+        if (isH2H) {
+          // For H2H: Update existing players with H2H data
+          const { error } = await supabaseServer
+            .from("premier_league_25_26")
+            .update({
+              h2h_category: config.h2hCategory,
+              h2h_points: fplPlayer.total,
+              h2h_stats: {
+                w: fplPlayer.matches_won || 0,
+                d: fplPlayer.matches_drawn || 0,
+                l: fplPlayer.matches_lost || 0,
+              },
+              points: fplPlayer.points_for || 0, // Overall points from H2H API
+              last_points_update: new Date().toISOString(),
+            })
+            .eq("team_name", fplPlayer.entry_name);
+
+          if (error) {
+            errors++;
+          } else {
+            updated++;
+          }
+        } else {
+          // For standard/premium: Insert new records
+          const { error } = await supabaseServer
+            .from("premier_league_25_26")
+            .insert({
+              first_name: firstName,
+              last_name: lastName,
+              team_name: fplPlayer.entry_name,
+              league_type: config.dbLeagueType,
+              points: fplPlayer.total,
+              email: `fpl_${fplPlayer.entry}@imported.com`, // Placeholder email
+              last_points_update: new Date().toISOString(),
+            });
+
+          if (error) {
+            console.error(`[FPL-SYNC] Insert error for ${fplPlayer.player_name}:`, error);
+            errors++;
+          } else {
+            inserted++;
+          }
+        }
+      }
 
       return NextResponse.json({
         success: true,
+        mode: "full_sync",
         leagueType,
         leagueId: config.id,
-        leagueApiType: config.type,
-        timestamp: new Date().toISOString(),
-        ...syncResult,
-        message: `Successfully processed ${leagueType} league: ${syncResult.updatedPlayers} players updated`,
+        totalFPLPlayers: fplPlayers.length,
+        inserted,
+        updated,
+        errors,
+        message: `Full sync complete: ${inserted} inserted, ${updated} updated, ${errors} errors`,
+        players: fplPlayers.map((p) => ({
+          rank: p.rank,
+          name: p.player_name,
+          team: p.entry_name,
+          points: isH2H ? p.points_for : p.total,
+          h2hPoints: isH2H ? p.total : undefined,
+        })),
       });
-    } catch (error) {
-      console.error(`[FPL-SYNC] Error processing league ${leagueType}:`, error);
-      return NextResponse.json(
-        {
-          error: `Failed to process ${leagueType} league`,
-          details: error instanceof Error ? error.message : "Unknown error",
-          leagueType,
-          leagueId: config.id,
-        },
-        { status: 500 }
-      );
+    } else {
+      // UPDATE MODE: Match by team name and update points
+      console.log(`[FPL-SYNC] Update mode - matching players by team name...`);
+
+      const notFound: string[] = [];
+      const matched: Array<{ fpl: string; db: string; oldPts: number; newPts: number }> = [];
+
+      for (const fplPlayer of fplPlayers) {
+        const newPoints = isH2H ? (fplPlayer.points_for || 0) : fplPlayer.total;
+
+        // Try to find by team name
+        const { data: existing } = await supabaseServer
+          .from("premier_league_25_26")
+          .select("id, first_name, last_name, team_name, points")
+          .eq("team_name", fplPlayer.entry_name)
+          .is("deleted_at", null)
+          .limit(1)
+          .single();
+
+        if (existing) {
+          const updateData: any = {
+            points: newPoints,
+            last_points_update: new Date().toISOString(),
+          };
+
+          if (isH2H) {
+            updateData.h2h_category = config.h2hCategory;
+            updateData.h2h_points = fplPlayer.total;
+            updateData.h2h_stats = {
+              w: fplPlayer.matches_won || 0,
+              d: fplPlayer.matches_drawn || 0,
+              l: fplPlayer.matches_lost || 0,
+            };
+          }
+
+          const { error } = await supabaseServer
+            .from("premier_league_25_26")
+            .update(updateData)
+            .eq("id", existing.id);
+
+          if (error) {
+            errors++;
+          } else {
+            updated++;
+            matched.push({
+              fpl: `${fplPlayer.player_name} (${fplPlayer.entry_name})`,
+              db: `${existing.first_name} ${existing.last_name} (${existing.team_name})`,
+              oldPts: existing.points,
+              newPts: newPoints,
+            });
+          }
+        } else {
+          notFound.push(`${fplPlayer.player_name} (${fplPlayer.entry_name}) - ${newPoints} pts`);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        mode: "update",
+        leagueType,
+        leagueId: config.id,
+        totalFPLPlayers: fplPlayers.length,
+        updated,
+        errors,
+        notFoundCount: notFound.length,
+        notFound,
+        matched,
+        message: `Update complete: ${updated} updated, ${notFound.length} not found`,
+      });
     }
   } catch (error) {
     console.error("[FPL-SYNC] Fatal error:", error);
     return NextResponse.json(
-      {
-        error: "FPL sync failed",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Sync failed", details: error instanceof Error ? error.message : "Unknown" },
       { status: 500 }
     );
   }

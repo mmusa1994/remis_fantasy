@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 
 // Interface for clean Premier League player
 interface PremierLeaguePlayer {
@@ -57,7 +57,7 @@ export async function GET() {
     }
 
     // Fetch all players from clean Premier League table
-    const { data: players, error } = await supabase
+    const { data: players, error } = await supabaseServer
       .from("premier_league_25_26")
       .select("*")
       .is("deleted_at", null)
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update player in clean table
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServer
       .from("premier_league_25_26")
       .update(updateData)
       .eq("id", playerId)
@@ -309,7 +309,7 @@ export async function PATCH(request: NextRequest) {
       let findError = null;
 
       // First try: find by team name (more reliable)
-      const { data: playersByTeam, error: teamError } = await supabase
+      const { data: playersByTeam, error: teamError } = await supabaseServer
         .from("premier_league_25_26")
         .select("id, team_name, first_name, last_name")
         .eq("team_name", update.team)
@@ -320,7 +320,7 @@ export async function PATCH(request: NextRequest) {
         players = playersByTeam;
       } else {
         // Second try: find by manager name (first_name and last_name)
-        const { data: playersByName, error: nameError } = await supabase
+        const { data: playersByName, error: nameError } = await supabaseServer
           .from("premier_league_25_26")
           .select("id, team_name, first_name, last_name")
           .eq("first_name", firstName)
@@ -333,7 +333,7 @@ export async function PATCH(request: NextRequest) {
         } else {
           // Third try: find by partial name matching (case insensitive)
           const { data: playersByPartialName, error: partialError } =
-            await supabase
+            await supabaseServer
               .from("premier_league_25_26")
               .select("id, team_name, first_name, last_name")
               .ilike("first_name", `%${firstName}%`)
@@ -387,7 +387,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       // Update player
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseServer
         .from("premier_league_25_26")
         .update(updateData)
         .eq("id", players[0].id);

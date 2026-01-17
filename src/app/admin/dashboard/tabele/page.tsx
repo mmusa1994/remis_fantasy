@@ -103,6 +103,7 @@ export default function AdminTablesCleanPage() {
     type: "success" | "error";
   }>({ show: false, message: "", type: "success" });
   const [updatingFromFPL, setUpdatingFromFPL] = useState<string | null>(null);
+  const [fullSyncing, setFullSyncing] = useState<string | null>(null);
   const [showLoginRedirect, setShowLoginRedirect] = useState(false);
 
   // Load tables when component mounts and session is ready
@@ -342,12 +343,10 @@ export default function AdminTablesCleanPage() {
         result.totalFPLPlayers ||
         result.updatedPlayers + (result.notFoundPlayers?.length || 0);
       let message = `${result.leagueType.toUpperCase()} league updated! Updated ${
-        result.updatedPlayers || 0
-      } out of ${totalInLeague} players in the league.`;
-      if (result.notFoundPlayers && result.notFoundPlayers.length > 0) {
-        message += ` Not found in database: ${result.notFoundPlayers
-          .slice(0, 3)
-          .join(", ")}${result.notFoundPlayers.length > 3 ? "..." : ""}`;
+        result.updated || result.updatedPlayers || 0
+      } out of ${totalInLeague} players.`;
+      if (result.notFound && result.notFound.length > 0) {
+        message += ` Not found: ${result.notFound.length}`;
       }
 
       setToast({
@@ -364,6 +363,49 @@ export default function AdminTablesCleanPage() {
       });
     } finally {
       setUpdatingFromFPL(null);
+    }
+  };
+
+  // FULL SYNC - Briše postojeće i uvozi sve s FPL-a
+  const fullSyncFromFPL = async (leagueType: string) => {
+    if (!confirm(`FULL SYNC za ${leagueType.toUpperCase()}?\n\nOvo će OBRISATI sve postojeće podatke za ovu ligu i uvesti sve igrače direktno s FPL-a.\n\nNastavi?`)) {
+      return;
+    }
+
+    try {
+      setFullSyncing(leagueType);
+
+      const response = await fetch("/api/admin/update-from-fpl", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ leagueType, fullSync: true }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to full sync from FPL");
+      }
+
+      const result = await response.json();
+
+      // Refresh the tables after sync
+      await loadTables();
+
+      setToast({
+        show: true,
+        message: `FULL SYNC ${leagueType.toUpperCase()}: ${result.inserted || 0} inserted, ${result.updated || 0} updated, ${result.errors || 0} errors`,
+        type: result.errors > 0 ? "error" : "success",
+      });
+    } catch (error) {
+      console.error("Error full syncing from FPL:", error);
+      setToast({
+        show: true,
+        message: `Error full syncing ${leagueType} league`,
+        type: "error",
+      });
+    } finally {
+      setFullSyncing(null);
     }
   };
 
@@ -866,47 +908,72 @@ export default function AdminTablesCleanPage() {
                     </button>
                   </div>
 
-                  {/* FPL Sync Buttons */}
-                  <div className="flex items-center gap-1 sm:gap-2 p-2 sm:p-0 bg-gray-50 sm:bg-transparent rounded-lg sm:rounded-none sm:ml-2 sm:pl-3 sm:border-l sm:border-gray-300">
-                    <span className="text-xs text-gray-600 font-medium whitespace-nowrap">
-                      FPL:
-                    </span>
-                    <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0">
-                      {fplLeagues.map((league) => (
-                        <button
-                          key={league.key}
-                          onClick={() => updateFromFPL(league.key)}
-                          disabled={updatingFromFPL === league.key || loading}
-                          className={`relative flex items-center gap-1 px-2 py-1 rounded font-medium transition-all duration-150 whitespace-nowrap touch-manipulation ${
-                            updatingFromFPL === league.key
-                              ? "bg-gray-300 cursor-not-allowed text-gray-500"
-                              : `bg-${league.color}-100 hover:bg-${league.color}-200 text-${league.color}-700 hover:text-${league.color}-800 active:bg-${league.color}-300`
-                          } text-xs border border-${
-                            league.color
-                          }-200 hover:border-${league.color}-300`}
-                          title={`Ažuriraj ${league.name} ligu (ID: ${league.id})`}
-                          aria-label={`Ažuriraj ${league.name} ligu`}
-                        >
-                          <RefreshCw
-                            className={`w-3 h-3 flex-shrink-0 ${
+                  {/* FPL Sync Section */}
+                  <div className="flex flex-col gap-2 p-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 sm:ml-2">
+                    {/* Update Row */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-600 font-semibold w-16">
+                        Update:
+                      </span>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {fplLeagues.map((league) => (
+                          <button
+                            key={league.key}
+                            onClick={() => updateFromFPL(league.key)}
+                            disabled={updatingFromFPL === league.key || fullSyncing !== null || loading}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all duration-150 text-xs ${
                               updatingFromFPL === league.key
-                                ? "animate-spin"
-                                : ""
+                                ? "bg-gray-300 cursor-not-allowed text-gray-500"
+                                : league.color === "yellow"
+                                ? "bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border border-yellow-300"
+                                : league.color === "blue"
+                                ? "bg-blue-100 hover:bg-blue-200 text-blue-800 border border-blue-300"
+                                : "bg-red-100 hover:bg-red-200 text-red-800 border border-red-300"
                             }`}
-                          />
-                          <span className="font-semibold">
-                            {updatingFromFPL === league.key
-                              ? "..."
-                              : league.name}
-                          </span>
-                          {updatingFromFPL !== league.key && (
-                            <div
-                              className="w-1.5 h-1.5 bg-green-500 rounded-full opacity-60 flex-shrink-0"
-                              aria-hidden="true"
-                            ></div>
-                          )}
-                        </button>
-                      ))}
+                            title={`Update ${league.name}`}
+                          >
+                            <RefreshCw
+                              className={`w-3.5 h-3.5 ${
+                                updatingFromFPL === league.key ? "animate-spin" : ""
+                              }`}
+                            />
+                            <span>{updatingFromFPL === league.key ? "..." : league.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Full Sync Row */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-amber-700 font-bold w-16">
+                        Full Sync:
+                      </span>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {fplLeagues.map((league) => (
+                          <button
+                            key={`full-${league.key}`}
+                            onClick={() => fullSyncFromFPL(league.key)}
+                            disabled={fullSyncing === league.key || updatingFromFPL !== null || loading}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all duration-150 text-xs ring-2 ring-amber-400 ring-offset-1 ${
+                              fullSyncing === league.key
+                                ? "bg-gray-400 cursor-not-allowed text-white"
+                                : league.color === "yellow"
+                                ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                                : league.color === "blue"
+                                ? "bg-blue-500 hover:bg-blue-600 text-white"
+                                : "bg-red-500 hover:bg-red-600 text-white"
+                            }`}
+                            title={`FULL SYNC ${league.name} - Briše i uvozi sve s FPL-a`}
+                          >
+                            <Upload
+                              className={`w-3.5 h-3.5 ${
+                                fullSyncing === league.key ? "animate-pulse" : ""
+                              }`}
+                            />
+                            <span>{fullSyncing === league.key ? "..." : league.name}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
