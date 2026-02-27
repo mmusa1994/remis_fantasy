@@ -28,7 +28,6 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
 }: AdvancedStatisticsProps) {
   const { t } = useTranslation("fpl");
   const [historyData, setHistoryData] = React.useState<any>(null);
-  // const [historyLoading, setHistoryLoading] = React.useState(false);
   const [captainHistory, setCaptainHistory] = React.useState<any[]>([]);
   const [captainLoading, setCaptainLoading] = React.useState(false);
   const [allPlayers, setAllPlayers] = React.useState<any[]>([]);
@@ -38,7 +37,6 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
     const fetchHistory = async () => {
       if (!managerId) return;
 
-      // setHistoryLoading(true);
       try {
         const response = await fetch(`/api/fpl/entry/${managerId}/history`);
         if (response.ok) {
@@ -50,7 +48,7 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
       } catch (error) {
         console.error("Failed to fetch manager history:", error);
       } finally {
-        // setHistoryLoading(false);
+        // fetch complete
       }
     };
 

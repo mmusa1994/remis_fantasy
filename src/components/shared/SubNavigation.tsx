@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState, useRef, useEffect } from "react";
-// import { useTranslation } from "react-i18next";
 import {
   BarChart3,
   Activity,
@@ -18,22 +17,6 @@ import {
 import { TbHome2, TbPresentationAnalytics } from "react-icons/tb";
 import { GrDiamond } from "react-icons/gr";
 import { FaMagic } from "react-icons/fa";
-// Unused - commenting out to avoid ESLint warning
-// const ChevronDownIcon = ({ className }: { className?: string }) => (
-//   <svg
-//     className={className}
-//     fill="none"
-//     viewBox="0 0 24 24"
-//     strokeWidth={1.5}
-//     stroke="currentColor"
-//   >
-//     <path
-//       strokeLinecap="round"
-//       strokeLinejoin="round"
-//       d="m19.5 8.25-7.5 7.5-7.5-7.5"
-//     />
-//   </svg>
-// );
 
 interface NavItem {
   name: string;

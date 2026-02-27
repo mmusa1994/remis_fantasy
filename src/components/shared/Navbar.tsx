@@ -28,17 +28,17 @@ const getNavItems = (t: any): NavItem[] => [
   { name: t("home", "Home"), href: "/", icon: Home },
   {
     name: t("premierLeague", "Premier League"),
-    href: "/premier-league/tabele",
+    href: "/premier-league/tables",
     icon: SiPremierleague,
   },
   {
     name: t("championsLeague", "Champions League"),
-    href: "/champions-league/tabele",
+    href: "/champions-league/tables",
     icon: PiSoccerBall,
   },
   {
     name: t("f1Fantasy", "F1 Fantasy"),
-    href: "/f1-fantasy/tabele",
+    href: "/f1-fantasy/tables",
     icon: GiF1Car,
   },
 ];
@@ -511,7 +511,7 @@ const Navbar = React.memo(function Navbar() {
                   >
                     {/* Dynamic background on hover - purple tint */}
                     <motion.div
-                      className={`absolute inset-0 minimal-radius backdrop-blur-sm ${
+                      className={`absolute inset-0 rounded-lg backdrop-blur-sm ${
                         theme === "light"
                           ? "bg-red-800/10 shadow-lg"
                           : "bg-red-700/10"
@@ -523,7 +523,7 @@ const Navbar = React.memo(function Navbar() {
 
                     {/* Subtle inner glow - purple */}
                     <motion.div
-                      className="absolute inset-0 minimal-radius bg-gradient-to-r from-transparent via-red-800/5 to-transparent"
+                      className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-red-800/5 to-transparent"
                       initial={{ opacity: 0 }}
                       whileHover={{ opacity: 1 }}
                       transition={{ duration: 0.4, delay: 0.1 }}
@@ -577,7 +577,7 @@ const Navbar = React.memo(function Navbar() {
 
                     {/* Corner accents */}
                     <motion.div
-                      className={`absolute top-0 left-0 w-1 h-1 minimal-radius ${
+                      className={`absolute top-0 left-0 w-1 h-1 rounded-lg ${
                         theme === "light" ? "bg-black" : "bg-white"
                       }`}
                       initial={{ scale: 0, opacity: 0 }}
@@ -585,7 +585,7 @@ const Navbar = React.memo(function Navbar() {
                       transition={{ duration: 0.2, delay: 0.2 }}
                     />
                     <motion.div
-                      className={`absolute top-0 right-0 w-1 h-1 minimal-radius ${
+                      className={`absolute top-0 right-0 w-1 h-1 rounded-lg ${
                         theme === "light" ? "bg-black" : "bg-white"
                       }`}
                       initial={{ scale: 0, opacity: 0 }}
@@ -593,7 +593,7 @@ const Navbar = React.memo(function Navbar() {
                       transition={{ duration: 0.2, delay: 0.25 }}
                     />
                     <motion.div
-                      className={`absolute bottom-0 left-0 w-1 h-1 minimal-radius ${
+                      className={`absolute bottom-0 left-0 w-1 h-1 rounded-lg ${
                         theme === "light" ? "bg-black" : "bg-white"
                       }`}
                       initial={{ scale: 0, opacity: 0 }}
@@ -601,7 +601,7 @@ const Navbar = React.memo(function Navbar() {
                       transition={{ duration: 0.2, delay: 0.3 }}
                     />
                     <motion.div
-                      className={`absolute bottom-0 right-0 w-1 h-1 minimal-radius ${
+                      className={`absolute bottom-0 right-0 w-1 h-1 rounded-lg ${
                         theme === "light" ? "bg-black" : "bg-white"
                       }`}
                       initial={{ scale: 0, opacity: 0 }}
@@ -630,7 +630,7 @@ const Navbar = React.memo(function Navbar() {
             <UserMenu />
             <motion.button
               onClick={() => setIsOpen(!isOpen)}
-              className="relative text-theme-text-secondary hover:text-theme-foreground transition-colors duration-300 p-3 minimal-radius backdrop-blur-sm bg-theme-secondary border border-theme-border theme-transition"
+              className="relative text-theme-text-secondary hover:text-theme-foreground transition-colors duration-300 p-3 rounded-lg backdrop-blur-sm bg-theme-secondary border border-theme-border theme-transition"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -707,7 +707,7 @@ const Navbar = React.memo(function Navbar() {
                   <Link key={item.name} href={item.href}>
                     <motion.div
                       onClick={handleMobileNavClick}
-                      className={`w-full text-center font-semibold py-4 px-4 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative ${
+                      className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative ${
                         isActive
                           ? "text-theme-foreground border-theme-foreground"
                           : "text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground"
@@ -744,7 +744,7 @@ const Navbar = React.memo(function Navbar() {
                   <Link href="/profile">
                     <motion.div
                       onClick={handleMobileNavClick}
-                      className={`w-full text-center font-semibold py-4 px-4 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground`}
+                      className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{
                         opacity: isOpen ? 1 : 0,
@@ -767,7 +767,7 @@ const Navbar = React.memo(function Navbar() {
                   <Link href="/billing-plans">
                     <motion.div
                       onClick={handleMobileNavClick}
-                      className={`w-full text-center font-semibold py-4 px-4 minimal-radius bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground`}
+                      className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{
                         opacity: isOpen ? 1 : 0,
@@ -792,7 +792,7 @@ const Navbar = React.memo(function Navbar() {
                       safeLogout("/");
                       handleMobileNavClick();
                     }}
-                    className={`w-full text-center font-semibold py-4 px-4 minimal-radius bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo cursor-pointer relative text-red-500 hover:text-red-400`}
+                    className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo cursor-pointer relative text-red-500 hover:text-red-400`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{
                       opacity: isOpen ? 1 : 0,

@@ -14,7 +14,7 @@ export default function PremierLeagueLayout({
     { 
       name: t("tables"), 
       subtitle: t("miniLeagues"),
-      href: "/premier-league/tabele",
+      href: "/premier-league/tables",
       icon: "BarChart3",
       showOnMobile: true 
     },
@@ -39,7 +39,7 @@ export default function PremierLeagueLayout({
     },
     {
       name: t("prices"),
-      href: "/premier-league/cijene",
+      href: "/premier-league/prices",
       icon: "DollarSign",
       showOnMobile: false
     },
@@ -57,19 +57,19 @@ export default function PremierLeagueLayout({
     },
     { 
       name: t("prizes"), 
-      href: "/premier-league/nagrade",
+      href: "/premier-league/prizes",
       icon: "Trophy",
       showOnMobile: false 
     },
     {
       name: t("registration"),
-      href: "/premier-league/registracija",
+      href: "/premier-league/registration",
       icon: "UserPlus",
       showOnMobile: false
     },
     { 
       name: t("gallery"), 
-      href: "/premier-league/galerija",
+      href: "/premier-league/gallery",
       icon: "Camera",
       showOnMobile: false 
     },

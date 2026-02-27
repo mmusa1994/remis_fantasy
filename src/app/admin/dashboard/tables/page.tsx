@@ -122,7 +122,7 @@ export default function AdminTablesCleanPage() {
 
   const loadTables = async () => {
     try {
-      const response = await fetch("/api/admin/tabele");
+      const response = await fetch("/api/admin/tables");
       const data: PremierLeagueResponse = await response.json();
       setTables(data.tables);
       setLastUpdated(data.lastUpdated);
@@ -144,7 +144,7 @@ export default function AdminTablesCleanPage() {
     updates: { points?: number; h2h_category?: "h2h" | "h2h2" | null }
   ) => {
     try {
-      const response = await fetch("/api/admin/tabele", {
+      const response = await fetch("/api/admin/tables", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -176,7 +176,7 @@ export default function AdminTablesCleanPage() {
 
   const handleSaveFreePlayer = async (playerId: string) => {
     try {
-      const response = await fetch("/api/admin/tabele", {
+      const response = await fetch("/api/admin/tables", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -237,7 +237,7 @@ export default function AdminTablesCleanPage() {
 
       setBulkUpdating(true);
 
-      const response = await fetch("/api/admin/tabele", {
+      const response = await fetch("/api/admin/tables", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -645,7 +645,7 @@ export default function AdminTablesCleanPage() {
                   )}
                 </button>
                 <a
-                  href="/champions-league/tabele"
+                  href="/champions-league/tables"
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -754,7 +754,7 @@ export default function AdminTablesCleanPage() {
                   )}
                 </button>
                 <a
-                  href="/f1/tabelepage"
+                  href="/f1-fantasy/tables"
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                   target="_blank"
                 >

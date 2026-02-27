@@ -628,7 +628,7 @@ export default function ChampionsLeagueAdmin() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link
-              href="/champions-league/tabele"
+              href="/champions-league/tables"
               target="_blank"
               className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg hover:from-blue-100 hover:to-purple-100 transition-all duration-200"
             >

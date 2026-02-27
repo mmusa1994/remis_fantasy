@@ -32,28 +32,28 @@
     {
       "title": "Registracija",
       "description": "Registruj se za Champions League",
-      "href": "/champions-league/registracija",
+      "href": "/champions-league/registration",
       "icon": "PenTool",
       "color": "blue"
     },
     {
       "title": "Nagrade",
       "description": "Pogledaj sve dostupne nagrade",
-      "href": "/champions-league/nagrade",
+      "href": "/champions-league/prizes",
       "icon": "Trophy",
       "color": "yellow"
     },
     {
       "title": "Galerija",
       "description": "Slike i memorije prethodnih sezona",
-      "href": "/champions-league/galerija",
+      "href": "/champions-league/gallery",
       "icon": "Camera",
       "color": "purple"
     },
     {
       "title": "Tabele",
       "description": "Trenutni rezultati i tabele",
-      "href": "/champions-league/tabele",
+      "href": "/champions-league/tables",
       "icon": "BarChart3",
       "color": "green"
     }
@@ -66,11 +66,11 @@
       "ctaButtons": {
         "primary": {
           "text": "Registruj se sada",
-          "href": "/champions-league/registracija"
+          "href": "/champions-league/registration"
         },
         "secondary": {
           "text": "Pogledaj nagrade",
-          "href": "/champions-league/nagrade"
+          "href": "/champions-league/prizes"
         }
       }
     },

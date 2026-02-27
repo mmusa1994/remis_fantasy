@@ -31,7 +31,7 @@ export async function GET() {
       }),
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Usage API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },

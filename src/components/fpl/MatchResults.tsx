@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -639,7 +637,7 @@ export default function MatchResults({
                                           : ""}
                                       </div>
                                       <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
-                                        {goalData.minutes.join(", ")}'
+                                        {goalData.minutes.join(", ")}&apos;
                                         {goalData.penalties > 0 && (
                                           <span className="ml-2 px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full font-bold">
                                             PEN
@@ -691,7 +689,7 @@ export default function MatchResults({
                                           : ""}
                                       </div>
                                       <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
-                                        {assistData.minutes.join(", ")}'
+                                        {assistData.minutes.join(", ")}&apos;
                                       </div>
                                     </div>
                                   </div>
@@ -792,7 +790,7 @@ export default function MatchResults({
                                           : ""}
                                       </div>
                                       <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
-                                        {goalData.minutes.join(", ")}'
+                                        {goalData.minutes.join(", ")}&apos;
                                         {goalData.penalties > 0 && (
                                           <span className="ml-2 px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full font-bold">
                                             {t("fplLive.penalty")}
@@ -844,7 +842,7 @@ export default function MatchResults({
                                           : ""}
                                       </div>
                                       <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
-                                        {assistData.minutes.join(", ")}'
+                                        {assistData.minutes.join(", ")}&apos;
                                       </div>
                                     </div>
                                   </div>

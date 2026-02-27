@@ -52,7 +52,7 @@ interface Registration {
   deleted_at?: string | null;
 }
 
-type LeagueTab = "premier" | "champions";
+type LeagueTab = "premier" | "champions" | "f1";
 
 interface AdminDashboardTabsProps {
   initialTab?: LeagueTab;
@@ -214,10 +214,11 @@ export default function AdminDashboardTabs({
 
   const fetchRegistrations = async () => {
     try {
-      const tableName = activeTab === "premier" ? "registration_25_26" : "cl_registrations_25_26";
-      const apiEndpoint = activeTab === "premier" 
-        ? "/api/admin/registrations" 
-        : "/api/admin/champions-registrations";
+      const apiEndpoint = activeTab === "premier"
+        ? "/api/admin/registrations"
+        : activeTab === "champions"
+        ? "/api/admin/champions-registrations"
+        : "/api/admin/f1-registrations";
 
       const response = await fetch(apiEndpoint);
 
@@ -363,9 +364,11 @@ export default function AdminDashboardTabs({
     if (!editingRecord) return;
 
     try {
-      const apiEndpoint = activeTab === "premier" 
-        ? "/api/admin/registrations" 
-        : "/api/admin/champions-registrations";
+      const apiEndpoint = activeTab === "premier"
+        ? "/api/admin/registrations"
+        : activeTab === "champions"
+        ? "/api/admin/champions-registrations"
+        : "/api/admin/f1-registrations";
 
       const response = await fetch(apiEndpoint, {
         method: "PUT",
@@ -422,9 +425,11 @@ export default function AdminDashboardTabs({
     }
 
     try {
-      const apiEndpoint = activeTab === "premier" 
-        ? `/api/admin/registrations?id=${id}` 
-        : `/api/admin/champions-registrations?id=${id}`;
+      const apiEndpoint = activeTab === "premier"
+        ? `/api/admin/registrations?id=${id}`
+        : activeTab === "champions"
+        ? `/api/admin/champions-registrations?id=${id}`
+        : `/api/admin/f1-registrations?id=${id}`;
 
       const response = await fetch(apiEndpoint, {
         method: "DELETE",
@@ -598,7 +603,7 @@ export default function AdminDashboardTabs({
                 <span className="hidden sm:inline">Visitors</span>
               </Link>
               <Link
-                href="/admin/dashboard/tabele"
+                href="/admin/dashboard/tables"
                 className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
                 title="Upravljanje tabelama"
               >
@@ -647,6 +652,19 @@ export default function AdminDashboardTabs({
               <div className="flex items-center gap-2">
                 <Crown className="w-5 h-5 text-blue-500" />
                 Champions League
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab("f1")}
+              className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === "f1"
+                  ? "border-red-500 text-red-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-red-500" />
+                F1 Fantasy
               </div>
             </button>
           </nav>
@@ -1251,9 +1269,11 @@ export default function AdminDashboardTabs({
                                 <button
                                   onClick={async () => {
                                     try {
-                                      const apiEndpoint = activeTab === "premier" 
-                                        ? "/api/admin/registrations" 
-                                        : "/api/admin/champions-registrations";
+                                      const apiEndpoint = activeTab === "premier"
+                                        ? "/api/admin/registrations"
+                                        : activeTab === "champions"
+                                        ? "/api/admin/champions-registrations"
+                                        : "/api/admin/f1-registrations";
 
                                       const response = await fetch(
                                         apiEndpoint,
@@ -1336,9 +1356,11 @@ export default function AdminDashboardTabs({
                                 onChange={async (e) => {
                                   const newStatus = e.target.value || null;
                                   try {
-                                    const apiEndpoint = activeTab === "premier" 
-                                      ? "/api/admin/registrations" 
-                                      : "/api/admin/champions-registrations";
+                                    const apiEndpoint = activeTab === "premier"
+                                      ? "/api/admin/registrations"
+                                      : activeTab === "champions"
+                                      ? "/api/admin/champions-registrations"
+                                      : "/api/admin/f1-registrations";
 
                                     const response = await fetch(
                                       apiEndpoint,

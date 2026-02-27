@@ -48,7 +48,7 @@ export async function GET() {
 
     return NextResponse.json({ plans, currentPlanId });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Billing plans API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },

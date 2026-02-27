@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Email verification error:", error);
     return NextResponse.json(
       { error: "Internal server error" },

@@ -17,12 +17,12 @@ export async function GET(request: NextRequest) {
       registrations: registrations || [],
       count: registrations?.length || 0,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Champions League registrations API error:", error);
     return NextResponse.json(
       {
         error: "Failed to fetch Champions League registrations",
-        details: error.message,
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -57,12 +57,12 @@ export async function PUT(request: NextRequest) {
       registration: updatedRegistration,
       message: "Champions League registration updated successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Champions League registration update error:", error);
     return NextResponse.json(
       {
         error: "Failed to update Champions League registration",
-        details: error.message,
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -99,12 +99,12 @@ export async function PATCH(request: NextRequest) {
       registration: updatedRegistration,
       message: `Champions League registration ${field} updated successfully`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Champions League registration field update error:", error);
     return NextResponse.json(
       {
         error: "Failed to update Champions League registration field",
-        details: error.message,
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -136,12 +136,12 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       message: "Champions League registration deleted successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Champions League registration deletion error:", error);
     return NextResponse.json(
       {
         error: "Failed to delete Champions League registration",
-        details: error.message,
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

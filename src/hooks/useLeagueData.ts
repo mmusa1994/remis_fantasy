@@ -109,28 +109,28 @@ export const useLeagueData = (leagueType: string) => {
           {
             title: t("navigation.registration"),
             description: `${t("navigation.register")} ${configData.name}`,
-            href: `${configData.basePath}/registracija`,
+            href: `${configData.basePath}/registration`,
             icon: "PenTool",
             color: configData.primaryColor,
           },
           {
             title: t("navigation.prizes"),
             description: t("navigation.viewPrizes"),
-            href: `${configData.basePath}/nagrade`,
+            href: `${configData.basePath}/prizes`,
             icon: "Trophy",
             color: "yellow",
           },
           {
             title: t("navigation.gallery"),
             description: t("navigation.viewGallery"),
-            href: `${configData.basePath}/galerija`,
+            href: `${configData.basePath}/gallery`,
             icon: "Camera",
             color: "blue",
           },
           {
             title: t("navigation.tables"),
             description: t("navigation.viewTables"),
-            href: `${configData.basePath}/tabele`,
+            href: `${configData.basePath}/tables`,
             icon: "BarChart3",
             color: "green",
           },
@@ -147,11 +147,11 @@ export const useLeagueData = (leagueType: string) => {
               ctaButtons: {
                 primary: {
                   text: t("navigation.registration"),
-                  href: `${configData.basePath}/registracija`,
+                  href: `${configData.basePath}/registration`,
                 },
                 secondary: {
                   text: t("navigation.prizes"),
-                  href: `${configData.basePath}/nagrade`,
+                  href: `${configData.basePath}/prizes`,
                 },
               },
             },

@@ -218,7 +218,7 @@ export default function Home() {
                   }}
                 >
                   <Link
-                    href={league.href + "/tabele"}
+                    href={league.href + "/tables"}
                     className=" flex flex-col h-full"
                   >
                     <div className="mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
@@ -462,7 +462,7 @@ export default function Home() {
                   : "bg-gradient-to-br from-blue-100/70 via-white/80 to-blue-200/70 border-blue-300 hover:border-blue-400"
               } shadow-2xl hover:shadow-blue-500/25`}
             >
-              <Link href="/premier-league/tabele">
+              <Link href="/premier-league/tables">
                 <div className="text-center">
                   <div className="mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
                     <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -498,7 +498,7 @@ export default function Home() {
                   : "bg-gradient-to-br from-green-100/70 via-white/80 to-green-200/70 border-green-300 hover:border-green-400"
               } shadow-2xl hover:shadow-green-500/25`}
             >
-              <Link href="/premier-league/cijene">
+              <Link href="/premier-league/prices">
                 <div className="text-center">
                   <div className="mb-6 group-hover:scale-110 transition-transform duration-300 flex justify-center">
                     <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">

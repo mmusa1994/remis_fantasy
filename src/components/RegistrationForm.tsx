@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useState, useRef } from "react";
@@ -378,8 +377,8 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
         <section className="relative w-full bg-theme-background theme-transition">
           {/* Optimized Background Effects */}
           <div className="absolute inset-0">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-900/10 via-gray-800/5 to-red-800/10 minimal-radius blur-3xl animate-pulse-gentle gpu-accelerated"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-l from-gray-900/10 via-red-900/5 to-gray-800/10 minimal-radius blur-3xl animate-float-slow gpu-accelerated"></div>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-900/10 via-gray-800/5 to-red-800/10 rounded-lg blur-3xl animate-pulse-gentle gpu-accelerated"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-l from-gray-900/10 via-red-900/5 to-gray-800/10 rounded-lg blur-3xl animate-float-slow gpu-accelerated"></div>
           </div>
 
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-6xl">
@@ -422,7 +421,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                             }
                             onFocus={() => setFocusedField("first_name")}
                             onBlur={() => setFocusedField(null)}
-                            className={`input-theme relative w-full px-3 xs:px-4 py-3 xs:py-4 border-2 minimal-radius peer transition-all duration-500 ease-in-out focus-ring text-sm xs:text-base ${
+                            className={`input-theme relative w-full px-3 xs:px-4 py-3 xs:py-4 border-2 rounded-lg peer transition-all duration-500 ease-in-out focus-ring text-sm xs:text-base ${
                               errors.first_name
                                 ? "border-red-400"
                                 : focusedField === "first_name"
@@ -462,7 +461,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                             }
                             onFocus={() => setFocusedField("last_name")}
                             onBlur={() => setFocusedField(null)}
-                            className={`input-theme relative w-full px-3 xs:px-4 py-3 xs:py-4 border-2 minimal-radius peer transition-all duration-500 ease-in-out focus-ring text-sm xs:text-base ${
+                            className={`input-theme relative w-full px-3 xs:px-4 py-3 xs:py-4 border-2 rounded-lg peer transition-all duration-500 ease-in-out focus-ring text-sm xs:text-base ${
                               errors.last_name
                                 ? "border-red-400"
                                 : focusedField === "last_name"
@@ -512,7 +511,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                             }
                             onFocus={() => setFocusedField("email")}
                             onBlur={() => setFocusedField(null)}
-                            className={`input-theme relative w-full px-3 xs:px-4 py-3 xs:py-4 border-2 minimal-radius peer transition-all duration-500 ease-in-out focus-ring text-sm xs:text-base ${
+                            className={`input-theme relative w-full px-3 xs:px-4 py-3 xs:py-4 border-2 rounded-lg peer transition-all duration-500 ease-in-out focus-ring text-sm xs:text-base ${
                               errors.email
                                 ? "border-red-400"
                                 : focusedField === "email"
@@ -551,7 +550,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                             }
                             onFocus={() => setFocusedField("phone")}
                             onBlur={() => setFocusedField(null)}
-                            className={`input-theme relative w-full px-3 xs:px-4 py-3 xs:py-4 border-2 minimal-radius peer transition-all duration-500 ease-in-out focus-ring text-sm xs:text-base ${
+                            className={`input-theme relative w-full px-3 xs:px-4 py-3 xs:py-4 border-2 rounded-lg peer transition-all duration-500 ease-in-out focus-ring text-sm xs:text-base ${
                               errors.phone
                                 ? "border-red-400"
                                 : focusedField === "phone"
@@ -599,7 +598,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                           }
                           onFocus={() => setFocusedField("team_name")}
                           onBlur={() => setFocusedField(null)}
-                          className={`input-theme relative w-full px-4 py-4 border-2 minimal-radius peer transition-all duration-500 ease-in-out focus-ring ${
+                          className={`input-theme relative w-full px-4 py-4 border-2 rounded-lg peer transition-all duration-500 ease-in-out focus-ring ${
                             errors.team_name
                               ? "border-red-400"
                               : focusedField === "team_name"
@@ -644,7 +643,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                       onChange={(e) =>
                         setFormData({ ...formData, notes: e.target.value })
                       }
-                      className="w-full px-3 xs:px-4 py-3 md:px-6 md:py-4 minimal-radius bg-theme-background backdrop-blur-sm border-2 border-theme-border focus:border-blue-400 focus:outline-none text-xs xs:text-sm md:text-base theme-transition placeholder:text-gray-400 font-medium font-inter resize-vertical focus-ring"
+                      className="w-full px-3 xs:px-4 py-3 md:px-6 md:py-4 rounded-lg bg-theme-background backdrop-blur-sm border-2 border-theme-border focus:border-blue-400 focus:outline-none text-xs xs:text-sm md:text-base theme-transition placeholder:text-gray-400 font-medium font-inter resize-vertical focus-ring"
                       placeholder={t("registration.notesPlaceholder")}
                       rows={4}
                       maxLength={1000}
@@ -660,11 +659,11 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                   <button
                     type="submit"
                     disabled={true} // Disabled for now
-                    className="w-full bg-gradient-to-r from-blue-600 via-slate-700 to-gray-800 hover:from-blue-700 hover:via-slate-800 hover:to-gray-900 text-white font-black py-3 xs:py-4 md:py-6 px-6 xs:px-8 md:px-12 minimal-radius text-base xs:text-lg md:text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-2xl border-2 border-blue-500/50 font-russo hover-scale hover-glow focus-ring gpu-accelerated"
+                    className="w-full bg-gradient-to-r from-blue-600 via-slate-700 to-gray-800 hover:from-blue-700 hover:via-slate-800 hover:to-gray-900 text-white font-black py-3 xs:py-4 md:py-6 px-6 xs:px-8 md:px-12 rounded-lg text-base xs:text-lg md:text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-2xl border-2 border-blue-500/50 font-russo hover-scale hover-glow focus-ring gpu-accelerated"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center gap-3 animate-fade-in">
-                        <div className="w-6 h-6 border-3 border-white border-t-transparent minimal-radius animate-rotate-slow"></div>
+                        <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-lg animate-rotate-slow"></div>
                         <span>{t("registration.loading")}</span>
                       </div>
                     ) : (
@@ -675,14 +674,14 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
 
                     {/* Animated Background */}
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-gray-800/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-gray-800 minimal-radius opacity-30 blur animate-rotate-slow" />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-gray-800 rounded-lg opacity-30 blur animate-rotate-slow" />
                   </button>
 
                   {/* Success/Error Messages */}
                   {submitStatus === "success" && (
-                    <div className="mt-6 xs:mt-8 bg-gradient-to-r from-green-500/30 via-emerald-500/30 to-teal-500/30 border border-green-500/60 minimal-radius p-3 xs:p-4 md:p-6 backdrop-blur-xl shadow-lg animate-scale-in">
+                    <div className="mt-6 xs:mt-8 bg-gradient-to-r from-green-500/30 via-emerald-500/30 to-teal-500/30 border border-green-500/60 rounded-lg p-3 xs:p-4 md:p-6 backdrop-blur-xl shadow-lg animate-scale-in">
                       <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
-                        <div className="w-12 h-12 xs:w-14 xs:h-14 md:w-12 md:h-12 bg-gradient-to-r from-green-400 to-emerald-500 minimal-radius flex items-center justify-center shadow-2xl animate-scale-in animate-delay-200">
+                        <div className="w-12 h-12 xs:w-14 xs:h-14 md:w-12 md:h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-2xl animate-scale-in animate-delay-200">
                           <CheckCircle className="w-6 h-6 xs:w-7 xs:h-7 md:w-6 md:h-6 text-white" />
                         </div>
                         <div className="space-y-2">
@@ -715,9 +714,9 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                   )}
 
                   {submitStatus === "error" && (
-                    <div className="mt-6 xs:mt-8 bg-gradient-to-r from-red-500/20 via-rose-500/20 to-pink-500/20 border border-red-400/50 minimal-radius p-4 xs:p-6 backdrop-blur-xl animate-scale-in">
+                    <div className="mt-6 xs:mt-8 bg-gradient-to-r from-red-500/20 via-rose-500/20 to-pink-500/20 border border-red-400/50 rounded-lg p-4 xs:p-6 backdrop-blur-xl animate-scale-in">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 xs:w-12 xs:h-12 bg-red-500 minimal-radius flex items-center justify-center">
+                        <div className="w-10 h-10 xs:w-12 xs:h-12 bg-red-500 rounded-lg flex items-center justify-center">
                           <AlertCircle className="w-5 h-5 xs:w-6 xs:h-6 text-white" />
                         </div>
                         <div>

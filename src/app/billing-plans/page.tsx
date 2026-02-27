@@ -92,11 +92,13 @@ export default function BillingPlansPage() {
 
       const data = await response.json();
 
-      if (data.success) {
-        // Payment successful - refresh page or redirect
+      if (data.success && data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else if (data.success) {
+        // Free plan activated
         await fetchPlans();
       } else {
-        // Show the logged message for now
         alert(
           data.message ||
             t(
@@ -436,17 +438,17 @@ export default function BillingPlansPage() {
                     {/* Action Button */}
                     <button
                       onClick={() => handleSelectPlan(plan.id)}
-                      disabled={isCurrentPlan || isProcessing || !isFree}
+                      disabled={isCurrentPlan || isProcessing}
                       className={`w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center ${
                         isCurrentPlan
                           ? "bg-green-500 text-white cursor-not-allowed"
                           : isProcessing
                           ? "bg-gray-400 text-white cursor-not-allowed"
-                          : !isFree
-                          ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                           : isPro
                           ? "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white transform hover:scale-105 shadow-lg"
-                          : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white transform hover:scale-105 shadow-lg"
+                          : isFree
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white transform hover:scale-105 shadow-lg"
+                          : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white transform hover:scale-105 shadow-lg"
                       }`}
                     >
                       {isProcessing ? (
@@ -464,7 +466,7 @@ export default function BillingPlansPage() {
                           <FaCreditCard className="w-4 h-4 mr-2" />
                           {isFree
                             ? t("getStarted", "Get Started")
-                            : t("comingSoon", "Coming Soon")}
+                            : t("subscribe", "Subscribe")}
                         </>
                       )}
                     </button>

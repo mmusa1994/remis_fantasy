@@ -11,10 +11,10 @@ export default function F1FantasyLayout({
   const { t } = useTranslation();
 
   const f1FantasyNavItems = [
-    { name: t("navigation.tables"), href: "/f1-fantasy/tabele" },
-    { name: t("navigation.prizes"), href: "/f1-fantasy/nagrade" },
-    { name: t("navigation.registration"), href: "/f1-fantasy/registracija" },
-    { name: t("navigation.gallery"), href: "/f1-fantasy/galerija" },
+    { name: t("navigation.tables"), href: "/f1-fantasy/tables" },
+    { name: t("navigation.prizes"), href: "/f1-fantasy/prizes" },
+    { name: t("navigation.registration"), href: "/f1-fantasy/registration" },
+    { name: t("navigation.gallery"), href: "/f1-fantasy/gallery" },
   ];
 
   return (

@@ -27,10 +27,10 @@ export async function POST() {
     return NextResponse.json({
       message: "Usage reset successfully for user: " + session.user.id,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Reset usage API error:", error);
     return NextResponse.json(
-      { error: "Internal server error", details: error.message },
+      { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

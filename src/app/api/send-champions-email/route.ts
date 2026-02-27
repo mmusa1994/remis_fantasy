@@ -296,12 +296,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ error: "Invalid email type" }, { status: 400 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Champions League email sending error:", error);
     return NextResponse.json(
       {
         error: "Failed to send email",
-        details: error.message,
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

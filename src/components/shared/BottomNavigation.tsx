@@ -31,19 +31,19 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
     },
     {
       name: t("premierLeague", "Premier League"),
-      href: "/premier-league/tabele",
+      href: "/premier-league/tables",
       icon: SiPremierleague,
       id: "premier",
     },
     {
       name: t("championsLeague", "Champions League"),
-      href: "/champions-league/tabele",
+      href: "/champions-league/tables",
       icon: PiSoccerBall,
       id: "champions",
     },
     {
       name: t("f1Fantasy", "F1 Fantasy"),
-      href: "/f1-fantasy/tabele",
+      href: "/f1-fantasy/tables",
       icon: GiF1Car,
       id: "f1",
     },

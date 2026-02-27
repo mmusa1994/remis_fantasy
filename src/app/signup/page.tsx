@@ -235,7 +235,7 @@ export default function SignUpPage() {
             {t("signupSuccessRedirect")}
           </p>
           <Link
-            href="/premier-league/tabele"
+            href="/premier-league/tables"
             className="bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white px-6 py-2 rounded-lg transition-all duration-300"
           >
             {t("goToDashboard")}

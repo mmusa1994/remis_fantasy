@@ -79,7 +79,7 @@ export default function RemisFplLanding() {
               </p>
             </div>
           </Link>
-          <Link href="/premier-league/tabele" className="group">
+          <Link href="/premier-league/tables" className="group">
             <div className="p-5 rounded-xl border border-blue-400/40 hover:bg-blue-500/10 transition">
               <h2 className="font-bold text-xl text-theme-foreground">
                 Mini lige i tabele

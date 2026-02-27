@@ -11,13 +11,13 @@ export default function ChampionsLeagueLayout({
   const { t } = useTranslation();
 
   const championsLeagueNavItems = [
-    { name: t("navigation.tables"), href: "/champions-league/tabele" },
-    { name: t("navigation.prizes"), href: "/champions-league/nagrade" },
+    { name: t("navigation.tables"), href: "/champions-league/tables" },
+    { name: t("navigation.prizes"), href: "/champions-league/prizes" },
     {
       name: t("navigation.registration"),
-      href: "/champions-league/registracija",
+      href: "/champions-league/registration",
     },
-    { name: t("navigation.gallery"), href: "/champions-league/galerija" },
+    { name: t("navigation.gallery"), href: "/champions-league/gallery" },
   ];
 
   return (

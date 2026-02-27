@@ -58,7 +58,7 @@ export async function GET() {
 
     return NextResponse.json(profile);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Profile API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
@@ -138,7 +138,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json(profile);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Profile update API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },

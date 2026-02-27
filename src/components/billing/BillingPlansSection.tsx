@@ -83,7 +83,9 @@ export default function BillingPlansSection() {
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else if (data.success) {
         await fetchPlans();
       } else {
         alert(

@@ -304,20 +304,6 @@ body {
     border-color 0.3s ease;
 }
 
-/* Global border-radius override - MINIMAL RADIUS */
-* {
-  border-radius: 0px !important;
-}
-
-/* Specific overrides for components that need even less radius */
-.minimal-radius {
-  border-radius: 1px !important;
-}
-
-.no-radius {
-  border-radius: 0px !important;
-}
-
 /* Force circular shape for logos */
 .force-circle {
   border-radius: 50% !important;

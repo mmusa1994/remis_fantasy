@@ -32,28 +32,28 @@
     {
       "title": "Registracija",
       "description": "Registruj se za sve dostupne lige",
-      "href": "/premier-league/registracija",
+      "href": "/premier-league/registration",
       "icon": "PenTool",
       "color": "purple"
     },
     {
       "title": "Nagrade",
       "description": "Pogledaj sve dostupne nagrade",
-      "href": "/premier-league/nagrade",
+      "href": "/premier-league/prizes",
       "icon": "Trophy",
       "color": "yellow"
     },
     {
       "title": "Galerija",
       "description": "Slike i memorije prethodnih sezona",
-      "href": "/premier-league/galerija",
+      "href": "/premier-league/gallery",
       "icon": "Camera",
       "color": "blue"
     },
     {
       "title": "Tabele",
       "description": "Trenutni rezultati i tabele",
-      "href": "/premier-league/tabele",
+      "href": "/premier-league/tables",
       "icon": "BarChart3",
       "color": "green"
     }
@@ -66,11 +66,11 @@
       "ctaButtons": {
         "primary": {
           "text": "Registruj se sada",
-          "href": "/premier-league/registracija"
+          "href": "/premier-league/registration"
         },
         "secondary": {
           "text": "Pogledaj nagrade",
-          "href": "/premier-league/nagrade"
+          "href": "/premier-league/prizes"
         }
       }
     },

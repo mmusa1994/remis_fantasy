@@ -11,7 +11,7 @@ const ThemeToggle = React.memo(function ThemeToggle() {
   return (
     <motion.button
       onClick={toggleTheme}
-      className="relative p-2 minimal-radius bg-theme-secondary border border-theme-border text-theme-foreground hover:bg-theme-accent transition-all duration-300"
+      className="relative p-2 rounded-lg bg-theme-secondary border border-theme-border text-theme-foreground hover:bg-theme-accent transition-all duration-300"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       aria-label={

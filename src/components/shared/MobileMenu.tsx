@@ -80,30 +80,30 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
   };
 
   const premierLeagueItems = [
-    { name: t("tables"), href: "/premier-league/tabele" },
+    { name: t("tables"), href: "/premier-league/tables" },
     { name: t("fplLive"), href: "/premier-league/fpl-live" },
     { name: t("fantasyCommand"), href: "/premier-league/team-planner" },
     { name: t("aiTeamAnalysis"), href: "/premier-league/ai-team-analysis" },
-    { name: t("prices"), href: "/premier-league/cijene" },
+    { name: t("prices"), href: "/premier-league/prices" },
     { name: t("bestDifferentials"), href: "/premier-league/best-differentials" },
     { name: t("teamNews"), href: "/premier-league/team-news" },
-    { name: t("prizes"), href: "/premier-league/nagrade" },
-    { name: t("registration"), href: "/premier-league/registracija" },
-    { name: t("gallery"), href: "/premier-league/galerija" },
+    { name: t("prizes"), href: "/premier-league/prizes" },
+    { name: t("registration"), href: "/premier-league/registration" },
+    { name: t("gallery"), href: "/premier-league/gallery" },
   ];
 
   const championsLeagueItems = [
-    { name: t("tables"), href: "/champions-league/tabele" },
-    { name: t("prizes"), href: "/champions-league/nagrade" },
-    { name: t("registration"), href: "/champions-league/registracija" },
-    { name: t("gallery"), href: "/champions-league/galerija" },
+    { name: t("tables"), href: "/champions-league/tables" },
+    { name: t("prizes"), href: "/champions-league/prizes" },
+    { name: t("registration"), href: "/champions-league/registration" },
+    { name: t("gallery"), href: "/champions-league/gallery" },
   ];
 
   const f1FantasyItems = [
-    { name: t("tables"), href: "/f1-fantasy/tabele" },
-    { name: t("prizes"), href: "/f1-fantasy/nagrade" },
-    { name: t("registration"), href: "/f1-fantasy/registracija" },
-    { name: t("gallery"), href: "/f1-fantasy/galerija" },
+    { name: t("tables"), href: "/f1-fantasy/tables" },
+    { name: t("prizes"), href: "/f1-fantasy/prizes" },
+    { name: t("registration"), href: "/f1-fantasy/registration" },
+    { name: t("gallery"), href: "/f1-fantasy/gallery" },
   ];
 
   return (
