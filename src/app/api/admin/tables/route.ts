@@ -4,8 +4,15 @@ import { authOptions } from "@/lib/auth-config";
 import { supabaseServer } from "@/lib/supabase-server";
 
 // SEPARATE TABLES:
-// - premier_league_25_26: Premium, Standard, Free (classic scoring)
-// - h2h_league_25_26: H2H, H2H2 (head-to-head scoring)
+// - premier_league_25_26 / premier_league_26_27: Premium, Standard, Free (classic scoring)
+// - h2h_league_25_26 / h2h_league_26_27: H2H, H2H2 (head-to-head scoring)
+
+type Season = "25_26" | "26_27";
+
+const TABLE_MAP: Record<Season, { classic: string; h2h: string }> = {
+  "25_26": { classic: "premier_league_25_26", h2h: "h2h_league_25_26" },
+  "26_27": { classic: "premier_league_26_27", h2h: "h2h_league_26_27" },
+};
 
 // Interface for classic Premier League player
 interface PremierLeaguePlayer {
@@ -66,7 +73,7 @@ interface LeagueTables {
 }
 
 // GET - Fetch premier league tables from SEPARATE tables
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -74,9 +81,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch classic leagues from premier_league_25_26
+    const { searchParams } = new URL(request.url);
+    const season = (searchParams.get("season") || "25_26") as Season;
+    const tables_map = TABLE_MAP[season] || TABLE_MAP["25_26"];
+
+    // Fetch classic leagues
     const { data: classicPlayers, error: classicError } = await supabaseServer
-      .from("premier_league_25_26")
+      .from(tables_map.classic)
       .select("*")
       .is("deleted_at", null)
       .order("points", { ascending: false });
@@ -89,9 +100,9 @@ export async function GET() {
       );
     }
 
-    // Fetch H2H leagues from h2h_league_25_26
+    // Fetch H2H leagues
     const { data: h2hPlayers, error: h2hError } = await supabaseServer
-      .from("h2h_league_25_26")
+      .from(tables_map.h2h)
       .select("*")
       .is("deleted_at", null)
       .order("h2h_points", { ascending: false });
@@ -226,6 +237,7 @@ export async function POST(request: NextRequest) {
       teamName,
       league_type,
       isH2HTable = false, // Flag to indicate which table to update
+      season = "25_26",
     } = await request.json();
 
     if (!playerId) {
@@ -236,7 +248,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine which table to update
-    const tableName = isH2HTable ? "h2h_league_25_26" : "premier_league_25_26";
+    const tables_map = TABLE_MAP[season as Season] || TABLE_MAP["25_26"];
+    const tableName = isH2HTable ? tables_map.h2h : tables_map.classic;
 
     // Prepare update data
     const updateData: Record<string, unknown> = {};
@@ -323,7 +336,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { updates, isH2HTable = false } = await request.json();
+    const { updates, isH2HTable = false, season = "25_26" } = await request.json();
 
     if (!updates || !Array.isArray(updates)) {
       return NextResponse.json(
@@ -332,7 +345,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const tableName = isH2HTable ? "h2h_league_25_26" : "premier_league_25_26";
+    const tables_map = TABLE_MAP[season as Season] || TABLE_MAP["25_26"];
+    const tableName = isH2HTable ? tables_map.h2h : tables_map.classic;
 
     let updatedCount = 0;
     const notFoundPlayers: string[] = [];

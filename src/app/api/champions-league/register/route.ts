@@ -9,10 +9,7 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       notes,
-      card_number,
-      card_exp_month,
-      card_exp_year,
-      card_cvc,
+      payment_method_id,
     } = await req.json();
 
     // Validate required fields
@@ -31,35 +28,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate card data
-    if (!card_number || !card_exp_month || !card_exp_year || !card_cvc) {
+    // Validate payment method ID (created client-side via Stripe Elements)
+    if (!payment_method_id || typeof payment_method_id !== "string" || !payment_method_id.startsWith("pm_")) {
       return NextResponse.json(
-        { error: "Card details are required" },
+        { error: "Valid payment method is required" },
         { status: 400 }
       );
     }
 
-    // Create PaymentMethod from card data
-    const paymentMethod = await stripe.paymentMethods.create({
-      type: "card",
-      card: {
-        number: card_number,
-        exp_month: parseInt(card_exp_month, 10),
-        exp_year: 2000 + parseInt(card_exp_year, 10),
-        cvc: card_cvc,
-      },
-      billing_details: {
-        name: `${first_name.trim()} ${last_name.trim()}`,
-        email: email.trim(),
-        phone: phone.trim(),
-      },
-    });
-
-    // Create PaymentIntent - fixed €15
+    // Create PaymentIntent with the client-created PaymentMethod
     const paymentIntent = await stripe.paymentIntents.create({
       amount: 1500, // €15.00
       currency: "eur",
-      payment_method: paymentMethod.id,
+      payment_method: payment_method_id,
       metadata: {
         type: "cl_registration_26_27",
         first_name: first_name.trim(),

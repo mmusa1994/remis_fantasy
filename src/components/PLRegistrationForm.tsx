@@ -5,6 +5,10 @@ import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
   useStripe,
+  useElements,
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
 } from "@stripe/react-stripe-js";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
@@ -43,6 +47,7 @@ function PLRegistrationFormInner() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const stripe = useStripe();
+  const elements = useElements();
   const router = useRouter();
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
@@ -62,10 +67,21 @@ function PLRegistrationFormInner() {
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [cardFocused, setCardFocused] = useState<string | null>(null);
 
-  // Custom card data
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvc, setCardCvc] = useState("");
+  // Stripe Elements state (PCI compliant - card data never touches our code)
+  const [cardBrand, setCardBrand] = useState<string>("unknown");
+  const [cardComplete, setCardComplete] = useState({ number: false, expiry: false, cvc: false });
+
+  // Stripe Element style (matches existing theme)
+  const stripeElementStyle = {
+    base: {
+      fontSize: "14px",
+      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      letterSpacing: "0.05em",
+      color: theme === "dark" ? "#e5e7eb" : "#1f2937",
+      "::placeholder": { color: theme === "dark" ? "#6b7280" : "#9ca3af" },
+    },
+    invalid: { color: "#f87171" },
+  };
 
   // Calculate total price based on selections
   const tierPrice = (mainLeague === "standard" ? 20 : mainLeague === "premium" ? 50 : 0) + (h2hSelected ? 15 : 0);
@@ -76,76 +92,6 @@ function PLRegistrationFormInner() {
     if (mainLeague) return mainLeague;
     if (h2hSelected) return "h2h_only";
     return "";
-  };
-
-  // Detect card brand from number
-  const detectBrand = (num: string): string => {
-    if (/^4/.test(num)) return "visa";
-    if (/^5[1-5]/.test(num) || /^2[2-7]/.test(num)) return "mastercard";
-    if (/^3[47]/.test(num)) return "amex";
-    if (/^6(?:011|5)/.test(num)) return "discover";
-    return "unknown";
-  };
-
-  const cardBrand = detectBrand(cardNumber);
-  const isAmex = cardBrand === "amex";
-  const maxCardLength = isAmex ? 15 : 16;
-  const maxCvcLength = isAmex ? 4 : 3;
-
-  // Format card number for display: "4242 4242 4242 4242"
-  const formatDisplayNumber = (num: string) => {
-    if (!num) return "\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022";
-    const padded = num.padEnd(maxCardLength, "\u2022");
-    if (isAmex) {
-      return `${padded.slice(0, 4)} ${padded.slice(4, 10)} ${padded.slice(10, 15)}`;
-    }
-    return `${padded.slice(0, 4)} ${padded.slice(4, 8)} ${padded.slice(8, 12)} ${padded.slice(12, 16)}`;
-  };
-
-  // Format card number for input field
-  const formatInputNumber = (num: string) => {
-    if (!num) return "";
-    if (isAmex) {
-      return [num.slice(0, 4), num.slice(4, 10), num.slice(10, 15)].filter(Boolean).join(" ");
-    }
-    return (num.match(/.{1,4}/g) || []).join(" ");
-  };
-
-  // Format expiry for display
-  const formatDisplayExpiry = (exp: string) => {
-    if (!exp) return "MM/YY";
-    const mm = exp.slice(0, 2);
-    const yy = exp.slice(2, 4);
-    if (exp.length <= 2) return `${mm.padEnd(2, "\u2022")}/${"\u2022\u2022"}`;
-    return `${mm}/${yy.padEnd(2, "\u2022")}`;
-  };
-
-  // Format expiry for input
-  const formatInputExpiry = (exp: string) => {
-    if (!exp) return "";
-    if (exp.length <= 2) return exp;
-    return `${exp.slice(0, 2)}/${exp.slice(2, 4)}`;
-  };
-
-  // Handle card number input
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, maxCardLength);
-    setCardNumber(raw);
-    if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
-  };
-
-  // Handle expiry input
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, 4);
-    setCardExpiry(raw);
-    if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
-  };
-
-  // Handle CVC input
-  const handleCvcChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, maxCvcLength);
-    setCardCvc(raw);
-    if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
   };
 
   const [paymentMode, setPaymentMode] = useState<"card" | "cash">("card");
@@ -190,18 +136,8 @@ function PLRegistrationFormInner() {
       }
     }
     if (paymentMode === "card") {
-      if (cardNumber.length < maxCardLength) {
+      if (!cardComplete.number || !cardComplete.expiry || !cardComplete.cvc) {
         newErrors.payment = t("common:validation.cardDataRequired");
-      } else if (cardExpiry.length < 4) {
-        newErrors.payment = t("common:validation.cardDataRequired");
-      } else {
-        const expMonth = parseInt(cardExpiry.slice(0, 2));
-        if (expMonth < 1 || expMonth > 12) {
-          newErrors.payment = "Neispravan mjesec isteka kartice";
-        }
-      }
-      if (cardCvc.length < 3) {
-        newErrors.payment = newErrors.payment || t("common:validation.cardDataRequired");
       }
     } else {
       if (!cashDeliveryDate) {
@@ -251,10 +187,27 @@ function PLRegistrationFormInner() {
         return;
       }
 
-      // Card flow
-      const expMonth = cardExpiry.slice(0, 2);
-      const expYear = cardExpiry.slice(2, 4);
+      // PCI-compliant card flow: create PaymentMethod client-side via Stripe Elements
+      if (!stripe || !elements) return;
 
+      const cardNumberElement = elements.getElement(CardNumberElement);
+      if (!cardNumberElement) return;
+
+      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+        type: "card",
+        card: cardNumberElement,
+        billing_details: {
+          name: `${formData.first_name.trim()} ${formData.last_name.trim()}`,
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+        },
+      });
+
+      if (pmError) {
+        throw new Error(pmError.message || t("common:validation.registrationError"));
+      }
+
+      // Send only the PaymentMethod ID to backend (never raw card data)
       const response = await fetch("/api/premier-league/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -264,10 +217,7 @@ function PLRegistrationFormInner() {
           email: formData.email.trim(),
           phone: formData.phone.trim(),
           notes: formData.notes.trim(),
-          card_number: cardNumber,
-          card_exp_month: expMonth,
-          card_exp_year: expYear,
-          card_cvc: cardCvc,
+          payment_method_id: paymentMethod.id,
           league_tier: getLeagueTier(),
         }),
       });
@@ -276,8 +226,6 @@ function PLRegistrationFormInner() {
       if (!response.ok) {
         throw new Error(data.error || t("common:validation.registrationError"));
       }
-
-      if (!stripe) return;
 
       const { error: stripeError, paymentIntent } =
         await stripe.confirmCardPayment(data.clientSecret);
@@ -329,12 +277,11 @@ function PLRegistrationFormInner() {
         : "floating-label-placeholder transform translate-y-0 scale-100"
     }`;
 
-  const cardFieldClass = (field: string) =>
-    `input-theme w-full px-3.5 py-2.5 border rounded-lg transition-all duration-200 focus-ring text-sm font-mono tracking-wider ${
-      cardFocused === field
-        ? "border-purple-600/40 dark:border-purple-400/40"
-        : "border-gray-200 dark:border-gray-700"
-    }`;
+  const stripeElementClass = `input-theme w-full px-3.5 py-3 border rounded-lg transition-all duration-200 text-sm ${
+    cardFocused
+      ? "border-purple-600/40 dark:border-purple-400/40 ring-1 ring-purple-600/20"
+      : "border-gray-200 dark:border-gray-700"
+  }`;
 
   const CardBrandIcon = () => {
     if (cardBrand === "visa") {
@@ -387,7 +334,7 @@ function PLRegistrationFormInner() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-8 animate-fade-in-up animate-delay-200">
             <div className="flex items-center gap-3 p-3.5 rounded-lg bg-purple-500/[0.03] dark:bg-purple-500/[0.06] border border-purple-500/10 hover:border-purple-500/20 transition-colors">
               <div className="w-9 h-9 rounded-lg bg-purple-500/8 flex items-center justify-center flex-shrink-0">
-                <Trophy className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
+                <Trophy className="w-[18px] h-[18px] text-purple-600 dark:text-purple-400" />
               </div>
               <div>
                 <div className="font-bold text-theme-heading-primary text-sm">Takmičenje za nagrade</div>
@@ -396,7 +343,7 @@ function PLRegistrationFormInner() {
             </div>
             <div className="flex items-center gap-3 p-3.5 rounded-lg bg-purple-500/[0.03] dark:bg-purple-500/[0.06] border border-purple-500/10 hover:border-purple-500/20 transition-colors">
               <div className="w-9 h-9 rounded-lg bg-purple-500/8 flex items-center justify-center flex-shrink-0">
-                <BarChart3 className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
+                <BarChart3 className="w-[18px] h-[18px] text-purple-600 dark:text-purple-400" />
               </div>
               <div>
                 <div className="font-bold text-theme-heading-primary text-sm">Live tabela</div>
@@ -405,7 +352,7 @@ function PLRegistrationFormInner() {
             </div>
             <div className="flex items-center gap-3 p-3.5 rounded-lg bg-purple-500/[0.03] dark:bg-purple-500/[0.06] border border-purple-500/10 hover:border-purple-500/20 transition-colors">
               <div className="w-9 h-9 rounded-lg bg-purple-500/8 flex items-center justify-center flex-shrink-0">
-                <Gift className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
+                <Gift className="w-[18px] h-[18px] text-purple-600 dark:text-purple-400" />
               </div>
               <div>
                 <div className="font-bold text-theme-heading-primary text-sm">Mjesečne nagrade</div>
@@ -432,7 +379,7 @@ function PLRegistrationFormInner() {
             {/* League Selection */}
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-5.5 h-5.5 rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">1</span>
+                <span className="w-[22px] h-[22px] rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">1</span>
                 Odaberite ligu
               </h3>
 
@@ -551,7 +498,7 @@ function PLRegistrationFormInner() {
             {/* Personal Info */}
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-5.5 h-5.5 rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">2</span>
+                <span className="w-[22px] h-[22px] rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">2</span>
                 Lični podaci
               </h3>
 
@@ -607,7 +554,7 @@ function PLRegistrationFormInner() {
             {/* Contact Info */}
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-5.5 h-5.5 rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">3</span>
+                <span className="w-[22px] h-[22px] rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">3</span>
                 Kontakt informacije
               </h3>
 
@@ -766,7 +713,7 @@ function PLRegistrationFormInner() {
             {paymentMode === "card" && (
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-5.5 h-5.5 rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">4</span>
+                <span className="w-[22px] h-[22px] rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">4</span>
                 Podaci o kartici
                 <div className="ml-auto flex items-center gap-1">
                   <div className="px-1.5 py-0.5 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700">
@@ -858,12 +805,10 @@ function PLRegistrationFormInner() {
                         </div>
                       </div>
 
-                      {/* Card number */}
-                      <div className={`font-mono text-[14px] xs:text-[15px] sm:text-[17px] tracking-[0.15em] sm:tracking-[0.18em] font-medium whitespace-nowrap transition-all duration-300 rounded-md px-2 py-1 -mx-2 ${
-                        cardFocused === "cardNumber" ? "bg-white/[0.06]" : ""
-                      }`} style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
-                        <span className={cardNumber ? "text-white/90" : `transition-colors duration-300 ${cardFocused === "cardNumber" ? "text-white/30" : "text-white/15"}`}>
-                          {formatDisplayNumber(cardNumber)}
+                      {/* Card number placeholder */}
+                      <div className="font-mono text-[14px] xs:text-[15px] sm:text-[17px] tracking-[0.15em] sm:tracking-[0.18em] font-medium whitespace-nowrap rounded-md px-2 py-1 -mx-2" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
+                        <span className="text-white/15">
+                          {"\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022"}
                         </span>
                       </div>
 
@@ -879,14 +824,10 @@ function PLRegistrationFormInner() {
                               : "YOUR NAME"}
                           </div>
                         </div>
-                        <div className={`text-right transition-all duration-300 rounded-md px-2 py-1 -mr-2 ${
-                          cardFocused === "cardExpiry" ? "bg-white/[0.06]" : ""
-                        }`}>
+                        <div className="text-right rounded-md px-2 py-1 -mr-2">
                           <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-white/30 mb-1 font-medium">Expires</div>
                           <div className="text-[12px] sm:text-[13px] font-semibold font-mono tracking-wider">
-                            <span className={cardExpiry ? "text-white/80" : `transition-colors duration-300 ${cardFocused === "cardExpiry" ? "text-white/30" : "text-white/15"}`}>
-                              {formatDisplayExpiry(cardExpiry)}
-                            </span>
+                            <span className="text-white/15">MM/YY</span>
                           </div>
                         </div>
                       </div>
@@ -922,14 +863,8 @@ function PLRegistrationFormInner() {
                             <div className="w-full h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
                           </div>
                         </div>
-                        <div className={`w-14 sm:w-16 h-9 sm:h-10 rounded-md flex items-center justify-center font-mono text-sm font-bold transition-all duration-300 ${
-                          cardFocused === "cardCvc"
-                            ? "bg-white/20 text-white border border-white/40 shadow-lg shadow-white/5"
-                            : "bg-white/8 text-white/40 border border-white/10"
-                        }`}>
-                          {cardCvc ? (
-                            <span className="text-white/90">{cardCvc}</span>
-                          ) : "CVC"}
+                        <div className="w-14 sm:w-16 h-9 sm:h-10 rounded-md flex items-center justify-center font-mono text-sm font-bold bg-white/8 text-white/40 border border-white/10">
+                          CVC
                         </div>
                       </div>
 
@@ -948,68 +883,66 @@ function PLRegistrationFormInner() {
                 </div>
               </div>
 
-              {/* Card Inputs */}
+              {/* Card Inputs - Stripe Elements (PCI Compliant) */}
               <div className="rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30 p-4 space-y-3">
                 {/* Card Number */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label htmlFor="pl_card_number" className="text-xs font-semibold text-theme-text-secondary flex items-center gap-1.5">
+                    <label className="text-xs font-semibold text-theme-text-secondary flex items-center gap-1.5">
                       <CreditCard className="w-3.5 h-3.5" />
                       Broj kartice
                     </label>
                     {cardBrand !== "unknown" && <CardBrandIcon />}
                   </div>
-                  <input
-                    id="pl_card_number"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="cc-number"
-                    placeholder="0000 0000 0000 0000"
-                    value={formatInputNumber(cardNumber)}
-                    onChange={handleCardNumberChange}
-                    onFocus={() => setCardFocused("cardNumber")}
-                    onBlur={() => setCardFocused(null)}
-                    className={cardFieldClass("cardNumber")}
-                  />
+                  <div className={stripeElementClass}>
+                    <CardNumberElement
+                      options={{ style: stripeElementStyle, showIcon: true }}
+                      onFocus={() => setCardFocused("cardNumber")}
+                      onBlur={() => setCardFocused(null)}
+                      onChange={(e) => {
+                        setCardBrand(e.brand || "unknown");
+                        setCardComplete((p) => ({ ...p, number: e.complete }));
+                        if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   {/* Expiry */}
                   <div>
-                    <label htmlFor="pl_card_expiry" className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
+                    <label className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
                       Datum isteka
                     </label>
-                    <input
-                      id="pl_card_expiry"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="cc-exp"
-                      placeholder="MM/YY"
-                      value={formatInputExpiry(cardExpiry)}
-                      onChange={handleExpiryChange}
-                      onFocus={() => setCardFocused("cardExpiry")}
-                      onBlur={() => setCardFocused(null)}
-                      className={cardFieldClass("cardExpiry")}
-                    />
+                    <div className={stripeElementClass}>
+                      <CardExpiryElement
+                        options={{ style: stripeElementStyle }}
+                        onFocus={() => setCardFocused("cardExpiry")}
+                        onBlur={() => setCardFocused(null)}
+                        onChange={(e) => {
+                          setCardComplete((p) => ({ ...p, expiry: e.complete }));
+                          if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* CVC */}
                   <div>
-                    <label htmlFor="pl_card_cvc" className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
+                    <label className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
                       CVC
                     </label>
-                    <input
-                      id="pl_card_cvc"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="cc-csc"
-                      placeholder={isAmex ? "0000" : "000"}
-                      value={cardCvc}
-                      onChange={handleCvcChange}
-                      onFocus={() => setCardFocused("cardCvc")}
-                      onBlur={() => setCardFocused(null)}
-                      className={cardFieldClass("cardCvc")}
-                    />
+                    <div className={stripeElementClass}>
+                      <CardCvcElement
+                        options={{ style: stripeElementStyle }}
+                        onFocus={() => setCardFocused("cardCvc")}
+                        onBlur={() => setCardFocused(null)}
+                        onChange={(e) => {
+                          setCardComplete((p) => ({ ...p, cvc: e.complete }));
+                          if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -1040,7 +973,7 @@ function PLRegistrationFormInner() {
             {paymentMode === "cash" && (
               <div className="mb-6">
                 <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                  <span className="w-5.5 h-5.5 rounded-md bg-green-600/10 flex items-center justify-center text-[11px] font-black text-green-600 dark:text-green-400">4</span>
+                  <span className="w-[22px] h-[22px] rounded-md bg-green-600/10 flex items-center justify-center text-[11px] font-black text-green-600 dark:text-green-400">4</span>
                   Gotovinska uplata
                 </h3>
 
@@ -1184,12 +1117,12 @@ function PLRegistrationFormInner() {
                 <span className="flex items-center justify-center gap-2.5">
                   {paymentMode === "card" ? (
                     <>
-                      <Lock className="w-4.5 h-4.5" />
+                      <Lock className="w-[18px] h-[18px]" />
                       Plati &euro;{tierPrice} i registruj se
                     </>
                   ) : (
                     <>
-                      <CheckCircle className="w-4.5 h-4.5" />
+                      <CheckCircle className="w-[18px] h-[18px]" />
                       Registruj se
                     </>
                   )}

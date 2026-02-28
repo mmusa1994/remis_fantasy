@@ -18,7 +18,11 @@ import {
   X,
   Sun,
   Moon,
+  Image as ImageIcon,
+  Trophy,
 } from "lucide-react";
+import AdminGalleryManager from "@/components/admin/AdminGalleryManager";
+import AdminChampionsManager from "@/components/admin/AdminChampionsManager";
 import Toast from "@/components/shared/Toast";
 import LoadingCard from "@/components/shared/LoadingCard";
 import { useTranslation } from "react-i18next";
@@ -82,9 +86,13 @@ export default function AdminTablesCleanPage() {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const { status } = useSession();
+  const [season, setSeason] = useState<"25_26" | "26_27">("25_26");
   const [mainTab, setMainTab] = useState<"premier" | "champions" | "f1">(
     "premier"
   );
+  const [activeSection, setActiveSection] = useState<
+    "tables" | "gallery" | "champions-wall"
+  >("tables");
   const [tables, setTables] = useState<LeagueTables | null>(null);
   const [selectedLeague, setSelectedLeague] =
     useState<keyof LeagueTables>("premiumLeague");
@@ -125,11 +133,11 @@ export default function AdminTablesCleanPage() {
     if (status === "authenticated" && mainTab === "premier") {
       loadTables();
     }
-  }, [status, mainTab]);
+  }, [status, mainTab, season]);
 
   const loadTables = async () => {
     try {
-      const response = await fetch("/api/admin/tables");
+      const response = await fetch(`/api/admin/tables?season=${season}`);
       const data: PremierLeagueResponse = await response.json();
       setTables(data.tables);
       setLastUpdated(data.lastUpdated);
@@ -156,7 +164,7 @@ export default function AdminTablesCleanPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ playerId, ...updates }),
+        body: JSON.stringify({ playerId, ...updates, season }),
       });
 
       if (!response.ok) {
@@ -195,6 +203,7 @@ export default function AdminTablesCleanPage() {
           teamName: freeEditData.teamName,
           points: parseInt(freeEditData.points) || 0,
           league_type: "free", // Explicitly set league_type for Free Liga
+          season,
         }),
       });
 
@@ -249,7 +258,7 @@ export default function AdminTablesCleanPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatesData),
+        body: JSON.stringify({ ...updatesData, season }),
       });
 
       if (!response.ok) {
@@ -334,7 +343,7 @@ export default function AdminTablesCleanPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ leagueType }),
+        body: JSON.stringify({ leagueType, season }),
       });
 
       if (!response.ok) {
@@ -387,7 +396,7 @@ export default function AdminTablesCleanPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ leagueType, fullSync: true }),
+        body: JSON.stringify({ leagueType, fullSync: true, season }),
       });
 
       if (!response.ok) {
@@ -565,29 +574,123 @@ export default function AdminTablesCleanPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Top-level Tabs */}
-        <div className={`rounded-md p-2 mb-6 inline-flex gap-2 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
-          {[
-            { key: "premier", label: "Premier League" },
-            { key: "champions", label: "Champions League" },
-            { key: "f1", label: "F1" },
-          ].map((t) => (
+        {/* Top-level League Tabs */}
+        <div className={`mb-6 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+          <nav className="-mb-px flex">
             <button
-              key={t.key}
-              onClick={() => setMainTab(t.key as any)}
-              className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
-                mainTab === (t.key as any)
-                  ? "bg-amber-600 text-white"
-                  : isDark ? "text-gray-400 hover:bg-gray-800" : "text-gray-700 hover:bg-gray-100"
+              onClick={() => { setMainTab("premier"); setActiveSection("tables"); }}
+              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
+                mainTab === "premier"
+                  ? "border-purple-500 text-purple-600 dark:text-purple-400"
+                  : isDark ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              {t.label}
+              <div className="flex items-center gap-2">
+                <Image src="/images/logos/pl-logo.png" alt="Premier League" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+                  opacity: mainTab === "premier" ? 1 : 0.5,
+                  filter: mainTab === "premier"
+                    ? "brightness(0) saturate(100%) invert(25%) sepia(80%) saturate(4000%) hue-rotate(260deg) brightness(95%)"
+                    : isDark ? "brightness(0) invert(1) opacity(0.5)" : "brightness(0) opacity(0.5)"
+                }} />
+                Premier League
+              </div>
             </button>
-          ))}
+            <button
+              onClick={() => { setMainTab("champions"); setActiveSection("tables"); }}
+              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
+                mainTab === "champions"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : isDark ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Image src="/images/logos/cl-logo.png" alt="Champions League" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+                  opacity: mainTab === "champions" ? 1 : 0.5,
+                  filter: mainTab === "champions"
+                    ? "brightness(0) saturate(100%) invert(35%) sepia(80%) saturate(3000%) hue-rotate(200deg) brightness(95%)"
+                    : isDark ? "brightness(0) invert(1) opacity(0.5)" : "brightness(0) opacity(0.5)"
+                }} />
+                Champions League
+              </div>
+            </button>
+            <button
+              onClick={() => { setMainTab("f1"); setActiveSection("tables"); }}
+              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
+                mainTab === "f1"
+                  ? "border-red-500 text-red-600 dark:text-red-400"
+                  : isDark ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Image src="/images/logos/f1.png" alt="F1 Fantasy" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+                  opacity: mainTab === "f1" ? 1 : 0.5,
+                  filter: mainTab === "f1"
+                    ? "brightness(0) saturate(100%) invert(20%) sepia(80%) saturate(5000%) hue-rotate(350deg) brightness(95%)"
+                    : isDark ? "brightness(0) invert(1) opacity(0.5)" : "brightness(0) opacity(0.5)"
+                }} />
+                F1 Fantasy
+              </div>
+            </button>
+          </nav>
         </div>
 
+        {/* Sub-section Tabs */}
+        <div className={`mb-6 rounded-md p-1 inline-flex gap-1 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-gray-100 border-gray-200"}`}>
+          <button
+            onClick={() => setActiveSection("tables")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              activeSection === "tables"
+                ? "bg-amber-600 text-white shadow-sm"
+                : isDark ? "text-gray-400 hover:bg-gray-800" : "text-gray-600 hover:bg-white"
+            }`}
+          >
+            <Server className="w-3.5 h-3.5" />
+            Tabele
+          </button>
+          <button
+            onClick={() => setActiveSection("gallery")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              activeSection === "gallery"
+                ? "bg-amber-600 text-white shadow-sm"
+                : isDark ? "text-gray-400 hover:bg-gray-800" : "text-gray-600 hover:bg-white"
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+            Galerija
+          </button>
+          <button
+            onClick={() => setActiveSection("champions-wall")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              activeSection === "champions-wall"
+                ? "bg-amber-600 text-white shadow-sm"
+                : isDark ? "text-gray-400 hover:bg-gray-800" : "text-gray-600 hover:bg-white"
+            }`}
+          >
+            <Trophy className="w-3.5 h-3.5" />
+            Zid Šampiona
+          </button>
+        </div>
+
+        {/* Gallery Manager */}
+        {activeSection === "gallery" && (
+          <AdminGalleryManager
+            league={mainTab === "premier" ? "pl" : mainTab === "champions" ? "cl" : "f1"}
+            isDark={isDark}
+            onToast={(message, type) => setToast({ show: true, message, type })}
+          />
+        )}
+
+        {/* Champions Wall Manager */}
+        {activeSection === "champions-wall" && (
+          <AdminChampionsManager
+            league={mainTab === "premier" ? "pl" : mainTab === "champions" ? "cl" : "f1"}
+            isDark={isDark}
+            onToast={(message, type) => setToast({ show: true, message, type })}
+          />
+        )}
+
         {/* Champions League Bulk Updater */}
-        {mainTab === "champions" && (
+        {activeSection === "tables" && mainTab === "champions" && (
           <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"} rounded-md overflow-hidden border`}>
             <div className={`px-6 py-4 border-b ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
               <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>
@@ -700,7 +803,7 @@ export default function AdminTablesCleanPage() {
         )}
 
         {/* F1 Bulk Updater */}
-        {mainTab === "f1" && (
+        {activeSection === "tables" && mainTab === "f1" && (
           <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"} rounded-md overflow-hidden border`}>
             <div className={`px-6 py-4 border-b ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
               <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>
@@ -864,12 +967,39 @@ export default function AdminTablesCleanPage() {
         )}
 
         {/* Wrap Premier content to toggle visibility via tab */}
-        <div className={mainTab !== "premier" ? "hidden" : "block"}>
+        <div className={mainTab !== "premier" || activeSection !== "tables" ? "hidden" : "block"}>
+          {/* Season Selector Bar */}
+          <div className={`flex items-center gap-3 mb-4 px-4 py-3 rounded-lg border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
+            <span className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Sezona:</span>
+            <div className="flex gap-1">
+              <button
+                onClick={() => { setSeason("25_26"); setLoading(true); }}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  season === "25_26"
+                    ? "bg-amber-600 text-white shadow-sm"
+                    : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-gray-200" : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                }`}
+              >
+                25/26
+              </button>
+              <button
+                onClick={() => { setSeason("26_27"); setLoading(true); }}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  season === "26_27"
+                    ? "bg-amber-600 text-white shadow-sm"
+                    : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-gray-200" : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                }`}
+              >
+                26/27
+              </button>
+            </div>
+          </div>
+
           {/* Control Panel */}
           <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100"} rounded-md mb-4 sm:mb-6 lg:mb-8 border overflow-hidden`}>
             {/* Header Info */}
             <div className={`px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
-              <div className="space-y-3 lg:space-y-0 lg:flex lg:items-center lg:justify-between">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
                     <Server className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
@@ -896,100 +1026,108 @@ export default function AdminTablesCleanPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                  {/* Main Actions */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowBulkUpdate(true)}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-all duration-200 text-xs sm:text-sm font-medium touch-manipulation"
-                      aria-label="Bulk Update"
-                    >
-                      <Upload className="w-4 h-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">Bulk Update</span>
-                      <span className="sm:hidden">Bulk</span>
-                    </button>
-                    <button
-                      onClick={refreshTables}
-                      disabled={loading}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium touch-manipulation"
-                      aria-label={loading ? "Loading tables" : "Refresh tables"}
-                    >
-                      <RefreshCw
-                        className={`w-4 h-4 flex-shrink-0 ${
-                          loading ? "animate-spin" : ""
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowBulkUpdate(true)}
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 text-xs sm:text-sm font-medium"
+                    aria-label="Bulk Update"
+                  >
+                    <Upload className="w-4 h-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">Bulk Update</span>
+                    <span className="sm:hidden">Bulk</span>
+                  </button>
+                  <button
+                    onClick={refreshTables}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium"
+                    aria-label={loading ? "Loading tables" : "Refresh tables"}
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 flex-shrink-0 ${
+                        loading ? "animate-spin" : ""
+                      }`}
+                    />
+                    <span>{loading ? "Loading" : "Refresh"}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* FPL Sync Section */}
+            <div className={`px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <RefreshCw className="w-3.5 h-3.5 text-amber-500" />
+                <h3 className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                  FPL Sync
+                </h3>
+              </div>
+              <div className="space-y-3">
+                {/* Update Row */}
+                <div className="flex items-start sm:items-center gap-3">
+                  <span className={`text-xs font-semibold w-20 shrink-0 pt-1.5 sm:pt-0 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                    Update:
+                  </span>
+                  <div className="flex gap-2 flex-wrap">
+                    {fplLeagues.map((league) => (
+                      <button
+                        key={league.key}
+                        onClick={() => updateFromFPL(league.key)}
+                        disabled={updatingFromFPL === league.key || fullSyncing !== null || loading}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all duration-150 text-xs ${
+                          updatingFromFPL === league.key
+                            ? "bg-gray-300 cursor-not-allowed text-gray-500"
+                            : league.color === "yellow"
+                            ? "bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border border-yellow-300"
+                            : league.color === "blue"
+                            ? "bg-blue-100 hover:bg-blue-200 text-blue-800 border border-blue-300"
+                            : "bg-red-100 hover:bg-red-200 text-red-800 border border-red-300"
                         }`}
-                      />
-                      <span>{loading ? "Loading" : "Refresh"}</span>
-                    </button>
+                        title={`Update ${league.name}`}
+                      >
+                        <RefreshCw
+                          className={`w-3 h-3 ${
+                            updatingFromFPL === league.key ? "animate-spin" : ""
+                          }`}
+                        />
+                        <span>{updatingFromFPL === league.key ? "..." : league.name}</span>
+                      </button>
+                    ))}
                   </div>
+                </div>
 
-                  {/* FPL Sync Section */}
-                  <div className={`flex flex-col gap-2 p-3 ${isDark ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"} rounded-md border sm:ml-2`}>
-                    {/* Update Row */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-600 font-semibold w-16">
-                        Update:
-                      </span>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {fplLeagues.map((league) => (
-                          <button
-                            key={league.key}
-                            onClick={() => updateFromFPL(league.key)}
-                            disabled={updatingFromFPL === league.key || fullSyncing !== null || loading}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all duration-150 text-xs ${
-                              updatingFromFPL === league.key
-                                ? "bg-gray-300 cursor-not-allowed text-gray-500"
-                                : league.color === "yellow"
-                                ? "bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border border-yellow-300"
-                                : league.color === "blue"
-                                ? "bg-blue-100 hover:bg-blue-200 text-blue-800 border border-blue-300"
-                                : "bg-red-100 hover:bg-red-200 text-red-800 border border-red-300"
-                            }`}
-                            title={`Update ${league.name}`}
-                          >
-                            <RefreshCw
-                              className={`w-3.5 h-3.5 ${
-                                updatingFromFPL === league.key ? "animate-spin" : ""
-                              }`}
-                            />
-                            <span>{updatingFromFPL === league.key ? "..." : league.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                {/* Divider */}
+                <div className={`border-t ${isDark ? "border-gray-800" : "border-gray-200"}`} />
 
-                    {/* Full Sync Row */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-amber-700 font-bold w-16">
-                        Full Sync:
-                      </span>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {fplLeagues.map((league) => (
-                          <button
-                            key={`full-${league.key}`}
-                            onClick={() => fullSyncFromFPL(league.key)}
-                            disabled={fullSyncing === league.key || updatingFromFPL !== null || loading}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold transition-all duration-150 text-xs ring-2 ring-amber-400 ring-offset-1 ${
-                              fullSyncing === league.key
-                                ? "bg-gray-400 cursor-not-allowed text-white"
-                                : league.color === "yellow"
-                                ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                                : league.color === "blue"
-                                ? "bg-blue-500 hover:bg-blue-600 text-white"
-                                : "bg-red-500 hover:bg-red-600 text-white"
-                            }`}
-                            title={`FULL SYNC ${league.name} - Briše i uvozi sve s FPL-a`}
-                          >
-                            <Upload
-                              className={`w-3.5 h-3.5 ${
-                                fullSyncing === league.key ? "animate-pulse" : ""
-                              }`}
-                            />
-                            <span>{fullSyncing === league.key ? "..." : league.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                {/* Full Sync Row */}
+                <div className="flex items-start sm:items-center gap-3">
+                  <span className={`text-xs font-bold w-20 shrink-0 pt-1.5 sm:pt-0 ${isDark ? "text-amber-400" : "text-amber-700"}`}>
+                    Full Sync:
+                  </span>
+                  <div className="flex gap-2 flex-wrap">
+                    {fplLeagues.map((league) => (
+                      <button
+                        key={`full-${league.key}`}
+                        onClick={() => fullSyncFromFPL(league.key)}
+                        disabled={fullSyncing === league.key || updatingFromFPL !== null || loading}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold transition-all duration-150 text-xs shadow-sm ${
+                          fullSyncing === league.key
+                            ? "bg-gray-400 cursor-not-allowed text-white"
+                            : league.color === "yellow"
+                            ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                            : league.color === "blue"
+                            ? "bg-blue-500 hover:bg-blue-600 text-white"
+                            : "bg-red-500 hover:bg-red-600 text-white"
+                        }`}
+                        title={`FULL SYNC ${league.name} - Briše i uvozi sve s FPL-a`}
+                      >
+                        <Upload
+                          className={`w-3 h-3 ${
+                            fullSyncing === league.key ? "animate-pulse" : ""
+                          }`}
+                        />
+                        <span>{fullSyncing === league.key ? "..." : league.name}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>

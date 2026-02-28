@@ -2,20 +2,34 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { supabaseServer } from "@/lib/supabase-server";
 
-// SEPARATE TABLES FOR CLASSIC AND H2H LEAGUES
-// - premier_league_25_26: Premium, Standard, Free (classic scoring)
-// - h2h_league_25_26: H2H, H2H2 (head-to-head scoring)
+// SEPARATE TABLES FOR CLASSIC AND H2H LEAGUES (season-aware)
 
-const LEAGUE_CONFIGS = {
-  // Classic leagues -> premier_league_25_26
-  premium: { id: 277005, type: "classic", table: "premier_league_25_26", dbLeagueType: "premium" },
-  standard: { id: 277449, type: "classic", table: "premier_league_25_26", dbLeagueType: "standard" },
-  // H2H leagues -> h2h_league_25_26
-  h2h: { id: 277479, type: "h2h", table: "h2h_league_25_26", h2hCategory: "h2h" },
-  h2h2: { id: 451227, type: "h2h", table: "h2h_league_25_26", h2hCategory: "h2h2" },
-} as const;
+type Season = "25_26" | "26_27";
 
-type LeagueType = keyof typeof LEAGUE_CONFIGS;
+interface LeagueConfig {
+  id: number;
+  type: string;
+  table: string;
+  dbLeagueType?: string;
+  h2hCategory?: string;
+}
+
+const LEAGUE_CONFIGS_BY_SEASON: Record<Season, Record<string, LeagueConfig>> = {
+  "25_26": {
+    premium: { id: 277005, type: "classic", table: "premier_league_25_26", dbLeagueType: "premium" },
+    standard: { id: 277449, type: "classic", table: "premier_league_25_26", dbLeagueType: "standard" },
+    h2h: { id: 277479, type: "h2h", table: "h2h_league_25_26", h2hCategory: "h2h" },
+    h2h2: { id: 451227, type: "h2h", table: "h2h_league_25_26", h2hCategory: "h2h2" },
+  },
+  "26_27": {
+    premium: { id: 0, type: "classic", table: "premier_league_26_27", dbLeagueType: "premium" },
+    standard: { id: 0, type: "classic", table: "premier_league_26_27", dbLeagueType: "standard" },
+    h2h: { id: 0, type: "h2h", table: "h2h_league_26_27", h2hCategory: "h2h" },
+    h2h2: { id: 0, type: "h2h", table: "h2h_league_26_27", h2hCategory: "h2h2" },
+  },
+};
+
+type LeagueType = string;
 
 interface FPLPlayer {
   rank: number;
@@ -88,17 +102,26 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { leagueType, fullSync = false } = body;
+    const { leagueType, fullSync = false, season = "25_26" } = body;
 
-    if (!leagueType || !LEAGUE_CONFIGS[leagueType as LeagueType]) {
+    const seasonConfigs = LEAGUE_CONFIGS_BY_SEASON[season as Season] || LEAGUE_CONFIGS_BY_SEASON["25_26"];
+
+    if (!leagueType || !seasonConfigs[leagueType]) {
       return NextResponse.json(
-        { error: "Invalid leagueType", validTypes: Object.keys(LEAGUE_CONFIGS) },
+        { error: "Invalid leagueType", validTypes: Object.keys(seasonConfigs) },
         { status: 400 }
       );
     }
 
-    const config = LEAGUE_CONFIGS[leagueType as LeagueType];
+    const config = seasonConfigs[leagueType];
     const isH2H = config.type === "h2h";
+
+    if (config.id === 0) {
+      return NextResponse.json(
+        { error: `FPL league ID not yet configured for ${leagueType} in season ${season}` },
+        { status: 400 }
+      );
+    }
 
     // Fetch ALL players from FPL
     console.log(`[FPL-SYNC] Fetching ${leagueType} league (ID: ${config.id})...`);
@@ -119,11 +142,11 @@ export async function POST(request: NextRequest) {
       console.log(`[FPL-SYNC] Full sync mode - clearing existing ${leagueType} data from ${config.table}...`);
 
       if (isH2H) {
-        // For H2H: Delete from h2h_league_25_26 where h2h_category matches
+        // For H2H: Delete where h2h_category matches
         const { error: deleteError } = await supabaseServer
-          .from("h2h_league_25_26")
+          .from(config.table)
           .delete()
-          .eq("h2h_category", (config as any).h2hCategory);
+          .eq("h2h_category", config.h2hCategory);
 
         if (deleteError) {
           console.error("[FPL-SYNC] Delete error:", deleteError);
@@ -135,12 +158,12 @@ export async function POST(request: NextRequest) {
           const { firstName, lastName } = splitName(fplPlayer.player_name);
 
           const { error } = await supabaseServer
-            .from("h2h_league_25_26")
+            .from(config.table)
             .insert({
               first_name: firstName,
               last_name: lastName,
               team_name: fplPlayer.entry_name,
-              h2h_category: (config as any).h2hCategory,
+              h2h_category: config.h2hCategory,
               h2h_points: fplPlayer.total,
               h2h_stats: {
                 w: fplPlayer.matches_won || 0,
@@ -161,11 +184,11 @@ export async function POST(request: NextRequest) {
           }
         }
       } else {
-        // For Classic leagues: Delete from premier_league_25_26 where league_type matches
+        // For Classic leagues: Delete where league_type matches
         const { error: deleteError } = await supabaseServer
-          .from("premier_league_25_26")
+          .from(config.table)
           .delete()
-          .eq("league_type", (config as any).dbLeagueType);
+          .eq("league_type", config.dbLeagueType);
 
         if (deleteError) {
           console.error("[FPL-SYNC] Delete error:", deleteError);
@@ -177,12 +200,12 @@ export async function POST(request: NextRequest) {
           const { firstName, lastName } = splitName(fplPlayer.player_name);
 
           const { error } = await supabaseServer
-            .from("premier_league_25_26")
+            .from(config.table)
             .insert({
               first_name: firstName,
               last_name: lastName,
               team_name: fplPlayer.entry_name,
-              league_type: (config as any).dbLeagueType,
+              league_type: config.dbLeagueType,
               points: fplPlayer.total,
               email: `fpl_${fplPlayer.entry}@imported.com`,
               last_points_update: new Date().toISOString(),
@@ -225,19 +248,19 @@ export async function POST(request: NextRequest) {
 
       for (const fplPlayer of fplPlayers) {
         if (isH2H) {
-          // H2H: Update in h2h_league_25_26
+          // H2H: Update in h2h table
           const { data: existing } = await supabaseServer
-            .from("h2h_league_25_26")
+            .from(config.table)
             .select("id, first_name, last_name, team_name, h2h_points")
             .eq("team_name", fplPlayer.entry_name)
-            .eq("h2h_category", (config as any).h2hCategory)
+            .eq("h2h_category", config.h2hCategory)
             .is("deleted_at", null)
             .limit(1)
             .single();
 
           if (existing) {
             const { error } = await supabaseServer
-              .from("h2h_league_25_26")
+              .from(config.table)
               .update({
                 h2h_points: fplPlayer.total,
                 h2h_stats: {
@@ -265,11 +288,11 @@ export async function POST(request: NextRequest) {
             notFound.push(`${fplPlayer.player_name} (${fplPlayer.entry_name}) - ${fplPlayer.total} H2H pts`);
           }
         } else {
-          // Classic: Update in premier_league_25_26
+          // Classic: Update in classic table
           const newPoints = fplPlayer.total;
 
           const { data: existing } = await supabaseServer
-            .from("premier_league_25_26")
+            .from(config.table)
             .select("id, first_name, last_name, team_name, points")
             .eq("team_name", fplPlayer.entry_name)
             .is("deleted_at", null)
@@ -278,7 +301,7 @@ export async function POST(request: NextRequest) {
 
           if (existing) {
             const { error } = await supabaseServer
-              .from("premier_league_25_26")
+              .from(config.table)
               .update({
                 points: newPoints,
                 last_points_update: new Date().toISOString(),

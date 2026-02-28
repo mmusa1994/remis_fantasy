@@ -1,37 +1,38 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import ChampionsWall, { Champion } from "@/components/shared/ChampionsWall";
 import AwardsGallery, { GalleryPhoto } from "@/components/shared/AwardsGallery";
-
-// Add champion data here as seasons are completed
-const PL_CHAMPIONS: Champion[] = [
-  // Example:
-  // {
-  //   season: "2024/25",
-  //   name: "John Doe",
-  //   teamName: "Fantasy FC",
-  //   image: "/images/gallery/premier-league/champions/john-doe.jpg",
-  //   achievement: "1st Place",
-  // },
-];
-
-// Add award ceremony photos here
-const PL_AWARDS_PHOTOS: GalleryPhoto[] = [
-  // Example:
-  // {
-  //   src: "/images/gallery/premier-league/awards/ceremony-2024.jpg",
-  //   alt: "2024 Award Ceremony",
-  //   caption: "Premier League Fantasy Awards 2024",
-  // },
-];
 
 const ACCENT_COLOR = "#7c3aed";
 
 export default function PremierLeagueGalleryPage() {
   const { theme } = useTheme();
   const { t } = useTranslation("fpl");
+  const [champions, setChampions] = useState<Champion[]>([]);
+  const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/wall-of-champions?league=pl").then((r) => r.json()),
+      fetch("/api/gallery?league=pl").then((r) => r.json()),
+    ]).then(([champs, gallery]) => {
+      setChampions(
+        Array.isArray(champs)
+          ? champs.map((c: any) => ({
+              season: c.season,
+              name: c.name,
+              teamName: c.team_name,
+              image: c.image,
+              achievement: c.achievement,
+            }))
+          : []
+      );
+      setPhotos(Array.isArray(gallery) ? gallery : []);
+    }).catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen pb-20 pt-10 px-4 bg-theme-background">
@@ -53,7 +54,7 @@ export default function PremierLeagueGalleryPage() {
 
         {/* Wall of Champions */}
         <ChampionsWall
-          champions={PL_CHAMPIONS}
+          champions={champions}
           accentColor={ACCENT_COLOR}
           leagueName={t("gallery.title")}
           title={t("gallery.championsWall.title")}
@@ -63,7 +64,7 @@ export default function PremierLeagueGalleryPage() {
 
         {/* Awards Gallery */}
         <AwardsGallery
-          photos={PL_AWARDS_PHOTOS}
+          photos={photos}
           accentColor={ACCENT_COLOR}
           title={t("gallery.awards.title")}
           subtitle={t("gallery.awards.subtitle")}
