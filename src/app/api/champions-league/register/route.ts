@@ -55,13 +55,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Create PaymentIntent with PaymentMethod attached
+    // Create PaymentIntent - fixed €15
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: 1000, // €10.00
+      amount: 1500, // €15.00
       currency: "eur",
       payment_method: paymentMethod.id,
       metadata: {
-        type: "f1_registration",
+        type: "cl_registration_26_27",
         first_name: first_name.trim(),
         last_name: last_name.trim(),
         email: email.trim(),
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         notes: (notes || "").trim(),
       },
       receipt_email: email.trim(),
-      description: "Remis Fantasy F1 2026 - Registration",
+      description: "Remis Fantasy Champions League 2026/27 - Registration",
     });
 
     return NextResponse.json({
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       clientSecret: paymentIntent.client_secret,
     });
   } catch (error: unknown) {
-    console.error("F1 registration API error:", error);
+    console.error("CL registration API error:", error);
     const message =
       error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(

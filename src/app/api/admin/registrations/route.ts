@@ -86,7 +86,17 @@ function validateField(
   return true;
 }
 
-export async function GET() {
+// Season-to-table mapping for Premier League
+const PL_TABLE_MAP: Record<string, string> = {
+  "25_26": "registration_25_26",
+  "26_27": "registration_premier_league_26_27",
+};
+
+function getPLTable(season: string | null): string {
+  return PL_TABLE_MAP[season || "26_27"] || PL_TABLE_MAP["26_27"];
+}
+
+export async function GET(request: NextRequest) {
   try {
     // Verify admin session
     const session = await getServerSession(authOptions);
@@ -95,9 +105,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const season = searchParams.get("season");
+    const tableName = getPLTable(season);
+
     // Fetch registrations using server-side client
     const { data, error } = await supabaseServer
-      .from("registration_25_26")
+      .from(tableName)
       .select("*")
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -125,6 +139,10 @@ export async function PUT(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const season = searchParams.get("season");
+    const tableName = getPLTable(season);
 
     // Parse and validate request body
     const parseResult = putRequestSchema.safeParse(await request.json());
@@ -184,7 +202,7 @@ export async function PUT(request: NextRequest) {
 
     // Update registration using server-side client
     const { data, error } = await supabaseServer
-      .from("registration_25_26")
+      .from(tableName)
       .update(filteredUpdates)
       .eq("id", id)
       .select()
@@ -218,6 +236,10 @@ export async function PATCH(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const season = searchParams.get("season");
+    const tableName = getPLTable(season);
 
     // Parse and validate request body
     const parseResult = patchRequestSchema.safeParse(await request.json());
@@ -261,7 +283,7 @@ export async function PATCH(request: NextRequest) {
 
     // Update specific field using server-side client
     const { data, error } = await supabaseServer
-      .from("registration_25_26")
+      .from(tableName)
       .update({ [field]: value })
       .eq("id", id)
       .select()
@@ -299,6 +321,8 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     const reason = searchParams.get("reason");
+    const season = searchParams.get("season");
+    const tableName = getPLTable(season);
 
     // Validate search parameters
     const parseResult = deleteRequestSchema.safeParse({ id, reason });
@@ -321,7 +345,7 @@ export async function DELETE(request: NextRequest) {
 
     // Soft delete registration using server-side client
     const { data, error } = await supabaseServer
-      .from("registration_25_26")
+      .from(tableName)
       .update({
         deleted_at: new Date().toISOString(),
         deleted_by: deletedBy,

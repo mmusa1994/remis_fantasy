@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 
+// Season-to-table mapping for Champions League
+const CL_TABLE_MAP: Record<string, string> = {
+  "25_26": "cl_registrations_25_26",
+  "26_27": "registration_champions_league_26_27",
+};
+
+function getCLTable(season: string | null): string {
+  return CL_TABLE_MAP[season || "26_27"] || CL_TABLE_MAP["26_27"];
+}
+
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const season = searchParams.get("season");
+    const tableName = getCLTable(season);
+
     const { data: registrations, error } = await supabaseServer
-      .from("cl_registrations_25_26")
+      .from(tableName)
       .select("*")
       .order("created_at", { ascending: false });
 
@@ -31,6 +45,10 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const season = searchParams.get("season");
+    const tableName = getCLTable(season);
+
     const body = await request.json();
     const { id, updates } = body;
 
@@ -42,7 +60,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const { data: updatedRegistration, error } = await supabaseServer
-      .from("cl_registrations_25_26")
+      .from(tableName)
       .update(updates)
       .eq("id", id)
       .select()
@@ -71,6 +89,10 @@ export async function PUT(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const season = searchParams.get("season");
+    const tableName = getCLTable(season);
+
     const body = await request.json();
     const { id, field, value } = body;
 
@@ -84,7 +106,7 @@ export async function PATCH(request: NextRequest) {
     const updates = { [field]: value };
 
     const { data: updatedRegistration, error } = await supabaseServer
-      .from("cl_registrations_25_26")
+      .from(tableName)
       .update(updates)
       .eq("id", id)
       .select()
@@ -115,6 +137,8 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const season = searchParams.get("season");
+    const tableName = getCLTable(season);
 
     if (!id) {
       return NextResponse.json(
@@ -124,7 +148,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { error } = await supabaseServer
-      .from("cl_registrations_25_26")
+      .from(tableName)
       .delete()
       .eq("id", id);
 

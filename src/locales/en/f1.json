@@ -83,5 +83,18 @@
     "title": "Registration Successful!",
     "message": "You have been successfully registered for F1 Fantasy.",
     "backToHome": "Back to Home"
+  },
+  "gallery": {
+    "title": "F1 Fantasy Gallery",
+    "championsWall": {
+      "title": "Wall of Champions",
+      "subtitle": "Our F1 Fantasy champions through the seasons"
+    },
+    "awards": {
+      "title": "Awards Ceremony",
+      "subtitle": "Moments from our previous award ceremonies"
+    },
+    "emptyChampions": "Champions will be displayed here soon.",
+    "emptyGallery": "Photos from award ceremonies will be displayed here soon."
   }
 }

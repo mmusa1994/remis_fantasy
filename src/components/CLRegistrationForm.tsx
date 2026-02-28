@@ -37,7 +37,7 @@ interface FormData {
   notes: string;
 }
 
-function F1RegistrationFormInner() {
+function CLRegistrationFormInner() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const stripe = useStripe();
@@ -58,7 +58,7 @@ function F1RegistrationFormInner() {
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [cardFocused, setCardFocused] = useState<string | null>(null);
 
-  // Custom card data (replaces Stripe Elements for visual interactivity)
+  // Custom card data
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvc, setCardCvc] = useState("");
@@ -77,7 +77,6 @@ function F1RegistrationFormInner() {
   const maxCardLength = isAmex ? 15 : 16;
   const maxCvcLength = isAmex ? 4 : 3;
 
-  // Format card number for display: "4242 4242 4242 4242"
   const formatDisplayNumber = (num: string) => {
     if (!num) return "\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022";
     const padded = num.padEnd(maxCardLength, "\u2022");
@@ -87,7 +86,6 @@ function F1RegistrationFormInner() {
     return `${padded.slice(0, 4)} ${padded.slice(4, 8)} ${padded.slice(8, 12)} ${padded.slice(12, 16)}`;
   };
 
-  // Format card number for input field: "4242 4242 4242 4242"
   const formatInputNumber = (num: string) => {
     if (!num) return "";
     if (isAmex) {
@@ -96,7 +94,6 @@ function F1RegistrationFormInner() {
     return (num.match(/.{1,4}/g) || []).join(" ");
   };
 
-  // Format expiry for display
   const formatDisplayExpiry = (exp: string) => {
     if (!exp) return "MM/YY";
     const mm = exp.slice(0, 2);
@@ -105,33 +102,30 @@ function F1RegistrationFormInner() {
     return `${mm}/${yy.padEnd(2, "\u2022")}`;
   };
 
-  // Format expiry for input: "12/26"
   const formatInputExpiry = (exp: string) => {
     if (!exp) return "";
     if (exp.length <= 2) return exp;
     return `${exp.slice(0, 2)}/${exp.slice(2, 4)}`;
   };
 
-  // Handle card number input
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "").slice(0, maxCardLength);
     setCardNumber(raw);
     if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
   };
 
-  // Handle expiry input
   const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "").slice(0, 4);
     setCardExpiry(raw);
     if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
   };
 
-  // Handle CVC input
   const handleCvcChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "").slice(0, maxCvcLength);
     setCardCvc(raw);
     if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
   };
+
   const [paymentMode, setPaymentMode] = useState<"card" | "cash">("card");
   const [cashConfirmed, setCashConfirmed] = useState(false);
   const [cashDeliveryDate, setCashDeliveryDate] = useState("");
@@ -206,9 +200,8 @@ function F1RegistrationFormInner() {
     setIsSubmitting(true);
 
     try {
-      // Cash flow
       if (paymentMode === "cash") {
-        const response = await fetch("/api/f1/register-cash", {
+        const response = await fetch("/api/champions-league/register-cash", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -225,15 +218,14 @@ function F1RegistrationFormInner() {
         if (!response.ok) {
           throw new Error(data.error || t("common:validation.registrationError"));
         }
-        router.push("/f1-fantasy/registration/success");
+        router.push("/champions-league/registration/success");
         return;
       }
 
-      // Card flow - send card data to server for secure PaymentMethod creation
       const expMonth = cardExpiry.slice(0, 2);
       const expYear = cardExpiry.slice(2, 4);
 
-      const response = await fetch("/api/f1/register", {
+      const response = await fetch("/api/champions-league/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -256,7 +248,6 @@ function F1RegistrationFormInner() {
 
       if (!stripe) return;
 
-      // Confirm payment client-side (handles 3D Secure if required)
       const { error: stripeError, paymentIntent } =
         await stripe.confirmCardPayment(data.clientSecret);
 
@@ -265,10 +256,10 @@ function F1RegistrationFormInner() {
       }
 
       if (paymentIntent?.status === "succeeded") {
-        router.push("/f1-fantasy/registration/success");
+        router.push("/champions-league/registration/success");
       }
     } catch (error: unknown) {
-      console.error("F1 registration error:", error);
+      console.error("CL registration error:", error);
       setToast({
         show: true,
         message:
@@ -296,7 +287,7 @@ function F1RegistrationFormInner() {
       errors[field]
         ? "border-red-400"
         : focusedField === field
-          ? "border-red-600/40 dark:border-red-400/40"
+          ? "border-blue-700/40 dark:border-blue-400/40"
           : "border-gray-200 dark:border-gray-700"
     }`;
 
@@ -310,7 +301,7 @@ function F1RegistrationFormInner() {
   const cardFieldClass = (field: string) =>
     `input-theme w-full px-3.5 py-2.5 border rounded-lg transition-all duration-200 focus-ring text-sm font-mono tracking-wider ${
       cardFocused === field
-        ? "border-red-600/40 dark:border-red-400/40"
+        ? "border-blue-700/40 dark:border-blue-400/40"
         : "border-gray-200 dark:border-gray-700"
     }`;
 
@@ -347,47 +338,47 @@ function F1RegistrationFormInner() {
           {/* Header */}
           <div className="flex justify-center items-center flex-col mb-8 sm:mb-10 animate-fade-in-up">
             <h2 className="text-2xl xs:text-3xl md:text-4xl font-black mb-2 xs:mb-3 text-balance leading-tight font-anta animate-scale-in animate-delay-200">
-              <span className="text-red-600 dark:text-red-500">
-                F1 Fantasy 2026
+              <span className="text-blue-700 dark:text-blue-400">
+                Champions League Fantasy 2026/27
               </span>
             </h2>
 
             <h3 className="text-lg xs:text-xl md:text-2xl font-bold mb-3 text-theme-heading-primary">
-              {t("f1:registration.subtitle")}
+              Registracija
             </h3>
 
             <p className="text-theme-text-secondary text-xs xs:text-sm md:text-base max-w-xl mx-auto leading-relaxed font-medium text-center px-2">
-              {t("common:hero.f1.subtitle")}
+              Pridružite se Champions League Fantasy ligi za sezonu 2026/27 i takmičite se za nagrade.
             </p>
           </div>
 
           {/* What You Get */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-8 animate-fade-in-up animate-delay-200">
-            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-red-500/[0.03] dark:bg-red-500/[0.06] border border-red-500/10 hover:border-red-500/20 transition-colors">
-              <div className="w-9 h-9 rounded-lg bg-red-500/8 flex items-center justify-center flex-shrink-0">
-                <Trophy className="w-4.5 h-4.5 text-red-600 dark:text-red-400" />
+            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-blue-500/[0.03] dark:bg-blue-500/[0.06] border border-blue-500/10 hover:border-blue-500/20 transition-colors">
+              <div className="w-9 h-9 rounded-lg bg-blue-500/8 flex items-center justify-center flex-shrink-0">
+                <Trophy className="w-4.5 h-4.5 text-blue-700 dark:text-blue-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">{t("f1:registration.competitionForPrizes")}</div>
-                <div className="text-xs text-theme-text-secondary">{t("f1:registration.winPrizeFund")}</div>
+                <div className="font-bold text-theme-heading-primary text-sm">Takmičenje za nagrade</div>
+                <div className="text-xs text-theme-text-secondary">Osvoji nagradni fond</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-red-500/[0.03] dark:bg-red-500/[0.06] border border-red-500/10 hover:border-red-500/20 transition-colors">
-              <div className="w-9 h-9 rounded-lg bg-red-500/8 flex items-center justify-center flex-shrink-0">
-                <BarChart3 className="w-4.5 h-4.5 text-red-600 dark:text-red-400" />
+            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-blue-500/[0.03] dark:bg-blue-500/[0.06] border border-blue-500/10 hover:border-blue-500/20 transition-colors">
+              <div className="w-9 h-9 rounded-lg bg-blue-500/8 flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="w-4.5 h-4.5 text-blue-700 dark:text-blue-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">{t("f1:registration.liveTable")}</div>
-                <div className="text-xs text-theme-text-secondary">{t("f1:registration.realTimeResults")}</div>
+                <div className="font-bold text-theme-heading-primary text-sm">Live tabela</div>
+                <div className="text-xs text-theme-text-secondary">Rezultati u realnom vremenu</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-red-500/[0.03] dark:bg-red-500/[0.06] border border-red-500/10 hover:border-red-500/20 transition-colors">
-              <div className="w-9 h-9 rounded-lg bg-red-500/8 flex items-center justify-center flex-shrink-0">
-                <Gift className="w-4.5 h-4.5 text-red-600 dark:text-red-400" />
+            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-blue-500/[0.03] dark:bg-blue-500/[0.06] border border-blue-500/10 hover:border-blue-500/20 transition-colors">
+              <div className="w-9 h-9 rounded-lg bg-blue-500/8 flex items-center justify-center flex-shrink-0">
+                <Gift className="w-4.5 h-4.5 text-blue-700 dark:text-blue-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">{t("f1:registration.grandPrixPrizes")}</div>
-                <div className="text-xs text-theme-text-secondary">{t("f1:registration.specialPrizesPerRace")}</div>
+                <div className="font-bold text-theme-heading-primary text-sm">Nagrade po kolu</div>
+                <div className="text-xs text-theme-text-secondary">Specijalne nagrade po utakmici</div>
               </div>
             </div>
           </div>
@@ -399,17 +390,17 @@ function F1RegistrationFormInner() {
           >
             {/* Price badge */}
             <div className="flex justify-center -mt-10 sm:-mt-11 mb-7">
-              <div className="bg-red-600 text-white px-5 py-2 rounded-lg shadow-md shadow-red-600/20 flex items-center gap-2">
-                <span className="text-sm font-medium opacity-90">{t("f1:registration.entryFee")}</span>
-                <span className="text-lg font-black">&euro;10</span>
+              <div className="bg-blue-700 text-white px-5 py-2 rounded-lg shadow-md shadow-blue-700/20 flex items-center gap-2">
+                <span className="text-sm font-medium opacity-90">Kotizacija</span>
+                <span className="text-lg font-black">&euro;15</span>
               </div>
             </div>
 
             {/* Personal Info */}
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-5.5 h-5.5 rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">1</span>
-                {t("f1:registration.personalInfo")}
+                <span className="w-5.5 h-5.5 rounded-md bg-blue-700/10 flex items-center justify-center text-[11px] font-black text-blue-700 dark:text-blue-400">1</span>
+                Lični podaci
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -417,15 +408,15 @@ function F1RegistrationFormInner() {
                   <div className="relative">
                     <input
                       type="text"
-                      id="first_name"
+                      id="cl_first_name"
                       value={formData.first_name}
                       onChange={(e) => handleInputChange("first_name", e.target.value)}
                       onFocus={() => setFocusedField("first_name")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("first_name")}
                     />
-                    <label htmlFor="first_name" className={labelClassName("first_name", formData.first_name)}>
-                      {t("f1:registration.firstName")} *
+                    <label htmlFor="cl_first_name" className={labelClassName("first_name", formData.first_name)}>
+                      Ime *
                     </label>
                   </div>
                   {errors.first_name && (
@@ -440,15 +431,15 @@ function F1RegistrationFormInner() {
                   <div className="relative">
                     <input
                       type="text"
-                      id="last_name"
+                      id="cl_last_name"
                       value={formData.last_name}
                       onChange={(e) => handleInputChange("last_name", e.target.value)}
                       onFocus={() => setFocusedField("last_name")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("last_name")}
                     />
-                    <label htmlFor="last_name" className={labelClassName("last_name", formData.last_name)}>
-                      {t("f1:registration.lastName")} *
+                    <label htmlFor="cl_last_name" className={labelClassName("last_name", formData.last_name)}>
+                      Prezime *
                     </label>
                   </div>
                   {errors.last_name && (
@@ -464,8 +455,8 @@ function F1RegistrationFormInner() {
             {/* Contact Info */}
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-5.5 h-5.5 rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">2</span>
-                {t("f1:registration.contactInfo")}
+                <span className="w-5.5 h-5.5 rounded-md bg-blue-700/10 flex items-center justify-center text-[11px] font-black text-blue-700 dark:text-blue-400">2</span>
+                Kontakt informacije
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -473,15 +464,15 @@ function F1RegistrationFormInner() {
                   <div className="relative">
                     <input
                       type="email"
-                      id="email"
+                      id="cl_email"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       onFocus={() => setFocusedField("email")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("email")}
                     />
-                    <label htmlFor="email" className={labelClassName("email", formData.email)}>
-                      {t("f1:registration.email")} *
+                    <label htmlFor="cl_email" className={labelClassName("email", formData.email)}>
+                      Email *
                     </label>
                   </div>
                   {errors.email && (
@@ -496,15 +487,15 @@ function F1RegistrationFormInner() {
                   <div className="relative">
                     <input
                       type="tel"
-                      id="phone"
+                      id="cl_phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
                       onFocus={() => setFocusedField("phone")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("phone")}
                     />
-                    <label htmlFor="phone" className={labelClassName("phone", formData.phone)}>
-                      {t("f1:registration.phone")} *
+                    <label htmlFor="cl_phone" className={labelClassName("phone", formData.phone)}>
+                      Telefon *
                     </label>
                   </div>
                   {errors.phone && (
@@ -522,7 +513,7 @@ function F1RegistrationFormInner() {
               <div className="relative">
                 <div className="relative">
                   <textarea
-                    id="notes"
+                    id="cl_notes"
                     value={formData.notes}
                     onChange={(e) => handleInputChange("notes", e.target.value)}
                     onFocus={() => setFocusedField("notes")}
@@ -530,8 +521,8 @@ function F1RegistrationFormInner() {
                     rows={2}
                     className={inputClassName("notes")}
                   />
-                  <label htmlFor="notes" className={labelClassName("notes", formData.notes)}>
-                    {t("f1:registration.notes")}
+                  <label htmlFor="cl_notes" className={labelClassName("notes", formData.notes)}>
+                    Napomene
                   </label>
                 </div>
               </div>
@@ -545,7 +536,7 @@ function F1RegistrationFormInner() {
                 </div>
                 <div className="relative flex justify-center">
                   <span className="bg-theme-background px-4 text-xs text-theme-text-secondary font-medium uppercase tracking-wider">
-                    {t("f1:payment.divider")}
+                    Način plaćanja
                   </span>
                 </div>
               </div>
@@ -556,27 +547,27 @@ function F1RegistrationFormInner() {
                   onClick={() => setPaymentMode("card")}
                   className={`relative p-3.5 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2.5 ${
                     paymentMode === "card"
-                      ? "border-red-600/60 bg-red-500/[0.04] dark:bg-red-500/[0.08] shadow-sm"
+                      ? "border-blue-700/60 bg-blue-500/[0.04] dark:bg-blue-500/[0.08] shadow-sm"
                       : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                   }`}
                 >
                   {paymentMode === "card" && (
                     <div className="absolute top-2 right-2">
-                      <CheckCircle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+                      <CheckCircle className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400" />
                     </div>
                   )}
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
                     paymentMode === "card"
-                      ? "bg-red-600/10 text-red-600 dark:text-red-400"
+                      ? "bg-blue-700/10 text-blue-700 dark:text-blue-400"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-400"
                   }`}>
                     <CreditCard className="w-5 h-5" />
                   </div>
                   <div className="text-center">
                     <div className={`text-sm font-bold ${
-                      paymentMode === "card" ? "text-red-600 dark:text-red-400" : "text-theme-heading-primary"
+                      paymentMode === "card" ? "text-blue-700 dark:text-blue-400" : "text-theme-heading-primary"
                     }`}>
-                      {t("f1:payment.card")}
+                      Kartica
                     </div>
                     <div className="text-[10px] text-theme-text-secondary mt-0.5">
                       Visa · Mastercard · Amex
@@ -609,7 +600,7 @@ function F1RegistrationFormInner() {
                     <div className={`text-sm font-bold ${
                       paymentMode === "cash" ? "text-green-600 dark:text-green-400" : "text-theme-heading-primary"
                     }`}>
-                      {t("f1:payment.cash")}
+                      Gotovina
                     </div>
                     <div className="text-[10px] text-theme-text-secondary mt-0.5">
                       Dostava gotovine
@@ -623,8 +614,8 @@ function F1RegistrationFormInner() {
             {paymentMode === "card" && (
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-5.5 h-5.5 rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">3</span>
-                {t("f1:registration.cardDetails")}
+                <span className="w-5.5 h-5.5 rounded-md bg-blue-700/10 flex items-center justify-center text-[11px] font-black text-blue-700 dark:text-blue-400">3</span>
+                Podaci o kartici
                 <div className="ml-auto flex items-center gap-1">
                   <div className="px-1.5 py-0.5 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700">
                     <span className="text-[9px] font-black italic text-blue-600 dark:text-blue-400">VISA</span>
@@ -639,7 +630,7 @@ function F1RegistrationFormInner() {
                 </div>
               </h3>
 
-              {/* Interactive 3D Card - Premium Black */}
+              {/* Interactive 3D Card - Premium Black with Blue tint */}
               <div className="flex justify-center mb-5" style={{ perspective: "1200px" }}>
                 <div
                   className="relative w-[300px] sm:w-[340px] h-[185px] sm:h-[210px] transition-transform duration-700 ease-in-out"
@@ -656,21 +647,17 @@ function F1RegistrationFormInner() {
                       boxShadow: "0 25px 60px -12px rgba(0, 0, 0, 0.5), 0 0 40px -8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                     }}
                   >
-                    {/* Premium black base */}
                     <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16162a] to-[#0f0f1a]" />
-                    {/* Subtle shimmer overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-red-950/8 via-transparent to-red-900/5" />
+                    {/* Blue shimmer overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-950/8 via-transparent to-blue-900/5" />
                     <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle at 30% 20%, white 0%, transparent 50%), radial-gradient(circle at 70% 80%, white 0%, transparent 50%)" }} />
-                    {/* Top edge highlight */}
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                    {/* Left edge highlight */}
                     <div className="absolute top-0 left-0 bottom-0 w-px bg-gradient-to-b from-white/10 via-transparent to-transparent" />
 
                     <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between">
-                      {/* Top row: chip + contactless + brand */}
+                      {/* Top row */}
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          {/* Premium chip */}
                           <div className="w-10 h-7 sm:w-11 sm:h-8 rounded-lg overflow-hidden" style={{
                             background: "linear-gradient(135deg, #d4af37 0%, #f5d061 25%, #d4af37 50%, #c5a028 75%, #f5d061 100%)",
                             boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 1px 3px rgba(0,0,0,0.3)",
@@ -688,14 +675,12 @@ function F1RegistrationFormInner() {
                               </div>
                             </div>
                           </div>
-                          {/* Contactless icon */}
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white/25">
                             <path d="M12.5 6.5C14.5 8 16 10 16 12.5S14.5 17 12.5 18.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                             <path d="M9.5 9C10.5 9.5 12 10.5 12 12.5S10.5 15.5 9.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                             <path d="M6.5 11C7 11.5 8 12 8 12.5S7 13.5 6.5 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                           </svg>
                         </div>
-                        {/* Brand */}
                         <div className="flex items-center">
                           {cardBrand === "visa" && (
                             <span className="text-lg sm:text-xl font-black italic text-white/75 tracking-tight">VISA</span>
@@ -715,7 +700,7 @@ function F1RegistrationFormInner() {
                         </div>
                       </div>
 
-                      {/* Card number - shows actual digits */}
+                      {/* Card number */}
                       <div className={`font-mono text-[14px] xs:text-[15px] sm:text-[17px] tracking-[0.15em] sm:tracking-[0.18em] font-medium whitespace-nowrap transition-all duration-300 rounded-md px-2 py-1 -mx-2 ${
                         cardFocused === "cardNumber" ? "bg-white/[0.06]" : ""
                       }`} style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
@@ -724,7 +709,7 @@ function F1RegistrationFormInner() {
                         </span>
                       </div>
 
-                      {/* Bottom row: name + expiry */}
+                      {/* Bottom row */}
                       <div className="flex items-end justify-between">
                         <div>
                           <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-white/30 mb-1 font-medium">Card Holder</div>
@@ -760,18 +745,15 @@ function F1RegistrationFormInner() {
                     }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16162a] to-[#0f0f1a]" />
-                    <div className="absolute inset-0 bg-gradient-to-tr from-red-950/5 via-transparent to-red-950/5" />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-950/5 via-transparent to-blue-950/5" />
 
                     <div className="relative h-full flex flex-col">
-                      {/* Magnetic stripe */}
                       <div className="w-full h-[46px] sm:h-[50px] mt-6 sm:mt-7" style={{
                         background: "linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 40%, #0f0f0f 60%, #1a1a1a 100%)",
                         boxShadow: "0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)",
                       }} />
 
-                      {/* Signature + CVC */}
                       <div className="flex items-center gap-3 px-5 sm:px-6 mt-5 sm:mt-6">
-                        {/* Signature strip */}
                         <div className="flex-1 h-10 sm:h-11 rounded-md" style={{
                           background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)",
                           border: "1px solid rgba(255,255,255,0.06)",
@@ -780,7 +762,6 @@ function F1RegistrationFormInner() {
                             <div className="w-full h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
                           </div>
                         </div>
-                        {/* CVC box */}
                         <div className={`w-14 sm:w-16 h-9 sm:h-10 rounded-md flex items-center justify-center font-mono text-sm font-bold transition-all duration-300 ${
                           cardFocused === "cardCvc"
                             ? "bg-white/20 text-white border border-white/40 shadow-lg shadow-white/5"
@@ -792,7 +773,6 @@ function F1RegistrationFormInner() {
                         </div>
                       </div>
 
-                      {/* Bottom: stripe logo */}
                       <div className="mt-auto px-5 sm:px-6 pb-4 sm:pb-5 flex justify-end">
                         <Image
                           src="/images/stripe.png"
@@ -809,17 +789,16 @@ function F1RegistrationFormInner() {
 
               {/* Card Inputs */}
               <div className="rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30 p-4 space-y-3">
-                {/* Card Number */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label htmlFor="card_number" className="text-xs font-semibold text-theme-text-secondary flex items-center gap-1.5">
+                    <label htmlFor="cl_card_number" className="text-xs font-semibold text-theme-text-secondary flex items-center gap-1.5">
                       <CreditCard className="w-3.5 h-3.5" />
-                      {t("f1:registration.cardNumber")}
+                      Broj kartice
                     </label>
                     {cardBrand !== "unknown" && <CardBrandIcon />}
                   </div>
                   <input
-                    id="card_number"
+                    id="cl_card_number"
                     type="text"
                     inputMode="numeric"
                     autoComplete="cc-number"
@@ -833,13 +812,12 @@ function F1RegistrationFormInner() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Expiry */}
                   <div>
-                    <label htmlFor="card_expiry" className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
-                      {t("f1:registration.expiryDate")}
+                    <label htmlFor="cl_card_expiry" className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
+                      Datum isteka
                     </label>
                     <input
-                      id="card_expiry"
+                      id="cl_card_expiry"
                       type="text"
                       inputMode="numeric"
                       autoComplete="cc-exp"
@@ -852,13 +830,12 @@ function F1RegistrationFormInner() {
                     />
                   </div>
 
-                  {/* CVC */}
                   <div>
-                    <label htmlFor="card_cvc" className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
+                    <label htmlFor="cl_card_cvc" className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
                       CVC
                     </label>
                     <input
-                      id="card_cvc"
+                      id="cl_card_cvc"
                       type="text"
                       inputMode="numeric"
                       autoComplete="cc-csc"
@@ -872,7 +849,6 @@ function F1RegistrationFormInner() {
                   </div>
                 </div>
 
-                {/* Stripe trust line */}
                 <div className="flex items-center justify-center gap-1.5 pt-1">
                   <Lock className="w-3 h-3 text-gray-400" />
                   <span className="text-[11px] text-gray-400">Secured by</span>
@@ -904,16 +880,14 @@ function F1RegistrationFormInner() {
                 </h3>
 
                 <div className="rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30 p-4 space-y-4">
-                  {/* Info */}
                   <div className="flex items-start gap-3 p-3 rounded-md bg-green-500/5 border border-green-500/15">
                     <Banknote className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-medium text-theme-heading-primary">Plaćanje gotovinom</p>
-                      <p className="text-xs text-theme-text-secondary mt-1">Izaberite datum do kojeg ćete dostaviti uplatu od &euro;10. Vaša registracija će biti potvrđena nakon primanja uplate.</p>
+                      <p className="text-xs text-theme-text-secondary mt-1">Izaberite datum do kojeg ćete dostaviti uplatu od &euro;15. Vaša registracija će biti potvrđena nakon primanja uplate.</p>
                     </div>
                   </div>
 
-                  {/* Date picker */}
                   <div>
                     <label className="text-xs font-semibold text-theme-text-secondary mb-1.5 flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5" />
@@ -939,7 +913,6 @@ function F1RegistrationFormInner() {
                     )}
                   </div>
 
-                  {/* Checkbox confirmation */}
                   <label className="flex items-start gap-3 cursor-pointer group">
                     <div className="relative mt-0.5">
                       <input
@@ -964,7 +937,7 @@ function F1RegistrationFormInner() {
                       </div>
                     </div>
                     <span className="text-sm text-theme-text-secondary leading-relaxed">
-                      Potvrđujem da ću dostaviti uplatu od <strong className="text-theme-heading-primary">&euro;10</strong> do odabranog datuma.
+                      Potvrđujem da ću dostaviti uplatu od <strong className="text-theme-heading-primary">&euro;15</strong> do odabranog datuma.
                     </span>
                   </label>
                   {errors.cashConfirmed && (
@@ -1029,7 +1002,7 @@ function F1RegistrationFormInner() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 md:py-4 px-8 rounded-lg text-sm md:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-md shadow-red-600/15 hover:shadow-lg hover:shadow-red-600/20 font-anta focus-ring gpu-accelerated active:scale-[0.98]"
+              className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3.5 md:py-4 px-8 rounded-lg text-sm md:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-md shadow-blue-700/15 hover:shadow-lg hover:shadow-blue-700/20 font-anta focus-ring gpu-accelerated active:scale-[0.98]"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2.5">
@@ -1037,14 +1010,14 @@ function F1RegistrationFormInner() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  {t("f1:registration.processingPayment")}
+                  Obrađujem uplatu...
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-2.5">
                   {paymentMode === "card" ? (
                     <>
                       <Lock className="w-4.5 h-4.5" />
-                      {t("f1:registration.payAndRegister")}
+                      Plati &euro;15 i registruj se
                     </>
                   ) : (
                     <>
@@ -1057,7 +1030,7 @@ function F1RegistrationFormInner() {
             </button>
 
             <p className="text-center text-[11px] text-theme-text-secondary mt-3 leading-relaxed">
-              {t("f1:registration.cardDataProtected")}
+              Vaši podaci su zaštićeni 256-bit SSL enkripcijom. Kartični podaci se sigurno obrađuju putem Stripe-a.
             </p>
           </form>
         </div>
@@ -1066,12 +1039,12 @@ function F1RegistrationFormInner() {
   );
 }
 
-const F1RegistrationForm = React.memo(function F1RegistrationForm() {
+const CLRegistrationFormNew = React.memo(function CLRegistrationFormNew() {
   return (
     <Elements stripe={stripePromise}>
-      <F1RegistrationFormInner />
+      <CLRegistrationFormInner />
     </Elements>
   );
 });
 
-export default F1RegistrationForm;
+export default CLRegistrationFormNew;

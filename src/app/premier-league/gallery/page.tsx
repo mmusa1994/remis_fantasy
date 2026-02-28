@@ -1,53 +1,74 @@
 "use client";
 
 import { useTheme } from "@/contexts/ThemeContext";
-import { Camera } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import ChampionsWall, { Champion } from "@/components/shared/ChampionsWall";
+import AwardsGallery, { GalleryPhoto } from "@/components/shared/AwardsGallery";
 
-export default function GalerijaPage() {
+// Add champion data here as seasons are completed
+const PL_CHAMPIONS: Champion[] = [
+  // Example:
+  // {
+  //   season: "2024/25",
+  //   name: "John Doe",
+  //   teamName: "Fantasy FC",
+  //   image: "/images/gallery/premier-league/champions/john-doe.jpg",
+  //   achievement: "1st Place",
+  // },
+];
+
+// Add award ceremony photos here
+const PL_AWARDS_PHOTOS: GalleryPhoto[] = [
+  // Example:
+  // {
+  //   src: "/images/gallery/premier-league/awards/ceremony-2024.jpg",
+  //   alt: "2024 Award Ceremony",
+  //   caption: "Premier League Fantasy Awards 2024",
+  // },
+];
+
+const ACCENT_COLOR = "#7c3aed";
+
+export default function PremierLeagueGalleryPage() {
   const { theme } = useTheme();
+  const { t } = useTranslation("fpl");
 
   return (
     <div className="min-h-screen pb-20 pt-10 px-4 bg-theme-background">
-      <div className="max-w-6xl mx-auto text-center">
-        <h1
-          className={`text-2xl md:text-3xl font-black mb-8 ${
-            theme === "dark" ? "text-white" : "text-gray-800"
-          }`}
-        >
-          Premier League Galerija
-        </h1>
-
-        <div
-          className={`p-12 rounded-lg backdrop-blur-lg border ${
-            theme === "dark"
-              ? "bg-gray-800/50 border-gray-700"
-              : "bg-white/60 border-orange-200"
-          }`}
-        >
-          <div className="mb-6">
-            <Camera
-              className={`w-16 h-16 mx-auto ${
-                theme === "dark" ? "text-purple-400" : "text-purple-600"
-              }`}
-            />
-          </div>
-          <h2
-            className={`text-2xl font-bold mb-4 ${
-              theme === "dark" ? "text-white" : "text-gray-800"
+      <div className="max-w-6xl mx-auto">
+        {/* Hero Header */}
+        <div className="text-center mb-12">
+          <h1
+            className={`text-3xl md:text-4xl font-bold mb-3 ${
+              theme === "dark" ? "text-white" : "text-gray-900"
             }`}
           >
-            Galerija u pripremi
-          </h2>
-          <p
-            className={`text-lg ${
-              theme === "dark" ? "text-gray-300" : "text-gray-600"
-            }`}
-          >
-            Uskoro ćete ovdje moći pregledati slike i uspomene iz prethodnih
-            sezona Premier League Fantasy lige. Najuzbudljiviji momenti,
-            ceremonije dodjele nagrada i proslava pobjeda čekaju vas!
-          </p>
+            {t("gallery.title")}
+          </h1>
+          <div
+            className="w-20 h-1 mx-auto rounded-full"
+            style={{ backgroundColor: ACCENT_COLOR }}
+          />
         </div>
+
+        {/* Wall of Champions */}
+        <ChampionsWall
+          champions={PL_CHAMPIONS}
+          accentColor={ACCENT_COLOR}
+          leagueName={t("gallery.title")}
+          title={t("gallery.championsWall.title")}
+          subtitle={t("gallery.championsWall.subtitle")}
+          emptyMessage={t("gallery.emptyChampions")}
+        />
+
+        {/* Awards Gallery */}
+        <AwardsGallery
+          photos={PL_AWARDS_PHOTOS}
+          accentColor={ACCENT_COLOR}
+          title={t("gallery.awards.title")}
+          subtitle={t("gallery.awards.subtitle")}
+          emptyMessage={t("gallery.emptyGallery")}
+        />
       </div>
     </div>
   );

@@ -1,43 +1,74 @@
-export const metadata = {
-  title: "F1 Fantasy Nagrade - REMIS Fantasy",
-  description:
-    "F1 Fantasy nagrade - osvojite brzinske nagrade u najuzbudljivijoj racing ligi!",
-};
+"use client";
 
-export default function F1FantasyGalerijaPage() {
+import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
+import ChampionsWall, { Champion } from "@/components/shared/ChampionsWall";
+import AwardsGallery, { GalleryPhoto } from "@/components/shared/AwardsGallery";
+
+// Add champion data here as seasons are completed
+const F1_CHAMPIONS: Champion[] = [
+  // Example:
+  // {
+  //   season: "2025",
+  //   name: "Max Racer",
+  //   teamName: "Speed Demons",
+  //   image: "/images/gallery/f1-fantasy/champions/max-racer.jpg",
+  //   achievement: "1st Place",
+  // },
+];
+
+// Add award ceremony photos here
+const F1_AWARDS_PHOTOS: GalleryPhoto[] = [
+  // Example:
+  // {
+  //   src: "/images/gallery/f1-fantasy/awards/ceremony-2025.jpg",
+  //   alt: "2025 Award Ceremony",
+  //   caption: "F1 Fantasy Awards 2025",
+  // },
+];
+
+const ACCENT_COLOR = "#dc2626";
+
+export default function F1FantasyGalleryPage() {
+  const { theme } = useTheme();
+  const { t } = useTranslation("f1");
+
   return (
-    <div className="min-h-screen bg-theme-card theme-transition">
-      <div className="container mx-auto px-4 sm:px-6 py-8 max-w-4xl">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-theme-foreground mb-4 theme-transition">
-            F1 Fantasy Nagrade
+    <div className="min-h-screen pb-20 pt-10 px-4 bg-theme-background">
+      <div className="max-w-6xl mx-auto">
+        {/* Hero Header */}
+        <div className="text-center mb-12">
+          <h1
+            className={`text-3xl md:text-4xl font-bold mb-3 ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {t("gallery.title")}
           </h1>
-          <p className="text-base sm:text-lg text-theme-text-secondary theme-transition">
-            Osvojite brzinske nagrade u najuzbudljivijoj racing ligi!
-          </p>
+          <div
+            className="w-20 h-1 mx-auto rounded-full"
+            style={{ backgroundColor: ACCENT_COLOR }}
+          />
         </div>
 
-        <div className="bg-theme-card rounded-lg border-theme-border p-6 sm:p-8 theme-transition">
-          <div className="text-center space-y-6">
-            <div className="bg-gradient-to-r from-red-600 to-red-500 rounded-lg p-6 text-white">
-              <h2 className="text-xl sm:text-2xl font-bold mb-2">
-                🏁 Prva nagrada
-              </h2>
-              <div className="text-3xl sm:text-4xl font-bold mb-2">
-                1000 KM
-              </div>
-              <p className="text-lg font-semibold">
-                F1 Racing Champion
-              </p>
-            </div>
-            
-            <div className="text-center py-4">
-              <p className="text-theme-text-secondary text-sm sm:text-base">
-                Osvojite glavnu nagradu i postanite prvak najbrže motorsport fantazi lige!
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Wall of Champions */}
+        <ChampionsWall
+          champions={F1_CHAMPIONS}
+          accentColor={ACCENT_COLOR}
+          leagueName={t("gallery.title")}
+          title={t("gallery.championsWall.title")}
+          subtitle={t("gallery.championsWall.subtitle")}
+          emptyMessage={t("gallery.emptyChampions")}
+        />
+
+        {/* Awards Gallery */}
+        <AwardsGallery
+          photos={F1_AWARDS_PHOTOS}
+          accentColor={ACCENT_COLOR}
+          title={t("gallery.awards.title")}
+          subtitle={t("gallery.awards.subtitle")}
+          emptyMessage={t("gallery.emptyGallery")}
+        />
       </div>
     </div>
   );

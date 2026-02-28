@@ -83,5 +83,18 @@
     "title": "Registracija uspješna!",
     "message": "Uspješno ste registrovani za F1 Fantasy.",
     "backToHome": "Nazad na početnu"
+  },
+  "gallery": {
+    "title": "F1 Fantasy Galerija",
+    "championsWall": {
+      "title": "Zid Šampiona",
+      "subtitle": "Naši F1 Fantasy šampioni kroz sezone"
+    },
+    "awards": {
+      "title": "Dodjela Nagrada",
+      "subtitle": "Momenti sa prethodnih dodjela nagrada"
+    },
+    "emptyChampions": "Šampioni će uskoro biti prikazani ovdje.",
+    "emptyGallery": "Fotografije sa dodjela nagrada će uskoro biti prikazane ovdje."
   }
 }

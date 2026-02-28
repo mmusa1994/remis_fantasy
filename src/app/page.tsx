@@ -21,7 +21,8 @@ import {
   FaGlobeAmericas,
 } from "react-icons/fa";
 import { MdLiveTv } from "react-icons/md";
-import { GiftIcon, ArrowRight, UserPlus, Zap } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import HowItWorks from "@/components/shared/HowItWorks";
 
 // TypeScript types for league and stat data
 interface LeagueCard {
@@ -155,27 +156,6 @@ export default function Home() {
       color: "text-cyan-500",
       titleKey: "hero:whyChoose.multiLeague.title",
       descKey: "hero:whyChoose.multiLeague.description",
-    },
-  ];
-
-  const howItWorksSteps = [
-    {
-      step: 1,
-      icon: UserPlus,
-      titleKey: "hero:howItWorks.step1.title",
-      descKey: "hero:howItWorks.step1.description",
-    },
-    {
-      step: 2,
-      icon: Zap,
-      titleKey: "hero:howItWorks.step2.title",
-      descKey: "hero:howItWorks.step2.description",
-    },
-    {
-      step: 3,
-      icon: FaTrophy,
-      titleKey: "hero:howItWorks.step3.title",
-      descKey: "hero:howItWorks.step3.description",
     },
   ];
 
@@ -356,101 +336,7 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-16 md:py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2
-            className={`text-xl md:text-2xl font-black text-center mb-16 ${
-              theme === "dark" ? "text-white" : "text-gray-800"
-            }`}
-          >
-            {t("hero:howItWorks.title")}
-          </h2>
-
-          <div className="relative">
-            {/* Connecting lines - Desktop */}
-            <div className="hidden md:block absolute top-[28px] left-[16.67%] right-[16.67%] h-px">
-              <div className={`w-full h-full ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`} />
-              {/* Animated pulse traveling along the line */}
-              <div
-                className="absolute top-0 h-full w-16 animate-shimmer-border"
-                style={{
-                  backgroundImage: theme === "dark"
-                    ? "linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.6) 50%, transparent 100%)"
-                    : "linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.4) 50%, transparent 100%)",
-                  backgroundSize: "200% 100%",
-                }}
-              />
-            </div>
-
-            {/* Steps */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 relative">
-              {howItWorksSteps.map((step, idx) => {
-                const StepIcon = step.icon;
-                const isLast = idx === howItWorksSteps.length - 1;
-                return (
-                  <div key={step.step} className="relative text-center">
-                    {/* Mobile connecting line */}
-                    {!isLast && (
-                      <div className={`md:hidden absolute left-1/2 -translate-x-1/2 top-[56px] w-px h-[calc(100%+48px-56px)] ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                      }`}>
-                        <div
-                          className="absolute left-0 w-full animate-pulse"
-                          style={{
-                            top: "30%",
-                            height: "40%",
-                            backgroundImage: theme === "dark"
-                              ? "linear-gradient(180deg, transparent 0%, rgba(139,92,246,0.5) 50%, transparent 100%)"
-                              : "linear-gradient(180deg, transparent 0%, rgba(139,92,246,0.3) 50%, transparent 100%)",
-                          }}
-                        />
-                      </div>
-                    )}
-
-                    {/* Step circle */}
-                    <div className="relative z-10 mx-auto mb-5">
-                      <div className={`w-14 h-14 rounded-md flex items-center justify-center mx-auto text-lg font-bold relative overflow-hidden ${
-                        theme === "dark"
-                          ? "bg-gray-800 text-white border border-gray-600"
-                          : "bg-white text-gray-900 border border-gray-200 shadow-sm"
-                      }`}>
-                        {/* Subtle glow effect */}
-                        <div className={`absolute inset-0 opacity-20 ${
-                          idx === 0 ? "bg-gradient-to-br from-purple-500 to-transparent" :
-                          idx === 1 ? "bg-gradient-to-br from-blue-500 to-transparent" :
-                          "bg-gradient-to-br from-green-500 to-transparent"
-                        }`} />
-                        <span className="relative z-10">{step.step}</span>
-                      </div>
-                      {/* Ping ring */}
-                      <div className={`absolute inset-0 mx-auto w-14 h-14 rounded-md animate-ping opacity-10 ${
-                        idx === 0 ? "bg-purple-500" :
-                        idx === 1 ? "bg-blue-500" :
-                        "bg-green-500"
-                      }`} style={{ animationDuration: "3s" }} />
-                    </div>
-
-                    <h3
-                      className={`text-base font-bold mb-2 ${
-                        theme === "dark" ? "text-white" : "text-gray-800"
-                      }`}
-                    >
-                      {t(step.titleKey)}
-                    </h3>
-                    <p
-                      className={`text-sm max-w-[240px] mx-auto ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}
-                    >
-                      {t(step.descKey)}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
+      <HowItWorks />
 
       {/* AI Guru CTA Section */}
       <section className="py-16 md:py-20 px-4">
@@ -471,13 +357,6 @@ export default function Home() {
             <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-sm font-bold shadow-lg">
               <FaStar className="text-lg" />
               {t("hero:aiGuru.premium")}
-            </div>
-          </div>
-
-          <div className="absolute -top-4 right-4">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-green-400 to-green-500 text-white text-sm font-bold shadow-lg">
-              <GiftIcon className="w-4 h-4" />
-              {t("hero:aiGuru.freeForNow")}
             </div>
           </div>
 

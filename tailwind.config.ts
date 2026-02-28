@@ -48,6 +48,9 @@ const config: Config = {
         float: "float 6s ease-in-out infinite",
         shimmer: "shimmer 3s ease-in-out infinite",
         "shimmer-border": "shimmerBorder 3s ease-in-out infinite",
+        "spin-slow": "spin 8s linear infinite",
+        "travel-line-1": "travelLine 2.5s ease-in-out infinite",
+        "travel-line-2": "travelLine 2.5s ease-in-out 0.3s infinite",
       },
       keyframes: {
         fadeIn: {
@@ -70,6 +73,12 @@ const config: Config = {
         shimmerBorder: {
           "0%": { backgroundPosition: "200% 0" },
           "100%": { backgroundPosition: "-200% 0" },
+        },
+        travelLine: {
+          "0%": { left: "-5%", opacity: "0" },
+          "10%": { opacity: "1" },
+          "90%": { opacity: "1" },
+          "100%": { left: "100%", opacity: "0" },
         },
       },
     },

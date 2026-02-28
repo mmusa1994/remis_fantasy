@@ -648,5 +648,18 @@
     "transfers": "Transfers",
     "accuracy": "Accuracy",
     "lastUpdated": "Last updated"
+  },
+  "gallery": {
+    "title": "Premier League Gallery",
+    "championsWall": {
+      "title": "Wall of Champions",
+      "subtitle": "Our Premier League fantasy champions through the seasons"
+    },
+    "awards": {
+      "title": "Awards Ceremony",
+      "subtitle": "Moments from our previous award ceremonies"
+    },
+    "emptyChampions": "Champions will be displayed here soon.",
+    "emptyGallery": "Photos from award ceremonies will be displayed here soon."
   }
 }

@@ -7,7 +7,7 @@ export default function PremierLeagueLayout({
 }) {
   return (
     <div className="w-full">
-      <main className="relative pt-0">{children}</main>
+      <main className="relative pt-0 sm:pt-4 md:pt-8 pb-8 sm:pb-12">{children}</main>
     </div>
   );
 }

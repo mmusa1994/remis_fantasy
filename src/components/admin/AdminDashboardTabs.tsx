@@ -33,6 +33,7 @@ interface Registration {
   phone: string;
   team_name?: string;
   league_type?: string;
+  league_tier?: string;
   h2h_league?: boolean;
   payment_method?: string;
   payment_status?: "paid" | "pending" | null;
@@ -69,6 +70,7 @@ export default function AdminDashboardTabs({
   const { theme, toggleTheme } = useTheme();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<LeagueTab>(initialTab);
+  const [season, setSeason] = useState<"25_26" | "26_27">("26_27");
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [filteredRegistrations, setFilteredRegistrations] = useState<
     Registration[]
@@ -135,7 +137,7 @@ export default function AdminDashboardTabs({
     // League type filter (only for Premier League)
     if (activeTab === "premier" && filters.league_type !== "all") {
       filtered = filtered.filter(
-        (reg) => reg.league_type === filters.league_type
+        (reg) => (reg.league_type || reg.league_tier) === filters.league_type
       );
     }
 
@@ -211,8 +213,9 @@ export default function AdminDashboardTabs({
   }, [registrations, filters, activeTab]);
 
   useEffect(() => {
+    setFilters((prev) => ({ ...prev, league_type: "all" }));
     fetchRegistrations();
-  }, [activeTab]);
+  }, [activeTab, season]);
 
   useEffect(() => {
     applyFilters();
@@ -220,10 +223,12 @@ export default function AdminDashboardTabs({
 
   const fetchRegistrations = async () => {
     try {
+      setLoading(true);
+      const seasonParam = activeTab !== "f1" ? `?season=${season}` : "";
       const apiEndpoint = activeTab === "premier"
-        ? "/api/admin/registrations"
+        ? `/api/admin/registrations${seasonParam}`
         : activeTab === "champions"
-        ? "/api/admin/champions-registrations"
+        ? `/api/admin/champions-registrations${seasonParam}`
         : "/api/admin/f1-registrations";
 
       const response = await fetch(apiEndpoint);
@@ -370,10 +375,11 @@ export default function AdminDashboardTabs({
     if (!editingRecord) return;
 
     try {
+      const seasonParam = activeTab !== "f1" ? `?season=${season}` : "";
       const apiEndpoint = activeTab === "premier"
-        ? "/api/admin/registrations"
+        ? `/api/admin/registrations${seasonParam}`
         : activeTab === "champions"
-        ? "/api/admin/champions-registrations"
+        ? `/api/admin/champions-registrations${seasonParam}`
         : "/api/admin/f1-registrations";
 
       const response = await fetch(apiEndpoint, {
@@ -431,10 +437,11 @@ export default function AdminDashboardTabs({
     }
 
     try {
+      const seasonParam = activeTab !== "f1" ? `&season=${season}` : "";
       const apiEndpoint = activeTab === "premier"
-        ? `/api/admin/registrations?id=${id}`
+        ? `/api/admin/registrations?id=${id}${seasonParam}`
         : activeTab === "champions"
-        ? `/api/admin/champions-registrations?id=${id}`
+        ? `/api/admin/champions-registrations?id=${id}${seasonParam}`
         : `/api/admin/f1-registrations?id=${id}`;
 
       const response = await fetch(apiEndpoint, {
@@ -638,8 +645,9 @@ export default function AdminDashboardTabs({
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* League Tabs */}
+        {/* League Tabs + Season Selector */}
         <div className={`mb-8 border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}>
+          <div className="flex items-center justify-between">
           <nav className="-mb-px flex">
             <button
               onClick={() => setActiveTab("premier")}
@@ -696,6 +704,23 @@ export default function AdminDashboardTabs({
               </div>
             </button>
           </nav>
+          {/* Season Selector */}
+          <div className="flex items-center gap-2 mb-1">
+            <label className={`text-xs font-medium uppercase tracking-wide ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+              Season
+            </label>
+            <select
+              value={season}
+              onChange={(e) => setSeason(e.target.value as "25_26" | "26_27")}
+              className={`px-3 py-1.5 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200 ${
+                theme === "dark" ? "bg-gray-900 border border-gray-700 text-white" : "bg-white border border-gray-200 text-gray-900"
+              }`}
+            >
+              <option value="26_27">2026/27</option>
+              <option value="25_26">2025/26</option>
+            </select>
+          </div>
+          </div>
         </div>
 
         {/* Refresh Button */}
@@ -812,7 +837,7 @@ export default function AdminDashboardTabs({
             {activeTab === "premier" && (
               <div>
                 <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-                  League Type
+                  {season === "26_27" ? "League Tier" : "League Type"}
                 </label>
                 <select
                   value={filters.league_type}
@@ -824,10 +849,22 @@ export default function AdminDashboardTabs({
                     }`}
                 >
                   <option value="all">All Leagues</option>
-                  <option value="standard">Standard</option>
-                  <option value="premium">Premium</option>
-                  <option value="h2h">H2H</option>
-                  <option value="n/a">N/A</option>
+                  {season === "26_27" ? (
+                    <>
+                      <option value="standard">Standard</option>
+                      <option value="premium">Premium</option>
+                      <option value="h2h_only">H2H Only</option>
+                      <option value="standard_h2h">Standard + H2H</option>
+                      <option value="premium_h2h">Premium + H2H</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="standard">Standard</option>
+                      <option value="premium">Premium</option>
+                      <option value="h2h">H2H</option>
+                      <option value="n/a">N/A</option>
+                    </>
+                  )}
                 </select>
               </div>
             )}

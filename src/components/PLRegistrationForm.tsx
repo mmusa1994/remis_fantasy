@@ -37,7 +37,9 @@ interface FormData {
   notes: string;
 }
 
-function F1RegistrationFormInner() {
+type MainLeague = "standard" | "premium" | null;
+
+function PLRegistrationFormInner() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const stripe = useStripe();
@@ -52,16 +54,29 @@ function F1RegistrationFormInner() {
     notes: "",
   });
 
+  const [mainLeague, setMainLeague] = useState<MainLeague>(null);
+  const [h2hSelected, setH2hSelected] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [cardFocused, setCardFocused] = useState<string | null>(null);
 
-  // Custom card data (replaces Stripe Elements for visual interactivity)
+  // Custom card data
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvc, setCardCvc] = useState("");
+
+  // Calculate total price based on selections
+  const tierPrice = (mainLeague === "standard" ? 20 : mainLeague === "premium" ? 50 : 0) + (h2hSelected ? 15 : 0);
+
+  // Build league_tier string for API
+  const getLeagueTier = () => {
+    if (mainLeague && h2hSelected) return `${mainLeague}_h2h`;
+    if (mainLeague) return mainLeague;
+    if (h2hSelected) return "h2h_only";
+    return "";
+  };
 
   // Detect card brand from number
   const detectBrand = (num: string): string => {
@@ -87,7 +102,7 @@ function F1RegistrationFormInner() {
     return `${padded.slice(0, 4)} ${padded.slice(4, 8)} ${padded.slice(8, 12)} ${padded.slice(12, 16)}`;
   };
 
-  // Format card number for input field: "4242 4242 4242 4242"
+  // Format card number for input field
   const formatInputNumber = (num: string) => {
     if (!num) return "";
     if (isAmex) {
@@ -105,7 +120,7 @@ function F1RegistrationFormInner() {
     return `${mm}/${yy.padEnd(2, "\u2022")}`;
   };
 
-  // Format expiry for input: "12/26"
+  // Format expiry for input
   const formatInputExpiry = (exp: string) => {
     if (!exp) return "";
     if (exp.length <= 2) return exp;
@@ -132,6 +147,7 @@ function F1RegistrationFormInner() {
     setCardCvc(raw);
     if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
   };
+
   const [paymentMode, setPaymentMode] = useState<"card" | "cash">("card");
   const [cashConfirmed, setCashConfirmed] = useState(false);
   const [cashDeliveryDate, setCashDeliveryDate] = useState("");
@@ -147,6 +163,11 @@ function F1RegistrationFormInner() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+
+    // At least one league must be selected
+    if (!mainLeague && !h2hSelected) {
+      newErrors.league = "Morate odabrati barem jednu ligu";
+    }
 
     if (!formData.first_name.trim()) {
       newErrors.first_name = t("common:validation.firstNameRequired");
@@ -208,7 +229,7 @@ function F1RegistrationFormInner() {
     try {
       // Cash flow
       if (paymentMode === "cash") {
-        const response = await fetch("/api/f1/register-cash", {
+        const response = await fetch("/api/premier-league/register-cash", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -219,21 +240,22 @@ function F1RegistrationFormInner() {
             notes: formData.notes.trim(),
             payment_method: "cash",
             cash_delivery_date: cashDeliveryDate,
+            league_tier: getLeagueTier(),
           }),
         });
         const data = await response.json();
         if (!response.ok) {
           throw new Error(data.error || t("common:validation.registrationError"));
         }
-        router.push("/f1-fantasy/registration/success");
+        router.push("/premier-league/registration/success");
         return;
       }
 
-      // Card flow - send card data to server for secure PaymentMethod creation
+      // Card flow
       const expMonth = cardExpiry.slice(0, 2);
       const expYear = cardExpiry.slice(2, 4);
 
-      const response = await fetch("/api/f1/register", {
+      const response = await fetch("/api/premier-league/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -246,6 +268,7 @@ function F1RegistrationFormInner() {
           card_exp_month: expMonth,
           card_exp_year: expYear,
           card_cvc: cardCvc,
+          league_tier: getLeagueTier(),
         }),
       });
 
@@ -256,7 +279,6 @@ function F1RegistrationFormInner() {
 
       if (!stripe) return;
 
-      // Confirm payment client-side (handles 3D Secure if required)
       const { error: stripeError, paymentIntent } =
         await stripe.confirmCardPayment(data.clientSecret);
 
@@ -265,10 +287,10 @@ function F1RegistrationFormInner() {
       }
 
       if (paymentIntent?.status === "succeeded") {
-        router.push("/f1-fantasy/registration/success");
+        router.push("/premier-league/registration/success");
       }
     } catch (error: unknown) {
-      console.error("F1 registration error:", error);
+      console.error("PL registration error:", error);
       setToast({
         show: true,
         message:
@@ -296,7 +318,7 @@ function F1RegistrationFormInner() {
       errors[field]
         ? "border-red-400"
         : focusedField === field
-          ? "border-red-600/40 dark:border-red-400/40"
+          ? "border-purple-600/40 dark:border-purple-400/40"
           : "border-gray-200 dark:border-gray-700"
     }`;
 
@@ -310,7 +332,7 @@ function F1RegistrationFormInner() {
   const cardFieldClass = (field: string) =>
     `input-theme w-full px-3.5 py-2.5 border rounded-lg transition-all duration-200 focus-ring text-sm font-mono tracking-wider ${
       cardFocused === field
-        ? "border-red-600/40 dark:border-red-400/40"
+        ? "border-purple-600/40 dark:border-purple-400/40"
         : "border-gray-200 dark:border-gray-700"
     }`;
 
@@ -347,47 +369,47 @@ function F1RegistrationFormInner() {
           {/* Header */}
           <div className="flex justify-center items-center flex-col mb-8 sm:mb-10 animate-fade-in-up">
             <h2 className="text-2xl xs:text-3xl md:text-4xl font-black mb-2 xs:mb-3 text-balance leading-tight font-anta animate-scale-in animate-delay-200">
-              <span className="text-red-600 dark:text-red-500">
-                F1 Fantasy 2026
+              <span className="text-purple-600 dark:text-purple-400">
+                Premier League Fantasy 2026/27
               </span>
             </h2>
 
             <h3 className="text-lg xs:text-xl md:text-2xl font-bold mb-3 text-theme-heading-primary">
-              {t("f1:registration.subtitle")}
+              Registracija
             </h3>
 
             <p className="text-theme-text-secondary text-xs xs:text-sm md:text-base max-w-xl mx-auto leading-relaxed font-medium text-center px-2">
-              {t("common:hero.f1.subtitle")}
+              Pridružite se Premier League Fantasy ligi za sezonu 2026/27 i takmičite se za nagrade.
             </p>
           </div>
 
           {/* What You Get */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-8 animate-fade-in-up animate-delay-200">
-            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-red-500/[0.03] dark:bg-red-500/[0.06] border border-red-500/10 hover:border-red-500/20 transition-colors">
-              <div className="w-9 h-9 rounded-lg bg-red-500/8 flex items-center justify-center flex-shrink-0">
-                <Trophy className="w-4.5 h-4.5 text-red-600 dark:text-red-400" />
+            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-purple-500/[0.03] dark:bg-purple-500/[0.06] border border-purple-500/10 hover:border-purple-500/20 transition-colors">
+              <div className="w-9 h-9 rounded-lg bg-purple-500/8 flex items-center justify-center flex-shrink-0">
+                <Trophy className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">{t("f1:registration.competitionForPrizes")}</div>
-                <div className="text-xs text-theme-text-secondary">{t("f1:registration.winPrizeFund")}</div>
+                <div className="font-bold text-theme-heading-primary text-sm">Takmičenje za nagrade</div>
+                <div className="text-xs text-theme-text-secondary">Osvoji nagradni fond</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-red-500/[0.03] dark:bg-red-500/[0.06] border border-red-500/10 hover:border-red-500/20 transition-colors">
-              <div className="w-9 h-9 rounded-lg bg-red-500/8 flex items-center justify-center flex-shrink-0">
-                <BarChart3 className="w-4.5 h-4.5 text-red-600 dark:text-red-400" />
+            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-purple-500/[0.03] dark:bg-purple-500/[0.06] border border-purple-500/10 hover:border-purple-500/20 transition-colors">
+              <div className="w-9 h-9 rounded-lg bg-purple-500/8 flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">{t("f1:registration.liveTable")}</div>
-                <div className="text-xs text-theme-text-secondary">{t("f1:registration.realTimeResults")}</div>
+                <div className="font-bold text-theme-heading-primary text-sm">Live tabela</div>
+                <div className="text-xs text-theme-text-secondary">Rezultati u realnom vremenu</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-red-500/[0.03] dark:bg-red-500/[0.06] border border-red-500/10 hover:border-red-500/20 transition-colors">
-              <div className="w-9 h-9 rounded-lg bg-red-500/8 flex items-center justify-center flex-shrink-0">
-                <Gift className="w-4.5 h-4.5 text-red-600 dark:text-red-400" />
+            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-purple-500/[0.03] dark:bg-purple-500/[0.06] border border-purple-500/10 hover:border-purple-500/20 transition-colors">
+              <div className="w-9 h-9 rounded-lg bg-purple-500/8 flex items-center justify-center flex-shrink-0">
+                <Gift className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">{t("f1:registration.grandPrixPrizes")}</div>
-                <div className="text-xs text-theme-text-secondary">{t("f1:registration.specialPrizesPerRace")}</div>
+                <div className="font-bold text-theme-heading-primary text-sm">Mjesečne nagrade</div>
+                <div className="text-xs text-theme-text-secondary">Specijalne nagrade po kolu</div>
               </div>
             </div>
           </div>
@@ -399,17 +421,138 @@ function F1RegistrationFormInner() {
           >
             {/* Price badge */}
             <div className="flex justify-center -mt-10 sm:-mt-11 mb-7">
-              <div className="bg-red-600 text-white px-5 py-2 rounded-lg shadow-md shadow-red-600/20 flex items-center gap-2">
-                <span className="text-sm font-medium opacity-90">{t("f1:registration.entryFee")}</span>
-                <span className="text-lg font-black">&euro;10</span>
+              <div className={`text-white px-5 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all duration-300 ${
+                tierPrice > 0 ? "bg-purple-600 shadow-purple-600/20" : "bg-gray-400 shadow-gray-400/20"
+              }`}>
+                <span className="text-sm font-medium opacity-90">Kotizacija</span>
+                <span className="text-lg font-black">{tierPrice > 0 ? <>&euro;{tierPrice}</> : "—"}</span>
               </div>
+            </div>
+
+            {/* League Selection */}
+            <div className="mb-6">
+              <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
+                <span className="w-5.5 h-5.5 rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">1</span>
+                Odaberite ligu
+              </h3>
+
+              {/* Main league: Standard or Premium (mutually exclusive) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMainLeague(mainLeague === "standard" ? null : "standard");
+                    if (errors.league) setErrors((p) => ({ ...p, league: "" }));
+                  }}
+                  className={`relative p-4 rounded-lg border-2 transition-all duration-300 text-left ${
+                    mainLeague === "standard"
+                      ? "border-purple-600/60 bg-purple-500/[0.04] dark:bg-purple-500/[0.08] shadow-sm"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                  }`}
+                >
+                  {mainLeague === "standard" && (
+                    <div className="absolute top-2.5 right-2.5">
+                      <CheckCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    </div>
+                  )}
+                  <div className={`text-sm font-bold mb-1 ${
+                    mainLeague === "standard" ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
+                  }`}>
+                    Standard Liga
+                  </div>
+                  <div className="text-xs text-theme-text-secondary">Osnovna liga sa takmičenjem za nagrade</div>
+                  <div className={`text-lg font-black mt-2 ${
+                    mainLeague === "standard" ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
+                  }`}>
+                    &euro;20
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMainLeague(mainLeague === "premium" ? null : "premium");
+                    if (errors.league) setErrors((p) => ({ ...p, league: "" }));
+                  }}
+                  className={`relative p-4 rounded-lg border-2 transition-all duration-300 text-left ${
+                    mainLeague === "premium"
+                      ? "border-purple-600/60 bg-purple-500/[0.04] dark:bg-purple-500/[0.08] shadow-sm"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                  }`}
+                >
+                  {mainLeague === "premium" && (
+                    <div className="absolute top-2.5 right-2.5">
+                      <CheckCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    </div>
+                  )}
+                  <div className={`text-sm font-bold mb-1 ${
+                    mainLeague === "premium" ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
+                  }`}>
+                    Premium Liga
+                  </div>
+                  <div className="text-xs text-theme-text-secondary">Premium liga sa većim nagradnim fondom</div>
+                  <div className={`text-lg font-black mt-2 ${
+                    mainLeague === "premium" ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
+                  }`}>
+                    &euro;50
+                  </div>
+                </button>
+              </div>
+
+              {/* H2H add-on checkbox */}
+              <button
+                type="button"
+                onClick={() => {
+                  setH2hSelected(!h2hSelected);
+                  if (errors.league) setErrors((p) => ({ ...p, league: "" }));
+                }}
+                className={`relative w-full p-4 rounded-lg border-2 transition-all duration-300 text-left ${
+                  h2hSelected
+                    ? "border-purple-600/60 bg-purple-500/[0.04] dark:bg-purple-500/[0.08] shadow-sm"
+                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className={`text-sm font-bold mb-1 ${
+                      h2hSelected ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
+                    }`}>
+                      H2H Liga
+                    </div>
+                    <div className="text-xs text-theme-text-secondary">Head-to-Head takmičenje (može se kombinovati)</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className={`text-lg font-black ${
+                      h2hSelected ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
+                    }`}>
+                      &euro;15
+                    </div>
+                    <div className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center flex-shrink-0 ${
+                      h2hSelected
+                        ? "bg-purple-600 border-purple-600"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}>
+                      {h2hSelected && (
+                        <CheckCircle className="w-3.5 h-3.5 text-white" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              {errors.league && (
+                <p className="text-red-400 text-xs mt-2 flex items-center gap-1 font-medium animate-fade-in">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {errors.league}
+                </p>
+              )}
             </div>
 
             {/* Personal Info */}
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-5.5 h-5.5 rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">1</span>
-                {t("f1:registration.personalInfo")}
+                <span className="w-5.5 h-5.5 rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">2</span>
+                Lični podaci
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -417,15 +560,15 @@ function F1RegistrationFormInner() {
                   <div className="relative">
                     <input
                       type="text"
-                      id="first_name"
+                      id="pl_first_name"
                       value={formData.first_name}
                       onChange={(e) => handleInputChange("first_name", e.target.value)}
                       onFocus={() => setFocusedField("first_name")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("first_name")}
                     />
-                    <label htmlFor="first_name" className={labelClassName("first_name", formData.first_name)}>
-                      {t("f1:registration.firstName")} *
+                    <label htmlFor="pl_first_name" className={labelClassName("first_name", formData.first_name)}>
+                      Ime *
                     </label>
                   </div>
                   {errors.first_name && (
@@ -440,15 +583,15 @@ function F1RegistrationFormInner() {
                   <div className="relative">
                     <input
                       type="text"
-                      id="last_name"
+                      id="pl_last_name"
                       value={formData.last_name}
                       onChange={(e) => handleInputChange("last_name", e.target.value)}
                       onFocus={() => setFocusedField("last_name")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("last_name")}
                     />
-                    <label htmlFor="last_name" className={labelClassName("last_name", formData.last_name)}>
-                      {t("f1:registration.lastName")} *
+                    <label htmlFor="pl_last_name" className={labelClassName("last_name", formData.last_name)}>
+                      Prezime *
                     </label>
                   </div>
                   {errors.last_name && (
@@ -464,8 +607,8 @@ function F1RegistrationFormInner() {
             {/* Contact Info */}
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-5.5 h-5.5 rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">2</span>
-                {t("f1:registration.contactInfo")}
+                <span className="w-5.5 h-5.5 rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">3</span>
+                Kontakt informacije
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -473,15 +616,15 @@ function F1RegistrationFormInner() {
                   <div className="relative">
                     <input
                       type="email"
-                      id="email"
+                      id="pl_email"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       onFocus={() => setFocusedField("email")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("email")}
                     />
-                    <label htmlFor="email" className={labelClassName("email", formData.email)}>
-                      {t("f1:registration.email")} *
+                    <label htmlFor="pl_email" className={labelClassName("email", formData.email)}>
+                      Email *
                     </label>
                   </div>
                   {errors.email && (
@@ -496,15 +639,15 @@ function F1RegistrationFormInner() {
                   <div className="relative">
                     <input
                       type="tel"
-                      id="phone"
+                      id="pl_phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
                       onFocus={() => setFocusedField("phone")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("phone")}
                     />
-                    <label htmlFor="phone" className={labelClassName("phone", formData.phone)}>
-                      {t("f1:registration.phone")} *
+                    <label htmlFor="pl_phone" className={labelClassName("phone", formData.phone)}>
+                      Telefon *
                     </label>
                   </div>
                   {errors.phone && (
@@ -522,7 +665,7 @@ function F1RegistrationFormInner() {
               <div className="relative">
                 <div className="relative">
                   <textarea
-                    id="notes"
+                    id="pl_notes"
                     value={formData.notes}
                     onChange={(e) => handleInputChange("notes", e.target.value)}
                     onFocus={() => setFocusedField("notes")}
@@ -530,8 +673,8 @@ function F1RegistrationFormInner() {
                     rows={2}
                     className={inputClassName("notes")}
                   />
-                  <label htmlFor="notes" className={labelClassName("notes", formData.notes)}>
-                    {t("f1:registration.notes")}
+                  <label htmlFor="pl_notes" className={labelClassName("notes", formData.notes)}>
+                    Napomene
                   </label>
                 </div>
               </div>
@@ -545,7 +688,7 @@ function F1RegistrationFormInner() {
                 </div>
                 <div className="relative flex justify-center">
                   <span className="bg-theme-background px-4 text-xs text-theme-text-secondary font-medium uppercase tracking-wider">
-                    {t("f1:payment.divider")}
+                    Način plaćanja
                   </span>
                 </div>
               </div>
@@ -556,27 +699,27 @@ function F1RegistrationFormInner() {
                   onClick={() => setPaymentMode("card")}
                   className={`relative p-3.5 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2.5 ${
                     paymentMode === "card"
-                      ? "border-red-600/60 bg-red-500/[0.04] dark:bg-red-500/[0.08] shadow-sm"
+                      ? "border-purple-600/60 bg-purple-500/[0.04] dark:bg-purple-500/[0.08] shadow-sm"
                       : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                   }`}
                 >
                   {paymentMode === "card" && (
                     <div className="absolute top-2 right-2">
-                      <CheckCircle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+                      <CheckCircle className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                     </div>
                   )}
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
                     paymentMode === "card"
-                      ? "bg-red-600/10 text-red-600 dark:text-red-400"
+                      ? "bg-purple-600/10 text-purple-600 dark:text-purple-400"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-400"
                   }`}>
                     <CreditCard className="w-5 h-5" />
                   </div>
                   <div className="text-center">
                     <div className={`text-sm font-bold ${
-                      paymentMode === "card" ? "text-red-600 dark:text-red-400" : "text-theme-heading-primary"
+                      paymentMode === "card" ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
                     }`}>
-                      {t("f1:payment.card")}
+                      Kartica
                     </div>
                     <div className="text-[10px] text-theme-text-secondary mt-0.5">
                       Visa · Mastercard · Amex
@@ -609,7 +752,7 @@ function F1RegistrationFormInner() {
                     <div className={`text-sm font-bold ${
                       paymentMode === "cash" ? "text-green-600 dark:text-green-400" : "text-theme-heading-primary"
                     }`}>
-                      {t("f1:payment.cash")}
+                      Gotovina
                     </div>
                     <div className="text-[10px] text-theme-text-secondary mt-0.5">
                       Dostava gotovine
@@ -623,8 +766,8 @@ function F1RegistrationFormInner() {
             {paymentMode === "card" && (
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-5.5 h-5.5 rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">3</span>
-                {t("f1:registration.cardDetails")}
+                <span className="w-5.5 h-5.5 rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">4</span>
+                Podaci o kartici
                 <div className="ml-auto flex items-center gap-1">
                   <div className="px-1.5 py-0.5 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700">
                     <span className="text-[9px] font-black italic text-blue-600 dark:text-blue-400">VISA</span>
@@ -639,7 +782,7 @@ function F1RegistrationFormInner() {
                 </div>
               </h3>
 
-              {/* Interactive 3D Card - Premium Black */}
+              {/* Interactive 3D Card - Premium Black with Purple tint */}
               <div className="flex justify-center mb-5" style={{ perspective: "1200px" }}>
                 <div
                   className="relative w-[300px] sm:w-[340px] h-[185px] sm:h-[210px] transition-transform duration-700 ease-in-out"
@@ -658,8 +801,8 @@ function F1RegistrationFormInner() {
                   >
                     {/* Premium black base */}
                     <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16162a] to-[#0f0f1a]" />
-                    {/* Subtle shimmer overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-red-950/8 via-transparent to-red-900/5" />
+                    {/* Purple shimmer overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-purple-950/8 via-transparent to-purple-900/5" />
                     <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle at 30% 20%, white 0%, transparent 50%), radial-gradient(circle at 70% 80%, white 0%, transparent 50%)" }} />
                     {/* Top edge highlight */}
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
@@ -715,7 +858,7 @@ function F1RegistrationFormInner() {
                         </div>
                       </div>
 
-                      {/* Card number - shows actual digits */}
+                      {/* Card number */}
                       <div className={`font-mono text-[14px] xs:text-[15px] sm:text-[17px] tracking-[0.15em] sm:tracking-[0.18em] font-medium whitespace-nowrap transition-all duration-300 rounded-md px-2 py-1 -mx-2 ${
                         cardFocused === "cardNumber" ? "bg-white/[0.06]" : ""
                       }`} style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
@@ -760,7 +903,7 @@ function F1RegistrationFormInner() {
                     }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16162a] to-[#0f0f1a]" />
-                    <div className="absolute inset-0 bg-gradient-to-tr from-red-950/5 via-transparent to-red-950/5" />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-purple-950/5 via-transparent to-purple-950/5" />
 
                     <div className="relative h-full flex flex-col">
                       {/* Magnetic stripe */}
@@ -771,7 +914,6 @@ function F1RegistrationFormInner() {
 
                       {/* Signature + CVC */}
                       <div className="flex items-center gap-3 px-5 sm:px-6 mt-5 sm:mt-6">
-                        {/* Signature strip */}
                         <div className="flex-1 h-10 sm:h-11 rounded-md" style={{
                           background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)",
                           border: "1px solid rgba(255,255,255,0.06)",
@@ -780,7 +922,6 @@ function F1RegistrationFormInner() {
                             <div className="w-full h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
                           </div>
                         </div>
-                        {/* CVC box */}
                         <div className={`w-14 sm:w-16 h-9 sm:h-10 rounded-md flex items-center justify-center font-mono text-sm font-bold transition-all duration-300 ${
                           cardFocused === "cardCvc"
                             ? "bg-white/20 text-white border border-white/40 shadow-lg shadow-white/5"
@@ -812,14 +953,14 @@ function F1RegistrationFormInner() {
                 {/* Card Number */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label htmlFor="card_number" className="text-xs font-semibold text-theme-text-secondary flex items-center gap-1.5">
+                    <label htmlFor="pl_card_number" className="text-xs font-semibold text-theme-text-secondary flex items-center gap-1.5">
                       <CreditCard className="w-3.5 h-3.5" />
-                      {t("f1:registration.cardNumber")}
+                      Broj kartice
                     </label>
                     {cardBrand !== "unknown" && <CardBrandIcon />}
                   </div>
                   <input
-                    id="card_number"
+                    id="pl_card_number"
                     type="text"
                     inputMode="numeric"
                     autoComplete="cc-number"
@@ -835,11 +976,11 @@ function F1RegistrationFormInner() {
                 <div className="grid grid-cols-2 gap-3">
                   {/* Expiry */}
                   <div>
-                    <label htmlFor="card_expiry" className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
-                      {t("f1:registration.expiryDate")}
+                    <label htmlFor="pl_card_expiry" className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
+                      Datum isteka
                     </label>
                     <input
-                      id="card_expiry"
+                      id="pl_card_expiry"
                       type="text"
                       inputMode="numeric"
                       autoComplete="cc-exp"
@@ -854,11 +995,11 @@ function F1RegistrationFormInner() {
 
                   {/* CVC */}
                   <div>
-                    <label htmlFor="card_cvc" className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
+                    <label htmlFor="pl_card_cvc" className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
                       CVC
                     </label>
                     <input
-                      id="card_cvc"
+                      id="pl_card_cvc"
                       type="text"
                       inputMode="numeric"
                       autoComplete="cc-csc"
@@ -899,7 +1040,7 @@ function F1RegistrationFormInner() {
             {paymentMode === "cash" && (
               <div className="mb-6">
                 <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                  <span className="w-5.5 h-5.5 rounded-md bg-green-600/10 flex items-center justify-center text-[11px] font-black text-green-600 dark:text-green-400">3</span>
+                  <span className="w-5.5 h-5.5 rounded-md bg-green-600/10 flex items-center justify-center text-[11px] font-black text-green-600 dark:text-green-400">4</span>
                   Gotovinska uplata
                 </h3>
 
@@ -909,7 +1050,7 @@ function F1RegistrationFormInner() {
                     <Banknote className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-medium text-theme-heading-primary">Plaćanje gotovinom</p>
-                      <p className="text-xs text-theme-text-secondary mt-1">Izaberite datum do kojeg ćete dostaviti uplatu od &euro;10. Vaša registracija će biti potvrđena nakon primanja uplate.</p>
+                      <p className="text-xs text-theme-text-secondary mt-1">Izaberite datum do kojeg ćete dostaviti uplatu od &euro;{tierPrice}. Vaša registracija će biti potvrđena nakon primanja uplate.</p>
                     </div>
                   </div>
 
@@ -964,7 +1105,7 @@ function F1RegistrationFormInner() {
                       </div>
                     </div>
                     <span className="text-sm text-theme-text-secondary leading-relaxed">
-                      Potvrđujem da ću dostaviti uplatu od <strong className="text-theme-heading-primary">&euro;10</strong> do odabranog datuma.
+                      Potvrđujem da ću dostaviti uplatu od <strong className="text-theme-heading-primary">&euro;{tierPrice}</strong> do odabranog datuma.
                     </span>
                   </label>
                   {errors.cashConfirmed && (
@@ -1029,7 +1170,7 @@ function F1RegistrationFormInner() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 md:py-4 px-8 rounded-lg text-sm md:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-md shadow-red-600/15 hover:shadow-lg hover:shadow-red-600/20 font-anta focus-ring gpu-accelerated active:scale-[0.98]"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 md:py-4 px-8 rounded-lg text-sm md:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-md shadow-purple-600/15 hover:shadow-lg hover:shadow-purple-600/20 font-anta focus-ring gpu-accelerated active:scale-[0.98]"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2.5">
@@ -1037,14 +1178,14 @@ function F1RegistrationFormInner() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  {t("f1:registration.processingPayment")}
+                  Obrađujem uplatu...
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-2.5">
                   {paymentMode === "card" ? (
                     <>
                       <Lock className="w-4.5 h-4.5" />
-                      {t("f1:registration.payAndRegister")}
+                      Plati &euro;{tierPrice} i registruj se
                     </>
                   ) : (
                     <>
@@ -1057,7 +1198,7 @@ function F1RegistrationFormInner() {
             </button>
 
             <p className="text-center text-[11px] text-theme-text-secondary mt-3 leading-relaxed">
-              {t("f1:registration.cardDataProtected")}
+              Vaši podaci su zaštićeni 256-bit SSL enkripcijom. Kartični podaci se sigurno obrađuju putem Stripe-a.
             </p>
           </form>
         </div>
@@ -1066,12 +1207,12 @@ function F1RegistrationFormInner() {
   );
 }
 
-const F1RegistrationForm = React.memo(function F1RegistrationForm() {
+const PLRegistrationForm = React.memo(function PLRegistrationForm() {
   return (
     <Elements stripe={stripePromise}>
-      <F1RegistrationFormInner />
+      <PLRegistrationFormInner />
     </Elements>
   );
 });
 
-export default F1RegistrationForm;
+export default PLRegistrationForm;

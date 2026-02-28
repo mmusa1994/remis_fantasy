@@ -623,5 +623,18 @@
     "target": "Cilj",
     "noRisersFound": "Nema pronađenih poskupljenja sa trenutnim filterima",
     "noFallersFound": "Nema pronađenih jeftinjenja sa trenutnim filterima"
+  },
+  "gallery": {
+    "title": "Premier League Galerija",
+    "championsWall": {
+      "title": "Zid Šampiona",
+      "subtitle": "Naši Premier League fantasy šampioni kroz sezone"
+    },
+    "awards": {
+      "title": "Dodjela Nagrada",
+      "subtitle": "Momenti sa prethodnih dodjela nagrada"
+    },
+    "emptyChampions": "Šampioni će uskoro biti prikazani ovdje.",
+    "emptyGallery": "Fotografije sa dodjela nagrada će uskoro biti prikazane ovdje."
   }
 }

@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
       card_exp_month,
       card_exp_year,
       card_cvc,
+      league_tier,
     } = await req.json();
 
     // Validate required fields
@@ -39,6 +40,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validate tier and determine amount
+    // standard=€20, premium=€50, h2h_only=€15
+    // standard_h2h=€35, premium_h2h=€65
+    const tierAmounts: Record<string, number> = {
+      standard: 2000,
+      premium: 5000,
+      h2h_only: 1500,
+      standard_h2h: 3500,
+      premium_h2h: 6500,
+    };
+
+    if (!league_tier || !tierAmounts[league_tier]) {
+      return NextResponse.json(
+        { error: "Invalid league tier" },
+        { status: 400 }
+      );
+    }
+
+    const amount = tierAmounts[league_tier];
+
     // Create PaymentMethod from card data
     const paymentMethod = await stripe.paymentMethods.create({
       type: "card",
@@ -57,11 +78,12 @@ export async function POST(req: NextRequest) {
 
     // Create PaymentIntent with PaymentMethod attached
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: 1000, // €10.00
+      amount,
       currency: "eur",
       payment_method: paymentMethod.id,
       metadata: {
-        type: "f1_registration",
+        type: "pl_registration_26_27",
+        league_tier,
         first_name: first_name.trim(),
         last_name: last_name.trim(),
         email: email.trim(),
@@ -69,7 +91,7 @@ export async function POST(req: NextRequest) {
         notes: (notes || "").trim(),
       },
       receipt_email: email.trim(),
-      description: "Remis Fantasy F1 2026 - Registration",
+      description: `Remis Fantasy Premier League 2026/27 - ${league_tier}`,
     });
 
     return NextResponse.json({
@@ -77,7 +99,7 @@ export async function POST(req: NextRequest) {
       clientSecret: paymentIntent.client_secret,
     });
   } catch (error: unknown) {
-    console.error("F1 registration API error:", error);
+    console.error("PL registration API error:", error);
     const message =
       error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(

@@ -112,5 +112,18 @@
     "Champions League Teams Only",
     "Weekly Prizes Available",
     "Live Match Updates"
-  ]
+  ],
+  "gallery": {
+    "title": "Champions League Gallery",
+    "championsWall": {
+      "title": "Wall of Champions",
+      "subtitle": "Our Champions League fantasy champions through the seasons"
+    },
+    "awards": {
+      "title": "Awards Ceremony",
+      "subtitle": "Moments from our previous award ceremonies"
+    },
+    "emptyChampions": "Champions will be displayed here soon.",
+    "emptyGallery": "Photos from award ceremonies will be displayed here soon."
+  }
 }
