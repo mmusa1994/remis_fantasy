@@ -80,8 +80,12 @@
     "registerCash": "Register"
   },
   "success": {
-    "title": "Registration Successful!",
-    "message": "You have been successfully registered for F1 Fantasy.",
+    "title": "Registration Confirmed!",
+    "message": "You have successfully registered for the F1 Fantasy League 2026. Payment has been received and your registration is active.",
+    "checkEmail": "Check your email",
+    "emailInstructions": "Once the system confirms your payment, you will receive a <strong>league access code</strong> at the email address you provided. Use that code to join the league on the official F1 Fantasy platform.",
+    "emailTiming": "The email with the league code arrives within <strong>a few minutes</strong> after payment confirmation. Check your spam/junk folder if you don't see it.",
+    "viewTables": "View Tables",
     "backToHome": "Back to Home"
   },
   "gallery": {

@@ -80,8 +80,12 @@
     "registerCash": "Registruj se"
   },
   "success": {
-    "title": "Registracija uspješna!",
-    "message": "Uspješno ste registrovani za F1 Fantasy.",
+    "title": "Registracija Potvrđena!",
+    "message": "Uspješno ste se registrovali za F1 Fantasy ligu 2026. Plaćanje je primljeno i vaša registracija je aktivna.",
+    "checkEmail": "Provjerite svoj email",
+    "emailInstructions": "Nakon što sistem potvrdi vašu uplatu, na email adresu koju ste unijeli dobićete <strong>kod za pristup F1 Fantasy ligi</strong>. Koristite taj kod da se pridružite ligi na zvaničnoj F1 Fantasy platformi.",
+    "emailTiming": "Email sa kodom lige stiže u roku od <strong>nekoliko minuta</strong> nakon potvrde uplate. Provjerite i spam/junk folder ako ne vidite email.",
+    "viewTables": "Pogledaj tabele",
     "backToHome": "Nazad na početnu"
   },
   "gallery": {

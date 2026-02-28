@@ -2,8 +2,11 @@
 
 import { CheckCircle, Trophy } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 export default function CLRegistrationSuccessPage() {
+  const { t } = useTranslation("champions");
+
   return (
     <section className="relative w-full min-h-[60vh] bg-theme-background theme-transition flex items-center justify-center">
       {/* Background effects */}
@@ -30,21 +33,20 @@ export default function CLRegistrationSuccessPage() {
 
           <h1 className="text-3xl md:text-4xl font-black mb-4 font-anta">
             <span className="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-800 bg-clip-text text-transparent">
-              Registracija Potvrdena!
+              {t("success.title")}
             </span>
           </h1>
 
           <p className="text-theme-text-secondary text-base md:text-lg mb-8 max-w-lg mx-auto">
-            Uspjesno ste se registrovali za Champions League Fantasy ligu 2026/27. Placanje je
-            primljeno i vasa registracija je aktivna.
+            {t("success.message")}
           </p>
 
           <div className="bg-gradient-to-r from-blue-500/10 via-blue-500/10 to-blue-500/10 rounded-lg p-6 mb-8 border border-blue-500/30">
             <p className="text-theme-heading-primary font-bold mb-2">
-              Sta dalje?
+              {t("success.whatsNext")}
             </p>
             <p className="text-theme-text-secondary text-sm">
-              Pratite tabele i rezultate na stranici Champions League Fantasy lige. Sretno!
+              {t("success.whatsNextDescription")}
             </p>
           </div>
 
@@ -52,7 +54,7 @@ export default function CLRegistrationSuccessPage() {
             href="/champions-league/tables"
             className="inline-block bg-gradient-to-r from-blue-700 via-blue-700 to-blue-800 hover:from-blue-800 hover:via-blue-800 hover:to-blue-900 text-white font-black py-3 px-8 rounded-lg text-base md:text-lg transition-all duration-500 shadow-2xl border-2 border-blue-500/50 font-anta hover-scale hover-glow focus-ring"
           >
-            Pogledaj tabele
+            {t("success.viewTables")}
           </Link>
         </div>
       </div>

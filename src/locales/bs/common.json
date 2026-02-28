@@ -218,5 +218,12 @@
     "registrationError": "Registracija neuspješna. Pokušajte ponovo.",
     "emailAlreadyRegistered": "Ovaj email je već registrovan",
     "loadingError": "Greška pri učitavanju. Pokušajte ponovo."
+  },
+  "plSuccess": {
+    "title": "Registracija Potvrđena!",
+    "message": "Uspješno ste se registrovali za Premier League Fantasy ligu 2026/27. Plaćanje je primljeno i vaša registracija je aktivna.",
+    "whatsNext": "Šta dalje?",
+    "whatsNextDescription": "Pratite tabele i rezultate na stranici Premier League Fantasy lige. Sretno!",
+    "viewTables": "Pogledaj tabele"
   }
 }

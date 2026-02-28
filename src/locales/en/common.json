@@ -218,5 +218,12 @@
     "registrationError": "Registration failed. Please try again.",
     "emailAlreadyRegistered": "This email is already registered",
     "loadingError": "Loading error. Please try again."
+  },
+  "plSuccess": {
+    "title": "Registration Confirmed!",
+    "message": "You have successfully registered for the Premier League Fantasy League 2026/27. Payment has been received and your registration is active.",
+    "whatsNext": "What's next?",
+    "whatsNextDescription": "Follow the tables and results on the Premier League Fantasy league page. Good luck!",
+    "viewTables": "View Tables"
   }
 }

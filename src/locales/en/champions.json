@@ -70,11 +70,14 @@
     "fileTypeError": "Only images and PDF files are allowed"
   },
   "success": {
-    "title": "REGISTRATION SUCCESSFUL!",
-    "message": "Champions League registration successful! Check your email for confirmation.",
+    "title": "Registration Confirmed!",
+    "message": "You have successfully registered for the Champions League Fantasy League 2025/26. Payment has been received and your registration is active.",
     "welcome": "Welcome to Champions League Fantasy 2025/26!",
     "emailSent": "We've sent you a confirmation email.",
-    "codesInfo": "League access codes will be sent after payment verification."
+    "codesInfo": "League access codes will be sent after payment verification.",
+    "whatsNext": "What's next?",
+    "whatsNextDescription": "Follow the tables and results on the Champions League Fantasy league page. Good luck!",
+    "viewTables": "View Tables"
   },
   "error": {
     "title": "REGISTRATION ERROR",

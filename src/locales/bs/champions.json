@@ -70,11 +70,14 @@
     "fileTypeError": "Dozvoljene su samo slike i PDF fajlovi"
   },
   "success": {
-    "title": "REGISTRACIJA USPEŠNA!",
-    "message": "Registracija za Champions League uspešna! Proverite email za potvrdu.",
+    "title": "Registracija Potvrđena!",
+    "message": "Uspješno ste se registrovali za Champions League Fantasy ligu 2025/26. Plaćanje je primljeno i vaša registracija je aktivna.",
     "welcome": "Dobrodošli u Champions League Fantasy 2025/26!",
     "emailSent": "Poslali smo vam email sa potvrdom prijave.",
-    "codesInfo": "Kod za pristup ligi će vam biti poslati nakon verifikacije uplate."
+    "codesInfo": "Kod za pristup ligi će vam biti poslati nakon verifikacije uplate.",
+    "whatsNext": "Šta dalje?",
+    "whatsNextDescription": "Pratite tabele i rezultate na stranici Champions League Fantasy lige. Sretno!",
+    "viewTables": "Pogledaj tabele"
   },
   "error": {
     "title": "GREŠKA PRI REGISTRACIJI",
