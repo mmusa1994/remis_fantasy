@@ -282,8 +282,8 @@ export default function AdminDashboardTabs({
     try {
       setSendingEmail(registration.id);
 
-      const emailEndpoint = activeTab === "premier" ? "/api/send-email" : "/api/send-champions-email";
-      const emailType = activeTab === "premier" ? "codes" : "champions_codes";
+      const emailEndpoint = activeTab === "premier" ? "/api/send-email" : activeTab === "champions" ? "/api/send-champions-email" : "/api/send-f1-email";
+      const emailType = activeTab === "premier" ? "codes" : activeTab === "champions" ? "champions_codes" : "f1_codes";
 
       const response = await fetch(emailEndpoint, {
         method: "POST",
@@ -337,7 +337,7 @@ export default function AdminDashboardTabs({
 
       const message = responseData.alreadySent
         ? "Email sa kodovima je već poslat ranije."
-        : `Email sa kodovima je uspešno poslat ${activeTab === "premier" ? "(Premier League)" : "(Champions League)"}!`;
+        : `Email sa kodovima je uspešno poslat ${activeTab === "premier" ? "(Premier League)" : activeTab === "champions" ? "(Champions League)" : "(F1 Fantasy)"}!`;
 
       setToast({
         show: true,
@@ -520,6 +520,33 @@ export default function AdminDashboardTabs({
           value: registrations.filter((r) => r.h2h_league).length,
           icon: "Crown",
           color: "from-red-800 to-red-900",
+        },
+      ];
+    } else if (activeTab === "f1") {
+      return [
+        {
+          label: "F1 Fantasy",
+          value: registrations.length,
+          icon: "Crown",
+          color: "from-red-500 to-red-600",
+        },
+        {
+          label: "Paid Registrations",
+          value: registrations.filter((r) => r.payment_status === "paid").length,
+          icon: "CheckCircle",
+          color: "from-green-500 to-green-600",
+        },
+        {
+          label: "Pending Payments",
+          value: registrations.filter((r) => r.payment_status === "pending").length,
+          icon: "AlertCircle",
+          color: "from-yellow-500 to-orange-500",
+        },
+        {
+          label: "Codes Sent",
+          value: registrations.filter((r) => r.codes_email_sent).length,
+          icon: "Mail",
+          color: "from-purple-500 to-purple-600",
         },
       ];
     } else {
@@ -1030,7 +1057,7 @@ export default function AdminDashboardTabs({
         <div className={`rounded-md overflow-hidden border ${theme === "dark" ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
           <div className={`px-6 py-4 border-b ${theme === "dark" ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
             <h2 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
-              {activeTab === "premier" ? "Premier League Registrations" : "Champions League Registrations"}
+              {activeTab === "premier" ? "Premier League Registrations" : activeTab === "champions" ? "Champions League Registrations" : "F1 Fantasy Registrations"}
             </h2>
             <p className="text-sm text-gray-600 mt-1">
               Showing {startIndex + 1}-
@@ -1107,10 +1134,10 @@ export default function AdminDashboardTabs({
                 {currentRegistrations.length === 0 ? (
                   <tr>
                     <td 
-                      colSpan={activeTab === "premier" ? 16 : 13} 
+                      colSpan={activeTab === "premier" ? 16 : 13}
                       className="px-6 py-8 text-center text-gray-500"
                     >
-                      No registrations found for {activeTab === "premier" ? "Premier League" : "Champions League"}
+                      No registrations found for {activeTab === "premier" ? "Premier League" : activeTab === "champions" ? "Champions League" : "F1 Fantasy"}
                     </td>
                   </tr>
                 ) : (
@@ -1787,7 +1814,7 @@ export default function AdminDashboardTabs({
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-gray-800">
-                  Edit Registration - {activeTab === "premier" ? "Premier League" : "Champions League"}
+                  Edit Registration - {activeTab === "premier" ? "Premier League" : activeTab === "champions" ? "Champions League" : "F1 Fantasy"}
                 </h3>
                 <button
                   type="button"
