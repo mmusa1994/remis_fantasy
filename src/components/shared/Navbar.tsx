@@ -1,11 +1,30 @@
 "use client";
 
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  AnimatePresence,
+} from "framer-motion";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, User, LogIn, LogOut, BarChart3, Activity, Trophy, UserPlus, Camera, DollarSign, TrendingUp, Newspaper } from "lucide-react";
+import {
+  Menu,
+  X,
+  User,
+  LogIn,
+  LogOut,
+  BarChart3,
+  Activity,
+  Trophy,
+  UserPlus,
+  Camera,
+  DollarSign,
+  TrendingUp,
+  Newspaper,
+} from "lucide-react";
 import { FaUser, FaGoogle, FaMagic } from "react-icons/fa";
 import { TbPresentationAnalytics } from "react-icons/tb";
 import ThemeToggle from "../ThemeToggle";
@@ -51,7 +70,7 @@ const Navbar = React.memo(function Navbar() {
   const backdropBlur = useTransform(
     scrollY,
     [0, 100],
-    ["blur(0px)", "blur(20px)"]
+    ["blur(0px)", "blur(20px)"],
   );
 
   useEffect(() => {
@@ -67,22 +86,22 @@ const Navbar = React.memo(function Navbar() {
       setUserMenuOpen(false);
     };
     if (userMenuOpen) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
     }
   }, [userMenuOpen]);
 
   // Fetch manager data when user is authenticated
   useEffect(() => {
     if (session?.user?.id) {
-      fetch('/api/user/manager-id')
-        .then(res => res.json())
-        .then(data => {
+      fetch("/api/user/manager-id")
+        .then((res) => res.json())
+        .then((data) => {
           if (!data.error) {
             setManagerData({
               managerId: data.managerId,
               isVerified: data.isVerified,
-              verificationNote: data.verificationNote
+              verificationNote: data.verificationNote,
             });
           }
         })
@@ -150,13 +169,37 @@ const Navbar = React.memo(function Navbar() {
       activeTextClass: "text-purple-600 dark:text-purple-400",
       subPages: [
         { name: t("tables"), href: "/premier-league/tables", icon: BarChart3 },
-        { name: t("fplLive"), href: "/premier-league/fpl-live", icon: Activity },
-        { name: t("fantasyCommand"), href: "/premier-league/team-planner", icon: TbPresentationAnalytics },
-        { name: t("aiTeamAnalysis"), href: "/premier-league/ai-team-analysis", icon: FaMagic },
+        {
+          name: t("fplLive"),
+          href: "/premier-league/fpl-live",
+          icon: Activity,
+        },
+        {
+          name: t("fantasyCommand"),
+          href: "/premier-league/team-planner",
+          icon: TbPresentationAnalytics,
+        },
+        {
+          name: t("aiTeamAnalysis"),
+          href: "/premier-league/ai-team-analysis",
+          icon: FaMagic,
+        },
         { name: t("prices"), href: "/premier-league/prices", icon: DollarSign },
-        { name: t("bestDifferentials"), href: "/premier-league/best-differentials", icon: TrendingUp },
-        { name: t("teamNews"), href: "/premier-league/team-news", icon: Newspaper },
-        { name: t("registration"), href: "/premier-league/registration", icon: UserPlus },
+        {
+          name: t("bestDifferentials"),
+          href: "/premier-league/best-differentials",
+          icon: TrendingUp,
+        },
+        {
+          name: t("teamNews"),
+          href: "/premier-league/team-news",
+          icon: Newspaper,
+        },
+        {
+          name: t("registration"),
+          href: "/premier-league/registration",
+          icon: UserPlus,
+        },
         { name: t("prizes"), href: "/premier-league/prizes", icon: Trophy },
         { name: t("gallery"), href: "/premier-league/gallery", icon: Camera },
       ],
@@ -170,9 +213,17 @@ const Navbar = React.memo(function Navbar() {
       borderClass: "border-t-blue-700",
       activeTextClass: "text-blue-600 dark:text-blue-400",
       subPages: [
-        { name: t("tables"), href: "/champions-league/tables", icon: BarChart3 },
+        {
+          name: t("tables"),
+          href: "/champions-league/tables",
+          icon: BarChart3,
+        },
         { name: t("prizes"), href: "/champions-league/prizes", icon: Trophy },
-        { name: t("registration"), href: "/champions-league/registration", icon: UserPlus },
+        {
+          name: t("registration"),
+          href: "/champions-league/registration",
+          icon: UserPlus,
+        },
         { name: t("gallery"), href: "/champions-league/gallery", icon: Camera },
       ],
     },
@@ -187,7 +238,11 @@ const Navbar = React.memo(function Navbar() {
       subPages: [
         { name: t("tables"), href: "/f1-fantasy/tables", icon: BarChart3 },
         { name: t("prizes"), href: "/f1-fantasy/prizes", icon: Trophy },
-        { name: t("registration"), href: "/f1-fantasy/registration", icon: UserPlus },
+        {
+          name: t("registration"),
+          href: "/f1-fantasy/registration",
+          icon: UserPlus,
+        },
         { name: t("gallery"), href: "/f1-fantasy/gallery", icon: Camera },
       ],
     },
@@ -233,10 +288,10 @@ const Navbar = React.memo(function Navbar() {
             }}
             className={`flex items-center justify-center w-10 h-10 rounded-full overflow-hidden border-2 transition-all duration-300 ${
               userMenuOpen
-                ? 'border-red-800 shadow-lg'
-                : theme === 'dark'
-                  ? 'border-gray-600 hover:border-red-700'
-                  : 'border-gray-300 hover:border-red-800'
+                ? "border-red-800 shadow-lg"
+                : theme === "dark"
+                  ? "border-gray-600 hover:border-red-700"
+                  : "border-gray-300 hover:border-red-800"
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -244,13 +299,15 @@ const Navbar = React.memo(function Navbar() {
             {session.user.image ? (
               <Image
                 src={session.user.image}
-                alt={session.user.name || 'User'}
+                alt={session.user.name || "User"}
                 width={40}
                 height={40}
                 className="w-full h-full object-cover"
               />
             ) : (
-              <FaUser className={`w-5 h-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`} />
+              <FaUser
+                className={`w-5 h-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}
+              />
             )}
           </motion.button>
 
@@ -260,20 +317,22 @@ const Navbar = React.memo(function Navbar() {
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               className={`absolute right-0 mt-2 w-64 rounded-lg border shadow-xl z-50 ${
-                theme === 'dark'
-                  ? 'bg-gray-800 border-gray-700'
-                  : 'bg-white border-gray-200'
+                theme === "dark"
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
               }`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* User Info */}
-              <div className={`px-4 py-3 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+              <div
+                className={`px-4 py-3 border-b ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden">
                     {session.user.image ? (
                       <Image
                         src={session.user.image}
-                        alt={session.user.name || 'User'}
+                        alt={session.user.name || "User"}
                         width={40}
                         height={40}
                         className="w-full h-full object-cover"
@@ -285,10 +344,14 @@ const Navbar = React.memo(function Navbar() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    <p
+                      className={`text-sm font-medium truncate ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+                    >
                       {session.user.name}
                     </p>
-                    <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p
+                      className={`text-xs truncate ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
+                    >
                       {session.user.email}
                     </p>
                   </div>
@@ -298,76 +361,97 @@ const Navbar = React.memo(function Navbar() {
               {/* Menu Items */}
               <div className="py-2">
                 <Link href="/profile" onClick={() => setUserMenuOpen(false)}>
-                  <div className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                    theme === 'dark'
-                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                  }`}>
+                  <div
+                    className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
+                      theme === "dark"
+                        ? "text-gray-300 hover:bg-gray-700 hover:text-white"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
                     <User className="w-4 h-4" />
-                    {t('myProfile')}
+                    {t("myProfile")}
                   </div>
                 </Link>
 
-                <Link href="/premier-league/ai-team-analysis" onClick={() => setUserMenuOpen(false)}>
-                  <div className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                    theme === 'dark'
-                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                  }`}>
+                <Link
+                  href="/premier-league/ai-team-analysis"
+                  onClick={() => setUserMenuOpen(false)}
+                >
+                  <div
+                    className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
+                      theme === "dark"
+                        ? "text-gray-300 hover:bg-gray-700 hover:text-white"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
                     <FaMagic className="w-4 h-4" />
-                    {t('aiAnalysis')}
+                    {t("aiAnalysis")}
                   </div>
                 </Link>
 
                 {/* Manager ID Section */}
-                <div className={`px-4 py-2 text-sm ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
+                <div
+                  className={`px-4 py-2 text-sm ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-medium">{t('managerId')}:</span>
-                      <span className={`text-xs font-mono ${
-                        managerData?.isVerified === false
-                          ? (theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600')
-                          : (theme === 'dark' ? 'text-green-400' : 'text-green-600')
-                      } truncate`}>
-                        {managerData?.managerId || t('notSet')}
+                      <span className="text-xs font-medium">
+                        {t("managerId")}:
+                      </span>
+                      <span
+                        className={`text-xs font-mono ${
+                          managerData?.isVerified === false
+                            ? theme === "dark"
+                              ? "text-yellow-400"
+                              : "text-yellow-600"
+                            : theme === "dark"
+                              ? "text-green-400"
+                              : "text-green-600"
+                        } truncate`}
+                      >
+                        {managerData?.managerId || t("notSet")}
                       </span>
                     </div>
                     <Link
                       href="/profile?tab=manager-id"
                       onClick={() => setUserMenuOpen(false)}
                       className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                        theme === 'dark'
-                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        theme === "dark"
+                          ? "text-gray-300 hover:bg-gray-700 hover:text-white"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                     >
                       <Edit className="w-3 h-3" />
-                      {t('edit')}
+                      {t("edit")}
                     </Link>
                   </div>
                   {managerData?.verificationNote && (
-                    <p className={`text-xs mt-1 ${
-                      theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'
-                    }`}>
+                    <p
+                      className={`text-xs mt-1 ${
+                        theme === "dark" ? "text-yellow-400" : "text-yellow-600"
+                      }`}
+                    >
                       {managerData.verificationNote}
                     </p>
                   )}
                 </div>
 
-                <div className={`border-t my-2 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
+                <div
+                  className={`border-t my-2 ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}
+                />
 
                 <button
                   onClick={handleSignOut}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                    theme === 'dark'
-                      ? 'text-red-400 hover:bg-red-900/20'
-                      : 'text-red-600 hover:bg-red-50'
+                    theme === "dark"
+                      ? "text-red-400 hover:bg-red-900/20"
+                      : "text-red-600 hover:bg-red-50"
                   }`}
                 >
                   <LogOut className="w-4 h-4" />
-                  {t('signOut')}
+                  {t("signOut")}
                 </button>
               </div>
             </motion.div>
@@ -386,10 +470,10 @@ const Navbar = React.memo(function Navbar() {
           }}
           className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
             userMenuOpen
-              ? 'bg-red-800 text-white shadow-lg'
-              : theme === 'dark'
-                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+              ? "bg-red-800 text-white shadow-lg"
+              : theme === "dark"
+                ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-600"
           }`}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -403,9 +487,9 @@ const Navbar = React.memo(function Navbar() {
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className={`absolute right-0 mt-2 w-56 rounded-lg border shadow-xl z-50 ${
-              theme === 'dark'
-                ? 'bg-gray-800 border-gray-700'
-                : 'bg-white border-gray-200'
+              theme === "dark"
+                ? "bg-gray-800 border-gray-700"
+                : "bg-white border-gray-200"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -416,36 +500,42 @@ const Navbar = React.memo(function Navbar() {
                   setUserMenuOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                  theme === 'dark'
-                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  theme === "dark"
+                    ? "text-gray-300 hover:bg-gray-700 hover:text-white"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
                 <FaGoogle className="w-4 h-4 text-red-500" />
-                {t('signIn')} with Google
+                {t("signIn")} with Google
               </button>
 
               <Link href="/login" onClick={() => setUserMenuOpen(false)}>
-                <div className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                  theme === 'dark'
-                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                }`}>
+                <div
+                  className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                    theme === "dark"
+                      ? "text-gray-300 hover:bg-gray-700 hover:text-white"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                >
                   <LogIn className="w-4 h-4" />
-                  {t('signIn')} with Email
+                  {t("signIn")} with Email
                 </div>
               </Link>
 
-              <div className={`border-t my-2 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
+              <div
+                className={`border-t my-2 ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}
+              />
 
               <Link href="/signup" onClick={() => setUserMenuOpen(false)}>
-                <div className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                  theme === 'dark'
-                    ? 'text-red-400 hover:bg-red-900/20'
-                    : 'text-red-800 hover:bg-red-50'
-                }`}>
+                <div
+                  className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                    theme === "dark"
+                      ? "text-red-400 hover:bg-red-900/20"
+                      : "text-red-800 hover:bg-red-50"
+                  }`}
+                >
                   <User className="w-4 h-4" />
-                  {t('createAccount')}
+                  {t("createAccount")}
                 </div>
               </Link>
             </div>
@@ -464,8 +554,8 @@ const Navbar = React.memo(function Navbar() {
             ? "rgba(0, 0, 0, 0.95)"
             : "rgba(255, 255, 255, 0.95)"
           : theme === "dark"
-          ? "rgba(0, 0, 0, 0.90)"
-          : "rgba(255, 255, 255, 0.90)",
+            ? "rgba(0, 0, 0, 0.90)"
+            : "rgba(255, 255, 255, 0.90)",
       }}
       transition={{ duration: 0.3 }}
       style={{
@@ -511,7 +601,7 @@ const Navbar = React.memo(function Navbar() {
               >
                 <div className="relative w-full h-full flex items-center justify-center">
                   <Image
-                    src="/images/rf-no-bg.png"
+                    src="/images/rf-logo.svg"
                     alt="Remis Fantasy Logo"
                     width={36}
                     height={36}
@@ -559,11 +649,11 @@ const Navbar = React.memo(function Navbar() {
                               ? league.accentColor === "purple"
                                 ? "brightness(0) saturate(100%) invert(18%) sepia(80%) saturate(5000%) hue-rotate(260deg) brightness(100%)"
                                 : league.accentColor === "blue"
-                                ? "brightness(0) saturate(100%) invert(30%) sepia(80%) saturate(3000%) hue-rotate(200deg) brightness(100%)"
-                                : "brightness(0) saturate(100%) invert(15%) sepia(80%) saturate(5000%) hue-rotate(350deg) brightness(100%)"
+                                  ? "brightness(0) saturate(100%) invert(30%) sepia(80%) saturate(3000%) hue-rotate(200deg) brightness(100%)"
+                                  : "brightness(0) saturate(100%) invert(15%) sepia(80%) saturate(5000%) hue-rotate(350deg) brightness(100%)"
                               : theme === "dark"
-                              ? "brightness(0) invert(1)"
-                              : "brightness(0)"
+                                ? "brightness(0) invert(1)"
+                                : "brightness(0)",
                           }}
                         />
                         {league.name}
@@ -576,8 +666,8 @@ const Navbar = React.memo(function Navbar() {
                             league.accentColor === "purple"
                               ? "bg-gradient-to-r from-transparent via-purple-600 to-transparent"
                               : league.accentColor === "blue"
-                              ? "bg-gradient-to-r from-transparent via-blue-600 to-transparent"
-                              : "bg-gradient-to-r from-transparent via-red-600 to-transparent"
+                                ? "bg-gradient-to-r from-transparent via-blue-600 to-transparent"
+                                : "bg-gradient-to-r from-transparent via-red-600 to-transparent"
                           }`}
                           initial={{ scaleX: 0, opacity: 0 }}
                           animate={{ scaleX: 1, opacity: 1 }}
@@ -600,11 +690,23 @@ const Navbar = React.memo(function Navbar() {
                             ? "bg-gray-900 border border-gray-700"
                             : "bg-white border border-gray-200"
                         }`}
-                        style={{ minWidth: league.subPages.length > 4 ? "520px" : "260px" }}
+                        style={{
+                          minWidth:
+                            league.subPages.length > 4 ? "520px" : "260px",
+                        }}
                         onMouseEnter={handleMouseEnterDropdown}
                         onMouseLeave={handleMouseLeaveDropdown}
                       >
-                        <div className={`p-4 grid gap-1.5 ${league.subPages.length > 4 ? "grid-cols-2 grid-flow-col" : "grid-cols-1"}`} style={league.subPages.length > 4 ? { gridTemplateRows: `repeat(${Math.ceil(league.subPages.length / 2)}, minmax(0, 1fr))` } : undefined}>
+                        <div
+                          className={`p-4 grid gap-1.5 ${league.subPages.length > 4 ? "grid-cols-2 grid-flow-col" : "grid-cols-1"}`}
+                          style={
+                            league.subPages.length > 4
+                              ? {
+                                  gridTemplateRows: `repeat(${Math.ceil(league.subPages.length / 2)}, minmax(0, 1fr))`,
+                                }
+                              : undefined
+                          }
+                        >
                           {league.subPages.map((page) => {
                             const PageIcon = page.icon;
                             const isPageActive = isExactPath(page.href);
@@ -614,23 +716,31 @@ const Navbar = React.memo(function Navbar() {
                                 href={page.href}
                                 onClick={() => setActiveDropdown(null)}
                               >
-                                <div className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
-                                  isPageActive
-                                    ? `${league.activeTextClass} ${
-                                        theme === "dark"
-                                          ? league.accentColor === "purple" ? "bg-purple-500/10"
-                                            : league.accentColor === "blue" ? "bg-blue-500/10"
-                                            : "bg-red-500/10"
-                                          : league.accentColor === "purple" ? "bg-purple-50"
-                                            : league.accentColor === "blue" ? "bg-blue-50"
-                                            : "bg-red-50"
-                                      }`
-                                    : theme === "dark"
-                                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
-                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                                }`}>
+                                <div
+                                  className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
+                                    isPageActive
+                                      ? `${league.activeTextClass} ${
+                                          theme === "dark"
+                                            ? league.accentColor === "purple"
+                                              ? "bg-purple-500/10"
+                                              : league.accentColor === "blue"
+                                                ? "bg-blue-500/10"
+                                                : "bg-red-500/10"
+                                            : league.accentColor === "purple"
+                                              ? "bg-purple-50"
+                                              : league.accentColor === "blue"
+                                                ? "bg-blue-50"
+                                                : "bg-red-50"
+                                        }`
+                                      : theme === "dark"
+                                        ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                  }`}
+                                >
                                   <PageIcon className="w-4 h-4 flex-shrink-0" />
-                                  <span className="font-medium whitespace-nowrap">{page.name}</span>
+                                  <span className="font-medium whitespace-nowrap">
+                                    {page.name}
+                                  </span>
                                 </div>
                               </Link>
                             );
@@ -699,15 +809,17 @@ const Navbar = React.memo(function Navbar() {
             <div className="flex flex-col space-y-3">
               {/* User Info in Mobile Menu */}
               {status === "authenticated" && session?.user && (
-                <div className={`p-4 rounded-lg mb-4 ${
-                  theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-100/50'
-                }`}>
+                <div
+                  className={`p-4 rounded-lg mb-4 ${
+                    theme === "dark" ? "bg-gray-700/50" : "bg-gray-100/50"
+                  }`}
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden">
                       {session.user.image ? (
                         <Image
                           src={session.user.image}
-                          alt={session.user.name || 'User'}
+                          alt={session.user.name || "User"}
                           width={40}
                           height={40}
                           className="w-full h-full object-cover"
@@ -719,10 +831,14 @@ const Navbar = React.memo(function Navbar() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                      <p
+                        className={`text-sm font-medium truncate ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+                      >
                         {session.user.name}
                       </p>
-                      <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <p
+                        className={`text-xs truncate ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
+                      >
                         {session.user.email}
                       </p>
                     </div>
@@ -800,7 +916,7 @@ const Navbar = React.memo(function Navbar() {
                     >
                       <div className="relative flex items-center justify-center gap-3">
                         <User className="w-5 h-5" />
-                        <span>{t('myProfile')}</span>
+                        <span>{t("myProfile")}</span>
                       </div>
                     </motion.div>
                   </Link>
@@ -811,9 +927,9 @@ const Navbar = React.memo(function Navbar() {
                       handleMobileNavClick();
                     }}
                     className={`w-full text-center font-semibold py-4 px-4 rounded-lg transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-anta cursor-pointer relative ${
-                      theme === 'dark'
-                        ? 'bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 hover:border-gray-500 text-red-400 hover:text-red-300'
-                        : 'bg-gray-100/50 hover:bg-gray-200/50 border border-gray-300 hover:border-gray-400 text-red-600 hover:text-red-700'
+                      theme === "dark"
+                        ? "bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 hover:border-gray-500 text-red-400 hover:text-red-300"
+                        : "bg-gray-100/50 hover:bg-gray-200/50 border border-gray-300 hover:border-gray-400 text-red-600 hover:text-red-700"
                     }`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{
@@ -829,7 +945,7 @@ const Navbar = React.memo(function Navbar() {
                   >
                     <div className="relative flex items-center justify-center gap-3">
                       <LogOut className="w-5 h-5" />
-                      <span>{t('signOut')}</span>
+                      <span>{t("signOut")}</span>
                     </div>
                   </motion.div>
                 </>
@@ -837,11 +953,15 @@ const Navbar = React.memo(function Navbar() {
 
               {/* Login options for unauthenticated users */}
               {status === "unauthenticated" && (
-                <div className={`p-4 rounded-lg mb-4 ${
-                  theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-100/50'
-                }`}>
-                  <p className={`text-center text-sm mb-3 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {t('signIn')} to access all features
+                <div
+                  className={`p-4 rounded-lg mb-4 ${
+                    theme === "dark" ? "bg-gray-700/50" : "bg-gray-100/50"
+                  }`}
+                >
+                  <p
+                    className={`text-center text-sm mb-3 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
+                  >
+                    {t("signIn")} to access all features
                   </p>
 
                   <div className="space-y-2">
@@ -851,9 +971,9 @@ const Navbar = React.memo(function Navbar() {
                         handleMobileNavClick();
                       }}
                       className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg border transition-colors ${
-                        theme === 'dark'
-                          ? 'border-gray-600 hover:bg-gray-600 text-gray-300'
-                          : 'border-gray-300 hover:bg-gray-100 text-gray-700'
+                        theme === "dark"
+                          ? "border-gray-600 hover:bg-gray-600 text-gray-300"
+                          : "border-gray-300 hover:bg-gray-100 text-gray-700"
                       }`}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -866,9 +986,9 @@ const Navbar = React.memo(function Navbar() {
                       <motion.div
                         onClick={handleMobileNavClick}
                         className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg border transition-colors ${
-                          theme === 'dark'
-                            ? 'border-red-800/50 hover:bg-red-800/10 text-red-400'
-                            : 'border-red-800/50 hover:bg-red-50 text-red-800'
+                          theme === "dark"
+                            ? "border-red-800/50 hover:bg-red-800/10 text-red-400"
+                            : "border-red-800/50 hover:bg-red-50 text-red-800"
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -882,15 +1002,15 @@ const Navbar = React.memo(function Navbar() {
                       <motion.div
                         onClick={handleMobileNavClick}
                         className={`w-full flex items-center justify-center gap-3 py-2 px-4 rounded-lg transition-colors ${
-                          theme === 'dark'
-                            ? 'hover:bg-gray-600/50 text-gray-400 hover:text-gray-300'
-                            : 'hover:bg-gray-100 text-gray-600 hover:text-gray-700'
+                          theme === "dark"
+                            ? "hover:bg-gray-600/50 text-gray-400 hover:text-gray-300"
+                            : "hover:bg-gray-100 text-gray-600 hover:text-gray-700"
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <User className="w-4 h-4" />
-                        <span className="text-sm">{t('createAccount')}</span>
+                        <span className="text-sm">{t("createAccount")}</span>
                       </motion.div>
                     </Link>
                   </div>

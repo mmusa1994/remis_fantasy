@@ -182,7 +182,7 @@ export default function Home() {
   return (
     <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pb-16 px-4 pt-5 md:pt-20">
+      <section className="relative overflow-hidden pb-16 px-4 pt-5 md:pt-8">
         <div className="max-w-6xl mx-auto text-center">
           {/* Logo */}
           <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 mx-auto mb-8 flex items-center justify-center drop-shadow-xl">

@@ -582,7 +582,7 @@ export default function FPLLivePage() {
   };
 
   return (
-    <div className="min-h-screen bg-theme-card theme-transition">
+    <div className="min-h-screen bg-theme-background theme-transition">
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-6">

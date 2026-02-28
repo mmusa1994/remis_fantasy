@@ -25,7 +25,6 @@ const Footer = React.memo(function Footer() {
         }`}
       ></div>
 
-
       <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Logo */}
@@ -41,7 +40,7 @@ const Footer = React.memo(function Footer() {
             >
               <div className="relative w-full h-full flex items-center justify-center">
                 <Image
-                  src="/images/rf-no-bg.png"
+                  src="/images/rf-logo.svg"
                   alt="Remis Fantasy Logo"
                   width={64}
                   height={64}
@@ -163,7 +162,6 @@ const Footer = React.memo(function Footer() {
           </motion.div>
         </div>
       </div>
-
     </footer>
   );
 });

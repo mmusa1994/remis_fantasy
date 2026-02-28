@@ -16,7 +16,11 @@ const isAdminPath = (path: string) => {
 };
 
 const isLoginPanel = (path: string) => {
-  return path.includes("login") || path.includes("signup") || path.includes("forgot-password");
+  return (
+    path.includes("login") ||
+    path.includes("signup") ||
+    path.includes("forgot-password")
+  );
 };
 
 export default function LayoutContent({
@@ -25,7 +29,8 @@ export default function LayoutContent({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { showOnboarding, setShowOnboarding, completeOnboarding } = useOnboarding();
+  const { showOnboarding, setShowOnboarding, completeOnboarding } =
+    useOnboarding();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isAdmin = isAdminPath(pathname);
   const isLoginPanelBool = isLoginPanel(pathname);
@@ -50,20 +55,19 @@ export default function LayoutContent({
     return (
       <main>
         <Navbar />
-        <div className="pt-0 md:pt-20 pb-16 md:pb-0">
-          {children}
-        </div>
-        
+        <div className="hidden md:block h-16" aria-hidden="true" />
+        <div className="pb-16 md:pb-0">{children}</div>
+
         {/* Bottom Navigation for Mobile */}
         <BottomNavigation onMenuToggle={() => setIsMobileMenuOpen(true)} />
-        
+
         {/* Mobile Menu */}
-        <MobileMenu 
+        <MobileMenu
           isOpen={isMobileMenuOpen}
           onClose={() => setIsMobileMenuOpen(false)}
           currentSection={getCurrentSection()}
         />
-        
+
         {/* Onboarding Widget for login pages too */}
         <OnboardingWidget />
       </main>
@@ -74,19 +78,20 @@ export default function LayoutContent({
     <>
       <VisitorTracker />
       <Navbar />
-      <main className="pt-0 md:pt-20 pb-16 md:pb-0">{children}</main>
+      <div className="hidden md:block h-16" aria-hidden="true" />
+      <main className="pb-16 md:pb-0">{children}</main>
       <Footer />
-      
+
       {/* Bottom Navigation for Mobile */}
       <BottomNavigation onMenuToggle={() => setIsMobileMenuOpen(true)} />
-      
+
       {/* Mobile Menu */}
-      <MobileMenu 
+      <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         currentSection={getCurrentSection()}
       />
-      
+
       {/* Onboarding Modal */}
       <OnboardingModal
         isOpen={showOnboarding}
