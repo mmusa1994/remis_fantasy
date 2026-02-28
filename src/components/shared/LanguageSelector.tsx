@@ -47,7 +47,7 @@ export default function LanguageSelector() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 ${
+        className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-300 ${
           theme === "dark"
             ? "bg-black hover:bg-gray-900 text-white border border-white"
             : "bg-white hover:bg-gray-50 text-black border border-black"
@@ -68,7 +68,7 @@ export default function LanguageSelector() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className={`absolute top-full left-0 mt-2 w-48 rounded-xl shadow-2xl border md:backdrop-blur-xl z-50 ${
+            className={`absolute top-full left-0 mt-2 w-48 rounded-lg shadow-lg border md:backdrop-blur-xl z-50 ${
               theme === "dark"
                 ? "bg-black border-white"
                 : "bg-white border-black"

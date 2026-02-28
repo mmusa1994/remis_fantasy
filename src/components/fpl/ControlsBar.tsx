@@ -132,7 +132,7 @@ export default function ControlsBar({
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-500/90 to-purple-600/90 rounded-xl shadow-lg p-4 md:p-6 border border-blue-300/30 backdrop-blur-sm">
+    <div className="bg-gradient-to-r from-blue-500/90 to-purple-600/90 rounded-lg shadow-lg p-4 md:p-6 border border-blue-300/30 backdrop-blur-sm">
       {/* Header */}
       <div className="text-center mb-4">
         <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
@@ -159,16 +159,16 @@ export default function ControlsBar({
         />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-center bg-white/10 rounded-lg p-3 md:p-4 backdrop-blur">
+      <div className="flex flex-col md:flex-row gap-3 items-stretch justify-center bg-white/10 rounded-lg p-3 md:p-4 backdrop-blur">
         {/* Manager ID Input */}
-        <div className="flex flex-col md:flex-row gap-2 items-center justify-center">
+        <div className="flex-1 min-w-0">
           <label
             htmlFor="manager-id-input"
-            className="text-sm font-medium text-white/90 text-center w-full"
+            className="block text-xs font-medium text-white/70 mb-1 text-center"
           >
             {t("fplLive.managerId")}
           </label>
-          <div className="relative w-full">
+          <div className="relative">
             <input
               id="manager-id-input"
               type="number"
@@ -176,7 +176,7 @@ export default function ControlsBar({
               onChange={(e) => handleManagerIdChange(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isLoadingManagerId}
-              className="w-full px-3 py-2 text-center border-2 border-white/30 bg-white/20 text-white rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 placeholder-white/60 backdrop-blur transition-all duration-200 disabled:opacity-50"
+              className="w-full px-4 py-2.5 text-center text-sm font-medium border border-white/20 bg-white/15 text-white rounded-md focus:ring-2 focus:ring-white/40 focus:border-white/40 placeholder-white/40 backdrop-blur transition-all duration-200 disabled:opacity-50"
               placeholder={isLoadingManagerId ? "Loading..." : "133790"}
               title="Press Enter to load team"
             />
@@ -189,10 +189,10 @@ export default function ControlsBar({
         </div>
 
         {/* Gameweek Input */}
-        <div className="flex flex-col md:flex-row gap-2 items-center justify-center">
+        <div className="w-full md:w-24 flex-shrink-0">
           <label
             htmlFor="gameweek-input"
-            className="text-sm font-medium text-white/90 text-center w-full"
+            className="block text-xs font-medium text-white/70 mb-1 text-center"
           >
             {t("fplLive.gameweek")}
           </label>
@@ -207,36 +207,38 @@ export default function ControlsBar({
             value={localGameweek}
             onChange={(e) => handleGameweekChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full px-3 py-2 text-center border-2 border-white/30 bg-white/20 text-white rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 backdrop-blur transition-all duration-200"
+            className="w-full px-2 py-2.5 text-center text-sm font-medium border border-white/20 bg-white/15 text-white rounded-md focus:ring-2 focus:ring-white/40 focus:border-white/40 placeholder-white/40 backdrop-blur transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             placeholder="1-38"
           />
         </div>
 
         {/* Load Team Button */}
-        <button
-          onClick={handleLoadTeam}
-          disabled={
-            loading ||
-            isNaN(parseInt(localManagerId, 10)) ||
-            parseInt(localManagerId, 10) <= 0 ||
-            isNaN(parseInt(localGameweek, 10)) ||
-            parseInt(localGameweek, 10) < 1 ||
-            parseInt(localGameweek, 10) > 38
-          }
-          className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          {loading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm">{t("fplLive.loading")}</span>
-            </>
-          ) : (
-            <>
-              <MdDownload className="text-lg" />
-              <span className="text-sm">{t("fplLive.loadTeam")}</span>
-            </>
-          )}
-        </button>
+        <div className="flex-shrink-0 flex items-end">
+          <button
+            onClick={handleLoadTeam}
+            disabled={
+              loading ||
+              isNaN(parseInt(localManagerId, 10)) ||
+              parseInt(localManagerId, 10) <= 0 ||
+              isNaN(parseInt(localGameweek, 10)) ||
+              parseInt(localGameweek, 10) < 1 ||
+              parseInt(localGameweek, 10) > 38
+            }
+            className="w-full md:w-auto flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white font-medium py-2.5 px-5 rounded-md shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm">{t("fplLive.loading")}</span>
+              </>
+            ) : (
+              <>
+                <MdDownload className="text-lg" />
+                <span className="text-sm">{t("fplLive.loadTeam")}</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

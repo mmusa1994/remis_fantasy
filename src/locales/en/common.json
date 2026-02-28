@@ -197,5 +197,26 @@
     "upgradeToAccess": "Upgrade to access this feature",
     "premiumFeature": "Premium Feature",
     "unlockFeature": "Unlock this feature with a premium plan and get access to advanced statistics, insights, and exclusive content."
+  },
+  "validation": {
+    "firstNameRequired": "First name is required",
+    "lastNameRequired": "Last name is required",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email address",
+    "phoneRequired": "Phone number is required",
+    "phoneInvalid": "Invalid phone number",
+    "teamNameRequired": "Team name is required",
+    "leagueTypeRequired": "League type is required",
+    "paymentMethodRequired": "Payment method is required",
+    "cashStatusRequired": "Cash payment status is required",
+    "paymentProofRequired": "Payment proof is required",
+    "recaptchaRequired": "Please complete the reCAPTCHA",
+    "fileTooLarge": "File is too large",
+    "invalidFileType": "Invalid file type",
+    "cardDataRequired": "Card information is required",
+    "registrationSuccess": "Registration successful!",
+    "registrationError": "Registration failed. Please try again.",
+    "emailAlreadyRegistered": "This email is already registered",
+    "loadingError": "Loading error. Please try again."
   }
 }

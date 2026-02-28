@@ -472,9 +472,9 @@ export default function FPLLivePage() {
         );
       case "squad":
         return teamDataLoading ? (
-          <div className="bg-theme-card rounded-xl border-theme-border theme-transition">
+          <div className="bg-theme-card rounded-lg border-theme-border theme-transition">
             {/* Mobile-friendly loading state */}
-            <div className="bg-theme-card rounded-xl border-theme-border overflow-hidden theme-transition">
+            <div className="bg-theme-card rounded-lg border-theme-border overflow-hidden theme-transition">
               <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-theme-border bg-theme-card theme-transition">
                 <div className="h-4 sm:h-5 lg:h-6 bg-black/20 dark:bg-white/20 rounded w-20 sm:w-24 animate-pulse theme-transition"></div>
               </div>
@@ -501,7 +501,7 @@ export default function FPLLivePage() {
         );
       case "leagues":
         return leaguesLoading ? (
-          <div className="bg-theme-card rounded-xl border-theme-border theme-transition">
+          <div className="bg-theme-card rounded-lg border-theme-border theme-transition">
             <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-black dark:border-white bg-white dark:bg-black theme-transition">
               <div className="h-4 sm:h-5 lg:h-6 bg-black/20 dark:bg-white/20 rounded w-16 sm:w-20 animate-pulse theme-transition"></div>
             </div>

@@ -518,7 +518,7 @@ export default function PricesPage() {
         <td className="px-4 py-4">
           <div className="flex items-center gap-3">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"
+              className="w-8 h-8 rounded-md flex items-center justify-center shadow-sm flex-shrink-0"
               style={{
                 backgroundColor: teamColors.primary,
                 border: `2px solid ${teamColors.secondary}`,
@@ -653,7 +653,7 @@ export default function PricesPage() {
               </p>
               <button 
                 onClick={() => window.location.reload()}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
               >
                 Refresh Page
               </button>
@@ -704,7 +704,7 @@ export default function PricesPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className={`p-4 rounded-xl border-2 ${
+            className={`p-4 rounded-lg border-2 ${
               theme === "dark"
                 ? "bg-gradient-to-br from-green-900/20 to-green-800/10 border-green-500/30"
                 : "bg-gradient-to-br from-green-50 to-green-100 border-green-200"
@@ -727,7 +727,7 @@ export default function PricesPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className={`p-4 rounded-xl border-2 ${
+            className={`p-4 rounded-lg border-2 ${
               theme === "dark"
                 ? "bg-gradient-to-br from-red-900/20 to-red-800/10 border-red-500/30"
                 : "bg-gradient-to-br from-red-50 to-red-100 border-red-200"
@@ -750,7 +750,7 @@ export default function PricesPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className={`p-4 rounded-xl border-2 ${
+            className={`p-4 rounded-lg border-2 ${
               theme === "dark"
                 ? "bg-gradient-to-br from-blue-900/20 to-blue-800/10 border-blue-500/30"
                 : "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200"
@@ -773,7 +773,7 @@ export default function PricesPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className={`p-4 rounded-xl border-2 ${
+            className={`p-4 rounded-lg border-2 ${
               theme === "dark"
                 ? "bg-gradient-to-br from-purple-900/20 to-purple-800/10 border-purple-500/30"
                 : "bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200"
@@ -798,7 +798,7 @@ export default function PricesPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className={`p-4 rounded-xl mb-8 border-2 ${
+          className={`p-4 rounded-lg mb-8 border-2 ${
             theme === "dark"
               ? "bg-gray-800/50 border-gray-700/50"
               : "bg-white border-gray-200"
@@ -812,7 +812,7 @@ export default function PricesPage() {
                 placeholder={t("prices.searchPlayer")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-10 pr-3 py-3 rounded-lg border-2 transition-colors ${
+                className={`w-full pl-10 pr-3 py-3 rounded-md border-2 transition-colors ${
                   theme === "dark"
                     ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500"
                     : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500"
@@ -823,7 +823,7 @@ export default function PricesPage() {
             <select
               value={selectedTeam}
               onChange={(e) => setSelectedTeam(e.target.value)}
-              className={`px-3 py-3 rounded-lg border-2 transition-colors ${
+              className={`px-3 py-3 rounded-md border-2 transition-colors ${
                 theme === "dark"
                   ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500"
                   : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
@@ -872,7 +872,7 @@ export default function PricesPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className={`rounded-xl border-2 overflow-hidden ${
+            className={`rounded-lg border-2 overflow-hidden ${
               theme === "dark"
                 ? "bg-gray-800/50 border-green-500/30"
                 : "bg-white border-green-200"
@@ -943,7 +943,7 @@ export default function PricesPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className={`rounded-xl border-2 overflow-hidden ${
+            className={`rounded-lg border-2 overflow-hidden ${
               theme === "dark"
                 ? "bg-gray-800/50 border-red-500/30"
                 : "bg-white border-red-200"
@@ -1012,7 +1012,7 @@ export default function PricesPage() {
 
         {/* Algorithm Info Footer */}
         <div
-          className={`mt-8 p-6 rounded-xl border-2 ${
+          className={`mt-8 p-6 rounded-lg border-2 ${
             theme === "dark" 
               ? "bg-gray-800/50 border-gray-700/50" 
               : "bg-gray-50 border-gray-200"

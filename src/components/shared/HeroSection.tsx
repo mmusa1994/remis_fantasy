@@ -264,7 +264,7 @@ export default function HeroSection({
                 src={logoPath}
                 alt={`${t("title", "REMIS Fantasy")} logo`}
                 fill
-                className={`object-contain drop-shadow-2xl ${
+                className={`object-contain ${
                   theme === "dark" ? "" : "bg-black"
                 }`}
                 priority
@@ -275,7 +275,7 @@ export default function HeroSection({
 
         {/* Title */}
         <motion.h1
-          className={`text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-theme-foreground mb-2 md:mb-4 drop-shadow-lg`}
+          className={`text-2xl md:text-3xl lg:text-4xl font-bold text-theme-foreground mb-2 md:mb-4`}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
@@ -285,7 +285,7 @@ export default function HeroSection({
 
         {/* Subtitle */}
         <motion.h2
-          className={`text-lg md:text-xl lg:text-2xl font-semibold ${themeColors.accent} mb-4 md:mb-6 drop-shadow-md`}
+          className={`text-lg md:text-xl lg:text-2xl font-semibold ${themeColors.accent} mb-4 md:mb-6`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
@@ -295,7 +295,7 @@ export default function HeroSection({
 
         {/* Description */}
         <motion.p
-          className="text-sm md:text-base lg:text-lg text-theme-text-secondary max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed drop-shadow-sm"
+          className="text-sm md:text-base lg:text-lg text-theme-text-secondary max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
@@ -315,7 +315,7 @@ export default function HeroSection({
         >
           <Link href={primaryHref}>
             <motion.button
-              className={`px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold text-white border-2 transition-all duration-300 shadow-lg hover:shadow-xl text-sm md:text-base ${themeColors.primary}`}
+              className={`px-6 md:px-8 py-3 md:py-4 rounded-md font-semibold text-white border-2 transition-all duration-300 shadow-sm hover:shadow-md text-sm md:text-base ${themeColors.primary}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -325,7 +325,7 @@ export default function HeroSection({
 
           <Link href={secondaryHref}>
             <motion.button
-              className={`px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold border-2 transition-all duration-300 shadow-lg hover:shadow-xl text-sm md:text-base ${themeColors.secondary}`}
+              className={`px-6 md:px-8 py-3 md:py-4 rounded-md font-semibold border-2 transition-all duration-300 shadow-sm hover:shadow-md text-sm md:text-base ${themeColors.secondary}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >

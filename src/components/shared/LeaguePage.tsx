@@ -144,7 +144,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
       <section className="py-8 md:py-16 px-4 pb-16">
         <div className="max-w-6xl mx-auto">
           <motion.h2
-            className="text-2xl md:text-3xl lg:text-4xl font-bold text-center text-theme-foreground mb-8 md:mb-12"
+            className="text-2xl md:text-3xl font-bold text-center text-theme-foreground mb-8 md:mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -160,7 +160,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
               return (
                 <Link key={item.title} href={item.href}>
                   <motion.div
-                    className={`group p-4 sm:p-6 md:p-8 rounded-2xl transition-all duration-300 hover:scale-105 cursor-pointer ${colorClasses.bg} ${colorClasses.hover} backdrop-blur-sm shadow-lg hover:shadow-xl`}
+                    className={`group p-4 sm:p-6 md:p-8 rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer ${colorClasses.bg} ${colorClasses.hover} backdrop-blur-sm shadow-lg hover:shadow-xl`}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -172,7 +172,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
                   >
                     <div className="text-center">
                       <motion.div
-                        className={`inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-xl mb-4 md:mb-6 ${colorClasses.bg}`}
+                        className="inline-flex items-center justify-center mb-4 md:mb-6"
                         whileHover={{
                           scale: 1.1,
                           rotate: 5,
@@ -180,7 +180,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
                         }}
                       >
                         <IconComponent
-                          className={`w-6 h-6 md:w-8 md:h-8 ${colorClasses.text}`}
+                          className={`w-8 h-8 md:w-10 md:h-10 ${colorClasses.text}`}
                         />
                       </motion.div>
 

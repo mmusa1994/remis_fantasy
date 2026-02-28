@@ -126,7 +126,7 @@ export default function PrizesGallery({
           return (
             <div
               key={prize.id}
-              className="bg-theme-card border rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300"
+              className="bg-theme-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
               style={{
                 borderColor: `${colors.primary}30`,
                 boxShadow: `0 4px 12px -2px ${colors.primary}10`,
@@ -149,7 +149,7 @@ export default function PrizesGallery({
                 {/* Price Badge */}
                 {prize.price && (
                   <div
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-white font-bold text-xs mb-3"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-white font-bold text-xs mb-3"
                     style={{
                       background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60)`,
                     }}
@@ -196,7 +196,7 @@ export default function PrizesGallery({
                 {/* CTA Button */}
                 <button
                   onClick={() => openModal(prize)}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all duration-300 hover:shadow-md"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-bold text-sm transition-all duration-300 hover:shadow-md"
                   style={{
                     background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60)`,
                     color: "#ffffff",

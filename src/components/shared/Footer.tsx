@@ -25,11 +25,6 @@ const Footer = React.memo(function Footer() {
         }`}
       ></div>
 
-      {/* Subtle Background Effects */}
-      <div className="absolute inset-0">
-        <div className="absolute bottom-0 left-1/3 w-96 h-32 bg-gradient-to-r from-black/5 dark:from-white/5 via-black/3 dark:via-white/3 to-black/5 dark:to-white/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/3 w-80 h-28 bg-gradient-to-l from-black/5 dark:from-white/5 via-black/3 dark:via-white/3 to-black/5 dark:to-white/5 rounded-full blur-3xl"></div>
-      </div>
 
       <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
@@ -44,55 +39,16 @@ const Footer = React.memo(function Footer() {
               className="relative w-20 h-20 group cursor-pointer"
               whileHover={{ scale: 1.1 }}
             >
-              {/* Elegant glow effect */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-br from-black/20 dark:from-white/20 via-black/15 dark:via-white/15 to-black/20 dark:to-white/20 rounded-full blur-xl group-hover:from-black/30 dark:group-hover:from-white/30 group-hover:via-black/25 dark:group-hover:via-white/25 group-hover:to-black/30 dark:group-hover:to-white/30 transition-all duration-500"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.3, 0.5, 0.3],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-
               <div className="relative w-full h-full flex items-center justify-center">
                 <Image
                   src="/images/rf-no-bg.png"
                   alt="Remis Fantasy Logo"
                   width={64}
                   height={64}
-                  className="w-16 h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 drop-shadow-2xl"
+                  className="w-16 h-16 object-contain transition-all duration-500"
                   priority
                 />
               </div>
-
-              {/* Rotating border */}
-              <motion.div
-                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                style={{
-                  background:
-                    theme === "dark"
-                      ? "conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.4) 90deg, transparent 180deg, rgba(255, 255, 255, 0.3) 270deg, transparent 360deg)"
-                      : "conic-gradient(from 0deg, transparent 0deg, rgba(0, 0, 0, 0.4) 90deg, transparent 180deg, rgba(0, 0, 0, 0.3) 270deg, transparent 360deg)",
-                  mask:
-                    theme === "dark"
-                      ? "radial-gradient(circle at center, transparent 65%, white 67%)"
-                      : "radial-gradient(circle at center, transparent 65%, black 67%)",
-                  WebkitMask:
-                    theme === "dark"
-                      ? "radial-gradient(circle at center, transparent 65%, white 67%)"
-                      : "radial-gradient(circle at center, transparent 65%, black 67%)",
-                }}
-                animate={{ rotate: 360 }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              />
             </motion.div>
           </motion.div>
 
@@ -208,9 +164,6 @@ const Footer = React.memo(function Footer() {
         </div>
       </div>
 
-      {/* Subtle corner accents */}
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-black/10 dark:from-white/10 to-transparent opacity-50"></div>
-      <div className="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-tl from-black/10 dark:from-white/10 to-transparent opacity-50"></div>
     </footer>
   );
 });

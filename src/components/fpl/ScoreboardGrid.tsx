@@ -109,11 +109,11 @@ const ScoreboardGrid = React.memo(function ScoreboardGrid({
     const fixtureBonus = getFixtureBonus(fixture.id);
 
     return (
-      <div className="bg-theme-card border border-theme-border rounded-xl p-6 hover:shadow-xl transition-all duration-300 w-full max-w-sm flex-shrink-0 hover:border-blue-300 dark:hover:border-blue-600">
+      <div className="bg-theme-card border border-theme-border rounded-lg p-6 hover:shadow-xl transition-all duration-300 w-full max-w-sm flex-shrink-0 hover:border-blue-300 dark:hover:border-blue-600">
         <div className="text-center">
           <div className="space-y-3 mb-4">
             <div className="flex items-center justify-center">
-              <div className="text-xs text-theme-muted font-medium px-3 py-1 bg-theme-secondary rounded-full">
+              <div className="text-xs text-theme-muted font-medium px-3 py-1 bg-theme-secondary rounded-md">
                 {getMatchStatus(fixture)}
               </div>
             </div>
@@ -165,7 +165,7 @@ const ScoreboardGrid = React.memo(function ScoreboardGrid({
                       </span>
                       <div className="flex items-center space-x-1 flex-shrink-0">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          className={`px-2 py-1 rounded-md text-xs font-bold ${
                             bonusAdded
                               ? "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200"
                               : "bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-200"

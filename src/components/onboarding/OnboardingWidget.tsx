@@ -54,7 +54,7 @@ const OnboardingWidget = () => {
           onClick={() => setShowModal(true)}
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
-          className={`relative group w-14 h-14 rounded-full shadow-lg transition-all duration-300 ${
+          className={`relative group w-14 h-14 rounded-md shadow-lg transition-all duration-300 ${
             theme === "dark"
               ? "bg-gradient-to-br from-red-700 to-red-800 hover:from-red-600 hover:to-red-700 text-white"
               : "bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white"
@@ -72,7 +72,7 @@ const OnboardingWidget = () => {
         >
           {/* Subtle pulsing background */}
           <motion.div
-            className="absolute inset-0 rounded-full bg-red-400 opacity-30"
+            className="absolute inset-0 rounded-md bg-red-400 opacity-30"
             animate={{ scale: [1, 1.2, 1] }}
             transition={{
               duration: 2,
@@ -108,7 +108,7 @@ const OnboardingWidget = () => {
           </div>
 
           {/* Hover glow effect */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-red-400/0 via-red-300/0 to-red-500/0 group-hover:from-red-400/20 group-hover:via-red-300/10 group-hover:to-red-500/20 transition-all duration-300" />
+          <div className="absolute inset-0 rounded-md bg-gradient-to-br from-red-400/0 via-red-300/0 to-red-500/0 group-hover:from-red-400/20 group-hover:via-red-300/10 group-hover:to-red-500/20 transition-all duration-300" />
         </motion.button>
       </div>
 

@@ -256,7 +256,7 @@ export default function PriceChangesWidget({
                   >
                     <div className="flex items-center space-x-2">
                       <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                        className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold text-white"
                         style={{ backgroundColor: player.team_colors.primary }}
                       >
                         {player.web_name.charAt(0)}
@@ -306,7 +306,7 @@ export default function PriceChangesWidget({
                   >
                     <div className="flex items-center space-x-2">
                       <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                        className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold text-white"
                         style={{ backgroundColor: player.team_colors.primary }}
                       >
                         {player.web_name.charAt(0)}

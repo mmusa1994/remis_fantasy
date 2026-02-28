@@ -4,6 +4,7 @@
     "season": "Sezona 2025/26",
     "subtitle": "Dobrodošli u najuzbudljivije fantasy lige! Odaberite svoju ligu i pokažite svoje znanje sporta.",
     "openLeague": "Otvori Ligu",
+    "explore": "Istraži",
     "liveFpl": "UŽIVO FPL",
     "liveFplDescription": "Pratite uživo Premier Liga utakmice sa ažuriranjima u realnom vremenu, rezultatima i fantasy bodovima!",
     "watchLive": "Gledaj Uživo",
@@ -47,60 +48,67 @@
     "findGems": "Pronađi Dragulje",
     "readNews": "Čitaj Vijesti"
   },
+  "whyChoose": {
+    "title": "Zašto Izabrati REMIS Fantasy",
+    "subtitle": "Najkompletnija fantasy sportska platforma u regionu.",
+    "payment": {
+      "title": "Sigurna Plaćanja",
+      "description": "Sigurna kartična plaćanja putem Stripe-a za bezbrižnu registraciju."
+    },
+    "autoManagement": {
+      "title": "Automatsko Upravljanje Ligom",
+      "description": "Tabele i poredak se automatski ažuriraju — bez manuelnog rada."
+    },
+    "prizes": {
+      "title": "Najbolje Nagrade u Regionu",
+      "description": "Velikodušni nagradni fondovi koji nagrađuju najbolje igrače svake sezone."
+    },
+    "aiAnalysis": {
+      "title": "AI Analiza Tima",
+      "description": "Besplatni AI uvidi koji vam pomažu da sastavite pobjednički tim."
+    },
+    "liveTracking": {
+      "title": "FPL Praćenje Uživo",
+      "description": "Podaci o utakmicama u realnom vremenu, bodovi i napredak gameweek-a na dohvat ruke."
+    },
+    "multiLeague": {
+      "title": "Multi-Liga Platforma",
+      "description": "Premier Liga, Liga Prvaka i F1 Fantasy sve na jednom mjestu."
+    }
+  },
+  "howItWorks": {
+    "title": "Kako Funkcioniše",
+    "step1": {
+      "title": "Registruj se i Plati",
+      "description": "Odaberi ligu, popuni podatke i sigurno plati online."
+    },
+    "step2": {
+      "title": "Pridruži se Ligi",
+      "description": "Budi dodan u službenu mini-ligu i počni se takmičiti."
+    },
+    "step3": {
+      "title": "Osvoji Nagrade",
+      "description": "Penjite se na tabeli, pobjedite konkurenciju i osvojite nagrade."
+    }
+  },
+  "cta": {
+    "title": "Spremni da dominirate u fantasy ligi?",
+    "register": "Registruj se",
+    "explore": "Istraži Lige"
+  },
   "aiGuru": {
+    "freeForNow": "BESPLATNO ZASAD",
     "premium": "PREMIUM",
     "cta": {
       "title": "Upoznajte Svog AI Fantasy Gurua",
       "description": "Revolucionarna AI tehnologija koja analizira milione podataka kako bi pružila personalizovane FPL strategije, preporuke za transfere i pobjedničke uvide.",
-      "tryFree": "Probaj Besplatno Sada",
-      "upgrade": "Nadogradi na Pro"
+      "tryFree": "Probaj Besplatno Sada"
     },
     "features": {
       "realTime": "Analiza u Realnom Vremenu",
       "personalized": "Personalizirani Savjeti",
       "datadriven": "Uvidi Zasnovani na Podacima",
       "winMore": "Osvoji Više Bodova"
-    }
-  },
-  "pricing": {
-    "title": "Odaberite Svoj Plan",
-    "subtitle": "Otključajte puni potencijal vašeg fantasy nogometnog putovanja s našim fleksibilnim planovima cijena.",
-    "popular": "Najpopularniji",
-    "month": "mjesec",
-    "getStarted": "Počni",
-    "choosePlan": "Odaberi Plan",
-    "guarantee": "30-dnevna garancija povrata novca",
-    "free": {
-      "title": "Besplatno",
-      "price": "$0",
-      "features": {
-        "analytics": "Osnovna analitika i statistike",
-        "live": "Praćenje utakmica uživo",
-        "prices": "Cijene i vrijednosti igrača",
-        "basicAI": "3 AI konsultacije/dan"
-      }
-    },
-    "pro": {
-      "title": "Pro",
-      "price": "$9.99",
-      "features": {
-        "unlimited": "Neograničene AI konsultacije",
-        "advanced": "Napredna analiza tima",
-        "personal": "Lično planiranje strategije",
-        "priority": "Prioritetna podrška",
-        "insights": "Ekskluzivni uvidi i savjeti"
-      }
-    },
-    "premium": {
-      "title": "Premium",
-      "price": "$19.99",
-      "features": {
-        "everything": "Sve iz Pro plana",
-        "exclusive": "Ekskluzivne premium funkcije",
-        "earlyAccess": "Rani pristup novim alatima",
-        "customAnalysis": "Prilagođena analiza tima",
-        "support": "24/7 premium podrška"
-      }
     }
   },
   "leagues": {

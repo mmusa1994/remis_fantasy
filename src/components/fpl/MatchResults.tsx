@@ -413,7 +413,7 @@ export default function MatchResults({
                   {/* Status and Expand Icon */}
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-bold ${getStatusColor(
+                      className={`px-3 py-1 rounded-md text-sm font-bold ${getStatusColor(
                         match.status
                       )}`}
                     >
@@ -639,7 +639,7 @@ export default function MatchResults({
                                       <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
                                         {goalData.minutes.join(", ")}&apos;
                                         {goalData.penalties > 0 && (
-                                          <span className="ml-2 px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full font-bold">
+                                          <span className="ml-2 px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-md font-bold">
                                             PEN
                                             {goalData.penalties > 1
                                               ? `(x${goalData.penalties})`
@@ -792,7 +792,7 @@ export default function MatchResults({
                                       <div className="text-sm text-black/60 dark:text-white/60 theme-transition">
                                         {goalData.minutes.join(", ")}&apos;
                                         {goalData.penalties > 0 && (
-                                          <span className="ml-2 px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full font-bold">
+                                          <span className="ml-2 px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-md font-bold">
                                             {t("fplLive.penalty")}
                                             {goalData.penalties > 1
                                               ? `(x${goalData.penalties})`

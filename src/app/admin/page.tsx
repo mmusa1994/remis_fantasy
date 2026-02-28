@@ -59,7 +59,7 @@ export default function AdminLogin() {
           <div className="mt-4">
             <Link 
               href="/admin/dashboard"
-              className="bg-white/20 px-6 py-2 rounded-lg hover:bg-white/30 transition-colors"
+              className="bg-white/20 px-6 py-2 rounded-md hover:bg-white/30 transition-colors"
             >
               Go to Dashboard
             </Link>
@@ -84,9 +84,9 @@ export default function AdminLogin() {
       </div>
 
       <div className="max-w-md w-full mx-4">
-        <div className="bg-transparent md:bg-white/10 md:backdrop-blur-md md:rounded-2xl p-8 md:shadow-2xl border-0 md:border md:border-white/20">
+        <div className="bg-transparent md:bg-white/10 md:backdrop-blur-md md:rounded-md p-8 md:shadow-2xl border-0 md:border md:border-white/20">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Admin Login</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">Admin Login</h1>
             <p className="text-white/60">REMIS Fantasy Admin Panel</p>
           </div>
 
@@ -104,7 +104,7 @@ export default function AdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 placeholder="admin@remisfantasy.com"
               />
             </div>
@@ -123,13 +123,13 @@ export default function AdminLogin() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 placeholder="••••••••"
               />
             </div>
 
             {error && (
-              <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-md text-sm">
                 {error}
               </div>
             )}
@@ -137,7 +137,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-amber-600 to-red-600 text-white font-bold py-3 px-4 rounded-lg hover:from-amber-700 hover:to-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-amber-600 to-red-600 text-white font-bold py-3 px-4 rounded-md hover:from-amber-700 hover:to-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>

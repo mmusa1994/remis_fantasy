@@ -216,7 +216,7 @@ export default function StatsGrid({
         return (
           <motion.div
             key={`${stat.label}-${index}`}
-            className={`h-full p-8 lg:p-10 rounded-3xl border-2 ${themeColors.bg} ${themeColors.border} ${themeColors.shadow} shadow-xl backdrop-blur-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:border-opacity-60`}
+            className={`h-full p-8 lg:p-10 rounded-lg border-2 ${themeColors.bg} ${themeColors.border} ${themeColors.shadow} shadow-xl backdrop-blur-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:border-opacity-60`}
             style={{
               backgroundImage: `linear-gradient(135deg, ${themeColors.bg.includes('dark') ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'} 0%, transparent 100%)`,
             }}
@@ -233,7 +233,6 @@ export default function StatsGrid({
             {/* Desktop Layout: Centered vertical */}
             <div className="hidden lg:flex flex-col items-center text-center space-y-6">
               <motion.div
-                className={`p-6 rounded-2xl ${themeColors.bg} border ${themeColors.border} border-2 shadow-lg`}
                 initial={{ opacity: 0, rotate: -180 }}
                 animate={{ opacity: 1, rotate: 0 }}
                 transition={{
@@ -291,7 +290,7 @@ export default function StatsGrid({
                 </motion.p>
               </div>
               <motion.div
-                className={`ml-4 p-3 md:p-4 rounded-xl ${themeColors.bg} border ${themeColors.border} shadow-lg`}
+                className="ml-4"
                 initial={{ opacity: 0, rotate: -180 }}
                 animate={{ opacity: 1, rotate: 0 }}
                 transition={{

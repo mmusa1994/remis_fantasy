@@ -19,9 +19,12 @@ import {
   ChevronRight,
   LogOut,
   ArrowLeft,
+  Sun,
+  Moon,
 } from "lucide-react";
-// Note: flag-icons CSS will need to be imported in globals.css or layout
 import LoadingCard from "@/components/shared/LoadingCard";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
 
 import CountryFlag from "@/components/shared/CountryFlag";
 
@@ -64,6 +67,8 @@ interface VisitorData {
 }
 
 export default function VisitorsPage() {
+  const { t } = useTranslation("navigation");
+  const { theme, toggleTheme } = useTheme();
   const { data: session, status } = useSession();
   const [data, setData] = useState<VisitorData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,14 +128,16 @@ export default function VisitorsPage() {
     }
   };
 
+  const isDark = theme === "dark";
+
   if (showLoginRedirect) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-black" : "bg-gray-50"}`}>
         <div className="text-center">
-          <p className="mb-4 text-gray-800">Redirecting to admin login...</p>
-          <Link 
+          <p className={`mb-4 ${isDark ? "text-gray-300" : "text-gray-800"}`}>Redirecting to admin login...</p>
+          <Link
             href="/admin"
-            className="bg-gradient-to-r from-amber-600 to-red-600 text-white px-6 py-2 rounded-lg hover:from-amber-700 hover:to-red-700 transition-colors"
+            className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors"
           >
             Go to Admin Login
           </Link>
@@ -141,7 +148,7 @@ export default function VisitorsPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-black" : "bg-gray-50"}`}>
         <LoadingCard
           title="Loading Visitor Analytics"
           description="Please wait while we fetch the visitor data"
@@ -153,12 +160,12 @@ export default function VisitorsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-black" : "bg-gray-50"}`}>
         <div className="text-center">
-          <p className="text-red-600 mb-4">Error: {error}</p>
+          <p className="text-red-500 mb-4">Error: {error}</p>
           <button
             onClick={() => fetchVisitorData(currentPage)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
           >
             Try Again
           </button>
@@ -168,17 +175,16 @@ export default function VisitorsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className={`min-h-screen ${isDark ? "bg-black" : "bg-gray-50"}`}>
       {/* Header */}
-      <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white shadow-lg sticky top-0 z-40">
+      <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3 sm:py-4">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <Link
                 href="/admin/dashboard"
-                className="bg-white/20 hover:bg-white/30 p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation"
+                className="text-white/70 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 rounded-md transition-colors flex-shrink-0"
                 title="Back to dashboard"
-                aria-label="Back to dashboard"
               >
                 <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
@@ -191,64 +197,51 @@ export default function VisitorsPage() {
                 priority
               />
               <div className="min-w-0 flex-1">
-                <h1 className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate">
-                  Visitor Analytics Dashboard
+                <h1 className="text-sm sm:text-lg lg:text-xl font-semibold truncate tracking-tight">
+                  Visitor Analytics
                 </h1>
-                <p className="text-xs sm:text-sm opacity-75 truncate hidden sm:block">
-                  Track and analyze visitor data
+                <p className="text-xs sm:text-sm text-white/60 truncate hidden sm:block">
+                  {session?.user?.email}
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="bg-white/20 hover:bg-white/30 p-1.5 sm:p-2 lg:px-4 lg:py-2 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 flex-shrink-0 touch-manipulation"
-              title="Sign Out"
-              aria-label="Sign Out"
-            >
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden lg:inline text-sm">Sign Out</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleTheme}
+                className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-md transition-colors"
+                title={isDark ? "Light mode" : "Dark mode"}
+              >
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="text-white/70 hover:text-white hover:bg-white/10 p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 flex-shrink-0 text-sm"
+                title={t("signOut")}
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden lg:inline">{t("signOut")}</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg">
-              <Users className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">
-                Visitor Analytics
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Track and analyze visitor data
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Stats Cards */}
         {data?.stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="group bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className={`p-5 rounded-md border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium mb-1">
-                    Total Visits
-                  </p>
-                  <p className="text-3xl font-bold text-blue-600">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Visits</p>
+                  <p className={`text-2xl font-semibold mt-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {data.stats.total.toLocaleString()}
                   </p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-xl group-hover:scale-110 transition-transform">
-                  <Eye className="w-8 h-8 text-blue-600" />
-                </div>
+                <Eye className="w-5 h-5 text-blue-500" />
               </div>
             </motion.div>
 
@@ -256,20 +249,16 @@ export default function VisitorsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="group bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className={`p-5 rounded-md border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium mb-1">
-                    Today
-                  </p>
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Today</p>
+                  <p className={`text-2xl font-semibold mt-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {data.stats.today.toLocaleString()}
                   </p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-xl group-hover:scale-110 transition-transform">
-                  <Calendar className="w-8 h-8 text-green-600" />
-                </div>
+                <Calendar className="w-5 h-5 text-emerald-500" />
               </div>
             </motion.div>
 
@@ -277,20 +266,16 @@ export default function VisitorsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="group bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className={`p-5 rounded-md border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium mb-1">
-                    This Week
-                  </p>
-                  <p className="text-3xl font-bold text-yellow-600">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">This Week</p>
+                  <p className={`text-2xl font-semibold mt-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {data.stats.week.toLocaleString()}
                   </p>
                 </div>
-                <div className="p-3 bg-yellow-100 rounded-xl group-hover:scale-110 transition-transform">
-                  <TrendingUp className="w-8 h-8 text-yellow-600" />
-                </div>
+                <TrendingUp className="w-5 h-5 text-amber-500" />
               </div>
             </motion.div>
 
@@ -298,20 +283,16 @@ export default function VisitorsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="group bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className={`p-5 rounded-md border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium mb-1">
-                    This Month
-                  </p>
-                  <p className="text-3xl font-bold text-purple-600">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">This Month</p>
+                  <p className={`text-2xl font-semibold mt-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {data.stats.month.toLocaleString()}
                   </p>
                 </div>
-                <div className="p-3 bg-purple-100 rounded-xl group-hover:scale-110 transition-transform">
-                  <Clock className="w-8 h-8 text-purple-600" />
-                </div>
+                <Clock className="w-5 h-5 text-purple-500" />
               </div>
             </motion.div>
           </div>
@@ -319,31 +300,29 @@ export default function VisitorsPage() {
 
         {/* Top Countries and Pages */}
         {data?.stats && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg"
+              className={`p-5 rounded-md border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
             >
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Globe className="w-5 h-5 text-blue-600" />
-                </div>
-                <span className="text-gray-800">Top Countries</span>
+              <h3 className={`text-sm font-semibold uppercase tracking-wide mb-4 flex items-center gap-2 ${isDark ? "text-gray-400" : "text-gray-700"}`}>
+                <Globe className="w-4 h-4 text-blue-500" />
+                Top Countries
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {data.stats.topCountries
                   .slice(0, 5)
                   .map(([country, count]) => (
                     <div
                       key={country}
-                      className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors"
+                      className={`flex justify-between items-center p-3 rounded-md ${isDark ? "bg-gray-800/50 hover:bg-gray-800" : "bg-gray-50 hover:bg-gray-100"} transition-colors`}
                     >
-                      <span className="text-gray-700 flex items-center gap-3 font-medium">
+                      <span className={`flex items-center gap-3 text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                         <CountryFlag country={country} size="xl" />
                         {country || "Unknown"}
                       </span>
-                      <span className="text-blue-600 font-bold text-lg">
+                      <span className="text-blue-500 font-semibold text-sm">
                         {count}
                       </span>
                     </div>
@@ -354,24 +333,22 @@ export default function VisitorsPage() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg"
+              className={`p-5 rounded-md border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
             >
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <MapPin className="w-5 h-5 text-green-600" />
-                </div>
-                <span className="text-gray-800">Top Pages</span>
+              <h3 className={`text-sm font-semibold uppercase tracking-wide mb-4 flex items-center gap-2 ${isDark ? "text-gray-400" : "text-gray-700"}`}>
+                <MapPin className="w-4 h-4 text-emerald-500" />
+                Top Pages
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {data.stats.topPages.slice(0, 5).map(([page, count]) => (
                   <div
                     key={page}
-                    className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors"
+                    className={`flex justify-between items-center p-3 rounded-md ${isDark ? "bg-gray-800/50 hover:bg-gray-800" : "bg-gray-50 hover:bg-gray-100"} transition-colors`}
                   >
-                    <span className="text-gray-700 truncate max-w-48 font-medium">
+                    <span className={`truncate max-w-48 text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       {page}
                     </span>
-                    <span className="text-green-600 font-bold text-lg">
+                    <span className="text-emerald-500 font-semibold text-sm">
                       {count}
                     </span>
                   </div>
@@ -385,54 +362,40 @@ export default function VisitorsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-lg"
+          className={`rounded-md border overflow-hidden ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
         >
-          <div className="px-6 py-6 border-b border-gray-200 bg-gray-50">
-            <h3 className="text-xl font-bold flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="w-5 h-5 text-blue-600" />
-              </div>
-              <span className="text-gray-800">Recent Visitors</span>
+          <div className={`px-5 py-4 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+            <h3 className={`text-sm font-semibold uppercase tracking-wide flex items-center gap-2 ${isDark ? "text-gray-400" : "text-gray-700"}`}>
+              <Users className="w-4 h-4 text-blue-500" />
+              Recent Visitors
             </h3>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className={isDark ? "bg-gray-800" : "bg-gray-50"}>
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Time
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Location
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Page
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Device
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Browser
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Referrer
-                  </th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Page</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Browser</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Referrer</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className={isDark ? "divide-y divide-gray-800" : "divide-y divide-gray-100"}>
                 {data?.visitors.map((visitor) => (
                   <tr
                     key={visitor.id}
-                    className="hover:bg-gray-50 transition-colors duration-200"
+                    className={`${isDark ? "hover:bg-gray-800" : "hover:bg-gray-50"} transition-colors`}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
+                    <td className={`px-5 py-3 whitespace-nowrap text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       {formatDate(visitor.timestamp)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      <div className="flex items-center gap-3">
+                    <td className={`px-5 py-3 whitespace-nowrap text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                      <div className="flex items-center gap-2">
                         <CountryFlag country={visitor.country} size="lg" />
-                        <span className="font-medium">
+                        <span>
                           {visitor.country
                             ? `${visitor.country}${
                                 visitor.city ? `, ${visitor.city}` : ""
@@ -441,26 +404,20 @@ export default function VisitorsPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 max-w-48 truncate font-medium">
+                    <td className={`px-5 py-3 text-sm max-w-48 truncate ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       {visitor.page_url}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      <div className="flex items-center gap-3">
-                        <div className="p-1 bg-gray-100 rounded-lg">
-                          {getDeviceIcon(visitor.device_type)}
-                        </div>
-                        <span className="capitalize font-medium">
-                          {visitor.device_type}
-                        </span>
+                    <td className={`px-5 py-3 whitespace-nowrap text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                      <div className="flex items-center gap-2">
+                        {getDeviceIcon(visitor.device_type)}
+                        <span className="capitalize">{visitor.device_type}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
+                    <td className={`px-5 py-3 whitespace-nowrap text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       {visitor.browser}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 max-w-32 truncate font-medium">
-                      {visitor.referrer === "direct"
-                        ? "Direct"
-                        : visitor.referrer}
+                    <td className={`px-5 py-3 text-sm max-w-32 truncate ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                      {visitor.referrer === "direct" ? "Direct" : visitor.referrer}
                     </td>
                   </tr>
                 ))}
@@ -470,29 +427,20 @@ export default function VisitorsPage() {
 
           {/* Pagination */}
           {data?.pagination && data.pagination.totalPages > 1 && (
-            <div className="px-6 py-6 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-              <div className="text-sm text-gray-600 font-medium">
-                Page{" "}
-                <span className="text-blue-600 font-bold">
-                  {data.pagination.page}
-                </span>{" "}
-                of{" "}
-                <span className="text-blue-600 font-bold">
-                  {data.pagination.totalPages}
-                </span>{" "}
-                (
-                <span className="text-blue-600 font-bold">
-                  {data.pagination.total}
-                </span>{" "}
-                total)
-              </div>
-              <div className="flex gap-3">
+            <div className={`px-5 py-4 border-t flex items-center justify-between ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+              <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-600"}`}>
+                Page <span className="font-medium">{data.pagination.page}</span> of <span className="font-medium">{data.pagination.totalPages}</span>{" "}
+                (<span className="font-medium">{data.pagination.total}</span> total)
+              </p>
+              <div className="flex gap-2">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-white text-gray-700 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium transition-all duration-200 border border-gray-300 hover:border-gray-400 shadow-lg hover:shadow-xl"
+                  className={`px-3 py-1.5 text-sm rounded-md flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isDark ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700" : "text-gray-600 bg-white border border-gray-200 hover:bg-gray-50"
+                  }`}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3.5 h-3.5" />
                   Previous
                 </button>
                 <button
@@ -502,10 +450,12 @@ export default function VisitorsPage() {
                     )
                   }
                   disabled={currentPage === data.pagination.totalPages}
-                  className="px-4 py-2 bg-white text-gray-700 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium transition-all duration-200 border border-gray-300 hover:border-gray-400 shadow-lg hover:shadow-xl"
+                  className={`px-3 py-1.5 text-sm rounded-md flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isDark ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700" : "text-gray-600 bg-white border border-gray-200 hover:bg-gray-50"
+                  }`}
                 >
                   Next
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>

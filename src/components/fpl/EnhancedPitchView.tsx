@@ -313,7 +313,7 @@ export default function EnhancedPitchView({
     <div className="relative overflow-visible" style={{ zIndex: 1 }}>
       {/* Team Stats Header */}
       {teamData && (
-        <div className="mb-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
+        <div className="mb-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 sm:gap-4 text-sm">
               <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm">
@@ -387,7 +387,7 @@ export default function EnhancedPitchView({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative bg-gradient-to-b from-green-400 via-green-500 to-green-400 rounded-xl shadow-inner"
+        className="relative bg-gradient-to-b from-green-400 via-green-500 to-green-400 rounded-lg shadow-inner"
         style={{
           minHeight: "500px",
           height: "min(70vh, 600px)", // Optimized for mobile - smaller height
@@ -583,9 +583,9 @@ export default function EnhancedPitchView({
         className="mt-8"
       >
         {/* Professional Bench Container */}
-        <div className="relative bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-600">
+        <div className="relative bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-lg p-6 shadow-lg border-2 border-gray-200 dark:border-gray-600">
           {/* Bench Label Badge */}
-          <div className="absolute -top-3 left-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md z-10">
+          <div className="absolute -top-3 left-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-md text-sm font-bold shadow-md z-10">
             {t("pitch.substitutesBench", "SUBSTITUTES BENCH")}
           </div>
 
@@ -637,7 +637,7 @@ export default function EnhancedPitchView({
                         compact={false}
                       />
                       {/* Substitute Number Badge */}
-                      <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white">
+                      <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-md w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white">
                         {12 + index}
                       </div>
                     </>
@@ -656,7 +656,7 @@ export default function EnhancedPitchView({
         transition={{ delay: 0.7 }}
         className="mt-4 text-center"
       >
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm text-gray-600 dark:text-gray-400">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-md text-sm text-gray-600 dark:text-gray-400">
           <span>
             {t("pitch.formation", "Formation")}: {formation}
           </span>

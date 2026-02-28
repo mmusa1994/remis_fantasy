@@ -292,7 +292,7 @@ export default function ChampionsLeagueAdmin() {
           <p className="mb-4 text-gray-800">Access denied. Please login.</p>
           <Link
             href="/admin"
-            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-md hover:from-blue-700 hover:to-purple-700 transition-colors"
           >
             Go to Admin Login
           </Link>
@@ -318,7 +318,7 @@ export default function ChampionsLeagueAdmin() {
             </div>
             <Link
               href="/admin/dashboard"
-              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-md transition-colors"
             >
               ← Nazad na Dashboard
             </Link>
@@ -330,7 +330,7 @@ export default function ChampionsLeagueAdmin() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Current Table Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <div className="bg-white rounded-md shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">
@@ -340,13 +340,13 @@ export default function ChampionsLeagueAdmin() {
                   {players.length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-md flex items-center justify-center">
                 <Crown className="w-6 h-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <div className="bg-white rounded-md shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">
@@ -356,13 +356,13 @@ export default function ChampionsLeagueAdmin() {
                   {players.length > 0 ? "Aktuelna sezona" : "Nema podataka"}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-md flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <div className="bg-white rounded-md shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
@@ -379,7 +379,7 @@ export default function ChampionsLeagueAdmin() {
                   players.length > 0
                     ? "from-green-500 to-green-600"
                     : "from-red-500 to-red-600"
-                } rounded-lg flex items-center justify-center`}
+                } rounded-md flex items-center justify-center`}
               >
                 {players.length > 0 ? (
                   <CheckCircle className="w-6 h-6 text-white" />
@@ -392,9 +392,9 @@ export default function ChampionsLeagueAdmin() {
         </div>
 
         {/* Upload Section */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
+        <div className="bg-white rounded-md shadow-lg p-6 mb-8 border border-gray-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-md flex items-center justify-center">
               <Upload className="w-5 h-5 text-white" />
             </div>
             <h2 className="text-xl font-bold text-gray-800">
@@ -410,7 +410,7 @@ export default function ChampionsLeagueAdmin() {
               <textarea
                 value={payloadText}
                 onChange={(e) => setPayloadText(e.target.value)}
-                className="w-full h-32 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 text-sm font-mono"
+                className="w-full h-32 px-4 py-3 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 text-sm font-mono"
                 placeholder="Ovde nalepite HTML kod sa UEFA gaming stranice..."
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -423,7 +423,7 @@ export default function ChampionsLeagueAdmin() {
               <button
                 onClick={handleParsePayload}
                 disabled={!payloadText.trim() || uploading}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-md shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Eye className="w-4 h-4" />
                 Parse & Preview
@@ -433,7 +433,7 @@ export default function ChampionsLeagueAdmin() {
                 <button
                   onClick={handleSaveData}
                   disabled={uploading || parsedData.length === 0}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-md shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? (
                     <>
@@ -453,7 +453,7 @@ export default function ChampionsLeagueAdmin() {
                 <button
                   onClick={handleClearTable}
                   disabled={uploading}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-md shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash2 className="w-4 h-4" />
                   Clear Table
@@ -465,7 +465,7 @@ export default function ChampionsLeagueAdmin() {
 
         {/* Preview Section */}
         {showPreview && parsedData.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
+          <div className="bg-white rounded-md shadow-lg p-6 mb-8 border border-gray-100">
             <h2 className="text-xl font-bold text-gray-800 mb-4">
               Preview - {parsedData.length} igrača
             </h2>
@@ -527,7 +527,7 @@ export default function ChampionsLeagueAdmin() {
 
         {/* Current Table */}
         {players.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+          <div className="bg-white rounded-md shadow-lg overflow-hidden border border-gray-100">
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <h2 className="text-lg font-semibold text-gray-800">
                 Trenutna Champions League Tabela
@@ -622,7 +622,7 @@ export default function ChampionsLeagueAdmin() {
         )}
 
         {/* Quick Links */}
-        <div className="mt-8 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        <div className="mt-8 bg-white rounded-md shadow-lg p-6 border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             Quick Links
           </h3>
@@ -630,7 +630,7 @@ export default function ChampionsLeagueAdmin() {
             <Link
               href="/champions-league/tables"
               target="_blank"
-              className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg hover:from-blue-100 hover:to-purple-100 transition-all duration-200"
+              className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-md hover:from-blue-100 hover:to-purple-100 transition-all duration-200"
             >
               <Eye className="w-5 h-5 text-blue-600" />
               <div>
@@ -643,7 +643,7 @@ export default function ChampionsLeagueAdmin() {
 
             <Link
               href="/admin/dashboard"
-              className="flex items-center gap-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-lg hover:from-gray-100 hover:to-gray-200 transition-all duration-200"
+              className="flex items-center gap-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-md hover:from-gray-100 hover:to-gray-200 transition-all duration-200"
             >
               <Crown className="w-5 h-5 text-gray-600" />
               <div>

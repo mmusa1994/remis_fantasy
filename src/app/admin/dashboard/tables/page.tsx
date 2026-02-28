@@ -16,9 +16,13 @@ import {
   FileText,
   Check,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import Toast from "@/components/shared/Toast";
 import LoadingCard from "@/components/shared/LoadingCard";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface LeaguePlayer {
   id: string;
@@ -74,6 +78,9 @@ const getIndicatorColor = (color: string) => {
 };
 
 export default function AdminTablesCleanPage() {
+  const { t } = useTranslation("navigation");
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
   const { status } = useSession();
   const [mainTab, setMainTab] = useState<"premier" | "champions" | "f1">(
     "premier"
@@ -443,25 +450,26 @@ export default function AdminTablesCleanPage() {
   // Function to get row background color based on league and position
   const getRowBackgroundColor = (position: number, leagueKey: string) => {
     if (position === 1) {
-      // First place is always gold for all leagues
-      return "bg-gradient-to-r from-yellow-100 to-amber-100 border-l-4 border-yellow-500";
+      return isDark
+        ? "bg-yellow-900/20 border-l-4 border-yellow-500"
+        : "bg-gradient-to-r from-yellow-100 to-amber-100 border-l-4 border-yellow-500";
     }
 
     switch (leagueKey) {
       case "premiumLeague":
         if (position >= 2 && position <= 5) {
-          return "bg-gradient-to-r from-yellow-50 to-amber-50";
+          return isDark ? "bg-yellow-900/10" : "bg-gradient-to-r from-yellow-50 to-amber-50";
         }
         break;
       case "standardLeague":
         if (position >= 2 && position <= 11) {
-          return "bg-gradient-to-r from-blue-50 to-sky-50";
+          return isDark ? "bg-blue-900/10" : "bg-gradient-to-r from-blue-50 to-sky-50";
         }
         break;
       case "h2hLeague":
       case "h2h2League":
         if (position >= 2 && position <= 4) {
-          return "bg-gradient-to-r from-red-50 to-rose-50";
+          return isDark ? "bg-red-900/10" : "bg-gradient-to-r from-red-50 to-rose-50";
         }
         break;
     }
@@ -471,12 +479,12 @@ export default function AdminTablesCleanPage() {
 
   if (showLoginRedirect) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-black" : "bg-gray-50"}`}>
         <div className="text-center">
           <p className="mb-4 text-gray-800">Redirecting to admin login...</p>
           <Link
             href="/admin"
-            className="bg-gradient-to-r from-amber-600 to-red-600 text-white px-6 py-2 rounded-lg hover:from-amber-700 hover:to-red-700 transition-colors"
+            className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors"
           >
             Go to Admin Login
           </Link>
@@ -488,7 +496,7 @@ export default function AdminTablesCleanPage() {
   // Show loading state while checking authentication
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-black" : "bg-gray-50"}`}>
         <LoadingCard
           title="Loading Tables Management"
           description="Please wait while we authenticate and load the table data"
@@ -504,7 +512,7 @@ export default function AdminTablesCleanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className={`min-h-screen ${isDark ? "bg-black" : "bg-gray-50"}`}>
       {/* Header */}
       <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white shadow-lg sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
@@ -512,7 +520,7 @@ export default function AdminTablesCleanPage() {
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <Link
                 href="/admin/dashboard"
-                className="bg-white/20 hover:bg-white/30 p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation"
+                className="text-white/70 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 rounded-md transition-colors flex-shrink-0"
                 title="Back to dashboard"
                 aria-label="Back to dashboard"
               >
@@ -527,22 +535,29 @@ export default function AdminTablesCleanPage() {
                 priority
               />
               <div className="min-w-0 flex-1">
-                <h1 className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate">
+                <h1 className="text-sm sm:text-lg lg:text-xl font-semibold truncate tracking-tight">
                   Premier League Tables
                 </h1>
-                <p className="text-xs sm:text-sm opacity-75 truncate hidden sm:block">
+                <p className="text-xs sm:text-sm text-white/60 truncate hidden sm:block">
                   League and ranking management
                 </p>
               </div>
             </div>
             <button
+              onClick={toggleTheme}
+              className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-md transition-colors"
+              title={isDark ? "Light mode" : "Dark mode"}
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
               onClick={handleSignOut}
-              className="bg-white/20 hover:bg-white/30 p-1.5 sm:p-2 lg:px-4 lg:py-2 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 flex-shrink-0 touch-manipulation"
-              title="Sign Out"
-              aria-label="Sign Out"
+              className="text-white/70 hover:text-white hover:bg-white/10 p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 flex-shrink-0 text-sm"
+              title={t("signOut")}
+              aria-label={t("signOut")}
             >
               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden lg:inline text-sm">Sign Out</span>
+              <span className="hidden lg:inline text-sm">{t("signOut")}</span>
             </button>
           </div>
         </div>
@@ -551,7 +566,7 @@ export default function AdminTablesCleanPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
         {/* Top-level Tabs */}
-        <div className="bg-white rounded-xl p-2 mb-6 inline-flex gap-2 border border-gray-200">
+        <div className={`rounded-md p-2 mb-6 inline-flex gap-2 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
           {[
             { key: "premier", label: "Premier League" },
             { key: "champions", label: "Champions League" },
@@ -560,10 +575,10 @@ export default function AdminTablesCleanPage() {
             <button
               key={t.key}
               onClick={() => setMainTab(t.key as any)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
                 mainTab === (t.key as any)
                   ? "bg-amber-600 text-white"
-                  : "text-gray-700 hover:bg-gray-100"
+                  : isDark ? "text-gray-400 hover:bg-gray-800" : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               {t.label}
@@ -573,19 +588,19 @@ export default function AdminTablesCleanPage() {
 
         {/* Champions League Bulk Updater */}
         {mainTab === "champions" && (
-          <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-              <h3 className="text-lg font-semibold text-gray-800">
+          <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"} rounded-md overflow-hidden border`}>
+            <div className={`px-6 py-4 border-b ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
+              <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>
                 Champions League Bulk Updater (2025/26)
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                 Paste UEFA Champions League HTML content and update the
                 cl_table_25_26 table.
               </p>
             </div>
             <div className="p-6 space-y-4">
               <textarea
-                className="text-gray-800 w-full min-h-[300px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[300px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500`}
                 placeholder={`Paste UEFA Champions League HTML content here. Example:\n<div class="si-data-row si-row si-cursor--pointer">\n  <div class="si-block si-name-wrp">\n    <div class="si-cell">\n      <div class="si-rank"><span>1</span><span class="si-rank-icons euro-drop-down si-winner"></span></div>\n      <div class="si-plyr-info-wrap">\n        <div class="si-plyr-info">\n          <div class="si-badge-wrap">\n            <img src="https://gaming.uefa.com/assets/avatars/scarf_19_45@2x.png">\n            <div class="si-member-num"><span>15</span></div>\n          </div>\n          <div class="si-names">\n            <span class="si-name-one">Lightbringer</span>\n            <span class="si-user-name">AmmarĆosović</span>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n  <div class="si-block si-right-data">\n    <div class="si-cell">\n      <div class="si-cell--top"><span>112</span></div>\n    </div>\n  </div>\n</div>`}
                 value={bulkUpdateData}
                 onChange={(e) => setBulkUpdateData(e.target.value)}
@@ -632,7 +647,7 @@ export default function AdminTablesCleanPage() {
                     }
                   }}
                   disabled={bulkUpdating}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50"
                 >
                   {bulkUpdating ? (
                     <>
@@ -646,19 +661,19 @@ export default function AdminTablesCleanPage() {
                 </button>
                 <a
                   href="/champions-league/tables"
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className={`px-4 py-2 border rounded-md ${isDark ? "border-gray-700 text-gray-400 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   View Public Table
                 </a>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+              <div className={`${isDark ? "bg-blue-900/20 border-blue-800" : "bg-blue-50 border-blue-200"} border rounded-md p-4`}>
+                <h4 className={`font-semibold ${isDark ? "text-blue-400" : "text-blue-800"} mb-2 flex items-center gap-2`}>
                   <FileText className="w-4 h-4" />
                   Instructions:
                 </h4>
-                <div className="text-sm text-blue-700 space-y-2">
+                <div className={`text-sm ${isDark ? "text-blue-300" : "text-blue-700"} space-y-2`}>
                   <p>1. Go to the UEFA Champions League fantasy page</p>
                   <p>
                     2. Right-click on the leaderboard section and select
@@ -686,19 +701,19 @@ export default function AdminTablesCleanPage() {
 
         {/* F1 Bulk Updater */}
         {mainTab === "f1" && (
-          <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-              <h3 className="text-lg font-semibold text-gray-800">
+          <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"} rounded-md overflow-hidden border`}>
+            <div className={`px-6 py-4 border-b ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
+              <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>
                 F1 Bulk Updater (2025)
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                 Paste standings text (Rank, Team, Manager, Points) and update
                 Supabase table f1_table_25.
               </p>
             </div>
             <div className="p-6 space-y-4">
               <textarea
-                className="text-gray-800 w-full min-h-[220px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[220px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500`}
                 placeholder={`Paste here. Example:\nRank\tName\tPoints\n1\nSainz & Conquer\nAlmir Softic\n3377\n2\nCosine kamikaze\nAmmar Cosovic\n3307`}
                 value={bulkUpdateData}
                 onChange={(e) => setBulkUpdateData(e.target.value)}
@@ -741,7 +756,7 @@ export default function AdminTablesCleanPage() {
                     }
                   }}
                   disabled={bulkUpdating}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50"
                 >
                   {bulkUpdating ? (
                     <>
@@ -755,7 +770,7 @@ export default function AdminTablesCleanPage() {
                 </button>
                 <a
                   href="/f1-fantasy/tables"
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className={`px-4 py-2 border rounded-md ${isDark ? "border-gray-700 text-gray-400 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
                   target="_blank"
                 >
                   Open Public Table
@@ -764,30 +779,30 @@ export default function AdminTablesCleanPage() {
             </div>
 
             {/* Race Info Updater */}
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <h4 className="text-md font-semibold text-gray-800 mb-3">
+            <div className={`px-6 py-4 border-t ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
+              <h4 className={`text-md font-semibold ${isDark ? "text-white" : "text-gray-800"} mb-3`}>
                 Race Info (Next & Last Race)
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className={`block text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-700"} mb-2`}>
                     Next Race
                   </label>
                   <input
                     type="text"
                     id="f1-next-race"
-                    className="text-gray-800 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500`}
                     placeholder="e.g., Austin"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className={`block text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-700"} mb-2`}>
                     Last Race
                   </label>
                   <input
                     type="text"
                     id="f1-last-race"
-                    className="text-gray-800 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500`}
                     placeholder="e.g., Singapore"
                   />
                 </div>
@@ -839,7 +854,7 @@ export default function AdminTablesCleanPage() {
                       });
                     }
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
                   <Upload className="w-4 h-4" /> Update Race Info
                 </button>
@@ -851,21 +866,21 @@ export default function AdminTablesCleanPage() {
         {/* Wrap Premier content to toggle visibility via tab */}
         <div className={mainTab !== "premier" ? "hidden" : "block"}>
           {/* Control Panel */}
-          <div className="bg-white rounded-xl shadow-lg mb-4 sm:mb-6 lg:mb-8 border border-gray-100 overflow-hidden">
+          <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100"} rounded-md mb-4 sm:mb-6 lg:mb-8 border overflow-hidden`}>
             {/* Header Info */}
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200">
+            <div className={`px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
               <div className="space-y-3 lg:space-y-0 lg:flex lg:items-center lg:justify-between">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Server className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
+                    <Server className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="text-base sm:text-lg font-bold text-gray-800 truncate">
+                    <h2 className={`text-base sm:text-lg font-bold ${isDark ? "text-white" : "text-gray-800"} truncate`}>
                       Premier League Tables
                     </h2>
                     {source && (
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium whitespace-nowrap">
+                        <span className={`text-xs px-2 py-1 ${isDark ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-700"} rounded-md font-medium whitespace-nowrap`}>
                           {source === "clean_table"
                             ? "Updated Table"
                             : "Registration Table"}
@@ -886,7 +901,7 @@ export default function AdminTablesCleanPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowBulkUpdate(true)}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow transition-all duration-200 text-xs sm:text-sm font-medium touch-manipulation"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-all duration-200 text-xs sm:text-sm font-medium touch-manipulation"
                       aria-label="Bulk Update"
                     >
                       <Upload className="w-4 h-4 flex-shrink-0" />
@@ -896,7 +911,7 @@ export default function AdminTablesCleanPage() {
                     <button
                       onClick={refreshTables}
                       disabled={loading}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium touch-manipulation"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium touch-manipulation"
                       aria-label={loading ? "Loading tables" : "Refresh tables"}
                     >
                       <RefreshCw
@@ -909,7 +924,7 @@ export default function AdminTablesCleanPage() {
                   </div>
 
                   {/* FPL Sync Section */}
-                  <div className="flex flex-col gap-2 p-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 sm:ml-2">
+                  <div className={`flex flex-col gap-2 p-3 ${isDark ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"} rounded-md border sm:ml-2`}>
                     {/* Update Row */}
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-600 font-semibold w-16">
@@ -921,7 +936,7 @@ export default function AdminTablesCleanPage() {
                             key={league.key}
                             onClick={() => updateFromFPL(league.key)}
                             disabled={updatingFromFPL === league.key || fullSyncing !== null || loading}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all duration-150 text-xs ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all duration-150 text-xs ${
                               updatingFromFPL === league.key
                                 ? "bg-gray-300 cursor-not-allowed text-gray-500"
                                 : league.color === "yellow"
@@ -954,7 +969,7 @@ export default function AdminTablesCleanPage() {
                             key={`full-${league.key}`}
                             onClick={() => fullSyncFromFPL(league.key)}
                             disabled={fullSyncing === league.key || updatingFromFPL !== null || loading}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all duration-150 text-xs ring-2 ring-amber-400 ring-offset-1 ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold transition-all duration-150 text-xs ring-2 ring-amber-400 ring-offset-1 ${
                               fullSyncing === league.key
                                 ? "bg-gray-400 cursor-not-allowed text-white"
                                 : league.color === "yellow"
@@ -984,7 +999,7 @@ export default function AdminTablesCleanPage() {
             <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                <h3 className={`text-xs sm:text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-700"} uppercase tracking-wide`}>
                   Filteri Liga
                 </h3>
               </div>
@@ -1000,7 +1015,7 @@ export default function AdminTablesCleanPage() {
                         setSelectedLeague(league.key as keyof LeagueTables);
                         setEditingPlayer(null);
                       }}
-                      className={`group relative flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 touch-manipulation ${
+                      className={`group relative flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-md sm:rounded-md font-semibold transition-all duration-200 touch-manipulation ${
                         isSelected
                           ? `bg-${league.color}-500 text-white shadow-lg scale-105`
                           : `bg-${league.color}-100 text-${league.color}-800 hover:bg-${league.color}-200 active:bg-${league.color}-300 border-2 border-${league.color}-300 hover:border-${league.color}-400`
@@ -1016,7 +1031,7 @@ export default function AdminTablesCleanPage() {
                         {league.name}
                       </span>
                       <span
-                        className={`text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-bold ${
+                        className={`text-xs px-1.5 sm:px-2 py-0.5 rounded-md font-bold ${
                           isSelected
                             ? "bg-white/20 text-white"
                             : `bg-${league.color}-300 text-${league.color}-900`
@@ -1039,11 +1054,11 @@ export default function AdminTablesCleanPage() {
           </div>
 
           {/* Current League Table */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-            <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gray-50">
+          <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100"} rounded-md overflow-hidden border`}>
+            <div className={`px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                  <h3 className={`text-base sm:text-lg font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>
                     {currentLeague?.name}
                   </h3>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1">
@@ -1080,7 +1095,7 @@ export default function AdminTablesCleanPage() {
                   role="table"
                   aria-label={`${currentLeague?.name} tabela`}
                 >
-                  <thead className="bg-gray-50">
+                  <thead className={isDark ? "bg-gray-800" : "bg-gray-50"}>
                     <tr>
                       <th
                         className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -1152,7 +1167,7 @@ export default function AdminTablesCleanPage() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className={isDark ? "bg-gray-900 divide-y divide-gray-800" : "bg-white divide-y divide-gray-200"}>
                     {currentPlayers.length === 0 ? (
                       <tr>
                         <td
@@ -1178,21 +1193,21 @@ export default function AdminTablesCleanPage() {
                       currentPlayers.map((player, index) => (
                         <tr
                           key={player.id}
-                          className={`hover:bg-gray-100 transition-colors ${getRowBackgroundColor(
+                          className={`${isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"} transition-colors ${getRowBackgroundColor(
                             player.position,
                             selectedLeague
                           )}`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div
-                              className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                              className={`flex items-center justify-center w-8 h-8 rounded-md ${
                                 index === 0
                                   ? "bg-yellow-500 text-white"
                                   : index === 1
                                   ? "bg-gray-400 text-white"
                                   : index === 2
                                   ? "bg-amber-600 text-white"
-                                  : "bg-gray-100 text-gray-700"
+                                  : `${isDark ? "bg-gray-800 text-gray-300" : "bg-gray-100 text-gray-700"}`
                               }`}
                             >
                               <span className="font-bold text-sm">
@@ -1214,7 +1229,7 @@ export default function AdminTablesCleanPage() {
                                         firstName: e.target.value,
                                       })
                                     }
-                                    className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                                    className={`w-20 px-2 py-1 border rounded text-sm ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"}`}
                                     placeholder="Ime"
                                   />
                                   <input
@@ -1226,12 +1241,12 @@ export default function AdminTablesCleanPage() {
                                         lastName: e.target.value,
                                       })
                                     }
-                                    className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                                    className={`w-24 px-2 py-1 border rounded text-sm ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"}`}
                                     placeholder="Prezime"
                                   />
                                 </div>
                               ) : (
-                                <span className="text-sm font-medium text-gray-900">
+                                <span className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
                                   {player.firstName} {player.lastName}
                                 </span>
                               )}
@@ -1264,7 +1279,7 @@ export default function AdminTablesCleanPage() {
                                     teamName: e.target.value,
                                   })
                                 }
-                                className="w-32 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                                className={`w-32 px-2 py-1 border rounded text-sm ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"}`}
                                 placeholder="Naziv tima"
                               />
                             ) : (
@@ -1325,10 +1340,10 @@ export default function AdminTablesCleanPage() {
                                       });
                                     }
                                   }}
-                                  className="px-2 py-1 border border-gray-300 rounded text-sm w-20 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-gray-900 font-semibold"
+                                  className={`px-2 py-1 border rounded text-sm w-20 focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"}`}
                                 />
                               ) : (
-                                <span className="text-sm font-semibold text-gray-900">
+                                <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
                                   {player.points}
                                 </span>
                               )}
@@ -1416,15 +1431,15 @@ export default function AdminTablesCleanPage() {
           {/* Bulk Update Modal */}
           {showBulkUpdate && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6 border-b border-gray-200">
+              <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white"} rounded-md shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto`}>
+                <div className={`p-6 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
                   <div className="flex justify-between items-center">
                     <div>
-                      <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                      <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-800"} flex items-center gap-2`}>
                         <Upload className="w-6 h-6 text-green-600" />
                         Bulk Update
                       </h3>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"} mt-1`}>
                         Update points or H2H categories for multiple players at
                         once using JSON format
                       </p>
@@ -1456,20 +1471,20 @@ export default function AdminTablesCleanPage() {
                 <div className="p-6">
                   {/* Format Example */}
                   <div className="mb-6">
-                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <h4 className={`font-semibold ${isDark ? "text-gray-300" : "text-gray-700"} mb-3 flex items-center gap-2`}>
                       <FileText className="w-4 h-4" />
                       Data Format:
                     </h4>
-                    <div className="bg-gray-100 rounded-lg p-4 text-xs">
-                      <h5 className="font-semibold mb-2 text-gray-800">
+                    <div className={`${isDark ? "bg-gray-800" : "bg-gray-100"} rounded-md p-4 text-xs`}>
+                      <h5 className={`font-semibold mb-2 ${isDark ? "text-white" : "text-gray-800"}`}>
                         For updating points:
                       </h5>
-                      <pre className="text-gray-700 mb-4">{`{
+                      <pre className={isDark ? "text-gray-300 mb-4" : "text-gray-700 mb-4"}>{`{
   "updates": [
     {
       "rank": 1,
       "team": "Team name",
-      "manager": "Manager name", 
+      "manager": "Manager name",
       "gw": 81,
       "total": 81
     },
@@ -1483,10 +1498,10 @@ export default function AdminTablesCleanPage() {
   ]
 }`}</pre>
 
-                      <h5 className="font-semibold mb-2 text-gray-800">
+                      <h5 className={`font-semibold mb-2 ${isDark ? "text-white" : "text-gray-800"}`}>
                         For updating H2H statistics (W/D/L and H2H points):
                       </h5>
-                      <pre className="text-gray-700">{`{
+                      <pre className={isDark ? "text-gray-300" : "text-gray-700"}>{`{
   "updates": [
     { 
       "rank": 1, 
@@ -1542,13 +1557,13 @@ export default function AdminTablesCleanPage() {
 
                   {/* JSON Input */}
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className={`block text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-700"} mb-2`}>
                       JSON Data:
                     </label>
                     <textarea
                       value={bulkUpdateData}
                       onChange={(e) => setBulkUpdateData(e.target.value)}
-                      className="w-full h-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm font-mono text-gray-900 bg-white placeholder-gray-500"
+                      className={`w-full h-64 px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm font-mono ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"}`}
                       placeholder="Enter JSON data here..."
                     />
                   </div>
@@ -1567,7 +1582,7 @@ export default function AdminTablesCleanPage() {
                     <button
                       onClick={bulkUpdatePlayers}
                       disabled={bulkUpdating || !bulkUpdateData.trim()}
-                      className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Upload
                         className={`w-4 h-4 ${

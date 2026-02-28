@@ -1,15 +1,13 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import React, { useState, useEffect } from "react";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, User, LogIn, LogOut } from "lucide-react";
-import { SiPremierleague } from "react-icons/si";
-import { GiF1Car } from "react-icons/gi";
-import { PiSoccerBall } from "react-icons/pi";
-import { FaUser, FaGoogle, FaCreditCard } from "react-icons/fa";
+import { Menu, X, User, LogIn, LogOut, BarChart3, Activity, Trophy, UserPlus, Camera, DollarSign, TrendingUp, Newspaper } from "lucide-react";
+import { FaUser, FaGoogle, FaMagic } from "react-icons/fa";
+import { TbPresentationAnalytics } from "react-icons/tb";
 import ThemeToggle from "../ThemeToggle";
 import LanguageSelector from "./LanguageSelector";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -18,35 +16,27 @@ import { useSession, signIn } from "next-auth/react";
 import { safeLogout } from "@/lib/session-utils";
 import { Edit } from "lucide-react";
 
-interface NavItem {
+interface LeagueNavItem {
+  id: string;
   name: string;
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  logo: string;
+  accentColor: string;
+  borderClass: string;
+  activeTextClass: string;
+  subPages: {
+    name: string;
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }[];
 }
-
-const getNavItems = (t: any): NavItem[] => [
-  { name: t("home", "Home"), href: "/", icon: Home },
-  {
-    name: t("premierLeague", "Premier League"),
-    href: "/premier-league/tables",
-    icon: SiPremierleague,
-  },
-  {
-    name: t("championsLeague", "Champions League"),
-    href: "/champions-league/tables",
-    icon: PiSoccerBall,
-  },
-  {
-    name: t("f1Fantasy", "F1 Fantasy"),
-    href: "/f1-fantasy/tables",
-    icon: GiF1Car,
-  },
-];
 
 const Navbar = React.memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [managerData, setManagerData] = useState<{
     managerId: string | null;
     isVerified: boolean;
@@ -102,13 +92,41 @@ const Navbar = React.memo(function Navbar() {
     }
   }, [session?.user?.id]);
 
+  // Mega dropdown handlers
+  const handleMouseEnterNav = useCallback((leagueId: string) => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
+    }
+    setActiveDropdown(leagueId);
+  }, []);
+
+  const handleMouseLeaveNav = useCallback(() => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 150);
+  }, []);
+
+  const handleMouseEnterDropdown = useCallback(() => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
+    }
+  }, []);
+
+  const handleMouseLeaveDropdown = useCallback(() => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 150);
+  }, []);
+
   // Wait for i18n to be ready
   if (!ready) {
     return (
       <div className="fixed top-0 left-0 right-0 w-full bg-theme-background border-b border-theme-border z-50">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-2">
-          <div className="flex items-center justify-between h-16 md:h-20">
-            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+          <div className="flex items-center justify-between h-12 md:h-14">
+            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
             <div className="hidden md:flex items-center space-x-4">
               <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
               <div className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
@@ -120,13 +138,71 @@ const Navbar = React.memo(function Navbar() {
     );
   }
 
-  const navItems = getNavItems(t);
+  // League nav items with sub-pages for mega dropdown
+  const leagueNavItems: LeagueNavItem[] = [
+    {
+      id: "premier-league",
+      name: t("premierLeague", "Premier League"),
+      href: "/premier-league/tables",
+      logo: "/images/logos/pl-logo.png",
+      accentColor: "purple",
+      borderClass: "border-t-purple-600",
+      activeTextClass: "text-purple-600 dark:text-purple-400",
+      subPages: [
+        { name: t("tables"), href: "/premier-league/tables", icon: BarChart3 },
+        { name: t("fplLive"), href: "/premier-league/fpl-live", icon: Activity },
+        { name: t("fantasyCommand"), href: "/premier-league/team-planner", icon: TbPresentationAnalytics },
+        { name: t("aiTeamAnalysis"), href: "/premier-league/ai-team-analysis", icon: FaMagic },
+        { name: t("prices"), href: "/premier-league/prices", icon: DollarSign },
+        { name: t("bestDifferentials"), href: "/premier-league/best-differentials", icon: TrendingUp },
+        { name: t("teamNews"), href: "/premier-league/team-news", icon: Newspaper },
+        { name: t("registration"), href: "/premier-league/registration", icon: UserPlus },
+        { name: t("prizes"), href: "/premier-league/prizes", icon: Trophy },
+        { name: t("gallery"), href: "/premier-league/gallery", icon: Camera },
+      ],
+    },
+    {
+      id: "champions-league",
+      name: t("championsLeague", "Champions League"),
+      href: "/champions-league/tables",
+      logo: "/images/logos/cl-logo.png",
+      accentColor: "blue",
+      borderClass: "border-t-blue-700",
+      activeTextClass: "text-blue-600 dark:text-blue-400",
+      subPages: [
+        { name: t("tables"), href: "/champions-league/tables", icon: BarChart3 },
+        { name: t("prizes"), href: "/champions-league/prizes", icon: Trophy },
+        { name: t("registration"), href: "/champions-league/registration", icon: UserPlus },
+        { name: t("gallery"), href: "/champions-league/gallery", icon: Camera },
+      ],
+    },
+    {
+      id: "f1-fantasy",
+      name: t("f1Fantasy", "F1 Fantasy"),
+      href: "/f1-fantasy/tables",
+      logo: "/images/logos/f1.png",
+      accentColor: "red",
+      borderClass: "border-t-red-600",
+      activeTextClass: "text-red-600 dark:text-red-400",
+      subPages: [
+        { name: t("tables"), href: "/f1-fantasy/tables", icon: BarChart3 },
+        { name: t("prizes"), href: "/f1-fantasy/prizes", icon: Trophy },
+        { name: t("registration"), href: "/f1-fantasy/registration", icon: UserPlus },
+        { name: t("gallery"), href: "/f1-fantasy/gallery", icon: Camera },
+      ],
+    },
+  ];
 
   const handleMobileNavClick = () => {
     setIsOpen(false);
   };
 
-  const isActiveLink = (href: string) => {
+  const isActivePath = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href.split("/").slice(0, 3).join("/"));
+  };
+
+  const isExactPath = (href: string) => {
     return pathname === href;
   };
 
@@ -156,19 +232,19 @@ const Navbar = React.memo(function Navbar() {
               setUserMenuOpen(!userMenuOpen);
             }}
             className={`flex items-center justify-center w-10 h-10 rounded-full overflow-hidden border-2 transition-all duration-300 ${
-              userMenuOpen 
-                ? 'border-red-800 shadow-lg' 
-                : theme === 'dark' 
-                  ? 'border-gray-600 hover:border-red-700' 
+              userMenuOpen
+                ? 'border-red-800 shadow-lg'
+                : theme === 'dark'
+                  ? 'border-gray-600 hover:border-red-700'
                   : 'border-gray-300 hover:border-red-800'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             {session.user.image ? (
-              <Image 
-                src={session.user.image} 
-                alt={session.user.name || 'User'} 
+              <Image
+                src={session.user.image}
+                alt={session.user.name || 'User'}
                 width={40}
                 height={40}
                 className="w-full h-full object-cover"
@@ -183,9 +259,9 @@ const Navbar = React.memo(function Navbar() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className={`absolute right-0 mt-2 w-64 rounded-xl border shadow-xl z-50 ${
-                theme === 'dark' 
-                  ? 'bg-gray-800 border-gray-700' 
+              className={`absolute right-0 mt-2 w-64 rounded-lg border shadow-xl z-50 ${
+                theme === 'dark'
+                  ? 'bg-gray-800 border-gray-700'
                   : 'bg-white border-gray-200'
               }`}
               onClick={(e) => e.stopPropagation()}
@@ -195,9 +271,9 @@ const Navbar = React.memo(function Navbar() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden">
                     {session.user.image ? (
-                      <Image 
-                        src={session.user.image} 
-                        alt={session.user.name || 'User'} 
+                      <Image
+                        src={session.user.image}
+                        alt={session.user.name || 'User'}
                         width={40}
                         height={40}
                         className="w-full h-full object-cover"
@@ -223,8 +299,8 @@ const Navbar = React.memo(function Navbar() {
               <div className="py-2">
                 <Link href="/profile" onClick={() => setUserMenuOpen(false)}>
                   <div className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                    theme === 'dark' 
-                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                    theme === 'dark'
+                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}>
                     <User className="w-4 h-4" />
@@ -232,24 +308,13 @@ const Navbar = React.memo(function Navbar() {
                   </div>
                 </Link>
 
-                <Link href="/billing-plans" onClick={() => setUserMenuOpen(false)}>
-                  <div className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                    theme === 'dark' 
-                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                  }`}>
-                    <FaCreditCard className="w-4 h-4 text-red-800" />
-                    {t('billingPlans')}
-                  </div>
-                </Link>
-                
                 <Link href="/premier-league/ai-team-analysis" onClick={() => setUserMenuOpen(false)}>
                   <div className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                    theme === 'dark' 
-                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                    theme === 'dark'
+                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}>
-                    <FaUser className="w-4 h-4" />
+                    <FaMagic className="w-4 h-4" />
                     {t('aiAnalysis')}
                   </div>
                 </Link>
@@ -260,26 +325,26 @@ const Navbar = React.memo(function Navbar() {
                 }`}>
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-medium">Manager ID:</span>
+                      <span className="text-xs font-medium">{t('managerId')}:</span>
                       <span className={`text-xs font-mono ${
-                        managerData?.isVerified === false 
-                          ? (theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600') 
+                        managerData?.isVerified === false
+                          ? (theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600')
                           : (theme === 'dark' ? 'text-green-400' : 'text-green-600')
                       } truncate`}>
-                        {managerData?.managerId || 'Not set'}
+                        {managerData?.managerId || t('notSet')}
                       </span>
                     </div>
-                    <Link 
-                      href="/profile?tab=manager-id" 
+                    <Link
+                      href="/profile?tab=manager-id"
                       onClick={() => setUserMenuOpen(false)}
                       className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                        theme === 'dark' 
-                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                        theme === 'dark'
+                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
                           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                       }`}
                     >
                       <Edit className="w-3 h-3" />
-                      Edit
+                      {t('edit')}
                     </Link>
                   </div>
                   {managerData?.verificationNote && (
@@ -292,12 +357,12 @@ const Navbar = React.memo(function Navbar() {
                 </div>
 
                 <div className={`border-t my-2 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
-                
-                <button 
+
+                <button
                   onClick={handleSignOut}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                    theme === 'dark' 
-                      ? 'text-red-400 hover:bg-red-900/20' 
+                    theme === 'dark'
+                      ? 'text-red-400 hover:bg-red-900/20'
                       : 'text-red-600 hover:bg-red-50'
                   }`}
                 >
@@ -320,10 +385,10 @@ const Navbar = React.memo(function Navbar() {
             setUserMenuOpen(!userMenuOpen);
           }}
           className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
-            userMenuOpen 
-              ? 'bg-red-800 text-white shadow-lg' 
-              : theme === 'dark' 
-                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+            userMenuOpen
+              ? 'bg-red-800 text-white shadow-lg'
+              : theme === 'dark'
+                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
           }`}
           whileHover={{ scale: 1.05 }}
@@ -337,9 +402,9 @@ const Navbar = React.memo(function Navbar() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className={`absolute right-0 mt-2 w-56 rounded-xl border shadow-xl z-50 ${
-              theme === 'dark' 
-                ? 'bg-gray-800 border-gray-700' 
+            className={`absolute right-0 mt-2 w-56 rounded-lg border shadow-xl z-50 ${
+              theme === 'dark'
+                ? 'bg-gray-800 border-gray-700'
                 : 'bg-white border-gray-200'
             }`}
             onClick={(e) => e.stopPropagation()}
@@ -351,19 +416,19 @@ const Navbar = React.memo(function Navbar() {
                   setUserMenuOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                  theme === 'dark' 
-                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                  theme === 'dark'
+                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
                 <FaGoogle className="w-4 h-4 text-red-500" />
                 {t('signIn')} with Google
               </button>
-              
+
               <Link href="/login" onClick={() => setUserMenuOpen(false)}>
                 <div className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                  theme === 'dark' 
-                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                  theme === 'dark'
+                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}>
                   <LogIn className="w-4 h-4" />
@@ -372,11 +437,11 @@ const Navbar = React.memo(function Navbar() {
               </Link>
 
               <div className={`border-t my-2 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
-              
+
               <Link href="/signup" onClick={() => setUserMenuOpen(false)}>
                 <div className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                  theme === 'dark' 
-                    ? 'text-red-400 hover:bg-red-900/20' 
+                  theme === 'dark'
+                    ? 'text-red-400 hover:bg-red-900/20'
                     : 'text-red-800 hover:bg-red-50'
                 }`}>
                   <User className="w-4 h-4" />
@@ -413,22 +478,22 @@ const Navbar = React.memo(function Navbar() {
         right: 0,
       }}
     >
-      {/* Animated border-bottom */}
-      <div
-        className={`absolute bottom-0 left-0 right-0 h-0.5 navbar-border-animated ${
-          isScrolled ? "visible" : ""
-        }`}
-        style={{
-          backgroundImage:
-            theme === "dark"
-              ? "linear-gradient(90deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 1))"
-              : "linear-gradient(90deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 1))",
-          backgroundSize: "300% 100%",
-        }}
-      />
+      {/* Shimmer border-bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-px overflow-hidden">
+        <div
+          className="w-full h-full animate-shimmer-border"
+          style={{
+            backgroundImage:
+              theme === "dark"
+                ? "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 20%, rgba(255,255,255,0.15) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.15) 60%, rgba(255,255,255,0.03) 80%, transparent 100%)"
+                : "linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.03) 20%, rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0.03) 80%, transparent 100%)",
+            backgroundSize: "200% 100%",
+          }}
+        />
+      </div>
 
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-2 relative z-10">
-        <div className="flex items-center justify-between h-16 md:h-20">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-1 relative z-10">
+        <div className="flex items-center justify-between h-12 md:h-14">
           {/* Logo - Left */}
           <Link href="/">
             <motion.div
@@ -438,178 +503,143 @@ const Navbar = React.memo(function Navbar() {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <motion.div
-                className="relative w-16 h-16 transition-all duration-500"
+                className="relative w-10 h-10 transition-all duration-500"
                 whileHover={{
                   scale: 1.15,
                   transition: { duration: 0.3, ease: "easeOut" },
                 }}
               >
-              {/* Sophisticated glow effect */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-br from-red-900/40 via-gray-600/30 to-red-800/40 force-circle blur-xl"
-                animate={{
-                  scale: [1, 1.3, 1],
-                  opacity: [0.4, 0.7, 0.4],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-
-              {/* Clean logo without background */}
-              <div className="relative w-full h-full flex items-center justify-center">
-                <Image
-                  src="/images/rf-no-bg.png"
-                  alt="Remis Fantasy Logo"
-                  width={60}
-                  height={60}
-                  className="w-14 h-14 object-contain filter drop-shadow-2xl transition-all duration-500"
-                  priority
-                />
-              </div>
-
-              {/* Elegant rotating border */}
-              <motion.div
-                className="absolute inset-0 force-circle"
-                style={{
-                  background:
-                    "conic-gradient(from 0deg, transparent 0deg, rgba(139, 69, 19, 0.6) 90deg, transparent 180deg, rgba(220, 38, 38, 0.4) 270deg, transparent 360deg)",
-                  mask: "radial-gradient(circle at center, transparent 65%, black 67%)",
-                  WebkitMask:
-                    "radial-gradient(circle at center, transparent 65%, black 67%)",
-                }}
-                animate={{ rotate: 360 }}
-                transition={{
-                  duration: 12,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              />
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <Image
+                    src="/images/rf-no-bg.png"
+                    alt="Remis Fantasy Logo"
+                    width={36}
+                    height={36}
+                    className="w-9 h-9 object-contain transition-all duration-500"
+                    priority
+                  />
+                </div>
               </motion.div>
             </motion.div>
           </Link>
 
           {/* Navigation Links - Right */}
-          <div className="hidden md:flex items-center space-x-4 lg:space-x-6">
-            {navItems.map((item, index) => {
-              const isActive = isActiveLink(item.href);
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
+            {/* League Nav Items with Mega Dropdown */}
+            {leagueNavItems.map((league, index) => {
+              const isActive = isActivePath(league.href);
               return (
-                <Link key={item.name} href={item.href}>
-                  <motion.div
-                    className={`relative group font-semibold transition-all duration-500 text-sm uppercase tracking-widest font-russo theme-transition px-4 py-2 cursor-pointer ${
-                      isActive
-                        ? "text-red-800 dark:text-red-400"
-                        : "text-theme-text-secondary hover:text-red-800 dark:hover:text-red-400"
-                    }`}
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {/* Dynamic background on hover - purple tint */}
+                <div
+                  key={league.id}
+                  className="relative"
+                  onMouseEnter={() => handleMouseEnterNav(league.id)}
+                  onMouseLeave={handleMouseLeaveNav}
+                >
+                  <Link href={league.href}>
                     <motion.div
-                      className={`absolute inset-0 rounded-lg backdrop-blur-sm ${
-                        theme === "light"
-                          ? "bg-red-800/10 shadow-lg"
-                          : "bg-red-700/10"
+                      className={`relative font-semibold transition-all duration-500 text-xs uppercase tracking-widest font-anta theme-transition px-2 lg:px-3 py-1.5 cursor-pointer ${
+                        isActive
+                          ? league.activeTextClass
+                          : "text-theme-text-secondary hover:text-theme-foreground"
                       }`}
-                      initial={{ opacity: 0, scale: 0.85 }}
-                      whileHover={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    />
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <span className="relative z-10 flex items-center gap-2">
+                        <Image
+                          src={league.logo}
+                          alt={league.id}
+                          width={18}
+                          height={18}
+                          className="w-[18px] h-[18px] object-contain transition-all duration-300"
+                          style={{
+                            filter: isActive
+                              ? league.accentColor === "purple"
+                                ? "brightness(0) saturate(100%) invert(18%) sepia(80%) saturate(5000%) hue-rotate(260deg) brightness(100%)"
+                                : league.accentColor === "blue"
+                                ? "brightness(0) saturate(100%) invert(30%) sepia(80%) saturate(3000%) hue-rotate(200deg) brightness(100%)"
+                                : "brightness(0) saturate(100%) invert(15%) sepia(80%) saturate(5000%) hue-rotate(350deg) brightness(100%)"
+                              : theme === "dark"
+                              ? "brightness(0) invert(1)"
+                              : "brightness(0)"
+                          }}
+                        />
+                        {league.name}
+                      </span>
 
-                    {/* Subtle inner glow - purple */}
-                    <motion.div
-                      className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-red-800/5 to-transparent"
-                      initial={{ opacity: 0 }}
-                      whileHover={{ opacity: 1 }}
-                      transition={{ duration: 0.4, delay: 0.1 }}
-                    />
+                      {/* Active indicator */}
+                      {isActive && (
+                        <motion.div
+                          className={`absolute -bottom-2 left-0 right-0 h-0.5 origin-center ${
+                            league.accentColor === "purple"
+                              ? "bg-gradient-to-r from-transparent via-purple-600 to-transparent"
+                              : league.accentColor === "blue"
+                              ? "bg-gradient-to-r from-transparent via-blue-600 to-transparent"
+                              : "bg-gradient-to-r from-transparent via-red-600 to-transparent"
+                          }`}
+                          initial={{ scaleX: 0, opacity: 0 }}
+                          animate={{ scaleX: 1, opacity: 1 }}
+                          transition={{ duration: 0.6, ease: "easeOut" }}
+                        />
+                      )}
+                    </motion.div>
+                  </Link>
 
-                    <span className="relative z-10 drop-shadow-sm flex items-center gap-2">
+                  {/* Mega Dropdown */}
+                  <AnimatePresence>
+                    {activeDropdown === league.id && (
                       <motion.div
-                        whileHover={{ scale: 1.2, rotate: 5 }}
-                        transition={{ duration: 0.2 }}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-lg border-t-2 shadow-xl z-50 ${league.borderClass} ${
+                          theme === "dark"
+                            ? "bg-gray-900 border border-gray-700"
+                            : "bg-white border border-gray-200"
+                        }`}
+                        style={{ minWidth: league.subPages.length > 4 ? "520px" : "260px" }}
+                        onMouseEnter={handleMouseEnterDropdown}
+                        onMouseLeave={handleMouseLeaveDropdown}
                       >
-                        <item.icon className="w-4 h-4" />
+                        <div className={`p-4 grid gap-1.5 ${league.subPages.length > 4 ? "grid-cols-2 grid-flow-col" : "grid-cols-1"}`} style={league.subPages.length > 4 ? { gridTemplateRows: `repeat(${Math.ceil(league.subPages.length / 2)}, minmax(0, 1fr))` } : undefined}>
+                          {league.subPages.map((page) => {
+                            const PageIcon = page.icon;
+                            const isPageActive = isExactPath(page.href);
+                            return (
+                              <Link
+                                key={page.href}
+                                href={page.href}
+                                onClick={() => setActiveDropdown(null)}
+                              >
+                                <div className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
+                                  isPageActive
+                                    ? `${league.activeTextClass} ${
+                                        theme === "dark"
+                                          ? league.accentColor === "purple" ? "bg-purple-500/10"
+                                            : league.accentColor === "blue" ? "bg-blue-500/10"
+                                            : "bg-red-500/10"
+                                          : league.accentColor === "purple" ? "bg-purple-50"
+                                            : league.accentColor === "blue" ? "bg-blue-50"
+                                            : "bg-red-50"
+                                      }`
+                                    : theme === "dark"
+                                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                }`}>
+                                  <PageIcon className="w-4 h-4 flex-shrink-0" />
+                                  <span className="font-medium whitespace-nowrap">{page.name}</span>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
                       </motion.div>
-                      {item.name}
-                    </span>
-
-                    {/* Active page indicator - purple line */}
-                    {isActive && (
-                      <motion.div
-                        className="absolute -bottom-2 left-0 right-0 h-0.5 origin-center bg-gradient-to-r from-transparent via-red-800 to-transparent"
-                        initial={{ scaleX: 0, opacity: 0 }}
-                        animate={{ scaleX: 1, opacity: 1 }}
-                        transition={{ duration: 0.6, ease: "easeOut" }}
-                      />
                     )}
-
-                    {/* Sophisticated underline - purple */}
-                    {!isActive && (
-                      <motion.div
-                        className="absolute -bottom-1 left-2 right-2 h-0.5 origin-center bg-gradient-to-r from-transparent via-red-800/60 to-transparent"
-                        initial={{ scaleX: 0, opacity: 0 }}
-                        whileHover={{ scaleX: 1, opacity: 1 }}
-                        transition={{ duration: 0.4, ease: "easeOut" }}
-                      />
-                    )}
-
-                    {/* Top accent line */}
-                    <motion.div
-                      className={`absolute -top-1 left-2 right-2 h-0.5 ${
-                        theme === "light"
-                          ? "bg-gradient-to-r from-transparent via-black/40 to-transparent"
-                          : "bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                      }`}
-                      initial={{ scaleX: 0, opacity: 0 }}
-                      whileHover={{ scaleX: 1, opacity: 1 }}
-                      transition={{
-                        duration: 0.3,
-                        delay: 0.1,
-                        ease: "easeOut",
-                      }}
-                    />
-
-                    {/* Corner accents */}
-                    <motion.div
-                      className={`absolute top-0 left-0 w-1 h-1 rounded-lg ${
-                        theme === "light" ? "bg-black" : "bg-white"
-                      }`}
-                      initial={{ scale: 0, opacity: 0 }}
-                      whileHover={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.2, delay: 0.2 }}
-                    />
-                    <motion.div
-                      className={`absolute top-0 right-0 w-1 h-1 rounded-lg ${
-                        theme === "light" ? "bg-black" : "bg-white"
-                      }`}
-                      initial={{ scale: 0, opacity: 0 }}
-                      whileHover={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.2, delay: 0.25 }}
-                    />
-                    <motion.div
-                      className={`absolute bottom-0 left-0 w-1 h-1 rounded-lg ${
-                        theme === "light" ? "bg-black" : "bg-white"
-                      }`}
-                      initial={{ scale: 0, opacity: 0 }}
-                      whileHover={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.2, delay: 0.3 }}
-                    />
-                    <motion.div
-                      className={`absolute bottom-0 right-0 w-1 h-1 rounded-lg ${
-                        theme === "light" ? "bg-black" : "bg-white"
-                      }`}
-                      initial={{ scale: 0, opacity: 0 }}
-                      whileHover={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.2, delay: 0.35 }}
-                    />
-                  </motion.div>
-                </Link>
+                  </AnimatePresence>
+                </div>
               );
             })}
 
@@ -675,9 +705,9 @@ const Navbar = React.memo(function Navbar() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden">
                       {session.user.image ? (
-                        <Image 
-                          src={session.user.image} 
-                          alt={session.user.name || 'User'} 
+                        <Image
+                          src={session.user.image}
+                          alt={session.user.name || 'User'}
                           width={40}
                           height={40}
                           className="w-full h-full object-cover"
@@ -700,43 +730,54 @@ const Navbar = React.memo(function Navbar() {
                 </div>
               )}
 
-              {/* Navigation Items */}
-              {navItems.map((item, index) => {
-                const isActive = isActiveLink(item.href);
-                return (
-                  <Link key={item.name} href={item.href}>
-                    <motion.div
-                      onClick={handleMobileNavClick}
-                      className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative ${
-                        isActive
-                          ? "text-theme-foreground border-theme-foreground"
-                          : "text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground"
-                      }`}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{
-                        opacity: isOpen ? 1 : 0,
-                        y: isOpen ? 0 : 20,
-                      }}
-                      transition={{
-                        duration: 0.3,
-                        delay: isOpen ? index * 0.1 : 0,
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="relative flex items-center justify-center gap-3">
-                        <motion.div
-                          whileHover={{ scale: 1.3, rotate: 10 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <item.icon className="w-5 h-5" />
-                        </motion.div>
-                        <span>{item.name}</span>
-                      </div>
-                    </motion.div>
-                  </Link>
-                );
-              })}
+              {/* Navigation Items - Home */}
+              <Link href="/">
+                <motion.div
+                  onClick={handleMobileNavClick}
+                  className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-anta theme-transition cursor-pointer relative ${
+                    pathname === "/"
+                      ? "text-theme-foreground border-theme-foreground"
+                      : "text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground"
+                  }`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{
+                    opacity: isOpen ? 1 : 0,
+                    y: isOpen ? 0 : 20,
+                  }}
+                  transition={{ duration: 0.3, delay: isOpen ? 0 : 0 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <span>{t("home", "Home")}</span>
+                </motion.div>
+              </Link>
+
+              {/* League Nav Items */}
+              {leagueNavItems.map((league, index) => (
+                <Link key={league.id} href={league.href}>
+                  <motion.div
+                    onClick={handleMobileNavClick}
+                    className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-anta theme-transition cursor-pointer relative ${
+                      isActivePath(league.href)
+                        ? "text-theme-foreground border-theme-foreground"
+                        : "text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground"
+                    }`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{
+                      opacity: isOpen ? 1 : 0,
+                      y: isOpen ? 0 : 20,
+                    }}
+                    transition={{
+                      duration: 0.3,
+                      delay: isOpen ? (index + 1) * 0.1 : 0,
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <span>{league.name}</span>
+                  </motion.div>
+                </Link>
+              ))}
 
               {/* User Actions in Mobile Menu */}
               {status === "authenticated" && session?.user && (
@@ -744,7 +785,7 @@ const Navbar = React.memo(function Navbar() {
                   <Link href="/profile">
                     <motion.div
                       onClick={handleMobileNavClick}
-                      className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground`}
+                      className="w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-anta theme-transition cursor-pointer relative text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{
                         opacity: isOpen ? 1 : 0,
@@ -752,7 +793,7 @@ const Navbar = React.memo(function Navbar() {
                       }}
                       transition={{
                         duration: 0.3,
-                        delay: isOpen ? (navItems.length + 1) * 0.1 : 0,
+                        delay: isOpen ? (leagueNavItems.length + 1) * 0.1 : 0,
                       }}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -764,35 +805,16 @@ const Navbar = React.memo(function Navbar() {
                     </motion.div>
                   </Link>
 
-                  <Link href="/billing-plans">
-                    <motion.div
-                      onClick={handleMobileNavClick}
-                      className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo theme-transition cursor-pointer relative text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground`}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{
-                        opacity: isOpen ? 1 : 0,
-                        y: isOpen ? 0 : 20,
-                      }}
-                      transition={{
-                        duration: 0.3,
-                        delay: isOpen ? (navItems.length + 2) * 0.1 : 0,
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="relative flex items-center justify-center gap-3">
-                        <FaCreditCard className="w-5 h-5 text-red-800" />
-                        <span>{t('billingPlans')}</span>
-                      </div>
-                    </motion.div>
-                  </Link>
-
                   <motion.div
                     onClick={() => {
                       safeLogout("/");
                       handleMobileNavClick();
                     }}
-                    className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-russo cursor-pointer relative text-red-500 hover:text-red-400`}
+                    className={`w-full text-center font-semibold py-4 px-4 rounded-lg transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-anta cursor-pointer relative ${
+                      theme === 'dark'
+                        ? 'bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 hover:border-gray-500 text-red-400 hover:text-red-300'
+                        : 'bg-gray-100/50 hover:bg-gray-200/50 border border-gray-300 hover:border-gray-400 text-red-600 hover:text-red-700'
+                    }`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{
                       opacity: isOpen ? 1 : 0,
@@ -800,7 +822,7 @@ const Navbar = React.memo(function Navbar() {
                     }}
                     transition={{
                       duration: 0.3,
-                      delay: isOpen ? (navItems.length + 3) * 0.1 : 0,
+                      delay: isOpen ? (leagueNavItems.length + 2) * 0.1 : 0,
                     }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -821,7 +843,7 @@ const Navbar = React.memo(function Navbar() {
                   <p className={`text-center text-sm mb-3 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     {t('signIn')} to access all features
                   </p>
-                  
+
                   <div className="space-y-2">
                     <motion.button
                       onClick={() => {

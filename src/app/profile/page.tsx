@@ -13,7 +13,6 @@ import {
   FaSignOutAlt,
   FaGoogle,
   FaCheckCircle,
-  FaCreditCard,
   FaHistory,
 } from "react-icons/fa";
 import { BiEdit, BiSave, BiX } from "react-icons/bi";
@@ -267,7 +266,7 @@ export default function ProfilePage() {
           </p>
           <Link
             href="/login"
-            className="bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white px-6 py-2 rounded-lg transition-all duration-300"
+            className="bg-red-800 hover:bg-red-900 text-white px-6 py-2 rounded-md transition-all duration-300"
           >
             Go to Login
           </Link>
@@ -297,7 +296,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-theme-background">
         <div
-          className={`text-center p-8 rounded-xl ${
+          className={`text-center p-8 rounded-lg ${
             theme === "dark"
               ? "bg-gray-800 text-white"
               : "bg-white text-gray-900"
@@ -318,7 +317,7 @@ export default function ProfilePage() {
         {/* Header */}
         <div className="mb-8">
           <h1
-            className={`text-3xl font-bold ${
+            className={`text-2xl font-bold ${
               theme === "dark" ? "text-white" : "text-gray-900"
             }`}
           >
@@ -337,7 +336,7 @@ export default function ProfilePage() {
           {/* Profile Information */}
           <div className="lg:col-span-2">
             <div
-              className={`rounded-xl border ${
+              className={`rounded-lg border ${
                 theme === "dark"
                   ? "bg-gray-800/50 border-gray-700"
                   : "bg-white/50 border-gray-200"
@@ -649,7 +648,7 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Subscription Card */}
             <div
-              className={`rounded-xl border ${
+              className={`rounded-lg border ${
                 theme === "dark"
                   ? "bg-gray-800/50 border-gray-700"
                   : "bg-white/50 border-gray-200"
@@ -711,7 +710,7 @@ export default function ProfilePage() {
                       {t("status")}
                     </span>
                     <span
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
                         profile.subscription.status === "active"
                           ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                           : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
@@ -721,14 +720,6 @@ export default function ProfilePage() {
                     </span>
                   </div>
 
-                  {profile.subscription.plan.name === "Free" && (
-                    <Link href="/billing-plans">
-                      <button className="w-full mt-4 px-4 py-2 bg-red-800 hover:bg-red-900 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                        <FaCreditCard />
-                        {t("upgradeNow")}
-                      </button>
-                    </Link>
-                  )}
                 </div>
               ) : (
                 <div>
@@ -739,12 +730,6 @@ export default function ProfilePage() {
                   >
                     {t("noActiveSubscription")}
                   </p>
-                  <Link href="/billing-plans">
-                    <button className="w-full px-4 py-2 bg-red-800 hover:bg-red-900 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                      <FaCreditCard />
-                      {t("choosePlan")}
-                    </button>
-                  </Link>
                 </div>
               )}
             </div>
@@ -752,7 +737,7 @@ export default function ProfilePage() {
             {/* Usage Card */}
             {usage && (
               <div
-                className={`rounded-xl border ${
+                className={`rounded-lg border ${
                   theme === "dark"
                     ? "bg-gray-800/50 border-gray-700"
                     : "bg-white/50 border-gray-200"
@@ -824,7 +809,7 @@ export default function ProfilePage() {
 
             {/* Quick Actions */}
             <div
-              className={`rounded-xl border ${
+              className={`rounded-lg border ${
                 theme === "dark"
                   ? "bg-gray-800/50 border-gray-700"
                   : "bg-white/50 border-gray-200"

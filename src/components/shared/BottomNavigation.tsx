@@ -75,8 +75,8 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
                 className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 ${
                   isActive
                     ? theme === "dark"
-                      ? "text-red-400 bg-red-500/10"
-                      : "text-red-600 bg-red-50"
+                      ? "text-white bg-gray-700/50"
+                      : "text-gray-900 bg-gray-100"
                     : theme === "dark"
                     ? "text-gray-400 hover:text-gray-200"
                     : "text-gray-600 hover:text-gray-900"
@@ -96,7 +96,7 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
                   <motion.div
                     layoutId="bottomNavIndicator"
                     className={`absolute -top-0.5 left-0 right-0 h-0.5 rounded-full ${
-                      theme === "dark" ? "bg-red-400" : "bg-red-600"
+                      theme === "dark" ? "bg-white" : "bg-gray-900"
                     }`}
                   />
                 )}
@@ -117,7 +117,7 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
             whileTap={{ scale: 0.95 }}
           >
             <Menu className="w-5 h-5 mb-1" />
-            <span className="text-xs font-medium">Menu</span>
+            <span className="text-xs font-medium">{t('menu')}</span>
           </motion.button>
         </div>
       </div>

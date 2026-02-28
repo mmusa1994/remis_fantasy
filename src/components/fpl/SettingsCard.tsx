@@ -84,7 +84,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-sm">
+      <div className="bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-lg shadow-lg border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-sm">
         <button className="w-full p-4 text-left flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -99,7 +99,7 @@ export default function SettingsCard({ onSettingsSaved }: SettingsCardProps) {
   }
 
   return (
-    <div className="bg-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 dark:bg-gradient-to-r rounded-xl shadow-lg border border-gray-200/60 dark:border-gray-600/50 backdrop-blur-sm overflow-hidden">
+    <div className="bg-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 dark:bg-gradient-to-r rounded-lg shadow-lg border border-gray-200/60 dark:border-gray-600/50 backdrop-blur-sm overflow-hidden">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full p-4 text-left flex items-center justify-between hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-blue-50/30 dark:hover:from-gray-700/50 dark:hover:to-blue-900/20 transition-all duration-300 group"

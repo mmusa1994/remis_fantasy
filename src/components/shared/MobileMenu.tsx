@@ -17,7 +17,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { FaGoogle, FaCreditCard, FaUser } from "react-icons/fa";
+import { FaGoogle, FaUser } from "react-icons/fa";
 import ThemeToggle from "../ThemeToggle";
 import LanguageSelector from "./LanguageSelector";
 
@@ -126,7 +126,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
 
           {/* Menu Panel */}
           <motion.div
-            className={`absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-2xl border-t ${
+            className={`absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-lg border-t ${
               theme === "dark"
                 ? "bg-gray-900 border-gray-700"
                 : "bg-white border-gray-200"
@@ -143,7 +143,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
               <h2 className={`text-lg font-bold ${
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}>
-                Menu
+                {t('menu')}
               </h2>
               <div className="flex items-center gap-2">
                 <button
@@ -168,7 +168,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                 <h3 className={`text-sm font-medium mb-3 ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}>
-                  Settings
+                  {t('settings')}
                 </h3>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -176,7 +176,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                       <span className={`text-xs mb-1 ${
                         theme === "dark" ? "text-gray-400" : "text-gray-600"
                       }`}>
-                        Theme
+                        {t('theme')}
                       </span>
                       <ThemeToggle />
                     </div>
@@ -184,7 +184,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                       <span className={`text-xs mb-1 ${
                         theme === "dark" ? "text-gray-400" : "text-gray-600"
                       }`}>
-                        Language
+                        {t('language')}
                       </span>
                       <LanguageSelector />
                     </div>
@@ -232,13 +232,13 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                       theme === "dark" ? "text-gray-400" : "text-gray-600"
                     }`}>
                       <div className="flex items-center justify-between">
-                        <span>Manager ID:</span>
+                        <span>{t('managerId')}:</span>
                         <span className={`font-mono ${
                           managerData?.isVerified === false 
                             ? (theme === "dark" ? "text-yellow-400" : "text-yellow-600") 
                             : (theme === "dark" ? "text-green-400" : "text-green-600")
                         }`}>
-                          {managerData.managerId || 'Not set'}
+                          {managerData.managerId || t('notSet')}
                         </span>
                       </div>
                       {managerData.verificationNote && (
@@ -259,17 +259,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                           : "bg-gray-200 hover:bg-gray-300 text-gray-900"
                       }`}>
                         <User className="w-4 h-4 inline mr-2" />
-                        Profile
-                      </button>
-                    </Link>
-                    <Link href="/billing-plans" onClick={onClose} className="flex-1">
-                      <button className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                        theme === "dark"
-                          ? "bg-red-700 hover:bg-red-600 text-white"
-                          : "bg-red-600 hover:bg-red-700 text-white"
-                      }`}>
-                        <FaCreditCard className="w-4 h-4 inline mr-2" />
-                        Billing
+                        {t('profile')}
                       </button>
                     </Link>
                   </div>
@@ -284,7 +274,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                   <p className={`text-center mb-4 ${
                     theme === "dark" ? "text-gray-300" : "text-gray-700"
                   }`}>
-                    Sign in to access all features
+                    {t('signInToAccess')}
                   </p>
                   <div className="space-y-2">
                     <button
@@ -296,7 +286,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                       }`}
                     >
                       <FaGoogle className="w-4 h-4 text-red-500" />
-                      <span className="font-medium">Continue with Google</span>
+                      <span className="font-medium">{t('continueWithGoogle')}</span>
                     </button>
                     <Link href="/login" onClick={onClose} className="block">
                       <button className={`w-full flex items-center justify-center gap-3 py-2 px-4 rounded-lg transition-colors ${
@@ -305,7 +295,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                           : "hover:bg-gray-100 text-gray-600"
                       }`}>
                         <LogIn className="w-4 h-4" />
-                        <span>Sign in with Email</span>
+                        <span>{t('signInWithEmail')}</span>
                       </button>
                     </Link>
                   </div>
@@ -324,7 +314,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                         : "bg-purple-50 hover:bg-purple-100 text-purple-700"
                     }`}
                   >
-                    <span className="font-medium">Premier League</span>
+                    <span className="font-medium">{t('premierLeague')}</span>
                     {expandedSection === "premier-league" ? (
                       <ChevronUp className="w-4 h-4" />
                     ) : (
@@ -368,7 +358,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                         : "bg-blue-50 hover:bg-blue-100 text-blue-700"
                     }`}
                   >
-                    <span className="font-medium">Champions League</span>
+                    <span className="font-medium">{t('championsLeague')}</span>
                     {expandedSection === "champions-league" ? (
                       <ChevronUp className="w-4 h-4" />
                     ) : (
@@ -408,11 +398,11 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                     onClick={() => toggleSection("f1-fantasy")}
                     className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
                       theme === "dark"
-                        ? "bg-orange-900/20 hover:bg-orange-800/30 text-orange-300"
-                        : "bg-orange-50 hover:bg-orange-100 text-orange-700"
+                        ? "bg-red-900/20 hover:bg-red-800/30 text-red-300"
+                        : "bg-red-50 hover:bg-red-100 text-red-700"
                     }`}
                   >
-                    <span className="font-medium">F1 Fantasy</span>
+                    <span className="font-medium">{t('f1Fantasy')}</span>
                     {expandedSection === "f1-fantasy" ? (
                       <ChevronUp className="w-4 h-4" />
                     ) : (
@@ -458,7 +448,7 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                   }`}
                 >
                   <LogOut className="w-4 h-4" />
-                  <span className="font-medium">Sign Out</span>
+                  <span className="font-medium">{t('signOut')}</span>
                 </button>
               )}
             </div>

@@ -372,7 +372,7 @@ const ManagerSummary = React.memo(function ManagerSummary({
               : t("fplLive.bonusPredicted")}
           </span>
         </div>
-        <div className="bg-theme-secondary/10 px-3 py-1 rounded-full border border-theme-border">
+        <div className="bg-theme-secondary/10 px-3 py-1 rounded-md border border-theme-border">
           <span className="text-xs font-medium text-theme-foreground theme-transition">
             {t("fplLive.managerId")}:{" "}
             <span className="font-bold text-blue-600 dark:text-blue-400">

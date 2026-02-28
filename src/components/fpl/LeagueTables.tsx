@@ -1433,7 +1433,7 @@ export default function LeagueTables({
                   Gameweek {data.gameweek} • {t("leagueTables.liveTable")}
                   {isPolling && (
                     <div className="mt-1">
-                      <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
+                      <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
                         🔴 {t("leagueTables.live")}
                       </span>
                       <span className="ml-1 text-xs">
@@ -1547,7 +1547,7 @@ export default function LeagueTables({
                       >
                         <div className="flex items-center gap-2">
                           {isCurrentUser && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white shadow-sm">
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-purple-500 text-white shadow-sm">
                               YOU
                             </span>
                           )}
@@ -1713,7 +1713,7 @@ export default function LeagueTables({
                         {/* Team Name */}
                         <div className="col-span-3 min-w-0 rounded-lg px-3 py-2 transition-all duration-200">
                           <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white shadow-sm">
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-purple-500 text-white shadow-sm">
                               YOU
                             </span>
                             <p className="font-semibold truncate text-purple-800 dark:text-purple-200">

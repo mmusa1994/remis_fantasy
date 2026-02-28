@@ -373,7 +373,7 @@ export default function EnhancedPlayerCard({
                 Captain Appeal
               </span>
             </div>
-            <span className="text-yellow-300 text-sm font-bold bg-yellow-400/10 px-2 py-1 rounded-full">
+            <span className="text-yellow-300 text-sm font-bold bg-yellow-400/10 px-2 py-1 rounded-md">
               {Math.round(
                 player.captaincy_appeal || player.total_points * 2 || 10
               )}

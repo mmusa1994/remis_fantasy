@@ -19,7 +19,7 @@ export default function F1FantasyGalerijaPage() {
 
         <div className="bg-theme-card rounded-lg border-theme-border p-6 sm:p-8 theme-transition">
           <div className="text-center space-y-6">
-            <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-lg p-6 text-white">
+            <div className="bg-gradient-to-r from-red-600 to-red-500 rounded-lg p-6 text-white">
               <h2 className="text-xl sm:text-2xl font-bold mb-2">
                 🏁 Prva nagrada
               </h2>

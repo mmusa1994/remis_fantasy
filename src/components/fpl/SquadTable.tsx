@@ -70,7 +70,7 @@ const SquadTable = React.memo(function SquadTable({
   const { t } = useTranslation("fpl");
   if (!teamData || teamData.length === 0) {
     return (
-      <div className="bg-theme-card border-theme-border rounded-xl p-4 sm:p-6 theme-transition">
+      <div className="bg-theme-card border-theme-border rounded-lg p-4 sm:p-6 theme-transition">
         <h3 className="text-lg font-semibold mb-4 text-theme-foreground theme-transition">
           {t("fplLive.squad")}
         </h3>
@@ -189,7 +189,7 @@ const SquadTable = React.memo(function SquadTable({
             </span>
             {getMultiplierDisplay(pick) && (
               <span
-                className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                className={`text-xs px-1.5 py-0.5 rounded-md font-bold ${
                   pick.is_captain
                     ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                     : pick.is_vice_captain
@@ -263,7 +263,7 @@ const SquadTable = React.memo(function SquadTable({
   };
 
   return (
-    <div className="bg-theme-card border-theme-border rounded-xl overflow-hidden shadow-lg theme-transition">
+    <div className="bg-theme-card border-theme-border rounded-lg overflow-hidden shadow-lg theme-transition">
       <div className="px-4 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>

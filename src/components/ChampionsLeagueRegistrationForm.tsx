@@ -289,11 +289,6 @@ const ChampionsLeagueRegistrationForm = React.memo(
         />
 
         <section className="relative w-full bg-theme-background theme-transition">
-          {/* Champions League themed background effects */}
-          <div className="absolute inset-0">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-900/20 via-purple-800/10 to-blue-800/20 rounded-lg blur-3xl animate-pulse-gentle gpu-accelerated"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-l from-purple-900/20 via-blue-900/10 to-purple-800/20 rounded-lg blur-3xl animate-float-slow gpu-accelerated"></div>
-          </div>
 
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-6xl">
             {/* Champions League Header */}
@@ -309,13 +304,13 @@ const ChampionsLeagueRegistrationForm = React.memo(
                 />
               </div>
 
-              <h2 className="text-2xl xs:text-3xl md:text-5xl lg:text-6xl font-black mb-3 xs:mb-4 text-balance leading-tight font-russo animate-scale-in animate-delay-200">
+              <h2 className="text-2xl xs:text-3xl md:text-4xl font-black mb-3 xs:mb-4 text-balance leading-tight font-anta animate-scale-in animate-delay-200">
                 <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent drop-shadow-2xl">
                   CHAMPIONS LEAGUE
                 </span>
               </h2>
 
-              <h3 className="text-xl xs:text-2xl md:text-3xl lg:text-4xl font-black mb-4 text-theme-heading-primary">
+              <h3 className="text-xl xs:text-2xl md:text-2xl font-black mb-4 text-theme-heading-primary">
                 {t("champions:registration.registerTitle")}
               </h3>
 
@@ -326,7 +321,7 @@ const ChampionsLeagueRegistrationForm = React.memo(
             </div>
 
             {/* Prize Summary */}
-            <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 rounded-2xl p-6 mb-8 border border-blue-500/30">
+            <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 rounded-lg p-6 mb-8 border border-blue-500/30">
               <h3 className="text-lg font-bold text-center mb-4 text-theme-heading-primary">
                 {t("champions:registration.prizesSummary")}
               </h3>
@@ -372,7 +367,7 @@ const ChampionsLeagueRegistrationForm = React.memo(
               <div className="relative">
                 <form
                   onSubmit={handleSubmit}
-                  className="relative z-10 p-4 sm:p-6 md:p-8 lg:p-12 animate-fade-in-up animate-delay-200 border-2 border-blue-600/30 rounded-2xl bg-theme-background/80 backdrop-blur-sm theme-transition"
+                  className="relative z-10 p-4 sm:p-6 md:p-8 lg:p-12 animate-fade-in-up animate-delay-200 border-2 border-blue-600/30 rounded-lg bg-theme-background/80 backdrop-blur-sm theme-transition"
                 >
                   {/* Personal Info Section */}
                   <div className="mb-8 xs:mb-10 sm:mb-12">
@@ -590,7 +585,7 @@ const ChampionsLeagueRegistrationForm = React.memo(
                       ].map((method) => (
                         <label
                           key={method.value}
-                          className={`relative cursor-pointer p-4 rounded-xl border-2 transition-all duration-300 ${
+                          className={`relative cursor-pointer p-4 rounded-md border-2 transition-all duration-300 ${
                             formData.payment_method === method.value
                               ? method.color === "green"
                                 ? "border-green-500 bg-green-500/10"
@@ -781,7 +776,7 @@ const ChampionsLeagueRegistrationForm = React.memo(
                         </h3>
 
                         <div
-                          className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 ${
+                          className={`relative border-2 border-dashed rounded-md p-8 transition-all duration-300 ${
                             dragActive
                               ? "border-blue-400 bg-blue-50/10"
                               : errors.payment_proof
@@ -809,7 +804,7 @@ const ChampionsLeagueRegistrationForm = React.memo(
                             </div>
                           ) : (
                             <div className="text-center">
-                              <div className="w-16 h-16 mx-auto mb-4 bg-blue-500/20 rounded-full flex items-center justify-center">
+                              <div className="w-16 h-16 mx-auto mb-4 bg-blue-500/20 rounded-md flex items-center justify-center">
                                 <svg
                                   className="w-8 h-8 text-blue-500"
                                   fill="none"
@@ -856,7 +851,7 @@ const ChampionsLeagueRegistrationForm = React.memo(
                   <div className="mb-8 animate-fade-in animate-delay-200">
                     <label
                       htmlFor="notes"
-                      className="block text-sm md:text-base font-bold mb-3 theme-transition font-russo"
+                      className="block text-sm md:text-base font-bold mb-3 theme-transition font-anta"
                     >
                       <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                         {t("champions:form.notes")}
@@ -901,7 +896,7 @@ const ChampionsLeagueRegistrationForm = React.memo(
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-blue-600 via-purple-700 to-blue-800 hover:from-blue-700 hover:via-purple-800 hover:to-blue-900 text-white font-black py-3 xs:py-4 md:py-6 px-6 xs:px-8 md:px-12 rounded-lg text-base xs:text-lg md:text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-2xl border-2 border-blue-500/50 font-russo hover-scale hover-glow focus-ring gpu-accelerated"
+                    className="w-full bg-gradient-to-r from-blue-600 via-purple-700 to-blue-800 hover:from-blue-700 hover:via-purple-800 hover:to-blue-900 text-white font-black py-3 xs:py-4 md:py-6 px-6 xs:px-8 md:px-12 rounded-lg text-base xs:text-lg md:text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-2xl border-2 border-blue-500/50 font-anta hover-scale hover-glow focus-ring gpu-accelerated"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center gap-3 animate-fade-in">
@@ -914,8 +909,6 @@ const ChampionsLeagueRegistrationForm = React.memo(
                       </span>
                     )}
 
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-800/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-800 rounded-lg opacity-30 blur animate-rotate-slow" />
                   </button>
 
                   {/* Success Message */}

@@ -38,8 +38,8 @@ const config: Config = {
         'theme-heading-secondary': 'var(--theme-heading-secondary)',
       },
       fontFamily: {
-        russo: ["Russo One", "system-ui", "sans-serif"],
-        sans: ["Russo One", "system-ui", "sans-serif"],
+        anta: ["var(--font-anta)", "system-ui", "sans-serif"],
+        sans: ["var(--font-anta)", "system-ui", "sans-serif"],
         mono: ["monospace"],
       },
       animation: {
@@ -47,6 +47,7 @@ const config: Config = {
         "slide-up": "slideUp 0.5s ease-out",
         float: "float 6s ease-in-out infinite",
         shimmer: "shimmer 3s ease-in-out infinite",
+        "shimmer-border": "shimmerBorder 3s ease-in-out infinite",
       },
       keyframes: {
         fadeIn: {
@@ -65,6 +66,10 @@ const config: Config = {
           "0%": { transform: "translateX(-100%) skewX(-12deg)" },
           "50%": { transform: "translateX(100%) skewX(-12deg)" },
           "100%": { transform: "translateX(100%) skewX(-12deg)" },
+        },
+        shimmerBorder: {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
         },
       },
     },

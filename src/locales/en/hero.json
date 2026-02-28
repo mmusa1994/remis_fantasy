@@ -4,6 +4,7 @@
     "season": "Season 2025/26",
     "subtitle": "Welcome to the most exciting fantasy leagues! Choose your league and show your sports knowledge.",
     "openLeague": "Open League",
+    "explore": "Explore",
     "liveFpl": "LIVE FPL",
     "liveFplDescription": "Follow live Premier League matches with real-time updates, scores and fantasy points!",
     "watchLive": "Watch Live",
@@ -47,61 +48,67 @@
     "findGems": "Find Gems",
     "readNews": "Read News"
   },
+  "whyChoose": {
+    "title": "Why Choose REMIS Fantasy",
+    "subtitle": "The most complete fantasy sports platform in the region.",
+    "payment": {
+      "title": "Secure Payments",
+      "description": "Safe card payments via Stripe for hassle-free registration."
+    },
+    "autoManagement": {
+      "title": "Auto League Management",
+      "description": "Tables and standings updated automatically — no manual work."
+    },
+    "prizes": {
+      "title": "Best Prizes in the Region",
+      "description": "Generous prize pools that reward top performers every season."
+    },
+    "aiAnalysis": {
+      "title": "AI Team Analysis",
+      "description": "Free AI-powered insights to help you build winning squads."
+    },
+    "liveTracking": {
+      "title": "Live FPL Tracking",
+      "description": "Real-time match data, points, and gameweek progress at your fingertips."
+    },
+    "multiLeague": {
+      "title": "Multi-League Platform",
+      "description": "Premier League, Champions League, and F1 Fantasy all in one place."
+    }
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "step1": {
+      "title": "Register & Pay",
+      "description": "Pick your league, fill in details, and pay securely online."
+    },
+    "step2": {
+      "title": "Join Your League",
+      "description": "Get added to the official mini-league and start competing."
+    },
+    "step3": {
+      "title": "Win Prizes",
+      "description": "Climb the table, beat the competition, and claim your rewards."
+    }
+  },
+  "cta": {
+    "title": "Ready to dominate your fantasy league?",
+    "register": "Register Now",
+    "explore": "Explore Leagues"
+  },
   "aiGuru": {
     "freeForNow": "FREE FOR NOW",
     "premium": "PREMIUM",
     "cta": {
       "title": "Meet Your AI Fantasy Guru",
       "description": "Revolutionary AI technology that analyzes millions of data points to provide personalized FPL strategies, transfer recommendations, and winning insights.",
-      "tryFree": "Try Free Now",
-      "upgrade": "Upgrade to Pro"
+      "tryFree": "Try Free Now"
     },
     "features": {
       "realTime": "Real-time Analysis",
       "personalized": "Personalized Tips",
       "datadriven": "Data-driven Insights",
       "winMore": "Win More Points"
-    }
-  },
-  "pricing": {
-    "title": "Choose Your Plan",
-    "subtitle": "Unlock the full potential of your fantasy football journey with our flexible pricing plans.",
-    "popular": "Most Popular",
-    "month": "month",
-    "getStarted": "Get Started",
-    "choosePlan": "Choose Plan",
-    "guarantee": "30-day money-back guarantee",
-    "free": {
-      "title": "Free",
-      "price": "$0",
-      "features": {
-        "analytics": "Basic analytics & stats",
-        "live": "Live match tracking",
-        "prices": "Player prices & values",
-        "basicAI": "3 AI consultations/day"
-      }
-    },
-    "pro": {
-      "title": "Pro",
-      "price": "$9.99",
-      "features": {
-        "unlimited": "Unlimited AI consultations",
-        "advanced": "Advanced team analysis",
-        "personal": "Personal strategy planning",
-        "priority": "Priority support",
-        "insights": "Exclusive insights & tips"
-      }
-    },
-    "premium": {
-      "title": "Premium",
-      "price": "$19.99",
-      "features": {
-        "everything": "Everything in Pro",
-        "exclusive": "Exclusive premium features",
-        "earlyAccess": "Early access to new tools",
-        "customAnalysis": "Custom team analysis",
-        "support": "24/7 premium support"
-      }
     }
   },
   "leagues": {

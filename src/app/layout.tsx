@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Anta } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import LayoutContent from "../components/shared/LayoutContent";
@@ -8,6 +9,13 @@ import JsonLd, {
   websiteSchema,
   sportsEventSchema,
 } from "../components/seo/JsonLd";
+
+const anta = Anta({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-anta",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://remis-fantasy.com"),
@@ -133,14 +141,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bs">
+    <html lang="bs" className={anta.variable}>
       <head>
         <JsonLd data={organizationSchema} />
         <JsonLd data={websiteSchema} />
         <JsonLd data={sportsEventSchema} />
       </head>
       <body
-        className="font-russo antialiased w-full"
+        className="font-anta antialiased w-full"
         suppressHydrationWarning={true}
       >
         <FlagLoader />

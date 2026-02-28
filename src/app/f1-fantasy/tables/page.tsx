@@ -98,7 +98,7 @@ export default function F1TabeleFromDBPage() {
           <p className="text-theme-text-secondary mb-4">{error}</p>
           <button
             onClick={() => location.reload()}
-            className="px-4 py-2 bg-theme-primary text-theme-primary-foreground rounded-md font-russo uppercase tracking-wide hover:bg-theme-primary/90 transition-colors"
+            className="px-4 py-2 bg-theme-primary text-theme-primary-foreground rounded-md font-anta uppercase tracking-wide hover:bg-theme-primary/90 transition-colors"
           >
             {t("leaderboard.retry")}
           </button>
@@ -113,14 +113,14 @@ export default function F1TabeleFromDBPage() {
         {/* Header Section */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <h1 className="font-russo uppercase tracking-tight text-4xl md:text-5xl text-[#782e2e]">
+            <h1 className="font-anta uppercase tracking-tight text-4xl text-[#782e2e]">
               {t("pageTitle")}
             </h1>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <div className="flex flex-col items-center gap-2">
-              <p className="text-theme-text-primary font-russo text-lg">
+              <p className="text-theme-text-primary font-anta text-lg">
                 {t("nextLast", { next: nextRace, last: lastRace })}
               </p>
               <p className="text-theme-text-secondary text-sm">
@@ -134,11 +134,11 @@ export default function F1TabeleFromDBPage() {
             <div className="flex flex-col items-center justify-center px-4 py-2 rounded-md bg-theme-card border border-theme-border w-full">
               <div className="text-center flex flex-row items-center justify-center gap-2">
                 <GiTrophyCup className="text-[#F4CE2A] text-xl" />
-                <div className="text-[#F4CE2A] font-russo text-lg">
+                <div className="text-[#F4CE2A] font-anta text-lg">
                   {t("prizes.first")}
                 </div>
               </div>
-              <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
+              <div className="text-theme-text-primary font-anta text-sm flex items-center gap-1">
                 <FaCoins className="text-[#F4CE2A]" />
                 120 KM
               </div>
@@ -146,11 +146,11 @@ export default function F1TabeleFromDBPage() {
             <div className="flex flex-col items-center justify-center px-4 py-2 rounded-md bg-theme-card border border-theme-border w-full">
               <div className="text-center flex flex-row items-center justify-center gap-2">
                 <MdEmojiEvents className="text-[#9AA6B2] text-xl" />
-                <div className="text-[#9AA6B2] font-russo text-lg">
+                <div className="text-[#9AA6B2] font-anta text-lg">
                   {t("prizes.second")}
                 </div>
               </div>
-              <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
+              <div className="text-theme-text-primary font-anta text-sm flex items-center gap-1">
                 <FaCoins className="text-[#F4CE2A]" />
                 80 KM
               </div>
@@ -158,11 +158,11 @@ export default function F1TabeleFromDBPage() {
             <div className="flex flex-col items-center justify-center px-4 py-2 rounded-md bg-theme-card border border-theme-border w-full">
               <div className="text-center flex flex-row items-center justify-center gap-2">
                 <MdEmojiEvents className="text-[#B47B36] text-xl" />
-                <div className="text-[#B47B36] font-russo text-lg">
+                <div className="text-[#B47B36] font-anta text-lg">
                   {t("prizes.third")}
                 </div>
               </div>
-              <div className="text-theme-text-primary font-russo text-sm flex items-center gap-1">
+              <div className="text-theme-text-primary font-anta text-sm flex items-center gap-1">
                 <FaCoins className="text-[#F4CE2A]" />
                 60 KM
               </div>
@@ -171,7 +171,7 @@ export default function F1TabeleFromDBPage() {
         </div>
 
         {/* Leaderboard */}
-        <div className="rounded-xl overflow-hidden bg-theme-card border border-theme-border">
+        <div className="rounded-lg overflow-hidden bg-theme-card border border-theme-border">
           {entries.map((entry, index) => {
             const movement = getMovement(entry.rank, entry.last_rank ?? null);
             const isTopThree = entry.rank <= 3;
@@ -201,7 +201,7 @@ export default function F1TabeleFromDBPage() {
 
                 {/* Rank Badge */}
                 <div
-                  className="flex items-center justify-center w-7 h-7 rounded mr-4 font-russo text-sm"
+                  className="flex items-center justify-center w-7 h-7 rounded mr-4 font-anta text-sm"
                   style={{
                     backgroundColor:
                       entry.rank <= 3
@@ -225,7 +225,7 @@ export default function F1TabeleFromDBPage() {
                   {movement.type === "up" && (
                     <div className="flex items-center text-green-400">
                       <MdTrendingUp className="w-4 h-4" />
-                      <span className="text-xs font-russo">
+                      <span className="text-xs font-anta">
                         +{movement.change}
                       </span>
                     </div>
@@ -233,7 +233,7 @@ export default function F1TabeleFromDBPage() {
                   {movement.type === "down" && (
                     <div className="flex items-center text-red-400">
                       <MdTrendingDown className="w-4 h-4" />
-                      <span className="text-xs font-russo">
+                      <span className="text-xs font-anta">
                         -{movement.change}
                       </span>
                     </div>
@@ -247,20 +247,20 @@ export default function F1TabeleFromDBPage() {
 
                 {/* Player Name */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-russo text-theme-text-primary text-lg tracking-wide truncate">
+                  <h3 className="font-anta text-theme-text-primary text-lg tracking-wide truncate">
                     {entry.manager_name}
                   </h3>
                 </div>
 
                 {/* Team Name */}
                 <div className="flex-1 text-right mr-4 min-w-0">
-                  <p className="font-russo text-theme-text-secondary text-sm uppercase tracking-wide opacity-80 truncate">
+                  <p className="font-anta text-theme-text-secondary text-sm uppercase tracking-wide opacity-80 truncate">
                     {entry.team_name}
                   </p>
                 </div>
 
                 {/* Points */}
-                <div className="px-3 py-2 rounded-md font-russo text-theme-text-primary text-lg bg-theme-secondary border border-theme-border">
+                <div className="px-3 py-2 rounded-md font-anta text-theme-text-primary text-lg bg-theme-secondary border border-theme-border">
                   {entry.points.toLocaleString()}
                 </div>
               </div>

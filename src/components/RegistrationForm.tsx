@@ -92,7 +92,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
       return (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <p className="text-red-500 mb-4">Greška pri učitavanju podataka</p>
+            <p className="text-red-500 mb-4">{t("common:validation.loadingError")}</p>
             <p className="text-theme-text-secondary">{configError}</p>
           </div>
         </div>
@@ -103,54 +103,53 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
       const newErrors: Record<string, string> = {};
 
       if (!formData.first_name.trim()) {
-        newErrors.first_name = "Ime je obavezno";
+        newErrors.first_name = t("common:validation.firstNameRequired");
       }
 
       if (!formData.last_name.trim()) {
-        newErrors.last_name = "Prezime je obavezno";
+        newErrors.last_name = t("common:validation.lastNameRequired");
       }
 
       if (!formData.email.trim()) {
-        newErrors.email = "Email je obavezan";
+        newErrors.email = t("common:validation.emailRequired");
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = "Molimo unesite valjan email";
+        newErrors.email = t("common:validation.emailInvalid");
       }
 
       if (!formData.phone.trim()) {
-        newErrors.phone = "Broj telefona je obavezan";
+        newErrors.phone = t("common:validation.phoneRequired");
       } else {
         // Simple phone validation - allows various formats but ensures it looks like a phone number
         const phoneRegex = /^[\+]?[\d\s\-\(\)]{8,20}$/;
         const cleanPhone = formData.phone.replace(/\s/g, ""); // Remove spaces for length check
 
         if (!phoneRegex.test(formData.phone) || cleanPhone.length < 8) {
-          newErrors.phone =
-            "Molimo unesite valjan broj telefona (minimum 8 cifara)";
+          newErrors.phone = t("common:validation.phoneInvalid");
         }
       }
 
       if (!formData.team_name.trim()) {
-        newErrors.team_name = "Ime tima je obavezno";
+        newErrors.team_name = t("common:validation.teamNameRequired");
       }
 
       if (!formData.league_type) {
-        newErrors.league_type = "Molimo odaberite tip lige";
+        newErrors.league_type = t("common:validation.leagueTypeRequired");
       }
 
       if (!formData.payment_method) {
-        newErrors.payment_method = "Molimo odaberite način plaćanja";
+        newErrors.payment_method = t("common:validation.paymentMethodRequired");
       }
 
       if (formData.payment_method === "cash" && !formData.cash_status) {
-        newErrors.cash_status = "Molimo odaberite status keš plaćanja";
+        newErrors.cash_status = t("common:validation.cashStatusRequired");
       }
 
       if (formData.payment_method !== "cash" && !formData.payment_proof) {
-        newErrors.payment_proof = "Dokaz o uplati je obavezan";
+        newErrors.payment_proof = t("common:validation.paymentProofRequired");
       }
 
       if (!recaptchaToken) {
-        newErrors.recaptcha = "Molimo potvrdite da niste robot";
+        newErrors.recaptcha = t("common:validation.recaptchaRequired");
       }
 
       setErrors(newErrors);
@@ -164,7 +163,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
       if (file.size > maxSize) {
         setErrors((prev) => ({
           ...prev,
-          payment_proof: "Veličina fajla mora biti manja od 10MB",
+          payment_proof: t("common:validation.fileTooLarge"),
         }));
         return;
       }
@@ -172,7 +171,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
       if (!allowedTypes.some((type) => file.type.startsWith(type))) {
         setErrors((prev) => ({
           ...prev,
-          payment_proof: "Dozvoljene su samo slike i PDF fajlovi",
+          payment_proof: t("common:validation.invalidFileType"),
         }));
         return;
       }
@@ -296,7 +295,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
         // Show success toast
         setToast({
           show: true,
-          message: "Registracija uspešna! Proverite email za potvrdu.",
+          message: t("common:validation.registrationSuccess"),
           type: "success",
         });
 
@@ -320,14 +319,13 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
         console.error("Registration error:", error);
         setSubmitStatus("error");
 
-        let errorMessage = "Greška pri registraciji. Pokušajte ponovo.";
+        let errorMessage = t("common:validation.registrationError");
 
         if (
           error?.message?.includes("email_unique_constraint") ||
           error?.message?.includes("already exists")
         ) {
-          errorMessage =
-            "Email adresa je već registrovana. Molimo koristite drugu email adresu.";
+          errorMessage = t("common:validation.emailAlreadyRegistered");
         }
 
         // Show error toast
@@ -375,15 +373,10 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
         />
 
         <section className="relative w-full bg-theme-background theme-transition">
-          {/* Optimized Background Effects */}
-          <div className="absolute inset-0">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-900/10 via-gray-800/5 to-red-800/10 rounded-lg blur-3xl animate-pulse-gentle gpu-accelerated"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-l from-gray-900/10 via-red-900/5 to-gray-800/10 rounded-lg blur-3xl animate-float-slow gpu-accelerated"></div>
-          </div>
 
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-6xl">
             <div className="text-center mb-8 xs:mb-10 sm:mb-12 animate-fade-in-up">
-              <h2 className="text-2xl xs:text-3xl md:text-5xl lg:text-6xl font-black mb-3 xs:mb-4 text-balance leading-tight font-russo animate-scale-in animate-delay-200">
+              <h2 className="text-2xl xs:text-3xl md:text-4xl font-black mb-3 xs:mb-4 text-balance leading-tight font-anta animate-scale-in animate-delay-200">
                 <span className="text-theme-heading-primary drop-shadow-2xl theme-transition">
                   {t("registration.title")}
                 </span>
@@ -398,7 +391,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
               <div className="relative">
                 <form
                   onSubmit={handleSubmit}
-                  className="relative z-10 p-4 sm:p-6 md:p-8 lg:p-12 animate-fade-in-up animate-delay-200 border-2 border-gray-600/30 rounded-2xl bg-theme-background/80 backdrop-blur-sm theme-transition"
+                  className="relative z-10 p-4 sm:p-6 md:p-8 lg:p-12 animate-fade-in-up animate-delay-200 border-2 border-gray-600/30 rounded-lg bg-theme-background/80 backdrop-blur-sm theme-transition"
                 >
                   {/* Personal Info Section */}
                   <div className="mb-8 xs:mb-10 sm:mb-12">
@@ -630,7 +623,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                   <div className="mb-8 animate-fade-in animate-delay-200">
                     <label
                       htmlFor="notes"
-                      className="block text-sm md:text-base font-bold mb-3 theme-transition font-russo"
+                      className="block text-sm md:text-base font-bold mb-3 theme-transition font-anta"
                     >
                       <span className="text-theme-heading-primary theme-transition">
                         {t("registration.notes")}
@@ -659,7 +652,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                   <button
                     type="submit"
                     disabled={true} // Disabled for now
-                    className="w-full bg-gradient-to-r from-blue-600 via-slate-700 to-gray-800 hover:from-blue-700 hover:via-slate-800 hover:to-gray-900 text-white font-black py-3 xs:py-4 md:py-6 px-6 xs:px-8 md:px-12 rounded-lg text-base xs:text-lg md:text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-2xl border-2 border-blue-500/50 font-russo hover-scale hover-glow focus-ring gpu-accelerated"
+                    className="w-full bg-gradient-to-r from-blue-600 via-slate-700 to-gray-800 hover:from-blue-700 hover:via-slate-800 hover:to-gray-900 text-white font-black py-3 xs:py-4 md:py-6 px-6 xs:px-8 md:px-12 rounded-lg text-base xs:text-lg md:text-xl transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-2xl border-2 border-blue-500/50 font-anta hover-scale hover-glow focus-ring gpu-accelerated"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center gap-3 animate-fade-in">
@@ -672,9 +665,6 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                       </span>
                     )}
 
-                    {/* Animated Background */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-gray-800/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-gray-800 rounded-lg opacity-30 blur animate-rotate-slow" />
                   </button>
 
                   {/* Success/Error Messages */}
@@ -701,12 +691,7 @@ const RegistrationForm = React.memo<RegistrationFormProps>(
                                 : "text-green-200"
                             } text-xs xs:text-sm md:text-sm leading-relaxed font-bold animate-fade-in animate-delay-500`}
                           >
-                            Dobrodošli u REMIS Fantasy 2025/26!
-                            <br />
-                            Poslali smo vam email sa potvrdom prijave.
-                            <br />
-                            Kodovi za pristup ligi će vam biti poslati nakon
-                            revizije uplate.
+                            {t("registration.successMessage")}
                           </p>
                         </div>
                       </div>

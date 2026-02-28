@@ -178,7 +178,7 @@ const OnboardingModal = ({
             priority
           />
         </div>
-        <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+        <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-md flex items-center justify-center">
           <Sparkles className="w-4 h-4 text-yellow-900" />
         </div>
       </div>
@@ -675,7 +675,7 @@ const OnboardingModal = ({
     <div className="text-center space-y-6">
       <div className="relative">
         <div
-          className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center ${
+          className={`w-20 h-20 mx-auto rounded-md flex items-center justify-center ${
             theme === "dark"
               ? "bg-gradient-to-r from-green-800 to-green-700"
               : "bg-gradient-to-r from-green-500 to-green-600"
@@ -791,7 +791,7 @@ const OnboardingModal = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className={`relative w-full max-w-2xl max-h-[95vh] overflow-y-auto mx-2 sm:mx-4 rounded-xl sm:rounded-2xl shadow-2xl ${
+            className={`relative w-full max-w-2xl max-h-[95vh] overflow-y-auto mx-2 sm:mx-4 rounded-lg shadow-lg ${
               theme === "dark"
                 ? "bg-gray-900 border border-gray-700"
                 : "bg-white border border-gray-200"

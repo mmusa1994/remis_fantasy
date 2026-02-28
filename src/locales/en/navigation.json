@@ -18,8 +18,18 @@
   "signIn": "Sign In",
   "signOut": "Sign Out",
   "myProfile": "My Profile",
-  "billingPlans": "Billing Plans",
   "aiAnalysis": "AI Analysis",
   "fantasyCommand": "Fantasy Command Center",
-  "createAccount": "Create Account"
+  "createAccount": "Create Account",
+  "menu": "Menu",
+  "settings": "Settings",
+  "theme": "Theme",
+  "language": "Language",
+  "edit": "Edit",
+  "managerId": "Manager ID",
+  "notSet": "Not set",
+  "signInToAccess": "Sign in to access",
+  "continueWithGoogle": "Continue with Google",
+  "signInWithEmail": "Sign in with Email",
+  "profile": "Profile"
 }

@@ -197,5 +197,26 @@
     "upgradeToAccess": "Unaprijedi da pristupiš ovoj funkciji",
     "premiumFeature": "Premium Funkcija",
     "unlockFeature": "Otključaj ovu funkciju sa premium planom i dobij pristup naprednim statistikama, uvide i ekskluzivni sadržaj."
+  },
+  "validation": {
+    "firstNameRequired": "Ime je obavezno",
+    "lastNameRequired": "Prezime je obavezno",
+    "emailRequired": "Email je obavezan",
+    "emailInvalid": "Neispravna email adresa",
+    "phoneRequired": "Broj telefona je obavezan",
+    "phoneInvalid": "Neispravan broj telefona",
+    "teamNameRequired": "Naziv tima je obavezan",
+    "leagueTypeRequired": "Tip lige je obavezan",
+    "paymentMethodRequired": "Način plaćanja je obavezan",
+    "cashStatusRequired": "Status gotovinskog plaćanja je obavezan",
+    "paymentProofRequired": "Dokaz o uplati je obavezan",
+    "recaptchaRequired": "Molimo završite reCAPTCHA provjeru",
+    "fileTooLarge": "Datoteka je prevelika",
+    "invalidFileType": "Neispravan tip datoteke",
+    "cardDataRequired": "Podaci o kartici su obavezni",
+    "registrationSuccess": "Registracija uspješna!",
+    "registrationError": "Registracija neuspješna. Pokušajte ponovo.",
+    "emailAlreadyRegistered": "Ovaj email je već registrovan",
+    "loadingError": "Greška pri učitavanju. Pokušajte ponovo."
   }
 }

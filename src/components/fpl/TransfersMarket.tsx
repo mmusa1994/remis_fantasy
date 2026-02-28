@@ -115,7 +115,7 @@ export default function TransfersMarket() {
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
         <div className="flex items-center gap-3">
           <MdInfo className="text-red-600 dark:text-red-400 text-xl" />
           <div>
@@ -132,7 +132,7 @@ export default function TransfersMarket() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500/90 to-red-600/90 rounded-xl shadow-lg p-4 sm:p-6 border border-orange-300/30 backdrop-blur-sm">
+      <div className="bg-gradient-to-r from-orange-500/90 to-red-600/90 rounded-lg shadow-lg p-4 sm:p-6 border border-orange-300/30 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-3">
             <TbTransfer className="text-xl sm:text-2xl text-white flex-shrink-0" />
@@ -163,7 +163,7 @@ export default function TransfersMarket() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Transfers In */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-t-xl">
             <div className="flex items-center gap-3">
               <TbTrendingUp className="text-2xl text-white" />
@@ -228,7 +228,7 @@ export default function TransfersMarket() {
         </div>
 
         {/* Transfers Out */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="bg-gradient-to-r from-red-500 to-red-600 p-4 rounded-t-xl">
             <div className="flex items-center gap-3">
               <TbTrendingDown className="text-2xl text-white" />

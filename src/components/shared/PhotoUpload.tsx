@@ -211,7 +211,7 @@ export default function PhotoUpload({
             <div className="flex gap-2">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 bg-red-800 hover:bg-red-900 text-white rounded-full transition-colors"
+                className="p-2 bg-red-800 hover:bg-red-900 text-white rounded-md transition-colors"
                 title="Upload photo"
               >
                 <FaCamera className="w-3 h-3" />
@@ -219,7 +219,7 @@ export default function PhotoUpload({
               {displayPhotoUrl && (
                 <button
                   onClick={deletePhoto}
-                  className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors"
+                  className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
                   title="Delete photo"
                 >
                   <FaTrash className="w-3 h-3" />

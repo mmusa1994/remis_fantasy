@@ -665,7 +665,7 @@ export default function AdvancedFilterPanel({
         exit={{ height: 0, opacity: 0 }}
         className={`${
           theme === "dark" ? "bg-gray-800" : "bg-white"
-        } border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-md`}
+        } border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-md`}
       >
         {/* Header */}
         <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
@@ -766,7 +766,7 @@ export default function AdvancedFilterPanel({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
+                className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="font-medium flex items-center gap-2">

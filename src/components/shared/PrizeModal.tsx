@@ -206,7 +206,7 @@ export default function PrizeModal({
           >
             {/* Modal Container */}
             <div
-              className="relative w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden"
+              className="relative w-full h-full rounded-lg sm:rounded-lg overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, ${colors.primary}10, transparent)`,
                 border: `1px solid ${colors.primary}30`,
@@ -216,7 +216,7 @@ export default function PrizeModal({
               <div
                 className={`${
                   theme === "light" ? "bg-theme-background" : "bg-black"
-                } rounded-2xl sm:rounded-3xl overflow-hidden relative w-full h-full theme-transition`}
+                } rounded-lg sm:rounded-lg overflow-hidden relative w-full h-full theme-transition`}
                 onKeyDown={handleModalKeyDown}
                 tabIndex={-1}
               >
@@ -236,7 +236,7 @@ export default function PrizeModal({
                 {/* Close Button */}
                 <button
                   onClick={handleClose}
-                  className={`absolute top-3 right-3 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 backdrop-blur-xl rounded-full flex items-center justify-center transition-all duration-300 theme-transition hover-scale focus-ring ${
+                  className={`absolute top-3 right-3 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 backdrop-blur-xl rounded-md flex items-center justify-center transition-all duration-300 theme-transition hover-scale focus-ring ${
                     theme === "light"
                       ? "bg-theme-secondary/70 hover:bg-theme-accent text-theme-foreground border border-theme-border"
                       : "bg-black/70 hover:bg-black/80 text-white border border-white/10"
@@ -256,7 +256,7 @@ export default function PrizeModal({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 items-center">
                       {/* Image */}
                       <motion.div
-                        className="relative h-48 sm:h-64 lg:h-80 overflow-hidden rounded-xl sm:rounded-2xl"
+                        className="relative h-48 sm:h-64 lg:h-80 overflow-hidden rounded-lg sm:rounded-lg"
                         initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
@@ -270,7 +270,7 @@ export default function PrizeModal({
                           quality={100}
                         />
                         <div
-                          className={`absolute inset-0 bg-gradient-to-t ${colors.bg} opacity-30 rounded-xl sm:rounded-2xl`}
+                          className={`absolute inset-0 bg-gradient-to-t ${colors.bg} opacity-30 rounded-lg sm:rounded-lg`}
                         />
                       </motion.div>
 
@@ -284,7 +284,7 @@ export default function PrizeModal({
                         {/* Price Badge */}
                         {prize.price && (
                           <motion.div
-                            className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-white font-bold text-sm sm:text-base shadow-lg border"
+                            className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-lg text-white font-bold text-sm sm:text-base shadow-lg border"
                             style={{
                               background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60, #00000080)`,
                               borderColor: `${colors.primary}40`,
@@ -392,7 +392,7 @@ export default function PrizeModal({
                       {prize.features.map((feature, index) => (
                         <motion.div
                           key={index}
-                          className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg sm:rounded-xl backdrop-blur-sm transition-all duration-300 theme-transition ${
+                          className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg sm:rounded-lg backdrop-blur-sm transition-all duration-300 theme-transition ${
                             theme === "light"
                               ? "bg-theme-secondary/30 border border-theme-border hover:border-theme-border-strong"
                               : "bg-white/5 border border-white/10 hover:border-white/20"
@@ -429,7 +429,7 @@ export default function PrizeModal({
                   {/* Footer */}
                   <div className="px-4 sm:px-8 pb-4 sm:pb-8">
                     <motion.div
-                      className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl theme-transition ${
+                      className={`p-4 sm:p-6 rounded-lg sm:rounded-lg theme-transition ${
                         theme === "light"
                           ? "bg-gradient-to-r from-theme-secondary/50 to-transparent border border-theme-border"
                           : "bg-gradient-to-r from-white/5 to-transparent border border-white/10"

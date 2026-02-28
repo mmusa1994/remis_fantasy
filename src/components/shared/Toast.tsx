@@ -69,7 +69,7 @@ export default function Toast({
 
               <button
                 onClick={onClose}
-                className="flex-shrink-0 p-1 rounded-full hover:bg-white/20 transition-colors"
+                className="flex-shrink-0 p-1 rounded-md hover:bg-white/20 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>

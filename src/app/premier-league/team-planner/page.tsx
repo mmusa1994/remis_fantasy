@@ -78,15 +78,13 @@ export default function TeamPlannerPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`max-w-md mx-auto p-8 rounded-xl border ${
+            className={`max-w-md mx-auto p-8 rounded-lg border ${
               theme === "dark"
                 ? "bg-gray-800/50 border-gray-700"
                 : "bg-white/50 border-gray-200"
             } text-center`}
           >
-            <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-green-100 dark:bg-green-900 mb-6">
-              <BiUserPlus className="h-8 w-8 text-green-600 dark:text-green-400" />
-            </div>
+            <BiUserPlus className="h-10 w-10 text-green-600 dark:text-green-400 mx-auto mb-6" />
 
             <h3
               className={`text-xl font-bold mb-4 ${
@@ -119,7 +117,7 @@ export default function TeamPlannerPage() {
                   theme === "dark"
                     ? "border-gray-700 hover:bg-gray-800"
                     : "border-gray-300 hover:bg-gray-50"
-                } rounded-lg text-sm font-medium transition-colors`}
+                } rounded-md text-sm font-medium transition-colors`}
               >
                 <FaGoogle className="text-red-500" />
                 {i18n.language === 'bs' ? 'Prijavite se sa Google' : 'Sign in with Google'}
@@ -128,7 +126,7 @@ export default function TeamPlannerPage() {
               {/* Email Sign In */}
               <Link
                 href="/login"
-                className={`w-full flex items-center justify-center gap-3 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors`}
+                className={`w-full flex items-center justify-center gap-3 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors`}
               >
                 <FaEnvelope />
                 {i18n.language === 'bs' ? 'Prijavite se sa Email' : 'Sign in with Email'}

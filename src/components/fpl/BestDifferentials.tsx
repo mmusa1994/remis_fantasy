@@ -112,7 +112,7 @@ export default function BestDifferentials() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <LoadingCard title={t("diamond.loading")} />
       </div>
     );
@@ -120,7 +120,7 @@ export default function BestDifferentials() {
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
         <div className="flex items-center gap-3">
           <div className="w-full">
             <h3 className="font-semibold text-red-800 dark:text-red-300 mb-2">
@@ -161,7 +161,7 @@ export default function BestDifferentials() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-500/90 to-blue-600/90 rounded-xl shadow-lg p-6 border border-purple-300/30 backdrop-blur-sm">
+      <div className="bg-gradient-to-r from-purple-500/90 to-blue-600/90 rounded-lg shadow-lg p-6 border border-purple-300/30 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <MdTrendingUp className="text-3xl text-white" />
           <div>
@@ -174,7 +174,7 @@ export default function BestDifferentials() {
       </div>
 
       {/* Content */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <div className="text-center mb-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {t("diamond.bestDifferentials")}
@@ -188,7 +188,7 @@ export default function BestDifferentials() {
           {topDifferentials.map((player, index) => (
             <div
               key={player.id}
-              className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-4 shadow-md hover:shadow-lg transition-all"
+              className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-all"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="flex items-center gap-2">

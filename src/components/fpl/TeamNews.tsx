@@ -152,7 +152,7 @@ export default function TeamNews() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <LoadingCard title={t("diamond.loading")} />
       </div>
     );
@@ -160,7 +160,7 @@ export default function TeamNews() {
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
         <div className="flex items-center gap-3">
           <div>
             <h3 className="font-semibold text-red-800 dark:text-red-300">
@@ -176,7 +176,7 @@ export default function TeamNews() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-500/90 to-blue-600/90 rounded-xl shadow-lg p-6 border border-purple-300/30 backdrop-blur-sm">
+      <div className="bg-gradient-to-r from-purple-500/90 to-blue-600/90 rounded-lg shadow-lg p-6 border border-purple-300/30 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <TbActivityHeartbeat className="text-3xl text-white" />
           <div>
@@ -189,7 +189,7 @@ export default function TeamNews() {
       </div>
 
       {/* Content */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <div className="text-center mb-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {t("diamond.teamNews")}
@@ -209,7 +209,7 @@ export default function TeamNews() {
             return (
               <div
                 key={teamId}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-center gap-2 mb-4">
                   <PiTShirtFill

@@ -10,7 +10,7 @@ export default function GalerijaPage() {
     <div className="min-h-screen pb-20 pt-10 px-4 bg-theme-background">
       <div className="max-w-6xl mx-auto text-center">
         <h1
-          className={`text-4xl md:text-6xl font-black mb-8 ${
+          className={`text-2xl md:text-3xl font-black mb-8 ${
             theme === "dark" ? "text-white" : "text-gray-800"
           }`}
         >
@@ -18,7 +18,7 @@ export default function GalerijaPage() {
         </h1>
 
         <div
-          className={`p-12 rounded-2xl backdrop-blur-lg border ${
+          className={`p-12 rounded-lg backdrop-blur-lg border ${
             theme === "dark"
               ? "bg-gray-800/50 border-gray-700"
               : "bg-white/60 border-orange-200"

@@ -321,13 +321,13 @@ export default function AITeamAnalysis() {
 
           {/* Authentication Required Card */}
           <div
-            className={`max-w-md mx-auto p-8 rounded-xl border ${
+            className={`max-w-md mx-auto p-8 rounded-lg border ${
               theme === "dark"
                 ? "bg-gray-800/50 border-gray-700"
                 : "bg-white/50 border-gray-200"
             } text-center`}
           >
-            <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900 mb-6">
+            <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-md bg-purple-100 dark:bg-purple-900 mb-6">
               <BiUserPlus className="h-8 w-8 text-purple-600 dark:text-purple-400" />
             </div>
 
@@ -500,7 +500,7 @@ export default function AITeamAnalysis() {
             {/* Beautiful Usage Card */}
             {!userApiKey && (
               <div
-                className={`mb-6 p-6 rounded-2xl backdrop-blur-lg border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${
+                className={`mb-6 p-6 rounded-lg backdrop-blur-lg border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${
                   theme === "dark"
                     ? "bg-green-500/10 border-green-500/30 shadow-green-500/10"
                     : "bg-green-50/80 border-green-200/50 shadow-green-200/20"
@@ -513,7 +513,7 @@ export default function AITeamAnalysis() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`p-2 rounded-xl ${
+                        className={`p-2 rounded-lg ${
                           theme === "dark" ? "bg-green-500/20" : "bg-green-100"
                         }`}
                       >
@@ -585,7 +585,7 @@ export default function AITeamAnalysis() {
 
                   {usage && (
                     <div
-                      className={`p-3 rounded-xl backdrop-blur-sm ${
+                      className={`p-3 rounded-lg backdrop-blur-sm ${
                         theme === "dark"
                           ? "bg-green-900/20 border border-green-500/20"
                           : "bg-white/60 border border-green-200/30"
@@ -669,7 +669,7 @@ export default function AITeamAnalysis() {
 
             {/* Magical Chat Interface */}
             <motion.div
-              className={`relative rounded-2xl border backdrop-blur-xl overflow-hidden shadow-2xl ${
+              className={`relative rounded-lg border backdrop-blur-xl overflow-hidden shadow-2xl ${
                 theme === "dark"
                   ? "bg-gradient-to-br from-purple-900/20 via-gray-800/50 to-indigo-900/20 border-purple-500/30"
                   : "bg-gradient-to-br from-purple-50/80 via-white/60 to-indigo-50/80 border-purple-200/50"
@@ -782,7 +782,7 @@ export default function AITeamAnalysis() {
                           }`}
                         >
                           <motion.div
-                            className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border ${
+                            className={`p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
                               message.role === "user"
                                 ? theme === "dark"
                                   ? "bg-gradient-to-br from-purple-600/90 to-purple-700/90 text-white border-purple-400/30"
@@ -850,7 +850,7 @@ export default function AITeamAnalysis() {
                     </motion.div>
                     <div className="flex-1">
                       <motion.div
-                        className={`p-4 rounded-2xl backdrop-blur-sm border shadow-lg ${
+                        className={`p-4 rounded-lg backdrop-blur-sm border shadow-lg ${
                           theme === "dark"
                             ? "bg-gradient-to-br from-gray-800/90 to-gray-900/90 border-purple-500/20"
                             : "bg-gradient-to-br from-white/90 to-gray-50/90 border-purple-200/30"
@@ -944,7 +944,7 @@ export default function AITeamAnalysis() {
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask about FPL players, transfers, captains..."
                     disabled={isLoading}
-                    className={`flex-1 px-5 py-3 rounded-full border backdrop-blur-sm shadow-lg ${
+                    className={`flex-1 px-5 py-3 rounded-md border backdrop-blur-sm shadow-lg ${
                       theme === "dark"
                         ? "bg-gray-800/50 border-purple-500/30 text-white placeholder-gray-400"
                         : "bg-white/60 border-purple-300/50 text-gray-900 placeholder-gray-500"
@@ -957,7 +957,7 @@ export default function AITeamAnalysis() {
                   <motion.button
                     type="submit"
                     disabled={isLoading || !input.trim()}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white rounded-full transition-all duration-300 flex items-center gap-2 shadow-lg"
+                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white rounded-md transition-all duration-300 flex items-center gap-2 shadow-lg"
                     whileHover={{
                       scale: 1.05,
                       boxShadow: "0 10px 20px rgba(139, 92, 246, 0.3)",
@@ -1023,7 +1023,7 @@ export default function AITeamAnalysis() {
                   onClick={() => setShowConfirmModal(false)}
                 >
                   <motion.div
-                    className={`max-w-md w-full rounded-2xl border shadow-2xl p-6 ${
+                    className={`max-w-md w-full rounded-lg border shadow-2xl p-6 ${
                       theme === "dark"
                         ? "bg-gray-900 border-gray-700"
                         : "bg-white border-gray-200"
@@ -1034,7 +1034,7 @@ export default function AITeamAnalysis() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="text-center mb-6">
-                      <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/50 mb-4">
+                      <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-md bg-yellow-100 dark:bg-yellow-900/50 mb-4">
                         <HiChatBubbleLeftEllipsis className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
                       </div>
 

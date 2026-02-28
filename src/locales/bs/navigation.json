@@ -18,8 +18,19 @@
   "signIn": "Prijava",
   "signOut": "Odjava",
   "myProfile": "Moj profil",
-  "billingPlans": "Pretplatni planovi",
   "aiAnalysis": "AI Analiza",
   "fantasyCommand": "Fantasy Komandni Centar",
-  "createAccount": "Napravi račun"
+  "createAccount": "Napravi račun",
+  "menu": "Meni",
+  "settings": "Postavke",
+  "theme": "Tema",
+  "language": "Jezik",
+  "edit": "Uredi",
+  "managerId": "ID Menadžera",
+  "notSet": "Nije postavljeno",
+  "signInToAccess": "Prijavite se za pristup",
+  "continueWithGoogle": "Nastavite sa Google",
+  "signInWithEmail": "Prijavite se sa Email",
+  "signOut": "Odjava",
+  "profile": "Profil"
 }

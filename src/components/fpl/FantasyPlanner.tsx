@@ -1397,7 +1397,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       {userTeamData.manager?.name}
                     </p>
                     {managerIdVerified === false && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 w-fit">
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 w-fit">
                         Unverified
                       </span>
                     )}
@@ -1626,7 +1626,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       </span>
                       {transferMode &&
                         pendingTransfers.transfersOut.length > 0 && (
-                          <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-semibold">
+                          <span className="bg-white/20 px-2 py-0.5 rounded-md text-xs font-semibold">
                             {pendingTransfers.transfersOut.length}
                           </span>
                         )}
@@ -2382,7 +2382,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                         onClick={() =>
                                           removePlayerOut(playerId)
                                         }
-                                        className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
+                                        className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center justify-center text-xs"
                                       >
                                         ×
                                       </button>
@@ -2439,7 +2439,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                           onClick={() =>
                                             removePlayerIn(playerId)
                                           }
-                                          className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
+                                          className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center justify-center text-xs"
                                         >
                                           ×
                                         </button>
@@ -2727,7 +2727,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 {/* Position */}
                                 <div className="col-span-1 flex items-center">
                                   <span
-                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                    className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
                                       player.element_type === 1
                                         ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
                                         : player.element_type === 2

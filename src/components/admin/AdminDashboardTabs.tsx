@@ -17,9 +17,13 @@ import {
   Crown,
   Star,
   AlertCircle,
+  Sun,
+  Moon,
 } from "lucide-react";
 import Toast from "@/components/shared/Toast";
 import LoadingCard from "@/components/shared/LoadingCard";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Registration {
   id: string;
@@ -61,6 +65,8 @@ interface AdminDashboardTabsProps {
 export default function AdminDashboardTabs({ 
   initialTab = "premier" 
 }: AdminDashboardTabsProps) {
+  const { t } = useTranslation("navigation");
+  const { theme, toggleTheme } = useTheme();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<LeagueTab>(initialTab);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -541,12 +547,12 @@ export default function AdminDashboardTabs({
 
   if (showLoginRedirect) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-black" : "bg-gray-50"}`}>
         <div className="text-center">
           <p className="mb-4 text-gray-800">Redirecting to admin login...</p>
           <Link
             href="/admin"
-            className="bg-gradient-to-r from-amber-600 to-red-600 text-white px-6 py-2 rounded-lg hover:from-amber-700 hover:to-red-700 transition-colors"
+            className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors"
           >
             Go to Admin Login
           </Link>
@@ -557,7 +563,7 @@ export default function AdminDashboardTabs({
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-black" : "bg-gray-50"}`}>
         <LoadingCard
           title="Loading Admin Dashboard"
           description="Please wait while we fetch the registration data"
@@ -570,9 +576,9 @@ export default function AdminDashboardTabs({
   const tabStats = getTabStats();
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-gray-50"}`}>
       {/* Header */}
-      <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white shadow-lg">
+      <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white border-b border-amber-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -585,38 +591,45 @@ export default function AdminDashboardTabs({
                 priority
               />
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
-                  REMIS Fantasy Admin
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold truncate tracking-tight">
+                  Admin Dashboard
                 </h1>
-                <p className="text-xs sm:text-sm opacity-75 truncate">
-                  Welcome, {session?.user?.email}
+                <p className="text-xs sm:text-sm text-white/60 truncate">
+                  {session?.user?.email}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <Link
                 href="/admin/visitors"
-                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                className="text-white/70 hover:text-white hover:bg-white/10 p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 flex-shrink-0 text-sm"
                 title="Visitor Analytics"
               >
-                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Users className="w-4 h-4" />
                 <span className="hidden sm:inline">Visitors</span>
               </Link>
               <Link
                 href="/admin/dashboard/tables"
-                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+                className="text-white/70 hover:text-white hover:bg-white/10 p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 flex-shrink-0 text-sm"
                 title="Upravljanje tabelama"
               >
-                <Table2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Table2 className="w-4 h-4" />
                 <span className="hidden sm:inline">Tabele</span>
               </Link>
               <button
-                onClick={handleSignOut}
-                className="bg-white/20 hover:bg-white/30 p-2 sm:px-4 sm:py-2 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
-                title="Sign Out"
+                onClick={toggleTheme}
+                className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-md transition-colors flex-shrink-0"
+                title={theme === "dark" ? "Light mode" : "Dark mode"}
               >
-                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Sign Out</span>
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="text-white/70 hover:text-white hover:bg-white/10 p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 flex-shrink-0 text-sm"
+                title={t("signOut")}
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">{t("signOut")}</span>
               </button>
             </div>
           </div>
@@ -626,44 +639,59 @@ export default function AdminDashboardTabs({
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* League Tabs */}
-        <div className="mb-8 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+        <div className={`mb-8 border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}>
+          <nav className="-mb-px flex">
             <button
               onClick={() => setActiveTab("premier")}
-              className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "premier"
-                  ? "border-purple-500 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-purple-500 text-purple-600 dark:text-purple-400"
+                  : theme === "dark" ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               <div className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-purple-500" />
+                <Image src="/images/logos/pl-logo.png" alt="Premier League" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+                  opacity: activeTab === "premier" ? 1 : 0.5,
+                  filter: activeTab === "premier"
+                    ? "brightness(0) saturate(100%) invert(25%) sepia(80%) saturate(4000%) hue-rotate(260deg) brightness(95%)"
+                    : theme === "dark" ? "brightness(0) invert(1) opacity(0.5)" : "brightness(0) opacity(0.5)"
+                }} />
                 Premier League
               </div>
             </button>
             <button
               onClick={() => setActiveTab("champions")}
-              className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "champions"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : theme === "dark" ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               <div className="flex items-center gap-2">
-                <Crown className="w-5 h-5 text-blue-500" />
+                <Image src="/images/logos/cl-logo.png" alt="Champions League" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+                  opacity: activeTab === "champions" ? 1 : 0.5,
+                  filter: activeTab === "champions"
+                    ? "brightness(0) saturate(100%) invert(35%) sepia(80%) saturate(3000%) hue-rotate(200deg) brightness(95%)"
+                    : theme === "dark" ? "brightness(0) invert(1) opacity(0.5)" : "brightness(0) opacity(0.5)"
+                }} />
                 Champions League
               </div>
             </button>
             <button
               onClick={() => setActiveTab("f1")}
-              className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "f1"
-                  ? "border-red-500 text-red-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-red-500 text-red-600 dark:text-red-400"
+                  : theme === "dark" ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-red-500" />
+                <Image src="/images/logos/f1.png" alt="F1 Fantasy" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+                  opacity: activeTab === "f1" ? 1 : 0.5,
+                  filter: activeTab === "f1"
+                    ? "brightness(0) saturate(100%) invert(20%) sepia(80%) saturate(5000%) hue-rotate(350deg) brightness(95%)"
+                    : theme === "dark" ? "brightness(0) invert(1) opacity(0.5)" : "brightness(0) opacity(0.5)"
+                }} />
                 F1 Fantasy
               </div>
             </button>
@@ -675,10 +703,12 @@ export default function AdminDashboardTabs({
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              theme === "dark" ? "text-gray-400 bg-gray-900 border border-gray-800 hover:bg-gray-800" : "text-gray-600 bg-white border border-gray-200 hover:bg-gray-50"
+            }`}
           >
             <svg
-              className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+              className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -696,57 +726,71 @@ export default function AdminDashboardTabs({
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {tabStats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          {tabStats.map((stat, index) => {
+            const cardBg = (() => {
+              switch (stat.icon) {
+                case "Users": return theme === "dark" ? "bg-gray-900 border-gray-800" : "bg-gray-50/80 border-gray-200";
+                case "Trophy": return theme === "dark" ? "bg-blue-950/40 border-blue-900/50" : "bg-blue-50/60 border-blue-200/60";
+                case "Star": return theme === "dark" ? "bg-amber-950/40 border-amber-900/50" : "bg-amber-50/60 border-amber-200/60";
+                case "Crown": return theme === "dark" ? "bg-red-950/40 border-red-900/50" : "bg-red-50/60 border-red-200/60";
+                case "CheckCircle": return theme === "dark" ? "bg-emerald-950/40 border-emerald-900/50" : "bg-emerald-50/60 border-emerald-200/60";
+                case "AlertCircle": return theme === "dark" ? "bg-amber-950/40 border-amber-900/50" : "bg-amber-50/60 border-amber-200/60";
+                case "Mail": return theme === "dark" ? "bg-purple-950/40 border-purple-900/50" : "bg-purple-50/60 border-purple-200/60";
+                default: return theme === "dark" ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200";
+              }
+            })();
+            return (
+            <div key={index} className={`rounded-md p-5 border ${cardBg}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                     {stat.label}
-                  </h3>
-                  <p className="text-3xl font-bold text-gray-900">
+                  </p>
+                  <p className={`text-2xl font-semibold mt-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                     {stat.value}
                   </p>
                 </div>
-                <div className={`w-12 h-12 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center`}>
-                  {stat.icon === "Users" && <Users className="w-6 h-6 text-white" />}
-                  {stat.icon === "Trophy" && <Trophy className="w-6 h-6 text-white" />}
-                  {stat.icon === "Star" && <Star className="w-6 h-6 text-white" />}
-                  {stat.icon === "Crown" && <Crown className="w-6 h-6 text-white" />}
-                  {stat.icon === "CheckCircle" && <CheckCircle className="w-6 h-6 text-white" />}
-                  {stat.icon === "AlertCircle" && <AlertCircle className="w-6 h-6 text-white" />}
-                  {stat.icon === "Mail" && <Mail className="w-6 h-6 text-white" />}
+                <div>
+                  {stat.icon === "Users" && <Users className="w-5 h-5 text-gray-400" />}
+                  {stat.icon === "Trophy" && <Trophy className="w-5 h-5 text-blue-500" />}
+                  {stat.icon === "Star" && <Star className="w-5 h-5 text-amber-500" />}
+                  {stat.icon === "Crown" && <Crown className="w-5 h-5 text-red-500" />}
+                  {stat.icon === "CheckCircle" && <CheckCircle className="w-5 h-5 text-emerald-500" />}
+                  {stat.icon === "AlertCircle" && <AlertCircle className="w-5 h-5 text-amber-500" />}
+                  {stat.icon === "Mail" && <Mail className="w-5 h-5 text-purple-500" />}
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-red-500 rounded-lg flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-gray-800">
-              Filters - {activeTab === "premier" ? "Premier League" : "Champions League"}
+        <div className={`rounded-md p-5 mb-8 border ${
+          theme === "dark" ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
+        }`}>
+          <div className="flex items-center gap-2 mb-5">
+            <svg
+              className={`w-4 h-4 ${theme === "dark" ? "text-gray-600" : "text-gray-400"}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"
+              />
+            </svg>
+            <h2 className={`text-sm font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
+              Filters
             </h2>
           </div>
 
           {/* Search Bar */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
               Search
             </label>
             <input
@@ -756,7 +800,9 @@ export default function AdminDashboardTabs({
               onChange={(e) =>
                 setFilters({ ...filters, search: e.target.value })
               }
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all duration-200"
+              className={`w-full px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200 ${
+                theme === "dark" ? "bg-gray-800 border border-gray-700 text-white placeholder-gray-500" : "bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-500"
+              }`}
             />
           </div>
 
@@ -765,7 +811,7 @@ export default function AdminDashboardTabs({
             {/* League Type (Premier League only) */}
             {activeTab === "premier" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
                   League Type
                 </label>
                 <select
@@ -773,7 +819,9 @@ export default function AdminDashboardTabs({
                   onChange={(e) =>
                     setFilters({ ...filters, league_type: e.target.value })
                   }
-                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
+                  className={`w-full px-3 py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent text-sm transition-all duration-200 ${
+                      theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
+                    }`}
                 >
                   <option value="all">All Leagues</option>
                   <option value="standard">Standard</option>
@@ -787,7 +835,7 @@ export default function AdminDashboardTabs({
             {/* H2H Status (Premier League only) */}
             {activeTab === "premier" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
                   H2H Status
                 </label>
                 <select
@@ -795,7 +843,9 @@ export default function AdminDashboardTabs({
                   onChange={(e) =>
                     setFilters({ ...filters, h2h_league: e.target.value })
                   }
-                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
+                  className={`w-full px-3 py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent text-sm transition-all duration-200 ${
+                      theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
+                    }`}
                 >
                   <option value="all">All</option>
                   <option value="yes">H2H Yes</option>
@@ -806,7 +856,7 @@ export default function AdminDashboardTabs({
 
             {/* Payment Method */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
                 Payment Method
               </label>
               <select
@@ -814,7 +864,9 @@ export default function AdminDashboardTabs({
                 onChange={(e) =>
                   setFilters({ ...filters, payment_method: e.target.value })
                 }
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
+                className={`w-full px-3 py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent text-sm transition-all duration-200 ${
+                      theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
+                    }`}
               >
                 <option value="all">All Methods</option>
                 <option value="bank">Bank Transfer</option>
@@ -826,7 +878,7 @@ export default function AdminDashboardTabs({
 
             {/* Payment Status */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
                 Payment Status
               </label>
               <select
@@ -834,7 +886,9 @@ export default function AdminDashboardTabs({
                 onChange={(e) =>
                   setFilters({ ...filters, payment_status: e.target.value })
                 }
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
+                className={`w-full px-3 py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent text-sm transition-all duration-200 ${
+                      theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
+                    }`}
               >
                 <option value="all">All Status</option>
                 <option value="paid">Paid</option>
@@ -846,7 +900,7 @@ export default function AdminDashboardTabs({
             {/* Cash Status (Premier League only) */}
             {activeTab === "premier" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
                   Cash Status
                 </label>
                 <select
@@ -854,7 +908,9 @@ export default function AdminDashboardTabs({
                   onChange={(e) =>
                     setFilters({ ...filters, cash_status: e.target.value })
                   }
-                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
+                  className={`w-full px-3 py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent text-sm transition-all duration-200 ${
+                      theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
+                    }`}
                 >
                   <option value="all">All Status</option>
                   <option value="paid">Paid</option>
@@ -866,7 +922,7 @@ export default function AdminDashboardTabs({
 
             {/* Email Status */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
                 Email Status
               </label>
               <select
@@ -874,7 +930,9 @@ export default function AdminDashboardTabs({
                 onChange={(e) =>
                   setFilters({ ...filters, codes_email_status: e.target.value })
                 }
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
+                className={`w-full px-3 py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent text-sm transition-all duration-200 ${
+                      theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
+                    }`}
               >
                 <option value="all">All</option>
                 <option value="sent">Codes Sent</option>
@@ -884,7 +942,7 @@ export default function AdminDashboardTabs({
 
             {/* League Entry Status */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
                 Liga Status
               </label>
               <select
@@ -895,7 +953,9 @@ export default function AdminDashboardTabs({
                     league_entry_status: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 text-sm transition-all duration-200"
+                className={`w-full px-3 py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent text-sm transition-all duration-200 ${
+                      theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
+                    }`}
               >
                 <option value="all">Svi</option>
                 <option value="entered">Ušao u ligu</option>
@@ -920,7 +980,9 @@ export default function AdminDashboardTabs({
                   league_entry_status: "all",
                 })
               }
-              className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+              className={`px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200 ${
+                theme === "dark" ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:text-gray-300" : "text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-700"
+              }`}
             >
               Clear All Filters
             </button>
@@ -928,9 +990,9 @@ export default function AdminDashboardTabs({
         </div>
 
         {/* Registrations Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-800">
+        <div className={`rounded-md overflow-hidden border ${theme === "dark" ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
+          <div className={`px-6 py-4 border-b ${theme === "dark" ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
+            <h2 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
               {activeTab === "premier" ? "Premier League Registrations" : "Champions League Registrations"}
             </h2>
             <p className="text-sm text-gray-600 mt-1">
@@ -944,9 +1006,9 @@ export default function AdminDashboardTabs({
           {/* Table content would continue here... */}
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className={theme === "dark" ? "bg-gray-800" : "bg-gray-50"}>
                 <tr>
-                  <th className="sticky left-0 z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 min-w-[160px]">
+                  <th className={`sticky left-0 z-10 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[160px] ${theme === "dark" ? "bg-gray-800 border-r border-gray-700" : "bg-gray-50 border-r border-gray-200"}`}>
                     Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1004,7 +1066,7 @@ export default function AdminDashboardTabs({
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className={theme === "dark" ? "bg-gray-900 divide-y divide-gray-800" : "bg-white divide-y divide-gray-200"}>
                 {currentRegistrations.length === 0 ? (
                   <tr>
                     <td 
@@ -1017,22 +1079,24 @@ export default function AdminDashboardTabs({
                 ) : (
                   currentRegistrations.map((reg) => {
                     // Determine row background color based on league entry status
-                    let rowBgClass = "hover:bg-gray-50 group";
+                    let rowBgClass = theme === "dark" ? "hover:bg-gray-800 group" : "hover:bg-gray-50 group";
                     if (reg.league_entry_status === "entered") {
-                      rowBgClass = "bg-green-50 hover:bg-green-100 group";
+                      rowBgClass = theme === "dark" ? "bg-[#0a1f0a] hover:bg-[#0f2a0f] group" : "bg-green-50 hover:bg-green-100 group";
                     } else if (reg.league_entry_status === "not_entered") {
-                      rowBgClass = "bg-yellow-50 hover:bg-yellow-100 group";
+                      rowBgClass = theme === "dark" ? "bg-[#1a1700] hover:bg-[#241f00] group" : "bg-yellow-50 hover:bg-yellow-100 group";
                     }
 
                     return (
                       <tr key={reg.id} className={rowBgClass}>
                         <td
-                          className={`sticky left-0 z-10 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200 min-w-[160px] ${
+                          className={`sticky left-0 z-10 px-6 py-4 whitespace-nowrap text-sm font-medium border-r min-w-[160px] ${
+                            theme === "dark" ? "text-white border-gray-700" : "text-gray-900 border-gray-200"
+                          } ${
                             reg.league_entry_status === "entered"
-                              ? "bg-green-50 group-hover:bg-green-100"
+                              ? theme === "dark" ? "bg-[#0a1f0a] group-hover:bg-[#0f2a0f]" : "bg-green-50 group-hover:bg-green-100"
                               : reg.league_entry_status === "not_entered"
-                              ? "bg-yellow-50 group-hover:bg-yellow-100"
-                              : "bg-white group-hover:bg-gray-50"
+                              ? theme === "dark" ? "bg-[#1a1700] group-hover:bg-[#241f00]" : "bg-yellow-50 group-hover:bg-yellow-100"
+                              : theme === "dark" ? "bg-gray-900 group-hover:bg-gray-800" : "bg-white group-hover:bg-gray-50"
                           }`}
                         >
                           {reg.first_name} {reg.last_name}
@@ -1051,7 +1115,7 @@ export default function AdminDashboardTabs({
                         {activeTab === "premier" && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-md ${
                                 reg.league_type === "premium"
                                   ? "bg-yellow-100 text-yellow-800"
                                   : reg.league_type === "h2h"
@@ -1068,7 +1132,7 @@ export default function AdminDashboardTabs({
                         {activeTab === "premier" && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-md ${
                                 reg.h2h_league
                                   ? "bg-green-100 text-green-800"
                                   : "bg-red-100 text-red-800"
@@ -1080,7 +1144,7 @@ export default function AdminDashboardTabs({
                         )}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-md ${
                               reg.payment_method === "cash"
                                 ? "bg-yellow-100 text-yellow-800"
                                 : reg.payment_method === "wise"
@@ -1096,7 +1160,7 @@ export default function AdminDashboardTabs({
                         {activeTab === "premier" && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-md ${
                                 reg.cash_status === "paid"
                                   ? "bg-green-100 text-green-800"
                                   : reg.cash_status === "pending"
@@ -1110,7 +1174,7 @@ export default function AdminDashboardTabs({
                         )}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-md ${
                               reg.payment_status === "paid"
                                 ? "bg-green-100 text-green-800"
                                 : reg.payment_status === "pending"
@@ -1181,12 +1245,12 @@ export default function AdminDashboardTabs({
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-1">
                               {reg.registration_email_sent ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-green-100 text-green-800">
                                   <CheckCircle className="w-3 h-3" />
                                   Registration
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-600">
                                   <Mail className="w-3 h-3" />
                                   Not sent
                                 </span>
@@ -1194,12 +1258,12 @@ export default function AdminDashboardTabs({
                             </div>
                             <div className="flex items-center gap-1">
                               {reg.codes_email_sent ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-blue-100 text-blue-800">
                                   <CheckCircle className="w-3 h-3" />
                                   Codes sent
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-yellow-100 text-yellow-800">
                                   <Mail className="w-3 h-3" />
                                   Codes pending
                                 </span>
@@ -1212,7 +1276,7 @@ export default function AdminDashboardTabs({
                             <button
                               onClick={() => sendCodesEmail(reg)}
                               disabled={sendingEmail === reg.id}
-                              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                                 sendingEmail === reg.id
                                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                   : activeTab === "premier"
@@ -1414,7 +1478,7 @@ export default function AdminDashboardTabs({
                           ) : (
                             <div className="flex items-center gap-2">
                               <span
-                                className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                className={`px-2 py-1 text-xs font-medium rounded-md ${
                                   reg.league_entry_status === "entered"
                                     ? "bg-green-100 text-green-800"
                                     : reg.league_entry_status === "not_entered"
@@ -1472,9 +1536,11 @@ export default function AdminDashboardTabs({
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="bg-white px-6 py-4 border-t border-gray-200 rounded-b-xl">
+            <div className={`px-6 py-4 border-t rounded-b-md ${
+              theme === "dark" ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
+            }`}>
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700">
+                <div className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
                   Showing {startIndex + 1} to{" "}
                   {Math.min(endIndex, filteredRegistrations.length)} of{" "}
                   {filteredRegistrations.length} registrations
@@ -1484,7 +1550,9 @@ export default function AdminDashboardTabs({
                   <button
                     onClick={goToPreviousPage}
                     disabled={currentPage === 1}
-                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className={`px-3 py-2 text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                      theme === "dark" ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700" : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                    }`}
                   >
                     Previous
                   </button>
@@ -1509,6 +1577,8 @@ export default function AdminDashboardTabs({
                           className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                             currentPage === pageNumber
                               ? "bg-amber-500 text-white"
+                              : theme === "dark"
+                              ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700"
                               : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
                           }`}
                         >
@@ -1521,7 +1591,9 @@ export default function AdminDashboardTabs({
                   <button
                     onClick={goToNextPage}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className={`px-3 py-2 text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                      theme === "dark" ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700" : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                    }`}
                   >
                     Next
                   </button>
@@ -1538,10 +1610,10 @@ export default function AdminDashboardTabs({
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedImage(null)}
         >
-          <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-lg overflow-hidden">
+          <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-md overflow-hidden">
             <button
               onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg z-10"
+              className="absolute top-4 right-4 bg-white rounded-md p-2 shadow-lg z-10"
             >
               <svg
                 className="w-6 h-6 text-black"
@@ -1575,7 +1647,7 @@ export default function AdminDashboardTabs({
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedFile(null)}
         >
-          <div className="relative max-w-2xl bg-white rounded-xl overflow-hidden shadow-2xl">
+          <div className="relative max-w-2xl bg-white rounded-md overflow-hidden shadow-2xl">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">
@@ -1602,7 +1674,7 @@ export default function AdminDashboardTabs({
               </div>
 
               <div className="text-center py-8">
-                <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-24 h-24 bg-red-100 rounded-md flex items-center justify-center mx-auto mb-4">
                   <svg
                     className="w-12 h-12 text-red-600"
                     fill="none"
@@ -1626,7 +1698,7 @@ export default function AdminDashboardTabs({
                   <a
                     href={selectedFile.url}
                     download={selectedFile.filename}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-md font-medium transition-all duration-200 shadow-lg"
                   >
                     <svg
                       className="w-5 h-5"
@@ -1647,7 +1719,7 @@ export default function AdminDashboardTabs({
                     href={selectedFile.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-all duration-200"
+                    className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-medium transition-all duration-200"
                   >
                     <svg
                       className="w-5 h-5"
@@ -1674,7 +1746,7 @@ export default function AdminDashboardTabs({
       {/* Edit Modal */}
       {editingRecord && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-md max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-gray-800">
@@ -1710,7 +1782,7 @@ export default function AdminDashboardTabs({
                 <div>
                   <label
                     htmlFor="edit-first-name"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
                     First Name
                   </label>
@@ -1731,7 +1803,7 @@ export default function AdminDashboardTabs({
                 <div>
                   <label
                     htmlFor="edit-last-name"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
                     Last Name
                   </label>
@@ -1752,7 +1824,7 @@ export default function AdminDashboardTabs({
                 <div>
                   <label
                     htmlFor="edit-email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
                     Email
                   </label>
@@ -1773,7 +1845,7 @@ export default function AdminDashboardTabs({
                 <div>
                   <label
                     htmlFor="edit-phone"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
                     Phone
                   </label>
@@ -1796,7 +1868,7 @@ export default function AdminDashboardTabs({
                     <div>
                       <label
                         htmlFor="edit-team-name"
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                       >
                         Team Name
                       </label>
@@ -1817,7 +1889,7 @@ export default function AdminDashboardTabs({
                     <div>
                       <label
                         htmlFor="edit-league-type"
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                       >
                         League Type
                       </label>
@@ -1842,7 +1914,7 @@ export default function AdminDashboardTabs({
                     <div>
                       <label
                         htmlFor="edit-h2h-league"
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                       >
                         H2H League
                       </label>
@@ -1865,7 +1937,7 @@ export default function AdminDashboardTabs({
                     <div>
                       <label
                         htmlFor="edit-cash-status"
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                       >
                         Cash Status
                       </label>
@@ -1891,7 +1963,7 @@ export default function AdminDashboardTabs({
                 <div>
                   <label
                     htmlFor="edit-payment-method"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
                     Payment Method
                   </label>
@@ -1916,7 +1988,7 @@ export default function AdminDashboardTabs({
                 <div>
                   <label
                     htmlFor="edit-payment-status"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
                     Payment Status
                   </label>
@@ -1940,7 +2012,7 @@ export default function AdminDashboardTabs({
                 <div>
                   <label
                     htmlFor="edit-email-template-type"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
                     Email Template Type
                   </label>
@@ -1970,7 +2042,7 @@ export default function AdminDashboardTabs({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
                     Reset Email Status
                   </label>
                   <button
@@ -1995,7 +2067,7 @@ export default function AdminDashboardTabs({
                 <div className="md:col-span-2">
                   <label
                     htmlFor="edit-admin-notes"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
                     Admin Notes
                   </label>
@@ -2018,7 +2090,7 @@ export default function AdminDashboardTabs({
                   <div className="md:col-span-2">
                     <label
                       htmlFor="edit-notes"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                     >
                       User Notes
                     </label>
@@ -2046,14 +2118,14 @@ export default function AdminDashboardTabs({
                     setEditingRecord(null);
                     setEditFormData({});
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={saveEditedRecord}
-                  className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors ${
                     activeTab === "premier"
                       ? "bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600"
                       : "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"

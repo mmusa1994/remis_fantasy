@@ -18,8 +18,6 @@ import profileEN from "@/locales/en/profile.json";
 import profileBS from "@/locales/bs/profile.json";
 import f1EN from "@/locales/en/f1.json";
 import f1BS from "@/locales/bs/f1.json";
-import billingEN from "@/locales/en/billing.json";
-import billingBS from "@/locales/bs/billing.json";
 import onboardingEN from "@/locales/en/onboarding.json";
 import onboardingBS from "@/locales/bs/onboarding.json";
 import championsEN from "@/locales/en/champions.json";
@@ -32,7 +30,6 @@ const resources = {
     common: commonEN,
     fpl: fplEN,
     f1: f1EN,
-    billing: billingEN,
     hero: heroEN,
     navigation: navigationEN,
     ai: aiEN,
@@ -46,7 +43,6 @@ const resources = {
     common: commonBS,
     fpl: fplBS,
     f1: f1BS,
-    billing: billingBS,
     hero: heroBS,
     navigation: navigationBS,
     ai: aiBS,
@@ -66,7 +62,7 @@ i18n
     fallbackLng: "en",
     debug: false,
     defaultNS: "common",
-    ns: ["common", "fpl", "f1", "billing", "hero", "navigation", "ai", "auth", "profile", "onboarding", "champions", "manager"],
+    ns: ["common", "fpl", "f1", "hero", "navigation", "ai", "auth", "profile", "onboarding", "champions", "manager"],
 
     interpolation: {
       escapeValue: false,

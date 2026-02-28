@@ -248,7 +248,7 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen flex  bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-red-800 via-red-900 to-gray-900 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gray-900 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzAgMzBjMC0xMS4wNDYtOC45NTQtMjAtMjAtMjBzLTIwIDguOTU0LTIwIDIwIDguOTU0IDIwIDIwIDIwIDIwLTguOTU0IDIwLTIwem0tMzAgMGMwLTUuNTIzIDQuNDc3LTEwIDEwLTEwczEwIDQuNDc3IDEwIDEwLTQuNDc3IDEwLTEwIDEwLTEwLTQuNDc3LTEwLTEweiIvPjwvZz48L2c+PC9zdmc+')] bg-repeat" />
@@ -306,7 +306,7 @@ export default function SignUpPage() {
           className="w-full max-w-md"
         >
           <div
-            className={`rounded-2xl shadow-2xl p-8 ${
+            className={`rounded-lg shadow-md p-8 ${
               theme === "dark"
                 ? "bg-gray-800/90 backdrop-blur-sm border border-gray-700/50"
                 : "bg-white/90 backdrop-blur-sm border border-gray-200/50"
@@ -318,7 +318,7 @@ export default function SignUpPage() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className={`text-3xl font-bold ${
+                className={`text-2xl font-bold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
@@ -530,7 +530,7 @@ export default function SignUpPage() {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50"
+                    className="mb-6 p-4 rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50"
                   >
                     <p className="text-sm text-red-800 dark:text-red-300 text-center">
                       {error}
@@ -581,7 +581,7 @@ export default function SignUpPage() {
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={isLoading}
-                  className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border-2 transition-all duration-300 ${
+                  className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-md border-2 transition-all duration-300 ${
                     theme === "dark"
                       ? "border-gray-600 bg-gray-700/50 hover:bg-gray-600/50 text-white"
                       : "border-gray-300 bg-white hover:bg-gray-50 text-gray-900"
@@ -652,7 +652,7 @@ export default function SignUpPage() {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50"
+                    className="mb-6 p-4 rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50"
                   >
                     <p className="text-sm text-red-800 dark:text-red-300 text-center">
                       {error}

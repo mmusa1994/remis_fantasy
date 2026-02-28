@@ -219,7 +219,7 @@ export default function ChampionsLeagueTable() {
                   <div className="col-span-1">
                     <div className="flex items-center gap-2">
                       <div
-                        className={`flex items-center justify-center w-10 h-10 rounded-full font-bold text-lg ${
+                        className={`flex items-center justify-center w-10 h-10 rounded-md font-bold text-lg ${
                           player.rank === 1
                             ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg shadow-yellow-500/30"
                             : player.rank === 2
@@ -244,7 +244,7 @@ export default function ChampionsLeagueTable() {
                           alt="Avatar"
                           className="w-12 h-12 rounded-full"
                         />
-                        <div className="absolute -bottom-1 -right-1 bg-theme-background rounded-full px-1.5 py-0.5 text-xs font-bold text-theme-foreground border border-theme-border">
+                        <div className="absolute -bottom-1 -right-1 bg-theme-background rounded-md px-1.5 py-0.5 text-xs font-bold text-theme-foreground border border-theme-border">
                           {player.member_number}
                         </div>
                       </div>
@@ -276,7 +276,7 @@ export default function ChampionsLeagueTable() {
                   {/* Prize */}
                   <div className="col-span-1 text-center">
                     {getPrizeAmount(player.rank) && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
                         {getPrizeAmount(player.rank)}
                       </span>
                     )}
@@ -304,7 +304,7 @@ export default function ChampionsLeagueTable() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div
-                      className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-lg ${
+                      className={`flex items-center justify-center w-8 h-8 rounded-md font-bold text-lg ${
                         player.rank === 1
                           ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg shadow-yellow-500/30"
                           : player.rank === 2
@@ -319,7 +319,7 @@ export default function ChampionsLeagueTable() {
                     {getRankIcon(player.rank)}
                   </div>
                   {getPrizeAmount(player.rank) && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
                       {getPrizeAmount(player.rank)}
                     </span>
                   )}
@@ -332,7 +332,7 @@ export default function ChampionsLeagueTable() {
                       alt="Avatar"
                       className="w-10 h-10 rounded-full"
                     />
-                    <div className="absolute -bottom-1 -right-1 bg-theme-background rounded-full px-1 py-0.5 text-xs font-bold text-theme-foreground border border-theme-border">
+                    <div className="absolute -bottom-1 -right-1 bg-theme-background rounded-md px-1 py-0.5 text-xs font-bold text-theme-foreground border border-theme-border">
                       {player.member_number}
                     </div>
                   </div>
