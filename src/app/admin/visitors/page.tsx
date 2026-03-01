@@ -228,7 +228,7 @@ export default function VisitorsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         {data?.stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -427,20 +427,20 @@ export default function VisitorsPage() {
 
           {/* Pagination */}
           {data?.pagination && data.pagination.totalPages > 1 && (
-            <div className={`px-5 py-4 border-t flex items-center justify-between ${isDark ? "border-gray-800" : "border-gray-200"}`}>
-              <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-600"}`}>
+            <div className={`px-3 sm:px-5 py-3 sm:py-4 border-t flex items-center justify-between ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+              <p className={`text-[11px] sm:text-sm ${isDark ? "text-gray-500" : "text-gray-600"}`}>
                 Stranica <span className="font-medium">{data.pagination.page}</span> od <span className="font-medium">{data.pagination.totalPages}</span>{" "}
                 (<span className="font-medium">{data.pagination.total}</span> ukupno)
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 sm:gap-2">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1.5 text-sm rounded-md flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-sm rounded-md flex items-center gap-0.5 sm:gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     isDark ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700" : "text-gray-600 bg-white border border-gray-200 hover:bg-gray-50"
                   }`}
                 >
-                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   Prethodna
                 </button>
                 <button
@@ -450,12 +450,12 @@ export default function VisitorsPage() {
                     )
                   }
                   disabled={currentPage === data.pagination.totalPages}
-                  className={`px-3 py-1.5 text-sm rounded-md flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-sm rounded-md flex items-center gap-0.5 sm:gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     isDark ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700" : "text-gray-600 bg-white border border-gray-200 hover:bg-gray-50"
                   }`}
                 >
                   Sljedeća
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </button>
               </div>
             </div>

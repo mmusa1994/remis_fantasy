@@ -674,18 +674,18 @@ export default function AdminDashboardTabs({
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* League Tabs + Season Selector */}
         <div className={`mb-8 border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <nav className="-mb-px flex">
             <button
               onClick={() => setActiveTab("premier")}
-              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2.5 px-2.5 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors ${
                 activeTab === "premier"
                   ? "border-purple-500 text-purple-600 dark:text-purple-400"
                   : theme === "dark" ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Image src="/images/logos/pl-logo.png" alt="Premier League" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Image src="/images/logos/pl-logo.png" alt="Premier League" width={18} height={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px] object-contain" style={{
                   opacity: activeTab === "premier" ? 1 : 0.5,
                   filter: activeTab === "premier"
                     ? "brightness(0) saturate(100%) invert(25%) sepia(80%) saturate(4000%) hue-rotate(260deg) brightness(95%)"
@@ -696,14 +696,14 @@ export default function AdminDashboardTabs({
             </button>
             <button
               onClick={() => setActiveTab("champions")}
-              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2.5 px-2.5 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors ${
                 activeTab === "champions"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
                   : theme === "dark" ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Image src="/images/logos/cl-logo.png" alt="Champions League" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Image src="/images/logos/cl-logo.png" alt="Champions League" width={18} height={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px] object-contain" style={{
                   opacity: activeTab === "champions" ? 1 : 0.5,
                   filter: activeTab === "champions"
                     ? "brightness(0) saturate(100%) invert(35%) sepia(80%) saturate(3000%) hue-rotate(200deg) brightness(95%)"
@@ -714,37 +714,46 @@ export default function AdminDashboardTabs({
             </button>
             <button
               onClick={() => setActiveTab("f1")}
-              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2.5 px-2.5 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors ${
                 activeTab === "f1"
                   ? "border-red-500 text-red-600 dark:text-red-400"
                   : theme === "dark" ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Image src="/images/logos/f1.png" alt="F1 Fantasy" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Image src="/images/logos/f1.png" alt="F1 Fantasy" width={18} height={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px] object-contain" style={{
                   opacity: activeTab === "f1" ? 1 : 0.5,
                   filter: activeTab === "f1"
                     ? "brightness(0) saturate(100%) invert(20%) sepia(80%) saturate(5000%) hue-rotate(350deg) brightness(95%)"
                     : theme === "dark" ? "brightness(0) invert(1) opacity(0.5)" : "brightness(0) opacity(0.5)"
                 }} />
-                F1 Fantasy
+                F1
               </div>
             </button>
           </nav>
           {/* Season Selector */}
-          <div className="flex items-center gap-2 mb-1">
-            <label className={`text-xs font-medium uppercase tracking-wide ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-              Season
-            </label>
+          <div className="flex items-center gap-1.5 -mt-2 sm:mt-0 mb-1">
             <select
               value={season}
               onChange={(e) => setSeason(e.target.value as "25_26" | "26_27")}
-              className={`px-3 py-1.5 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200 ${
-                theme === "dark" ? "bg-gray-900 border border-gray-700 text-white" : "bg-white border border-gray-200 text-gray-900"
+              className={`px-2 py-1 rounded text-[11px] sm:text-xs font-medium tracking-wide cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-400 transition-all duration-200 appearance-none pr-5 bg-[length:10px] bg-[right_4px_center] bg-no-repeat ${
+                theme === "dark"
+                  ? "bg-gray-800/60 border border-gray-700/50 text-gray-400 hover:text-gray-300 hover:border-gray-600"
+                  : "bg-gray-100/80 border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
             >
-              <option value="26_27">2026/27</option>
-              <option value="25_26">2025/26</option>
+              {activeTab === "f1" ? (
+                <>
+                  <option value="26_27">2026</option>
+                  <option value="25_26">2025</option>
+                </>
+              ) : (
+                <>
+                  <option value="26_27">2026/27</option>
+                  <option value="25_26">2025/26</option>
+                </>
+              )}
             </select>
           </div>
           </div>
@@ -777,7 +786,7 @@ export default function AdminDashboardTabs({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           {tabStats.map((stat, index) => {
             const cardBg = (() => {
               switch (stat.icon) {

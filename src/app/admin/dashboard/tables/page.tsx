@@ -655,14 +655,14 @@ export default function AdminTablesCleanPage() {
           <nav className="-mb-px flex">
             <button
               onClick={() => { setMainTab("premier"); setActiveSection("tables"); }}
-              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2.5 px-2.5 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors ${
                 mainTab === "premier"
                   ? "border-purple-500 text-purple-600 dark:text-purple-400"
                   : isDark ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Image src="/images/logos/pl-logo.png" alt="Premier League" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Image src="/images/logos/pl-logo.png" alt="Premier League" width={18} height={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px] object-contain" style={{
                   opacity: mainTab === "premier" ? 1 : 0.5,
                   filter: mainTab === "premier"
                     ? "brightness(0) saturate(100%) invert(25%) sepia(80%) saturate(4000%) hue-rotate(260deg) brightness(95%)"
@@ -673,14 +673,14 @@ export default function AdminTablesCleanPage() {
             </button>
             <button
               onClick={() => { setMainTab("champions"); setActiveSection("tables"); }}
-              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2.5 px-2.5 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors ${
                 mainTab === "champions"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
                   : isDark ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Image src="/images/logos/cl-logo.png" alt="Champions League" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Image src="/images/logos/cl-logo.png" alt="Champions League" width={18} height={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px] object-contain" style={{
                   opacity: mainTab === "champions" ? 1 : 0.5,
                   filter: mainTab === "champions"
                     ? "brightness(0) saturate(100%) invert(35%) sepia(80%) saturate(3000%) hue-rotate(200deg) brightness(95%)"
@@ -691,20 +691,20 @@ export default function AdminTablesCleanPage() {
             </button>
             <button
               onClick={() => { setMainTab("f1"); setActiveSection("tables"); }}
-              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2.5 px-2.5 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors ${
                 mainTab === "f1"
                   ? "border-red-500 text-red-600 dark:text-red-400"
                   : isDark ? "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Image src="/images/logos/f1.png" alt="F1 Fantasy" width={18} height={18} className="w-[18px] h-[18px] object-contain" style={{
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Image src="/images/logos/f1.png" alt="F1 Fantasy" width={18} height={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px] object-contain" style={{
                   opacity: mainTab === "f1" ? 1 : 0.5,
                   filter: mainTab === "f1"
                     ? "brightness(0) saturate(100%) invert(20%) sepia(80%) saturate(5000%) hue-rotate(350deg) brightness(95%)"
                     : isDark ? "brightness(0) invert(1) opacity(0.5)" : "brightness(0) opacity(0.5)"
                 }} />
-                F1 Fantasy
+                F1
               </div>
             </button>
           </nav>

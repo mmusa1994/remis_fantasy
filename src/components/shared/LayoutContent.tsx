@@ -47,8 +47,6 @@ export default function LayoutContent({
     return (
       <main>
         {children}
-        {/* Onboarding Widget for admin too */}
-        <OnboardingWidget />
       </main>
     );
   } else if (isLoginPanelBool) {
