@@ -72,21 +72,23 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-950 via-red-900 to-red-950">
       {/* Logo above the login panel */}
-      <div className="mb-8">
+      <div className="mb-4 md:mb-8">
         <Image
           src="/images/rf-logo.svg"
           alt="REMIS Fantasy Logo"
           width={200}
           height={200}
-          className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48"
+          className="w-24 h-24 md:w-40 md:h-40 lg:w-48 lg:h-48"
           priority
         />
       </div>
 
       <div className="max-w-md w-full mx-4">
-        <div className="bg-transparent md:bg-white/10 md:backdrop-blur-md md:rounded-md p-8 md:shadow-2xl border-0 md:border md:border-white/20">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">Admin Prijava</h1>
+        <div className="bg-transparent md:bg-white/10 md:backdrop-blur-md md:rounded-md px-6 md:p-8 md:shadow-2xl border-0 md:border md:border-white/20">
+          <div className="text-center mb-5 md:mb-8">
+            <h1 className="text-2xl font-bold text-white mb-2">
+              Admin Prijava
+            </h1>
             <p className="text-white/60">REMIS Fantasy Admin Panel</p>
           </div>
 
@@ -143,7 +145,7 @@ export default function AdminLogin() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-4 md:mt-6 text-center">
             <Link
               href="/"
               className="text-white/60 hover:text-white text-sm transition-colors"
