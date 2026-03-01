@@ -131,6 +131,7 @@ function F1RegistrationFormInner() {
         newErrors.cashConfirmed = "Morate potvrditi da ćete dostaviti uplatu";
       }
     }
+
     if (!recaptchaToken) {
       newErrors.recaptcha = t("common:validation.recaptchaRequired");
     }

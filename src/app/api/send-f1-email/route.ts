@@ -27,8 +27,12 @@ export function getF1CodesEmailHtml(firstName: string): string {
     <div style="font-family: 'Anta', 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #1a1a2e !important; color: #ffffff !important; border-radius: 12px; overflow: hidden;">
       <!-- Header -->
       <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important; background-color: #1a1a2e !important; padding: 40px 30px 20px; text-align: center;">
-        <img src="https://remis-fantasy.com/images/rf-no-bg.png" alt="REMIS Fantasy" style="width: 120px; height: auto; margin-bottom: 4px;" />
-        <img src="https://remis-fantasy.com/images/logos/f1.png" alt="F1" style="width: 80px; height: auto; margin-bottom: 4px; display: block; margin-left: auto; margin-right: auto;" />
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 8px;">
+          <tr>
+            <td style="padding-right: 12px;"><img src="https://remis-fantasy.com/images/rf-no-bg.png" alt="REMIS Fantasy" style="width: 100px; height: auto; display: block;" /></td>
+            <td><img src="https://remis-fantasy.com/images/logos/f1.png" alt="F1" style="width: 70px; height: auto; display: block;" /></td>
+          </tr>
+        </table>
         <h1 style="font-family: 'Anta', 'Helvetica Neue', Arial, sans-serif; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 2px; color: #ffffff !important;">F1 FANTASY LEAGUE 2026</h1>
         <div style="width: 60px; height: 3px; background-color: #e10600 !important; margin: 16px auto 0;"></div>
       </div>
