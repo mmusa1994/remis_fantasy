@@ -71,7 +71,6 @@ export async function POST(req: NextRequest) {
         phone: phone.trim(),
         notes: (notes || "").trim(),
       },
-      receipt_email: email.trim(),
       description: `Remis Fantasy Premier League 2026/27 - ${league_tier}`,
     });
 

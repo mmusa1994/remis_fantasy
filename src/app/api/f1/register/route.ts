@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
         phone: phone.trim(),
         notes: (notes || "").trim(),
       },
-      receipt_email: email.trim(),
       description: "Remis Fantasy F1 2026 - Registration",
     });
 

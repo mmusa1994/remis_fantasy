@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
         phone: phone.trim(),
         notes: (notes || "").trim(),
       },
-      receipt_email: email.trim(),
       description: "Remis Fantasy Champions League 2026/27 - Registration",
     });
 
