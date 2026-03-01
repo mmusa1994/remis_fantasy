@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendAdminRegistrationNotification } from "@/lib/email";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -65,6 +66,27 @@ export async function POST(req: NextRequest) {
       }
       throw error;
     }
+
+    const tierAmounts: Record<string, number> = {
+      standard: 20.0,
+      premium: 50.0,
+      h2h_only: 15.0,
+      standard_h2h: 35.0,
+      premium_h2h: 65.0,
+    };
+    const amount = tierAmounts[league_tier] || 0;
+
+    sendAdminRegistrationNotification({
+      competition: "Premier League",
+      first_name: first_name.trim(),
+      last_name: last_name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      payment_method: `Cash (dostava: ${cash_delivery_date})`,
+      amount: `${amount.toFixed(2)}€`,
+      league_tier,
+      notes: notes?.trim() || undefined,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {

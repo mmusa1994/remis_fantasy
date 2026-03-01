@@ -11,6 +11,19 @@ interface UserData {
   h2h_league: boolean;
 }
 
+// Type for universal admin registration notification
+export interface AdminRegistrationData {
+  competition: "F1" | "Champions League" | "Premier League";
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  payment_method: string;
+  amount: string;
+  notes?: string;
+  league_tier?: string;
+}
+
 // Validate required email environment variables
 const emailUser = process.env.SMTP_USER;
 const emailPass = process.env.SMTP_PASS;
@@ -1363,5 +1376,146 @@ export const sendRegistrationConfirmationEmail = async (userData: UserData) => {
   } catch (error) {
     console.error("Error sending registration confirmation email:", error);
     throw error;
+  }
+};
+
+// Universal admin registration notification template
+const ADMIN_NOTIFICATION_EMAIL = "remis.fantasy.platform@gmail.com";
+
+const competitionLabels: Record<string, string> = {
+  "F1": "Formula 1 Fantasy 2026",
+  "Champions League": "Champions League Fantasy 2026/27",
+  "Premier League": "Premier League Fantasy 2026/27",
+};
+
+const competitionColors: Record<string, string> = {
+  "F1": "#e10600",
+  "Champions League": "#1e3a8a",
+  "Premier League": "#37003c",
+};
+
+const createAdminRegistrationNotificationTemplate = (data: AdminRegistrationData) => {
+  const color = competitionColors[data.competition] || "#333";
+  const label = competitionLabels[data.competition] || data.competition;
+  const tierLabel = data.league_tier
+    ? ` (${data.league_tier.replace("_", " + ").replace(/\b\w/g, (c) => c.toUpperCase())})`
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:${color};padding:28px 32px;">
+            <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Nova Registracija</h1>
+            <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">${label}</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:28px 32px;">
+
+            <!-- User Info -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;overflow:hidden;">
+              <tr style="background:#fafafa;">
+                <td colspan="2" style="padding:12px 16px;font-size:13px;font-weight:600;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #e4e4e7;">
+                  Podaci korisnika
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;font-size:14px;color:#71717a;width:140px;border-bottom:1px solid #f4f4f5;">Ime i prezime</td>
+                <td style="padding:10px 16px;font-size:14px;color:#18181b;font-weight:500;border-bottom:1px solid #f4f4f5;">${data.first_name} ${data.last_name}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;font-size:14px;color:#71717a;border-bottom:1px solid #f4f4f5;">Email</td>
+                <td style="padding:10px 16px;font-size:14px;color:#18181b;border-bottom:1px solid #f4f4f5;">${data.email}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;font-size:14px;color:#71717a;border-bottom:1px solid #f4f4f5;">Telefon</td>
+                <td style="padding:10px 16px;font-size:14px;color:#18181b;border-bottom:1px solid #f4f4f5;">${data.phone}</td>
+              </tr>
+              ${data.notes ? `<tr>
+                <td style="padding:10px 16px;font-size:14px;color:#71717a;border-bottom:1px solid #f4f4f5;">Napomena</td>
+                <td style="padding:10px 16px;font-size:14px;color:#18181b;border-bottom:1px solid #f4f4f5;">${data.notes}</td>
+              </tr>` : ""}
+            </table>
+
+            <!-- Payment Info -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;overflow:hidden;margin-top:16px;">
+              <tr style="background:#fafafa;">
+                <td colspan="2" style="padding:12px 16px;font-size:13px;font-weight:600;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #e4e4e7;">
+                  Uplata
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;font-size:14px;color:#71717a;width:140px;border-bottom:1px solid #f4f4f5;">Takmicenje</td>
+                <td style="padding:10px 16px;font-size:14px;color:#18181b;font-weight:500;border-bottom:1px solid #f4f4f5;">${data.competition}${tierLabel}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;font-size:14px;color:#71717a;border-bottom:1px solid #f4f4f5;">Nacin uplate</td>
+                <td style="padding:10px 16px;font-size:14px;color:#18181b;border-bottom:1px solid #f4f4f5;">${data.payment_method}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;font-size:14px;color:#71717a;">Iznos</td>
+                <td style="padding:10px 16px;font-size:14px;color:#18181b;font-weight:600;">${data.amount}</td>
+              </tr>
+            </table>
+
+            <!-- Timestamp -->
+            <p style="margin:20px 0 0;font-size:12px;color:#a1a1aa;text-align:center;">
+              ${new Date().toLocaleString("sr-RS", {
+                timeZone: "Europe/Belgrade",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#fafafa;padding:16px 32px;border-top:1px solid #e4e4e7;">
+            <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center;">REMIS Fantasy Platform</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+};
+
+// Send admin notification for any competition registration
+export const sendAdminRegistrationNotification = async (data: AdminRegistrationData) => {
+  try {
+    const html = createAdminRegistrationNotificationTemplate(data);
+    const subject = `Nova registracija — ${data.first_name} ${data.last_name} | ${data.competition}`;
+
+    const result = await transporter.sendMail({
+      from: emailFrom || emailUser,
+      to: ADMIN_NOTIFICATION_EMAIL,
+      subject,
+      html,
+    });
+
+    console.info(`Admin registration notification sent for ${data.competition}:`, result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("Failed to send admin registration notification:", error);
+    // Don't throw — admin notification failure should not break the user flow
   }
 };

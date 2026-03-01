@@ -4,6 +4,7 @@ import { supabaseServer } from "@/lib/supabase-server";
 import Stripe from "stripe";
 import * as nodemailer from "nodemailer";
 import { getF1CodesEmailHtml } from "@/app/api/send-f1-email/route";
+import { sendAdminRegistrationNotification } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -103,6 +104,18 @@ export async function POST(req: NextRequest) {
           } else {
             console.log(`F1 registration completed for ${email}`);
 
+            // Send admin notification
+            sendAdminRegistrationNotification({
+              competition: "F1",
+              first_name,
+              last_name,
+              email,
+              phone,
+              payment_method: "Stripe (kartica)",
+              amount: "10.00€",
+              notes: notes || undefined,
+            });
+
             // Auto-send F1 codes email
             try {
               const smtpUser = process.env.SMTP_USER;
@@ -144,6 +157,88 @@ export async function POST(req: NextRequest) {
             }
           }
         }
+
+        if (paymentIntent.metadata?.type === "cl_registration_26_27") {
+          const { first_name, last_name, email, phone, notes } =
+            paymentIntent.metadata;
+
+          const { error: clError } = await supabaseServer
+            .from("registration_champions_league_26_27")
+            .insert({
+              first_name,
+              last_name,
+              email,
+              phone,
+              notes: notes || null,
+              payment_method: "stripe",
+              payment_status: "paid",
+              stripe_payment_intent_id: paymentIntent.id,
+              amount_paid: 15.0,
+            });
+
+          if (clError) {
+            console.error("Error inserting CL registration:", clError);
+          } else {
+            console.log(`CL registration completed for ${email}`);
+            sendAdminRegistrationNotification({
+              competition: "Champions League",
+              first_name,
+              last_name,
+              email,
+              phone,
+              payment_method: "Stripe (kartica)",
+              amount: "15.00€",
+              notes: notes || undefined,
+            });
+          }
+        }
+
+        if (paymentIntent.metadata?.type === "pl_registration_26_27") {
+          const { first_name, last_name, email, phone, notes, league_tier } =
+            paymentIntent.metadata;
+
+          const tierAmounts: Record<string, number> = {
+            standard: 20.0,
+            premium: 50.0,
+            h2h_only: 15.0,
+            standard_h2h: 35.0,
+            premium_h2h: 65.0,
+          };
+          const amount = tierAmounts[league_tier] || 0;
+
+          const { error: plError } = await supabaseServer
+            .from("registration_premier_league_26_27")
+            .insert({
+              first_name,
+              last_name,
+              email,
+              phone,
+              notes: notes || null,
+              payment_method: "stripe",
+              payment_status: "paid",
+              league_tier,
+              stripe_payment_intent_id: paymentIntent.id,
+              amount_paid: amount,
+            });
+
+          if (plError) {
+            console.error("Error inserting PL registration:", plError);
+          } else {
+            console.log(`PL registration completed for ${email}`);
+            sendAdminRegistrationNotification({
+              competition: "Premier League",
+              first_name,
+              last_name,
+              email,
+              phone,
+              payment_method: "Stripe (kartica)",
+              amount: `${amount.toFixed(2)}€`,
+              league_tier,
+              notes: notes || undefined,
+            });
+          }
+        }
+
         break;
       }
 

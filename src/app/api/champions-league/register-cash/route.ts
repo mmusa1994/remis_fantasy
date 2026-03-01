@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendAdminRegistrationNotification } from "@/lib/email";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -56,6 +57,17 @@ export async function POST(req: NextRequest) {
       }
       throw error;
     }
+
+    sendAdminRegistrationNotification({
+      competition: "Champions League",
+      first_name: first_name.trim(),
+      last_name: last_name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      payment_method: `Cash (dostava: ${cash_delivery_date})`,
+      amount: "15.00€",
+      notes: notes?.trim() || undefined,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
