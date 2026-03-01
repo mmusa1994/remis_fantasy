@@ -3,7 +3,7 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
-import { UserPlus, Zap, Trophy } from "lucide-react";
+import { UserPlus, Link2, Trophy } from "lucide-react";
 
 const steps = [
   {
@@ -18,7 +18,7 @@ const steps = [
   },
   {
     step: 2,
-    icon: Zap,
+    icon: Link2,
     titleKey: "hero:howItWorks.step2.title",
     descKey: "hero:howItWorks.step2.description",
     gradient: "from-blue-500 to-cyan-500",

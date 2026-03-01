@@ -15,11 +15,31 @@
   },
   "prizes": {
     "first": "1.",
-    "second": "2.", 
+    "second": "2.",
     "third": "3.",
     "gold": "Zlato",
     "silver": "Srebro",
-    "bronze": "Bronza"
+    "bronze": "Bronza",
+    "pageTitle": "F1 Fantasy Nagrade — Sezona 2026",
+    "pageSubtitle": "Nagradni fond se formira od uplata učesnika",
+    "entryFee": "Kotizacija",
+    "prizePool": "Nagradni fond",
+    "firstTitle": "1. Mjesto",
+    "firstPercent": "35%",
+    "firstDesc": "Trofej + Majica + 35% nagradnog fonda",
+    "trophyLabel": "Trofej",
+    "shirtLabel": "F1 Majica",
+    "secondTitle": "2. Mjesto",
+    "secondPercent": "25%",
+    "secondDesc": "F1 Model Auta (1/43) + 25% nagradnog fonda",
+    "modelCarLabel": "F1 Model (1/43)",
+    "thirdTitle": "3. Mjesto",
+    "thirdPercent": "15%",
+    "thirdDesc": "F1 Privjesak + 15% nagradnog fonda",
+    "keychainLabel": "F1 Privjesak",
+    "plusPercent": "+ {{percent}} fonda",
+    "viewTables": "Pogledaj tabelu",
+    "register": "Registruj se"
   },
   "movement": {
     "up": "Gore",
@@ -27,6 +47,7 @@
     "same": "Bez promjene"
   },
   "season": "Sezona",
+  "seasonCompleted": "(Završena)",
   "grandPrix": "Grand Prix"
   ,
   "pageTitle": "Remis Fantasy F1 Liga",

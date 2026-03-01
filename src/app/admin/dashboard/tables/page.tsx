@@ -134,6 +134,7 @@ export default function AdminTablesCleanPage() {
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [bulkUpdateData, setBulkUpdateData] = useState<string>("");
   const [showBulkUpdate, setShowBulkUpdate] = useState(false);
+  const [f1Season, setF1Season] = useState<"25" | "26">("26");
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [source, setSource] = useState<string>("");
   const [toast, setToast] = useState<{
@@ -178,7 +179,7 @@ export default function AdminTablesCleanPage() {
       console.error("Error loading tables:", error);
       setToast({
         show: true,
-        message: "Error loading tables",
+        message: "Greška pri učitavanju tabela",
         type: "error",
       });
     } finally {
@@ -208,7 +209,7 @@ export default function AdminTablesCleanPage() {
 
       setToast({
         show: true,
-        message: "Player updated successfully!",
+        message: "Igrač uspješno ažuriran!",
         type: "success",
       });
     } catch (error) {
@@ -242,7 +243,7 @@ export default function AdminTablesCleanPage() {
       if (response.ok) {
         setToast({
           show: true,
-          message: "Free League player updated successfully!",
+          message: "Igrač Free lige uspješno ažuriran!",
           type: "success",
         });
         setEditingFreePlayer(null);
@@ -260,7 +261,7 @@ export default function AdminTablesCleanPage() {
       console.error("Error updating free player:", error);
       setToast({
         show: true,
-        message: "Error updating player",
+        message: "Greška pri ažuriranju igrača",
         type: "error",
       });
     }
@@ -307,7 +308,7 @@ export default function AdminTablesCleanPage() {
     if (!bulkUpdateData.trim()) {
       setToast({
         show: true,
-        message: "Please enter JSON data for bulk update",
+        message: "Unesite JSON podatke za grupno ažuriranje",
         type: "error",
       });
       return;
@@ -339,9 +340,9 @@ export default function AdminTablesCleanPage() {
       // Refresh tables after update
       await loadTables();
 
-      let message = `Bulk update completed! Updated ${result.updatedCount}/${result.totalUpdates} players.`;
+      let message = `Grupno ažuriranje završeno! Ažurirano ${result.updatedCount}/${result.totalUpdates} igrača.`;
       if (result.notFound && result.notFound.length > 0) {
-        message += ` Not found: ${result.notFound.slice(0, 3).join(", ")}${
+        message += ` Nije pronađeno: ${result.notFound.slice(0, 3).join(", ")}${
           result.notFound.length > 3 ? "..." : ""
         }`;
       }
@@ -358,7 +359,7 @@ export default function AdminTablesCleanPage() {
       console.error("Error during bulk update:", error);
       setToast({
         show: true,
-        message: "Error during bulk update - check JSON format",
+        message: "Greška pri grupnom ažuriranju - provjerite JSON format",
         type: "error",
       });
     } finally {
@@ -427,11 +428,11 @@ export default function AdminTablesCleanPage() {
       const totalInLeague =
         result.totalFPLPlayers ||
         result.updatedPlayers + (result.notFoundPlayers?.length || 0);
-      let message = `${result.leagueType.toUpperCase()} league updated! Updated ${
+      let message = `${result.leagueType.toUpperCase()} liga ažurirana! Ažurirano ${
         result.updated || result.updatedPlayers || 0
-      } out of ${totalInLeague} players.`;
+      } od ${totalInLeague} igrača.`;
       if (result.notFound && result.notFound.length > 0) {
-        message += ` Not found: ${result.notFound.length}`;
+        message += ` Nije pronađeno: ${result.notFound.length}`;
       }
 
       setToast({
@@ -443,7 +444,7 @@ export default function AdminTablesCleanPage() {
       console.error("Error updating from FPL:", error);
       setToast({
         show: true,
-        message: `Error updating ${leagueType} league from FPL API`,
+        message: `Greška pri ažuriranju ${leagueType} lige sa FPL API-ja`,
         type: "error",
       });
     } finally {
@@ -479,14 +480,14 @@ export default function AdminTablesCleanPage() {
 
       setToast({
         show: true,
-        message: `FULL SYNC ${leagueType.toUpperCase()}: ${result.inserted || 0} inserted, ${result.updated || 0} updated, ${result.errors || 0} errors`,
+        message: `FULL SYNC ${leagueType.toUpperCase()}: ${result.inserted || 0} uneseno, ${result.updated || 0} ažurirano, ${result.errors || 0} grešaka`,
         type: result.errors > 0 ? "error" : "success",
       });
     } catch (error) {
       console.error("Error full syncing from FPL:", error);
       setToast({
         show: true,
-        message: `Error full syncing ${leagueType} league`,
+        message: `Greška pri full sync-u ${leagueType} lige`,
         type: "error",
       });
     } finally {
@@ -559,12 +560,12 @@ export default function AdminTablesCleanPage() {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-black" : "bg-gray-50"}`}>
         <div className="text-center">
-          <p className="mb-4 text-gray-800">Redirecting to admin login...</p>
+          <p className="mb-4 text-gray-800">Preusmjeravanje na admin prijavu...</p>
           <Link
             href="/admin"
             className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors"
           >
-            Go to Admin Login
+            Admin Prijava
           </Link>
         </div>
       </div>
@@ -576,8 +577,8 @@ export default function AdminTablesCleanPage() {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-black" : "bg-gray-50"}`}>
         <LoadingCard
-          title="Loading Tables Management"
-          description="Please wait while we authenticate and load the table data"
+          title="Učitavanje upravljanja tabelama"
+          description="Molimo sačekajte dok se autentifikacija i podaci učitaju"
           className="w-full max-w-md mx-auto"
         />
       </div>
@@ -605,8 +606,8 @@ export default function AdminTablesCleanPage() {
               <Link
                 href="/admin/dashboard"
                 className="text-white/70 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 rounded-md transition-colors flex-shrink-0"
-                title="Back to dashboard"
-                aria-label="Back to dashboard"
+                title="Nazad na kontrolnu ploču"
+                aria-label="Nazad na kontrolnu ploču"
               >
                 <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
@@ -620,17 +621,17 @@ export default function AdminTablesCleanPage() {
               />
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm sm:text-lg lg:text-xl font-semibold truncate tracking-tight">
-                  League Tables
+                  Tabele Liga
                 </h1>
                 <p className="text-xs sm:text-sm text-white/60 truncate hidden sm:block">
-                  League and ranking management
+                  Upravljanje ligama i rangiranjem
                 </p>
               </div>
             </div>
             <button
               onClick={toggleTheme}
               className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-md transition-colors"
-              title={isDark ? "Light mode" : "Dark mode"}
+              title={isDark ? "Svijetli mod" : "Tamni mod"}
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
@@ -752,6 +753,7 @@ export default function AdminTablesCleanPage() {
             league={mainTab === "premier" ? "pl" : mainTab === "champions" ? "cl" : "f1"}
             isDark={isDark}
             onToast={(message, type) => setToast({ show: true, message, type })}
+            accentClass={getMainTabAccentWithHover(mainTab)}
           />
         )}
 
@@ -761,6 +763,7 @@ export default function AdminTablesCleanPage() {
             league={mainTab === "premier" ? "pl" : mainTab === "champions" ? "cl" : "f1"}
             isDark={isDark}
             onToast={(message, type) => setToast({ show: true, message, type })}
+            accentClass={getMainTabAccentWithHover(mainTab)}
           />
         )}
 
@@ -769,11 +772,11 @@ export default function AdminTablesCleanPage() {
           <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"} rounded-md overflow-hidden border`}>
             <div className={`px-6 py-4 border-b ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
               <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>
-                Champions League Bulk Updater (2025/26)
+                Champions League Ažuriranje (2025/26)
               </h3>
               <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                Paste UEFA Champions League HTML content and update the
-                cl_table_25_26 table.
+                Zalijepite UEFA Champions League HTML sadržaj da ažurirate
+                cl_table_25_26 tabelu.
               </p>
             </div>
             <div className="p-6 space-y-4">
@@ -789,7 +792,7 @@ export default function AdminTablesCleanPage() {
                     if (!bulkUpdateData.trim()) {
                       setToast({
                         show: true,
-                        message: "Please paste Champions League HTML content",
+                        message: "Zalijepite Champions League HTML sadržaj",
                         type: "error",
                       });
                       return;
@@ -809,7 +812,7 @@ export default function AdminTablesCleanPage() {
                         throw new Error(json.error || "Update failed");
                       setToast({
                         show: true,
-                        message: `Successfully updated ${json.count} Champions League entries`,
+                        message: `Uspješno ažurirano ${json.count} Champions League unosa`,
                         type: "success",
                       });
                       setBulkUpdateData(""); // Clear the textarea after successful update
@@ -817,7 +820,7 @@ export default function AdminTablesCleanPage() {
                       setToast({
                         show: true,
                         message:
-                          e.message || "Champions League bulk update failed",
+                          e.message || "Champions League grupno ažuriranje neuspješno",
                         type: "error",
                       });
                     } finally {
@@ -829,11 +832,11 @@ export default function AdminTablesCleanPage() {
                 >
                   {bulkUpdating ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Ažuriranje...
                     </>
                   ) : (
                     <>
-                      <Upload className="w-4 h-4" /> Parse & Update
+                      <Upload className="w-4 h-4" /> Parsiraj i ažuriraj
                     </>
                   )}
                 </button>
@@ -843,33 +846,33 @@ export default function AdminTablesCleanPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  View Public Table
+                  Pogledaj javnu tabelu
                 </a>
               </div>
               <div className={`${isDark ? "bg-blue-900/20 border-blue-800" : "bg-blue-50 border-blue-200"} border rounded-md p-4`}>
                 <h4 className={`font-semibold ${isDark ? "text-blue-400" : "text-blue-800"} mb-2 flex items-center gap-2`}>
                   <FileText className="w-4 h-4" />
-                  Instructions:
+                  Uputstva:
                 </h4>
                 <div className={`text-sm ${isDark ? "text-blue-300" : "text-blue-700"} space-y-2`}>
-                  <p>1. Go to the UEFA Champions League fantasy page</p>
+                  <p>1. Idite na UEFA Champions League fantasy stranicu</p>
                   <p>
-                    2. Right-click on the leaderboard section and select
+                    2. Desni klik na leaderboard sekciju i izaberite
                     &quot;Inspect Element&quot;
                   </p>
                   <p>
-                    3. Find the div with class &quot;si-leagues__lb&quot;
-                    containing all player rows
+                    3. Pronađite div sa klasom &quot;si-leagues__lb&quot;
+                    koji sadrži sve redove igrača
                   </p>
-                  <p>4. Copy the entire HTML content of that section</p>
+                  <p>4. Kopirajte cijeli HTML sadržaj te sekcije</p>
                   <p>
-                    5. Paste it in the textarea above and click &quot;Parse
-                    &amp; Update&quot;
+                    5. Zalijepite u polje iznad i kliknite &quot;Parsiraj
+                    i ažuriraj&quot;
                   </p>
                   <p>
-                    <strong>Note:</strong> The parser will extract rank, team
-                    name, user name, avatar, member number, points, and status
-                    (winner/loser/tie) from the HTML.
+                    <strong>Napomena:</strong> Parser će izvući rang, naziv tima,
+                    korisničko ime, avatar, broj člana, bodove i status
+                    (pobjednik/gubitnik/neriješeno) iz HTML-a.
                   </p>
                 </div>
               </div>
@@ -880,19 +883,62 @@ export default function AdminTablesCleanPage() {
         {/* F1 Bulk Updater */}
         {activeSection === "tables" && mainTab === "f1" && (
           <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"} rounded-md overflow-hidden border`}>
+            {/* F1 Season Switcher */}
+            <div className={`px-6 py-4 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                    Sezona:
+                  </span>
+                  <div className={`inline-flex rounded-lg p-1 ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
+                    <button
+                      onClick={() => setF1Season("25")}
+                      className={`px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                        f1Season === "25"
+                          ? "bg-red-600 text-white shadow-sm"
+                          : isDark
+                          ? "text-gray-400 hover:text-gray-200"
+                          : "text-gray-600 hover:text-gray-800"
+                      }`}
+                    >
+                      2025
+                      <span className={`ml-1.5 text-xs ${f1Season === "25" ? "text-red-200" : isDark ? "text-gray-500" : "text-gray-400"}`}>
+                        (Završena)
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setF1Season("26")}
+                      className={`px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                        f1Season === "26"
+                          ? "bg-red-600 text-white shadow-sm"
+                          : isDark
+                          ? "text-gray-400 hover:text-gray-200"
+                          : "text-gray-600 hover:text-gray-800"
+                      }`}
+                    >
+                      2026
+                      <span className={`ml-1.5 text-xs ${f1Season === "26" ? "text-red-200" : isDark ? "text-gray-500" : "text-gray-400"}`}>
+                        (Aktivna)
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className={`px-6 py-4 border-b ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
               <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>
-                F1 Bulk Updater (2025)
+                F1 Ažuriranje ({f1Season === "25" ? "2025" : "2026"})
               </h3>
               <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                Paste standings text (Rank, Team, Manager, Points) and update
-                Supabase table f1_table_25.
+                Zalijepite tekst tabele (Rang, Tim, Menadžer, Bodovi) da ažurirate
+                Supabase tabelu f1_table_{f1Season}.
               </p>
             </div>
             <div className="p-6 space-y-4">
               <textarea
                 className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[220px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
-                placeholder={`Paste here. Example:\nRank\tName\tPoints\n1\nSainz & Conquer\nAlmir Softic\n3377\n2\nCosine kamikaze\nAmmar Cosovic\n3307`}
+                placeholder={`Zalijepite ovdje. Primjer:\nRang\tIme\tBodovi\n1\nSainz & Conquer\nAlmir Softic\n3377\n2\nCosine kamikaze\nAmmar Cosovic\n3307`}
                 value={bulkUpdateData}
                 onChange={(e) => setBulkUpdateData(e.target.value)}
               />
@@ -902,7 +948,7 @@ export default function AdminTablesCleanPage() {
                     if (!bulkUpdateData.trim()) {
                       setToast({
                         show: true,
-                        message: "Please paste standings text",
+                        message: "Zalijepite tekst tabele",
                         type: "error",
                       });
                       return;
@@ -912,21 +958,21 @@ export default function AdminTablesCleanPage() {
                       const res = await fetch("/api/admin/f1/bulk-update", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ text: bulkUpdateData }),
+                        body: JSON.stringify({ text: bulkUpdateData, season: f1Season }),
                       });
                       const json = await res.json();
                       if (!res.ok || !json.success)
                         throw new Error(json.error || "Update failed");
                       setToast({
                         show: true,
-                        message: `Updated ${json.count} entries`,
+                        message: `Ažurirano ${json.count} unosa u f1_table_${f1Season}`,
                         type: "success",
                       });
                       setBulkUpdateData(""); // Clear after success
                     } catch (e: any) {
                       setToast({
                         show: true,
-                        message: e.message || "Bulk update failed",
+                        message: e.message || "Grupno ažuriranje neuspješno",
                         type: "error",
                       });
                     } finally {
@@ -938,11 +984,11 @@ export default function AdminTablesCleanPage() {
                 >
                   {bulkUpdating ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Ažuriranje...
                     </>
                   ) : (
                     <>
-                      <Upload className="w-4 h-4" /> Parse & Update
+                      <Upload className="w-4 h-4" /> Parsiraj i ažuriraj
                     </>
                   )}
                 </button>
@@ -951,7 +997,7 @@ export default function AdminTablesCleanPage() {
                   className={`px-4 py-2 border rounded-md ${isDark ? "border-gray-700 text-gray-400 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
                   target="_blank"
                 >
-                  Open Public Table
+                  Pogledaj javnu tabelu
                 </a>
               </div>
             </div>
@@ -959,29 +1005,29 @@ export default function AdminTablesCleanPage() {
             {/* Race Info Updater */}
             <div className={`px-6 py-4 border-t ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
               <h4 className={`text-md font-semibold ${isDark ? "text-white" : "text-gray-800"} mb-3`}>
-                Race Info (Next & Last Race)
+                Info o trkama (Sljedeća i Prethodna) — Sezona {f1Season === "25" ? "2025" : "2026"}
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={`block text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-700"} mb-2`}>
-                    Next Race
+                    Sljedeća trka
                   </label>
                   <input
                     type="text"
                     id="f1-next-race"
                     className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
-                    placeholder="e.g., Austin"
+                    placeholder="npr. Austin"
                   />
                 </div>
                 <div>
                   <label className={`block text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-700"} mb-2`}>
-                    Last Race
+                    Prethodna trka
                   </label>
                   <input
                     type="text"
                     id="f1-last-race"
                     className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
-                    placeholder="e.g., Singapore"
+                    placeholder="npr. Singapore"
                   />
                 </div>
               </div>
@@ -1001,7 +1047,7 @@ export default function AdminTablesCleanPage() {
                     if (!nextRace || !lastRace) {
                       setToast({
                         show: true,
-                        message: "Please fill in both race fields",
+                        message: "Popunite oba polja za trke",
                         type: "error",
                       });
                       return;
@@ -1011,14 +1057,14 @@ export default function AdminTablesCleanPage() {
                       const res = await fetch("/api/admin/f1/race-info", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ nextRace, lastRace }),
+                        body: JSON.stringify({ nextRace, lastRace, season: f1Season }),
                       });
                       const json = await res.json();
                       if (!res.ok || !json.success)
                         throw new Error(json.error || "Update failed");
                       setToast({
                         show: true,
-                        message: "Race info updated successfully",
+                        message: "Info o trkama uspješno ažuriran",
                         type: "success",
                       });
                       // Clear inputs
@@ -1027,14 +1073,14 @@ export default function AdminTablesCleanPage() {
                     } catch (e: any) {
                       setToast({
                         show: true,
-                        message: e.message || "Race info update failed",
+                        message: e.message || "Ažuriranje info o trkama neuspješno",
                         type: "error",
                       });
                     }
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  className={`inline-flex items-center gap-2 px-4 py-2 ${getMainTabAccentWithHover(mainTab)} text-white rounded-md`}
                 >
-                  <Upload className="w-4 h-4" /> Update Race Info
+                  <Upload className="w-4 h-4" /> Ažuriraj info o trkama
                 </button>
               </div>
             </div>
@@ -1081,14 +1127,14 @@ export default function AdminTablesCleanPage() {
                   </div>
                   <div className="min-w-0">
                     <h2 className={`text-base sm:text-lg font-bold ${isDark ? "text-white" : "text-gray-800"} truncate`}>
-                      League Tables
+                      Tabele Liga
                     </h2>
                     {source && (
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`text-xs px-2 py-1 ${isDark ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-700"} rounded-md font-medium whitespace-nowrap`}>
                           {source === "clean_table"
-                            ? "Updated Table"
-                            : "Registration Table"}
+                            ? "Ažurirana tabela"
+                            : "Registracijska tabela"}
                         </span>
                         {lastUpdated && (
                           <span className="text-xs text-gray-500 hidden sm:inline truncate">
@@ -1104,25 +1150,25 @@ export default function AdminTablesCleanPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowBulkUpdate(true)}
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 text-xs sm:text-sm font-medium"
-                    aria-label="Bulk Update"
+                    className={`flex items-center gap-2 px-3 sm:px-4 py-2 ${getMainTabAccentWithHover(mainTab)} text-white rounded-lg transition-all duration-200 text-xs sm:text-sm font-medium`}
+                    aria-label="Grupno ažuriranje"
                   >
                     <Upload className="w-4 h-4 flex-shrink-0" />
-                    <span className="hidden sm:inline">Bulk Update</span>
-                    <span className="sm:hidden">Bulk</span>
+                    <span className="hidden sm:inline">Grupno ažuriranje</span>
+                    <span className="sm:hidden">Grupno</span>
                   </button>
                   <button
                     onClick={refreshTables}
                     disabled={loading}
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium"
-                    aria-label={loading ? "Loading tables" : "Refresh tables"}
+                    className={`flex items-center gap-2 px-3 sm:px-4 py-2 ${getMainTabAccentWithHover(mainTab)} text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium`}
+                    aria-label={loading ? "Učitavanje tabela" : "Osvježi tabele"}
                   >
                     <RefreshCw
                       className={`w-4 h-4 flex-shrink-0 ${
                         loading ? "animate-spin" : ""
                       }`}
                     />
-                    <span>{loading ? "Loading" : "Refresh"}</span>
+                    <span>{loading ? "Učitavanje" : "Osvježi"}</span>
                   </button>
                 </div>
               </div>
@@ -1140,7 +1186,7 @@ export default function AdminTablesCleanPage() {
                 {/* Update Row */}
                 <div className="flex items-start sm:items-center gap-3">
                   <span className={`text-xs font-semibold w-20 shrink-0 pt-1.5 sm:pt-0 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                    Update:
+                    Ažuriraj:
                   </span>
                   <div className="flex gap-2 flex-wrap">
                     {fplLeagues.map((league) => (
@@ -1276,7 +1322,7 @@ export default function AdminTablesCleanPage() {
                   </h3>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1">
                     <p className="text-sm text-gray-600">
-                      Total players:{" "}
+                      Ukupno igrača:{" "}
                       <span className="font-semibold">
                         {currentPlayers.length}
                       </span>
@@ -1284,16 +1330,16 @@ export default function AdminTablesCleanPage() {
                     <p className="text-xs text-green-600 flex items-center gap-1">
                       <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></span>
                       <span className="hidden sm:inline">
-                        Automatic sorting and positioning
+                        Automatsko sortiranje i pozicioniranje
                       </span>
-                      <span className="sm:hidden">Auto sort</span>
+                      <span className="sm:hidden">Auto sortiranje</span>
                     </p>
                   </div>
                 </div>
                 {selectedLeague === "freeLeague" && (
                   <button
                     onClick={() => setShowCreatePlayer(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm font-medium"
+                    className={`inline-flex items-center gap-2 px-4 py-2 ${getMainTabAccentWithHover(mainTab)} text-white rounded-lg transition-colors text-sm font-medium`}
                   >
                     <Plus className="w-4 h-4" />
                     Dodaj igrača
@@ -1306,8 +1352,8 @@ export default function AdminTablesCleanPage() {
               {loading ? (
                 <div className="flex items-center justify-center py-8 sm:py-12">
                   <LoadingCard
-                    title="Loading Tables"
-                    description="Please wait while we fetch the table data"
+                    title="Učitavanje tabela"
+                    description="Molimo sačekajte dok se podaci učitaju"
                     className="w-full max-w-md mx-auto"
                   />
                 </div>
@@ -1323,15 +1369,15 @@ export default function AdminTablesCleanPage() {
                         className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         scope="col"
                       >
-                        <span className="hidden sm:inline">Position</span>
-                        <span className="sm:hidden">Pos.</span>
+                        <span className="hidden sm:inline">Pozicija</span>
+                        <span className="sm:hidden">Poz.</span>
                       </th>
                       <th
                         className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         scope="col"
                       >
-                        <span className="hidden sm:inline">Name</span>
-                        <span className="sm:hidden">Name</span>
+                        <span className="hidden sm:inline">Ime</span>
+                        <span className="sm:hidden">Ime</span>
                       </th>
                       {selectedLeague !== "freeLeague" && (
                         <th
@@ -1345,7 +1391,7 @@ export default function AdminTablesCleanPage() {
                         className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         scope="col"
                       >
-                        Team
+                        Tim
                       </th>
                       {selectedLeague === "h2hLeague" ||
                       selectedLeague === "h2h2League" ? (
@@ -1361,15 +1407,15 @@ export default function AdminTablesCleanPage() {
                             scope="col"
                           >
                             <span className="hidden sm:inline">
-                              Overall Points
+                              Ukupni bodovi
                             </span>
-                            <span className="sm:hidden">Overall</span>
+                            <span className="sm:hidden">Ukupno</span>
                           </th>
                           <th
                             className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             scope="col"
                           >
-                            <span className="hidden sm:inline">H2H Points</span>
+                            <span className="hidden sm:inline">H2H Bodovi</span>
                             <span className="sm:hidden">H2H</span>
                           </th>
                         </>
@@ -1378,14 +1424,14 @@ export default function AdminTablesCleanPage() {
                           className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           scope="col"
                         >
-                          Points
+                          Bodovi
                         </th>
                       )}
                       <th
                         className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         scope="col"
                       >
-                        Actions
+                        Akcije
                       </th>
                     </tr>
                   </thead>
@@ -1612,7 +1658,7 @@ export default function AdminTablesCleanPage() {
                                         points: player.points.toString(),
                                       });
                                     }}
-                                    className="inline-flex items-center px-4 py-2 text-xs font-medium rounded-md bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+                                    className={`inline-flex items-center px-4 py-2 text-xs font-medium rounded-md ${getMainTabAccentWithHover(mainTab)} text-white transition-colors`}
                                   >
                                     <Edit3 className="w-3 h-3 mr-1" />
                                     Uredi sve
@@ -1631,13 +1677,13 @@ export default function AdminTablesCleanPage() {
                                 className={`inline-flex items-center px-4 py-2 text-xs font-medium rounded-md transition-colors ${
                                   editingPlayer === player.id
                                     ? "bg-green-500 text-white hover:bg-green-600"
-                                    : "bg-blue-500 text-white hover:bg-blue-600"
+                                    : `${getMainTabAccentWithHover(mainTab)} text-white`
                                 }`}
                               >
                                 <Edit3 className="w-3 h-3 mr-1" />
                                 {editingPlayer === player.id
-                                  ? "Finish"
-                                  : "Edit Points"}
+                                  ? "Završi"
+                                  : "Uredi bodove"}
                               </button>
                             )}
                           </td>
@@ -1745,7 +1791,7 @@ export default function AdminTablesCleanPage() {
                     <button
                       onClick={handleCreateFreePlayer}
                       disabled={creatingPlayer}
-                      className="inline-flex items-center gap-2 px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors text-sm font-medium disabled:opacity-50"
+                      className={`inline-flex items-center gap-2 px-5 py-2 ${getMainTabAccentWithHover(mainTab)} text-white rounded-md transition-colors text-sm font-medium disabled:opacity-50`}
                     >
                       {creatingPlayer ? (
                         <>
@@ -1772,11 +1818,11 @@ export default function AdminTablesCleanPage() {
                     <div>
                       <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-800"} flex items-center gap-2`}>
                         <Upload className="w-6 h-6 text-green-600" />
-                        Bulk Update
+                        Grupno Ažuriranje
                       </h3>
                       <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"} mt-1`}>
-                        Update points or H2H categories for multiple players at
-                        once using JSON format
+                        Ažurirajte bodove ili H2H kategorije za više igrača
+                        odjednom koristeći JSON format
                       </p>
                     </div>
                     <button
@@ -1808,25 +1854,25 @@ export default function AdminTablesCleanPage() {
                   <div className="mb-6">
                     <h4 className={`font-semibold ${isDark ? "text-gray-300" : "text-gray-700"} mb-3 flex items-center gap-2`}>
                       <FileText className="w-4 h-4" />
-                      Data Format:
+                      Format podataka:
                     </h4>
                     <div className={`${isDark ? "bg-gray-800" : "bg-gray-100"} rounded-md p-4 text-xs`}>
                       <h5 className={`font-semibold mb-2 ${isDark ? "text-white" : "text-gray-800"}`}>
-                        For updating points:
+                        Za ažuriranje bodova:
                       </h5>
                       <pre className={isDark ? "text-gray-300 mb-4" : "text-gray-700 mb-4"}>{`{
   "updates": [
     {
       "rank": 1,
-      "team": "Team name",
-      "manager": "Manager name",
+      "team": "Naziv tima",
+      "manager": "Ime menadžera",
       "gw": 81,
       "total": 81
     },
     {
       "rank": 2,
-      "team": "Second team",
-      "manager": "Second manager",
+      "team": "Drugi tim",
+      "manager": "Drugi menadžer",
       "gw": 79,
       "total": 79
     }
@@ -1834,7 +1880,7 @@ export default function AdminTablesCleanPage() {
 }`}</pre>
 
                       <h5 className={`font-semibold mb-2 ${isDark ? "text-white" : "text-gray-800"}`}>
-                        For updating H2H statistics (W/D/L and H2H points):
+                        Za ažuriranje H2H statistike (W/D/L i H2H bodovi):
                       </h5>
                       <pre className={isDark ? "text-gray-300" : "text-gray-700"}>{`{
   "updates": [
@@ -1873,19 +1919,19 @@ export default function AdminTablesCleanPage() {
                     </div>
                     <div className="text-xs text-gray-500 mt-2 space-y-1">
                       <p>
-                        • System searches for players by team name and manager
+                        • Sistem pretražuje igrače po nazivu tima i menadžeru
                       </p>
-                      <p>• For points use total field</p>
+                      <p>• Za bodove koristite polje total</p>
                       <p>
-                        • For H2H statistics use w, d, l (win/draw/loss) and
+                        • Za H2H statistiku koristite w, d, l (pobjeda/neriješeno/poraz) i
                         h2h_pts
                       </p>
                       <p>
-                        • score represents overall points, and h2h_pts H2H
-                        points
+                        • score predstavlja ukupne bodove, a h2h_pts H2H
+                        bodove
                       </p>
                       <p>
-                        • You can combine different types in the same request
+                        • Možete kombinovati različite tipove u istom zahtjevu
                       </p>
                     </div>
                   </div>
@@ -1893,13 +1939,13 @@ export default function AdminTablesCleanPage() {
                   {/* JSON Input */}
                   <div className="mb-6">
                     <label className={`block text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-700"} mb-2`}>
-                      JSON Data:
+                      JSON Podaci:
                     </label>
                     <textarea
                       value={bulkUpdateData}
                       onChange={(e) => setBulkUpdateData(e.target.value)}
                       className={`w-full h-64 px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm font-mono ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"}`}
-                      placeholder="Enter JSON data here..."
+                      placeholder="Unesite JSON podatke ovdje..."
                     />
                   </div>
 
@@ -1912,19 +1958,19 @@ export default function AdminTablesCleanPage() {
                       }}
                       className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
                     >
-                      Cancel
+                      Otkaži
                     </button>
                     <button
                       onClick={bulkUpdatePlayers}
                       disabled={bulkUpdating || !bulkUpdateData.trim()}
-                      className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`flex items-center gap-2 px-6 py-2 ${getMainTabAccentWithHover(mainTab)} text-white rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <Upload
                         className={`w-4 h-4 ${
                           bulkUpdating ? "animate-pulse" : ""
                         }`}
                       />
-                      {bulkUpdating ? "Updating..." : "Update"}
+                      {bulkUpdating ? "Ažuriranje..." : "Ažuriraj"}
                     </button>
                   </div>
                 </div>

@@ -134,12 +134,12 @@ export default function VisitorsPage() {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-black" : "bg-gray-50"}`}>
         <div className="text-center">
-          <p className={`mb-4 ${isDark ? "text-gray-300" : "text-gray-800"}`}>Redirecting to admin login...</p>
+          <p className={`mb-4 ${isDark ? "text-gray-300" : "text-gray-800"}`}>Preusmjeravanje na admin prijavu...</p>
           <Link
             href="/admin"
             className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors"
           >
-            Go to Admin Login
+            Admin Prijava
           </Link>
         </div>
       </div>
@@ -150,8 +150,8 @@ export default function VisitorsPage() {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-black" : "bg-gray-50"}`}>
         <LoadingCard
-          title="Loading Visitor Analytics"
-          description="Please wait while we fetch the visitor data"
+          title="Učitavanje analitike posjetilaca"
+          description="Molimo sačekajte dok učitamo podatke o posjetiocima"
           className="w-full max-w-md mx-auto"
         />
       </div>
@@ -162,12 +162,12 @@ export default function VisitorsPage() {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-black" : "bg-gray-50"}`}>
         <div className="text-center">
-          <p className="text-red-500 mb-4">Error: {error}</p>
+          <p className="text-red-500 mb-4">Greška: {error}</p>
           <button
             onClick={() => fetchVisitorData(currentPage)}
             className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
           >
-            Try Again
+            Pokušaj ponovo
           </button>
         </div>
       </div>
@@ -184,7 +184,7 @@ export default function VisitorsPage() {
               <Link
                 href="/admin/dashboard"
                 className="text-white/70 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 rounded-md transition-colors flex-shrink-0"
-                title="Back to dashboard"
+                title="Nazad na kontrolnu ploču"
               >
                 <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
@@ -198,7 +198,7 @@ export default function VisitorsPage() {
               />
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm sm:text-lg lg:text-xl font-semibold truncate tracking-tight">
-                  Visitor Analytics
+                  Analitika Posjetilaca
                 </h1>
                 <p className="text-xs sm:text-sm text-white/60 truncate hidden sm:block">
                   {session?.user?.email}
@@ -209,7 +209,7 @@ export default function VisitorsPage() {
               <button
                 onClick={toggleTheme}
                 className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-md transition-colors"
-                title={isDark ? "Light mode" : "Dark mode"}
+                title={isDark ? "Svijetli mod" : "Tamni mod"}
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
@@ -236,7 +236,7 @@ export default function VisitorsPage() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Visits</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Ukupno posjeta</p>
                   <p className={`text-2xl font-semibold mt-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {data.stats.total.toLocaleString()}
                   </p>
@@ -253,7 +253,7 @@ export default function VisitorsPage() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Today</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Danas</p>
                   <p className={`text-2xl font-semibold mt-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {data.stats.today.toLocaleString()}
                   </p>
@@ -270,7 +270,7 @@ export default function VisitorsPage() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">This Week</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Ova sedmica</p>
                   <p className={`text-2xl font-semibold mt-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {data.stats.week.toLocaleString()}
                   </p>
@@ -287,7 +287,7 @@ export default function VisitorsPage() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">This Month</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Ovaj mjesec</p>
                   <p className={`text-2xl font-semibold mt-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {data.stats.month.toLocaleString()}
                   </p>
@@ -308,7 +308,7 @@ export default function VisitorsPage() {
             >
               <h3 className={`text-sm font-semibold uppercase tracking-wide mb-4 flex items-center gap-2 ${isDark ? "text-gray-400" : "text-gray-700"}`}>
                 <Globe className="w-4 h-4 text-blue-500" />
-                Top Countries
+                Top Zemlje
               </h3>
               <div className="space-y-2">
                 {data.stats.topCountries
@@ -320,7 +320,7 @@ export default function VisitorsPage() {
                     >
                       <span className={`flex items-center gap-3 text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                         <CountryFlag country={country} size="xl" />
-                        {country || "Unknown"}
+                        {country || "Nepoznato"}
                       </span>
                       <span className="text-blue-500 font-semibold text-sm">
                         {count}
@@ -337,7 +337,7 @@ export default function VisitorsPage() {
             >
               <h3 className={`text-sm font-semibold uppercase tracking-wide mb-4 flex items-center gap-2 ${isDark ? "text-gray-400" : "text-gray-700"}`}>
                 <MapPin className="w-4 h-4 text-emerald-500" />
-                Top Pages
+                Top Stranice
               </h3>
               <div className="space-y-2">
                 {data.stats.topPages.slice(0, 5).map(([page, count]) => (
@@ -367,7 +367,7 @@ export default function VisitorsPage() {
           <div className={`px-5 py-4 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
             <h3 className={`text-sm font-semibold uppercase tracking-wide flex items-center gap-2 ${isDark ? "text-gray-400" : "text-gray-700"}`}>
               <Users className="w-4 h-4 text-blue-500" />
-              Recent Visitors
+              Nedavni posjetioci
             </h3>
           </div>
 
@@ -375,12 +375,12 @@ export default function VisitorsPage() {
             <table className="w-full">
               <thead className={isDark ? "bg-gray-800" : "bg-gray-50"}>
                 <tr>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Page</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Browser</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Referrer</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vrijeme</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokacija</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stranica</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uređaj</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preglednik</th>
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Izvor</th>
                 </tr>
               </thead>
               <tbody className={isDark ? "divide-y divide-gray-800" : "divide-y divide-gray-100"}>
@@ -400,7 +400,7 @@ export default function VisitorsPage() {
                             ? `${visitor.country}${
                                 visitor.city ? `, ${visitor.city}` : ""
                               }`
-                            : "Unknown"}
+                            : "Nepoznato"}
                         </span>
                       </div>
                     </td>
@@ -417,7 +417,7 @@ export default function VisitorsPage() {
                       {visitor.browser}
                     </td>
                     <td className={`px-5 py-3 text-sm max-w-32 truncate ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                      {visitor.referrer === "direct" ? "Direct" : visitor.referrer}
+                      {visitor.referrer === "direct" ? "Direktno" : visitor.referrer}
                     </td>
                   </tr>
                 ))}
@@ -429,8 +429,8 @@ export default function VisitorsPage() {
           {data?.pagination && data.pagination.totalPages > 1 && (
             <div className={`px-5 py-4 border-t flex items-center justify-between ${isDark ? "border-gray-800" : "border-gray-200"}`}>
               <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-600"}`}>
-                Page <span className="font-medium">{data.pagination.page}</span> of <span className="font-medium">{data.pagination.totalPages}</span>{" "}
-                (<span className="font-medium">{data.pagination.total}</span> total)
+                Stranica <span className="font-medium">{data.pagination.page}</span> od <span className="font-medium">{data.pagination.totalPages}</span>{" "}
+                (<span className="font-medium">{data.pagination.total}</span> ukupno)
               </p>
               <div className="flex gap-2">
                 <button
@@ -441,7 +441,7 @@ export default function VisitorsPage() {
                   }`}
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
-                  Previous
+                  Prethodna
                 </button>
                 <button
                   onClick={() =>
@@ -454,7 +454,7 @@ export default function VisitorsPage() {
                     isDark ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700" : "text-gray-600 bg-white border border-gray-200 hover:bg-gray-50"
                   }`}
                 >
-                  Next
+                  Sljedeća
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>

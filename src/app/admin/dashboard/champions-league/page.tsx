@@ -280,7 +280,7 @@ export default function ChampionsLeagueAdmin() {
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <LoadingCard title="Loading Champions League Admin" />
+        <LoadingCard title="Učitavanje Champions League Admin" />
       </div>
     );
   }
@@ -289,12 +289,12 @@ export default function ChampionsLeagueAdmin() {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <p className="mb-4 text-gray-800">Access denied. Please login.</p>
+          <p className="mb-4 text-gray-800">Pristup odbijen. Molimo prijavite se.</p>
           <Link
             href="/admin"
             className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-md hover:from-blue-700 hover:to-purple-700 transition-colors"
           >
-            Go to Admin Login
+            Admin Prijava
           </Link>
         </div>
       </div>
@@ -310,7 +310,7 @@ export default function ChampionsLeagueAdmin() {
             <div className="flex items-center gap-3">
               <Crown className="w-8 h-8" />
               <div>
-                <h1 className="text-2xl font-bold">Champions League Admin</h1>
+                <h1 className="text-2xl font-bold">Champions League Upravljanje</h1>
                 <p className="text-blue-100 text-sm">
                   Upravljanje Champions League tabelom
                 </p>
@@ -426,7 +426,7 @@ export default function ChampionsLeagueAdmin() {
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-md shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Eye className="w-4 h-4" />
-                Parse & Preview
+                Parsiraj i pregledaj
               </button>
 
               {showPreview && (
@@ -438,12 +438,12 @@ export default function ChampionsLeagueAdmin() {
                   {uploading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Saving...
+                      Čuvanje...
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      Save to Database
+                      Sačuvaj u bazu
                     </>
                   )}
                 </button>
@@ -456,7 +456,7 @@ export default function ChampionsLeagueAdmin() {
                   className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-md shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Clear Table
+                  Obriši tabelu
                 </button>
               )}
             </div>
@@ -624,7 +624,7 @@ export default function ChampionsLeagueAdmin() {
         {/* Quick Links */}
         <div className="mt-8 bg-white rounded-md shadow-lg p-6 border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Quick Links
+            Brzi linkovi
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link
@@ -647,7 +647,7 @@ export default function ChampionsLeagueAdmin() {
             >
               <Crown className="w-5 h-5 text-gray-600" />
               <div>
-                <div className="font-medium text-gray-800">Admin Dashboard</div>
+                <div className="font-medium text-gray-800">Admin Kontrolna Ploča</div>
                 <div className="text-sm text-gray-600">
                   Nazad na glavni panel
                 </div>

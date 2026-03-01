@@ -28,12 +28,14 @@ interface AdminChampionsManagerProps {
   league: "pl" | "cl" | "f1";
   isDark: boolean;
   onToast: (message: string, type: "success" | "error") => void;
+  accentClass?: string;
 }
 
 export default function AdminChampionsManager({
   league,
   isDark,
   onToast,
+  accentClass = "bg-red-900 hover:bg-red-950",
 }: AdminChampionsManagerProps) {
   const [champions, setChampions] = useState<ChampionEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -351,12 +353,12 @@ export default function AdminChampionsManager({
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-red-900 text-white rounded-md hover:bg-red-950 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            className={`inline-flex items-center gap-2 px-4 py-2 ${accentClass} text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium`}
           >
             {submitting ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                {uploading ? "Uploading..." : "Saving..."}
+                {uploading ? "Učitavanje..." : "Čuvanje..."}
               </>
             ) : (
               <>

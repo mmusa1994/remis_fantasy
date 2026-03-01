@@ -257,27 +257,6 @@ export default function Home() {
             })}
           </div>
 
-          {/* Stats Strip — clean inline numbers */}
-          <div className={`mt-12 md:mt-16 max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4 ${
-            theme === "dark"
-              ? "divide-gray-700"
-              : "divide-gray-200"
-          }`}>
-            {typedStats.map((stat, index) => (
-              <div key={`stat-${index}`} className="text-center">
-                <p className={`text-2xl md:text-3xl font-black leading-none mb-1 ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}>
-                  {stat.value}
-                </p>
-                <p className={`text-xs md:text-sm font-medium ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}>
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 

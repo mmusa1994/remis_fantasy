@@ -1,16 +1,28 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 
-export async function GET() {
+const SEASON_TABLES: Record<string, string> = {
+  "25": "f1_race_info",
+  "26": "f1_race_info_26",
+};
+
+export async function GET(req: NextRequest) {
   try {
+    const season = req.nextUrl.searchParams.get("season") || "26";
+    const tableName = SEASON_TABLES[season];
+
+    if (!tableName) {
+      return NextResponse.json({ error: "Invalid season" }, { status: 400 });
+    }
+
     const { data, error } = await supabaseServer
-      .from("f1_race_info")
+      .from(tableName)
       .select("next_race, last_race, updated_at")
       .eq("id", 1)
       .single();
 
     if (error) {
-      console.error("Error fetching F1 race info:", error);
+      console.error(`Error fetching ${tableName}:`, error);
       return NextResponse.json(
         { error: "Failed to fetch race info" },
         { status: 500 }

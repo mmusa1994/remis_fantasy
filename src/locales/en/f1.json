@@ -15,11 +15,31 @@
   },
   "prizes": {
     "first": "1st",
-    "second": "2nd", 
+    "second": "2nd",
     "third": "3rd",
     "gold": "Gold",
     "silver": "Silver",
-    "bronze": "Bronze"
+    "bronze": "Bronze",
+    "pageTitle": "F1 Fantasy Prizes — Season 2026",
+    "pageSubtitle": "Prize pool is formed from participant entry fees",
+    "entryFee": "Entry Fee",
+    "prizePool": "Prize Pool",
+    "firstTitle": "1st Place",
+    "firstPercent": "35%",
+    "firstDesc": "Trophy + T-Shirt + 35% of prize pool",
+    "trophyLabel": "Trophy",
+    "shirtLabel": "F1 T-Shirt",
+    "secondTitle": "2nd Place",
+    "secondPercent": "25%",
+    "secondDesc": "F1 Model Car (1/43) + 25% of prize pool",
+    "modelCarLabel": "F1 Model (1/43)",
+    "thirdTitle": "3rd Place",
+    "thirdPercent": "15%",
+    "thirdDesc": "F1 Keychain + 15% of prize pool",
+    "keychainLabel": "F1 Keychain",
+    "plusPercent": "+ {{percent}} of pool",
+    "viewTables": "View Table",
+    "register": "Register"
   },
   "movement": {
     "up": "Up",
@@ -27,6 +47,7 @@
     "same": "No change"
   },
   "season": "Season",
+  "seasonCompleted": "(Completed)",
   "grandPrix": "Grand Prix"
   ,
   "pageTitle": "Remis Fantasy F1 League",

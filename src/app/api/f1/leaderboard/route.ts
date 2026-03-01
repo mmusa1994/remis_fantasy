@@ -2,21 +2,28 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 
+const SEASON_TABLES: Record<string, string> = {
+  "25": "f1_table_25",
+  "26": "f1_table_26",
+};
+
 export async function GET(request: NextRequest) {
   try {
     // Get league ID from query parameters
     const { searchParams } = new URL(request.url);
     const leagueId = searchParams.get("league") || "7206907"; // Default to your league
+    const season = searchParams.get("season") || "26";
+    const tableName = SEASON_TABLES[season] || "f1_table_26";
 
     console.log(`Fetching F1 Fantasy league from DB: ${leagueId}`);
 
     const { data: rows, error } = await supabaseServer
-      .from("f1_table_25")
+      .from(tableName)
       .select("rank, team_name, manager_name, points, last_rank, updated_at")
       .order("rank", { ascending: true });
 
     if (error) {
-      console.error("DB error fetching f1_table_25:", error);
+      console.error(`DB error fetching ${tableName}:`, error);
       return NextResponse.json(
         { success: false, error: "Database error" },
         { status: 500 }
@@ -51,7 +58,7 @@ export async function GET(request: NextRequest) {
         third: "60 KM",
       },
       currentGrandPrix: "Zandvoort",
-      season: "2025",
+      season: `20${season}`,
     };
 
     return NextResponse.json({

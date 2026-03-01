@@ -4,18 +4,28 @@ import { authOptions } from "@/lib/auth-config";
 import { supabaseServer } from "@/lib/supabase-server";
 import { parseF1BulkText } from "@/lib/f1-parser";
 
+const SEASON_TABLES: Record<string, string> = {
+  "25": "f1_table_25",
+  "26": "f1_table_26",
+};
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user || !(session.user as any).isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    const { text } = await req.json();
+    const { text, season = "26" } = await req.json();
     if (!text || typeof text !== "string") {
       return NextResponse.json(
         { error: "Missing 'text' field in body" },
         { status: 400 }
       );
+    }
+
+    const tableName = SEASON_TABLES[season];
+    if (!tableName) {
+      return NextResponse.json({ error: "Invalid season" }, { status: 400 });
     }
 
     const entries = parseF1BulkText(text);
@@ -28,11 +38,11 @@ export async function POST(req: NextRequest) {
 
     // Load existing rows to preserve last_rank
     const { data: existingRows, error: fetchErr } = await supabaseServer
-      .from("f1_table_25")
+      .from(tableName)
       .select("id, team_name, rank");
 
     if (fetchErr) {
-      console.error("Error fetching existing f1_table_25:", fetchErr);
+      console.error(`Error fetching existing ${tableName}:`, fetchErr);
       return NextResponse.json(
         { error: "Database error fetching existing rows" },
         { status: 500 }
@@ -61,11 +71,11 @@ export async function POST(req: NextRequest) {
 
     // Use upsert with on conflict team_name unique index
     const { error: upsertErr } = await supabaseServer
-      .from("f1_table_25")
+      .from(tableName)
       .upsert(upserts, { onConflict: "team_name" });
 
     if (upsertErr) {
-      console.error("Upsert error f1_table_25:", upsertErr);
+      console.error(`Upsert error ${tableName}:`, upsertErr);
       return NextResponse.json(
         { error: "Failed to upsert F1 table" },
         { status: 500 }

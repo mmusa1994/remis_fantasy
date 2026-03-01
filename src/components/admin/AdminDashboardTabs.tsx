@@ -498,25 +498,25 @@ export default function AdminDashboardTabs({
     if (activeTab === "premier") {
       return [
         {
-          label: "Total Registrations",
+          label: "Ukupno registracija",
           value: registrations.length,
           icon: "Users",
           color: "from-gray-500 to-gray-600",
         },
         {
-          label: "Standard League",
+          label: "Standard Liga",
           value: registrations.filter((r) => r.league_type === "standard").length,
           icon: "Trophy",
           color: "from-blue-400 to-blue-500",
         },
         {
-          label: "Premium League",
+          label: "Premium Liga",
           value: registrations.filter((r) => r.league_type === "premium").length,
           icon: "Star",
           color: "from-yellow-500 to-yellow-600",
         },
         {
-          label: "H2H Participants",
+          label: "H2H Učesnici",
           value: registrations.filter((r) => r.h2h_league).length,
           icon: "Crown",
           color: "from-red-800 to-red-900",
@@ -531,19 +531,19 @@ export default function AdminDashboardTabs({
           color: "from-red-500 to-red-600",
         },
         {
-          label: "Paid Registrations",
+          label: "Plaćene registracije",
           value: registrations.filter((r) => r.payment_status === "paid").length,
           icon: "CheckCircle",
           color: "from-green-500 to-green-600",
         },
         {
-          label: "Pending Payments",
+          label: "Čekanje na uplatu",
           value: registrations.filter((r) => r.payment_status === "pending").length,
           icon: "AlertCircle",
           color: "from-yellow-500 to-orange-500",
         },
         {
-          label: "Codes Sent",
+          label: "Kodovi poslani",
           value: registrations.filter((r) => r.codes_email_sent).length,
           icon: "Mail",
           color: "from-purple-500 to-purple-600",
@@ -558,19 +558,19 @@ export default function AdminDashboardTabs({
           color: "from-blue-500 to-purple-600",
         },
         {
-          label: "Paid Registrations",
+          label: "Plaćene registracije",
           value: registrations.filter((r) => r.payment_status === "paid").length,
           icon: "CheckCircle",
           color: "from-green-500 to-green-600",
         },
         {
-          label: "Pending Payments",
+          label: "Čekanje na uplatu",
           value: registrations.filter((r) => r.payment_status === "pending").length,
           icon: "AlertCircle",
           color: "from-yellow-500 to-orange-500",
         },
         {
-          label: "Codes Sent",
+          label: "Kodovi poslani",
           value: registrations.filter((r) => r.codes_email_sent).length,
           icon: "Mail",
           color: "from-purple-500 to-purple-600",
@@ -583,12 +583,12 @@ export default function AdminDashboardTabs({
     return (
       <div className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-black" : "bg-gray-50"}`}>
         <div className="text-center">
-          <p className="mb-4 text-gray-800">Redirecting to admin login...</p>
+          <p className="mb-4 text-gray-800">Preusmjeravanje na admin prijavu...</p>
           <Link
             href="/admin"
             className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors"
           >
-            Go to Admin Login
+            Admin Prijava
           </Link>
         </div>
       </div>
@@ -599,8 +599,8 @@ export default function AdminDashboardTabs({
     return (
       <div className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-black" : "bg-gray-50"}`}>
         <LoadingCard
-          title="Loading Admin Dashboard"
-          description="Please wait while we fetch the registration data"
+          title="Učitavanje Admin Kontrolne Ploče"
+          description="Molimo sačekajte dok učitamo podatke o registracijama"
           className="w-full max-w-md mx-auto"
         />
       </div>
@@ -626,7 +626,7 @@ export default function AdminDashboardTabs({
               />
               <div className="min-w-0 flex-1">
                 <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold truncate tracking-tight">
-                  Admin Dashboard
+                  Admin Kontrolna Ploča
                 </h1>
                 <p className="text-xs sm:text-sm text-white/60 truncate">
                   {session?.user?.email}
@@ -637,10 +637,10 @@ export default function AdminDashboardTabs({
               <Link
                 href="/admin/visitors"
                 className="text-white/70 hover:text-white hover:bg-white/10 p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 flex-shrink-0 text-sm"
-                title="Visitor Analytics"
+                title="Analitika posjetilaca"
               >
                 <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">Visitors</span>
+                <span className="hidden sm:inline">Posjetioci</span>
               </Link>
               <Link
                 href="/admin/dashboard/tables"
@@ -653,7 +653,7 @@ export default function AdminDashboardTabs({
               <button
                 onClick={toggleTheme}
                 className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-md transition-colors flex-shrink-0"
-                title={theme === "dark" ? "Light mode" : "Dark mode"}
+                title={theme === "dark" ? "Svijetli mod" : "Tamni mod"}
               >
                 {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
@@ -772,7 +772,7 @@ export default function AdminDashboardTabs({
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
-            {refreshing ? "Refreshing..." : "Refresh"}
+            {refreshing ? "Osvježavanje..." : "Osvježi"}
           </button>
         </div>
 
@@ -836,18 +836,18 @@ export default function AdminDashboardTabs({
               />
             </svg>
             <h2 className={`text-sm font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-              Filters
+              Filteri
             </h2>
           </div>
 
           {/* Search Bar */}
           <div className="mb-6">
             <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-              Search
+              Pretraga
             </label>
             <input
               type="text"
-              placeholder="Name, email, team..."
+              placeholder="Ime, email, tim..."
               value={filters.search}
               onChange={(e) =>
                 setFilters({ ...filters, search: e.target.value })
@@ -864,7 +864,7 @@ export default function AdminDashboardTabs({
             {activeTab === "premier" && (
               <div>
                 <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-                  {season === "26_27" ? "League Tier" : "League Type"}
+                  {season === "26_27" ? "Nivo lige" : "Tip lige"}
                 </label>
                 <select
                   value={filters.league_type}
@@ -875,7 +875,7 @@ export default function AdminDashboardTabs({
                       theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
                     }`}
                 >
-                  <option value="all">All Leagues</option>
+                  <option value="all">Sve lige</option>
                   {season === "26_27" ? (
                     <>
                       <option value="standard">Standard</option>
@@ -911,9 +911,9 @@ export default function AdminDashboardTabs({
                       theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
                     }`}
                 >
-                  <option value="all">All</option>
-                  <option value="yes">H2H Yes</option>
-                  <option value="no">H2H No</option>
+                  <option value="all">Svi</option>
+                  <option value="yes">H2H Da</option>
+                  <option value="no">H2H Ne</option>
                 </select>
               </div>
             )}
@@ -921,7 +921,7 @@ export default function AdminDashboardTabs({
             {/* Payment Method */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-                Payment Method
+                Način plaćanja
               </label>
               <select
                 value={filters.payment_method}
@@ -932,8 +932,8 @@ export default function AdminDashboardTabs({
                       theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
                     }`}
               >
-                <option value="all">All Methods</option>
-                <option value="bank">Bank Transfer</option>
+                <option value="all">Svi načini</option>
+                <option value="bank">Bankovni transfer</option>
                 <option value="wise">Wise</option>
                 <option value="cash">Cash</option>
                 <option value="paypal">PayPal</option>
@@ -943,7 +943,7 @@ export default function AdminDashboardTabs({
             {/* Payment Status */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-                Payment Status
+                Status plaćanja
               </label>
               <select
                 value={filters.payment_status}
@@ -954,9 +954,9 @@ export default function AdminDashboardTabs({
                       theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
                     }`}
               >
-                <option value="all">All Status</option>
-                <option value="paid">Paid</option>
-                <option value="pending">Pending</option>
+                <option value="all">Svi statusi</option>
+                <option value="paid">Plaćeno</option>
+                <option value="pending">Na čekanju</option>
                 <option value="null">NULL</option>
               </select>
             </div>
@@ -965,7 +965,7 @@ export default function AdminDashboardTabs({
             {activeTab === "premier" && (
               <div>
                 <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-                  Cash Status
+                  Status gotovine
                 </label>
                 <select
                   value={filters.cash_status}
@@ -976,9 +976,9 @@ export default function AdminDashboardTabs({
                       theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
                     }`}
                 >
-                  <option value="all">All Status</option>
-                  <option value="paid">Paid</option>
-                  <option value="pending">Pending</option>
+                  <option value="all">Svi statusi</option>
+                  <option value="paid">Plaćeno</option>
+                  <option value="pending">Na čekanju</option>
                   <option value="null">NULL</option>
                 </select>
               </div>
@@ -987,7 +987,7 @@ export default function AdminDashboardTabs({
             {/* Email Status */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-                Email Status
+                Status emaila
               </label>
               <select
                 value={filters.codes_email_status}
@@ -998,9 +998,9 @@ export default function AdminDashboardTabs({
                       theme === "dark" ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-50 border border-gray-200 text-gray-900"
                     }`}
               >
-                <option value="all">All</option>
-                <option value="sent">Codes Sent</option>
-                <option value="pending">Codes Pending</option>
+                <option value="all">Svi</option>
+                <option value="sent">Kodovi poslani</option>
+                <option value="pending">Kodovi na čekanju</option>
               </select>
             </div>
 
@@ -1048,7 +1048,7 @@ export default function AdminDashboardTabs({
                 theme === "dark" ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:text-gray-300" : "text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-700"
               }`}
             >
-              Clear All Filters
+              Očisti sve filtere
             </button>
           </div>
         </div>
@@ -1057,13 +1057,13 @@ export default function AdminDashboardTabs({
         <div className={`rounded-md overflow-hidden border ${theme === "dark" ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
           <div className={`px-6 py-4 border-b ${theme === "dark" ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
             <h2 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
-              {activeTab === "premier" ? "Premier League Registrations" : activeTab === "champions" ? "Champions League Registrations" : "F1 Fantasy Registrations"}
+              {activeTab === "premier" ? "Premier League Registracije" : activeTab === "champions" ? "Champions League Registracije" : "F1 Fantasy Registracije"}
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              Showing {startIndex + 1}-
-              {Math.min(endIndex, filteredRegistrations.length)} of{" "}
-              {filteredRegistrations.length} registrations
-              {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+              Prikazano {startIndex + 1}-
+              {Math.min(endIndex, filteredRegistrations.length)} od{" "}
+              {filteredRegistrations.length} registracija
+              {totalPages > 1 && ` (Stranica ${currentPage} od ${totalPages})`}
             </p>
           </div>
 
@@ -1073,22 +1073,22 @@ export default function AdminDashboardTabs({
               <thead className={theme === "dark" ? "bg-gray-800" : "bg-gray-50"}>
                 <tr>
                   <th className={`sticky left-0 z-10 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[160px] ${theme === "dark" ? "bg-gray-800 border-r border-gray-700" : "bg-gray-50 border-r border-gray-200"}`}>
-                    Name
+                    Ime
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Phone
+                    Telefon
                   </th>
                   {activeTab === "premier" && (
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Team Name
+                      Naziv tima
                     </th>
                   )}
                   {activeTab === "premier" && (
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      League
+                      Liga
                     </th>
                   )}
                   {activeTab === "premier" && (
@@ -1097,36 +1097,36 @@ export default function AdminDashboardTabs({
                     </th>
                   )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment Method
+                    Način plaćanja
                   </th>
                   {activeTab === "premier" && (
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Cash Status
+                      Status gotovine
                     </th>
                   )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment Status
+                    Status plaćanja
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment Proof
+                    Dokaz uplate
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email Status
+                    Status emaila
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    Akcije
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Admin Notes
+                    Admin bilješke
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Liga Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    Datum
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Edit/Delete
+                    Uredi/Obriši
                   </th>
                 </tr>
               </thead>
@@ -1137,7 +1137,7 @@ export default function AdminDashboardTabs({
                       colSpan={activeTab === "premier" ? 16 : 13}
                       className="px-6 py-8 text-center text-gray-500"
                     >
-                      No registrations found for {activeTab === "premier" ? "Premier League" : activeTab === "champions" ? "Champions League" : "F1 Fantasy"}
+                      Nema registracija za {activeTab === "premier" ? "Premier League" : activeTab === "champions" ? "Champions League" : "F1 Fantasy"}
                     </td>
                   </tr>
                 ) : (
@@ -1291,18 +1291,18 @@ export default function AdminDashboardTabs({
                               {loadingFile === reg.payment_proof_url ? (
                                 <span className="flex items-center gap-1">
                                   <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-                                  Loading...
+                                  Učitavanje...
                                 </span>
                               ) : reg.payment_proof_url
                                   ?.toLowerCase()
                                   .endsWith(".pdf") ? (
-                                "Download PDF"
+                                "Preuzmi PDF"
                               ) : (
-                                "View Proof"
+                                "Pogledaj dokaz"
                               )}
                             </button>
                           ) : (
-                            <span className="text-red-600 text-sm">No proof</span>
+                            <span className="text-red-600 text-sm">Nema dokaza</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -1311,12 +1311,12 @@ export default function AdminDashboardTabs({
                               {reg.codes_email_sent ? (
                                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-blue-100 text-blue-800">
                                   <CheckCircle className="w-3 h-3" />
-                                  Codes sent
+                                  Kodovi poslani
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-yellow-100 text-yellow-800">
                                   <Mail className="w-3 h-3" />
-                                  Codes pending
+                                  Kodovi na čekanju
                                 </span>
                               )}
                             </div>
@@ -1350,19 +1350,19 @@ export default function AdminDashboardTabs({
                                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                                     />
                                   </svg>
-                                  Sending...
+                                  Slanje...
                                 </>
                               ) : (
                                 <>
                                   <Send className="w-4 h-4" />
-                                  Send Codes
+                                  Pošalji kodove
                                 </>
                               )}
                             </button>
                           )}
                           {reg.codes_email_sent && (
                             <div className="text-xs text-gray-500">
-                              Sent on{" "}
+                              Poslano{" "}
                               {reg.codes_email_sent_at &&
                                 new Date(
                                   reg.codes_email_sent_at
@@ -1561,19 +1561,19 @@ export default function AdminDashboardTabs({
                               type="button"
                               onClick={() => handleEditRecord(reg)}
                               className="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600 transition-colors"
-                              title="Edit registration"
+                              title="Uredi registraciju"
                             >
                               <Edit className="w-3 h-3 mr-1" />
-                              Edit
+                              Uredi
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteRecord(reg.id)}
                               className="inline-flex items-center px-3 py-1 bg-red-500 text-white text-xs font-medium rounded-md hover:bg-red-600 transition-colors"
-                              title="Delete registration"
+                              title="Obriši registraciju"
                             >
                               <Trash2 className="w-3 h-3 mr-1" />
-                              Delete
+                              Obriši
                             </button>
                           </div>
                         </td>
@@ -1592,9 +1592,9 @@ export default function AdminDashboardTabs({
             }`}>
               <div className="flex items-center justify-between">
                 <div className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-                  Showing {startIndex + 1} to{" "}
-                  {Math.min(endIndex, filteredRegistrations.length)} of{" "}
-                  {filteredRegistrations.length} registrations
+                  Prikazano {startIndex + 1} do{" "}
+                  {Math.min(endIndex, filteredRegistrations.length)} od{" "}
+                  {filteredRegistrations.length} registracija
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -1605,7 +1605,7 @@ export default function AdminDashboardTabs({
                       theme === "dark" ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700" : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
                     }`}
                   >
-                    Previous
+                    Prethodna
                   </button>
 
                   <div className="flex items-center gap-1">
@@ -1646,7 +1646,7 @@ export default function AdminDashboardTabs({
                       theme === "dark" ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700" : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
                     }`}
                   >
-                    Next
+                    Sljedeća
                   </button>
                 </div>
               </div>
@@ -1682,7 +1682,7 @@ export default function AdminDashboardTabs({
             </button>
             <Image
               src={selectedImage}
-              alt="Payment proof"
+              alt="Dokaz uplate"
               width={800}
               height={600}
               className="object-contain"
@@ -1702,7 +1702,7 @@ export default function AdminDashboardTabs({
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">
-                  PDF Document
+                  PDF Dokument
                 </h3>
                 <button
                   onClick={() => setSelectedFile(null)}
@@ -1743,7 +1743,7 @@ export default function AdminDashboardTabs({
                 <h4 className="text-lg font-medium text-gray-900 mb-2">
                   {selectedFile.filename}
                 </h4>
-                <p className="text-gray-600 mb-6">Payment proof document</p>
+                <p className="text-gray-600 mb-6">Dokument dokaza uplate</p>
 
                 <div className="flex gap-3 justify-center">
                   <a
@@ -1764,7 +1764,7 @@ export default function AdminDashboardTabs({
                         d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                       />
                     </svg>
-                    Download PDF
+                    Preuzmi PDF
                   </a>
                   <a
                     href={selectedFile.url}
@@ -1785,7 +1785,7 @@ export default function AdminDashboardTabs({
                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                       />
                     </svg>
-                    Open in New Tab
+                    Otvori u novom tabu
                   </a>
                 </div>
               </div>
@@ -1801,7 +1801,7 @@ export default function AdminDashboardTabs({
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-gray-800">
-                  Edit Registration - {activeTab === "premier" ? "Premier League" : activeTab === "champions" ? "Champions League" : "F1 Fantasy"}
+                  Uredi registraciju - {activeTab === "premier" ? "Premier League" : activeTab === "champions" ? "Champions League" : "F1 Fantasy"}
                 </h3>
                 <button
                   type="button"
@@ -1810,7 +1810,7 @@ export default function AdminDashboardTabs({
                     setEditFormData({});
                   }}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label="Close modal"
+                  aria-label="Zatvori"
                 >
                   <svg
                     className="w-6 h-6"
@@ -1818,7 +1818,7 @@ export default function AdminDashboardTabs({
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <title>Close</title>
+                    <title>Zatvori</title>
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -1835,7 +1835,7 @@ export default function AdminDashboardTabs({
                     htmlFor="edit-first-name"
                     className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
-                    First Name
+                    Ime
                   </label>
                   <input
                     id="edit-first-name"
@@ -1856,7 +1856,7 @@ export default function AdminDashboardTabs({
                     htmlFor="edit-last-name"
                     className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
-                    Last Name
+                    Prezime
                   </label>
                   <input
                     id="edit-last-name"
@@ -1877,7 +1877,7 @@ export default function AdminDashboardTabs({
                     htmlFor="edit-email"
                     className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
-                    Email
+                    E-mail
                   </label>
                   <input
                     id="edit-email"
@@ -1898,7 +1898,7 @@ export default function AdminDashboardTabs({
                     htmlFor="edit-phone"
                     className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
-                    Phone
+                    Telefon
                   </label>
                   <input
                     id="edit-phone"
@@ -1921,7 +1921,7 @@ export default function AdminDashboardTabs({
                         htmlFor="edit-team-name"
                         className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                       >
-                        Team Name
+                        Naziv tima
                       </label>
                       <input
                         id="edit-team-name"
@@ -1942,7 +1942,7 @@ export default function AdminDashboardTabs({
                         htmlFor="edit-league-type"
                         className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                       >
-                        League Type
+                        Tip lige
                       </label>
                       <select
                         id="edit-league-type"
@@ -1967,7 +1967,7 @@ export default function AdminDashboardTabs({
                         htmlFor="edit-h2h-league"
                         className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                       >
-                        H2H League
+                        H2H Liga
                       </label>
                       <select
                         id="edit-h2h-league"
@@ -1980,8 +1980,8 @@ export default function AdminDashboardTabs({
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                       >
-                        <option value="false">No</option>
-                        <option value="true">Yes</option>
+                        <option value="false">Ne</option>
+                        <option value="true">Da</option>
                       </select>
                     </div>
 
@@ -1990,7 +1990,7 @@ export default function AdminDashboardTabs({
                         htmlFor="edit-cash-status"
                         className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                       >
-                        Cash Status
+                        Status gotovine
                       </label>
                       <select
                         id="edit-cash-status"
@@ -2004,8 +2004,8 @@ export default function AdminDashboardTabs({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                       >
                         <option value="">NULL</option>
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
+                        <option value="pending">Na čekanju</option>
+                        <option value="paid">Plaćeno</option>
                       </select>
                     </div>
                   </>
@@ -2016,7 +2016,7 @@ export default function AdminDashboardTabs({
                     htmlFor="edit-payment-method"
                     className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
-                    Payment Method
+                    Način plaćanja
                   </label>
                   <select
                     id="edit-payment-method"
@@ -2029,9 +2029,9 @@ export default function AdminDashboardTabs({
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   >
-                    <option value="bank">Bank Transfer</option>
+                    <option value="bank">Bankovni transfer</option>
                     <option value="wise">Wise</option>
-                    <option value="cash">Cash</option>
+                    <option value="cash">Gotovina</option>
                     <option value="paypal">PayPal</option>
                   </select>
                 </div>
@@ -2041,7 +2041,7 @@ export default function AdminDashboardTabs({
                     htmlFor="edit-payment-status"
                     className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
-                    Payment Status
+                    Status plaćanja
                   </label>
                   <select
                     id="edit-payment-status"
@@ -2055,8 +2055,8 @@ export default function AdminDashboardTabs({
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   >
                     <option value="">NULL</option>
-                    <option value="pending">Pending</option>
-                    <option value="paid">Paid</option>
+                    <option value="pending">Na čekanju</option>
+                    <option value="paid">Plaćeno</option>
                   </select>
                 </div>
 
@@ -2065,7 +2065,7 @@ export default function AdminDashboardTabs({
                     htmlFor="edit-email-template-type"
                     className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
-                    Email Template Type
+                    Tip email šablona
                   </label>
                   <select
                     id="edit-email-template-type"
@@ -2078,7 +2078,7 @@ export default function AdminDashboardTabs({
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   >
-                    <option value="">Select template</option>
+                    <option value="">Izaberi šablon</option>
                     {activeTab === "premier" ? (
                       <>
                         <option value="standard">Standard</option>
@@ -2094,7 +2094,7 @@ export default function AdminDashboardTabs({
 
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}>
-                    Reset Email Status
+                    Resetuj status emaila
                   </label>
                   <button
                     type="button"
@@ -2107,11 +2107,11 @@ export default function AdminDashboardTabs({
                     }
                     className="w-full px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
                   >
-                    Reset Email Status (Allow Resend)
+                    Resetuj status emaila (Dozvoli ponovo slanje)
                   </button>
                   <p className="text-xs text-gray-500 mt-1">
-                    Current:{" "}
-                    {editFormData.codes_email_sent ? "Sent" : "Not sent"}
+                    Trenutno:{" "}
+                    {editFormData.codes_email_sent ? "Poslano" : "Nije poslano"}
                   </p>
                 </div>
 
@@ -2120,7 +2120,7 @@ export default function AdminDashboardTabs({
                     htmlFor="edit-admin-notes"
                     className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                   >
-                    Admin Notes
+                    Admin bilješke
                   </label>
                   <textarea
                     id="edit-admin-notes"
@@ -2133,7 +2133,7 @@ export default function AdminDashboardTabs({
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                     rows={3}
-                    placeholder="Add admin notes..."
+                    placeholder="Dodaj admin bilješke..."
                   />
                 </div>
 
@@ -2143,7 +2143,7 @@ export default function AdminDashboardTabs({
                       htmlFor="edit-notes"
                       className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
                     >
-                      User Notes
+                      Korisničke bilješke
                     </label>
                     <textarea
                       id="edit-notes"
@@ -2156,7 +2156,7 @@ export default function AdminDashboardTabs({
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                       rows={3}
-                      placeholder="User additional notes..."
+                      placeholder="Dodatne korisničke bilješke..."
                     />
                   </div>
                 )}
@@ -2171,7 +2171,7 @@ export default function AdminDashboardTabs({
                   }}
                   className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  Otkaži
                 </button>
                 <button
                   type="button"
@@ -2182,7 +2182,7 @@ export default function AdminDashboardTabs({
                       : "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
                   }`}
                 >
-                  Save Changes
+                  Sačuvaj promjene
                 </button>
               </div>
             </div>

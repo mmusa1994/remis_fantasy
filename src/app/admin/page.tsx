@@ -28,15 +28,15 @@ export default function AdminLogin() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password.");
+        setError("Pogrešan email ili lozinka.");
       } else if (result?.ok) {
         setLoginSuccess(true);
       } else {
-        setError("An error occurred. Please try again.");
+        setError("Došlo je do greške. Pokušajte ponovo.");
       }
     } catch (error) {
       console.error("Admin login error:", error);
-      setError("An error occurred. Please try again.");
+      setError("Došlo je do greške. Pokušajte ponovo.");
     } finally {
       setLoading(false);
     }
@@ -55,13 +55,13 @@ export default function AdminLogin() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-950 via-red-900 to-red-950">
         <div className="text-center text-white">
           <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Login successful! Redirecting...</p>
+          <p>Prijava uspješna! Preusmjeravanje...</p>
           <div className="mt-4">
-            <Link 
+            <Link
               href="/admin/dashboard"
               className="bg-white/20 px-6 py-2 rounded-md hover:bg-white/30 transition-colors"
             >
-              Go to Dashboard
+              Idi na kontrolnu ploču
             </Link>
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function AdminLogin() {
       <div className="max-w-md w-full mx-4">
         <div className="bg-transparent md:bg-white/10 md:backdrop-blur-md md:rounded-md p-8 md:shadow-2xl border-0 md:border md:border-white/20">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">Admin Login</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">Admin Prijava</h1>
             <p className="text-white/60">REMIS Fantasy Admin Panel</p>
           </div>
 
@@ -96,7 +96,7 @@ export default function AdminLogin() {
                 htmlFor="email"
                 className="block text-sm font-medium text-white mb-2"
               >
-                Email
+                E-mail
               </label>
               <input
                 id="email"
@@ -114,7 +114,7 @@ export default function AdminLogin() {
                 htmlFor="password"
                 className="block text-sm font-medium text-white mb-2"
               >
-                Password
+                Lozinka
               </label>
               <input
                 id="password"
@@ -139,7 +139,7 @@ export default function AdminLogin() {
               disabled={loading}
               className="w-full bg-gradient-to-r from-red-800 to-red-900 text-white font-bold py-3 px-4 rounded-md hover:from-red-900 hover:to-red-950 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Prijavljivanje..." : "Prijavi se"}
             </button>
           </form>
 
@@ -148,7 +148,7 @@ export default function AdminLogin() {
               href="/"
               className="text-white/60 hover:text-white text-sm transition-colors"
             >
-              ← Back to Home
+              ← Nazad na početnu
             </Link>
           </div>
         </div>
