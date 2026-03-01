@@ -177,7 +177,7 @@ export default function VisitorsPage() {
   return (
     <div className={`min-h-screen ${isDark ? "bg-black" : "bg-gray-50"}`}>
       {/* Header */}
-      <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white sticky top-0 z-40">
+      <header className="bg-gradient-to-r from-red-950 to-red-900 text-white sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3 sm:py-4">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
@@ -275,7 +275,7 @@ export default function VisitorsPage() {
                     {data.stats.week.toLocaleString()}
                   </p>
                 </div>
-                <TrendingUp className="w-5 h-5 text-amber-500" />
+                <TrendingUp className="w-5 h-5 text-red-700" />
               </div>
             </motion.div>
 

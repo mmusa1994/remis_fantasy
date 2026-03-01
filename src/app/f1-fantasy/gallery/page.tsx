@@ -18,41 +18,41 @@ export default function F1FantasyGalleryPage() {
     Promise.all([
       fetch("/api/wall-of-champions?league=f1").then((r) => r.json()),
       fetch("/api/gallery?league=f1").then((r) => r.json()),
-    ]).then(([champs, gallery]) => {
-      setChampions(
-        Array.isArray(champs)
-          ? champs.map((c: any) => ({
-              season: c.season,
-              name: c.name,
-              teamName: c.team_name,
-              image: c.image,
-              achievement: c.achievement,
-            }))
-          : []
-      );
-      setPhotos(Array.isArray(gallery) ? gallery : []);
-    }).catch(() => {});
+    ])
+      .then(([champs, gallery]) => {
+        setChampions(
+          Array.isArray(champs)
+            ? champs.map((c: any) => ({
+                season: c.season,
+                name: c.name,
+                teamName: c.team_name,
+                image: c.image,
+                achievement: c.achievement,
+              }))
+            : []
+        );
+        setPhotos(Array.isArray(gallery) ? gallery : []);
+      })
+      .catch(() => {});
   }, []);
 
   return (
     <div className="min-h-screen pb-20 pt-10 px-4 bg-theme-background">
       <div className="max-w-6xl mx-auto">
-        {/* Hero Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-16">
           <h1
-            className={`text-3xl md:text-4xl font-bold mb-3 ${
+            className={`text-3xl md:text-5xl font-bold tracking-tight mb-4 ${
               theme === "dark" ? "text-white" : "text-gray-900"
             }`}
           >
             {t("gallery.title")}
           </h1>
           <div
-            className="w-20 h-1 mx-auto rounded-full"
+            className="w-12 h-0.5 mx-auto rounded-full"
             style={{ backgroundColor: ACCENT_COLOR }}
           />
         </div>
 
-        {/* Wall of Champions */}
         <ChampionsWall
           champions={champions}
           accentColor={ACCENT_COLOR}
@@ -62,7 +62,6 @@ export default function F1FantasyGalleryPage() {
           emptyMessage={t("gallery.emptyChampions")}
         />
 
-        {/* Awards Gallery */}
         <AwardsGallery
           photos={photos}
           accentColor={ACCENT_COLOR}

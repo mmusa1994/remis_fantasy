@@ -327,6 +327,51 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// PUT - Create a new player (Free League)
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user || !(session.user as any).isAdmin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { firstName, lastName, teamName, points, league_type, season = "25_26" } = await request.json();
+
+    if (!firstName || !lastName || !teamName) {
+      return NextResponse.json(
+        { error: "firstName, lastName, and teamName are required" },
+        { status: 400 }
+      );
+    }
+
+    const tables_map = TABLE_MAP[season as Season] || TABLE_MAP["25_26"];
+
+    const { data, error } = await supabaseServer
+      .from(tables_map.classic)
+      .insert({
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        team_name: teamName.trim(),
+        points: points || 0,
+        league_type: league_type || "free",
+        email: "",
+        position: 0,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating player:", error);
+      return NextResponse.json({ error: "Failed to create player" }, { status: 500 });
+    }
+
+    return NextResponse.json({ message: "Player created", player: data }, { status: 201 });
+  } catch (error) {
+    console.error("Error creating player:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 // PATCH - Bulk update multiple players at once
 export async function PATCH(request: NextRequest) {
   try {

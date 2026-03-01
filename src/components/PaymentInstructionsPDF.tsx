@@ -243,7 +243,7 @@ const PaymentInstructionsPDF = ({
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          © 2025 REMIS Fantasy - Najbolji fantasy football dozivljaj u regionu
+          © 2026 REMIS Fantasy - Najbolji fantasy football dozivljaj u regionu
         </Text>
       </View>
     </Page>

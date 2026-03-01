@@ -176,7 +176,7 @@ export async function DELETE(request: NextRequest) {
       const storagePath = extractStoragePath(champion.image);
       if (storagePath) {
         await supabaseServer.storage
-          .from("gallery-images")
+          .from("wall-of-champions")
           .remove([storagePath]);
       }
     }
@@ -204,7 +204,7 @@ export async function DELETE(request: NextRequest) {
 function extractStoragePath(url: string): string | null {
   try {
     const match = url.match(
-      /\/storage\/v1\/object\/public\/gallery-images\/(.+)/
+      /\/storage\/v1\/object\/public\/wall-of-champions\/(.+)/
     );
     return match ? match[1] : null;
   } catch {

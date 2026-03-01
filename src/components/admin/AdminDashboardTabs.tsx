@@ -612,7 +612,7 @@ export default function AdminDashboardTabs({
   return (
     <div className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-gray-50"}`}>
       {/* Header */}
-      <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white border-b border-amber-950">
+      <header className="bg-gradient-to-r from-red-950 to-red-900 text-white border-b border-red-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -783,10 +783,10 @@ export default function AdminDashboardTabs({
               switch (stat.icon) {
                 case "Users": return theme === "dark" ? "bg-gray-900 border-gray-800" : "bg-gray-50/80 border-gray-200";
                 case "Trophy": return theme === "dark" ? "bg-blue-950/40 border-blue-900/50" : "bg-blue-50/60 border-blue-200/60";
-                case "Star": return theme === "dark" ? "bg-amber-950/40 border-amber-900/50" : "bg-amber-50/60 border-amber-200/60";
+                case "Star": return theme === "dark" ? "bg-red-950/40 border-red-900/50" : "bg-red-50/60 border-red-200/60";
                 case "Crown": return theme === "dark" ? "bg-red-950/40 border-red-900/50" : "bg-red-50/60 border-red-200/60";
                 case "CheckCircle": return theme === "dark" ? "bg-emerald-950/40 border-emerald-900/50" : "bg-emerald-50/60 border-emerald-200/60";
-                case "AlertCircle": return theme === "dark" ? "bg-amber-950/40 border-amber-900/50" : "bg-amber-50/60 border-amber-200/60";
+                case "AlertCircle": return theme === "dark" ? "bg-orange-950/40 border-orange-900/50" : "bg-orange-50/60 border-orange-200/60";
                 case "Mail": return theme === "dark" ? "bg-purple-950/40 border-purple-900/50" : "bg-purple-50/60 border-purple-200/60";
                 default: return theme === "dark" ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200";
               }
@@ -805,10 +805,10 @@ export default function AdminDashboardTabs({
                 <div>
                   {stat.icon === "Users" && <Users className="w-5 h-5 text-gray-400" />}
                   {stat.icon === "Trophy" && <Trophy className="w-5 h-5 text-blue-500" />}
-                  {stat.icon === "Star" && <Star className="w-5 h-5 text-amber-500" />}
+                  {stat.icon === "Star" && <Star className="w-5 h-5 text-red-700" />}
                   {stat.icon === "Crown" && <Crown className="w-5 h-5 text-red-500" />}
                   {stat.icon === "CheckCircle" && <CheckCircle className="w-5 h-5 text-emerald-500" />}
-                  {stat.icon === "AlertCircle" && <AlertCircle className="w-5 h-5 text-amber-500" />}
+                  {stat.icon === "AlertCircle" && <AlertCircle className="w-5 h-5 text-orange-600" />}
                   {stat.icon === "Mail" && <Mail className="w-5 h-5 text-purple-500" />}
                 </div>
               </div>
@@ -1331,7 +1331,7 @@ export default function AdminDashboardTabs({
                                 sendingEmail === reg.id
                                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                   : activeTab === "premier"
-                                  ? "bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl"
+                                  ? "bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white shadow-lg hover:shadow-xl"
                                   : "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl"
                               }`}
                             >
@@ -1513,7 +1513,7 @@ export default function AdminDashboardTabs({
                                     });
                                   }
                                 }}
-                                className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900"
                               >
                                 <option value="">Nije postavljeno</option>
                                 <option value="entered">Ušao u ligu</option>
@@ -1627,7 +1627,7 @@ export default function AdminDashboardTabs({
                           onClick={() => goToPage(pageNumber)}
                           className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                             currentPage === pageNumber
-                              ? "bg-amber-500 text-white"
+                              ? "bg-red-900 text-white"
                               : theme === "dark"
                               ? "text-gray-400 bg-gray-800 border border-gray-700 hover:bg-gray-700"
                               : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
@@ -1847,7 +1847,7 @@ export default function AdminDashboardTabs({
                         first_name: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   />
                 </div>
 
@@ -1868,7 +1868,7 @@ export default function AdminDashboardTabs({
                         last_name: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   />
                 </div>
 
@@ -1889,7 +1889,7 @@ export default function AdminDashboardTabs({
                         email: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   />
                 </div>
 
@@ -1910,7 +1910,7 @@ export default function AdminDashboardTabs({
                         phone: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   />
                 </div>
 
@@ -1933,7 +1933,7 @@ export default function AdminDashboardTabs({
                             team_name: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                       />
                     </div>
 
@@ -1953,7 +1953,7 @@ export default function AdminDashboardTabs({
                             league_type: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                       >
                         <option value="">N/A</option>
                         <option value="standard">Standard</option>
@@ -1978,7 +1978,7 @@ export default function AdminDashboardTabs({
                             h2h_league: e.target.value === "true",
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                       >
                         <option value="false">No</option>
                         <option value="true">Yes</option>
@@ -2001,7 +2001,7 @@ export default function AdminDashboardTabs({
                             cash_status: e.target.value as any,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                       >
                         <option value="">NULL</option>
                         <option value="pending">Pending</option>
@@ -2027,7 +2027,7 @@ export default function AdminDashboardTabs({
                         payment_method: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   >
                     <option value="bank">Bank Transfer</option>
                     <option value="wise">Wise</option>
@@ -2052,7 +2052,7 @@ export default function AdminDashboardTabs({
                         payment_status: e.target.value as any,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   >
                     <option value="">NULL</option>
                     <option value="pending">Pending</option>
@@ -2076,7 +2076,7 @@ export default function AdminDashboardTabs({
                         email_template_type: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   >
                     <option value="">Select template</option>
                     {activeTab === "premier" ? (
@@ -2131,7 +2131,7 @@ export default function AdminDashboardTabs({
                         admin_notes: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                     rows={3}
                     placeholder="Add admin notes..."
                   />
@@ -2154,7 +2154,7 @@ export default function AdminDashboardTabs({
                           notes: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                       rows={3}
                       placeholder="User additional notes..."
                     />
@@ -2178,7 +2178,7 @@ export default function AdminDashboardTabs({
                   onClick={saveEditedRecord}
                   className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors ${
                     activeTab === "premier"
-                      ? "bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600"
+                      ? "bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950"
                       : "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
                   }`}
                 >

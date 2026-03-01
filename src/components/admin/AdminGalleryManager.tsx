@@ -214,7 +214,7 @@ export default function AdminGalleryManager({
               value={alt}
               onChange={(e) => setAlt(e.target.value)}
               placeholder="Opis slike za pristupačnost"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -236,7 +236,7 @@ export default function AdminGalleryManager({
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Naslov ispod slike"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -248,7 +248,7 @@ export default function AdminGalleryManager({
           <button
             onClick={handleUpload}
             disabled={uploading || !selectedFile}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-900 text-white rounded-md hover:bg-red-950 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
             {uploading ? (
               <>
@@ -297,7 +297,7 @@ export default function AdminGalleryManager({
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <RefreshCw className="w-6 h-6 animate-spin text-amber-500" />
+            <RefreshCw className="w-6 h-6 animate-spin text-red-800" />
           </div>
         ) : photos.length === 0 ? (
           <div

@@ -52,7 +52,7 @@ export default function AdminLogin() {
 
   if (loginSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-900 via-red-900 to-amber-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-950 via-red-900 to-red-950">
         <div className="text-center text-white">
           <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
           <p>Login successful! Redirecting...</p>
@@ -70,7 +70,7 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-red-900 to-amber-900">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-950 via-red-900 to-red-950">
       {/* Logo above the login panel */}
       <div className="mb-8">
         <Image
@@ -104,7 +104,7 @@ export default function AdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
                 placeholder="admin@remisfantasy.com"
               />
             </div>
@@ -123,7 +123,7 @@ export default function AdminLogin() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
                 placeholder="••••••••"
               />
             </div>
@@ -137,7 +137,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-amber-600 to-red-600 text-white font-bold py-3 px-4 rounded-md hover:from-amber-700 hover:to-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-red-800 to-red-900 text-white font-bold py-3 px-4 rounded-md hover:from-red-900 hover:to-red-950 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>

@@ -20,6 +20,7 @@ import {
   Moon,
   Image as ImageIcon,
   Trophy,
+  Plus,
 } from "lucide-react";
 import AdminGalleryManager from "@/components/admin/AdminGalleryManager";
 import AdminChampionsManager from "@/components/admin/AdminChampionsManager";
@@ -81,6 +82,29 @@ const getIndicatorColor = (color: string) => {
   }
 };
 
+// Get accent color based on active main tab
+const getMainTabAccent = (tab: "premier" | "champions" | "f1") => {
+  switch (tab) {
+    case "premier":
+      return "bg-purple-600";
+    case "champions":
+      return "bg-blue-600";
+    case "f1":
+      return "bg-red-600";
+  }
+};
+
+const getMainTabAccentWithHover = (tab: "premier" | "champions" | "f1") => {
+  switch (tab) {
+    case "premier":
+      return "bg-purple-600 hover:bg-purple-700";
+    case "champions":
+      return "bg-blue-600 hover:bg-blue-700";
+    case "f1":
+      return "bg-red-600 hover:bg-red-700";
+  }
+};
+
 export default function AdminTablesCleanPage() {
   const { t } = useTranslation("navigation");
   const { theme, toggleTheme } = useTheme();
@@ -120,6 +144,14 @@ export default function AdminTablesCleanPage() {
   const [updatingFromFPL, setUpdatingFromFPL] = useState<string | null>(null);
   const [fullSyncing, setFullSyncing] = useState<string | null>(null);
   const [showLoginRedirect, setShowLoginRedirect] = useState(false);
+  const [showCreatePlayer, setShowCreatePlayer] = useState(false);
+  const [creatingPlayer, setCreatingPlayer] = useState(false);
+  const [createData, setCreateData] = useState({
+    firstName: "",
+    lastName: "",
+    teamName: "",
+    points: "",
+  });
 
   // Load tables when component mounts and session is ready
   useEffect(() => {
@@ -231,6 +263,43 @@ export default function AdminTablesCleanPage() {
         message: "Error updating player",
         type: "error",
       });
+    }
+  };
+
+  const handleCreateFreePlayer = async () => {
+    if (!createData.firstName.trim() || !createData.lastName.trim() || !createData.teamName.trim()) {
+      setToast({ show: true, message: "Ime, prezime i naziv tima su obavezni", type: "error" });
+      return;
+    }
+
+    setCreatingPlayer(true);
+    try {
+      const response = await fetch("/api/admin/tables", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: createData.firstName.trim(),
+          lastName: createData.lastName.trim(),
+          teamName: createData.teamName.trim(),
+          points: parseInt(createData.points) || 0,
+          league_type: "free",
+          season,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to create player");
+      }
+
+      setToast({ show: true, message: "Igrač uspješno kreiran!", type: "success" });
+      setShowCreatePlayer(false);
+      setCreateData({ firstName: "", lastName: "", teamName: "", points: "" });
+      await loadTables();
+    } catch (e: any) {
+      setToast({ show: true, message: e.message || "Greška pri kreiranju igrača", type: "error" });
+    } finally {
+      setCreatingPlayer(false);
     }
   };
 
@@ -523,7 +592,13 @@ export default function AdminTablesCleanPage() {
   return (
     <div className={`min-h-screen ${isDark ? "bg-black" : "bg-gray-50"}`}>
       {/* Header */}
-      <header className="bg-gradient-to-r from-amber-900 to-red-900 text-white shadow-lg sticky top-0 z-40">
+      <header className={`text-white shadow-lg sticky top-0 z-40 transition-colors duration-300 ${
+        mainTab === "premier"
+          ? "bg-gradient-to-r from-purple-950 to-purple-900"
+          : mainTab === "champions"
+          ? "bg-gradient-to-r from-blue-950 to-blue-900"
+          : "bg-gradient-to-r from-red-950 to-red-900"
+      }`}>
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3 sm:py-4">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
@@ -545,7 +620,7 @@ export default function AdminTablesCleanPage() {
               />
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm sm:text-lg lg:text-xl font-semibold truncate tracking-tight">
-                  Premier League Tables
+                  League Tables
                 </h1>
                 <p className="text-xs sm:text-sm text-white/60 truncate hidden sm:block">
                   League and ranking management
@@ -640,7 +715,7 @@ export default function AdminTablesCleanPage() {
             onClick={() => setActiveSection("tables")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               activeSection === "tables"
-                ? "bg-amber-600 text-white shadow-sm"
+                ? `${getMainTabAccent(mainTab)} text-white shadow-sm`
                 : isDark ? "text-gray-400 hover:bg-gray-800" : "text-gray-600 hover:bg-white"
             }`}
           >
@@ -651,7 +726,7 @@ export default function AdminTablesCleanPage() {
             onClick={() => setActiveSection("gallery")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               activeSection === "gallery"
-                ? "bg-amber-600 text-white shadow-sm"
+                ? `${getMainTabAccent(mainTab)} text-white shadow-sm`
                 : isDark ? "text-gray-400 hover:bg-gray-800" : "text-gray-600 hover:bg-white"
             }`}
           >
@@ -662,7 +737,7 @@ export default function AdminTablesCleanPage() {
             onClick={() => setActiveSection("champions-wall")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               activeSection === "champions-wall"
-                ? "bg-amber-600 text-white shadow-sm"
+                ? `${getMainTabAccent(mainTab)} text-white shadow-sm`
                 : isDark ? "text-gray-400 hover:bg-gray-800" : "text-gray-600 hover:bg-white"
             }`}
           >
@@ -703,7 +778,7 @@ export default function AdminTablesCleanPage() {
             </div>
             <div className="p-6 space-y-4">
               <textarea
-                className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[300px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500`}
+                className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[300px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
                 placeholder={`Paste UEFA Champions League HTML content here. Example:\n<div class="si-data-row si-row si-cursor--pointer">\n  <div class="si-block si-name-wrp">\n    <div class="si-cell">\n      <div class="si-rank"><span>1</span><span class="si-rank-icons euro-drop-down si-winner"></span></div>\n      <div class="si-plyr-info-wrap">\n        <div class="si-plyr-info">\n          <div class="si-badge-wrap">\n            <img src="https://gaming.uefa.com/assets/avatars/scarf_19_45@2x.png">\n            <div class="si-member-num"><span>15</span></div>\n          </div>\n          <div class="si-names">\n            <span class="si-name-one">Lightbringer</span>\n            <span class="si-user-name">AmmarĆosović</span>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n  <div class="si-block si-right-data">\n    <div class="si-cell">\n      <div class="si-cell--top"><span>112</span></div>\n    </div>\n  </div>\n</div>`}
                 value={bulkUpdateData}
                 onChange={(e) => setBulkUpdateData(e.target.value)}
@@ -750,7 +825,7 @@ export default function AdminTablesCleanPage() {
                     }
                   }}
                   disabled={bulkUpdating}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50"
+                  className={`inline-flex items-center gap-2 px-4 py-2 ${getMainTabAccentWithHover(mainTab)} text-white rounded-md disabled:opacity-50`}
                 >
                   {bulkUpdating ? (
                     <>
@@ -816,7 +891,7 @@ export default function AdminTablesCleanPage() {
             </div>
             <div className="p-6 space-y-4">
               <textarea
-                className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[220px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500`}
+                className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[220px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
                 placeholder={`Paste here. Example:\nRank\tName\tPoints\n1\nSainz & Conquer\nAlmir Softic\n3377\n2\nCosine kamikaze\nAmmar Cosovic\n3307`}
                 value={bulkUpdateData}
                 onChange={(e) => setBulkUpdateData(e.target.value)}
@@ -859,7 +934,7 @@ export default function AdminTablesCleanPage() {
                     }
                   }}
                   disabled={bulkUpdating}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50"
+                  className={`inline-flex items-center gap-2 px-4 py-2 ${getMainTabAccentWithHover(mainTab)} text-white rounded-md disabled:opacity-50`}
                 >
                   {bulkUpdating ? (
                     <>
@@ -894,7 +969,7 @@ export default function AdminTablesCleanPage() {
                   <input
                     type="text"
                     id="f1-next-race"
-                    className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500`}
+                    className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
                     placeholder="e.g., Austin"
                   />
                 </div>
@@ -905,7 +980,7 @@ export default function AdminTablesCleanPage() {
                   <input
                     type="text"
                     id="f1-last-race"
-                    className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500`}
+                    className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
                     placeholder="e.g., Singapore"
                   />
                 </div>
@@ -976,7 +1051,7 @@ export default function AdminTablesCleanPage() {
                 onClick={() => { setSeason("25_26"); setLoading(true); }}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                   season === "25_26"
-                    ? "bg-amber-600 text-white shadow-sm"
+                    ? `${getMainTabAccent(mainTab)} text-white shadow-sm`
                     : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-gray-200" : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                 }`}
               >
@@ -986,7 +1061,7 @@ export default function AdminTablesCleanPage() {
                 onClick={() => { setSeason("26_27"); setLoading(true); }}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                   season === "26_27"
-                    ? "bg-amber-600 text-white shadow-sm"
+                    ? `${getMainTabAccent(mainTab)} text-white shadow-sm`
                     : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-gray-200" : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                 }`}
               >
@@ -1002,11 +1077,11 @@ export default function AdminTablesCleanPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
-                    <Server className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+                    <Server className="w-4 h-4 sm:w-5 sm:h-5 text-red-800" />
                   </div>
                   <div className="min-w-0">
                     <h2 className={`text-base sm:text-lg font-bold ${isDark ? "text-white" : "text-gray-800"} truncate`}>
-                      Premier League Tables
+                      League Tables
                     </h2>
                     {source && (
                       <div className="flex items-center gap-2 mt-1">
@@ -1056,7 +1131,7 @@ export default function AdminTablesCleanPage() {
             {/* FPL Sync Section */}
             <div className={`px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
               <div className="flex items-center gap-2 mb-3">
-                <RefreshCw className="w-3.5 h-3.5 text-amber-500" />
+                <RefreshCw className="w-3.5 h-3.5 text-red-800" />
                 <h3 className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                   FPL Sync
                 </h3>
@@ -1100,7 +1175,7 @@ export default function AdminTablesCleanPage() {
 
                 {/* Full Sync Row */}
                 <div className="flex items-start sm:items-center gap-3">
-                  <span className={`text-xs font-bold w-20 shrink-0 pt-1.5 sm:pt-0 ${isDark ? "text-amber-400" : "text-amber-700"}`}>
+                  <span className={`text-xs font-bold w-20 shrink-0 pt-1.5 sm:pt-0 ${isDark ? "text-red-400" : "text-red-900"}`}>
                     Full Sync:
                   </span>
                   <div className="flex gap-2 flex-wrap">
@@ -1215,6 +1290,15 @@ export default function AdminTablesCleanPage() {
                     </p>
                   </div>
                 </div>
+                {selectedLeague === "freeLeague" && (
+                  <button
+                    onClick={() => setShowCreatePlayer(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Dodaj igrača
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1344,7 +1428,7 @@ export default function AdminTablesCleanPage() {
                                   : index === 1
                                   ? "bg-gray-400 text-white"
                                   : index === 2
-                                  ? "bg-amber-600 text-white"
+                                  ? "bg-red-900 text-white"
                                   : `${isDark ? "bg-gray-800 text-gray-300" : "bg-gray-100 text-gray-700"}`
                               }`}
                             >
@@ -1478,7 +1562,7 @@ export default function AdminTablesCleanPage() {
                                       });
                                     }
                                   }}
-                                  className={`px-2 py-1 border rounded text-sm w-20 focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"}`}
+                                  className={`px-2 py-1 border rounded text-sm w-20 focus:outline-none focus:ring-2 focus:ring-red-900 font-semibold ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"}`}
                                 />
                               ) : (
                                 <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
@@ -1565,6 +1649,119 @@ export default function AdminTablesCleanPage() {
               )}
             </div>
           </div>
+
+          {/* Create Free League Player Modal */}
+          {showCreatePlayer && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white"} rounded-md shadow-2xl max-w-md w-full border`}>
+                <div className={`p-5 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+                  <div className="flex justify-between items-center">
+                    <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-800"} flex items-center gap-2`}>
+                      <Plus className="w-5 h-5 text-purple-500" />
+                      Dodaj igrača u Free Ligu
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setShowCreatePlayer(false);
+                        setCreateData({ firstName: "", lastName: "", teamName: "", points: "" });
+                      }}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-gray-400" : "text-gray-700"}`}>
+                        Ime *
+                      </label>
+                      <input
+                        type="text"
+                        value={createData.firstName}
+                        onChange={(e) => setCreateData({ ...createData, firstName: e.target.value })}
+                        placeholder="Ime"
+                        className={`w-full p-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                          isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-gray-400" : "text-gray-700"}`}>
+                        Prezime *
+                      </label>
+                      <input
+                        type="text"
+                        value={createData.lastName}
+                        onChange={(e) => setCreateData({ ...createData, lastName: e.target.value })}
+                        placeholder="Prezime"
+                        className={`w-full p-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                          isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-gray-400" : "text-gray-700"}`}>
+                      Naziv tima *
+                    </label>
+                    <input
+                      type="text"
+                      value={createData.teamName}
+                      onChange={(e) => setCreateData({ ...createData, teamName: e.target.value })}
+                      placeholder="npr. FC Fantasy Kings"
+                      className={`w-full p-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                        isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-gray-400" : "text-gray-700"}`}>
+                      Bodovi
+                    </label>
+                    <input
+                      type="number"
+                      value={createData.points}
+                      onChange={(e) => setCreateData({ ...createData, points: e.target.value })}
+                      placeholder="0"
+                      className={`w-full p-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                        isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"
+                      }`}
+                    />
+                  </div>
+                  <div className="flex gap-3 justify-end pt-2">
+                    <button
+                      onClick={() => {
+                        setShowCreatePlayer(false);
+                        setCreateData({ firstName: "", lastName: "", teamName: "", points: "" });
+                      }}
+                      className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                        isDark ? "text-gray-400 hover:bg-gray-800" : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      Otkaži
+                    </button>
+                    <button
+                      onClick={handleCreateFreePlayer}
+                      disabled={creatingPlayer}
+                      className="inline-flex items-center gap-2 px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors text-sm font-medium disabled:opacity-50"
+                    >
+                      {creatingPlayer ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" /> Kreiranje...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" /> Kreiraj
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Bulk Update Modal */}
           {showBulkUpdate && (

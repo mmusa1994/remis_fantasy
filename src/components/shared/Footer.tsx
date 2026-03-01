@@ -95,7 +95,7 @@ const Footer = React.memo(function Footer() {
             transition={{ duration: 0.8, delay: 0.5 }}
           >
             {[
-              { number: "9+", label: t("common:footer.years") },
+              { number: "10+", label: t("common:footer.years") },
               { number: "100%", label: t("common:footer.trust") },
             ].map((stat, index) => (
               <motion.div

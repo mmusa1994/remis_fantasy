@@ -98,7 +98,7 @@ export default function AdminChampionsManager({
       formData.append("file", selectedFile);
       formData.append("league", league);
 
-      const uploadRes = await fetch("/api/admin/gallery/upload", {
+      const uploadRes = await fetch("/api/admin/wall-of-champions/upload", {
         method: "POST",
         body: formData,
       });
@@ -206,7 +206,7 @@ export default function AdminChampionsManager({
             isDark ? "text-white" : "text-gray-800"
           }`}
         >
-          <Trophy className="w-5 h-5 text-amber-500" />
+          <Trophy className="w-5 h-5 text-red-800" />
           Dodaj novog šampiona
         </h3>
 
@@ -225,7 +225,7 @@ export default function AdminChampionsManager({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ime i prezime"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -247,7 +247,7 @@ export default function AdminChampionsManager({
               value={season}
               onChange={(e) => setSeason(e.target.value)}
               placeholder="npr. 2024/25"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -269,7 +269,7 @@ export default function AdminChampionsManager({
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
               placeholder="Naziv tima"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -291,7 +291,7 @@ export default function AdminChampionsManager({
               value={achievement}
               onChange={(e) => setAchievement(e.target.value)}
               placeholder="npr. 1st Place"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -351,7 +351,7 @@ export default function AdminChampionsManager({
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-900 text-white rounded-md hover:bg-red-950 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
             {submitting ? (
               <>
@@ -393,7 +393,7 @@ export default function AdminChampionsManager({
               isDark ? "text-white" : "text-gray-800"
             }`}
           >
-            <Trophy className="w-5 h-5 text-amber-500" />
+            <Trophy className="w-5 h-5 text-red-800" />
             Šampioni ({champions.length})
           </h3>
           <button
@@ -413,7 +413,7 @@ export default function AdminChampionsManager({
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <RefreshCw className="w-6 h-6 animate-spin text-amber-500" />
+            <RefreshCw className="w-6 h-6 animate-spin text-red-800" />
           </div>
         ) : champions.length === 0 ? (
           <div
