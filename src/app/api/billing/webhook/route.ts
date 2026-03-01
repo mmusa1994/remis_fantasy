@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseServer } from "@/lib/supabase-server";
 import Stripe from "stripe";
+import * as nodemailer from "nodemailer";
+import { getF1CodesEmailHtml } from "@/app/api/send-f1-email/route";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -81,7 +83,7 @@ export async function POST(req: NextRequest) {
           const { first_name, last_name, email, phone, notes } =
             paymentIntent.metadata;
 
-          const { error: f1Error } = await supabaseServer
+          const { data: insertedRow, error: f1Error } = await supabaseServer
             .from("f1_registrations_25_26")
             .insert({
               first_name,
@@ -92,12 +94,54 @@ export async function POST(req: NextRequest) {
               payment_status: "paid",
               stripe_payment_intent_id: paymentIntent.id,
               amount_paid: 10.0,
-            });
+            })
+            .select("id")
+            .single();
 
           if (f1Error) {
             console.error("Error inserting F1 registration:", f1Error);
           } else {
             console.log(`F1 registration completed for ${email}`);
+
+            // Auto-send F1 codes email
+            try {
+              const smtpUser = process.env.SMTP_USER;
+              const smtpPass = process.env.SMTP_PASS;
+
+              if (smtpUser && smtpPass) {
+                const transporter = nodemailer.createTransport({
+                  service: "gmail",
+                  auth: { user: smtpUser, pass: smtpPass },
+                });
+
+                await transporter.sendMail({
+                  from: process.env.SMTP_FROM || smtpUser,
+                  to: email,
+                  subject:
+                    "F1 Fantasy League 2026 - Kod za pristup | REMIS Fantasy",
+                  html: getF1CodesEmailHtml(first_name),
+                });
+
+                // Update codes_email_sent flag
+                if (insertedRow?.id) {
+                  await supabaseServer
+                    .from("f1_registrations_25_26")
+                    .update({
+                      codes_email_sent: true,
+                      codes_email_sent_at: new Date().toISOString(),
+                    })
+                    .eq("id", insertedRow.id);
+                }
+
+                console.log(`F1 codes email sent automatically to ${email}`);
+              } else {
+                console.warn(
+                  "Email credentials not configured, skipping auto-send"
+                );
+              }
+            } catch (emailError) {
+              console.error("Failed to auto-send F1 codes email:", emailError);
+            }
           }
         }
         break;

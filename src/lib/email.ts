@@ -12,16 +12,17 @@ interface UserData {
 }
 
 // Validate required email environment variables
-const emailUser = process.env.EMAIL_USER;
-const emailPass = process.env.EMAIL_PASS;
+const emailUser = process.env.SMTP_USER;
+const emailPass = process.env.SMTP_PASS;
+const emailFrom = process.env.SMTP_FROM || emailUser;
 const adminEmail = process.env.ADMIN_EMAIL || "admin@remisfantasy.com";
 
 if (!emailUser) {
-  throw new Error("Missing env var EMAIL_USER");
+  throw new Error("Missing env var SMTP_USER");
 }
 
 if (!emailPass) {
-  throw new Error("Missing env var EMAIL_PASS");
+  throw new Error("Missing env var SMTP_PASS");
 }
 
 // Email transporter configuration with SMTP pooling for better performance

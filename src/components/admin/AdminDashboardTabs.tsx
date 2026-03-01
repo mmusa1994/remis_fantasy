@@ -1308,19 +1308,6 @@ export default function AdminDashboardTabs({
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-1">
-                              {reg.registration_email_sent ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-green-100 text-green-800">
-                                  <CheckCircle className="w-3 h-3" />
-                                  Registration
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-600">
-                                  <Mail className="w-3 h-3" />
-                                  Not sent
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1">
                               {reg.codes_email_sent ? (
                                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-blue-100 text-blue-800">
                                   <CheckCircle className="w-3 h-3" />

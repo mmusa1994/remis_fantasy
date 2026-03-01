@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         {
           error: `Previše zahtjeva. Pokušajte ponovo za ${resetTimeMinutes} minuta.`,
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       if (!session) {
         return NextResponse.json(
           { error: "Unauthorized: Admin session required for codes email" },
-          { status: 401 }
+          { status: 401 },
         );
       }
     }
@@ -65,14 +65,14 @@ export async function POST(request: NextRequest) {
     if (emailType === "registration" && !session && !recaptchaToken) {
       return NextResponse.json(
         { error: "reCAPTCHA token required for public registration" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (recaptchaToken) {
       const recaptchaResponse = await fetch(
         `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${recaptchaToken}`,
-        { method: "POST" }
+        { method: "POST" },
       );
 
       const recaptchaData = await recaptchaResponse.json();
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       if (!recaptchaData.success) {
         return NextResponse.json(
           { error: "reCAPTCHA verifikacija neuspešna" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -99,10 +99,10 @@ export async function POST(request: NextRequest) {
         // Send registration confirmation to user (without codes)
         result = await sendRegistrationConfirmationEmail(userData);
 
-        // Send admin notification with muhamed.musa1994@gmail.com
+        // Send admin notification with remisfantasy16@gmail.com
         adminResult = await sendAdminNotificationEmail(
           userData,
-          "muhamed.musa1994@gmail.com"
+          "remisfantasy16@gmail.com",
         );
 
         // Update database to mark registration email as sent
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
                 alreadySent: true,
                 sentAt: existingRegistration.codes_email_sent_at,
               },
-              { status: 200 }
+              { status: 200 },
             );
           }
         }
@@ -148,10 +148,10 @@ export async function POST(request: NextRequest) {
             userData.league_type === "premium" && userData.h2h_league
               ? "premium_h2h"
               : userData.league_type === "premium"
-              ? "premium"
-              : userData.league_type === "standard" && userData.h2h_league
-              ? "standard_h2h"
-              : "standard";
+                ? "premium"
+                : userData.league_type === "standard" && userData.h2h_league
+                  ? "standard_h2h"
+                  : "standard";
 
           const { data, error } = await supabaseServer
             .from("registration_25_26")
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
         adminMessageId: adminResult?.messageId,
         registration: updatedRegistration,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("API Error:", error);
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
         error: "Failed to send email",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

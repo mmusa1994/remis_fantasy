@@ -5,20 +5,20 @@ import { supabaseServer } from "@/lib/supabase-server";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "muhamed.musa1994@gmail.com";
 
 function getTransporter() {
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
 
-  if (!emailUser || !emailPass) {
+  if (!smtpUser || !smtpPass) {
     throw new Error(
-      "Missing email credentials (EMAIL_USER/EMAIL_PASS) in environment"
+      "Missing email credentials (SMTP_USER/SMTP_PASS) in environment"
     );
   }
 
   return nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: emailUser,
-      pass: emailPass,
+      user: smtpUser,
+      pass: smtpPass,
     },
   });
 }
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
       // Send registration confirmation email to user
       const userMailOptions: nodemailer.SendMailOptions = {
-        from: process.env.EMAIL_USER,
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
         to: userData.email,
         subject:
           "✅ Champions League Fantasy Registracija Potvrđena - REMIS Fantasy 2025/26",
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
 
       // Send notification email to admin
       const adminMailOptions: nodemailer.SendMailOptions = {
-        from: process.env.EMAIL_USER,
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
         to: ADMIN_EMAIL,
         subject: `🆕 Nova Champions League Registracija - ${userData.first_name} ${userData.last_name}`,
         html: `
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
       // Send codes email to user
       const transporter = getTransporter();
       const codesMailOptions: nodemailer.SendMailOptions = {
-        from: process.env.EMAIL_USER,
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
         to: userData.email,
         subject:
           "🔑 Champions League Fantasy - Kod za pristup | REMIS Fantasy CL Paid 25/26",

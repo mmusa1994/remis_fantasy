@@ -251,7 +251,7 @@ function F1RegistrationFormInner() {
   const labelClassName = (field: string, value: string) =>
     `floating-label transition-all duration-300 theme-transition text-xs xs:text-sm ${
       value || focusedField === field
-        ? "transform -translate-y-2 scale-90"
+        ? "transform -translate-y-0.5 scale-90"
         : "floating-label-placeholder transform translate-y-0 scale-100"
     }`;
 
