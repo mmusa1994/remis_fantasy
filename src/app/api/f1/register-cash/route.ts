@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { error } = await supabase
-      .from("f1_registrations")
+      .from("f1_registrations_25_26")
       .insert({
         first_name: first_name.trim(),
         last_name: last_name.trim(),

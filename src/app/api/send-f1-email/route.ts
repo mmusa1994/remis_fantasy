@@ -23,12 +23,13 @@ function getTransporter() {
 
 export function getF1CodesEmailHtml(firstName: string): string {
   return `
-    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #1a1a2e !important; color: #ffffff !important; border-radius: 12px; overflow: hidden;">
+    <link href="https://fonts.googleapis.com/css2?family=Anta&display=swap" rel="stylesheet" />
+    <div style="font-family: 'Anta', 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #1a1a2e !important; color: #ffffff !important; border-radius: 12px; overflow: hidden;">
       <!-- Header -->
       <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important; background-color: #1a1a2e !important; padding: 40px 30px 20px; text-align: center;">
-        <img src="https://remis-fantasy.com/images/rf-no-bg.png" alt="REMIS Fantasy" style="width: 120px; height: auto; margin-bottom: 16px;" />
-        <img src="https://remis-fantasy.com/images/logos/f1.png" alt="F1" style="width: 80px; height: auto; margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto;" />
-        <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 2px; color: #ffffff !important;">F1 FANTASY LEAGUE 2026</h1>
+        <img src="https://remis-fantasy.com/images/rf-no-bg.png" alt="REMIS Fantasy" style="width: 120px; height: auto; margin-bottom: 4px;" />
+        <img src="https://remis-fantasy.com/images/logos/f1.png" alt="F1" style="width: 80px; height: auto; margin-bottom: 4px; display: block; margin-left: auto; margin-right: auto;" />
+        <h1 style="font-family: 'Anta', 'Helvetica Neue', Arial, sans-serif; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 2px; color: #ffffff !important;">F1 FANTASY LEAGUE 2026</h1>
         <div style="width: 60px; height: 3px; background-color: #e10600 !important; margin: 16px auto 0;"></div>
       </div>
 
@@ -47,12 +48,12 @@ export function getF1CodesEmailHtml(firstName: string): string {
 
         <!-- CTA Button -->
         <div style="text-align: center; margin-bottom: 28px;">
-          <a href="https://fantasy.formula1.com/en/leagues/join/C16BVMBB402" style="display: inline-block; background-color: #e10600 !important; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; letter-spacing: 0.5px;">Pristupi ligi</a>
+          <a href="https://fantasy.formula1.com/en/leagues/join/C16BVMBB402" style="font-family: 'Anta', 'Helvetica Neue', Arial, sans-serif; display: inline-block; background-color: #e10600 !important; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; letter-spacing: 0.5px;">Pristupi ligi</a>
         </div>
 
         <!-- Instructions -->
         <div style="background-color: #16213e !important; border-radius: 10px; padding: 20px; margin-bottom: 24px;">
-          <p style="margin: 0 0 12px; font-size: 14px; font-weight: 600; color: #e10600 !important; text-transform: uppercase; letter-spacing: 1px;">Kako se pridruziti</p>
+          <p style="font-family: 'Anta', 'Helvetica Neue', Arial, sans-serif; margin: 0 0 12px; font-size: 14px; font-weight: 600; color: #e10600 !important; text-transform: uppercase; letter-spacing: 1px;">Kako se pridruziti</p>
           <p style="margin: 0 0 6px; font-size: 14px; line-height: 1.8; color: #dddddd !important;">1. Otvorite <strong style="color: #ffffff !important;">fantasy.formula1.com</strong></p>
           <p style="margin: 0 0 6px; font-size: 14px; line-height: 1.8; color: #dddddd !important;">2. Kreirajte tim (ako vec nemate)</p>
           <p style="margin: 0 0 6px; font-size: 14px; line-height: 1.8; color: #dddddd !important;">3. Idite na <strong style="color: #ffffff !important;">Leagues</strong></p>
@@ -67,7 +68,7 @@ export function getF1CodesEmailHtml(firstName: string): string {
         <!-- Footer -->
         <div style="text-align: center;">
           <p style="margin: 0 0 6px; font-size: 13px; color: #888888 !important;">Za pitanja ili pomoc:</p>
-          <p style="margin: 0 0 4px; font-size: 13px; color: #aaaaaa !important;">remisfantasy16@gmail.com</p>
+          <p style="margin: 0 0 4px; font-size: 13px; color: #aaaaaa !important;">remis.fantasy.platform@gmail.com</p>
           <p style="margin: 0 0 16px; font-size: 13px; color: #aaaaaa !important;">Instagram: @remis_fantasy</p>
           <p style="margin: 0; font-size: 11px; color: #555555 !important;">REMIS Fantasy — F1 Fantasy League 2026</p>
         </div>

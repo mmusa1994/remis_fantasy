@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         // Send admin notification with remisfantasy16@gmail.com
         adminResult = await sendAdminNotificationEmail(
           userData,
-          "remisfantasy16@gmail.com",
+          "remis.fantasy.platform@gmail.com",
         );
 
         // Update database to mark registration email as sent

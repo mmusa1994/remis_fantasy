@@ -30,7 +30,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 );
 
 interface FormData {
@@ -65,13 +65,18 @@ function F1RegistrationFormInner() {
 
   // Stripe Elements state (PCI compliant - card data never touches our code)
   const [cardBrand, setCardBrand] = useState<string>("unknown");
-  const [cardComplete, setCardComplete] = useState({ number: false, expiry: false, cvc: false });
+  const [cardComplete, setCardComplete] = useState({
+    number: false,
+    expiry: false,
+    cvc: false,
+  });
 
   // Stripe Element style (matches existing theme)
   const stripeElementStyle = {
     base: {
       fontSize: "14px",
-      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      fontFamily:
+        "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
       letterSpacing: "0.05em",
       color: theme === "dark" ? "#e5e7eb" : "#1f2937",
       "::placeholder": { color: theme === "dark" ? "#6b7280" : "#9ca3af" },
@@ -159,7 +164,9 @@ function F1RegistrationFormInner() {
         });
         const data = await response.json();
         if (!response.ok) {
-          throw new Error(data.error || t("common:validation.registrationError"));
+          throw new Error(
+            data.error || t("common:validation.registrationError"),
+          );
         }
         router.push("/f1-fantasy/registration/success");
         return;
@@ -171,18 +178,21 @@ function F1RegistrationFormInner() {
       const cardNumberElement = elements.getElement(CardNumberElement);
       if (!cardNumberElement) return;
 
-      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
-        type: "card",
-        card: cardNumberElement,
-        billing_details: {
-          name: `${formData.first_name.trim()} ${formData.last_name.trim()}`,
-          email: formData.email.trim(),
-          phone: formData.phone.trim(),
-        },
-      });
+      const { error: pmError, paymentMethod } =
+        await stripe.createPaymentMethod({
+          type: "card",
+          card: cardNumberElement,
+          billing_details: {
+            name: `${formData.first_name.trim()} ${formData.last_name.trim()}`,
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+          },
+        });
 
       if (pmError) {
-        throw new Error(pmError.message || t("common:validation.registrationError"));
+        throw new Error(
+          pmError.message || t("common:validation.registrationError"),
+        );
       }
 
       // Send only the PaymentMethod ID to backend (never raw card data)
@@ -209,7 +219,9 @@ function F1RegistrationFormInner() {
         await stripe.confirmCardPayment(data.clientSecret);
 
       if (stripeError) {
-        throw new Error(stripeError.message || t("common:validation.registrationError"));
+        throw new Error(
+          stripeError.message || t("common:validation.registrationError"),
+        );
       }
 
       if (paymentIntent?.status === "succeeded") {
@@ -263,7 +275,11 @@ function F1RegistrationFormInner() {
 
   const CardBrandIcon = () => {
     if (cardBrand === "visa") {
-      return <span className="text-[11px] font-black italic text-blue-600 dark:text-blue-400 tracking-tight">VISA</span>;
+      return (
+        <span className="text-[11px] font-black italic text-blue-600 dark:text-blue-400 tracking-tight">
+          VISA
+        </span>
+      );
     }
     if (cardBrand === "mastercard") {
       return (
@@ -274,7 +290,11 @@ function F1RegistrationFormInner() {
       );
     }
     if (cardBrand === "amex") {
-      return <span className="text-[10px] font-black text-blue-500 tracking-tight">AMEX</span>;
+      return (
+        <span className="text-[10px] font-black text-blue-500 tracking-tight">
+          AMEX
+        </span>
+      );
     }
     return null;
   };
@@ -289,7 +309,6 @@ function F1RegistrationFormInner() {
       />
 
       <section className="relative w-full bg-theme-background theme-transition pb-16 sm:pb-20 md:pb-24">
-
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-3xl">
           {/* Header */}
           <div className="flex justify-center items-center flex-col mb-8 sm:mb-10 animate-fade-in-up">
@@ -315,8 +334,12 @@ function F1RegistrationFormInner() {
                 <Trophy className="w-[18px] h-[18px] text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">{t("f1:registration.competitionForPrizes")}</div>
-                <div className="text-xs text-theme-text-secondary">{t("f1:registration.winPrizeFund")}</div>
+                <div className="font-bold text-theme-heading-primary text-sm">
+                  {t("f1:registration.competitionForPrizes")}
+                </div>
+                <div className="text-xs text-theme-text-secondary">
+                  {t("f1:registration.winPrizeFund")}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3.5 rounded-lg bg-red-500/[0.03] dark:bg-red-500/[0.06] border border-red-500/10 hover:border-red-500/20 transition-colors">
@@ -324,8 +347,12 @@ function F1RegistrationFormInner() {
                 <BarChart3 className="w-[18px] h-[18px] text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">{t("f1:registration.liveTable")}</div>
-                <div className="text-xs text-theme-text-secondary">{t("f1:registration.realTimeResults")}</div>
+                <div className="font-bold text-theme-heading-primary text-sm">
+                  {t("f1:registration.liveTable")}
+                </div>
+                <div className="text-xs text-theme-text-secondary">
+                  {t("f1:registration.realTimeResults")}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3.5 rounded-lg bg-red-500/[0.03] dark:bg-red-500/[0.06] border border-red-500/10 hover:border-red-500/20 transition-colors">
@@ -333,8 +360,12 @@ function F1RegistrationFormInner() {
                 <Gift className="w-[18px] h-[18px] text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">{t("f1:registration.grandPrixPrizes")}</div>
-                <div className="text-xs text-theme-text-secondary">{t("f1:registration.specialPrizesPerRace")}</div>
+                <div className="font-bold text-theme-heading-primary text-sm">
+                  {t("f1:registration.grandPrixPrizes")}
+                </div>
+                <div className="text-xs text-theme-text-secondary">
+                  {t("f1:registration.specialPrizesPerRace")}
+                </div>
               </div>
             </div>
           </div>
@@ -347,7 +378,9 @@ function F1RegistrationFormInner() {
             {/* Price badge */}
             <div className="flex justify-center -mt-10 sm:-mt-11 mb-7">
               <div className="bg-red-600 text-white px-5 py-2 rounded-lg shadow-md shadow-red-600/20 flex items-center gap-2">
-                <span className="text-sm font-medium opacity-90">{t("f1:registration.entryFee")}</span>
+                <span className="text-sm font-medium opacity-90">
+                  {t("f1:registration.entryFee")}
+                </span>
                 <span className="text-lg font-black">&euro;10</span>
               </div>
             </div>
@@ -355,7 +388,9 @@ function F1RegistrationFormInner() {
             {/* Personal Info */}
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-[22px] h-[22px] rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">1</span>
+                <span className="w-[22px] h-[22px] rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">
+                  1
+                </span>
                 {t("f1:registration.personalInfo")}
               </h3>
 
@@ -366,12 +401,20 @@ function F1RegistrationFormInner() {
                       type="text"
                       id="first_name"
                       value={formData.first_name}
-                      onChange={(e) => handleInputChange("first_name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("first_name", e.target.value)
+                      }
                       onFocus={() => setFocusedField("first_name")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("first_name")}
                     />
-                    <label htmlFor="first_name" className={labelClassName("first_name", formData.first_name)}>
+                    <label
+                      htmlFor="first_name"
+                      className={labelClassName(
+                        "first_name",
+                        formData.first_name,
+                      )}
+                    >
                       {t("f1:registration.firstName")} *
                     </label>
                   </div>
@@ -389,12 +432,20 @@ function F1RegistrationFormInner() {
                       type="text"
                       id="last_name"
                       value={formData.last_name}
-                      onChange={(e) => handleInputChange("last_name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("last_name", e.target.value)
+                      }
                       onFocus={() => setFocusedField("last_name")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("last_name")}
                     />
-                    <label htmlFor="last_name" className={labelClassName("last_name", formData.last_name)}>
+                    <label
+                      htmlFor="last_name"
+                      className={labelClassName(
+                        "last_name",
+                        formData.last_name,
+                      )}
+                    >
                       {t("f1:registration.lastName")} *
                     </label>
                   </div>
@@ -411,7 +462,9 @@ function F1RegistrationFormInner() {
             {/* Contact Info */}
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-[22px] h-[22px] rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">2</span>
+                <span className="w-[22px] h-[22px] rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">
+                  2
+                </span>
                 {t("f1:registration.contactInfo")}
               </h3>
 
@@ -422,12 +475,17 @@ function F1RegistrationFormInner() {
                       type="email"
                       id="email"
                       value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
                       onFocus={() => setFocusedField("email")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("email")}
                     />
-                    <label htmlFor="email" className={labelClassName("email", formData.email)}>
+                    <label
+                      htmlFor="email"
+                      className={labelClassName("email", formData.email)}
+                    >
                       {t("f1:registration.email")} *
                     </label>
                   </div>
@@ -445,12 +503,17 @@ function F1RegistrationFormInner() {
                       type="tel"
                       id="phone"
                       value={formData.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("phone", e.target.value)
+                      }
                       onFocus={() => setFocusedField("phone")}
                       onBlur={() => setFocusedField(null)}
                       className={inputClassName("phone")}
                     />
-                    <label htmlFor="phone" className={labelClassName("phone", formData.phone)}>
+                    <label
+                      htmlFor="phone"
+                      className={labelClassName("phone", formData.phone)}
+                    >
                       {t("f1:registration.phone")} *
                     </label>
                   </div>
@@ -477,7 +540,10 @@ function F1RegistrationFormInner() {
                     rows={2}
                     className={inputClassName("notes")}
                   />
-                  <label htmlFor="notes" className={labelClassName("notes", formData.notes)}>
+                  <label
+                    htmlFor="notes"
+                    className={labelClassName("notes", formData.notes)}
+                  >
                     {t("f1:registration.notes")}
                   </label>
                 </div>
@@ -512,17 +578,23 @@ function F1RegistrationFormInner() {
                       <CheckCircle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                     </div>
                   )}
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                    paymentMode === "card"
-                      ? "bg-red-600/10 text-red-600 dark:text-red-400"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-400"
-                  }`}>
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                      paymentMode === "card"
+                        ? "bg-red-600/10 text-red-600 dark:text-red-400"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-400"
+                    }`}
+                  >
                     <CreditCard className="w-5 h-5" />
                   </div>
                   <div className="text-center">
-                    <div className={`text-sm font-bold ${
-                      paymentMode === "card" ? "text-red-600 dark:text-red-400" : "text-theme-heading-primary"
-                    }`}>
+                    <div
+                      className={`text-sm font-bold ${
+                        paymentMode === "card"
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-theme-heading-primary"
+                      }`}
+                    >
                       {t("f1:payment.card")}
                     </div>
                     <div className="text-[10px] text-theme-text-secondary mt-0.5">
@@ -545,17 +617,23 @@ function F1RegistrationFormInner() {
                       <CheckCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                     </div>
                   )}
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                    paymentMode === "cash"
-                      ? "bg-green-600/10 text-green-600 dark:text-green-400"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-400"
-                  }`}>
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                      paymentMode === "cash"
+                        ? "bg-green-600/10 text-green-600 dark:text-green-400"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-400"
+                    }`}
+                  >
                     <Banknote className="w-5 h-5" />
                   </div>
                   <div className="text-center">
-                    <div className={`text-sm font-bold ${
-                      paymentMode === "cash" ? "text-green-600 dark:text-green-400" : "text-theme-heading-primary"
-                    }`}>
+                    <div
+                      className={`text-sm font-bold ${
+                        paymentMode === "cash"
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-theme-heading-primary"
+                      }`}
+                    >
                       {t("f1:payment.cash")}
                     </div>
                     <div className="text-[10px] text-theme-text-secondary mt-0.5">
@@ -568,271 +646,366 @@ function F1RegistrationFormInner() {
 
             {/* Card Payment Section */}
             {paymentMode === "card" && (
-            <div className="mb-6">
-              <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                <span className="w-[22px] h-[22px] rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">3</span>
-                {t("f1:registration.cardDetails")}
-                <div className="ml-auto flex items-center gap-1">
-                  <div className="px-1.5 py-0.5 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700">
-                    <span className="text-[9px] font-black italic text-blue-600 dark:text-blue-400">VISA</span>
+              <div className="mb-6">
+                <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
+                  <span className="w-[22px] h-[22px] rounded-md bg-red-600/10 flex items-center justify-center text-[11px] font-black text-red-600 dark:text-red-400">
+                    3
+                  </span>
+                  {t("f1:registration.cardDetails")}
+                  <div className="ml-auto flex items-center gap-1">
+                    <div className="px-1.5 py-0.5 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700">
+                      <span className="text-[9px] font-black italic text-blue-600 dark:text-blue-400">
+                        VISA
+                      </span>
+                    </div>
+                    <div className="px-1.5 py-0.5 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700 flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+                      <span className="w-2 h-2 rounded-full bg-yellow-500 inline-block -ml-0.5" />
+                    </div>
+                    <div className="px-1.5 py-0.5 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700">
+                      <span className="text-[8px] font-black text-blue-500 dark:text-blue-300">
+                        AMEX
+                      </span>
+                    </div>
                   </div>
-                  <div className="px-1.5 py-0.5 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700 flex items-center">
-                    <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
-                    <span className="w-2 h-2 rounded-full bg-yellow-500 inline-block -ml-0.5" />
-                  </div>
-                  <div className="px-1.5 py-0.5 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700">
-                    <span className="text-[8px] font-black text-blue-500 dark:text-blue-300">AMEX</span>
-                  </div>
-                </div>
-              </h3>
+                </h3>
 
-              {/* Interactive 3D Card - Premium Black */}
-              <div className="flex justify-center mb-5" style={{ perspective: "1200px" }}>
+                {/* Interactive 3D Card - Premium Black */}
                 <div
-                  className="relative w-[300px] sm:w-[340px] h-[185px] sm:h-[210px] transition-transform duration-700 ease-in-out"
-                  style={{
-                    transformStyle: "preserve-3d",
-                    transform: cardFocused === "cardCvc" ? "rotateY(180deg)" : "rotateY(0deg)",
-                  }}
+                  className="flex justify-center mb-5"
+                  style={{ perspective: "1200px" }}
                 >
-                  {/* Front */}
                   <div
-                    className="absolute inset-0 rounded-[20px] overflow-hidden"
+                    className="relative w-[300px] sm:w-[340px] h-[185px] sm:h-[210px] transition-transform duration-700 ease-in-out"
                     style={{
-                      backfaceVisibility: "hidden",
-                      boxShadow: "0 25px 60px -12px rgba(0, 0, 0, 0.5), 0 0 40px -8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                      transformStyle: "preserve-3d",
+                      transform:
+                        cardFocused === "cardCvc"
+                          ? "rotateY(180deg)"
+                          : "rotateY(0deg)",
                     }}
                   >
-                    {/* Premium black base */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16162a] to-[#0f0f1a]" />
-                    {/* Subtle shimmer overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-red-950/8 via-transparent to-red-900/5" />
-                    <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle at 30% 20%, white 0%, transparent 50%), radial-gradient(circle at 70% 80%, white 0%, transparent 50%)" }} />
-                    {/* Top edge highlight */}
-                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                    {/* Left edge highlight */}
-                    <div className="absolute top-0 left-0 bottom-0 w-px bg-gradient-to-b from-white/10 via-transparent to-transparent" />
+                    {/* Front */}
+                    <div
+                      className="absolute inset-0 rounded-[20px] overflow-hidden"
+                      style={{
+                        backfaceVisibility: "hidden",
+                        boxShadow:
+                          "0 25px 60px -12px rgba(0, 0, 0, 0.5), 0 0 40px -8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                      }}
+                    >
+                      {/* Premium black base */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16162a] to-[#0f0f1a]" />
+                      {/* Subtle shimmer overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-red-950/8 via-transparent to-red-900/5" />
+                      <div
+                        className="absolute inset-0 opacity-[0.03]"
+                        style={{
+                          backgroundImage:
+                            "radial-gradient(circle at 30% 20%, white 0%, transparent 50%), radial-gradient(circle at 70% 80%, white 0%, transparent 50%)",
+                        }}
+                      />
+                      {/* Top edge highlight */}
+                      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                      {/* Left edge highlight */}
+                      <div className="absolute top-0 left-0 bottom-0 w-px bg-gradient-to-b from-white/10 via-transparent to-transparent" />
 
-                    <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between">
-                      {/* Top row: chip + contactless + brand */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          {/* Premium chip */}
-                          <div className="w-10 h-7 sm:w-11 sm:h-8 rounded-lg overflow-hidden" style={{
-                            background: "linear-gradient(135deg, #d4af37 0%, #f5d061 25%, #d4af37 50%, #c5a028 75%, #f5d061 100%)",
-                            boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 1px 3px rgba(0,0,0,0.3)",
-                          }}>
-                            <div className="w-full h-full flex items-center justify-center">
-                              <div className="w-7 h-5 sm:w-8 sm:h-6 rounded-sm" style={{
-                                background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.15) 100%)",
-                                border: "1px solid rgba(180,150,50,0.4)",
-                              }}>
-                                <div className="w-full h-full grid grid-cols-3 gap-px p-px opacity-40">
-                                  {[...Array(6)].map((_, i) => (
-                                    <div key={i} className="bg-yellow-800/30 rounded-[1px]" />
-                                  ))}
+                      <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between">
+                        {/* Top row: chip + contactless + brand */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            {/* Premium chip */}
+                            <div
+                              className="w-10 h-7 sm:w-11 sm:h-8 rounded-lg overflow-hidden"
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #d4af37 0%, #f5d061 25%, #d4af37 50%, #c5a028 75%, #f5d061 100%)",
+                                boxShadow:
+                                  "inset 0 1px 2px rgba(255,255,255,0.3), 0 1px 3px rgba(0,0,0,0.3)",
+                              }}
+                            >
+                              <div className="w-full h-full flex items-center justify-center">
+                                <div
+                                  className="w-7 h-5 sm:w-8 sm:h-6 rounded-sm"
+                                  style={{
+                                    background:
+                                      "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.15) 100%)",
+                                    border: "1px solid rgba(180,150,50,0.4)",
+                                  }}
+                                >
+                                  <div className="w-full h-full grid grid-cols-3 gap-px p-px opacity-40">
+                                    {[...Array(6)].map((_, i) => (
+                                      <div
+                                        key={i}
+                                        className="bg-yellow-800/30 rounded-[1px]"
+                                      />
+                                    ))}
+                                  </div>
                                 </div>
                               </div>
                             </div>
+                            {/* Contactless icon */}
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              className="text-white/25"
+                            >
+                              <path
+                                d="M12.5 6.5C14.5 8 16 10 16 12.5S14.5 17 12.5 18.5"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M9.5 9C10.5 9.5 12 10.5 12 12.5S10.5 15.5 9.5 16"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M6.5 11C7 11.5 8 12 8 12.5S7 13.5 6.5 14"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
+                            </svg>
                           </div>
-                          {/* Contactless icon */}
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white/25">
-                            <path d="M12.5 6.5C14.5 8 16 10 16 12.5S14.5 17 12.5 18.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                            <path d="M9.5 9C10.5 9.5 12 10.5 12 12.5S10.5 15.5 9.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                            <path d="M6.5 11C7 11.5 8 12 8 12.5S7 13.5 6.5 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                          </svg>
-                        </div>
-                        {/* Brand */}
-                        <div className="flex items-center">
-                          {cardBrand === "visa" && (
-                            <span className="text-lg sm:text-xl font-black italic text-white/75 tracking-tight">VISA</span>
-                          )}
-                          {cardBrand === "mastercard" && (
-                            <span className="flex items-center -space-x-2">
-                              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-500 inline-block opacity-85" />
-                              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-yellow-500 inline-block opacity-85" />
-                            </span>
-                          )}
-                          {cardBrand === "amex" && (
-                            <span className="text-sm sm:text-base font-black text-white/75 tracking-widest">AMEX</span>
-                          )}
-                          {(cardBrand === "unknown" || !cardBrand) && (
-                            <CreditCard className="w-7 h-7 sm:w-8 sm:h-8 text-white/15" />
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Card number placeholder */}
-                      <div className="font-mono text-[14px] xs:text-[15px] sm:text-[17px] tracking-[0.15em] sm:tracking-[0.18em] font-medium whitespace-nowrap rounded-md px-2 py-1 -mx-2" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
-                        <span className="text-white/15">
-                          {"\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022"}
-                        </span>
-                      </div>
-
-                      {/* Bottom row: name + expiry */}
-                      <div className="flex items-end justify-between">
-                        <div>
-                          <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-white/30 mb-1 font-medium">Card Holder</div>
-                          <div className={`text-[12px] sm:text-[13px] font-semibold tracking-wider uppercase truncate max-w-[180px] transition-colors duration-300 ${
-                            formData.first_name || formData.last_name ? "text-white/70" : "text-white/15"
-                          }`} style={{ textShadow: "0 1px 2px rgba(0,0,0,0.2)" }}>
-                            {formData.first_name || formData.last_name
-                              ? `${formData.first_name} ${formData.last_name}`.trim()
-                              : "YOUR NAME"}
+                          {/* Brand */}
+                          <div className="flex items-center">
+                            {cardBrand === "visa" && (
+                              <span className="text-lg sm:text-xl font-black italic text-white/75 tracking-tight">
+                                VISA
+                              </span>
+                            )}
+                            {cardBrand === "mastercard" && (
+                              <span className="flex items-center -space-x-2">
+                                <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-500 inline-block opacity-85" />
+                                <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-yellow-500 inline-block opacity-85" />
+                              </span>
+                            )}
+                            {cardBrand === "amex" && (
+                              <span className="text-sm sm:text-base font-black text-white/75 tracking-widest">
+                                AMEX
+                              </span>
+                            )}
+                            {(cardBrand === "unknown" || !cardBrand) && (
+                              <CreditCard className="w-7 h-7 sm:w-8 sm:h-8 text-white/15" />
+                            )}
                           </div>
                         </div>
-                        <div className="text-right rounded-md px-2 py-1 -mr-2">
-                          <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-white/30 mb-1 font-medium">Expires</div>
-                          <div className="text-[12px] sm:text-[13px] font-semibold font-mono tracking-wider">
-                            <span className="text-white/15">MM/YY</span>
+
+                        {/* Card number placeholder */}
+                        <div
+                          className="font-mono text-[14px] xs:text-[15px] sm:text-[17px] tracking-[0.15em] sm:tracking-[0.18em] font-medium whitespace-nowrap rounded-md px-2 py-1 -mx-2"
+                          style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+                        >
+                          <span className="text-white/15">
+                            {
+                              "\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022"
+                            }
+                          </span>
+                        </div>
+
+                        {/* Bottom row: name + expiry */}
+                        <div className="flex items-end justify-between">
+                          <div>
+                            <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-white/30 mb-1 font-medium">
+                              Card Holder
+                            </div>
+                            <div
+                              className={`text-[12px] sm:text-[13px] font-semibold tracking-wider uppercase truncate max-w-[180px] transition-colors duration-300 ${
+                                formData.first_name || formData.last_name
+                                  ? "text-white/70"
+                                  : "text-white/15"
+                              }`}
+                              style={{
+                                textShadow: "0 1px 2px rgba(0,0,0,0.2)",
+                              }}
+                            >
+                              {formData.first_name || formData.last_name
+                                ? `${formData.first_name} ${formData.last_name}`.trim()
+                                : "YOUR NAME"}
+                            </div>
+                          </div>
+                          <div className="text-right rounded-md px-2 py-1 -mr-2">
+                            <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-white/30 mb-1 font-medium">
+                              Expires
+                            </div>
+                            <div className="text-[12px] sm:text-[13px] font-semibold font-mono tracking-wider">
+                              <span className="text-white/15">MM/YY</span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Back */}
-                  <div
-                    className="absolute inset-0 rounded-[20px] overflow-hidden"
-                    style={{
-                      backfaceVisibility: "hidden",
-                      transform: "rotateY(180deg)",
-                      boxShadow: "0 25px 60px -12px rgba(0, 0, 0, 0.5), 0 0 40px -8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16162a] to-[#0f0f1a]" />
-                    <div className="absolute inset-0 bg-gradient-to-tr from-red-950/5 via-transparent to-red-950/5" />
+                    {/* Back */}
+                    <div
+                      className="absolute inset-0 rounded-[20px] overflow-hidden"
+                      style={{
+                        backfaceVisibility: "hidden",
+                        transform: "rotateY(180deg)",
+                        boxShadow:
+                          "0 25px 60px -12px rgba(0, 0, 0, 0.5), 0 0 40px -8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16162a] to-[#0f0f1a]" />
+                      <div className="absolute inset-0 bg-gradient-to-tr from-red-950/5 via-transparent to-red-950/5" />
 
-                    <div className="relative h-full flex flex-col">
-                      {/* Magnetic stripe */}
-                      <div className="w-full h-[46px] sm:h-[50px] mt-6 sm:mt-7" style={{
-                        background: "linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 40%, #0f0f0f 60%, #1a1a1a 100%)",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)",
-                      }} />
+                      <div className="relative h-full flex flex-col">
+                        {/* Magnetic stripe */}
+                        <div
+                          className="w-full h-[46px] sm:h-[50px] mt-6 sm:mt-7"
+                          style={{
+                            background:
+                              "linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 40%, #0f0f0f 60%, #1a1a1a 100%)",
+                            boxShadow:
+                              "0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)",
+                          }}
+                        />
 
-                      {/* Signature + CVC */}
-                      <div className="flex items-center gap-3 px-5 sm:px-6 mt-5 sm:mt-6">
-                        {/* Signature strip */}
-                        <div className="flex-1 h-10 sm:h-11 rounded-md" style={{
-                          background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)",
-                          border: "1px solid rgba(255,255,255,0.06)",
-                        }}>
-                          <div className="h-full flex items-center px-3">
-                            <div className="w-full h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
+                        {/* Signature + CVC */}
+                        <div className="flex items-center gap-3 px-5 sm:px-6 mt-5 sm:mt-6">
+                          {/* Signature strip */}
+                          <div
+                            className="flex-1 h-10 sm:h-11 rounded-md"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)",
+                              border: "1px solid rgba(255,255,255,0.06)",
+                            }}
+                          >
+                            <div className="h-full flex items-center px-3">
+                              <div className="w-full h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
+                            </div>
+                          </div>
+                          {/* CVC box */}
+                          <div className="w-14 sm:w-16 h-9 sm:h-10 rounded-md flex items-center justify-center font-mono text-sm font-bold bg-white/8 text-white/40 border border-white/10">
+                            CVC
                           </div>
                         </div>
-                        {/* CVC box */}
-                        <div className="w-14 sm:w-16 h-9 sm:h-10 rounded-md flex items-center justify-center font-mono text-sm font-bold bg-white/8 text-white/40 border border-white/10">
-                          CVC
+
+                        {/* Bottom: stripe logo */}
+                        <div className="mt-auto px-5 sm:px-6 pb-4 sm:pb-5 flex justify-end">
+                          <Image
+                            src="/images/stripe.png"
+                            alt="Stripe"
+                            width={50}
+                            height={21}
+                            className="brightness-200 opacity-30"
+                          />
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
 
-                      {/* Bottom: stripe logo */}
-                      <div className="mt-auto px-5 sm:px-6 pb-4 sm:pb-5 flex justify-end">
-                        <Image
-                          src="/images/stripe.png"
-                          alt="Stripe"
-                          width={50}
-                          height={21}
-                          className="brightness-200 opacity-30"
+                {/* Card Inputs - Stripe Elements (PCI Compliant) */}
+                <div className="rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30 p-4 space-y-3">
+                  {/* Card Number */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-semibold text-theme-text-secondary flex items-center gap-1.5">
+                        <CreditCard className="w-3.5 h-3.5" />
+                        {t("f1:registration.cardNumber")}
+                      </label>
+                      {cardBrand !== "unknown" && <CardBrandIcon />}
+                    </div>
+                    <div className={stripeElementClass}>
+                      <CardNumberElement
+                        options={{ style: stripeElementStyle, showIcon: true }}
+                        onFocus={() => setCardFocused("cardNumber")}
+                        onBlur={() => setCardFocused(null)}
+                        onChange={(e) => {
+                          setCardBrand(e.brand || "unknown");
+                          setCardComplete((p) => ({
+                            ...p,
+                            number: e.complete,
+                          }));
+                          if (errors.payment)
+                            setErrors((p) => ({ ...p, payment: "" }));
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Expiry */}
+                    <div>
+                      <label className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
+                        {t("f1:registration.expiryDate")}
+                      </label>
+                      <div className={stripeElementClass}>
+                        <CardExpiryElement
+                          options={{ style: stripeElementStyle }}
+                          onFocus={() => setCardFocused("cardExpiry")}
+                          onBlur={() => setCardFocused(null)}
+                          onChange={(e) => {
+                            setCardComplete((p) => ({
+                              ...p,
+                              expiry: e.complete,
+                            }));
+                            if (errors.payment)
+                              setErrors((p) => ({ ...p, payment: "" }));
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* CVC */}
+                    <div>
+                      <label className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
+                        CVC
+                      </label>
+                      <div className={stripeElementClass}>
+                        <CardCvcElement
+                          options={{ style: stripeElementStyle }}
+                          onFocus={() => setCardFocused("cardCvc")}
+                          onBlur={() => setCardFocused(null)}
+                          onChange={(e) => {
+                            setCardComplete((p) => ({ ...p, cvc: e.complete }));
+                            if (errors.payment)
+                              setErrors((p) => ({ ...p, payment: "" }));
+                          }}
                         />
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Card Inputs - Stripe Elements (PCI Compliant) */}
-              <div className="rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30 p-4 space-y-3">
-                {/* Card Number */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-theme-text-secondary flex items-center gap-1.5">
-                      <CreditCard className="w-3.5 h-3.5" />
-                      {t("f1:registration.cardNumber")}
-                    </label>
-                    {cardBrand !== "unknown" && <CardBrandIcon />}
-                  </div>
-                  <div className={stripeElementClass}>
-                    <CardNumberElement
-                      options={{ style: stripeElementStyle, showIcon: true }}
-                      onFocus={() => setCardFocused("cardNumber")}
-                      onBlur={() => setCardFocused(null)}
-                      onChange={(e) => {
-                        setCardBrand(e.brand || "unknown");
-                        setCardComplete((p) => ({ ...p, number: e.complete }));
-                        if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
-                      }}
+                  {/* Stripe trust line */}
+                  <div className="flex items-center justify-center gap-1.5 pt-1">
+                    <Lock className="w-3 h-3 text-gray-400" />
+                    <span className="text-[11px] text-gray-400">
+                      Secured by
+                    </span>
+                    <Image
+                      src="/images/stripe.png"
+                      alt="Stripe"
+                      width={40}
+                      height={17}
+                      className="opacity-70 dark:brightness-200"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Expiry */}
-                  <div>
-                    <label className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
-                      {t("f1:registration.expiryDate")}
-                    </label>
-                    <div className={stripeElementClass}>
-                      <CardExpiryElement
-                        options={{ style: stripeElementStyle }}
-                        onFocus={() => setCardFocused("cardExpiry")}
-                        onBlur={() => setCardFocused(null)}
-                        onChange={(e) => {
-                          setCardComplete((p) => ({ ...p, expiry: e.complete }));
-                          if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* CVC */}
-                  <div>
-                    <label className="text-xs font-semibold text-theme-text-secondary mb-1.5 block">
-                      CVC
-                    </label>
-                    <div className={stripeElementClass}>
-                      <CardCvcElement
-                        options={{ style: stripeElementStyle }}
-                        onFocus={() => setCardFocused("cardCvc")}
-                        onBlur={() => setCardFocused(null)}
-                        onChange={(e) => {
-                          setCardComplete((p) => ({ ...p, cvc: e.complete }));
-                          if (errors.payment) setErrors((p) => ({ ...p, payment: "" }));
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stripe trust line */}
-                <div className="flex items-center justify-center gap-1.5 pt-1">
-                  <Lock className="w-3 h-3 text-gray-400" />
-                  <span className="text-[11px] text-gray-400">Secured by</span>
-                  <Image
-                    src="/images/stripe.png"
-                    alt="Stripe"
-                    width={40}
-                    height={17}
-                    className="opacity-70 dark:brightness-200"
-                  />
-                </div>
+                {errors.payment && (
+                  <p className="text-red-400 text-xs mt-2 flex items-center gap-1 font-medium animate-fade-in">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {errors.payment}
+                  </p>
+                )}
               </div>
-
-              {errors.payment && (
-                <p className="text-red-400 text-xs mt-2 flex items-center gap-1 font-medium animate-fade-in">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  {errors.payment}
-                </p>
-              )}
-            </div>
             )}
 
             {/* Cash Payment Section */}
             {paymentMode === "cash" && (
               <div className="mb-6">
                 <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
-                  <span className="w-[22px] h-[22px] rounded-md bg-green-600/10 flex items-center justify-center text-[11px] font-black text-green-600 dark:text-green-400">3</span>
+                  <span className="w-[22px] h-[22px] rounded-md bg-green-600/10 flex items-center justify-center text-[11px] font-black text-green-600 dark:text-green-400">
+                    3
+                  </span>
                   Gotovinska uplata
                 </h3>
 
@@ -841,8 +1014,14 @@ function F1RegistrationFormInner() {
                   <div className="flex items-start gap-3 p-3 rounded-md bg-green-500/5 border border-green-500/15">
                     <Banknote className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-theme-heading-primary">Plaćanje gotovinom</p>
-                      <p className="text-xs text-theme-text-secondary mt-1">Izaberite datum do kojeg ćete dostaviti uplatu od &euro;10. Vaša registracija će biti potvrđena nakon primanja uplate.</p>
+                      <p className="text-sm font-medium text-theme-heading-primary">
+                        Plaćanje gotovinom
+                      </p>
+                      <p className="text-xs text-theme-text-secondary mt-1">
+                        Izaberite datum do kojeg ćete dostaviti uplatu od
+                        &euro;10. Vaša registracija će biti potvrđena nakon
+                        primanja uplate.
+                      </p>
                     </div>
                   </div>
 
@@ -886,18 +1065,24 @@ function F1RegistrationFormInner() {
                         }}
                         className="sr-only peer"
                       />
-                      <div className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
-                        cashConfirmed
-                          ? "bg-green-500 border-green-500"
-                          : "border-gray-300 dark:border-gray-600 group-hover:border-green-400"
-                      }`}>
+                      <div
+                        className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
+                          cashConfirmed
+                            ? "bg-green-500 border-green-500"
+                            : "border-gray-300 dark:border-gray-600 group-hover:border-green-400"
+                        }`}
+                      >
                         {cashConfirmed && (
                           <CheckCircle className="w-3.5 h-3.5 text-white" />
                         )}
                       </div>
                     </div>
                     <span className="text-sm text-theme-text-secondary leading-relaxed">
-                      Potvrđujem da ću dostaviti uplatu od <strong className="text-theme-heading-primary">&euro;10</strong> do odabranog datuma.
+                      Potvrđujem da ću dostaviti uplatu od{" "}
+                      <strong className="text-theme-heading-primary">
+                        &euro;10
+                      </strong>{" "}
+                      do odabranog datuma.
                     </span>
                   </label>
                   {errors.cashConfirmed && (
@@ -912,28 +1097,28 @@ function F1RegistrationFormInner() {
 
             {/* Trust Signals */}
             {paymentMode === "card" && (
-            <div className="flex items-center justify-center gap-4 sm:gap-6 mb-6 text-theme-text-secondary">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-green-500" />
-                <span className="text-[11px] font-medium">256-bit SSL</span>
+              <div className="flex items-center justify-center gap-4 sm:gap-6 mb-6 text-theme-text-secondary">
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-green-500" />
+                  <span className="text-[11px] font-medium">256-bit SSL</span>
+                </div>
+                <div className="w-px h-3 bg-gray-300 dark:bg-gray-600" />
+                <div className="flex items-center gap-1.5">
+                  <Lock className="w-4 h-4 text-blue-500" />
+                  <span className="text-[11px] font-medium">PCI DSS</span>
+                </div>
+                <div className="w-px h-3 bg-gray-300 dark:bg-gray-600" />
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4 text-indigo-500" />
+                  <Image
+                    src="/images/stripe.png"
+                    alt="Stripe"
+                    width={36}
+                    height={15}
+                    className="opacity-60 dark:brightness-200"
+                  />
+                </div>
               </div>
-              <div className="w-px h-3 bg-gray-300 dark:bg-gray-600" />
-              <div className="flex items-center gap-1.5">
-                <Lock className="w-4 h-4 text-blue-500" />
-                <span className="text-[11px] font-medium">PCI DSS</span>
-              </div>
-              <div className="w-px h-3 bg-gray-300 dark:bg-gray-600" />
-              <div className="flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4 text-indigo-500" />
-                <Image
-                  src="/images/stripe.png"
-                  alt="Stripe"
-                  width={36}
-                  height={15}
-                  className="opacity-60 dark:brightness-200"
-                />
-              </div>
-            </div>
             )}
 
             {/* reCAPTCHA */}
@@ -966,9 +1151,24 @@ function F1RegistrationFormInner() {
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2.5">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg
+                    className="animate-spin h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   {t("f1:registration.processingPayment")}
                 </span>
