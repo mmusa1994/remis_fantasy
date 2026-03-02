@@ -13,6 +13,7 @@ export default function PremierLeagueGalleryPage() {
   const { t } = useTranslation("fpl");
   const [champions, setChampions] = useState<Champion[]>([]);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -33,7 +34,8 @@ export default function PremierLeagueGalleryPage() {
         );
         setPhotos(Array.isArray(gallery) ? gallery : []);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -60,6 +62,7 @@ export default function PremierLeagueGalleryPage() {
           title={t("gallery.championsWall.title")}
           subtitle={t("gallery.championsWall.subtitle")}
           emptyMessage={t("gallery.emptyChampions")}
+          loading={loading}
         />
 
         <AwardsGallery
@@ -68,6 +71,7 @@ export default function PremierLeagueGalleryPage() {
           title={t("gallery.awards.title")}
           subtitle={t("gallery.awards.subtitle")}
           emptyMessage={t("gallery.emptyGallery")}
+          loading={loading}
         />
       </div>
     </div>

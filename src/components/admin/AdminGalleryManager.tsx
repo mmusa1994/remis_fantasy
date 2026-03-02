@@ -19,6 +19,8 @@ interface AdminGalleryManagerProps {
   isDark: boolean;
   onToast: (message: string, type: "success" | "error") => void;
   accentClass?: string;
+  focusRingClass?: string;
+  iconColorClass?: string;
 }
 
 export default function AdminGalleryManager({
@@ -26,6 +28,8 @@ export default function AdminGalleryManager({
   isDark,
   onToast,
   accentClass = "bg-red-900 hover:bg-red-950",
+  focusRingClass = "focus:ring-red-600",
+  iconColorClass = "text-red-600",
 }: AdminGalleryManagerProps) {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -216,7 +220,7 @@ export default function AdminGalleryManager({
               value={alt}
               onChange={(e) => setAlt(e.target.value)}
               placeholder="Opis slike za pristupačnost"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${focusRingClass} ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -238,7 +242,7 @@ export default function AdminGalleryManager({
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Naslov ispod slike"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${focusRingClass} ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -299,7 +303,7 @@ export default function AdminGalleryManager({
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <RefreshCw className="w-6 h-6 animate-spin text-red-800" />
+            <RefreshCw className={`w-6 h-6 animate-spin ${iconColorClass}`} />
           </div>
         ) : photos.length === 0 ? (
           <div

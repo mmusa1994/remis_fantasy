@@ -105,6 +105,28 @@ const getMainTabAccentWithHover = (tab: "premier" | "champions" | "f1") => {
   }
 };
 
+const getMainTabFocusRing = (tab: "premier" | "champions" | "f1") => {
+  switch (tab) {
+    case "premier":
+      return "focus:ring-purple-600";
+    case "champions":
+      return "focus:ring-blue-600";
+    case "f1":
+      return "focus:ring-red-600";
+  }
+};
+
+const getMainTabIconColor = (tab: "premier" | "champions" | "f1") => {
+  switch (tab) {
+    case "premier":
+      return "text-purple-600";
+    case "champions":
+      return "text-blue-600";
+    case "f1":
+      return "text-red-600";
+  }
+};
+
 export default function AdminTablesCleanPage() {
   const { t } = useTranslation("navigation");
   const { theme, toggleTheme } = useTheme();
@@ -754,6 +776,8 @@ export default function AdminTablesCleanPage() {
             isDark={isDark}
             onToast={(message, type) => setToast({ show: true, message, type })}
             accentClass={getMainTabAccentWithHover(mainTab)}
+            focusRingClass={getMainTabFocusRing(mainTab)}
+            iconColorClass={getMainTabIconColor(mainTab)}
           />
         )}
 
@@ -764,6 +788,8 @@ export default function AdminTablesCleanPage() {
             isDark={isDark}
             onToast={(message, type) => setToast({ show: true, message, type })}
             accentClass={getMainTabAccentWithHover(mainTab)}
+            focusRingClass={getMainTabFocusRing(mainTab)}
+            iconColorClass={getMainTabIconColor(mainTab)}
           />
         )}
 
@@ -781,7 +807,7 @@ export default function AdminTablesCleanPage() {
             </div>
             <div className="p-6 space-y-4">
               <textarea
-                className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[300px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
+                className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[300px] p-3 border rounded-md focus:outline-none focus:ring-2 ${getMainTabFocusRing(mainTab)}`}
                 placeholder={`Paste UEFA Champions League HTML content here. Example:\n<div class="si-data-row si-row si-cursor--pointer">\n  <div class="si-block si-name-wrp">\n    <div class="si-cell">\n      <div class="si-rank"><span>1</span><span class="si-rank-icons euro-drop-down si-winner"></span></div>\n      <div class="si-plyr-info-wrap">\n        <div class="si-plyr-info">\n          <div class="si-badge-wrap">\n            <img src="https://gaming.uefa.com/assets/avatars/scarf_19_45@2x.png">\n            <div class="si-member-num"><span>15</span></div>\n          </div>\n          <div class="si-names">\n            <span class="si-name-one">Lightbringer</span>\n            <span class="si-user-name">AmmarĆosović</span>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n  <div class="si-block si-right-data">\n    <div class="si-cell">\n      <div class="si-cell--top"><span>112</span></div>\n    </div>\n  </div>\n</div>`}
                 value={bulkUpdateData}
                 onChange={(e) => setBulkUpdateData(e.target.value)}
@@ -937,7 +963,7 @@ export default function AdminTablesCleanPage() {
             </div>
             <div className="p-6 space-y-4">
               <textarea
-                className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[220px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
+                className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full min-h-[220px] p-3 border rounded-md focus:outline-none focus:ring-2 ${getMainTabFocusRing(mainTab)}`}
                 placeholder={`Zalijepite ovdje. Primjer:\nRang\tIme\tBodovi\n1\nSainz & Conquer\nAlmir Softic\n3377\n2\nCosine kamikaze\nAmmar Cosovic\n3307`}
                 value={bulkUpdateData}
                 onChange={(e) => setBulkUpdateData(e.target.value)}
@@ -1015,7 +1041,7 @@ export default function AdminTablesCleanPage() {
                   <input
                     type="text"
                     id="f1-next-race"
-                    className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
+                    className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 ${getMainTabFocusRing(mainTab)}`}
                     placeholder="npr. Austin"
                   />
                 </div>
@@ -1026,7 +1052,7 @@ export default function AdminTablesCleanPage() {
                   <input
                     type="text"
                     id="f1-last-race"
-                    className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-900`}
+                    className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-800"} w-full p-2 border rounded-md focus:outline-none focus:ring-2 ${getMainTabFocusRing(mainTab)}`}
                     placeholder="npr. Singapore"
                   />
                 </div>
@@ -1123,7 +1149,7 @@ export default function AdminTablesCleanPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
-                    <Server className="w-4 h-4 sm:w-5 sm:h-5 text-red-800" />
+                    <Server className={`w-4 h-4 sm:w-5 sm:h-5 ${getMainTabIconColor(mainTab)}`} />
                   </div>
                   <div className="min-w-0">
                     <h2 className={`text-base sm:text-lg font-bold ${isDark ? "text-white" : "text-gray-800"} truncate`}>
@@ -1177,7 +1203,7 @@ export default function AdminTablesCleanPage() {
             {/* FPL Sync Section */}
             <div className={`px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
               <div className="flex items-center gap-2 mb-3">
-                <RefreshCw className="w-3.5 h-3.5 text-red-800" />
+                <RefreshCw className={`w-3.5 h-3.5 ${getMainTabIconColor(mainTab)}`} />
                 <h3 className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                   FPL Sync
                 </h3>
@@ -1608,7 +1634,7 @@ export default function AdminTablesCleanPage() {
                                       });
                                     }
                                   }}
-                                  className={`px-2 py-1 border rounded text-sm w-20 focus:outline-none focus:ring-2 focus:ring-red-900 font-semibold ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"}`}
+                                  className={`px-2 py-1 border rounded text-sm w-20 focus:outline-none focus:ring-2 ${getMainTabFocusRing(mainTab)} font-semibold ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900"}`}
                                 />
                               ) : (
                                 <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>

@@ -18,52 +18,70 @@ interface ChampionsWallProps {
   title: string;
   subtitle: string;
   emptyMessage: string;
+  loading?: boolean;
 }
 
-const PLACEHOLDER_CHAMPIONS = [
-  {
-    season: "2024/25",
-    name: "Marko Horvat",
-    teamName: "FC Fantasy Kings",
-    achievement: "1st Place",
-    gradient: "from-amber-950 via-yellow-900/80 to-stone-900",
-  },
-  {
-    season: "2023/24",
-    name: "Ivan Perić",
-    teamName: "Dream Team XI",
-    achievement: "Champion",
-    gradient: "from-stone-900 via-amber-950/70 to-zinc-900",
-  },
-  {
-    season: "2022/23",
-    name: "Luka Mandić",
-    teamName: "Goal Machine FC",
-    achievement: "Winner",
-    gradient: "from-yellow-950 via-stone-800 to-amber-950",
-  },
-  {
-    season: "2021/22",
-    name: "Ante Babić",
-    teamName: "Elite Squad",
-    achievement: "1st Place",
-    gradient: "from-zinc-900 via-amber-950/60 to-stone-900",
-  },
-  {
-    season: "2020/21",
-    name: "Mateo Jurić",
-    teamName: "Victory Lane",
-    achievement: "Champion",
-    gradient: "from-amber-950/80 via-stone-900 to-yellow-950",
-  },
-  {
-    season: "2019/20",
-    name: "Filip Kovač",
-    teamName: "Crown FC",
-    achievement: "Winner",
-    gradient: "from-stone-900 via-yellow-950/60 to-zinc-900",
-  },
-];
+function SkeletonCard({ theme }: { theme: string }) {
+  return (
+    <div
+      className="relative overflow-hidden"
+      style={{ borderRadius: "0.75rem" }}
+    >
+      <div className="aspect-[3/4] sm:aspect-[3/4]">
+        <div
+          className={`absolute inset-0 ${
+            theme === "dark" ? "bg-gray-800/60" : "bg-gray-100"
+          }`}
+        >
+          <div className="absolute inset-0 overflow-hidden">
+            <div
+              className="absolute inset-0 animate-[shimmer_2s_infinite]"
+              style={{
+                background:
+                  theme === "dark"
+                    ? "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%)"
+                    : "linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 50%, transparent 100%)",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Faint bottom content area */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+          <div
+            className={`w-8 h-[1px] mb-3 rounded-full ${
+              theme === "dark" ? "bg-gray-700/50" : "bg-gray-200/80"
+            }`}
+          />
+          <div
+            className={`h-3.5 rounded-full mb-2 w-3/4 ${
+              theme === "dark" ? "bg-gray-700/40" : "bg-gray-200/60"
+            }`}
+          />
+          <div
+            className={`h-2.5 rounded-full mb-3 w-1/2 ${
+              theme === "dark" ? "bg-gray-700/30" : "bg-gray-200/40"
+            }`}
+          />
+          <div
+            className={`h-5 rounded-full w-16 ${
+              theme === "dark" ? "bg-gray-700/30" : "bg-gray-200/40"
+            }`}
+          />
+        </div>
+
+        {/* Faint season badge */}
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+          <div
+            className={`h-5 w-14 rounded-full ${
+              theme === "dark" ? "bg-gray-700/30" : "bg-gray-200/50"
+            }`}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ChampionCard({
   name,
@@ -71,7 +89,6 @@ function ChampionCard({
   season,
   achievement,
   image,
-  placeholder,
   theme,
 }: {
   name: string;
@@ -79,7 +96,6 @@ function ChampionCard({
   season: string;
   achievement?: string;
   image?: string;
-  placeholder?: { gradient: string };
   theme: string;
 }) {
   return (
@@ -138,23 +154,13 @@ function ChampionCard({
       />
 
       <div className="relative aspect-[3/4] sm:aspect-[3/4] overflow-hidden">
-        {/* Image or placeholder gradient */}
-        {placeholder ? (
-          <>
-            <div
-              className={`absolute inset-0 bg-gradient-to-br ${placeholder.gradient}`}
-            />
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-amber-500/[0.03] to-transparent" />
-          </>
-        ) : (
-          <Image
-            src={image!}
-            alt={name}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.05]"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
-          />
-        )}
+        <Image
+          src={image!}
+          alt={name}
+          fill
+          className="object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
+        />
 
         {/* Dark gradient overlay from bottom */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/5" />
@@ -217,9 +223,10 @@ export default function ChampionsWall({
   champions,
   title,
   subtitle,
+  emptyMessage,
+  loading,
 }: ChampionsWallProps) {
   const { theme } = useTheme();
-  const showPlaceholders = champions.length === 0;
 
   return (
     <section className="mb-20 relative">
@@ -270,32 +277,58 @@ export default function ChampionsWall({
         />
       </div>
 
-      {/* Cards grid - 2 cols on mobile, 3 on lg */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
-        {showPlaceholders
-          ? PLACEHOLDER_CHAMPIONS.map((item, i) => (
-              <ChampionCard
-                key={i}
-                name={item.name}
-                teamName={item.teamName}
-                season={item.season}
-                achievement={item.achievement}
-                placeholder={{ gradient: item.gradient }}
-                theme={theme}
+      {loading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} theme={theme} />
+          ))}
+        </div>
+      ) : champions.length === 0 ? (
+        <div className="py-16 sm:py-20 text-center">
+          <div
+            className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-4 ${
+              theme === "dark" ? "bg-gray-800/60" : "bg-gray-100"
+            }`}
+          >
+            <svg
+              className={`w-5 h-5 ${
+                theme === "dark" ? "text-gray-600" : "text-gray-300"
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-4.5A3.375 3.375 0 0012.75 10.5h-1.5A3.375 3.375 0 007.875 13.875v4.875m8.625 0H7.875M12 3.375a2.625 2.625 0 100 5.25 2.625 2.625 0 000-5.25z"
               />
-            ))
-          : champions.map((item, i) => (
-              <ChampionCard
-                key={i}
-                name={item.name}
-                teamName={item.teamName}
-                season={item.season}
-                achievement={item.achievement}
-                image={item.image}
-                theme={theme}
-              />
-            ))}
-      </div>
+            </svg>
+          </div>
+          <p
+            className={`text-sm ${
+              theme === "dark" ? "text-gray-600" : "text-gray-400"
+            }`}
+          >
+            {emptyMessage}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
+          {champions.map((item, i) => (
+            <ChampionCard
+              key={i}
+              name={item.name}
+              teamName={item.teamName}
+              season={item.season}
+              achievement={item.achievement}
+              image={item.image}
+              theme={theme}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

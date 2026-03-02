@@ -29,6 +29,8 @@ interface AdminChampionsManagerProps {
   isDark: boolean;
   onToast: (message: string, type: "success" | "error") => void;
   accentClass?: string;
+  focusRingClass?: string;
+  iconColorClass?: string;
 }
 
 export default function AdminChampionsManager({
@@ -36,6 +38,8 @@ export default function AdminChampionsManager({
   isDark,
   onToast,
   accentClass = "bg-red-900 hover:bg-red-950",
+  focusRingClass = "focus:ring-red-600",
+  iconColorClass = "text-red-600",
 }: AdminChampionsManagerProps) {
   const [champions, setChampions] = useState<ChampionEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -208,7 +212,7 @@ export default function AdminChampionsManager({
             isDark ? "text-white" : "text-gray-800"
           }`}
         >
-          <Trophy className="w-5 h-5 text-red-800" />
+          <Trophy className={`w-5 h-5 ${iconColorClass}`} />
           Dodaj novog šampiona
         </h3>
 
@@ -227,7 +231,7 @@ export default function AdminChampionsManager({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ime i prezime"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${focusRingClass} ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -249,7 +253,7 @@ export default function AdminChampionsManager({
               value={season}
               onChange={(e) => setSeason(e.target.value)}
               placeholder="npr. 2024/25"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${focusRingClass} ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -271,7 +275,7 @@ export default function AdminChampionsManager({
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
               placeholder="Naziv tima"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${focusRingClass} ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -293,7 +297,7 @@ export default function AdminChampionsManager({
               value={achievement}
               onChange={(e) => setAchievement(e.target.value)}
               placeholder="npr. 1st Place"
-              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-900 ${
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${focusRingClass} ${
                 isDark
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-gray-800"
@@ -395,7 +399,7 @@ export default function AdminChampionsManager({
               isDark ? "text-white" : "text-gray-800"
             }`}
           >
-            <Trophy className="w-5 h-5 text-red-800" />
+            <Trophy className={`w-5 h-5 ${iconColorClass}`} />
             Šampioni ({champions.length})
           </h3>
           <button
@@ -415,7 +419,7 @@ export default function AdminChampionsManager({
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <RefreshCw className="w-6 h-6 animate-spin text-red-800" />
+            <RefreshCw className={`w-6 h-6 animate-spin ${iconColorClass}`} />
           </div>
         ) : champions.length === 0 ? (
           <div
