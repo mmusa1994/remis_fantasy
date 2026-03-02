@@ -68,7 +68,6 @@ export async function GET(request: NextRequest) {
             break;
           }
         } catch (fallbackError) {
-          console.log(`❌ GW${gameweek} also failed:`, fallbackError);
           continue;
         }
       }

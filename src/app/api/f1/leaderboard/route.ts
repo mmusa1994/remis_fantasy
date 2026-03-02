@@ -15,8 +15,6 @@ export async function GET(request: NextRequest) {
     const season = searchParams.get("season") || "26";
     const tableName = SEASON_TABLES[season] || "f1_table_26";
 
-    console.log(`Fetching F1 Fantasy league from DB: ${leagueId}`);
-
     const { data: rows, error } = await supabaseServer
       .from(tableName)
       .select("rank, team_name, manager_name, points, last_rank, updated_at")

@@ -82,8 +82,6 @@ export async function POST(req: NextRequest) {
       managerId
     );
 
-    console.log("Validation result:", validationResult);
-
     // Handle different validation states
     switch (validationResult.state) {
       case ValidationState.SUCCESS:

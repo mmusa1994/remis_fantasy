@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { useSession } from "next-auth/react";
 
 interface OnboardingContextType {
@@ -10,7 +16,9 @@ interface OnboardingContextType {
   isLoading: boolean;
 }
 
-const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
+const OnboardingContext = createContext<OnboardingContextType | undefined>(
+  undefined,
+);
 
 interface OnboardingProviderProps {
   children: ReactNode;
@@ -32,7 +40,6 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
         const response = await fetch("/api/user/onboarding");
         if (response.ok) {
           const data = await response.json();
-          console.log("🧪 Onboarding status check:", data);
           setShowOnboarding(!data.onboardingShown);
         } else {
           console.error("🧪 Onboarding API failed:", response.status);

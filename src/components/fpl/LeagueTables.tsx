@@ -160,7 +160,7 @@ export default function LeagueTables({
   useEffect(() => {
     const id = setTimeout(
       () => setDebouncedQuery(filterDraft.playerQuery),
-      100
+      100,
     );
     return () => clearTimeout(id);
   }, [filterDraft.playerQuery]);
@@ -178,7 +178,7 @@ export default function LeagueTables({
   const isTeamFixtureFinished = (teamId: number): boolean => {
     if (!fixtures || fixtures.length === 0) return false;
     const teamFixtures = fixtures.filter(
-      (f) => f.team_h === teamId || f.team_a === teamId
+      (f) => f.team_h === teamId || f.team_a === teamId,
     );
     if (teamFixtures.length === 0) return false;
     return teamFixtures.every((f) => f.finished === true);
@@ -206,7 +206,7 @@ export default function LeagueTables({
     const benchOrderMap = new Map(benchOutfield.map((b) => [b.id, b.order]));
 
     const benchGKElement = team.picks.find(
-      (p) => p.position > 11 && elementsMap.get(p.element)?.element_type === 1
+      (p) => p.position > 11 && elementsMap.get(p.element)?.element_type === 1,
     );
 
     const squad: SquadPlayer[] = team.picks.map((p) => {
@@ -279,7 +279,7 @@ export default function LeagueTables({
     const benchOrderMap = new Map(benchOutfield.map((b) => [b.id, b.order]));
 
     const benchGK = teamWithStats.find(
-      (p) => p.position > 11 && p.player?.element_type === 1
+      (p) => p.position > 11 && p.player?.element_type === 1,
     );
 
     const squad: SquadPlayer[] = teamWithStats.map((p) => {
@@ -453,7 +453,7 @@ export default function LeagueTables({
 
     try {
       const response = await fetch(
-        `/api/fpl/live-table-calc?managerId=${managerId}&gameweek=${gameweek}&leagueId=${selectedLeagueId}`
+        `/api/fpl/live-table-calc?managerId=${managerId}&gameweek=${gameweek}&leagueId=${selectedLeagueId}`,
       );
 
       if (!response.ok) {
@@ -589,7 +589,7 @@ export default function LeagueTables({
     if (!currentUserData?.captain || !data?.elements) return null;
 
     const captainElement = data.elements.find(
-      (e) => e.id === currentUserData.captain.player_id
+      (e) => e.id === currentUserData.captain.player_id,
     );
     if (!captainElement) return null;
 
@@ -610,10 +610,10 @@ export default function LeagueTables({
     if (!currentUserData?.team_with_stats) return null;
 
     const startingXI = currentUserData.team_with_stats.filter(
-      (p: any) => p.position <= 11
+      (p: any) => p.position <= 11,
     );
     const bench = currentUserData.team_with_stats.filter(
-      (p: any) => p.position > 11
+      (p: any) => p.position > 11,
     );
 
     // Compute auto subs for current user if enabled
@@ -630,7 +630,7 @@ export default function LeagueTables({
         subsCount = result.subsApplied.length;
         // derive bench-ins and outs
         const originalStarterIds = new Set(
-          squad.filter((p) => p.isStarter).map((p) => p.id)
+          squad.filter((p) => p.isStarter).map((p) => p.id),
         );
         result.subsApplied.forEach((s) => {
           subbedOutIds.add(s.outId);
@@ -667,8 +667,8 @@ export default function LeagueTables({
                   playerDetail.is_captain
                     ? "border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20"
                     : playerDetail.is_vice_captain
-                    ? "border-gray-400 bg-gray-50 dark:bg-gray-900/20"
-                    : "border-theme-border bg-theme-card"
+                      ? "border-gray-400 bg-gray-50 dark:bg-gray-900/20"
+                      : "border-theme-border bg-theme-card"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -701,7 +701,7 @@ export default function LeagueTables({
                             (
                             {t(
                               "leagueTables.subbedOutZeroMin",
-                              "0m, subbed out"
+                              "0m, subbed out",
                             )}
                             )
                           </span>
@@ -874,8 +874,8 @@ export default function LeagueTables({
                   playerDetail.is_captain
                     ? "border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20"
                     : playerDetail.is_vice_captain
-                    ? "border-gray-400 bg-gray-50 dark:bg-gray-900/20"
-                    : "border-theme-border bg-theme-card"
+                      ? "border-gray-400 bg-gray-50 dark:bg-gray-900/20"
+                      : "border-theme-border bg-theme-card"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -1134,7 +1134,7 @@ export default function LeagueTables({
                     if (e.key === "ArrowDown") {
                       e.preventDefault();
                       setActiveIdx((idx) =>
-                        Math.min(idx + 1, filteredPlayersForSelect.length - 1)
+                        Math.min(idx + 1, filteredPlayersForSelect.length - 1),
                       );
                     } else if (e.key === "ArrowUp") {
                       e.preventDefault();
@@ -1157,7 +1157,7 @@ export default function LeagueTables({
                           show: true,
                           message: t(
                             "leagueTables.filters.appliedToast",
-                            "Filter applied"
+                            "Filter applied",
                           ),
                           type: "success",
                         });
@@ -1170,7 +1170,7 @@ export default function LeagueTables({
                   className="w-full pl-8 pr-8 py-2 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
                   placeholder={t(
                     "leagueTables.filters.searchPlaceholder",
-                    "Search player..."
+                    "Search player...",
                   )}
                 />
                 {filterDraft.playerId && (
@@ -1202,7 +1202,7 @@ export default function LeagueTables({
                       <div className="px-3 py-2 text-sm text-theme-text-secondary">
                         {t(
                           "leagueTables.filters.noResults",
-                          "No players found"
+                          "No players found",
                         )}
                       </div>
                     ) : (
@@ -1227,7 +1227,7 @@ export default function LeagueTables({
                               show: true,
                               message: t(
                                 "leagueTables.filters.appliedToast",
-                                "Filter applied"
+                                "Filter applied",
                               ),
                               type: "success",
                             });
@@ -1311,7 +1311,7 @@ export default function LeagueTables({
                     <option value="playersRemaining">
                       {t(
                         "leagueTables.sort.playersRemaining",
-                        "Players Remaining"
+                        "Players Remaining",
                       )}
                     </option>
                     <option value="leagueRank">
@@ -1354,7 +1354,7 @@ export default function LeagueTables({
                     show: true,
                     message: t(
                       "leagueTables.filters.appliedToast",
-                      "Filter applied"
+                      "Filter applied",
                     ),
                     type: "success",
                   });
@@ -1380,7 +1380,7 @@ export default function LeagueTables({
                     show: true,
                     message: t(
                       "leagueTables.filters.clearedToast",
-                      "Filter cleared"
+                      "Filter cleared",
                     ),
                     type: "success",
                   });
@@ -1412,8 +1412,8 @@ export default function LeagueTables({
             leaguesLoading
               ? t("leagueTables.fetchingManagerLeagues")
               : loading
-              ? "Loading league table..."
-              : "Preparing league data..."
+                ? "Loading league table..."
+                : "Preparing league data..."
           }
         />
       )}
@@ -1593,10 +1593,11 @@ export default function LeagueTables({
                       <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-green-50 hover:to-teal-50 dark:hover:from-green-900/20 dark:hover:to-teal-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-green-700 dark:group-hover:text-green-300 transition-colors">
                           {includeAutoSubs
-                            ? adjustedTotalsByTeam?.get(team.id)?.live_points ??
+                            ? (adjustedTotalsByTeam?.get(team.id)
+                                ?.live_points ??
                               team.live_points ??
                               team.event_total ??
-                              0
+                              0)
                             : team.live_points || team.event_total || 0}
                         </span>
                       </div>
@@ -1605,10 +1606,10 @@ export default function LeagueTables({
                       <div className="col-span-1 text-center hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
                           {includeAutoSubs
-                            ? adjustedTotalsByTeam?.get(team.id)?.live_total ??
+                            ? (adjustedTotalsByTeam?.get(team.id)?.live_total ??
                               team.live_total ??
                               team.total ??
-                              0
+                              0)
                             : team.live_total || team.total || 0}
                         </span>
                       </div>
@@ -1618,7 +1619,7 @@ export default function LeagueTables({
                         {team.active_chip && (
                           <div
                             className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold text-white transition-transform hover:scale-110 ${getChipColor(
-                              getChipAbbreviation(team.active_chip)
+                              getChipAbbreviation(team.active_chip),
                             )}`}
                           >
                             {getChipAbbreviation(team.active_chip)}
@@ -1673,17 +1674,17 @@ export default function LeagueTables({
             {/* Current Manager Row - Display if not in main table */}
             {(() => {
               const currentUserInTable = data.teams.find(
-                (team) => team.id === managerId
+                (team) => team.id === managerId,
               );
               if (!!currentUserInTable) return null;
 
               // Find the current manager's league entry rank for display
               const currentUserLeague = leagues.find(
-                (league) => league.id.toString() === selectedLeagueId.toString()
+                (league) =>
+                  league.id.toString() === selectedLeagueId.toString(),
               );
 
               if (!currentUserLeague) return null;
-              console.log(currentUserData);
               return (
                 <>
                   <div className="border-t-4 border-purple-300 dark:border-purple-600"></div>
@@ -1749,7 +1750,7 @@ export default function LeagueTables({
                             {(() => {
                               const startingXI =
                                 currentUserData?.team_with_stats?.filter(
-                                  (p: any) => p.position <= 11
+                                  (p: any) => p.position <= 11,
                                 ) || [];
                               const totalPoints = startingXI.reduce(
                                 (sum: number, player: any) => {
@@ -1759,7 +1760,7 @@ export default function LeagueTables({
                                   const points = playerPoints * multiplier;
                                   return sum + points;
                                 },
-                                0
+                                0,
                               );
                               return totalPoints;
                             })()}
@@ -1778,7 +1779,9 @@ export default function LeagueTables({
                           {currentUserData?.active_chip && (
                             <div
                               className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold text-white transition-transform hover:scale-110 ${getChipColor(
-                                getChipAbbreviation(currentUserData.active_chip)
+                                getChipAbbreviation(
+                                  currentUserData.active_chip,
+                                ),
                               )}`}
                             >
                               {getChipAbbreviation(currentUserData.active_chip)}
@@ -1953,7 +1956,7 @@ export default function LeagueTables({
                         {team.active_chip && (
                           <div
                             className={`inline-flex items-center justify-center w-4 h-4 rounded text-xs font-bold text-white ml-1 ${getChipColor(
-                              getChipAbbreviation(team.active_chip)
+                              getChipAbbreviation(team.active_chip),
                             )}`}
                           >
                             {getChipAbbreviation(team.active_chip)}
@@ -1992,13 +1995,14 @@ export default function LeagueTables({
             {/* Current Manager Row - Mobile - Display if not in main table */}
             {(() => {
               const currentUserInTable = data.teams.find(
-                (team) => team.id === managerId
+                (team) => team.id === managerId,
               );
               if (currentUserInTable) return null;
 
               // Find the current manager's league entry rank for display
               const currentUserLeague = leagues.find(
-                (league) => league.id.toString() === selectedLeagueId.toString()
+                (league) =>
+                  league.id.toString() === selectedLeagueId.toString(),
               );
 
               if (!currentUserLeague) return null;
@@ -2058,7 +2062,7 @@ export default function LeagueTables({
                             {(() => {
                               const startingXI =
                                 currentUserData?.team_with_stats?.filter(
-                                  (p: any) => p.position <= 11
+                                  (p: any) => p.position <= 11,
                                 ) || [];
                               const totalPoints = startingXI.reduce(
                                 (sum: number, player: any) => {
@@ -2068,7 +2072,7 @@ export default function LeagueTables({
                                   const points = playerPoints * multiplier;
                                   return sum + points;
                                 },
-                                0
+                                0,
                               );
                               return totalPoints;
                             })()}
@@ -2083,7 +2087,9 @@ export default function LeagueTables({
                           {currentUserData?.active_chip && (
                             <div
                               className={`inline-flex items-center justify-center w-4 h-4 rounded text-xs font-bold text-white ml-1 ${getChipColor(
-                                getChipAbbreviation(currentUserData.active_chip)
+                                getChipAbbreviation(
+                                  currentUserData.active_chip,
+                                ),
                               )}`}
                             >
                               {getChipAbbreviation(currentUserData.active_chip)}

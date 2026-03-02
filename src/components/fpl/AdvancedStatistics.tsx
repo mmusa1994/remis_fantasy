@@ -203,12 +203,6 @@ const AdvancedStatistics = React.memo(function AdvancedStatistics({
           }
         }
 
-        console.table(captainData);
-        captainData.forEach((c) => {
-          console.log(
-            `GW${c.event}: ${c.playerName} (${c.element}) - Base: ${c.basePoints}, Multiplier: ${c.multiplier}, Total: ${c.captainPoints}`
-          );
-        });
         setCaptainHistory(captainData);
       } catch (error) {
         console.error("Failed to fetch captain history:", error);

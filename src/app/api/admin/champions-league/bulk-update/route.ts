@@ -138,12 +138,6 @@ function parseChampionsLeagueHTML(htmlContent: string): ParsedPlayer[] {
       }
 
       // Debug logging for the first few entries
-      if (rank <= 5) {
-        console.log(
-          `Parsing player ${rank}: ${teamName} - Last MD: ${lastMdPoints}, Total: ${totalPoints}`
-        );
-      }
-
       players.push({
         rank,
         team_name: teamName,

@@ -198,8 +198,6 @@ export abstract class BaseFPLService {
 
     for (const proxyUrl of proxyMethods) {
       try {
-        console.log(`🔄 Trying proxy: ${proxyUrl.split("?")[0]}`);
-
         const response = await fetch(proxyUrl, {
           headers: {
             "Content-Type": "application/json",
@@ -218,8 +216,6 @@ export abstract class BaseFPLService {
             result.error || "Proxy returned unsuccessful response"
           );
         }
-
-        console.log(`✅ Proxy success: ${proxyUrl.split("?")[0]}`);
 
         // Cache the successful response
         if (cacheConfig) {

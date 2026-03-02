@@ -70,9 +70,6 @@ export async function POST(req: NextRequest) {
         if (upsertError) {
           console.error("Error updating subscription:", upsertError);
         } else {
-          console.log(
-            `Subscription activated for user ${userId}, plan ${planId}`
-          );
         }
         break;
       }
@@ -102,7 +99,6 @@ export async function POST(req: NextRequest) {
           if (f1Error) {
             console.error("Error inserting F1 registration:", f1Error);
           } else {
-            console.log(`F1 registration completed for ${email}`);
 
             // Send admin notification
             sendAdminRegistrationNotification({
@@ -146,7 +142,6 @@ export async function POST(req: NextRequest) {
                     .eq("id", insertedRow.id);
                 }
 
-                console.log(`F1 codes email sent automatically to ${email}`);
               } else {
                 console.warn(
                   "Email credentials not configured, skipping auto-send"
@@ -179,7 +174,6 @@ export async function POST(req: NextRequest) {
           if (clError) {
             console.error("Error inserting CL registration:", clError);
           } else {
-            console.log(`CL registration completed for ${email}`);
             sendAdminRegistrationNotification({
               competition: "Champions League",
               first_name,
@@ -224,7 +218,6 @@ export async function POST(req: NextRequest) {
           if (plError) {
             console.error("Error inserting PL registration:", plError);
           } else {
-            console.log(`PL registration completed for ${email}`);
             sendAdminRegistrationNotification({
               competition: "Premier League",
               first_name,
@@ -283,7 +276,6 @@ export async function POST(req: NextRequest) {
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });

@@ -96,19 +96,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ response: routing.message });
 
     // ZERO HALLUCINATION FLOW: Only bootstrap-static + fixtures + user team
-    console.log("🚀 STARTING ZERO HALLUCINATION FLOW");
 
     // STEP 1: Bootstrap-static (MANDATORY - All players & teams with exact IDs)
-    console.log("🔄 STEP 1: Fetching bootstrap-static...");
     let bootstrapData: any;
     try {
       bootstrapData = await getBootstrapStatic();
       if (!bootstrapData?.elements || !bootstrapData?.teams) {
         throw new Error("Bootstrap data incomplete");
       }
-      console.log(
-        `✅ STEP 1 COMPLETE: ${bootstrapData.elements.length} players, ${bootstrapData.teams.length} teams`
-      );
     } catch (error) {
       console.error("❌ STEP 1 FAILED:", error);
       return NextResponse.json(
@@ -118,7 +113,6 @@ export async function POST(req: NextRequest) {
     }
 
     // STEP 2: Fixtures (MANDATORY - Complete season schedule & results)
-    console.log("🔄 STEP 2: Fetching fixtures...");
     let fixturesData: any[];
     try {
       const fixtures = await getFixtures();
@@ -126,7 +120,6 @@ export async function POST(req: NextRequest) {
         throw new Error("Fixtures data invalid");
       }
       fixturesData = fixtures;
-      console.log(`✅ STEP 2 COMPLETE: ${fixturesData.length} fixtures loaded`);
     } catch (error) {
       console.error("❌ STEP 2 FAILED:", error);
       return NextResponse.json(
@@ -138,8 +131,6 @@ export async function POST(req: NextRequest) {
     let userTeamData: any = null;
 
     if (session?.user?.id) {
-      console.log("🔄 STEP 3: Fetching detailed user team data...");
-
       try {
         const { data: userData, error: userError } = await supabaseServer
           .from("users")
@@ -147,17 +138,9 @@ export async function POST(req: NextRequest) {
           .eq("id", session.user.id)
           .single();
 
-        console.log("🔍 Database query result:", { userData, userError });
-
         if (!userError && userData?.manager_id) {
-          console.log(`📋 Manager ID found: ${userData.manager_id}`);
           const current_event =
             bootstrapData.events?.find((e: any) => e.is_next)?.id || 1;
-
-          // Use only public endpoints (my-team requires auth)
-          console.log(
-            `🔄 Fetching data for manager ${userData.manager_id}, GW${current_event}...`
-          );
 
           // Try current event first, then fallback to previous events
           let currentPicks = null;
@@ -169,24 +152,17 @@ export async function POST(req: NextRequest) {
             gw--
           ) {
             try {
-              console.log(`🔍 Trying GW${gw} for picks...`);
               currentPicks = await getUserPicks(userData.manager_id, gw);
               actualGW = gw;
               break;
             } catch (e) {
-              console.log(`❌ GW${gw} picks failed: ${(e as Error).message}`);
+              // GW picks failed, try previous
             }
           }
 
           const [teamHistory, teamInfo] = await Promise.all([
-            getTeamHistory(userData.manager_id).catch((e) => {
-              console.log("❌ History failed:", e.message);
-              return null;
-            }),
-            getUserTeam(userData.manager_id).catch((e) => {
-              console.log("❌ Team info failed:", e.message);
-              return null;
-            }),
+            getTeamHistory(userData.manager_id).catch(() => null),
+            getUserTeam(userData.manager_id).catch(() => null),
           ]);
 
           userTeamData = {
@@ -200,14 +176,9 @@ export async function POST(req: NextRequest) {
       } catch (error) {
         console.warn("⚠️ STEP 3 WARNING: User team fetch failed:", error);
       }
-    } else {
-      console.log("ℹ️ STEP 3 SKIPPED: User not logged in");
     }
 
-    console.log("🚀 ZERO HALLUCINATION FLOW COMPLETE - Processing data...");
-
     // MINIMAL DATA PROCESSING - Only essential information
-    console.log("🔧 Processing minimal data for AI...");
 
     // Team ID to name mapping (essential)
     const teams = bootstrapData.teams.reduce((acc: any, t: any) => {
@@ -272,57 +243,8 @@ export async function POST(req: NextRequest) {
       bootstrapData.events?.find((e: any) => e.is_next)?.id || 1;
     const today = new Date().toISOString().split("T")[0];
 
-    console.log(
-      `✅ Data processed: ${allPlayers.split("\n").length} players, ${
-        completedMatches.split("\n").length
-      } results, ${upcomingMatches.split("\n").length} upcoming`
-    );
-
-    // DEBUG: Log first few players to check data format
-    console.log("🔍 DEBUG: First 3 players data:");
-    allPlayers
-      .split("\n")
-      .slice(0, 3)
-      .forEach((player: any, i: any) => {
-        console.log(`  Player ${i + 1}: ${player}`);
-      });
-
-    // DEBUG: Check specific player team mapping
-    console.log("🔍 DEBUG: Team ID mappings:");
-    console.log(
-      "  Teams object:",
-      Object.keys(teams)
-        .slice(0, 10)
-        .map((id) => `${id}:${teams[id]}`)
-    );
-
-    // DEBUG: Check key player prices from bootstrap vs processed
-    console.log("🔍 DEBUG: Key player prices comparison:");
-
-    // Check your team prices too
-    if (userTeamData?.picks?.picks) {
-      (userTeamData.picks as any).picks.slice(0, 3).forEach((pick: any) => {
-        const player = bootstrapData.elements.find(
-          (p: any) => p.id === pick.element
-        );
-        if (player) {
-          const actualPrice = (player.now_cost / 10).toFixed(1);
-          console.log(
-            `  ${player.web_name}: now_cost=${player.now_cost}, Price=£${actualPrice}m`
-          );
-        }
-      });
-    }
-
     // Detailed User Team Info
     let userTeamInfo = "";
-    console.log("🔍 USERTEAM DEBUG:", {
-      hasUserTeamData: !!userTeamData,
-      hasPicks: !!userTeamData?.picks,
-      picksCount: userTeamData?.picks?.picks?.length || 0,
-      hasInfo: !!userTeamData?.info,
-      managerId: userTeamData?.managerId,
-    });
 
     if (userTeamData?.picks?.picks) {
       // Only require picks, info is optional
@@ -388,9 +310,6 @@ NAPADI (${squadByPosition.FWD.length}): ${formatPosition(squadByPosition.FWD)}
 Transferi napravljeni: ${userTeamData.picks.entry_history?.event_transfers || 0}
 Ukupan rank: ${userTeamData.info?.summary_overall_rank || "N/A"}`;
 
-      console.log(
-        `✅ Team info: ${squadByPosition.GK.length}GK, ${squadByPosition.DEF.length}DEF, ${squadByPosition.MID.length}MID, ${squadByPosition.FWD.length}FWD - Manager: ${userTeamData.managerId}`
-      );
     }
 
     // FPL 2025/26 EXPERT SYSTEM PROMPT - IMPROVED
@@ -426,24 +345,6 @@ KLJUČNA PRAVILA:
       { role: "user" as const, content: message },
     ];
 
-    // Token efficiency check
-    const estimatedPromptTokens = JSON.stringify(aiInput).length / 4;
-    console.log(
-      `🔍 TOKEN CHECK: Estimated prompt tokens: ${estimatedPromptTokens.toFixed(
-        0
-      )}`
-    );
-
-    // Token check - target ~20k tokens
-    if (estimatedPromptTokens > 25000) {
-      console.warn(
-        `⚠️ TOKEN WARNING: ${estimatedPromptTokens.toFixed(
-          0
-        )} tokens - approaching 25k limit`
-      );
-    }
-
-    console.log("🤖 Sending request to OpenAI...");
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: aiInput,
@@ -454,14 +355,6 @@ KLJUČNA PRAVILA:
     // No need for tool calls - we already have live data
 
     let response = completion.choices[0]?.message?.content || "No answer.";
-
-    // Debug what AI actually returned
-    console.log("🤖 AI Raw Response:", {
-      choices: completion.choices?.length,
-      hasContent: !!completion.choices[0]?.message?.content,
-      contentLength: completion.choices[0]?.message?.content?.length,
-      actualContent: completion.choices[0]?.message?.content?.substring(0, 200),
-    });
 
     // Fallback to gpt-4o-mini if nano returns empty response
     if (!response || response.trim() === "" || response === "No answer.") {
@@ -476,18 +369,6 @@ KLJUČNA PRAVILA:
         response =
           fallbackCompletion.choices[0]?.message?.content || "No answer.";
 
-        console.log("✅ Fallback successful:", {
-          hasContent: !!response,
-          contentLength: response.length,
-        });
-
-        if (fallbackCompletion.usage) {
-          console.log("💰 Token Usage - Fallback Request:", {
-            prompt_tokens: fallbackCompletion.usage.prompt_tokens,
-            completion_tokens: fallbackCompletion.usage.completion_tokens,
-            total_tokens: fallbackCompletion.usage.total_tokens,
-          });
-        }
       } catch (fallbackError) {
         console.error("❌ Fallback also failed:", fallbackError);
         response =
@@ -495,37 +376,15 @@ KLJUČNA PRAVILA:
       }
     }
 
-    // Log token usage for monitoring and enforce 50k limit
-    let tokenUsage = null;
-    if (completion.usage) {
-      tokenUsage = {
-        prompt_tokens: completion.usage.prompt_tokens,
-        completion_tokens: completion.usage.completion_tokens,
-        total_tokens: completion.usage.total_tokens,
-      };
-
-      console.log("💰 Token Usage - Main Request:", tokenUsage);
-
-      // Alert if approaching 50k token limit
-      if (tokenUsage.total_tokens > 40000) {
-        console.warn("⚠️ HIGH TOKEN USAGE: Approaching 50k limit!", tokenUsage);
-      }
-
-      // Hard stop at 50k tokens
-      if (tokenUsage.total_tokens > 50000) {
-        console.error(
-          "🚨 TOKEN LIMIT EXCEEDED: Request used more than 50k tokens!",
-          tokenUsage
-        );
-        return NextResponse.json(
-          {
-            error:
-              "Request too large. Please try a simpler question or break it into multiple parts.",
-            tokenUsage: tokenUsage,
-          },
-          { status: 413 }
-        );
-      }
+    // Enforce 50k token limit
+    if (completion.usage && completion.usage.total_tokens > 50000) {
+      return NextResponse.json(
+        {
+          error:
+            "Request too large. Please try a simpler question or break it into multiple parts.",
+        },
+        { status: 413 }
+      );
     }
 
     // Check if AI requests player summary
@@ -566,45 +425,18 @@ Odgovori na pitanje koristeći ove podatke.`,
         response =
           summaryCompletion.choices[0]?.message?.content || "No answer.";
 
-        // Log token usage for player summary request
-        if (summaryCompletion.usage) {
-          console.log("💰 Token Usage - Player Summary Request:", {
-            prompt_tokens: summaryCompletion.usage.prompt_tokens,
-            completion_tokens: summaryCompletion.usage.completion_tokens,
-            total_tokens: summaryCompletion.usage.total_tokens,
-          });
-        }
       } catch (error) {
         console.error("Failed to fetch player summary:", error);
         response = "Ne mogu da dohvatim detaljne podatke o igraču trenutno.";
       }
     }
 
-    // FIXED: Always increment usage for successful responses (except when using own API key)
+    // Increment usage for successful responses (except when using own API key)
     if (!userApiKey && response && response.trim() !== "" && response !== "No answer.") {
       const userId = session?.user?.id || (await getUserFromRequest(req));
-      console.log('🎯 About to increment usage:', {
-        hasUserApiKey: !!userApiKey,
-        hasResponse: !!response,
-        responseLength: response?.length || 0,
-        responsePreview: response?.substring(0, 50) || "empty",
-        userId,
-        sessionUserId: session?.user?.id
-      });
       if (userId) {
-        console.log('✅ Calling incrementUserUsage for userId:', userId);
         await incrementUserUsage(userId);
-        console.log('✅ incrementUserUsage call completed');
-      } else {
-        console.log('❌ No userId found - cannot increment usage');
       }
-    } else {
-      console.log('⏭️ Skipping usage increment:', {
-        hasUserApiKey: !!userApiKey,
-        hasResponse: !!response,
-        responseLength: response?.length || 0,
-        reason: userApiKey ? 'Using user API key' : 'Empty or invalid response'
-      });
     }
 
     return NextResponse.json({ response });

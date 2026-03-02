@@ -46,10 +46,6 @@ export const authOptions = {
           return null;
         }
         const inputEmail = String(credentials.email).trim();
-        try {
-          console.log("[Auth] Credentials authorize start", { action: credentials.action, email: inputEmail });
-        } catch {}
-
         // Handle admin-only login
         if (credentials.action === 'login_admin') {
           if (!credentials.password) return null;
@@ -409,5 +405,5 @@ export const authOptions = {
     },
   },
   secret: nextAuthSecret,
-  debug: true, // Enable debug for production troubleshooting
+  debug: process.env.NODE_ENV === "development",
 };

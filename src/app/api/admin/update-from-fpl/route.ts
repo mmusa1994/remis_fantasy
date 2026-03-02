@@ -124,14 +124,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch ALL players from FPL
-    console.log(`[FPL-SYNC] Fetching ${leagueType} league (ID: ${config.id})...`);
     const fplPlayers = await fetchAllFPLPlayers(config.id, config.type);
 
     if (!fplPlayers.length) {
       return NextResponse.json({ error: "No players found in FPL league" }, { status: 500 });
     }
-
-    console.log(`[FPL-SYNC] Fetched ${fplPlayers.length} players from FPL`);
 
     let inserted = 0;
     let updated = 0;
@@ -139,8 +136,6 @@ export async function POST(request: NextRequest) {
 
     if (fullSync) {
       // FULL SYNC MODE: Delete existing and insert fresh
-      console.log(`[FPL-SYNC] Full sync mode - clearing existing ${leagueType} data from ${config.table}...`);
-
       if (isH2H) {
         // For H2H: Delete where h2h_category matches
         const { error: deleteError } = await supabaseServer
@@ -241,8 +236,6 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // UPDATE MODE: Match by team name and update points
-      console.log(`[FPL-SYNC] Update mode - matching players by team name in ${config.table}...`);
-
       const notFound: string[] = [];
       const matched: Array<{ fpl: string; db: string; oldPts: number; newPts: number }> = [];
 

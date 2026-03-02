@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export async function POST(request: NextRequest) {
@@ -22,10 +22,9 @@ export async function POST(request: NextRequest) {
     if (typeof completed !== "boolean") {
       return NextResponse.json(
         { error: "Invalid request body" },
-        { status: 400 }
+        { status: 400 },
       );
     }
-
 
     // Try to update, but handle gracefully if column doesn't exist
     const updateData: any = {
@@ -35,28 +34,34 @@ export async function POST(request: NextRequest) {
     // Try to add onboarding_shown only if the column exists
     try {
       updateData.onboarding_shown = completed;
-      
+
       const { error } = await supabase
         .from("users")
         .update(updateData)
         .eq("id", session.user.id);
 
-      console.log("🧪 Onboarding update:", { userId: session.user.id, completed, error });
-
       if (error) {
         // If column doesn't exist, ignore the error and continue
-        if (error.message?.includes("column") && error.message?.includes("onboarding_shown")) {
-          console.log("⚠️ onboarding_shown column doesn't exist yet, skipping update");
-          return NextResponse.json({ success: true, warning: "Column not found, but continuing" });
+        if (
+          error.message?.includes("column") &&
+          error.message?.includes("onboarding_shown")
+        ) {
+          return NextResponse.json({
+            success: true,
+            warning: "Column not found, but continuing",
+          });
         }
-        
+
         console.error("Onboarding update error:", error);
         return NextResponse.json({ error: "Database error" }, { status: 500 });
       }
     } catch (err) {
       console.error("Onboarding update exception:", err);
       // Continue anyway - don't block onboarding completion
-      return NextResponse.json({ success: true, warning: "Update failed but continuing" });
+      return NextResponse.json({
+        success: true,
+        warning: "Update failed but continuing",
+      });
     }
 
     return NextResponse.json({ success: true });
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
     console.error("Onboarding POST error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -77,8 +82,6 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("🧪 Checking onboarding status for user:", session.user.id);
-
     try {
       const { data, error } = await supabase
         .from("users")
@@ -87,23 +90,24 @@ export async function GET() {
         .maybeSingle();
 
       if (error) {
-        if (error.message?.includes("column") && error.message?.includes("onboarding_shown")) {
-          console.log("⚠️ onboarding_shown column doesn't exist, returning false");
+        if (
+          error.message?.includes("column") &&
+          error.message?.includes("onboarding_shown")
+        ) {
           return NextResponse.json({
             onboardingShown: false,
-            warning: "Column not found"
+            warning: "Column not found",
           });
         }
-        
+
         console.error("Onboarding status fetch error:", error);
         return NextResponse.json({ error: "Database error" }, { status: 500 });
       }
 
       if (!data) {
-        console.log("⚠️ No user data found, returning false to show onboarding");
         return NextResponse.json({
           onboardingShown: false,
-          warning: "No user data found"
+          warning: "No user data found",
         });
       }
 
@@ -114,14 +118,14 @@ export async function GET() {
       console.error("Onboarding status exception:", err);
       return NextResponse.json({
         onboardingShown: false,
-        warning: "Failed to check status"
+        warning: "Failed to check status",
       });
     }
   } catch (error) {
     console.error("Onboarding status GET error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

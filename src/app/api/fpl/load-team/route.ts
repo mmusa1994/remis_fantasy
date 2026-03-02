@@ -143,7 +143,6 @@ export async function POST(request: NextRequest) {
               break;
             }
           } catch (fallbackError) {
-            console.log(`❌ GW${currentGw} also failed:`, fallbackError);
             continue;
           }
         }

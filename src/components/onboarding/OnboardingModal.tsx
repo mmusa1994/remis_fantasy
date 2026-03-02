@@ -119,7 +119,7 @@ const OnboardingModal = ({
       });
 
       if (!response.ok) {
-        console.log("⚠️ Onboarding API failed, but continuing anyway");
+        // Onboarding API failed, but continuing anyway
       }
 
       // Always complete, regardless of API response
