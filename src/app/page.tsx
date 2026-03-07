@@ -209,6 +209,13 @@ export default function Home() {
                   ? "/images/logos/cl-logo.png"
                   : "/images/logos/f1.png";
 
+              const logoFilter =
+                league.id === "premier-league"
+                  ? "brightness(0) invert(22%) sepia(100%) saturate(5000%) hue-rotate(265deg) brightness(88%)"
+                  : league.id === "champions-league"
+                  ? "brightness(0) invert(33%) sepia(100%) saturate(4000%) hue-rotate(210deg) brightness(92%)"
+                  : undefined;
+
               return (
                 <Link
                   key={league.id}
@@ -229,6 +236,7 @@ export default function Home() {
                         width={36}
                         height={36}
                         className="w-9 h-9 object-contain"
+                        style={logoFilter ? { filter: logoFilter } : undefined}
                       />
                       <h3
                         className={`text-lg font-bold ${
