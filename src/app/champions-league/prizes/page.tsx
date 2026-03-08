@@ -34,7 +34,7 @@ export default function ChampionsLeagueNagradePage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{t("errors.general", "Error loading data")}</p>
+          <p className="text-red-500 mb-4">{t("error.general", "Error loading data")}</p>
           <p className="text-theme-text-secondary">
             {prizesError || contentError}
           </p>

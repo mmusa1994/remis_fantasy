@@ -73,7 +73,20 @@
     "secondPlace": "2nd Place",
     "secondPlaceDesc": "Runner-up of the league",
     "thirdPlace": "3rd Place",
-    "thirdPlaceDesc": "Third place in the league"
+    "thirdPlaceDesc": "Third place in the league",
+    "viewDetails": "View Details",
+    "moreFeatures": "+{{count}} more",
+    "noPrizes": "No prizes available for this league.",
+    "participants": "participants",
+    "specialPrize": "Special Prize",
+    "noLimit": "No Limit",
+    "prizesCount": "{{count}} prizes",
+    "rewardsAndBenefits": "Rewards & Benefits",
+    "footerText": "All prizes are awarded at the end of the season. Monthly prizes are awarded every month.",
+    "registerNow": "Register now and secure your spot in {{title}}!",
+    "originalJersey": "ORIGINAL JERSEY 25/26 PL",
+    "freeEntry": "FREE ENTRY NEXT SEASON",
+    "freeEntryShort": "Free Entry"
   },
   "leagues": {
     "premier-league": {
@@ -163,11 +176,6 @@
       "points": "Points"
     },
     "lastUpdated": "Last Updated"
-  },
-  "prizes": {
-    "originalJersey": "ORIGINAL JERSEY 25/26 PL",
-    "freeEntry": "FREE ENTRY NEXT SEASON",
-    "freeEntryShort": "Free Entry"
   },
   "registration": {
     "title": "REGISTER",

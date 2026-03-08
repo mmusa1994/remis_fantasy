@@ -73,7 +73,20 @@
     "secondPlace": "2. Mjesto",
     "secondPlaceDesc": "Drugoplasirani u ligi",
     "thirdPlace": "3. Mjesto",
-    "thirdPlaceDesc": "Trećeplasirani u ligi"
+    "thirdPlaceDesc": "Trećeplasirani u ligi",
+    "viewDetails": "Pogledaj Detalje",
+    "moreFeatures": "+{{count}} više",
+    "noPrizes": "Nema dostupnih nagrada za ovu ligu.",
+    "participants": "učesnika",
+    "specialPrize": "Specijalna nagrada",
+    "noLimit": "Bez limita",
+    "prizesCount": "{{count}} nagrada",
+    "rewardsAndBenefits": "Nagrade i Benefiti",
+    "footerText": "Sve nagrade se dodeljuju na kraju sezone. Mjesečne nagrade se dodeljuju svakog mjeseca.",
+    "registerNow": "Registruj se sada i osiguraj svoje mjesto u {{title}}!",
+    "originalJersey": "ORIGINAL DRES 25/26 PL",
+    "freeEntry": "BESPLATNO UČEŠĆE NAREDNE SEZONE",
+    "freeEntryShort": "Besplatno Učešće"
   },
   "leagues": {
     "premier-league": {
@@ -163,11 +176,6 @@
       "points": "Poeni"
     },
     "lastUpdated": "Poslednje ažurirano"
-  },
-  "prizes": {
-    "originalJersey": "ORIGINAL DRES 25/26 PL",
-    "freeEntry": "BESPLATNO UČEŠĆE NAREDNE SEZONE",
-    "freeEntryShort": "Besplatno Učešće"
   },
   "registration": {
     "title": "PRIJAVI SE ZA NOVU SEZONU",

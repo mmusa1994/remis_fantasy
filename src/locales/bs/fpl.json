@@ -122,6 +122,13 @@
   "currentManagerId": "Trenutni ID Menadžera",
   "offline": "Van Mreže",
   "fplLive": {
+    "prizes": {
+      "loadingTitle": "Učitavanje Premier League Nagrada",
+      "loadingDesc": "Molimo sačekajte dok dohvatimo najnovije informacije o nagradama",
+      "error": "Greška pri učitavanju podataka",
+      "plTitle": "Premier League Nagrade",
+      "plSubtitle": "Osvojite nevjerovatne nagrade tokom cijele Premier League sezone!"
+    },
     "eventDefensiveContribution": "Defensive contribution",
     "liveTrackerLivePolling": "Uživo praćenje aktivno",
     "predictedBonus": "Predviđeni Bonus",
@@ -823,5 +830,82 @@
     "loading2": "Učitavanje podataka za poređenje...",
     "error": "Greška pri učitavanju podataka za poređenje",
     "noData": "Učitajte tim da vidite poređenja"
+  },
+  "prizesCards": {
+    "1": {
+      "title": "Dobrodošli u novu sezonu",
+      "subtitle": "REMIS Fantasy 2025/26",
+      "description": "Spremite se za najuzbudljiviju sezonu fantasy footballa! Nove lige, veće nagrade, bolje iskustvo.",
+      "features": [
+        "Nova sezona kreće",
+        "Povećane nagrade",
+        "4 različite lige",
+        "Najbolja i najzabavnija sezona ikad"
+      ]
+    },
+    "2": {
+      "title": "Free Liga",
+      "subtitle": "Sezona 25/26 - Besplatno!",
+      "description": "Prošlogodišnji učesnici automatski ubačeni. Najbolji dobija originalni dres!",
+      "features": [
+        "1. mjesto: Originalni dres",
+        "Kod za ulazak: 51kkl0"
+      ]
+    },
+    "3": {
+      "title": "H2H Liga",
+      "subtitle": "40 učesnika - Head-to-Head",
+      "description": "Najnepredvidivija liga sa bogatim nagradnim fondom od 720 KM / 368 €.",
+      "features": [
+        "1. mjesto: 300 KM / 155 € + pehar + medalja + plaketa",
+        "2. mjesto: 200 KM / 102 € + medalja + plaketa",
+        "3. mjesto: 130 KM / 67 € + medalja + plaketa",
+        "4. mjesto: 90 KM / 46 €"
+      ]
+    },
+    "4": {
+      "title": "Standard Liga",
+      "subtitle": "100 učesnika - Klasa i tradicija",
+      "description": "Standardna liga s mjesečnim i kup nagradama. Nagradni fond 2.400 KM / 1.228 €.",
+      "features": [
+        "1. mjesto: 500 KM / 255 € + pehar + medalja + plaketa",
+        "2. mjesto: 350 KM / 179 € + medalja + plaketa",
+        "3. mjesto: 250 KM / 128 € + medalja + plaketa",
+        "4. mjesto: 200 KM / 103 €",
+        "5. mjesto: 150 KM / 77 €",
+        "6. mjesto: 100 KM / 52 €",
+        "7. mjesto: 80 KM / 41 €",
+        "8.-10. mjesto: Besplatno učešće naredne sezone",
+        "Mjesečne nagrade: 75 KM / 38 € (*10)",
+        "Kup nagrade: 100 KM / 52 €"
+      ]
+    },
+    "5": {
+      "title": "Premium Liga",
+      "subtitle": "50 učesnika - Vrhunsko iskustvo",
+      "description": "Najekskluzivnija liga s najvećim nagradama i posebnim privilegijama. Fond 4.000 KM / 2.050 €.",
+      "features": [
+        "1. mjesto: 1.200 KM / 615 € + pehar + medalja + plaketa",
+        "2. mjesto: 700 KM / 358 € + medalja + plaketa",
+        "3. mjesto: 400 KM / 205 € + medalja + plaketa",
+        "4. mjesto: Originalni dres PL 25/26",
+        "5. mjesto: Besplatno učešće naredne sezone",
+        "Mjesečne nagrade: 150 KM / 75 € (*10)",
+        "Kup nagrade: 200 KM / 100 €"
+      ]
+    },
+    "6": {
+      "title": "Specijalna nagrada",
+      "subtitle": "AUTENTIČNI DRES ARSENALA IZ SEZONE 2003/2004",
+      "description": "Original! Ovo je sveti gral svakog fudbalskog fanatika. Dres iz legendarne \"Invincibles\" sezone - kada su Thierry Henry i Arsenal bez poraza osvojili Premier ligu.",
+      "features": [
+        "Hall of Fame Premier lige",
+        "Henry - ikona igre, genije napada, umjetnik na terenu. Ovaj dres nosi DNK nepobjedivosti. Na aukcijama dostiže vrijednost preko 1.000€, rijetkost koja se ne pušta iz ruku.",
+        "Igrač sa najviše poena u jednom kolu (PREMIUM liga) odnosi ovu istorijsku relikviju, zajedno sa certifikatom autentičnosti.",
+        "OVO NIJE SAMO NAGRADA. OVO JE LEGENDA.",
+        "Ovo je dres kojim ispisujete svoju stranicu u istoriji REMIS Fantasy lige",
+        "Budi najbolji. Uđi u legendu. Osvoji dres nepobjedivih."
+      ]
+    }
   }
 }

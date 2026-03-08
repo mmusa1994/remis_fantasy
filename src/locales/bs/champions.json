@@ -88,25 +88,55 @@
   "prizes": {
     "title": "Champions League Nagrade",
     "subtitle": "Osvojite nevjerovatne nagrade tokom cijele Champions League sezone",
-    "firstPlace": {
-      "title": "1. MESTO",
-      "subtitle": "Champions League Pobednik",
-      "description": "Ultimativni Champions League Fantasy šampion dobija najveću nagradu",
-      "amount": "120 KM"
-    },
-    "secondPlace": {
-      "title": "2. MESTO",
-      "subtitle": "Champions League Drugoplasiran",
-      "description": "Impresivan drugi rezultat zaslužuje priznanje",
-      "amount": "80 KM"
-    },
-    "thirdPlace": {
-      "title": "3. MESTO",
-      "subtitle": "Champions League Bronzana Medalja",
-      "description": "Podijumsko mesto u Champions League je izuzetan uspeh",
-      "amount": "60 KM"
-    },
-    "totalPrizePool": "100% Uplata Ukupan Fond Nagrada"
+    "totalPrizePool": "100% Ukupan Fond Nagrada",
+    "cards": {
+      "1": {
+        "title": "1. Mjesto",
+        "subtitle": "Pobjednik Champions League 🏆",
+        "description": "Ultimativna nagrada za šampiona Champions League Fantasy lige! Dominiraj evropskom elitom i osvoji pobjedu.",
+        "features": [
+          "50% Novčane nagrade",
+          "Champions League Fantasy pehar šampiona",
+          "Digitalni certifikat postignuća",
+          "Besplatno učešće naredne sezone",
+          "Kuća slavnih priznanje",
+          "Specijalna značka pobjednika"
+        ]
+      },
+      "2": {
+        "title": "2. Mjesto",
+        "subtitle": "Drugoplasirani Champions League 🥈",
+        "description": "Impresivan drugi rezultat u najprestižnijoj evropskoj fantasy ligi zaslužuje priznanje i nagradu.",
+        "features": [
+          "30% Novčane nagrade",
+          "Medalja drugoplasiranog",
+          "Digitalni certifikat",
+          "50% Popust za narednu sezonu",
+          "Srebrena značka priznanja"
+        ]
+      },
+      "3": {
+        "title": "3. Mjesto",
+        "subtitle": "Bronzana medalja Champions League 🥉",
+        "description": "Podijumski završetak u Champions League Fantasy ligi je izuzetan uspjeh vrijedan proslave.",
+        "features": [
+          "20% Novčane nagrade",
+          "Bronzana medalja",
+          "Digitalni certifikat",
+          "25% Popust za narednu sezonu",
+          "Bronzana značka priznanja"
+        ]
+      },
+      "4": {
+        "title": "CL Besplatna",
+        "subtitle": "Najviše bodova u jednom kolu 🌟",
+        "description": "Originalni dres nasumičnog kluba 25/26",
+        "features": [
+          "Dres za pobjednika",
+          "Majica od Remis organizacije"
+        ]
+      }
+    }
   },
   "features": [
     "15 KM/ 8 EUR Kotizacija",

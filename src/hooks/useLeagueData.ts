@@ -191,7 +191,7 @@ export const useLeagueData = (leagueType: string) => {
 };
 
 export const useLeaguePrizes = (leagueType: string) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -202,97 +202,57 @@ export const useLeaguePrizes = (leagueType: string) => {
         setLoading(true);
         setError(null);
 
-        // Load prizes from JSON file based on league type
-        const loadPrizesFromFile = async () => {
-          try {
-            let prizesData: any[] = [];
+        let prizesData: any[] = [];
+        let translationNs = "";
+        let cardsKey = "";
 
-            switch (leagueType) {
-              case "premier-league":
-              case "premier":
-                // Import the Premier League prizes JSON file
-                const premierPrizes = await import(
-                  "@/data/premier-league/prizes.json"
-                );
-                prizesData = premierPrizes.default;
-                break;
-              case "champions-league":
-              case "champions":
-                // Import the Champions League prizes JSON file
-                const championsPrizes = await import(
-                  "@/data/champions-league/prizes.json"
-                );
-                prizesData = championsPrizes.default;
-                break;
-              case "f1-fantasy":
-              case "f1":
-                // For now, fallback to basic data - can add F1 JSON file later
-                prizesData = [
-                  {
-                    id: 1,
-                    title: t("prizes.firstPlace"),
-                    subtitle: "F1 Fantasy Champion",
-                    image: "/images/prizes/f1-first.png",
-                    description: t("prizes.firstPlaceDesc"),
-                    tier: "premium",
-                    league: "f1",
-                    price: "1000 KM",
-                    features: ["Trophy", "Medal", "Certificate"],
-                  },
-                ];
-                break;
-              default:
-                prizesData = [];
-            }
-
-            return prizesData;
-          } catch (importError) {
-            console.warn(
-              "Failed to import prizes file, using fallback data:",
-              importError
+        switch (leagueType) {
+          case "premier-league":
+          case "premier": {
+            const premierPrizes = await import(
+              "@/data/premier-league/prizes.json"
             );
-
-            // Fallback data with proper structure
-            return [
-              {
-                id: 1,
-                title: t("prizes.firstPlace"),
-                subtitle: "Liga Champion",
-                image: "/images/new-season/premium.png",
-                description: t("prizes.firstPlaceDesc"),
-                tier: "premium",
-                league: leagueType,
-                price: "3000 KM",
-                features: ["Trophy", "Medal", "Certificate"],
-              },
-              {
-                id: 2,
-                title: t("prizes.secondPlace"),
-                subtitle: "Runner Up",
-                image: "/images/new-season/standard.png",
-                description: t("prizes.secondPlaceDesc"),
-                tier: "standard",
-                league: leagueType,
-                price: "2000 KM",
-                features: ["Medal", "Certificate"],
-              },
-              {
-                id: 3,
-                title: t("prizes.thirdPlace"),
-                subtitle: "Third Place",
-                image: "/images/new-season/free.png",
-                description: t("prizes.thirdPlaceDesc"),
-                tier: "h2h",
-                league: leagueType,
-                price: "1000 KM",
-                features: ["Certificate"],
-              },
-            ];
+            prizesData = premierPrizes.default;
+            translationNs = "fpl";
+            cardsKey = "prizesCards";
+            break;
           }
-        };
+          case "champions-league":
+          case "champions": {
+            const championsPrizes = await import(
+              "@/data/champions-league/prizes.json"
+            );
+            prizesData = championsPrizes.default;
+            translationNs = "champions";
+            cardsKey = "prizes.cards";
+            break;
+          }
+          default:
+            prizesData = [];
+        }
 
-        const prizesData = await loadPrizesFromFile();
-        setData(prizesData);
+        // Overlay translations onto prize data
+        const translatedPrizes = prizesData.map((prize: any) => {
+          const key = `${cardsKey}.${prize.id}`;
+          const translatedTitle = t(`${key}.title`, { ns: translationNs, defaultValue: "" });
+          const translatedSubtitle = t(`${key}.subtitle`, { ns: translationNs, defaultValue: "" });
+          const translatedDescription = t(`${key}.description`, { ns: translationNs, defaultValue: "" });
+
+          // Get translated features array
+          const featuresKey = `${key}.features`;
+          const rawFeatures = t(featuresKey, { ns: translationNs, returnObjects: true, defaultValue: null });
+          const translatedFeatures = Array.isArray(rawFeatures) ? rawFeatures : null;
+
+          return {
+            ...prize,
+            title: translatedTitle || prize.title,
+            subtitle: translatedSubtitle || prize.subtitle,
+            description: translatedDescription || prize.description,
+            features: translatedFeatures || prize.features,
+          };
+        });
+
+        setData(translatedPrizes);
       } catch (err) {
         console.error("Error loading prizes:", err);
         setError(t("common.error"));
@@ -302,7 +262,7 @@ export const useLeaguePrizes = (leagueType: string) => {
     };
 
     loadPrizes();
-  }, [leagueType, t]);
+  }, [leagueType, t, i18n.language]);
 
   return { data, loading, error };
 };

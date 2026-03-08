@@ -122,6 +122,13 @@
   "currentManagerId": "Current Manager ID",
   "offline": "Offline",
   "fplLive": {
+    "prizes": {
+      "loadingTitle": "Loading Premier League Prizes",
+      "loadingDesc": "Please wait while we fetch the latest prize information",
+      "error": "Error loading data",
+      "plTitle": "Premier League Prizes",
+      "plSubtitle": "Win amazing prizes throughout the Premier League season!"
+    },
     "bestPerformersAndEO": "Best Performers and Effective Ownership",
     "eventDefensiveContribution": "Defensive contribution",
     "liveTrackerLivePolling": "Live tracking active",
@@ -846,5 +853,82 @@
     "loading2": "Loading comparison data...",
     "error": "Error loading comparison data",
     "noData": "Load your team to see comparisons"
+  },
+  "prizesCards": {
+    "1": {
+      "title": "Welcome to the New Season",
+      "subtitle": "REMIS Fantasy 2025/26",
+      "description": "Get ready for the most exciting season of fantasy football! New leagues, bigger prizes, better experience.",
+      "features": [
+        "New season kicks off",
+        "Increased prizes",
+        "4 different leagues",
+        "The best and most fun season ever"
+      ]
+    },
+    "2": {
+      "title": "Free League",
+      "subtitle": "Season 25/26 - Free!",
+      "description": "Last year's participants automatically included. The best player wins an original jersey!",
+      "features": [
+        "1st place: Original jersey",
+        "Entry code: 51kkl0"
+      ]
+    },
+    "3": {
+      "title": "H2H League",
+      "subtitle": "40 participants - Head-to-Head",
+      "description": "The most unpredictable league with a rich prize pool of 720 KM / 368 €.",
+      "features": [
+        "1st place: 300 KM / 155 € + trophy + medal + plaque",
+        "2nd place: 200 KM / 102 € + medal + plaque",
+        "3rd place: 130 KM / 67 € + medal + plaque",
+        "4th place: 90 KM / 46 €"
+      ]
+    },
+    "4": {
+      "title": "Standard League",
+      "subtitle": "100 participants - Class and tradition",
+      "description": "Standard league with monthly and cup prizes. Prize pool 2,400 KM / 1,228 €.",
+      "features": [
+        "1st place: 500 KM / 255 € + trophy + medal + plaque",
+        "2nd place: 350 KM / 179 € + medal + plaque",
+        "3rd place: 250 KM / 128 € + medal + plaque",
+        "4th place: 200 KM / 103 €",
+        "5th place: 150 KM / 77 €",
+        "6th place: 100 KM / 52 €",
+        "7th place: 80 KM / 41 €",
+        "8th-10th place: Free entry next season",
+        "Monthly prizes: 75 KM / 38 € (*10)",
+        "Cup prizes: 100 KM / 52 €"
+      ]
+    },
+    "5": {
+      "title": "Premium League",
+      "subtitle": "50 participants - Premium experience",
+      "description": "The most exclusive league with the biggest prizes and special privileges. Pool 4,000 KM / 2,050 €.",
+      "features": [
+        "1st place: 1,200 KM / 615 € + trophy + medal + plaque",
+        "2nd place: 700 KM / 358 € + medal + plaque",
+        "3rd place: 400 KM / 205 € + medal + plaque",
+        "4th place: Original PL 25/26 jersey",
+        "5th place: Free entry next season",
+        "Monthly prizes: 150 KM / 75 € (*10)",
+        "Cup prizes: 200 KM / 100 €"
+      ]
+    },
+    "6": {
+      "title": "Special Prize",
+      "subtitle": "AUTHENTIC ARSENAL JERSEY FROM THE 2003/2004 SEASON",
+      "description": "Original! This is the holy grail for every football fanatic. A jersey from the legendary \"Invincibles\" season - when Thierry Henry and Arsenal won the Premier League unbeaten.",
+      "features": [
+        "Premier League Hall of Fame",
+        "Henry - icon of the game, genius of attack, artist on the pitch. This jersey carries the DNA of invincibility. At auctions it reaches values over €1,000, a rarity not to be let go.",
+        "The player with the most points in a single gameweek (PREMIUM league) takes home this historic relic, along with a certificate of authenticity.",
+        "THIS IS NOT JUST A PRIZE. THIS IS A LEGEND.",
+        "This is the jersey that writes your page in the history of the REMIS Fantasy league.",
+        "Be the best. Enter the legend. Win the jersey of the Invincibles."
+      ]
+    }
   }
 }

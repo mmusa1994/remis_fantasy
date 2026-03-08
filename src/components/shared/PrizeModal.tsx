@@ -6,6 +6,7 @@ import Image from "next/image";
 import { X, Award, Trophy, Medal, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 interface Prize {
   id: number;
@@ -116,6 +117,7 @@ export default function PrizeModal({
   onClose,
 }: PrizeModalProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation("common");
 
   const [mounted, setMounted] = useState(false);
 
@@ -338,14 +340,14 @@ export default function PrizeModal({
                             <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                             <span className="text-xs sm:text-sm font-medium">
                               {prize.tier === "h2h"
-                                ? "40 učesnika"
+                                ? `40 ${t("prizes.participants")}`
                                 : prize.tier === "premium"
-                                ? "50 učesnika"
+                                ? `50 ${t("prizes.participants")}`
                                 : prize.tier === "standard"
-                                ? "100 učesnika"
+                                ? `100 ${t("prizes.participants")}`
                                 : prize.tier === "arsenal"
-                                ? "Specijalna nagrada"
-                                : "Bez limita"}
+                                ? t("prizes.specialPrize")
+                                : t("prizes.noLimit")}
                             </span>
                           </div>
                           <div
@@ -357,7 +359,7 @@ export default function PrizeModal({
                           >
                             <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
                             <span className="text-xs sm:text-sm font-medium">
-                              {prize.features.length} nagrada
+                              {t("prizes.prizesCount", { count: prize.features.length })}
                             </span>
                           </div>
                         </div>
@@ -380,7 +382,7 @@ export default function PrizeModal({
                       <Medal
                         className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.icon}`}
                       />
-                      Nagrade i Benefiti
+                      {t("prizes.rewardsAndBenefits")}
                     </motion.h4>
 
                     <motion.div
@@ -445,14 +447,12 @@ export default function PrizeModal({
                             : "text-gray-400"
                         }`}
                       >
-                        Sve nagrade se dodeljuju na kraju sezone. Mesečne
-                        nagrade se dodeljuju svakog meseca.
+                        {t("prizes.footerText")}
                         <br className="hidden sm:block" />
                         <span
                           className={`${colors.icon} font-medium block sm:inline mt-2 sm:mt-0`}
                         >
-                          Registruj se sada i osiguraj svoje mesto u{" "}
-                          {prize.title}!
+                          {t("prizes.registerNow", { title: prize.title })}
                         </span>
                       </p>
                     </motion.div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Award, Eye } from "lucide-react";
 import PrizeModal from "./PrizeModal";
+import { useTranslation } from "react-i18next";
 
 export interface Prize {
   id: number;
@@ -70,9 +71,10 @@ const tierColors = {
 export default function PrizesGallery({
   prizes,
   leagueFilter,
-  title = "Nagrade",
-  subtitle = "Osvajaj nevjerovatne nagrade tokom sezone!",
+  title,
+  subtitle,
 }: PrizesGalleryProps) {
+  const { t } = useTranslation("common");
   const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -99,7 +101,7 @@ export default function PrizesGallery({
             {title}
           </h2>
           <p className="text-theme-text-secondary">
-            No prizes available for this league.
+            {t("prizes.noPrizes")}
           </p>
         </div>
       </div>
@@ -122,11 +124,11 @@ export default function PrizesGallery({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto px-4">
         {filteredPrizes.map((prize) => {
           const colors = tierColors[prize.tier] || tierColors.standard;
-          
+
           return (
             <div
               key={prize.id}
-              className="bg-theme-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
+              className="bg-theme-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col"
               style={{
                 borderColor: `${colors.primary}30`,
                 boxShadow: `0 4px 12px -2px ${colors.primary}10`,
@@ -145,11 +147,11 @@ export default function PrizesGallery({
               </div>
 
               {/* Content */}
-              <div className="p-4">
+              <div className="p-4 flex flex-col flex-1">
                 {/* Price Badge */}
                 {prize.price && (
                   <div
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-white font-bold text-xs mb-3"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-white font-bold text-xs mb-3 self-start"
                     style={{
                       background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60)`,
                     }}
@@ -172,7 +174,7 @@ export default function PrizesGallery({
                 </p>
 
                 {/* Features List */}
-                <div className="mb-4">
+                <div className="mb-4 flex-1">
                   <div className="space-y-1 max-h-24 overflow-y-auto">
                     {prize.features.slice(0, 3).map((feature, index) => (
                       <div key={index} className="flex items-start gap-2 text-xs">
@@ -187,23 +189,23 @@ export default function PrizesGallery({
                     ))}
                     {prize.features.length > 3 && (
                       <div className="text-xs text-theme-text-muted mt-1">
-                        +{prize.features.length - 3} više
+                        {t("prizes.moreFeatures", { count: prize.features.length - 3 })}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* CTA Button */}
+                {/* CTA Button - always at bottom */}
                 <button
                   onClick={() => openModal(prize)}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-bold text-sm transition-all duration-300 hover:shadow-md"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-bold text-sm transition-all duration-300 hover:shadow-md mt-auto"
                   style={{
                     background: `linear-gradient(135deg, ${colors.primary}90, ${colors.primary}60)`,
                     color: "#ffffff",
                   }}
                 >
                   <Eye className="w-4 h-4" />
-                  Pogledaj Detalje
+                  {t("prizes.viewDetails")}
                 </button>
               </div>
             </div>

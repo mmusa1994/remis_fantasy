@@ -88,25 +88,55 @@
   "prizes": {
     "title": "Champions League Prizes",
     "subtitle": "Win amazing prizes throughout the Champions League season",
-    "firstPlace": {
-      "title": "1ST PLACE",
-      "subtitle": "Champions League Champion",
-      "description": "The ultimate Champions League Fantasy champion receives the biggest prize",
-      "amount": "50%"
-    },
-    "secondPlace": {
-      "title": "2ND PLACE",
-      "subtitle": "Champions League Runner-Up",
-      "description": "An impressive second place finish deserves recognition",
-      "amount": "30%"
-    },
-    "thirdPlace": {
-      "title": "3RD PLACE",
-      "subtitle": "Champions League Bronze Medal",
-      "description": "A podium finish in the Champions League is a remarkable achievement",
-      "amount": "20%"
-    },
-    "totalPrizePool": " 100% Total Prize Pool"
+    "totalPrizePool": "100% Total Prize Pool",
+    "cards": {
+      "1": {
+        "title": "1st Place",
+        "subtitle": "Champions League Winner 🏆",
+        "description": "The ultimate prize for the Champions League Fantasy champion! Dominate Europe's elite competition and claim your victory.",
+        "features": [
+          "50% Cash Prize",
+          "Champions League Fantasy Champion Trophy",
+          "Digital Certificate of Achievement",
+          "Free Entry to Next Season",
+          "Hall of Fame Recognition",
+          "Special Winner's Badge"
+        ]
+      },
+      "2": {
+        "title": "2nd Place",
+        "subtitle": "Champions League Runner-Up 🥈",
+        "description": "An impressive second place finish in Europe's most prestigious fantasy competition deserves recognition and reward.",
+        "features": [
+          "30% Cash Prize",
+          "Runner-Up Medal",
+          "Digital Certificate",
+          "50% Discount for Next Season",
+          "Silver Badge Recognition"
+        ]
+      },
+      "3": {
+        "title": "3rd Place",
+        "subtitle": "Champions League Bronze Medal 🥉",
+        "description": "A podium finish in the Champions League Fantasy competition is a remarkable achievement worthy of celebration.",
+        "features": [
+          "20% Cash Prize",
+          "Bronze Medal",
+          "Digital Certificate",
+          "25% Discount for Next Season",
+          "Bronze Badge Recognition"
+        ]
+      },
+      "4": {
+        "title": "CL Free",
+        "subtitle": "Best Single Gameweek Score 🌟",
+        "description": "Original random club kit 25/26",
+        "features": [
+          "Kit for Winner",
+          "Shirt from Remis organisation"
+        ]
+      }
+    }
   },
   "features": [
     "15 KM/ 8 EUR Entry Fee",
