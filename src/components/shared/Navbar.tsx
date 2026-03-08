@@ -21,7 +21,7 @@ import {
   Trophy,
   UserPlus,
   Camera,
-  DollarSign,
+  PoundSterling,
   TrendingUp,
   Newspaper,
 } from "lucide-react";
@@ -184,7 +184,7 @@ const Navbar = React.memo(function Navbar() {
           href: "/premier-league/ai-team-analysis",
           icon: FaMagic,
         },
-        { name: t("prices"), href: "/premier-league/prices", icon: DollarSign },
+        { name: t("prices"), href: "/premier-league/prices", icon: PoundSterling },
         {
           name: t("bestDifferentials"),
           href: "/premier-league/best-differentials",

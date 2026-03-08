@@ -639,7 +639,11 @@
     "timing": "Vremenske",
     "target": "Cilj",
     "noRisersFound": "Nema pronađenih poskupljenja sa trenutnim filterima",
-    "noFallersFound": "Nema pronađenih jeftinjenja sa trenutnim filterima"
+    "noFallersFound": "Nema pronađenih jeftinjenja sa trenutnim filterima",
+    "transfers": "Transferi",
+    "lastUpdated": "Zadnje ažurirano",
+    "players": "igrača",
+    "retry": "Pokušaj ponovo"
   },
   "gallery": {
     "title": "Premier League Galerija",

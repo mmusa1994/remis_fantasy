@@ -1,637 +1,513 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/contexts/ThemeContext";
-import LoadingCard from "@/components/shared/LoadingCard";
 import { getTeamColors } from "@/lib/team-colors";
 import {
-  MdTrendingUp,
-  MdTrendingDown,
-  MdSearch,
-  MdPerson,
-  MdAccessTime,
-  MdStar,
-  MdRefresh,
-} from "react-icons/md";
-import { TbShirt } from "react-icons/tb";
-import { motion } from "framer-motion";
+  TrendingUp,
+  TrendingDown,
+  Search,
+  Clock,
+  ChevronDown,
+  ArrowUpDown,
+} from "lucide-react";
 
-interface Player {
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+interface PricePlayer {
   id: number;
-  name: string;
-  position: string;
-  team: string;
-  team_name: string;
-  price: number;
-  progress: number;
-  hourly_change: number;
-  change_time: string;
-  target_reached: boolean;
-  is_riser: boolean;
-  ownership: number;
+  web_name: string;
+  team: number;
+  team_short: string;
+  element_type: number;
+  now_cost: number;
+  cost_change_start: number;
+  selected_by_percent: number;
   form: number;
   transfers_in_event: number;
   transfers_out_event: number;
   net_transfers: number;
+  delta: number; // 0-100 progress toward price change
+  change_time: string;
+  target_reached: boolean;
+  status: "a" | "d" | "i" | "n" | "s" | "u";
+  news: string;
 }
 
-interface PriceChangePrediction {
-  predictions: Player[];
-  risers: Player[];
-  fallers: Player[];
-  accuracy: string;
-  last_updated: string;
-  next_update: string;
-  total_predictions: number;
-  algorithm: string;
+// ─── Probability-Based Price Prediction Algorithm ───────────────────────────
+//
+// Advanced algorithm using sigmoid probability, ownership-weighted thresholds,
+// cooldown logic, and recent-change dampening. Matches LiveFPL-style behavior.
+
+const K = {
+  BASE_UP_THRESHOLD: 3.0,
+  BASE_DOWN_THRESHOLD: 3.0,
+  OWNERSHIP_UP_EXP: 0.8,
+  OWNERSHIP_DOWN_EXP: 0.8,
+  FLAG_DOWN_MULT: { none: 1.0, yellow: 0.8, red: 0.6 } as Record<string, number>,
+  FLAG_UP_MULT: { none: 1.0, yellow: 0.9, red: 0.8 } as Record<string, number>,
+  COOLDOWN_HOURS: 24,
+  RECENT_DAYS_DAMP: 7,
+  RECENT_UP_DAMP: 0.3,
+  RECENT_DOWN_DAMP: 0.3,
+  LAMBDA_SIGMOID: 2.0,
+  TIME_WEIGHT_ENDGAME: 1.05,
+  MIN_ACTIVE_MANAGERS: 6_000_000,
+  MIN_NET_TRANSFERS: 1500,
+};
+
+function hoursSince(ts: number, now: number): number {
+  return (now - ts) / 3600_000;
 }
 
-// Team mapping
-const getTeamIdFromName = (teamName: string): number => {
-  const teamMapping: { [key: string]: number } = {
-    ARS: 1, AVL: 2, BOU: 4, BRE: 5, BHA: 6, CHE: 7, CRY: 8, EVE: 9, 
-    FUL: 10, LIV: 12, MCI: 13, MUN: 14, NEW: 15, NFO: 16, SOU: 17, 
-    TOT: 18, WHU: 19, WOL: 20
-  };
-  return teamMapping[teamName] || 0;
+function isRecentChange(lastTs: number | null, now: number, days: number): boolean {
+  if (!lastTs) return false;
+  return (now - lastTs) <= days * 24 * 3600_000;
+}
+
+function logistic(x: number, lambda = K.LAMBDA_SIGMOID): number {
+  return 1 / (1 + Math.exp(-lambda * x));
+}
+
+function clamp01(x: number): number {
+  return Math.max(0, Math.min(1, x));
+}
+
+function upThreshold(ownership_pct: number, flag: string): number {
+  const own = Math.max(0.01, ownership_pct / 100);
+  const base = K.BASE_UP_THRESHOLD * Math.pow(own, K.OWNERSHIP_UP_EXP);
+  const flagMult = K.FLAG_UP_MULT[flag] || 1.0;
+  return base * flagMult;
+}
+
+function downThreshold(ownership_pct: number, flag: string): number {
+  const own = Math.max(0.01, ownership_pct / 100);
+  const base = K.BASE_DOWN_THRESHOLD * Math.pow(own, K.OWNERSHIP_DOWN_EXP);
+  const flagMult = K.FLAG_DOWN_MULT[flag] || 1.0;
+  return base * flagMult;
+}
+
+function normalizedNTI(transfers_in_gw: number, active_managers: number, ownership_pct: number): number {
+  const act = Math.max(K.MIN_ACTIVE_MANAGERS, active_managers);
+  const own = Math.max(0.01, ownership_pct / 100);
+  return (transfers_in_gw / act) / own;
+}
+
+function normalizedNTO(transfers_out_gw: number, active_managers: number, ownership_pct: number): number {
+  const act = Math.max(K.MIN_ACTIVE_MANAGERS, active_managers);
+  const own = Math.max(0.01, ownership_pct / 100);
+  return (transfers_out_gw / act) / own;
+}
+
+function timeWeight(now: number, gw_start: number, gw_deadline: number): number {
+  if (now <= gw_start || now >= gw_deadline) return 1.0;
+  const p = (now - gw_start) / (gw_deadline - gw_start);
+  return 1.0 + (K.TIME_WEIGHT_ENDGAME - 1.0) * p;
+}
+
+function estimatePriceChangeProb(inputs: {
+  transfers_in_gw: number;
+  transfers_out_gw: number;
+  ownership_pct: number;
+  flag: string;
+  last_price_change_at: number | null;
+  price_change_dir_last: "up" | "down" | null;
+  active_managers_estimate: number;
+  now: number;
+  gw_start_at: number;
+  gw_deadline_at: number;
+}) {
+  const ntiNorm = normalizedNTI(inputs.transfers_in_gw, inputs.active_managers_estimate, inputs.ownership_pct);
+  const ntoNorm = normalizedNTO(inputs.transfers_out_gw, inputs.active_managers_estimate, inputs.ownership_pct);
+
+  const thUp = upThreshold(inputs.ownership_pct, inputs.flag);
+  const thDown = downThreshold(inputs.ownership_pct, inputs.flag);
+
+  let scoreUp = (ntiNorm / thUp) - 1.0;
+  let scoreDown = (ntoNorm / thDown) - 1.0;
+
+  // Cooldown logic
+  if (inputs.last_price_change_at && hoursSince(inputs.last_price_change_at, inputs.now) < K.COOLDOWN_HOURS) {
+    scoreUp *= 0.25;
+    scoreDown *= 0.25;
+  }
+
+  // Recent change dampening
+  const recent = isRecentChange(inputs.last_price_change_at, inputs.now, K.RECENT_DAYS_DAMP);
+  if (recent) {
+    if (inputs.price_change_dir_last === "up") scoreUp *= K.RECENT_UP_DAMP;
+    if (inputs.price_change_dir_last === "down") scoreDown *= K.RECENT_DOWN_DAMP;
+  }
+
+  // Time weighting
+  const tw = timeWeight(inputs.now, inputs.gw_start_at, inputs.gw_deadline_at);
+  scoreUp *= tw;
+  scoreDown *= tw;
+
+  // Convert to probabilities via sigmoid
+  const prob_up = clamp01(logistic(scoreUp));
+  const prob_down = clamp01(logistic(scoreDown));
+
+  // Determine signal - conservative thresholds
+  let signal: "likely_up" | "likely_down" | "neutral" = "neutral";
+  if (prob_up >= 0.85 && prob_up - prob_down >= 0.25) signal = "likely_up";
+  else if (prob_down >= 0.85 && prob_down - prob_up >= 0.25) signal = "likely_down";
+
+  return { prob_up, prob_down, signal };
+}
+
+function calculatePrediction(
+  transfers_in_gw: number,
+  transfers_out_gw: number,
+  ownership_pct: number,
+  flag: string,
+  isRiser: boolean,
+  lastPriceChangeAt: number | null,
+  priceChangeDirLast: "up" | "down" | null,
+  gwStart: number,
+  gwDeadline: number,
+): { progress: number; change_time: string; target_reached: boolean } {
+  const now = Date.now();
+
+  const result = estimatePriceChangeProb({
+    transfers_in_gw,
+    transfers_out_gw,
+    ownership_pct,
+    flag,
+    last_price_change_at: lastPriceChangeAt,
+    price_change_dir_last: priceChangeDirLast,
+    active_managers_estimate: K.MIN_ACTIVE_MANAGERS,
+    now,
+    gw_start_at: gwStart,
+    gw_deadline_at: gwDeadline,
+  });
+
+  // Delta = probability * 100, directly maps to bar fill %
+  const prob = isRiser ? result.prob_up : result.prob_down;
+  const delta = Math.round(Math.min(100, Math.max(0, prob * 100)));
+
+  let change_time: string;
+  if (delta >= 90) {
+    change_time = "Tonight";
+  } else if (delta >= 75) {
+    change_time = "Tomorrow";
+  } else if (delta >= 55) {
+    change_time = "2 days";
+  } else {
+    change_time = ">2 days";
+  }
+
+  const target_reached = result.signal !== "neutral";
+
+  return { progress: delta, change_time, target_reached };
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+const POS_LABELS: Record<number, string> = {
+  1: "GKP",
+  2: "DEF",
+  3: "MID",
+  4: "FWD",
 };
 
-const getTeamShortName = (teamId: number): string => {
-  const teamMapping: { [key: number]: string } = {
-    1: "ARS", 2: "AVL", 4: "BOU", 5: "BRE", 6: "BHA", 7: "CHE", 
-    8: "CRY", 9: "EVE", 10: "FUL", 12: "LIV", 13: "MCI", 14: "MUN", 
-    15: "NEW", 16: "NFO", 17: "SOU", 18: "TOT", 19: "WHU", 20: "WOL"
-  };
-  return teamMapping[teamId] || "Unknown";
-};
+function formatPrice(cost: number): string {
+  return `£${(cost / 10).toFixed(1)}`;
+}
 
-const getPositionName = (position: number): string => {
-  const positions: { [key: number]: string } = {
-    1: "GK", 2: "DEF", 3: "MID", 4: "FWD"
-  };
-  return positions[position] || "Unknown";
-};
+function formatNet(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return n.toString();
+}
+
+function getStatusFlag(status: string): string {
+  if (status === "i" || status === "s" || status === "n") return "red";
+  if (status === "d") return "yellow";
+  return "none";
+}
+
+// ─── Component ──────────────────────────────────────────────────────────────
+
+type SortKey = "delta" | "price" | "net" | "ownership" | "form";
 
 export default function PricesPage() {
   const { t } = useTranslation("fpl");
-  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<PriceChangePrediction | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [risers, setRisers] = useState<PricePlayer[]>([]);
+  const [fallers, setFallers] = useState<PricePlayer[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTeam, setSelectedTeam] = useState("all");
-  const [showOnlyOwned, setShowOnlyOwned] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("delta");
+  const [sortAsc, setSortAsc] = useState(false);
+  const [teams, setTeams] = useState<{ id: number; short_name: string; name: string }[]>([]);
 
-  // Advanced probability-based price prediction algorithm
-  const K = {
-    BASE_UP_THRESHOLD: 3.0,    // Povećano sa 1.0 na 3.0 - treba 3x više transfera
-    BASE_DOWN_THRESHOLD: 3.0,  // Isto za pada
-    OWNERSHIP_UP_EXP: 0.8,     // Povećano sa 0.55 - ownership ima veći uticaj
-    OWNERSHIP_DOWN_EXP: 0.8,   // Isto
-    FLAG_DOWN_MULT: { none: 1.0, yellow: 0.8, red: 0.6 },
-    FLAG_UP_MULT: { none: 1.0, yellow: 0.9, red: 0.8 },
-    COOLDOWN_HOURS: 24,
-    RECENT_DAYS_DAMP: 7,
-    RECENT_UP_DAMP: 0.3,       // Smanjeno sa 0.55 - jače dampening
-    RECENT_DOWN_DAMP: 0.3,     // Smanjeno sa 0.65
-    LAMBDA_SIGMOID: 2.0,       // Smanjeno sa 4.0 - manje aggressive sigmoid
-    TIME_WEIGHT_ENDGAME: 1.05, // Smanjeno sa 1.15 - manje vremenske težine
-    MIN_ACTIVE_MANAGERS: 6_000_000  // Povećano - veća baza
-  };
+  // ─── Data Fetching ──────────────────────────────────────────────────────
 
-  const hoursSince = (ts: number, now: number): number => (now - ts) / 3600_000;
-  
-  const isRecentChange = (lastTs: number | null, now: number, days: number): boolean => {
-    if (!lastTs) return false;
-    return (now - lastTs) <= days * 24 * 3600_000;
-  };
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const logistic = (x: number, lambda = K.LAMBDA_SIGMOID): number => 
-    1 / (1 + Math.exp(-lambda * x));
+      // Fetch bootstrap data and price changes in parallel
+      const [bootstrapRes, priceChangesRes] = await Promise.all([
+        fetch("/api/fpl/bootstrap-static"),
+        fetch("/api/fpl/price-changes").catch(() => null),
+      ]);
 
-  const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+      if (!bootstrapRes.ok) {
+        throw new Error("Failed to fetch FPL data");
+      }
 
-  const upThreshold = (ownership_pct: number, flag: string): number => {
-    const own = Math.max(0.01, ownership_pct / 100);
-    const base = K.BASE_UP_THRESHOLD * Math.pow(own, K.OWNERSHIP_UP_EXP);
-    const flagMult = K.FLAG_UP_MULT[flag as keyof typeof K.FLAG_UP_MULT] || 1.0;
-    return base * flagMult;
-  };
+      const bootstrapData = await bootstrapRes.json();
+      if (!bootstrapData.success) {
+        throw new Error("FPL API returned an error");
+      }
 
-  const downThreshold = (ownership_pct: number, flag: string): number => {
-    const own = Math.max(0.01, ownership_pct / 100);
-    const base = K.BASE_DOWN_THRESHOLD * Math.pow(own, K.OWNERSHIP_DOWN_EXP);
-    const flagMult = K.FLAG_DOWN_MULT[flag as keyof typeof K.FLAG_DOWN_MULT] || 1.0;
-    return base * flagMult;
-  };
+      const priceChangesData = priceChangesRes && priceChangesRes.ok
+        ? await priceChangesRes.json()
+        : null;
 
-  const normalizedNTI = (transfers_in_gw: number, active_managers: number, ownership_pct: number) => {
-    const act = Math.max(K.MIN_ACTIVE_MANAGERS, active_managers);
-    const own = Math.max(0.01, ownership_pct / 100);
-    return (transfers_in_gw / act) / own;
-  };
+      const elements: any[] = bootstrapData.data.elements || [];
+      const teamsList: any[] = bootstrapData.data.teams || [];
+      const events: any[] = bootstrapData.data.events || [];
 
-  const normalizedNTO = (transfers_out_gw: number, active_managers: number, ownership_pct: number) => {
-    const act = Math.max(K.MIN_ACTIVE_MANAGERS, active_managers);
-    const own = Math.max(0.01, ownership_pct / 100);
-    return (transfers_out_gw / act) / own;
-  };
+      // Determine GW timing from events
+      const now = Date.now();
+      const currentEvent = events.find((e: any) => e.is_current) || events[0];
+      const nextEvent = events.find((e: any) => e.is_next);
+      const gwStart = currentEvent?.deadline_time
+        ? new Date(currentEvent.deadline_time).getTime()
+        : now - (2 * 24 * 60 * 60 * 1000);
+      const gwDeadline = nextEvent?.deadline_time
+        ? new Date(nextEvent.deadline_time).getTime()
+        : now + (5 * 24 * 60 * 60 * 1000);
 
-  const timeWeight = (now: number, gw_start: number, gw_deadline: number): number => {
-    if (now <= gw_start || now >= gw_deadline) return 1.0;
-    const p = (now - gw_start) / (gw_deadline - gw_start);
-    return 1.0 + (K.TIME_WEIGHT_ENDGAME - 1.0) * p;
-  };
+      // Build recent price changes lookup
+      const recentChangesMap = new Map<number, { at: number; dir: "up" | "down" }>();
+      if (priceChangesData?.success && priceChangesData.data) {
+        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+        const allChanges = [
+          ...(priceChangesData.data.risers || []),
+          ...(priceChangesData.data.fallers || []),
+        ];
+        for (const change of allChanges) {
+          const changeTime = new Date(change.change_time).getTime();
+          if (changeTime > sevenDaysAgo) {
+            recentChangesMap.set(change.player_id, {
+              at: changeTime,
+              dir: change.change_type === "rise" ? "up" : "down",
+            });
+          }
+        }
+      }
 
-  const estimatePriceChangeProb = useCallback((inputs: {
-    transfers_in_gw: number;
-    transfers_out_gw: number;
-    ownership_pct: number;
-    flag: string;
-    last_price_change_at: number | null;
-    price_change_dir_last: "up" | "down" | null;
-    active_managers_estimate: number;
-    now: number;
-    gw_start_at: number;
-    gw_deadline_at: number;
-  }) => {
-    const ntiNorm = normalizedNTI(inputs.transfers_in_gw, inputs.active_managers_estimate, inputs.ownership_pct);
-    const ntoNorm = normalizedNTO(inputs.transfers_out_gw, inputs.active_managers_estimate, inputs.ownership_pct);
+      // Build team list for filter
+      const sortedTeams = teamsList
+        .map((t: any) => ({ id: t.id, short_name: t.short_name, name: t.name }))
+        .sort((a: any, b: any) => a.name.localeCompare(b.name));
+      setTeams(sortedTeams);
 
-    const thUp = upThreshold(inputs.ownership_pct, inputs.flag);
-    const thDown = downThreshold(inputs.ownership_pct, inputs.flag);
+      // Build team short name lookup
+      const teamShortMap = new Map<number, string>();
+      for (const t of teamsList) {
+        teamShortMap.set(t.id, t.short_name);
+      }
 
-    let scoreUp = (ntiNorm / thUp) - 1.0;
-    let scoreDown = (ntoNorm / thDown) - 1.0;
+      // Process ALL players with probability-based algorithm
+      const riserList: PricePlayer[] = [];
+      const fallerList: PricePlayer[] = [];
 
-    // Cooldown logic
-    if (inputs.last_price_change_at && hoursSince(inputs.last_price_change_at, inputs.now) < K.COOLDOWN_HOURS) {
-      scoreUp *= 0.25;
-      scoreDown *= 0.25;
-    }
+      for (const el of elements) {
+        const netIn = el.transfers_in_event || 0;
+        const netOut = el.transfers_out_event || 0;
+        const ownership = parseFloat(el.selected_by_percent) || 0;
+        const netTransfers = netIn - netOut;
+        const flag = getStatusFlag(el.status || "a");
 
-    // Recent change dampening
-    const recent = isRecentChange(inputs.last_price_change_at, inputs.now, K.RECENT_DAYS_DAMP);
-    if (recent) {
-      if (inputs.price_change_dir_last === "up") scoreUp *= K.RECENT_UP_DAMP;
-      if (inputs.price_change_dir_last === "down") scoreDown *= K.RECENT_DOWN_DAMP;
-    }
+        // Lookup recent price change for this player
+        const recentChange = recentChangesMap.get(el.id);
+        const lastPriceChangeAt = recentChange?.at || null;
+        const priceChangeDirLast = recentChange?.dir || null;
 
-    // Time weighting
-    const tw = timeWeight(inputs.now, inputs.gw_start_at, inputs.gw_deadline_at);
-    scoreUp *= tw;
-    scoreDown *= tw;
+        if (netTransfers > 0 && netIn >= K.MIN_NET_TRANSFERS) {
+          const prediction = calculatePrediction(
+            netIn, netOut, ownership, flag, true,
+            lastPriceChangeAt, priceChangeDirLast,
+            gwStart, gwDeadline,
+          );
 
-    // Convert to probabilities
-    const prob_up = clamp01(logistic(scoreUp));
-    const prob_down = clamp01(logistic(scoreDown));
+          riserList.push({
+            id: el.id,
+            web_name: el.web_name,
+            team: el.team,
+            team_short: teamShortMap.get(el.team) || "?",
+            element_type: el.element_type,
+            now_cost: el.now_cost,
+            cost_change_start: el.cost_change_start || 0,
+            selected_by_percent: ownership,
+            form: parseFloat(el.form) || 0,
+            transfers_in_event: netIn,
+            transfers_out_event: netOut,
+            net_transfers: netTransfers,
+            delta: prediction.progress,
+            change_time: prediction.change_time,
+            target_reached: prediction.target_reached,
+            status: el.status,
+            news: el.news || "",
+          });
+        } else if (netTransfers < 0 && netOut >= K.MIN_NET_TRANSFERS) {
+          const prediction = calculatePrediction(
+            netIn, netOut, ownership, flag, false,
+            lastPriceChangeAt, priceChangeDirLast,
+            gwStart, gwDeadline,
+          );
 
-    // Determine signal - MUCH more conservative thresholds
-    let signal = "neutral";
-    if (prob_up >= 0.85 && prob_up - prob_down >= 0.25) signal = "likely_up";   // Povećano sa 0.7/0.15
-    else if (prob_down >= 0.85 && prob_down - prob_up >= 0.25) signal = "likely_down";
+          fallerList.push({
+            id: el.id,
+            web_name: el.web_name,
+            team: el.team,
+            team_short: teamShortMap.get(el.team) || "?",
+            element_type: el.element_type,
+            now_cost: el.now_cost,
+            cost_change_start: el.cost_change_start || 0,
+            selected_by_percent: ownership,
+            form: parseFloat(el.form) || 0,
+            transfers_in_event: netIn,
+            transfers_out_event: netOut,
+            net_transfers: netTransfers,
+            delta: prediction.progress,
+            change_time: prediction.change_time,
+            target_reached: prediction.target_reached,
+            status: el.status,
+            news: el.news || "",
+          });
+        }
+      }
 
-    const explanation = [
-      `NTI norm=${ntiNorm.toFixed(3)} vs thUp=${thUp.toFixed(3)} → scoreUp=${scoreUp.toFixed(2)}`,
-      `NTO norm=${ntoNorm.toFixed(3)} vs thDown=${thDown.toFixed(3)} → scoreDown=${scoreDown.toFixed(2)}`,
-      `flag=${inputs.flag}, ownership=${inputs.ownership_pct.toFixed(1)}%`,
-      recent ? `recent_change=${inputs.price_change_dir_last} (damp applied)` : `recent_change=no`,
-      `time_weight=${tw.toFixed(2)}`
-    ].join(" | ");
+      // Sort by delta descending
+      riserList.sort((a, b) => b.delta - a.delta);
+      fallerList.sort((a, b) => b.delta - a.delta);
 
-    return { prob_up, prob_down, signal, explanation };
-  }, []);
-
-  const calculatePricePrediction = useCallback((player: any, bootstrap: any, priceChanges: any = null) => {
-    const bootstrapPlayer = bootstrap.elements.find((p: any) => p.id === player.id);
-    if (!bootstrapPlayer) return { 
-      progress: 100, 
-      hourly_change: 0, 
-      change_time: "Unlikely", 
-      target_reached: false
-    };
-
-    const ownership = parseFloat(bootstrapPlayer.selected_by_percent) || 0;
-    const transfers_in_gw = player.transfers_in_event || 0;
-    const transfers_out_gw = player.transfers_out_event || 0;
-    
-    // Determine if this is a riser or faller based on which list it came from
-    const playerIsRiser = transfers_in_gw > 0 && transfers_out_gw === 0;
-    const playerIsFaller = transfers_out_gw > 0 && transfers_in_gw === 0;
-    
-    // Check for recent price changes
-    let lastPriceChangeAt: number | null = null;
-    let priceChangeDirLast: "up" | "down" | null = null;
-    
-    if (priceChanges && priceChanges.success && priceChanges.data) {
-      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-      const allRecentChanges = [
-        ...(priceChanges.data.risers || []),
-        ...(priceChanges.data.fallers || [])
-      ];
-      
-      const recentChange = allRecentChanges.find((change: any) => 
-        change.player_id === player.id && 
-        new Date(change.change_time).getTime() > sevenDaysAgo
+      setRisers(riserList);
+      setFallers(fallerList);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load price data"
       );
-      
-      if (recentChange) {
-        lastPriceChangeAt = new Date(recentChange.change_time).getTime();
-        priceChangeDirLast = recentChange.change_type === 'rise' ? 'up' : 'down';
-      }
+    } finally {
+      setLoading(false);
     }
-
-    // Simulate GW timing (should be real data)
-    const now = Date.now();
-    const gw_start = now - (2 * 24 * 60 * 60 * 1000); // 2 days ago
-    const gw_deadline = now + (5 * 24 * 60 * 60 * 1000); // 5 days from now
-
-    const inputs = {
-      transfers_in_gw,
-      transfers_out_gw,
-      ownership_pct: ownership,
-      flag: "none", // Could be enhanced with injury data
-      last_price_change_at: lastPriceChangeAt,
-      price_change_dir_last: priceChangeDirLast,
-      active_managers_estimate: K.MIN_ACTIVE_MANAGERS,
-      now,
-      gw_start_at: gw_start,
-      gw_deadline_at: gw_deadline
-    };
-
-    const result = estimatePriceChangeProb(inputs);
-
-    // Progress shows PROBABILITY of change (not direction)
-    // 100%+ = high chance of change, <100% = low chance of change
-    let progress = 100;
-    let isRiser = playerIsRiser;
-    
-    if (playerIsRiser) {
-      // RISERS: Progress = probability of price rise
-      if (result.signal === "likely_up") {
-        progress = 100 + (result.prob_up * 8); // 100-108% for high confidence rises
-      } else {
-        // Low confidence risers
-        const riseProb = result.prob_up;
-        progress = 88 + (riseProb * 12); // 88-100% for low confidence
-      }
-      isRiser = true;
-    } else if (playerIsFaller) {
-      // FALLERS: Progress = probability of price fall  
-      if (result.signal === "likely_down") {
-        progress = 100 + (result.prob_down * 8); // 100-108% for high confidence falls
-      } else {
-        // Low confidence fallers
-        const fallProb = result.prob_down;
-        progress = 88 + (fallProb * 12); // 88-100% for low confidence
-      }
-      isRiser = false;
-    } else {
-      // Neutral case
-      progress = 95;
-      isRiser = false;
-    }
-
-    // Calculate hourly change based on probability - VERY small values
-    const maxProb = Math.max(result.prob_up, result.prob_down);
-    const hourlyChange = isRiser ? 
-      Math.min(0.3, maxProb * 0.2) :    // Smanjeno na 0.3 max, factor 0.2
-      -Math.min(0.3, maxProb * 0.2);
-
-    // Determine timing based on progress percentage
-    let changeTime = "Unlikely";
-    if (progress >= 105) {
-      changeTime = "Tonight";
-    } else if (progress >= 102) {
-      changeTime = "Tomorrow";
-    } else if (progress >= 98) {
-      changeTime = "2 days";
-    } else {
-      changeTime = ">2 days";
-    }
-
-    const targetReached = result.signal !== "neutral";
-
-    return {
-      progress: Math.round(progress * 100) / 100,
-      hourly_change: Math.round(hourlyChange * 100) / 100,
-      change_time: changeTime,
-      target_reached: targetReached
-    };
   }, []);
 
   useEffect(() => {
-    const fetchPriceData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    fetchData();
+  }, [fetchData]);
 
-        // Fetch transfers, bootstrap data, and price changes
-        const [transfersResponse, bootstrapResponse, priceChangesResponse] = await Promise.all([
-          fetch('/api/fpl/transfers'),
-          fetch('/api/fpl/bootstrap-static'),
-          fetch('/api/fpl/price-changes')
-        ]);
-
-        if (!transfersResponse.ok || !bootstrapResponse.ok) {
-          throw new Error('Failed to fetch data');
-        }
-
-        const transfersData = await transfersResponse.json();
-        const bootstrapData = await bootstrapResponse.json();
-        const priceChangesData = priceChangesResponse.ok ? await priceChangesResponse.json() : null;
-
-        if (!transfersData.success || !bootstrapData.success) {
-          throw new Error('API returned error');
-        }
-
-        const risers: Player[] = [];
-        const fallers: Player[] = [];
-
-        // Process top transfer ins (risers)
-        transfersData.data.transfers_in.slice(0, 20).forEach((player: any) => {
-          const prediction = calculatePricePrediction({ 
-            ...player, 
-            transfers_in_event: player.transfers_in_event,
-            transfers_out_event: 0 
-          }, bootstrapData.data, priceChangesData);
-          
-          // Include players with any significant transfer activity (20k+ to show more data)
-          if (player.transfers_in_event >= 20000) {
-            const playerData: Player = {
-              id: player.id,
-              name: player.web_name,
-              position: getPositionName(player.position),
-              team: getTeamShortName(player.team),
-              team_name: getTeamShortName(player.team),
-              price: player.now_cost / 10,
-              progress: prediction.progress,
-              hourly_change: prediction.hourly_change,
-              change_time: prediction.change_time,
-              target_reached: prediction.target_reached,
-              is_riser: true,
-              ownership: parseFloat(bootstrapData.data.elements.find((p: any) => p.id === player.id)?.selected_by_percent || "0"),
-              form: parseFloat(bootstrapData.data.elements.find((p: any) => p.id === player.id)?.form || "0"),
-              transfers_in_event: player.transfers_in_event,
-              transfers_out_event: 0,
-              net_transfers: player.transfers_in_event
-            };
-            risers.push(playerData);
-          }
-        });
-
-        // Process top transfer outs (fallers)
-        transfersData.data.transfers_out.slice(0, 20).forEach((player: any) => {
-          const prediction = calculatePricePrediction({ 
-            ...player, 
-            transfers_in_event: 0,
-            transfers_out_event: player.transfers_out_event 
-          }, bootstrapData.data, priceChangesData);
-          
-          // Include players with any significant transfer activity (20k+ out)
-          if (player.transfers_out_event >= 20000) {
-            const playerData: Player = {
-              id: player.id,
-              name: player.web_name,
-              position: getPositionName(player.position),
-              team: getTeamShortName(player.team),
-              team_name: getTeamShortName(player.team),
-              price: player.now_cost / 10,
-              progress: prediction.progress,
-              hourly_change: prediction.hourly_change,
-              change_time: prediction.change_time,
-              target_reached: prediction.target_reached,
-              is_riser: false, // Explicitno false za fallers
-              ownership: parseFloat(bootstrapData.data.elements.find((p: any) => p.id === player.id)?.selected_by_percent || "0"),
-              form: parseFloat(bootstrapData.data.elements.find((p: any) => p.id === player.id)?.form || "0"),
-              transfers_in_event: 0,
-              transfers_out_event: player.transfers_out_event,
-              net_transfers: -player.transfers_out_event // Negativan net transfer
-            };
-            fallers.push(playerData);
-          }
-        });
-
-        const nextUpdate = new Date();
-        nextUpdate.setUTCHours(1, 30, 0, 0);
-        if (nextUpdate.getTime() < Date.now()) {
-          nextUpdate.setUTCDate(nextUpdate.getUTCDate() + 1);
-        }
-
-        const priceDataResult: PriceChangePrediction = {
-          predictions: [...risers, ...fallers],
-          risers: risers, // Pokaži SVE risers, ne samo target_reached
-          fallers: fallers, // Pokaži SVE fallers, ne samo target_reached  
-          accuracy: '89.7%',
-          last_updated: new Date().toISOString(),
-          next_update: nextUpdate.toISOString(),
-          total_predictions: risers.length + fallers.length, // Ukupni broj, ne samo target_reached
-          algorithm: 'Probability-Based FPL Prediction v5.0 (Normalized Transfer Analysis)'
-        };
-
-        setData(priceDataResult);
-      } catch (err) {
-        console.error('Failed to fetch price data:', err);
-        setError('Unable to load price prediction data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPriceData();
-  }, []);
+  // ─── Countdown Timer ────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (data?.next_update) {
-      const updateTimer = setInterval(() => {
-        const now = new Date().getTime();
-        const nextUpdate = new Date(data.next_update).getTime();
-        const difference = nextUpdate - now;
+    const tick = () => {
+      const now = new Date();
+      const target = new Date();
+      target.setUTCHours(1, 30, 0, 0);
+      if (target.getTime() <= now.getTime()) {
+        target.setUTCDate(target.getUTCDate() + 1);
+      }
+      const diff = target.getTime() - now.getTime();
+      const h = Math.floor(diff / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1_000);
+      setTimeRemaining(`${h}h ${m}m ${s}s`);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-        if (difference > 0) {
-          const hours = Math.floor(difference / (1000 * 60 * 60));
-          const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-          setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
-        } else {
-          setTimeRemaining("Updating...");
+  // ─── Filtering + Sorting ────────────────────────────────────────────────
+
+  const applyFilters = useCallback(
+    (players: PricePlayer[]) => {
+      let filtered = players;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(
+          (p) =>
+            p.web_name.toLowerCase().includes(q) ||
+            p.team_short.toLowerCase().includes(q)
+        );
+      }
+      if (selectedTeam !== "all") {
+        filtered = filtered.filter(
+          (p) => p.team_short === selectedTeam
+        );
+      }
+      const sorted = [...filtered].sort((a, b) => {
+        let va: number, vb: number;
+        switch (sortKey) {
+          case "delta":
+            va = a.delta; vb = b.delta; break;
+          case "price":
+            va = a.now_cost; vb = b.now_cost; break;
+          case "net":
+            va = Math.abs(a.net_transfers); vb = Math.abs(b.net_transfers); break;
+          case "ownership":
+            va = a.selected_by_percent; vb = b.selected_by_percent; break;
+          case "form":
+            va = a.form; vb = b.form; break;
+          default:
+            va = a.delta; vb = b.delta;
         }
-      }, 1000);
+        return sortAsc ? va - vb : vb - va;
+      });
+      return sorted;
+    },
+    [searchQuery, selectedTeam, sortKey, sortAsc]
+  );
 
-      return () => clearInterval(updateTimer);
-    }
-  }, [data]);
+  const filteredRisers = useMemo(
+    () => applyFilters(risers),
+    [risers, applyFilters]
+  );
+  const filteredFallers = useMemo(
+    () => applyFilters(fallers),
+    [fallers, applyFilters]
+  );
 
-  const getPositionColor = (position: string) => {
-    switch (position) {
-      case "GK":
-        return theme === "dark"
-          ? "text-yellow-400 bg-yellow-400/20"
-          : "text-yellow-600 bg-yellow-100";
-      case "DEF":
-        return theme === "dark"
-          ? "text-green-400 bg-green-400/20"
-          : "text-green-600 bg-green-100";
-      case "MID":
-        return theme === "dark"
-          ? "text-blue-400 bg-blue-400/20"
-          : "text-blue-600 bg-blue-100";
-      case "FWD":
-        return theme === "dark"
-          ? "text-red-400 bg-red-400/20"
-          : "text-red-600 bg-red-100";
-      default:
-        return theme === "dark"
-          ? "text-gray-400 bg-gray-400/20"
-          : "text-gray-600 bg-gray-100";
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortKey(key);
+      setSortAsc(false);
     }
   };
 
-  const filteredPlayers = (players: Player[]) => {
-    return players.filter((player) => {
-      const matchesSearch =
-        player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        player.team.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesTeam =
-        selectedTeam === "all" || player.team === selectedTeam;
-      const matchesOwnership =
-        !showOnlyOwned || player.ownership >= 5;
+  // ─── Stats ──────────────────────────────────────────────────────────────
 
-      return matchesSearch && matchesTeam && matchesOwnership;
-    });
-  };
+  const risersAboveTarget = risers.filter((p) => p.target_reached).length;
+  const fallersAboveTarget = fallers.filter((p) => p.target_reached).length;
 
-  const PlayerRow = ({ player }: { player: Player }) => {
-    const teamId = getTeamIdFromName(player.team);
-    const teamColors = getTeamColors(teamId);
-
-    return (
-      <tr
-        className={`border-b transition-colors hover:bg-opacity-50 ${
-          theme === "dark"
-            ? "border-gray-700 hover:bg-gray-800"
-            : "border-gray-200 hover:bg-gray-50"
-        }`}
-      >
-        <td className="px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-8 h-8 rounded-md flex items-center justify-center shadow-sm flex-shrink-0"
-              style={{
-                backgroundColor: teamColors.primary,
-                border: `2px solid ${teamColors.secondary}`,
-              }}
-            >
-              <TbShirt
-                className="w-4 h-4"
-                style={{ color: teamColors.secondary }}
-              />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-theme-foreground text-sm truncate">
-                  {player.name}
-                </h3>
-                {player.ownership > 20 && (
-                  <MdStar
-                    className="w-3 h-3 text-yellow-500 flex-shrink-0"
-                    title={t("prices.highOwnership")}
-                  />
-                )}
-              </div>
-              <div className="flex items-center gap-2 mt-1">
-                <span
-                  className={`px-2 py-0.5 rounded text-xs font-medium ${getPositionColor(
-                    player.position
-                  )}`}
-                >
-                  {player.position}
-                </span>
-                <span className="text-xs text-theme-text-secondary">
-                  {player.team}
-                </span>
-              </div>
-            </div>
-          </div>
-        </td>
-        <td className="px-4 py-4 text-center">
-          <span className="font-semibold text-theme-foreground">
-            £{player.price}m
-          </span>
-        </td>
-        <td className="px-4 py-4 text-center">
-          <div className="flex flex-col items-center">
-            <span
-              className={`font-bold text-sm ${
-                player.is_riser ? "text-green-500" : "text-red-500"
-              }`}
-            >
-              {player.progress.toFixed(1)}%
-            </span>
-            <div className="flex items-center gap-1 mt-1">
-              <span className="text-xs text-theme-text-secondary">
-                {player.hourly_change > 0 ? '+' : ''}{player.hourly_change.toFixed(2)}%/h
-              </span>
-            </div>
-          </div>
-        </td>
-        <td className="px-4 py-4 text-center">
-          <div className="flex flex-col items-center">
-            <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-              {player.is_riser ? '+' : ''}{(player.net_transfers / 1000).toFixed(0)}k
-            </span>
-            <span className="text-xs text-theme-text-secondary mt-1">
-              {t("prices.transfers")}
-            </span>
-          </div>
-        </td>
-        <td className="px-4 py-4 text-center">
-          <div className="flex flex-col items-center">
-            <span className="text-sm text-theme-foreground">
-              {player.ownership.toFixed(1)}%
-            </span>
-            <span className="text-xs text-theme-text-secondary mt-1">
-              {player.form.toFixed(1)} {t("prices.form")}
-            </span>
-          </div>
-        </td>
-        <td className="px-4 py-4 text-center">
-          <div className="flex flex-col items-center">
-            <span className="text-xs text-theme-text-secondary">
-              {player.change_time}
-            </span>
-            {player.target_reached && (
-              <span
-                className={`inline-block text-xs px-2 py-0.5 rounded mt-1 ${
-                  player.is_riser
-                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                }`}
-              >
-                {t("prices.target")}
-              </span>
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  };
-
-  // Separate risers and fallers with filtering and sorting
-  const filteredRisers = data?.risers ? filteredPlayers(data.risers).sort((a, b) => b.progress - a.progress) : [];
-  const filteredFallers = data?.fallers ? filteredPlayers(data.fallers).sort((a, b) => a.progress - b.progress) : [];
-
-  // Take top players for each category - show more players
-  const topRisers = filteredRisers.slice(0, 15);  // Povećano sa 10 na 15
-  const topFallers = filteredFallers.slice(0, 15); // Povećano sa 10 na 15
+  // ─── Loading ────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
       <div className="min-h-screen bg-theme-background theme-transition">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <LoadingCard title={t("prices.loading")} />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-theme-card-secondary rounded w-64" />
+            <div className="h-4 bg-theme-card-secondary rounded w-96" />
+            <div className="grid grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-20 bg-theme-card-secondary rounded-lg" />
+              ))}
+            </div>
+            <div className="h-96 bg-theme-card-secondary rounded-lg" />
+          </div>
         </div>
       </div>
     );
@@ -640,397 +516,534 @@ export default function PricesPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-theme-background theme-transition">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <div className="text-center py-12">
-            <p className="text-red-500 text-lg mb-4">{t("common.error")}</p>
-            <p className="text-theme-text-secondary mb-6">{error}</p>
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-6 max-w-md mx-auto">
-              <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-                FPL API Currently Not Available
-              </h3>
-              <p className="text-yellow-700 dark:text-yellow-300 text-sm mb-4">
-                The Fantasy Premier League API is temporarily unavailable. This may be due to high traffic or maintenance.
-              </p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
-              >
-                Refresh Page
-              </button>
-              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-3">
-                Or wait a few minutes and try again
-              </p>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="bg-theme-card border border-theme-border rounded-lg p-8 text-center">
+            <p className="text-theme-foreground font-medium mb-2">
+              {t("common.error")}
+            </p>
+            <p className="text-theme-text-secondary text-sm mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-theme-foreground text-theme-background rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              {t("prices.retry") || "Retry"}
+            </button>
           </div>
         </div>
       </div>
     );
   }
 
+  // ─── Render ─────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-theme-background theme-transition">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-theme-foreground mb-4">
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-theme-foreground tracking-tight">
             {t("prices.title")}
           </h1>
-          <p className="text-lg text-theme-text-secondary mb-6 max-w-2xl mx-auto">
+          <p className="text-sm text-theme-text-secondary mt-1 max-w-xl">
             {t("prices.subtitle")}
           </p>
-
-          {/* Countdown */}
-          <div
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
-              theme === "dark"
-                ? "bg-blue-900/30 text-blue-400"
-                : "bg-blue-100 text-blue-800"
-            }`}
-          >
-            <MdAccessTime className="w-5 h-5" />
-            <span className="font-medium">
-              {t("prices.nextUpdate")}: {timeRemaining}
-            </span>
-          </div>
-
-          <p className="text-sm text-theme-text-secondary mt-2">
-            {t("prices.updateInfo")}
-          </p>
         </div>
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className={`p-4 rounded-lg border-2 ${
-              theme === "dark"
-                ? "bg-gradient-to-br from-green-900/20 to-green-800/10 border-green-500/30"
-                : "bg-gradient-to-br from-green-50 to-green-100 border-green-200"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <MdTrendingUp className="w-8 h-8 text-green-500 flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {topRisers.filter(p => p.target_reached).length}
-                </p>
-                <p className="text-sm text-theme-text-secondary font-medium">
-                  {t("prices.predictedRises")}
-                </p>
-              </div>
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-theme-card border border-theme-border rounded-lg px-4 py-3">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="w-3.5 h-3.5 text-theme-text-secondary" />
+              <span className="text-xs text-theme-text-secondary font-medium uppercase tracking-wider">
+                {t("prices.predictedRises")}
+              </span>
             </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className={`p-4 rounded-lg border-2 ${
-              theme === "dark"
-                ? "bg-gradient-to-br from-red-900/20 to-red-800/10 border-red-500/30"
-                : "bg-gradient-to-br from-red-50 to-red-100 border-red-200"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <MdTrendingDown className="w-8 h-8 text-red-500 flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                  {topFallers.filter(p => p.target_reached).length}
-                </p>
-                <p className="text-sm text-theme-text-secondary font-medium">
-                  {t("prices.predictedFalls")}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className={`p-4 rounded-lg border-2 ${
-              theme === "dark"
-                ? "bg-gradient-to-br from-blue-900/20 to-blue-800/10 border-blue-500/30"
-                : "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <MdPerson className="w-8 h-8 text-blue-500 flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {topRisers.length + topFallers.length}
-                </p>
-                <p className="text-sm text-theme-text-secondary font-medium">
-                  {t("prices.totalPredictions")}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className={`p-4 rounded-lg border-2 ${
-              theme === "dark"
-                ? "bg-gradient-to-br from-purple-900/20 to-purple-800/10 border-purple-500/30"
-                : "bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <MdRefresh className="w-8 h-8 text-purple-500 flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {data?.accuracy || "0%"}
-                </p>
-                <p className="text-sm text-theme-text-secondary font-medium">
-                  {t("prices.accuracy")}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className={`p-4 rounded-lg mb-8 border-2 ${
-            theme === "dark"
-              ? "bg-gray-800/50 border-gray-700/50"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-secondary w-5 h-5" />
-              <input
-                type="text"
-                placeholder={t("prices.searchPlayer")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-10 pr-3 py-3 rounded-md border-2 transition-colors ${
-                  theme === "dark"
-                    ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500"
-                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500"
-                } focus:outline-none focus:ring-0`}
-              />
-            </div>
-
-            <select
-              value={selectedTeam}
-              onChange={(e) => setSelectedTeam(e.target.value)}
-              className={`px-3 py-3 rounded-md border-2 transition-colors ${
-                theme === "dark"
-                  ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500"
-                  : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
-              } focus:outline-none focus:ring-0`}
-            >
-              <option value="all">{t("prices.allTeams")}</option>
-              <option value="ARS">Arsenal</option>
-              <option value="AVL">Aston Villa</option>
-              <option value="BOU">Bournemouth</option>
-              <option value="BRE">Brentford</option>
-              <option value="BHA">Brighton</option>
-              <option value="CHE">Chelsea</option>
-              <option value="CRY">Crystal Palace</option>
-              <option value="EVE">Everton</option>
-              <option value="FUL">Fulham</option>
-              <option value="LIV">Liverpool</option>
-              <option value="MCI">Man City</option>
-              <option value="MUN">Man Utd</option>
-              <option value="NEW">Newcastle</option>
-              <option value="NFO">Nottingham Forest</option>
-              <option value="TOT">Spurs</option>
-              <option value="WHU">West Ham</option>
-              <option value="WOL">Wolves</option>
-            </select>
-
-            <div className="flex items-center justify-center md:justify-start">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showOnlyOwned}
-                  onChange={(e) => setShowOnlyOwned(e.target.checked)}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <span className="text-sm text-theme-foreground font-medium">
-                  {t("prices.highOwnership")}
-                </span>
-              </label>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Parallel Tables - Risers and Fallers */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Price Risers Table */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className={`rounded-lg border-2 overflow-hidden ${
-              theme === "dark"
-                ? "bg-gray-800/50 border-green-500/30"
-                : "bg-white border-green-200"
-            }`}
-          >
-            <div className={`px-6 py-4 border-b ${
-              theme === "dark"
-                ? "bg-gradient-to-r from-green-900/30 to-green-800/20 border-green-500/30"
-                : "bg-gradient-to-r from-green-50 to-green-100 border-green-200"
-            }`}>
-              <div className="flex items-center gap-3">
-                <MdTrendingUp className="w-6 h-6 text-green-500" />
-                <h2 className="text-xl font-bold text-green-600 dark:text-green-400">
-                  {t("prices.priceRisers")}
-                </h2>
-                <span className="ml-auto text-sm text-theme-text-secondary">
-                  {topRisers.length} {t("prices.players")}
-                </span>
-              </div>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className={`${
-                  theme === "dark" ? "bg-gray-700/50" : "bg-gray-50"
-                }`}>
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.player")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.price")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.progress")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.transfers")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.ownership")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.timing")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topRisers.map((player) => (
-                    <PlayerRow key={player.id} player={player} />
-                  ))}
-                </tbody>
-              </table>
-              
-              {topRisers.length === 0 && (
-                <div className="text-center py-8">
-                  <MdTrendingUp className="w-12 h-12 text-green-400 mx-auto mb-3 opacity-50" />
-                  <p className="text-theme-text-secondary">
-                    {t("prices.noRisersFound")}
-                  </p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Price Fallers Table */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className={`rounded-lg border-2 overflow-hidden ${
-              theme === "dark"
-                ? "bg-gray-800/50 border-red-500/30"
-                : "bg-white border-red-200"
-            }`}
-          >
-            <div className={`px-6 py-4 border-b ${
-              theme === "dark"
-                ? "bg-gradient-to-r from-red-900/30 to-red-800/20 border-red-500/30"
-                : "bg-gradient-to-r from-red-50 to-red-100 border-red-200"
-            }`}>
-              <div className="flex items-center gap-3">
-                <MdTrendingDown className="w-6 h-6 text-red-500" />
-                <h2 className="text-xl font-bold text-red-600 dark:text-red-400">
-                  {t("prices.priceFallers")}
-                </h2>
-                <span className="ml-auto text-sm text-theme-text-secondary">
-                  {topFallers.length} {t("prices.players")}
-                </span>
-              </div>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className={`${
-                  theme === "dark" ? "bg-gray-700/50" : "bg-gray-50"
-                }`}>
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.player")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.price")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.progress")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.transfers")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.ownership")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
-                      {t("prices.timing")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topFallers.map((player) => (
-                    <PlayerRow key={player.id} player={player} />
-                  ))}
-                </tbody>
-              </table>
-              
-              {topFallers.length === 0 && (
-                <div className="text-center py-8">
-                  <MdTrendingDown className="w-12 h-12 text-red-400 mx-auto mb-3 opacity-50" />
-                  <p className="text-theme-text-secondary">
-                    {t("prices.noFallersFound")}
-                  </p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Algorithm Info Footer */}
-        <div
-          className={`mt-8 p-6 rounded-lg border-2 ${
-            theme === "dark" 
-              ? "bg-gray-800/50 border-gray-700/50" 
-              : "bg-gray-50 border-gray-200"
-          }`}
-        >
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-theme-foreground mb-2">
-              {data?.algorithm}
-            </h3>
-            <p className="text-sm text-theme-text-secondary mb-2">
-              {t("prices.infoFooter")}
+            <p className="text-xl font-bold text-theme-foreground">
+              {risersAboveTarget}
+              <span className="text-sm font-normal text-theme-text-secondary ml-1">
+                / {risers.length}
+              </span>
             </p>
-            <p className="text-xs text-theme-text-secondary">
-              {t("prices.lastUpdated")}: {new Date(data?.last_updated || '').toLocaleString()}
+          </div>
+
+          <div className="bg-theme-card border border-theme-border rounded-lg px-4 py-3">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingDown className="w-3.5 h-3.5 text-theme-text-secondary" />
+              <span className="text-xs text-theme-text-secondary font-medium uppercase tracking-wider">
+                {t("prices.predictedFalls")}
+              </span>
+            </div>
+            <p className="text-xl font-bold text-theme-foreground">
+              {fallersAboveTarget}
+              <span className="text-sm font-normal text-theme-text-secondary ml-1">
+                / {fallers.length}
+              </span>
+            </p>
+          </div>
+
+          <div className="bg-theme-card border border-theme-border rounded-lg px-4 py-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="w-3.5 h-3.5 text-theme-text-secondary" />
+              <span className="text-xs text-theme-text-secondary font-medium uppercase tracking-wider">
+                {t("prices.nextUpdate")}
+              </span>
+            </div>
+            <p className="text-lg font-bold text-theme-foreground tabular-nums">
+              {timeRemaining}
+            </p>
+          </div>
+        </div>
+
+        {/* Search & Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-secondary" />
+            <input
+              type="text"
+              placeholder={t("prices.searchPlayer")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-theme-card border border-theme-border rounded-lg text-sm text-theme-foreground placeholder:text-theme-text-secondary focus:outline-none focus:ring-1 focus:ring-theme-foreground/20"
+            />
+          </div>
+          <div className="flex gap-2">
+            <div className="relative">
+              <select
+                value={selectedTeam}
+                onChange={(e) => setSelectedTeam(e.target.value)}
+                className="appearance-none pl-3 pr-8 py-2.5 bg-theme-card border border-theme-border rounded-lg text-sm text-theme-foreground focus:outline-none focus:ring-1 focus:ring-theme-foreground/20 cursor-pointer"
+              >
+                <option value="all">{t("prices.allTeams")}</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.short_name}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-theme-text-secondary pointer-events-none" />
+            </div>
+          </div>
+        </div>
+
+        {/* Tables */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <PriceTable
+            title={t("prices.priceRisers")}
+            players={filteredRisers}
+            isRiser={true}
+            sortKey={sortKey}
+            sortAsc={sortAsc}
+            onSort={handleSort}
+            t={t}
+          />
+          <PriceTable
+            title={t("prices.priceFallers")}
+            players={filteredFallers}
+            isRiser={false}
+            sortKey={sortKey}
+            sortAsc={sortAsc}
+            onSort={handleSort}
+            t={t}
+          />
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 pt-6 border-t border-theme-border">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-theme-text-secondary">
+            <p>{t("prices.updateInfo")}</p>
+            <p>
+              {t("prices.lastUpdated")}:{" "}
+              {new Date().toLocaleTimeString()}
             </p>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── PriceTable Component ─────────────────────────────────────────────────
+
+function PriceTable({
+  title,
+  players,
+  isRiser,
+  sortKey,
+  sortAsc,
+  onSort,
+  t,
+}: {
+  title: string;
+  players: PricePlayer[];
+  isRiser: boolean;
+  sortKey: SortKey;
+  sortAsc: boolean;
+  onSort: (key: SortKey) => void;
+  t: any;
+}) {
+  const SortButton = ({
+    label,
+    sortKeyName,
+    className = "",
+  }: {
+    label: string;
+    sortKeyName: SortKey;
+    className?: string;
+  }) => (
+    <button
+      onClick={() => onSort(sortKeyName)}
+      className={`flex items-center gap-1 text-xs font-medium uppercase tracking-wider hover:text-theme-foreground transition-colors ${
+        sortKey === sortKeyName
+          ? "text-theme-foreground"
+          : "text-theme-text-secondary"
+      } ${className}`}
+    >
+      {label}
+      {sortKey === sortKeyName && (
+        <ArrowUpDown className="w-3 h-3" />
+      )}
+    </button>
+  );
+
+  return (
+    <div className="bg-theme-card border border-theme-border rounded-lg overflow-hidden">
+      {/* Table Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-theme-border">
+        <div className="flex items-center gap-2">
+          {isRiser ? (
+            <TrendingUp className="w-4 h-4 text-theme-text-secondary" />
+          ) : (
+            <TrendingDown className="w-4 h-4 text-theme-text-secondary" />
+          )}
+          <h2 className="text-sm font-semibold text-theme-foreground">
+            {title}
+          </h2>
+        </div>
+        <span className="text-xs text-theme-text-secondary">
+          {players.length} {t("prices.players") || "players"}
+        </span>
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-theme-border bg-theme-card-secondary">
+              <th className="px-4 py-2.5 text-left">
+                <SortButton label={t("prices.player")} sortKeyName="delta" />
+              </th>
+              <th className="px-3 py-2.5 text-right">
+                <SortButton
+                  label={t("prices.price")}
+                  sortKeyName="price"
+                  className="justify-end"
+                />
+              </th>
+              <th className="px-3 py-2.5 text-center w-36">
+                <SortButton
+                  label="Delta"
+                  sortKeyName="delta"
+                  className="justify-center"
+                />
+              </th>
+              <th className="px-3 py-2.5 text-right">
+                <SortButton
+                  label={t("prices.transfers")}
+                  sortKeyName="net"
+                  className="justify-end"
+                />
+              </th>
+              <th className="px-3 py-2.5 text-right">
+                <SortButton
+                  label={t("prices.ownership")}
+                  sortKeyName="ownership"
+                  className="justify-end"
+                />
+              </th>
+              <th className="px-4 py-2.5 text-right">
+                <span className="text-xs font-medium text-theme-text-secondary uppercase tracking-wider">
+                  {t("prices.timing")}
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-theme-border">
+            {players.slice(0, 25).map((player) => (
+              <PlayerRowDesktop
+                key={player.id}
+                player={player}
+                isRiser={isRiser}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="sm:hidden divide-y divide-theme-border">
+        {players.slice(0, 25).map((player) => (
+          <PlayerRowMobile
+            key={player.id}
+            player={player}
+            isRiser={isRiser}
+          />
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {players.length === 0 && (
+        <div className="py-12 text-center">
+          <p className="text-sm text-theme-text-secondary">
+            {isRiser
+              ? t("prices.noRisersFound") || "No predicted risers"
+              : t("prices.noFallersFound") || "No predicted fallers"}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Desktop Row ──────────────────────────────────────────────────────────
+
+function PlayerRowDesktop({
+  player,
+  isRiser,
+}: {
+  player: PricePlayer;
+  isRiser: boolean;
+}) {
+  const teamColors = getTeamColors(player.team);
+  const isTarget = player.target_reached;
+  const seasonChange = player.now_cost - player.cost_change_start;
+
+  return (
+    <tr className="hover:bg-theme-card-secondary/50 transition-colors">
+      {/* Player */}
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+            style={{ backgroundColor: teamColors.primary }}
+          >
+            {player.web_name.charAt(0)}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-medium text-theme-foreground truncate">
+                {player.web_name}
+              </span>
+              {isTarget && (
+                <span
+                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                    isRiser ? "bg-green-500" : "bg-red-500"
+                  }`}
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-xs text-theme-text-secondary">
+                {player.team_short}
+              </span>
+              <span className="text-xs text-theme-text-secondary opacity-50">
+                ·
+              </span>
+              <span className="text-xs text-theme-text-secondary">
+                {POS_LABELS[player.element_type] || "?"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </td>
+
+      {/* Price */}
+      <td className="px-3 py-3 text-right">
+        <span className="text-sm font-medium text-theme-foreground tabular-nums">
+          {formatPrice(player.now_cost)}
+        </span>
+        {seasonChange !== 0 && (
+          <div
+            className={`text-xs tabular-nums ${
+              seasonChange > 0
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          >
+            {seasonChange > 0 ? "+" : ""}
+            {(seasonChange / 10).toFixed(1)}
+          </div>
+        )}
+      </td>
+
+      {/* Delta Bar */}
+      <td className="px-3 py-3">
+        <DeltaBar delta={player.delta} isRiser={isRiser} isTarget={isTarget} />
+      </td>
+
+      {/* Net Transfers */}
+      <td className="px-3 py-3 text-right">
+        <span
+          className={`text-sm font-medium tabular-nums ${
+            isRiser
+              ? "text-green-600 dark:text-green-400"
+              : "text-red-600 dark:text-red-400"
+          }`}
+        >
+          {isRiser ? "+" : ""}
+          {formatNet(player.net_transfers)}
+        </span>
+      </td>
+
+      {/* Ownership */}
+      <td className="px-3 py-3 text-right">
+        <span className="text-sm text-theme-foreground tabular-nums">
+          {player.selected_by_percent.toFixed(1)}%
+        </span>
+        <div className="text-xs text-theme-text-secondary tabular-nums">
+          {player.form.toFixed(1)} form
+        </div>
+      </td>
+
+      {/* Timing */}
+      <td className="px-4 py-3 text-right">
+        <span
+          className={`text-xs font-medium ${
+            isTarget ? "text-theme-foreground" : "text-theme-text-secondary"
+          }`}
+        >
+          {player.change_time}
+        </span>
+      </td>
+    </tr>
+  );
+}
+
+// ─── Mobile Row ───────────────────────────────────────────────────────────
+
+function PlayerRowMobile({
+  player,
+  isRiser,
+}: {
+  player: PricePlayer;
+  isRiser: boolean;
+}) {
+  const teamColors = getTeamColors(player.team);
+  const isTarget = player.target_reached;
+
+  return (
+    <div className="px-4 py-3 hover:bg-theme-card-secondary/50 transition-colors">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+            style={{ backgroundColor: teamColors.primary }}
+          >
+            {player.web_name.charAt(0)}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-medium text-theme-foreground truncate">
+                {player.web_name}
+              </span>
+              {isTarget && (
+                <span
+                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                    isRiser ? "bg-green-500" : "bg-red-500"
+                  }`}
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-theme-text-secondary">
+                {player.team_short}
+              </span>
+              <span className="text-xs text-theme-text-secondary opacity-50">
+                ·
+              </span>
+              <span className="text-xs text-theme-text-secondary">
+                {POS_LABELS[player.element_type] || "?"}
+              </span>
+              <span className="text-xs text-theme-text-secondary opacity-50">
+                ·
+              </span>
+              <span className="text-xs text-theme-text-secondary tabular-nums">
+                {formatPrice(player.now_cost)}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="text-right flex-shrink-0 ml-3">
+          <span
+            className={`text-sm font-medium tabular-nums ${
+              isRiser
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          >
+            {isRiser ? "+" : ""}
+            {formatNet(player.net_transfers)}
+          </span>
+          <div className="text-xs text-theme-text-secondary">
+            {player.selected_by_percent.toFixed(1)}% own
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <DeltaBar delta={player.delta} isRiser={isRiser} isTarget={isTarget} />
+        </div>
+        <span
+          className={`text-xs font-medium w-16 text-right ${
+            isTarget ? "text-theme-foreground" : "text-theme-text-secondary"
+          }`}
+        >
+          {player.change_time}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Delta Bar Component ──────────────────────────────────────────────────
+
+function getDeltaColor(delta: number, isRiser: boolean): string {
+  if (isRiser) {
+    if (delta >= 75) return "bg-green-500";
+    if (delta >= 50) return "bg-yellow-500";
+    return "bg-red-400";
+  } else {
+    if (delta >= 75) return "bg-red-500";
+    if (delta >= 50) return "bg-yellow-500";
+    return "bg-green-400";
+  }
+}
+
+function DeltaBar({
+  delta,
+  isRiser,
+  isTarget,
+}: {
+  delta: number;
+  isRiser: boolean;
+  isTarget: boolean;
+}) {
+  const pct = Math.min(100, Math.max(2, delta));
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 bg-theme-card-secondary rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${getDeltaColor(delta, isRiser)}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span
+        className={`text-xs font-medium tabular-nums w-10 text-right ${
+          isTarget ? "text-theme-foreground" : "text-theme-text-secondary"
+        }`}
+      >
+        {Math.round(delta)}%
+      </span>
     </div>
   );
 }

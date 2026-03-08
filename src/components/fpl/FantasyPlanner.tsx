@@ -3074,6 +3074,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   refreshInterval={1800000}
                   showRecommendations={true}
                   maxWeeksShown={5}
+                  currentGameweek={currentGameweek}
                 />
               </div>
             </motion.div>

@@ -664,7 +664,9 @@
     "noFallersFound": "No price fallers found with current filters",
     "transfers": "Transfers",
     "accuracy": "Accuracy",
-    "lastUpdated": "Last updated"
+    "lastUpdated": "Last updated",
+    "players": "players",
+    "retry": "Retry"
   },
   "gallery": {
     "title": "Premier League Gallery",
