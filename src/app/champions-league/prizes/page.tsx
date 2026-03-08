@@ -3,8 +3,10 @@
 import PrizesGallery from "@/components/shared/PrizesGallery";
 import { useLeaguePrizes, usePageContent } from "@/hooks/useLeagueData";
 import LoadingCard from "@/components/shared/LoadingCard";
+import { useTranslation } from "react-i18next";
 
 export default function ChampionsLeagueNagradePage() {
+  const { t } = useTranslation("champions");
   const {
     data: prizes,
     loading: prizesLoading,
@@ -20,8 +22,8 @@ export default function ChampionsLeagueNagradePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingCard
-          title="Loading Champions League Prizes"
-          description="Please wait while we fetch the latest Champions League prize information"
+          title={t("prizes.title", "Champions League Prizes")}
+          description={t("prizes.subtitle", "Please wait while we fetch the latest prize information")}
           className="w-full max-w-md mx-auto"
         />
       </div>
@@ -32,7 +34,7 @@ export default function ChampionsLeagueNagradePage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-500 mb-4">Greška pri učitavanju podataka</p>
+          <p className="text-red-500 mb-4">{t("errors.general", "Error loading data")}</p>
           <p className="text-theme-text-secondary">
             {prizesError || contentError}
           </p>
@@ -46,10 +48,10 @@ export default function ChampionsLeagueNagradePage() {
       <PrizesGallery
         prizes={prizes}
         leagueFilter="champions"
-        title={content?.title || "Champions League Nagrade"}
+        title={content?.title || t("prizes.title", "Champions League Prizes")}
         subtitle={
           content?.subtitle ||
-          "Osvojite nevjerovatne nagrade tokom cijele Champions League sezone!"
+          t("prizes.subtitle", "Win amazing prizes throughout the Champions League season")
         }
       />
     </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { TbTrendingUp, TbTrendingDown, TbTransfer } from "react-icons/tb";
 import { MdRefresh, MdInfo } from "react-icons/md";
-import LoadingCard from "@/components/shared/LoadingCard";
+
 import { getTeamColors } from "@/lib/team-colors";
 
 interface TransferData {
@@ -107,15 +107,17 @@ export default function TransfersMarket() {
 
   if (isInitialLoad || (loading && !transfersData.transfers_in && !transfersData.transfers_out)) {
     return (
-      <div className="space-y-6">
-        <LoadingCard title={t("fplLive.transfers.loading")} />
+      <div className="bg-theme-card rounded-lg border border-theme-border p-4 space-y-2 theme-transition">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="h-10 bg-theme-card-secondary rounded animate-pulse" />
+        ))}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+      <div className="bg-theme-card border border-theme-border rounded-lg p-6">
         <div className="flex items-center gap-3">
           <MdInfo className="text-red-600 dark:text-red-400 text-xl" />
           <div>
@@ -132,15 +134,15 @@ export default function TransfersMarket() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500/90 to-red-600/90 rounded-lg shadow-lg p-4 sm:p-6 border border-orange-300/30 backdrop-blur-sm">
+      <div className="bg-theme-card border border-theme-border rounded-lg p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-3">
-            <TbTransfer className="text-xl sm:text-2xl text-white flex-shrink-0" />
+            <TbTransfer className="text-xl sm:text-2xl text-theme-foreground flex-shrink-0" />
             <div className="min-w-0">
-              <h2 className="text-lg sm:text-xl font-bold text-white">
+              <h2 className="text-lg sm:text-xl font-bold text-theme-foreground">
                 {t("fplLive.transfers.title")}
               </h2>
-              <p className="text-orange-100 text-xs sm:text-sm">
+              <p className="text-theme-text-secondary text-xs sm:text-sm">
                 {t("fplLive.transfers.subtitle")}
               </p>
             </div>
@@ -148,14 +150,14 @@ export default function TransfersMarket() {
           <button
             onClick={fetchTransfers}
             disabled={loading}
-            className="flex items-center gap-1.5 sm:gap-2 bg-white/20 hover:bg-white/30 disabled:bg-white/10 text-white font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-lg backdrop-blur transition-all duration-200 text-sm sm:text-base"
+            className="flex items-center gap-1.5 sm:gap-2 bg-theme-card-secondary hover:bg-theme-border disabled:opacity-50 text-theme-foreground font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-lg transition-all duration-200 text-sm sm:text-base"
           >
             <MdRefresh className={`text-base sm:text-lg ${loading ? "animate-spin" : ""}`} />
             <span className="text-xs sm:text-sm">{t("fplLive.refresh")}</span>
           </button>
         </div>
         {lastUpdated && (
-          <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-orange-100">
+          <div className="mt-3 sm:mt-4 text-xs text-theme-text-secondary">
             {t("fplLive.lastUpdated")}: {new Date(lastUpdated).toLocaleString()}
           </div>
         )}
@@ -163,15 +165,15 @@ export default function TransfersMarket() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Transfers In */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-          <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-t-xl">
+        <div className="bg-theme-card rounded-lg border border-theme-border theme-transition">
+          <div className="bg-theme-card border-b border-theme-border p-3 sm:p-4 rounded-t-lg">
             <div className="flex items-center gap-3">
-              <TbTrendingUp className="text-2xl text-white" />
+              <TbTrendingUp className="text-green-600 dark:text-green-400 text-lg" />
               <div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-base font-semibold text-theme-foreground">
                   {t("fplLive.transfers.mostTransferredIn")}
                 </h3>
-                <p className="text-green-100 text-sm">
+                <p className="text-theme-text-secondary text-xs">
                   {t("fplLive.transfers.popularAdditions")}
                 </p>
               </div>
@@ -184,26 +186,26 @@ export default function TransfersMarket() {
                 {transfersData.transfers_in.slice(0, 10).map((player, index) => (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="flex items-center justify-between p-3 bg-theme-card-secondary rounded-lg hover:bg-theme-border transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex flex-col items-center">
-                        <span className="text-lg font-bold text-gray-600 dark:text-gray-400">
+                        <span className="text-sm font-semibold text-theme-text-secondary">
                           #{index + 1}
                         </span>
-                        <span className={`px-2 py-1 rounded text-xs font-medium text-white ${getPositionColor(player.position)}`}>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium text-white ${getPositionColor(player.position)}`}>
                           {getPositionName(player.position)}
                         </span>
                       </div>
                       <div className="w-2 h-8 rounded" style={{ backgroundColor: getTeamColors(player.team).primary }}></div>
                       <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">
+                        <p className="font-semibold text-theme-foreground">
                           {player.web_name}
-                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                          <span className="text-xs text-theme-text-secondary ml-1">
                             ({getTeamColors(player.team).shortName})
                           </span>
                         </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-theme-text-secondary">
                           £{formatCost(player.now_cost)}m
                         </p>
                       </div>
@@ -212,7 +214,7 @@ export default function TransfersMarket() {
                       <p className="font-bold text-green-600 dark:text-green-400">
                         +{formatNumber(player.transfers_in_event || 0)}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-theme-text-secondary">
                         {t("fplLive.transfers.thisGW")}
                       </p>
                     </div>
@@ -220,7 +222,7 @@ export default function TransfersMarket() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8 text-theme-text-secondary">
                 {t("fplLive.transfers.noData")}
               </div>
             )}
@@ -228,15 +230,15 @@ export default function TransfersMarket() {
         </div>
 
         {/* Transfers Out */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-          <div className="bg-gradient-to-r from-red-500 to-red-600 p-4 rounded-t-xl">
+        <div className="bg-theme-card rounded-lg border border-theme-border theme-transition">
+          <div className="bg-theme-card border-b border-theme-border p-3 sm:p-4 rounded-t-lg">
             <div className="flex items-center gap-3">
-              <TbTrendingDown className="text-2xl text-white" />
+              <TbTrendingDown className="text-red-600 dark:text-red-400 text-lg" />
               <div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-base font-semibold text-theme-foreground">
                   {t("fplLive.transfers.mostTransferredOut")}
                 </h3>
-                <p className="text-red-100 text-sm">
+                <p className="text-theme-text-secondary text-xs">
                   {t("fplLive.transfers.popularRemovals")}
                 </p>
               </div>
@@ -249,26 +251,26 @@ export default function TransfersMarket() {
                 {transfersData.transfers_out.slice(0, 10).map((player, index) => (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="flex items-center justify-between p-3 bg-theme-card-secondary rounded-lg hover:bg-theme-border transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex flex-col items-center">
-                        <span className="text-lg font-bold text-gray-600 dark:text-gray-400">
+                        <span className="text-sm font-semibold text-theme-text-secondary">
                           #{index + 1}
                         </span>
-                        <span className={`px-2 py-1 rounded text-xs font-medium text-white ${getPositionColor(player.position)}`}>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium text-white ${getPositionColor(player.position)}`}>
                           {getPositionName(player.position)}
                         </span>
                       </div>
                       <div className="w-2 h-8 rounded" style={{ backgroundColor: getTeamColors(player.team).primary }}></div>
                       <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">
+                        <p className="font-semibold text-theme-foreground">
                           {player.web_name}
-                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                          <span className="text-xs text-theme-text-secondary ml-1">
                             ({getTeamColors(player.team).shortName})
                           </span>
                         </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-theme-text-secondary">
                           £{formatCost(player.now_cost)}m
                         </p>
                       </div>
@@ -277,7 +279,7 @@ export default function TransfersMarket() {
                       <p className="font-bold text-red-600 dark:text-red-400">
                         -{formatNumber(player.transfers_out_event || 0)}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-theme-text-secondary">
                         {t("fplLive.transfers.thisGW")}
                       </p>
                     </div>
@@ -285,7 +287,7 @@ export default function TransfersMarket() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8 text-theme-text-secondary">
                 {t("fplLive.transfers.noData")}
               </div>
             )}

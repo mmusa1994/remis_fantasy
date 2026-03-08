@@ -109,9 +109,90 @@ const ManagerSummary = React.memo(function ManagerSummary({
     ? t("fplLive.finalBonus")
     : t("fplLive.predictedBonus");
 
+  // Determine arrow direction based on GW rank vs overall rank
+  const gwRank = manager.summary_event_rank || 0;
+  const overallRank = manager.summary_overall_rank || 0;
+  const arrowDirection: "green" | "red" | "neutral" =
+    gwRank > 0 && overallRank > 0
+      ? gwRank < overallRank
+        ? "green"
+        : gwRank > overallRank
+        ? "red"
+        : "neutral"
+      : "neutral";
+
+  // Rank milestones
+  const rankMilestones = [
+    { label: "Top 10K", threshold: 10000 },
+    { label: "Top 50K", threshold: 50000 },
+    { label: "Top 100K", threshold: 100000 },
+    { label: "Top 250K", threshold: 250000 },
+    { label: "Top 500K", threshold: 500000 },
+    { label: "Top 1M", threshold: 1000000 },
+  ];
+  const currentMilestone = rankMilestones.find(
+    (m) => overallRank <= m.threshold
+  );
+  const nextMilestone = rankMilestones.find(
+    (m) => overallRank > m.threshold
+  );
+
   return (
     <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">
       <FlagLoader />
+      {/* Arrow Indicator Banner */}
+      <div className={`mb-4 p-3 rounded-lg flex items-center justify-between ${
+        arrowDirection === "green"
+          ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+          : arrowDirection === "red"
+          ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+          : "bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700"
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className={`text-3xl ${
+            arrowDirection === "green" ? "text-green-500" : arrowDirection === "red" ? "text-red-500" : "text-gray-400"
+          }`}>
+            {arrowDirection === "green" ? "▲" : arrowDirection === "red" ? "▼" : "▬"}
+          </div>
+          <div>
+            <p className={`text-sm font-bold ${
+              arrowDirection === "green"
+                ? "text-green-700 dark:text-green-300"
+                : arrowDirection === "red"
+                ? "text-red-700 dark:text-red-300"
+                : "text-gray-600 dark:text-gray-400"
+            }`}>
+              {arrowDirection === "green"
+                ? t("fplLive.greenArrow")
+                : arrowDirection === "red"
+                ? t("fplLive.redArrow")
+                : t("fplLive.noChange")}
+            </p>
+            <p className="text-xs text-theme-text-secondary">
+              {t("fplLive.gameweekRank")}: {formatRank(gwRank)} | {t("fplLive.overallRank")}: {formatRank(overallRank)}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-xl font-bold text-theme-foreground">{manager.summary_event_points || 0}</p>
+          <p className="text-xs text-theme-text-secondary">GW{gameweek} {t("fplLive.points")}</p>
+        </div>
+      </div>
+
+      {/* Rank Milestones */}
+      {currentMilestone && (
+        <div className="mb-4 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 rounded-md border border-purple-200 dark:border-purple-800">
+          <p className="text-xs font-medium text-purple-700 dark:text-purple-300">
+            {currentMilestone.label} ({formatRank(overallRank)})
+            {nextMilestone && (
+              <span className="text-purple-500 dark:text-purple-400 ml-1">
+                — {formatNumber(overallRank - nextMilestone.threshold)} {t("fplLive.position")} → {nextMilestone.label}
+              </span>
+            )}
+          </p>
+        </div>
+      )}
+
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-theme-foreground theme-transition">
           {t("fplLive.managerOverview")} - GW{gameweek}

@@ -99,7 +99,7 @@ export default function PrizesGallery({
             {title}
           </h2>
           <p className="text-theme-text-secondary">
-            Nema dostupnih nagrada za ovu ligu.
+            No prizes available for this league.
           </p>
         </div>
       </div>

@@ -137,13 +137,11 @@ export default function PriceChangesWidget({
   if (loading) {
     return (
       <div
-        className={`${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
-        } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+        className="bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
-            <DollarSign className="text-green-500 w-5 h-5" />
+            <DollarSign className="text-theme-text-secondary w-4 h-4" />
             {t("teamPlanner.widgets.priceChanges")}
           </h3>
           <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
@@ -162,13 +160,11 @@ export default function PriceChangesWidget({
   if (error) {
     return (
       <div
-        className={`${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
-        } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+        className="bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
-            <DollarSign className="text-green-500 w-5 h-5" />
+            <DollarSign className="text-theme-text-secondary w-4 h-4" />
             {t("teamPlanner.widgets.priceChanges")}
           </h3>
           <button
@@ -184,7 +180,7 @@ export default function PriceChangesWidget({
         <div className="mt-3 flex justify-center">
           <button
             onClick={() => fetchPriceChanges()}
-            className="text-blue-600 hover:text-blue-700 text-sm underline"
+            className="text-theme-text-secondary hover:text-theme-foreground text-sm underline"
           >
             Retry now
           </button>
@@ -197,13 +193,11 @@ export default function PriceChangesWidget({
 
   return (
     <div
-      className={`${
-        theme === "dark" ? "bg-gray-800" : "bg-white"
-      } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+      className={`bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition`}
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold flex items-center gap-2">
-          <DollarSign className="text-green-500 w-5 h-5" />
+          <DollarSign className="text-theme-text-secondary w-4 h-4" />
           Price Changes
         </h3>
         <button
@@ -239,7 +233,7 @@ export default function PriceChangesWidget({
         {/* Risers */}
         {data.risers.length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-green-600">
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-theme-text-secondary">
               <TrendingUp className="w-4 h-4" />
               {t("teamPlanner.widgets.risers")}
             </h4>
@@ -252,7 +246,7 @@ export default function PriceChangesWidget({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.05 }}
-                    className="flex items-center justify-between p-2 rounded-lg bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-2 rounded-lg bg-theme-card-secondary hover:bg-theme-card-secondary/80 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center space-x-2">
                       <div
@@ -289,7 +283,7 @@ export default function PriceChangesWidget({
         {/* Fallers */}
         {data.fallers.length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-red-600">
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-theme-text-secondary">
               <TrendingDown className="w-4 h-4" />
               {t("teamPlanner.widgets.fallers")}
             </h4>
@@ -302,7 +296,7 @@ export default function PriceChangesWidget({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.05 }}
-                    className="flex items-center justify-between p-2 rounded-lg bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-2 rounded-lg bg-theme-card-secondary hover:bg-theme-card-secondary/80 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center space-x-2">
                       <div

@@ -355,13 +355,11 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
     if (loading) {
       return (
         <div
-          className={`${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
-          } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+          className={`bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition`}
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold flex items-center gap-2">
-              <Users className="text-blue-500 w-5 h-5" />
+              <Users className="text-theme-text-secondary w-4 h-4" />
               {t("teamPlanner.widgets.ownershipChanges")}
             </h3>
             <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
@@ -380,13 +378,11 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
     if (error) {
       return (
         <div
-          className={`${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
-          } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+          className={`bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition`}
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold flex items-center gap-2">
-              <Users className="text-blue-500 w-5 h-5" />
+              <Users className="text-theme-text-secondary w-4 h-4" />
               {t("teamPlanner.widgets.ownershipChanges")}
             </h3>
             <button
@@ -402,7 +398,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
           <div className="mt-3 flex justify-center">
             <button
               onClick={handleManualRefresh}
-              className="text-blue-600 hover:text-blue-700 text-sm underline"
+              className="text-theme-text-secondary hover:text-theme-foreground text-sm underline"
               disabled={loading}
             >
               {loading ? "Refreshing..." : "Retry now"}
@@ -418,25 +414,23 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
 
     return (
       <div
-        className={`${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
-        } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+        className="bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
-            <Users className="text-blue-500 w-5 h-5" />
+            <Users className="text-theme-text-secondary w-4 h-4" />
             Ownership Changes
           </h3>
           <div className="flex items-center gap-2">
             {/* Timeframe Selector */}
-            <div className="flex bg-gray-100 dark:bg-gray-700 rounded p-1">
+            <div className="flex bg-theme-card-secondary rounded p-1">
               {(["1h", "24h", "week"] as const).map((tf) => (
                 <button
                   key={tf}
                   onClick={() => setCurrentTimeframe(tf)}
                   className={`px-2 py-1 text-xs rounded transition-colors ${
                     currentTimeframe === tf
-                      ? "bg-blue-500 text-white"
+                      ? "bg-theme-foreground/10 text-theme-foreground"
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
                 >
@@ -463,7 +457,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
           {/* Risers */}
           {data.risers.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-green-600">
+              <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-theme-text-secondary">
                 <TrendingUp className="w-4 h-4" />
                 {t("teamPlanner.widgets.risers")} ({getTimeframeLabel(data.timeframe)})
               </h4>
@@ -476,7 +470,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center justify-between p-2 rounded-lg bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-2 rounded-lg bg-theme-card-secondary hover:bg-theme-card-secondary/80 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center space-x-2">
                         <div
@@ -514,7 +508,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
           {/* Fallers */}
           {data.fallers.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-red-600">
+              <h4 className="text-sm font-semibold mb-2 flex items-center gap-1 text-theme-text-secondary">
                 <TrendingDown className="w-4 h-4" />
                 {t("teamPlanner.widgets.fallers")} ({getTimeframeLabel(data.timeframe)})
               </h4>
@@ -527,7 +521,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center justify-between p-2 rounded-lg bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-2 rounded-lg bg-theme-card-secondary hover:bg-theme-card-secondary/80 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center space-x-2">
                         <div

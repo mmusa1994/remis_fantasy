@@ -11,6 +11,7 @@ import {
   MdPlayArrow,
   MdStop,
   MdRefresh,
+  MdCompareArrows,
 } from "react-icons/md";
 
 import { FaChartLine, FaTrophy } from "react-icons/fa";
@@ -23,12 +24,15 @@ import ManagerSummary from "@/components/fpl/ManagerSummary";
 import GameweekStatus from "@/components/fpl/GameweekStatus";
 import SquadTable from "@/components/fpl/SquadTable";
 import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
-// import LiveTracker from "@/components/fpl/LiveTracker";
 import MatchResults from "@/components/fpl/MatchResults";
 import TransfersMarket from "@/components/fpl/TransfersMarket";
 import LeagueTables from "@/components/fpl/LeagueTables";
+import CaptainsAnalysis from "@/components/fpl/CaptainsAnalysis";
+import WhatIfSimulator from "@/components/fpl/WhatIfSimulator";
+import RankGains from "@/components/fpl/RankGains";
+import ThreatsAnalysis from "@/components/fpl/ThreatsAnalysis";
+import Comparisons from "@/components/fpl/Comparisons";
 import LoadingCard from "@/components/shared/LoadingCard";
-// import LiveTracker from "@/components/fpl/LiveTracker";
 import type { FPLGameweekStatus } from "@/types/fpl";
 
 interface FPLData {
@@ -47,10 +51,14 @@ interface FPLData {
 type TabType =
   | "overview"
   | "squad"
-  | "leagues"
-  | "analytics"
+  | "captains"
+  | "live"
+  | "whatIf"
+  | "gains"
+  | "threats"
   | "transfers"
-  | "matchResults";
+  | "comparisons"
+  | "leagues";
 
 interface TabConfig {
   id: TabType;
@@ -83,13 +91,13 @@ export default function FPLLivePage() {
   // );
 
   // Master live tracking state
-  const [isLiveTracking, setIsLiveTracking] = useState(false);
+  const [isLiveTracking, setIsLiveTracking] = useState(true);
 
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [showTabDropdown, setShowTabDropdown] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
-  const [tabLoading, setTabLoading] = useState(false);
+  // tabLoading removed — instant tab switches, no double loaders
 
   // Tab configuration
   const tabs: TabConfig[] = [
@@ -98,27 +106,55 @@ export default function FPLLivePage() {
       label: t("fplLive.tabs.overview"),
       icon: MdDashboard,
       description: t("fplLive.tabs.overviewDesc"),
-      color: "blue",
-    },
-    {
-      id: "squad",
-      label: t("fplLive.tabs.squad"),
-      icon: MdGroup,
-      description: t("fplLive.tabs.squadDesc"),
-      color: "green",
+      color: "purple",
     },
     {
       id: "leagues",
       label: t("fplLive.tabs.leagues"),
       icon: FaTrophy,
       description: t("fplLive.tabs.leaguesDesc"),
-      color: "yellow",
+      color: "purple",
     },
     {
-      id: "analytics",
-      label: t("fplLive.tabs.analytics"),
+      id: "squad",
+      label: t("fplLive.tabs.squad"),
+      icon: MdGroup,
+      description: t("fplLive.tabs.squadDesc"),
+      color: "purple",
+    },
+    {
+      id: "captains",
+      label: t("fplLive.tabs.captains", "Captains"),
+      icon: MdGroup,
+      description: t("fplLive.tabs.captainsDesc", "Captain & chip analytics"),
+      color: "purple",
+    },
+    {
+      id: "live",
+      label: t("fplLive.tabs.matchResults"),
+      icon: IoFootballOutline,
+      description: t("fplLive.tabs.matchResultsDesc"),
+      color: "purple",
+    },
+    {
+      id: "whatIf",
+      label: t("fplLive.tabs.whatIf", "What-If"),
+      icon: MdCompareArrows,
+      description: t("fplLive.tabs.whatIfDesc", "Scenario simulator"),
+      color: "purple",
+    },
+    {
+      id: "gains",
+      label: t("fplLive.tabs.gains", "Gains"),
       icon: FaChartLine,
-      description: t("fplLive.tabs.analyticsDesc"),
+      description: t("fplLive.tabs.gainsDesc", "Player contributions"),
+      color: "purple",
+    },
+    {
+      id: "threats",
+      label: t("fplLive.tabs.threats", "Threats"),
+      icon: MdInfo,
+      description: t("fplLive.tabs.threatsDesc", "Players hurting your rank"),
       color: "purple",
     },
     {
@@ -126,14 +162,14 @@ export default function FPLLivePage() {
       label: t("fplLive.tabs.transfers"),
       icon: TbTransfer,
       description: t("fplLive.tabs.transfersDesc"),
-      color: "orange",
+      color: "purple",
     },
     {
-      id: "matchResults",
-      label: t("fplLive.tabs.matchResults"),
-      icon: IoFootballOutline,
-      description: t("fplLive.tabs.matchResultsDesc"),
-      color: "green",
+      id: "comparisons",
+      label: t("fplLive.tabs.comparisons", "Compare"),
+      icon: MdCompareArrows,
+      description: t("fplLive.tabs.comparisonsDesc", "Compare vs benchmarks"),
+      color: "purple",
     },
   ];
 
@@ -332,6 +368,9 @@ export default function FPLLivePage() {
             showSuccess(t("managerInfoLoaded"));
             setLoading(false);
 
+            // Auto-activate live tracking when team loads
+            setIsLiveTracking(true);
+
             // Load additional data in background
             setTeamDataLoading(true);
             loadFullTeamData(useManagerId, useGameweek);
@@ -383,14 +422,11 @@ export default function FPLLivePage() {
         return;
       }
 
-      if (!data.manager) {
-        showError(t("loadTeamFirst"));
-        return;
-      }
-
       setIsLiveTracking(true);
 
-      handleTabChange("leagues");
+      if (teamLoaded) {
+        handleTabChange("leagues");
+      }
 
       showSuccess("Pokrenuto je uživo praćenje za sve komponente");
     } else {
@@ -398,7 +434,7 @@ export default function FPLLivePage() {
 
       showSuccess("Zaustavljen je uživo praćenje");
     }
-  }, [isLiveTracking, managerId, data.manager, t]);
+  }, [isLiveTracking, managerId, teamLoaded, t]);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -421,31 +457,12 @@ export default function FPLLivePage() {
   }, [showTabDropdown]);
 
   const handleTabChange = (newTab: TabType) => {
-    setTabLoading(true);
     setActiveTab(newTab);
-
-    // Simulate brief loading for smooth transition
-    setTimeout(() => {
-      setTabLoading(false);
-    }, 300);
   };
 
   const renderTabContent = () => {
     if (!teamLoaded || !data.manager) {
       return null;
-    }
-
-    // Show loading during tab transitions
-    if (tabLoading) {
-      return (
-        <LoadingCard
-          title={`${t("fplLive.loadingContent")} ${
-            tabs.find((tab) => tab.id === activeTab)?.label || ""
-          }...`}
-          description={t("fplLive.preparingContent")}
-          className="bg-theme-card border-theme-border rounded-lg shadow theme-transition"
-        />
-      );
     }
 
     switch (activeTab) {
@@ -472,23 +489,10 @@ export default function FPLLivePage() {
         );
       case "squad":
         return teamDataLoading ? (
-          <div className="bg-theme-card rounded-lg border-theme-border theme-transition">
-            {/* Mobile-friendly loading state */}
-            <div className="bg-theme-card rounded-lg border-theme-border overflow-hidden theme-transition">
-              <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-theme-border bg-theme-card theme-transition">
-                <div className="h-4 sm:h-5 lg:h-6 bg-black/20 dark:bg-white/20 rounded w-20 sm:w-24 animate-pulse theme-transition"></div>
-              </div>
-              <div className="p-3 sm:p-4 lg:p-6">
-                <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-                  {Array.from({ length: 6 }, (_, i) => (
-                    <div
-                      key={i}
-                      className="h-10 sm:h-11 lg:h-12 bg-black/10 dark:bg-white/10 rounded animate-pulse theme-transition"
-                    ></div>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className="bg-theme-card rounded-lg border border-theme-border theme-transition p-4 space-y-2">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="h-10 bg-theme-card-secondary rounded animate-pulse theme-transition"></div>
+            ))}
           </div>
         ) : (
           <div className="space-y-4 lg:space-y-6">
@@ -501,48 +505,58 @@ export default function FPLLivePage() {
         );
       case "leagues":
         return leaguesLoading ? (
-          <div className="bg-theme-card rounded-lg border-theme-border theme-transition">
-            <div className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 border-b-2 border-black dark:border-white bg-white dark:bg-black theme-transition">
-              <div className="h-4 sm:h-5 lg:h-6 bg-black/20 dark:bg-white/20 rounded w-16 sm:w-20 animate-pulse theme-transition"></div>
-            </div>
-
-            <div className="p-3 sm:p-4 lg:p-6 space-y-2 sm:space-y-3">
-              {Array.from({ length: 3 }, (_, i) => (
-                <div
-                  key={i}
-                  className="border-2 border-black dark:border-white rounded-lg overflow-hidden theme-transition"
-                >
-                  <div className="bg-black/5 dark:bg-white/5 px-3 py-2 sm:px-4 sm:py-3 border-b-2 border-black dark:border-white theme-transition">
-                    <div className="h-4 sm:h-5 bg-black/20 dark:bg-white/20 rounded w-24 sm:w-32 animate-pulse theme-transition"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="bg-theme-card rounded-lg border border-theme-border theme-transition p-4 space-y-3">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="h-10 bg-theme-card-secondary rounded animate-pulse theme-transition"></div>
+            ))}
           </div>
         ) : (
           leagueData && (
             <div className="space-y-4 lg:space-y-6">
-              {/* Live Status Indicator */}
-              <div className="bg-theme-card rounded-md p-3 border-theme-border theme-transition">
-                <div className="flex items-center justify-center gap-3">
-                  <div
-                    className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                      isLiveTracking
-                        ? "bg-green-500 animate-pulse shadow-lg shadow-green-500/30"
-                        : "bg-red-500 shadow-lg shadow-red-500/30"
-                    }`}
-                  ></div>
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-theme-foreground theme-transition">
-                      {isLiveTracking
-                        ? "LIVE TRACKING ACTIVE"
-                        : "LIVE TRACKING INACTIVE"}
-                    </p>
+              {/* Live Status */}
+              <div className="bg-theme-card rounded-md px-3 py-2 border border-theme-border theme-transition">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                        isLiveTracking
+                          ? "bg-green-500 animate-pulse"
+                          : "bg-theme-text-secondary"
+                      }`}
+                    ></div>
                     <p className="text-xs text-theme-text-secondary theme-transition">
                       {isLiveTracking
-                        ? "Data is being tracked in real-time"
-                        : "Click 'Start Live' to begin tracking"}
+                        ? t("fplLive.liveTrackingActive")
+                        : t("fplLive.readyForLiveTracking")}
                     </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={toggleLiveTracking}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium transition-all ${
+                        isLiveTracking
+                          ? "bg-theme-card-secondary hover:bg-theme-border text-theme-text-secondary"
+                          : "bg-theme-card-secondary hover:bg-theme-border text-theme-foreground"
+                      }`}
+                    >
+                      {isLiveTracking ? (
+                        <MdStop className="w-3 h-3" />
+                      ) : (
+                        <MdPlayArrow className="w-3 h-3" />
+                      )}
+                      <span>
+                        {isLiveTracking
+                          ? t("fplLive.stopLive")
+                          : t("fplLive.startLive")}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => loadManagerInfo()}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-theme-card-secondary hover:bg-theme-border text-theme-text-secondary rounded text-xs font-medium transition-all"
+                    >
+                      <MdRefresh className="w-3 h-3" />
+                      <span className="hidden sm:inline">{t("refresh")}</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -555,16 +569,15 @@ export default function FPLLivePage() {
             </div>
           )
         );
-      case "analytics":
+      case "captains":
         return (
-          <AdvancedStatistics
+          <CaptainsAnalysis
             managerId={managerId || undefined}
             gameweek={gameweek}
-            loading={teamDataLoading}
             managerData={data}
           />
         );
-      case "matchResults":
+      case "live":
         return (
           <MatchResults
             gameweek={gameweek}
@@ -574,8 +587,40 @@ export default function FPLLivePage() {
             }}
           />
         );
+      case "whatIf":
+        return (
+          <WhatIfSimulator
+            managerId={managerId || undefined}
+            gameweek={gameweek}
+            managerData={data}
+          />
+        );
+      case "gains":
+        return (
+          <RankGains
+            managerId={managerId || undefined}
+            gameweek={gameweek}
+            managerData={data}
+          />
+        );
+      case "threats":
+        return (
+          <ThreatsAnalysis
+            managerId={managerId || undefined}
+            gameweek={gameweek}
+            managerData={data}
+          />
+        );
       case "transfers":
         return <TransfersMarket />;
+      case "comparisons":
+        return (
+          <Comparisons
+            managerId={managerId || undefined}
+            gameweek={gameweek}
+            managerData={data}
+          />
+        );
       default:
         return null;
     }
@@ -702,63 +747,38 @@ export default function FPLLivePage() {
           <div className="space-y-4 lg:space-y-6">
             {/* Mobile-Optimized Controls Bar */}
             <div className="bg-theme-card rounded-md p-3 sm:p-4 lg:p-5 border-theme-border theme-transition">
-              <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="flex items-center gap-3">
                 {/* Manager Info - Always visible */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-md flex items-center justify-center flex-shrink-0">
-                    <IoFootballOutline className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-theme-foreground text-sm sm:text-base lg:text-lg truncate theme-transition">
-                      {data.manager?.player_first_name}{" "}
-                      {data.manager?.player_last_name}
-                    </p>
-                    <p className="text-xs sm:text-sm text-theme-text-secondary theme-transition">
-                      GW{gameweek} • ID: {managerId}
-                    </p>
-                  </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-md flex items-center justify-center flex-shrink-0">
+                  <IoFootballOutline className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-theme-foreground text-sm sm:text-base lg:text-lg truncate theme-transition">
+                    {data.manager?.player_first_name}{" "}
+                    {data.manager?.player_last_name}
+                  </p>
+                  <p className="text-xs sm:text-sm text-theme-text-secondary theme-transition">
+                    GW{gameweek} • ID: {managerId}
+                  </p>
                 </div>
 
-                {/* Mobile Action Buttons - Stack on mobile, inline on larger screens */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                  <button
-                    onClick={toggleLiveTracking}
-                    className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all min-h-[44px] ${
-                      isLiveTracking
-                        ? "bg-red-500 hover:bg-red-600 text-white"
-                        : "bg-green-500 hover:bg-green-600 text-white"
-                    }`}
-                  >
-                    {isLiveTracking ? (
-                      <MdStop className="w-4 h-4 sm:w-5 sm:h-5" />
-                    ) : (
-                      <MdPlayArrow className="w-4 h-4 sm:w-5 sm:h-5" />
-                    )}
-                    <span className="text-xs sm:text-sm">
-                      {isLiveTracking
-                        ? t("fplLive.stopLive")
-                        : t("fplLive.startLive")}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => loadManagerInfo()}
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-all min-h-[44px]"
-                  >
-                    <MdRefresh className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="text-xs sm:text-sm">{t("refresh")}</span>
-                  </button>
-                </div>
+                {/* Refresh button */}
+                <button
+                  onClick={() => loadManagerInfo()}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-theme-card-secondary hover:bg-theme-border text-theme-text-secondary rounded-md text-xs font-medium transition-all min-h-[36px] flex-shrink-0"
+                >
+                  <MdRefresh className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{t("refresh")}</span>
+                </button>
               </div>
             </div>
 
             {/* Responsive Tab Navigation */}
             <div className="bg-theme-card rounded-md border-theme-border overflow-hidden theme-transition">
               <div className="border-b border-theme-border bg-theme-card theme-transition">
-                {/* Mobile: Show 3 tabs + dropdown - always show Overview, Squad, Leagues */}
+                {/* Mobile: Show 3 tabs + dropdown */}
                 <div className="sm:hidden">
                   <div className="flex">
-                    {/* First 3 tabs visible - ensure Leagues is always visible */}
                     {tabs.slice(0, 3).map((tab) => {
                       const Icon = tab.icon;
                       const isActive = activeTab === tab.id;
@@ -766,14 +786,14 @@ export default function FPLLivePage() {
                         <button
                           key={tab.id}
                           onClick={() => handleTabChange(tab.id)}
-                          className={`flex-1 flex flex-col items-center gap-1 px-1 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
+                          className={`flex-1 flex flex-col items-center gap-0.5 px-1 py-2.5 text-[11px] font-medium transition-all border-b-2 min-h-[48px] ${
                             isActive
-                              ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                              : "border-transparent text-gray-600 dark:text-gray-400"
+                              ? "border-purple-500 text-purple-600 dark:text-purple-400"
+                              : "border-transparent text-theme-text-secondary"
                           } theme-transition`}
                         >
-                          <Icon className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-xs leading-tight text-center">
+                          <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span className="leading-tight text-center">
                             {tab.label}
                           </span>
                         </button>
@@ -787,14 +807,14 @@ export default function FPLLivePage() {
                           e.stopPropagation();
                           setShowTabDropdown(!showTabDropdown);
                         }}
-                        className={`w-full flex flex-col items-center gap-1 px-1 py-3 text-xs font-medium transition-all border-b-2 min-h-[56px] ${
+                        className={`w-full flex flex-col items-center gap-0.5 px-1 py-2.5 text-[11px] font-medium transition-all border-b-2 min-h-[48px] ${
                           tabs.slice(3).some((tab) => tab.id === activeTab)
-                            ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                            : "border-transparent text-gray-600 dark:text-gray-400"
+                            ? "border-purple-500 text-purple-600 dark:text-purple-400"
+                            : "border-transparent text-theme-text-secondary"
                         } theme-transition`}
                       >
-                        <MdExpandMore className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-xs leading-tight text-center">
+                        <MdExpandMore className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="leading-tight text-center">
                           {tabs.slice(3).find((tab) => tab.id === activeTab)
                             ?.label || t("fplLive.common.more")}
                         </span>
@@ -808,9 +828,9 @@ export default function FPLLivePage() {
                             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 sm:hidden"
                             onClick={() => setShowTabDropdown(false)}
                           />
-                          <div className="absolute top-full right-0 w-48 max-w-[90vw] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden theme-transition">
-                            <div className="py-2">
-                              {tabs.slice(3).map((tab, index) => {
+                          <div className="absolute top-full right-0 w-44 max-w-[90vw] bg-theme-card border border-theme-border rounded-lg shadow-lg z-50 overflow-hidden theme-transition">
+                            <div className="py-1">
+                              {tabs.slice(3).map((tab) => {
                                 const Icon = tab.icon;
                                 const isActive = activeTab === tab.id;
                                 return (
@@ -820,17 +840,13 @@ export default function FPLLivePage() {
                                       handleTabChange(tab.id);
                                       setShowTabDropdown(false);
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all touch-manipulation ${
+                                    className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium transition-all touch-manipulation ${
                                       isActive
-                                        ? "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-r-2 border-purple-500"
-                                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700"
-                                    } ${index === 0 ? "rounded-t-lg" : ""} ${
-                                      index === tabs.slice(3).length - 1
-                                        ? "rounded-b-lg"
-                                        : ""
+                                        ? "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/10"
+                                        : "text-theme-text-secondary hover:bg-theme-card-secondary"
                                     }`}
                                   >
-                                    <Icon className="w-5 h-5 flex-shrink-0" />
+                                    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                                     <span className="truncate">
                                       {tab.label}
                                     </span>
@@ -854,14 +870,14 @@ export default function FPLLivePage() {
                       <button
                         key={tab.id}
                         onClick={() => handleTabChange(tab.id)}
-                        className={`flex-1 flex items-center justify-center gap-2 px-2 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition-all border-b-2 min-h-[44px] ${
                           isActive
-                            ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                            : "border-transparent text-gray-600 dark:text-gray-400"
+                            ? "border-purple-500 text-purple-600 dark:text-purple-400"
+                            : "border-transparent text-theme-text-secondary"
                         } theme-transition`}
                       >
-                        <Icon className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm truncate">{tab.label}</span>
+                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate">{tab.label}</span>
                       </button>
                     );
                   })}
@@ -874,14 +890,14 @@ export default function FPLLivePage() {
                           e.stopPropagation();
                           setShowTabDropdown(!showTabDropdown);
                         }}
-                        className={`w-full flex items-center justify-center gap-2 px-2 py-3 text-sm font-medium transition-all border-b-2 min-h-[60px] ${
+                        className={`w-full flex items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition-all border-b-2 min-h-[44px] ${
                           tabs.slice(4).some((tab) => tab.id === activeTab)
-                            ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                            : "border-transparent text-gray-600 dark:text-gray-400"
+                            ? "border-purple-500 text-purple-600 dark:text-purple-400"
+                            : "border-transparent text-theme-text-secondary"
                         } theme-transition`}
                       >
-                        <MdExpandMore className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm truncate">
+                        <MdExpandMore className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate">
                           {tabs.slice(4).find((tab) => tab.id === activeTab)
                             ?.label || t("fplLive.common.more")}
                         </span>
@@ -894,9 +910,9 @@ export default function FPLLivePage() {
                             className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 md:hidden"
                             onClick={() => setShowTabDropdown(false)}
                           />
-                          <div className="absolute top-full right-0 w-56 max-w-[85vw] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden theme-transition">
-                            <div className="py-2">
-                              {tabs.slice(4).map((tab, index) => {
+                          <div className="absolute top-full right-0 w-48 max-w-[85vw] bg-theme-card border border-theme-border rounded-lg shadow-lg z-50 overflow-hidden theme-transition">
+                            <div className="py-1">
+                              {tabs.slice(4).map((tab) => {
                                 const Icon = tab.icon;
                                 const isActive = activeTab === tab.id;
                                 return (
@@ -906,17 +922,13 @@ export default function FPLLivePage() {
                                       handleTabChange(tab.id);
                                       setShowTabDropdown(false);
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all touch-manipulation ${
+                                    className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium transition-all touch-manipulation ${
                                       isActive
-                                        ? "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-r-2 border-purple-500"
-                                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700"
-                                    } ${index === 0 ? "rounded-t-lg" : ""} ${
-                                      index === tabs.slice(4).length - 1
-                                        ? "rounded-b-lg"
-                                        : ""
+                                        ? "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/10"
+                                        : "text-theme-text-secondary hover:bg-theme-card-secondary"
                                     }`}
                                   >
-                                    <Icon className="w-5 h-5 flex-shrink-0" />
+                                    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                                     <span className="truncate">
                                       {tab.label}
                                     </span>
@@ -940,14 +952,14 @@ export default function FPLLivePage() {
                       <button
                         key={tab.id}
                         onClick={() => handleTabChange(tab.id)}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-base font-medium transition-all border-b-2 min-h-[60px] ${
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium transition-all border-b-2 min-h-[44px] ${
                           isActive
-                            ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                            : "border-transparent text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                            ? "border-purple-500 text-purple-600 dark:text-purple-400"
+                            : "border-transparent text-theme-text-secondary hover:text-purple-600 dark:hover:text-purple-400"
                         } theme-transition`}
                       >
-                        <Icon className="w-5 h-5 flex-shrink-0" />
-                        <span className="text-base">{tab.label}</span>
+                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span>{tab.label}</span>
                       </button>
                     );
                   })}

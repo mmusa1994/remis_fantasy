@@ -1327,9 +1327,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
   return (
     <div
-      className={`min-h-screen p-2 sm:p-4 ${
-        theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
-      }`}
+      className="min-h-screen p-2 sm:p-4 bg-theme-background text-theme-foreground"
     >
       {/* Loading State */}
       {isInitialLoading && (
@@ -1350,7 +1348,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
       {/* Enhanced Error State for Complete API Failure */}
       {!isInitialLoading && fplApiError && !userTeamData && (
-        <div className={`${theme === "dark" ? "bg-gray-800" : "bg-white"} rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700`}>
+        <div className="bg-theme-card rounded-lg p-6 shadow-sm border border-theme-border">
           <div className="text-center py-8">
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-6 max-w-md mx-auto">
               <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
@@ -1380,9 +1378,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
-            } rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 shadow-lg border border-gray-200 dark:border-gray-700`}
+            className="bg-theme-card rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 shadow-sm border border-theme-border theme-transition"
           >
             <div className="flex flex-col space-y-4 mb-4">
               {/* Mobile-first header layout */}
@@ -1393,7 +1389,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     {userTeamData.manager?.player_last_name}
                   </h1>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-                    <p className="text-base sm:text-lg font-medium text-purple-600">
+                    <p className="text-base sm:text-lg font-medium text-theme-text-secondary">
                       {userTeamData.manager?.name}
                     </p>
                     {managerIdVerified === false && (
@@ -1485,38 +1481,38 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
             {/* Enhanced Team Stats - Mobile optimized */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-center">
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <p className="text-xs sm:text-sm text-gray-500 mb-1">
+              <div className="bg-theme-card-secondary rounded-lg p-3">
+                <p className="text-xs sm:text-sm text-theme-text-secondary mb-1">
                   {t("teamPlanner.gameweek")}
                 </p>
                 <p className="font-bold text-base sm:text-lg">{currentGameweek}</p>
               </div>
-              <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3">
-                <p className="text-xs sm:text-sm text-gray-500 mb-1">
+              <div className="bg-theme-card-secondary rounded-lg p-3">
+                <p className="text-xs sm:text-sm text-theme-text-secondary mb-1">
                   {t("teamPlanner.gwPoints")}
                 </p>
-                <p className="font-bold text-base sm:text-lg text-green-600">
+                <p className="font-bold text-base sm:text-lg">
                   {userTeamData.team_totals?.total_points_final || 0}
                 </p>
               </div>
-              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 col-span-2 sm:col-span-1">
-                <p className="text-xs sm:text-sm text-gray-500 mb-1">
+              <div className="bg-theme-card-secondary rounded-lg p-3 col-span-2 sm:col-span-1">
+                <p className="text-xs sm:text-sm text-theme-text-secondary mb-1">
                   {t("teamPlanner.totalPoints")}
                 </p>
                 <p className="font-bold text-base sm:text-lg">
                   {userTeamData.manager?.summary_overall_points?.toLocaleString()}
                 </p>
               </div>
-              <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3">
-                <p className="text-xs sm:text-sm text-gray-500 mb-1">
+              <div className="bg-theme-card-secondary rounded-lg p-3">
+                <p className="text-xs sm:text-sm text-theme-text-secondary mb-1">
                   {t("teamPlanner.teamValue")}
                 </p>
                 <p className="font-bold text-base sm:text-lg">
                   £{((userTeamData.entry_history?.value || 1000) / 10).toFixed(1)}m
                 </p>
               </div>
-              <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-3">
-                <p className="text-xs sm:text-sm text-gray-500 mb-1">{t("teamPlanner.bank")}</p>
+              <div className="bg-theme-card-secondary rounded-lg p-3">
+                <p className="text-xs sm:text-sm text-theme-text-secondary mb-1">{t("teamPlanner.bank")}</p>
                 <p className="font-bold text-base sm:text-lg">
                   £{((userTeamData.entry_history?.bank || 0) / 10).toFixed(1)}m
                 </p>
@@ -1534,15 +1530,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               transition={{ delay: 0.2 }}
             >
               <div
-                className={`${
-                  theme === "dark" ? "bg-gray-800" : "bg-white"
-                } rounded-lg shadow-lg  border border-gray-200 dark:border-gray-700`}
+                className="bg-theme-card rounded-lg shadow-sm border border-theme-border theme-transition"
               >
                 {/* Enhanced View Controls */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 lg:p-4 border-b border-gray-200 dark:border-gray-700 space-y-3 sm:space-y-0">
                   <div className="flex items-center space-x-2 w-full sm:w-auto">
                     {/* View Toggle */}
-                    <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-full sm:w-auto">
+                    <div className="flex bg-theme-card-secondary rounded-lg p-1 w-full sm:w-auto">
                       <button
                         onClick={() => {
                           setCurrentView("pitch");
@@ -1553,11 +1547,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }}
                         className={`flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 rounded-md transition-all duration-200 flex-1 sm:flex-none text-sm ${
                           currentView === "pitch"
-                            ? "bg-green-600 text-white shadow-sm"
-                            : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                            ? "bg-theme-foreground/10 text-theme-foreground"
+                            : "text-theme-text-secondary hover:text-theme-foreground"
                         }`}
                       >
-                        <Target className="w-4 h-4" />
+                        <Target className="w-3.5 h-3.5" />
                         <span className="text-xs sm:text-sm">
                           {t("teamPlanner.tabs.pitch")}
                         </span>
@@ -1572,11 +1566,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }}
                         className={`flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 rounded-md transition-all duration-200 flex-1 sm:flex-none text-sm ${
                           currentView === "list"
-                            ? "bg-green-600 text-white shadow-sm"
-                            : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                            ? "bg-theme-foreground/10 text-theme-foreground"
+                            : "text-theme-text-secondary hover:text-theme-foreground"
                         }`}
                       >
-                        <FaListAlt className="w-4 h-4" />
+                        <FaListAlt className="w-3.5 h-3.5" />
                         <span className="text-xs sm:text-sm">
                           {t("teamPlanner.tabs.list")}
                         </span>
@@ -1591,11 +1585,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }}
                         className={`flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 rounded-md transition-all duration-200 flex-1 sm:flex-none text-sm ${
                           currentView === "analytics"
-                            ? "bg-green-600 text-white shadow-sm"
-                            : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                            ? "bg-theme-foreground/10 text-theme-foreground"
+                            : "text-theme-text-secondary hover:text-theme-foreground"
                         }`}
                       >
-                        <BarChart3 className="w-4 h-4" />
+                        <BarChart3 className="w-3.5 h-3.5" />
                         <span className="text-xs sm:text-sm">
                           {t("teamPlanner.tabs.analytics")}
                         </span>
@@ -1611,8 +1605,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       }
                       className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium ${
                         transferMode
-                          ? "bg-red-600 text-white hover:bg-red-700 shadow-sm"
-                          : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                          ? "bg-theme-foreground text-theme-background hover:opacity-90"
+                          : "border border-theme-border text-theme-foreground hover:bg-theme-card-secondary"
                       }`}
                     >
                       <FaExchangeAlt className="w-4 h-4" />
@@ -1639,7 +1633,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         disabled={!canUseAI}
                         className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium ${
                           canUseAI
-                            ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-sm"
+                            ? "border border-theme-border text-theme-foreground hover:bg-theme-card-secondary"
                             : "bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed"
                         }`}
                         title={
@@ -1725,13 +1719,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         <div className="px-4 py-3">
                           <div className="flex items-center justify-center gap-8">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                                <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center text-xs font-bold text-white">
+                              <div className="w-8 h-8 rounded-full bg-theme-card-secondary border border-theme-border flex items-center justify-center">
+                                <div className="w-4 h-4 rounded-full bg-theme-foreground/80 flex items-center justify-center text-xs font-bold text-theme-background">
                                   C
                                 </div>
                               </div>
                               <div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                <p className="text-xs text-theme-text-secondary">
                                   Captain
                                 </p>
                                 <p className="text-sm font-medium">
@@ -1741,7 +1735,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                     )?.web_name
                                   }
                                 </p>
-                                <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                                <p className="text-xs text-theme-text-secondary">
                                   {userTeamData.captain.stats?.total_points ||
                                     0}{" "}
                                   pts (x2)
@@ -1751,13 +1745,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
                             {userTeamData?.vice_captain?.player_id && (
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                  <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white">
+                                <div className="w-8 h-8 rounded-full bg-theme-card-secondary border border-theme-border flex items-center justify-center">
+                                  <div className="w-4 h-4 rounded-full bg-theme-foreground/50 flex items-center justify-center text-xs font-bold text-theme-background">
                                     V
                                   </div>
                                 </div>
                                 <div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  <p className="text-xs text-theme-text-secondary">
                                     Vice Captain
                                   </p>
                                   <p className="text-sm font-medium">
@@ -1767,7 +1761,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                       )?.web_name
                                     }
                                   </p>
-                                  <p className="text-xs text-blue-600 dark:text-blue-400">
+                                  <p className="text-xs text-theme-text-secondary">
                                     {userTeamData.vice_captain.stats
                                       ?.total_points || 0}{" "}
                                     pts
@@ -1788,7 +1782,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     {/* Squad Overview */}
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Target className="w-5 h-5 text-green-500" />
+                        <Target className="w-4 h-4 text-theme-text-secondary" />
                         {t("teamPlanner.list.startingXI")} ({formation})
                       </h3>
 
@@ -1811,9 +1805,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 key={teamPlayer.player_id}
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className={`${
-                                  theme === "dark" ? "bg-gray-700" : "bg-white"
-                                } rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-all duration-200 cursor-pointer`}
+                                className="bg-theme-card rounded-lg p-4 border border-theme-border hover:bg-theme-card-secondary transition-all duration-200 cursor-pointer"
                                 onClick={() => {
                                   if (transferMode) {
                                     if (
@@ -2085,12 +2077,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Team Performance Analytics */}
                       <div
-                        className={`${
-                          theme === "dark" ? "bg-gray-700" : "bg-gray-50"
-                        } rounded-lg p-4`}
+                        className="bg-theme-card-secondary rounded-lg p-4"
                       >
                         <h3 className="font-semibold mb-4 flex items-center gap-2">
-                          <BarChart3 className="w-5 h-5 text-blue-500" />
+                          <BarChart3 className="w-4 h-4 text-theme-text-secondary" />
                           {t("teamPlanner.analytics.teamAnalytics")}
                         </h3>
                         <div className="space-y-3">
@@ -2122,7 +2112,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               {t("teamPlanner.analytics.teamValue")}
                             </span>
-                            <span className="font-bold text-green-600">
+                            <span className="font-bold">
                               £
                               {userTeamData?.entry_history?.value
                                 ? (
@@ -2159,12 +2149,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
                       {/* Formation Analysis */}
                       <div
-                        className={`${
-                          theme === "dark" ? "bg-gray-700" : "bg-gray-50"
-                        } rounded-lg p-4`}
+                        className="bg-theme-card-secondary rounded-lg p-4"
                       >
                         <h3 className="font-semibold mb-4 flex items-center gap-2">
-                          <Target className="w-5 h-5 text-purple-500" />
+                          <Target className="w-4 h-4 text-theme-text-secondary" />
                           {t("teamPlanner.analytics.formationAnalysis")}
                         </h3>
                         <div className="space-y-3">
@@ -2244,38 +2232,38 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
                 {/* Transfer Status Panel - Full Width */}
                 {transferMode && (
-                  <div className="mt-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 lg:p-6">
+                  <div className="mt-4 bg-theme-card-secondary border border-theme-border rounded-lg p-4 lg:p-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex flex-col sm:flex-row gap-4">
                         <div className="text-center sm:text-left">
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             {t("teamPlanner.transfers.transfersOut")}
                           </p>
-                          <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                          <p className="text-lg font-bold text-theme-foreground">
                             {pendingTransfers.transfersOut.length}
                           </p>
                         </div>
                         <div className="text-center sm:text-left">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p className="text-sm text-theme-text-secondary">
                             {t("teamPlanner.transfers.transfersIn")}
                           </p>
-                          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                          <p className="text-lg font-bold text-theme-foreground">
                             {pendingTransfers.transfersIn.length}
                           </p>
                         </div>
                         <div className="text-center sm:text-left">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p className="text-sm text-theme-text-secondary">
                             {t("teamPlanner.transfers.availableBudget")}
                           </p>
-                          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          <p className="text-lg font-bold text-theme-foreground">
                             £{(availableBudget / 10).toFixed(1)}m
                           </p>
                         </div>
                         <div className="text-center sm:text-left">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p className="text-sm text-theme-text-secondary">
                             {t("teamPlanner.transfers.transferCost")}
                           </p>
-                          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                          <p className="text-lg font-bold text-theme-foreground">
                             {transferCost} pts
                           </p>
                         </div>
@@ -2485,8 +2473,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                           onClick={() => setShowFilters(!showFilters)}
                           className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-colors shrink-0 ${
                             showFilters
-                              ? "bg-green-600 text-white border-green-600"
-                              : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              ? "bg-theme-foreground/10 text-theme-foreground border-theme-border"
+                              : "border-theme-border text-theme-text-secondary hover:bg-theme-card-secondary"
                           }`}
                         >
                           <Filter className="w-4 h-4" />
@@ -2511,10 +2499,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     <div
                       className={`${
                         showFilters ? "mt-6" : ""
-                      } bg-white dark:bg-gray-800 rounded-lg  border border-gray-200 dark:border-gray-700`}
+                      } bg-theme-card rounded-lg border border-theme-border`}
                     >
                       {/* Table Header */}
-                      <div className="bg-gray-50 dark:bg-gray-700 px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 dark:border-gray-600">
+                      <div className="bg-theme-card-secondary px-2 sm:px-4 py-2 sm:py-3 border-b border-theme-border">
                         {/* Desktop Header */}
                         <div className="hidden sm:grid sm:grid-cols-9 sm:gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           <div className="col-span-3">
@@ -2769,7 +2757,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 {/* Points */}
                                 <div className="col-span-1 flex items-center">
                                   <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-green-600">
+                                    <span className="text-sm font-bold text-theme-foreground">
                                       {player.total_points}
                                     </span>
                                     <span className="text-xs text-gray-500">
@@ -2833,7 +2821,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                     {/* Differential badge */}
                                     {player.differential_score &&
                                       player.differential_score > 20 && (
-                                        <Star className="w-3 h-3 text-yellow-500" />
+                                        <Star className="w-3 h-3 text-theme-text-secondary" />
                                       )}
                                   </div>
                                 </div>
@@ -2926,7 +2914,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 <div className="flex items-center gap-3 flex-shrink-0">
                                   {/* Points */}
                                   <div className="text-center w-12">
-                                    <div className="text-xs font-bold text-green-600">
+                                    <div className="text-xs font-bold text-theme-foreground">
                                       {player.total_points}
                                     </div>
                                     <div className="text-xs text-gray-400">
@@ -3030,8 +3018,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     }
                     className={`px-2 lg:px-3 py-1 text-xs lg:text-sm rounded-lg transition-colors ${
                       uiState.compareMode
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                        ? "bg-theme-foreground/10 text-theme-foreground"
+                        : "bg-theme-card-secondary text-theme-text-secondary"
                     }`}
                   >
                     {t("teamPlanner.widgets.compare")}
@@ -3098,7 +3086,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl">
             <div className="flex items-center gap-3">
-              <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+              <div className="animate-spin w-6 h-6 border-2 border-theme-foreground border-t-transparent rounded-full"></div>
               <span className="text-gray-700 dark:text-gray-300">
                 Checking your account...
               </span>
@@ -3131,11 +3119,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
       {/* AI Team Analysis Modal */}
       {showAIChat && session?.user && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
+          <div className="bg-theme-card rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-4 border-b border-theme-border">
               <div className="flex items-center gap-2">
-                <FaRobot className="w-5 h-5 text-purple-600" />
+                <FaRobot className="w-5 h-5 text-theme-text-secondary" />
                 <h3 className="text-lg font-semibold">
                   {i18n.language === "bs"
                     ? "AI Analiza Tima"
@@ -3157,8 +3145,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             <div className="p-4 max-h-96 overflow-y-auto">
               {!aiAnalysis && !aiChatLoading && canUseAI && (
                 <div className="text-center py-8">
-                  <div className="bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-lg p-6 mb-4">
-                    <FaRobot className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+                  <div className="bg-theme-card-secondary rounded-lg p-6 mb-4">
+                    <FaRobot className="w-12 h-12 text-theme-text-secondary mx-auto mb-4" />
                     <h4 className="text-lg font-semibold mb-2">
                       {i18n.language === "bs"
                         ? "AI Analiza Tima"
@@ -3171,7 +3159,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     </p>
                     <button
                       onClick={requestAIAnalysis}
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105"
+                      className="bg-theme-foreground text-theme-background px-6 py-3 rounded-lg hover:opacity-90 transition-all"
                     >
                       <FaPaperPlane className="w-4 h-4 inline mr-2" />
                       {i18n.language === "bs"
@@ -3184,7 +3172,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
               {aiChatLoading && (
                 <div className="text-center py-12">
-                  <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <div className="animate-spin w-8 h-8 border-4 border-theme-foreground border-t-transparent rounded-full mx-auto mb-4"></div>
                   <p className="text-gray-600 dark:text-gray-400">
                     {i18n.language === "bs"
                       ? "Analiziram vaš tim..."
@@ -3195,10 +3183,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
               {aiAnalysis && (
                 <div className="space-y-4">
-                  <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg p-4">
+                  <div className="bg-theme-card-secondary rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <FaRobot className="w-5 h-5 text-green-600" />
-                      <h4 className="font-semibold text-green-800 dark:text-green-200">
+                      <FaRobot className="w-5 h-5 text-theme-text-secondary" />
+                      <h4 className="font-semibold text-theme-foreground">
                         {i18n.language === "bs"
                           ? "AI Preporuke"
                           : "AI Recommendations"}

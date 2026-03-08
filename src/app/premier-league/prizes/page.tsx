@@ -3,8 +3,10 @@
 import PrizesGallery from "@/components/shared/PrizesGallery";
 import { useLeaguePrizes, usePageContent } from "@/hooks/useLeagueData";
 import LoadingCard from "@/components/shared/LoadingCard";
+import { useTranslation } from "react-i18next";
 
 export default function PremierLeagueNagradePage() {
+  const { t } = useTranslation("fpl");
   const {
     data: prizes,
     loading: prizesLoading,
@@ -20,8 +22,8 @@ export default function PremierLeagueNagradePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingCard
-          title="Loading Premier League Prizes"
-          description="Please wait while we fetch the latest prize information"
+          title={t("fplLive.prizes.loadingTitle", "Loading Premier League Prizes")}
+          description={t("fplLive.prizes.loadingDesc", "Please wait while we fetch the latest prize information")}
           className="w-full max-w-md mx-auto"
         />
       </div>
@@ -32,7 +34,7 @@ export default function PremierLeagueNagradePage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-500 mb-4">Greška pri učitavanju podataka</p>
+          <p className="text-red-500 mb-4">{t("fplLive.prizes.error", "Error loading data")}</p>
           <p className="text-theme-text-secondary">
             {prizesError || contentError}
           </p>
@@ -42,14 +44,14 @@ export default function PremierLeagueNagradePage() {
   }
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       <PrizesGallery
         prizes={prizes}
         leagueFilter="premier"
-        title={content?.title || "Premier League Nagrade"}
+        title={content?.title || t("fplLive.prizes.plTitle", "Premier League Prizes")}
         subtitle={
           content?.subtitle ||
-          "Osvajaj nevjerovatne nagrade tokom cijele Premier League sezone!"
+          t("fplLive.prizes.plSubtitle", "Win amazing prizes throughout the Premier League season!")
         }
       />
     </div>

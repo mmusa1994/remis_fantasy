@@ -111,7 +111,7 @@ export default function LeagueTables({
   const [leaguesLoading, setLeaguesLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
   const [leaguesInitiallyLoaded, setLeaguesInitiallyLoaded] = useState(false);
-  const [includeAutoSubs, setIncludeAutoSubs] = useState(false);
+  const [includeAutoSubs, setIncludeAutoSubs] = useState(true);
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -1491,7 +1491,7 @@ export default function LeagueTables({
 
           {/* Desktop Table */}
           <div className="hidden md:block divide-y divide-theme-border">
-            {sortedTeams.map((team) => {
+            {sortedTeams.map((team, sortedIndex) => {
               const isCurrentUser = managerId === team.id;
               const isHighlighted =
                 !!filter.playerId && matchingTeamIds.has(team.id);
@@ -1532,8 +1532,13 @@ export default function LeagueTables({
                       {/* Rank & Change */}
                       <div className="col-span-1 flex items-center gap-2 hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50 dark:hover:from-green-900/20 dark:hover:to-emerald-900/20 rounded-lg px-3 py-2 transition-all duration-200 hover:shadow-sm">
                         <span className="font-bold text-theme-foreground group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
-                          {team.rank}
+                          {includeAutoSubs ? sortedIndex + 1 : team.rank}
                         </span>
+                        {includeAutoSubs && sortedIndex + 1 !== team.rank && (
+                          <span className="text-xs text-theme-text-secondary" title={`Original rank: ${team.rank}`}>
+                            ({team.rank})
+                          </span>
+                        )}
                         {getRankChangeIcon(team.rank_change)}
                       </div>
 
@@ -1861,7 +1866,7 @@ export default function LeagueTables({
 
           {/* Mobile Table */}
           <div className="md:hidden divide-y divide-theme-border">
-            {sortedTeams.map((team) => {
+            {sortedTeams.map((team, sortedIndex) => {
               const isCurrentUser = managerId === team.id;
               const isHighlighted =
                 !!filter.playerId && matchingTeamIds.has(team.id);
@@ -1902,7 +1907,7 @@ export default function LeagueTables({
                       {/* Rank */}
                       <div className="flex items-center justify-center gap-1">
                         <span className="font-bold text-theme-foreground text-sm">
-                          {team.rank}
+                          {includeAutoSubs ? sortedIndex + 1 : team.rank}
                         </span>
                         {getRankChangeIcon(team.rank_change)}
                       </div>

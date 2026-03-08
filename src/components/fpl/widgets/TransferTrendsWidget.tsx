@@ -295,13 +295,11 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
     if (loading) {
       return (
         <div
-          className={`${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
-          } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+          className={`bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition`}
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold flex items-center gap-2">
-              <ArrowRightLeft className="text-purple-500 w-5 h-5" />
+              <ArrowRightLeft className="text-theme-text-secondary w-4 h-4" />
               {t("teamPlanner.widgets.transferTrends")}
             </h3>
             <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
@@ -320,13 +318,11 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
     if (error) {
       return (
         <div
-          className={`${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
-          } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+          className={`bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition`}
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold flex items-center gap-2">
-              <ArrowRightLeft className="text-purple-500 w-5 h-5" />
+              <ArrowRightLeft className="text-theme-text-secondary w-4 h-4" />
               {t("teamPlanner.widgets.transferTrends")}
             </h3>
             <button
@@ -342,7 +338,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
           <div className="mt-3 flex justify-center">
             <button
               onClick={handleManualRefresh}
-              className="text-blue-600 hover:text-blue-700 text-sm underline"
+              className="text-theme-text-secondary hover:text-theme-foreground text-sm underline"
               disabled={loading}
             >
               {loading ? "Refreshing..." : "Retry now"}
@@ -358,13 +354,11 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
 
     return (
       <div
-        className={`${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
-        } rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700`}
+        className="bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2">
-            <ArrowRightLeft className="text-purple-500 w-5 h-5" />
+            <ArrowRightLeft className="text-theme-text-secondary w-4 h-4" />
             Transfer Trends
           </h3>
           <button
@@ -380,12 +374,12 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex bg-gray-100 dark:bg-gray-700 rounded p-1 mb-4 text-xs">
+        <div className="flex bg-theme-card-secondary rounded p-1 mb-4 text-xs">
           <button
             onClick={() => setActiveTab("current")}
             className={`flex-1 px-2 py-1 rounded transition-colors ${
               activeTab === "current"
-                ? "bg-purple-500 text-white"
+                ? "bg-theme-foreground/10 text-theme-foreground"
                 : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
@@ -395,7 +389,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
             onClick={() => setActiveTab("players_in")}
             className={`flex-1 px-2 py-1 rounded transition-colors ${
               activeTab === "players_in"
-                ? "bg-purple-500 text-white"
+                ? "bg-theme-foreground/10 text-theme-foreground"
                 : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
@@ -405,7 +399,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
             onClick={() => setActiveTab("players_out")}
             className={`flex-1 px-2 py-1 rounded transition-colors ${
               activeTab === "players_out"
-                ? "bg-purple-500 text-white"
+                ? "bg-theme-foreground/10 text-theme-foreground"
                 : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
@@ -416,7 +410,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
               onClick={() => setActiveTab("future")}
               className={`flex-1 px-2 py-1 rounded transition-colors ${
                 activeTab === "future"
-                  ? "bg-purple-500 text-white"
+                  ? "bg-theme-foreground/10 text-theme-foreground"
                   : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
@@ -442,7 +436,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                 {data.current_transfers.map((transfer, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                    className="flex items-center justify-between p-2 rounded-lg bg-theme-card-secondary hover:bg-theme-card-secondary/80 transition-colors"
                   >
                     <div className="flex items-center space-x-2 text-sm">
                       <span className="font-medium truncate">
@@ -453,7 +447,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                         {transfer.player_in.name}
                       </span>
                     </div>
-                    <div className="text-xs font-bold text-purple-600">
+                    <div className="text-xs font-bold text-theme-foreground">
                       {formatTransferCount(transfer.count)}
                     </div>
                   </div>
@@ -470,14 +464,14 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-2"
               >
-                <h4 className="text-sm font-semibold text-green-600 flex items-center gap-1">
+                <h4 className="text-sm font-semibold text-theme-text-secondary flex items-center gap-1">
                   <TrendingUp className="w-4 h-4" />
                   {t("teamPlanner.widgets.topTransfers", { gw: currentGameweek })} {t("teamPlanner.widgets.in")}
                 </h4>
                 {data.top_players_in.map((player) => (
                   <div
                     key={player.player_id}
-                    className="flex items-center justify-between p-2 rounded-lg bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-2 rounded-lg bg-theme-card-secondary hover:bg-theme-card-secondary/80 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center space-x-2">
                       <div
@@ -495,7 +489,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                         </p>
                       </div>
                     </div>
-                    <div className="text-sm font-bold text-green-600">
+                    <div className="text-sm font-bold text-theme-foreground">
                       {formatTransferCount(player.transfers_count)}
                     </div>
                   </div>
@@ -512,14 +506,14 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-2"
               >
-                <h4 className="text-sm font-semibold text-red-600 flex items-center gap-1">
+                <h4 className="text-sm font-semibold text-theme-text-secondary flex items-center gap-1">
                   <TrendingDown className="w-4 h-4" />
                   {t("teamPlanner.widgets.topTransfers", { gw: currentGameweek })} {t("teamPlanner.widgets.out")}
                 </h4>
                 {data.top_players_out.map((player) => (
                   <div
                     key={player.player_id}
-                    className="flex items-center justify-between p-2 rounded-lg bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-2 rounded-lg bg-theme-card-secondary hover:bg-theme-card-secondary/80 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center space-x-2">
                       <div
@@ -537,7 +531,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                         </p>
                       </div>
                     </div>
-                    <div className="text-sm font-bold text-red-600">
+                    <div className="text-sm font-bold text-theme-foreground">
                       {formatTransferCount(player.transfers_count)}
                     </div>
                   </div>
@@ -556,7 +550,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-3"
                 >
-                  <h4 className="text-sm font-semibold text-blue-600 flex items-center gap-1">
+                  <h4 className="text-sm font-semibold text-theme-text-secondary flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     {t("teamPlanner.widgets.future")} Transfers
                   </h4>
@@ -572,7 +566,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                           .map((transfer: any, index: number) => (
                             <div
                               key={index}
-                              className="flex items-center justify-between p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-sm"
+                              className="flex items-center justify-between p-2 rounded-lg bg-theme-card-secondary text-sm"
                             >
                               <div className="flex items-center space-x-2">
                                 <span className="truncate">
@@ -583,7 +577,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                                   {transfer.player_in_name}
                                 </span>
                               </div>
-                              <div className="text-xs font-bold text-blue-600">
+                              <div className="text-xs font-bold text-theme-foreground">
                                 {transfer.transfer_count}
                               </div>
                             </div>
