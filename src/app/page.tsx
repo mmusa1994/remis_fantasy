@@ -211,9 +211,9 @@ export default function Home() {
 
               const logoFilter =
                 league.id === "premier-league"
-                  ? "brightness(0) invert(22%) sepia(100%) saturate(5000%) hue-rotate(265deg) brightness(88%)"
+                  ? "brightness(0) invert(22%) sepia(97%) saturate(4729%) hue-rotate(264deg) brightness(87%) contrast(96%)"
                   : league.id === "champions-league"
-                  ? "brightness(0) invert(33%) sepia(100%) saturate(4000%) hue-rotate(210deg) brightness(92%)"
+                  ? "brightness(0) invert(29%) sepia(92%) saturate(2475%) hue-rotate(213deg) brightness(97%) contrast(92%)"
                   : undefined;
 
               return (
