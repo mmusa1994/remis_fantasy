@@ -123,11 +123,23 @@ export const TEAM_COLORS = {
   }
 } as const;
 
-export const getTeamColors = (teamId: number) => {
-  return TEAM_COLORS[teamId as keyof typeof TEAM_COLORS] || {
+// Reverse lookup: short name → team ID
+const SHORT_NAME_TO_ID = new Map<string, number>();
+for (const [id, team] of Object.entries(TEAM_COLORS)) {
+  SHORT_NAME_TO_ID.set(team.shortName, Number(id));
+}
+
+export const getTeamIdFromShortName = (shortName: string): number => {
+  return SHORT_NAME_TO_ID.get(shortName) || 0;
+};
+
+export const getTeamColors = (teamId: number | string) => {
+  // Accept both numeric ID and short name string
+  const id = typeof teamId === 'string' ? getTeamIdFromShortName(teamId) : teamId;
+  return TEAM_COLORS[id as keyof typeof TEAM_COLORS] || {
     primary: '#808080',
     secondary: '#FFFFFF',
-    name: `Team ${teamId}`,
-    shortName: `T${teamId}`
+    name: `Team ${id}`,
+    shortName: `T${id}`
   };
 };

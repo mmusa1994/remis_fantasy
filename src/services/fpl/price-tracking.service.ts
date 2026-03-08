@@ -46,6 +46,7 @@ export class FPLPriceTrackingService extends BaseFPLService {
         .map(player => ({
           player_id: player.id,
           web_name: player.web_name,
+          team_id: player.team,
           team_name: teamsMap.get(player.team) || 'Unknown',
           position: this.getPositionName(player.element_type),
           old_price: player.now_cost - player.cost_change_event,
@@ -63,6 +64,7 @@ export class FPLPriceTrackingService extends BaseFPLService {
         .map(player => ({
           player_id: player.id,
           web_name: player.web_name,
+          team_id: player.team,
           team_name: teamsMap.get(player.team) || 'Unknown',
           position: this.getPositionName(player.element_type),
           old_price: player.now_cost - player.cost_change_event,
@@ -176,6 +178,7 @@ export class FPLPriceTrackingService extends BaseFPLService {
       predictions.push({
         player_id: player.id,
         web_name: player.web_name,
+        team_id: player.team,
         team_name: teamsMap.get(player.team) || 'Unknown',
         position: this.getPositionName(player.element_type),
         old_price: player.now_cost,
@@ -192,6 +195,7 @@ export class FPLPriceTrackingService extends BaseFPLService {
       predictions.push({
         player_id: player.id,
         web_name: player.web_name,
+        team_id: player.team,
         team_name: teamsMap.get(player.team) || 'Unknown',
         position: this.getPositionName(player.element_type),
         old_price: player.now_cost,

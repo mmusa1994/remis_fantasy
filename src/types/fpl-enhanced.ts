@@ -63,6 +63,7 @@ export interface EnhancedPlayerData extends FPLPlayer {
 export interface PriceChange {
   player_id: number;
   web_name: string;
+  team_id?: number;
   team_name: string;
   position: string;
   old_price: number;
