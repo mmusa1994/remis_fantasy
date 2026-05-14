@@ -25,7 +25,7 @@ import {
   TrendingUp,
   Newspaper,
 } from "lucide-react";
-import { FaUser, FaGoogle, FaMagic } from "react-icons/fa";
+import { FaUser, FaGoogle, FaMagic, FaFutbol, FaQuestion } from "react-icons/fa";
 import { TbPresentationAnalytics } from "react-icons/tb";
 import ThemeToggle from "../ThemeToggle";
 import LanguageSelector from "./LanguageSelector";
@@ -753,6 +753,41 @@ const Navbar = React.memo(function Navbar() {
               );
             })}
 
+            {/* Predictor — cross-cutting feature */}
+            <Link href="/predictor">
+              <motion.div
+                className={`relative font-semibold transition-all duration-500 text-xs uppercase tracking-widest font-anta theme-transition px-2 lg:px-3 py-1.5 cursor-pointer ${
+                  pathname?.startsWith("/predictor")
+                    ? "text-amber-500 dark:text-amber-400"
+                    : "text-theme-text-secondary hover:text-theme-foreground"
+                }`}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  <span className="relative inline-flex">
+                    <FaFutbol className="w-[18px] h-[18px]" />
+                    <span
+                      className={`absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 flex items-center justify-center shadow-sm ring-2 ${theme === "dark" ? "ring-black" : "ring-white"}`}
+                    >
+                      <FaQuestion className="w-[7px] h-[7px] text-black" />
+                    </span>
+                  </span>
+                  {t("predictor", "Predictor")}
+                </span>
+                {pathname?.startsWith("/predictor") && (
+                  <motion.div
+                    className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent"
+                    initial={{ scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                  />
+                )}
+              </motion.div>
+            </Link>
+
             {/* Language Selector */}
             <LanguageSelector />
 
@@ -894,6 +929,41 @@ const Navbar = React.memo(function Navbar() {
                   </motion.div>
                 </Link>
               ))}
+
+              {/* Predictor link */}
+              <Link href="/predictor">
+                <motion.div
+                  onClick={handleMobileNavClick}
+                  className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-anta theme-transition cursor-pointer relative ${
+                    pathname?.startsWith("/predictor")
+                      ? "text-amber-500 border-amber-500"
+                      : "text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground"
+                  }`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{
+                    opacity: isOpen ? 1 : 0,
+                    y: isOpen ? 0 : 20,
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    delay: isOpen ? (leagueNavItems.length + 1) * 0.1 : 0,
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="relative inline-flex">
+                      <FaFutbol className="w-[18px] h-[18px]" />
+                      <span
+                        className={`absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 flex items-center justify-center shadow-sm ring-2 ${theme === "dark" ? "ring-black" : "ring-white"}`}
+                      >
+                        <FaQuestion className="w-[7px] h-[7px] text-black" />
+                      </span>
+                    </span>
+                    <span>{t("predictor", "Predictor")}</span>
+                  </div>
+                </motion.div>
+              </Link>
 
               {/* User Actions in Mobile Menu */}
               {status === "authenticated" && session?.user && (

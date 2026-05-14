@@ -1,0 +1,46 @@
+{
+  "loading": "Loading…",
+  "loadingDesc": "Fetching tournaments",
+  "badge": "Remis Predictor",
+  "hero": {
+    "title": "Predict. Compete. Win.",
+    "subtitle": "Tournament winner, top scorer, best goalkeeper, top 4 teams — call every shot. Climb the leaderboard. Claim the rewards."
+  },
+  "features": {
+    "tournamentWinner": "Tournament winner",
+    "topScorer": "Top scorer",
+    "bestPlayer": "Best player",
+    "top4": "Top 4 teams",
+    "groupWinners": "Group winners",
+    "surprise": "Surprise team"
+  },
+  "sections": {
+    "featured": "Featured",
+    "all": "All tournaments"
+  },
+  "empty": {
+    "title": "No active tournaments yet",
+    "subtitle": "Check back soon — new prediction tournaments drop before major events."
+  },
+  "tabs": {
+    "predictions": "Predictions",
+    "matches": "Matches",
+    "rules": "Rules",
+    "rewards": "Rewards",
+    "standings": "Standings"
+  },
+  "backToList": "All tournaments",
+  "locksAt": "Locks",
+  "sponsor": "Sponsor",
+  "progress": "Predictions completed",
+  "noPredictionsToSave": "Nothing to save — make a pick first.",
+  "saveFailed": "Save failed",
+  "open": "Open predictor",
+  "savePredictions": "Save predictions",
+  "saving": "Saving…",
+  "signIn": "Sign in",
+  "notFound": {
+    "title": "Tournament not found",
+    "subtitle": "This tournament does not exist or is not yet public."
+  }
+}

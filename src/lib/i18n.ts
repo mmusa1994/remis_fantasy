@@ -24,6 +24,8 @@ import championsEN from "@/locales/en/champions.json";
 import championsBS from "@/locales/bs/champions.json";
 import managerEN from "@/locales/en/manager.json";
 import managerBS from "@/locales/bs/manager.json";
+import predictorEN from "@/locales/en/predictor.json";
+import predictorBS from "@/locales/bs/predictor.json";
 
 const resources = {
   en: {
@@ -38,6 +40,7 @@ const resources = {
     onboarding: onboardingEN,
     champions: championsEN,
     manager: managerEN,
+    predictor: predictorEN,
   },
   bs: {
     common: commonBS,
@@ -51,6 +54,7 @@ const resources = {
     onboarding: onboardingBS,
     champions: championsBS,
     manager: managerBS,
+    predictor: predictorBS,
   },
 };
 
@@ -59,10 +63,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: "en",
+    fallbackLng: "bs",
+    lng: typeof window !== "undefined" && localStorage.getItem("i18nextLng")
+      ? undefined
+      : "bs",
     debug: false,
     defaultNS: "common",
-    ns: ["common", "fpl", "f1", "hero", "navigation", "ai", "auth", "profile", "onboarding", "champions", "manager"],
+    ns: ["common", "fpl", "f1", "hero", "navigation", "ai", "auth", "profile", "onboarding", "champions", "manager", "predictor"],
 
     interpolation: {
       escapeValue: false,

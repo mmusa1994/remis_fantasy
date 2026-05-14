@@ -1,0 +1,46 @@
+{
+  "loading": "Učitavanje…",
+  "loadingDesc": "Učitavamo turnire",
+  "badge": "Remis Predictor",
+  "hero": {
+    "title": "Predvidi. Takmiči se. Pobijedi.",
+    "subtitle": "Pobjednik turnira, najbolji strijelac, najbolji golman, top 4 ekipe — predvidi sve. Penji se na tabelu. Osvoji nagrade."
+  },
+  "features": {
+    "tournamentWinner": "Pobjednik turnira",
+    "topScorer": "Najbolji strijelac",
+    "bestPlayer": "Najbolji igrač",
+    "top4": "Top 4 ekipe",
+    "groupWinners": "Pobjednici grupa",
+    "surprise": "Iznenađenje turnira"
+  },
+  "sections": {
+    "featured": "Istaknuto",
+    "all": "Svi turniri"
+  },
+  "empty": {
+    "title": "Trenutno nema aktivnih turnira",
+    "subtitle": "Vrati se uskoro — novi turniri predikcija dolaze prije velikih takmičenja."
+  },
+  "tabs": {
+    "predictions": "Predikcije",
+    "matches": "Utakmice",
+    "rules": "Pravila",
+    "rewards": "Nagrade",
+    "standings": "Tabela"
+  },
+  "backToList": "Svi turniri",
+  "locksAt": "Zaključava se",
+  "sponsor": "Sponzor",
+  "progress": "Završene predikcije",
+  "noPredictionsToSave": "Nema šta da se sačuva — prvo napravi izbor.",
+  "saveFailed": "Greška pri čuvanju",
+  "open": "Otvori predictor",
+  "savePredictions": "Sačuvaj predikcije",
+  "saving": "Čuvanje…",
+  "signIn": "Prijavi se",
+  "notFound": {
+    "title": "Turnir nije pronađen",
+    "subtitle": "Ovaj turnir ne postoji ili još nije javno objavljen."
+  }
+}

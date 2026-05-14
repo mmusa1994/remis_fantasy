@@ -4,12 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { motion } from "framer-motion";
-import { Home, User, LogIn, Menu } from "lucide-react";
+import { Home, Menu } from "lucide-react";
 import { SiPremierleague } from "react-icons/si";
 import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
-import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { FaFutbol, FaQuestion } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 interface BottomNavProps {
@@ -19,12 +18,24 @@ interface BottomNavProps {
 const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
   const pathname = usePathname();
   const { theme } = useTheme();
-  const { data: session } = useSession();
   const { t } = useTranslation("navigation");
+
+  const PredictorIcon = ({ className }: { className?: string }) => (
+    <span className={`relative inline-block ${className ?? ""}`}>
+      <FaFutbol className="w-full h-full" />
+      <span
+        className={`absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 flex items-center justify-center shadow-sm ring-2 ${
+          theme === "dark" ? "ring-gray-900" : "ring-white"
+        }`}
+      >
+        <FaQuestion className="w-[6px] h-[6px] text-black" />
+      </span>
+    </span>
+  );
 
   const navItems = [
     {
-      name: t("home", "Home"),
+      name: t("home", "Početna"),
       href: "/",
       icon: Home,
       id: "home",
@@ -36,13 +47,19 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
       id: "premier",
     },
     {
-      name: t("championsLeague", "Champions League"),
+      name: t("championsLeague", "Liga Prvaka"),
       href: "/champions-league/tables",
       icon: PiSoccerBall,
       id: "champions",
     },
     {
-      name: t("f1Fantasy", "F1 Fantasy"),
+      name: t("predictor", "Predictor"),
+      href: "/predictor",
+      icon: PredictorIcon,
+      id: "predictor",
+    },
+    {
+      name: t("f1Fantasy", "F1"),
       href: "/f1-fantasy/tables",
       icon: GiF1Car,
       id: "f1",
