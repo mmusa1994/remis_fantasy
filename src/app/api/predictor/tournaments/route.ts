@@ -6,7 +6,7 @@ export async function GET() {
   const { data, error } = await supabaseServer
     .from("predictor_tournaments")
     .select(
-      "id, slug, name, short_description, banner_image_url, hero_image_url, logo_url, accent_color, status, starts_at, ends_at, registration_lock_at, prize_pool_amount, prize_pool_currency, sponsor_name, sponsor_logo_url, is_featured, sort_order",
+      "id, slug, name, name_en, short_description, short_description_en, banner_image_url, hero_image_url, logo_url, accent_color, status, starts_at, ends_at, registration_lock_at, prize_pool_amount, prize_pool_currency, sponsor_name, sponsor_logo_url, is_featured, sort_order, require_approval, theme_background_image",
     )
     .is("deleted_at", null)
     .eq("visibility", "public")

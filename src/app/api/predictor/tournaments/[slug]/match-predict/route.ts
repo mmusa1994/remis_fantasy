@@ -27,8 +27,32 @@ export async function POST(
     .eq("slug", slug)
     .is("deleted_at", null)
     .maybeSingle();
-  if (!tournament) return jsonError("turnir nije pronađen", 404);
-  if (tournament.status === "draft") return jsonError("nije objavljen", 404);
+  if (!tournament) {
+    return NextResponse.json(
+      { error: "not_found", message: "Turnir nije pronađen." },
+      { status: 404 },
+    );
+  }
+  if (tournament.status === "draft") {
+    return NextResponse.json(
+      {
+        error: "draft",
+        message:
+          "Turnir još nije objavljen. Admin ga mora objaviti prije nego što možeš sačuvati predikcije.",
+      },
+      { status: 409 },
+    );
+  }
+  if (tournament.status === "locked" || tournament.status === "finished") {
+    return NextResponse.json(
+      {
+        error: "locked",
+        message:
+          "Turnir je zaključan ili završen — predikcije se više ne mogu mijenjati.",
+      },
+      { status: 409 },
+    );
+  }
 
   // approval check
   const membership = await checkMembership(

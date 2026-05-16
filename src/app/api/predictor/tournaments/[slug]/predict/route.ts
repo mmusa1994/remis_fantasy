@@ -17,8 +17,15 @@ export async function POST(
   if (!guard.ok) return guard.response;
 
   const { slug } = await context.params;
-  const body = (await req.json()) as SubmitPredictionsPayload;
-  if (!body?.items?.length) return jsonError("items required");
+  const body = (await req.json()) as SubmitPredictionsPayload & {
+    delete_category_ids?: string[];
+  };
+  const deleteIds = Array.isArray(body?.delete_category_ids)
+    ? body.delete_category_ids.filter((x): x is string => typeof x === "string")
+    : [];
+  if (!body?.items?.length && deleteIds.length === 0) {
+    return jsonError("items or delete_category_ids required");
+  }
 
   const { data: tournament, error: tErr } = await supabaseServer
     .from("predictor_tournaments")
@@ -52,7 +59,10 @@ export async function POST(
     );
   }
 
-  const categoryIds = body.items.map((i) => i.category_id);
+  const categoryIds = [
+    ...body.items.map((i) => i.category_id),
+    ...deleteIds,
+  ];
   const { data: categories, error: cErr } = await supabaseServer
     .from("predictor_categories")
     .select("*")
@@ -105,8 +115,35 @@ export async function POST(
     });
   }
 
+  // Process cleared categories: drop rows the user had previously saved
+  // but now wants empty. We only delete rows where the category is not
+  // locked (you can't unset a locked prediction by clearing the field).
+  let deleted = 0;
+  if (deleteIds.length > 0) {
+    const deletableIds = deleteIds.filter((id) => {
+      const cat = catMap.get(id);
+      if (!cat) return false;
+      return !isLocked(
+        tournament.registration_lock_at,
+        cat.lock_at,
+        tournament.status,
+      );
+    });
+    if (deletableIds.length > 0) {
+      const { data: deletedRows, error: delErr } = await supabaseServer
+        .from("predictor_predictions")
+        .delete()
+        .eq("tournament_id", tournament.id)
+        .eq("user_id", userId)
+        .in("category_id", deletableIds)
+        .select("id");
+      if (delErr) return jsonError(delErr.message, 500);
+      deleted = deletedRows?.length ?? 0;
+    }
+  }
+
   if (!rows.length) {
-    return NextResponse.json({ ok: true, saved: 0, skipped });
+    return NextResponse.json({ ok: true, saved: 0, deleted, skipped });
   }
 
   const { data, error } = await supabaseServer
@@ -118,6 +155,7 @@ export async function POST(
   return NextResponse.json({
     ok: true,
     saved: data?.length ?? 0,
+    deleted,
     skipped,
   });
 }

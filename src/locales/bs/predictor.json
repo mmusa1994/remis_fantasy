@@ -42,5 +42,78 @@
   "notFound": {
     "title": "Turnir nije pronađen",
     "subtitle": "Ovaj turnir ne postoji ili još nije javno objavljen."
-  }
+  },
+  "matchPredictions": "Tvoje predikcije utakmica",
+  "incDec": {
+    "inc": "Povećaj rezultat",
+    "dec": "Smanji rezultat"
+  },
+  "savedAt": "Snimljeno",
+  "filled": "popunjeno",
+  "errors": {
+    "title": "Nije sačuvano",
+    "close": "Zatvori",
+    "mustSignIn": "Moraš biti prijavljen da sačuvaš predikcije. Klikni Prijava iznad.",
+    "nothingToSave": "Nema predikcija za snimanje. Unesi rezultate prvo (koristi + i − dugmadi).",
+    "sessionExpired": "Sesija je istekla. Prijavi se ponovo.",
+    "notAllowed": "Nemaš dozvolu za ovaj turnir. Zatraži učešće ako je potrebno.",
+    "tournamentNotFound": "Turnir nije pronađen.",
+    "tournamentNotAcceptingPredictions": "Turnir trenutno ne prima predikcije.",
+    "draftMessage": "Turnir još nije objavljen. Admin ga mora objaviti prije nego što možeš sačuvati predikcije.",
+    "lockedMessage": "Turnir je zaključan ili završen — predikcije se više ne mogu mijenjati.",
+    "genericHttp": "Greška pri čuvanju (HTTP {{status}}).",
+    "unknown": "Nepoznata greška pri čuvanju.",
+    "matchSkipped": "Predikcije nisu sačuvane. Razlozi: {{reasons}}. Provjeri da utakmice nisu zaključane."
+  },
+  "live": "UŽIVO",
+  "locked": "Zaključano",
+  "unlockedExtended": "Produženo",
+  "pointsLabels": {
+    "exact": "tačno",
+    "diff": "razlika",
+    "winner": "pobjednik"
+  },
+  "outcome": {
+    "exact": "Tačan rezultat",
+    "diff": "Tačna razlika",
+    "winner": "Tačan pobjednik",
+    "wrong": "Pogrešno"
+  },
+  "stage": {
+    "group_a": "Grupa A",
+    "group_b": "Grupa B",
+    "group_c": "Grupa C",
+    "group_d": "Grupa D",
+    "group_e": "Grupa E",
+    "group_f": "Grupa F",
+    "group_g": "Grupa G",
+    "group_h": "Grupa H",
+    "group_i": "Grupa I",
+    "group_j": "Grupa J",
+    "group_k": "Grupa K",
+    "group_l": "Grupa L",
+    "round_of_32": "Šesnaestina finala",
+    "round_of_16": "Osmina finala",
+    "quarter_final": "Četvrtfinale",
+    "semi_final": "Polufinale",
+    "third_place": "Za 3. mjesto",
+    "final": "Finale",
+    "other": "Ostalo"
+  },
+  "matchesCount": "{{count}} utakmica",
+  "noMatches": "Još nema rasporeda utakmica. Provjeri kasnije.",
+  "yourPrediction": "tvoja predikcija",
+  "rules": {
+    "overview": "Pregled",
+    "pointSystem": "Sistem bodovanja",
+    "eligibility": "Uslovi učešća",
+    "emptyState": "Još nema objavljenih pravila."
+  },
+  "rewards": {
+    "emptyState": "Još nema konfigurisanih nagrada."
+  },
+  "signInBanner": {
+    "message": "Prijavi se da bi mogao podnijeti predikcije i takmičiti se za nagrade."
+  },
+  "noCategories": "Još nema kategorija predikcija."
 }

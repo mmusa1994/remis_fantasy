@@ -9,6 +9,13 @@ import { useSession, signIn } from "next-auth/react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import LoadingCard from "@/components/shared/LoadingCard";
+import WCBackground from "@/components/shared/WCBackground";
+import WCMusicPlayer from "@/components/shared/WCMusicPlayer";
+import SaveToast, {
+  type SaveToastState,
+} from "@/components/shared/SaveToast";
+import { isWorldCupTheme } from "@/utils/wc-theme";
+import { localizeTeamName } from "@/utils/country-names";
 import {
   Trophy,
   Calendar,
@@ -31,6 +38,13 @@ import {
   Flame,
   Clock,
   Unlock,
+  X,
+  ShieldCheck,
+  Hourglass,
+  UserCheck,
+  Ban,
+  Send,
+  Edit3,
 } from "lucide-react";
 import type {
   PredictionCategory,
@@ -46,6 +60,24 @@ import type {
   MatchStatus,
 } from "@/types/predictor";
 import { getLogoFilter } from "@/utils/predictor-logo";
+import {
+  localizedTournamentName,
+  localizedTournamentShort,
+  localizedTournamentLong,
+  localizedCategoryName,
+  localizedCategoryDescription,
+  localizedOptionLabel,
+  localizedOptionGroup,
+  localizedRuleTitle,
+  localizedRuleBody,
+  localizedRewardTitle,
+  localizedRewardDescription,
+  localizedMatchHomeTeam,
+  localizedMatchAwayTeam,
+  localizedMatchVenue,
+  localizedMatchStageLabel,
+  pickLocalizedNullable,
+} from "@/utils/predictor-i18n";
 
 type CategoryWithOptions = PredictionCategory & { options: PredictionOption[] };
 type TournamentDetail = Tournament & {
@@ -103,7 +135,8 @@ function isLockedClient(
 
 export default function TournamentDetailPage() {
   const { theme } = useTheme();
-  const { t, ready } = useTranslation("predictor");
+  const { t, i18n, ready } = useTranslation("predictor");
+  const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
   const { slug } = useParams<{ slug: string }>();
   const { data: session, status: authStatus } = useSession();
   const currentUserId = (session?.user as any)?.id as string | undefined;
@@ -117,6 +150,7 @@ export default function TournamentDetailPage() {
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<SaveToastState>(null);
   // matches state
   const [matches, setMatches] = useState<Match[]>([]);
   const [myMatchPredictions, setMyMatchPredictions] = useState<
@@ -125,7 +159,7 @@ export default function TournamentDetailPage() {
   // membership (approval)
   const [membership, setMembership] = useState<{
     require_approval: boolean;
-    member: { status: string } | null;
+    member: { status: "pending" | "approved" | "rejected" | "banned" } | null;
     can_predict: boolean;
   } | null>(null);
   const [joining, setJoining] = useState(false);
@@ -244,8 +278,10 @@ export default function TournamentDetailPage() {
     setSaving(true);
     setError(null);
     try {
-      const items = tournament.categories
-        .filter((c) => !isLockedClient(tournament, c))
+      const editableCategories = tournament.categories.filter(
+        (c) => !isLockedClient(tournament, c),
+      );
+      const items = editableCategories
         .map((c) => {
           const d = draft[c.id];
           if (!d || !hasEntry(c.category_type, d)) return null;
@@ -259,7 +295,22 @@ export default function TournamentDetailPage() {
           };
         })
         .filter(Boolean);
-      if (items.length === 0) {
+
+      // Categories the user had previously saved but cleared in this
+      // session — server should drop those rows, otherwise the old
+      // value sticks because the upsert payload no longer mentions them.
+      const previouslySavedIds = new Set(
+        myPredictions.map((p) => p.category_id),
+      );
+      const delete_category_ids = editableCategories
+        .filter((c) => {
+          if (!previouslySavedIds.has(c.id)) return false;
+          const d = draft[c.id];
+          return !d || !hasEntry(c.category_type, d);
+        })
+        .map((c) => c.id);
+
+      if (items.length === 0 && delete_category_ids.length === 0) {
         setError(
           t("noPredictionsToSave", "Nothing to save — make a pick first."),
         );
@@ -271,7 +322,7 @@ export default function TournamentDetailPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items }),
+          body: JSON.stringify({ items, delete_category_ids }),
         },
       );
       if (!res.ok) {
@@ -279,9 +330,19 @@ export default function TournamentDetailPage() {
         throw new Error(j.error || t("saveFailed", "Save failed"));
       }
       setSavedAt(new Date());
+      setToast({
+        kind: "success",
+        text: lang === "en" ? "Predictions saved" : "Predikcije sačuvane",
+      });
       await loadMyPredictions();
     } catch (e: any) {
       setError(e.message);
+      setToast({
+        kind: "error",
+        text:
+          e?.message ||
+          (lang === "en" ? "Save failed" : "Greška pri čuvanju"),
+      });
     } finally {
       setSaving(false);
     }
@@ -335,10 +396,32 @@ export default function TournamentDetailPage() {
   const isFullyLocked =
     tournament.status === "locked" || tournament.status === "finished";
 
+  // WC theme is now driven explicitly by admin-picked fields on the
+  // tournament — the slug-based auto-detect is only a fallback in case
+  // older tournaments haven't been migrated yet.
+  const themeBg = tournament.theme_background_image ?? null;
+  const themeMusicEnabled = !!tournament.theme_music_enabled;
+  const isWC = !!themeBg || themeMusicEnabled || isWorldCupTheme(tournament);
+
   return (
-    <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
+    <main className="relative w-full min-h-screen overflow-x-hidden bg-theme-background">
+      <SaveToast
+        toast={toast}
+        onDismiss={() => setToast(null)}
+        anchor="bottom"
+      />
+      {themeBg && (
+        <WCBackground
+          variant="hero"
+          src={themeBg}
+          opacity={0.45}
+          overlay={0.45}
+          fixed
+        />
+      )}
+      {themeMusicEnabled && <WCMusicPlayer />}
       {/* Hero */}
-      <section className="relative overflow-hidden pb-8 px-4 pt-6 md:pt-10">
+      <section className="relative z-10 overflow-hidden pb-6 sm:pb-8 px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8 md:pt-12">
         {tournament.hero_image_url && (
           <div className="absolute inset-0 pointer-events-none opacity-10">
             <Image
@@ -363,7 +446,7 @@ export default function TournamentDetailPage() {
             {tournament.logo_url ? (
               <Image
                 src={tournament.logo_url}
-                alt={tournament.name}
+                alt={localizedTournamentName(tournament, lang)}
                 width={64}
                 height={64}
                 className="w-14 h-14 md:w-16 md:h-16 object-contain"
@@ -383,15 +466,15 @@ export default function TournamentDetailPage() {
                   theme === "dark" ? "text-white" : "text-gray-800"
                 }`}
               >
-                {tournament.name}
+                {localizedTournamentName(tournament, lang)}
               </h1>
-              {tournament.short_description && (
+              {localizedTournamentShort(tournament, lang) && (
                 <p
                   className={`text-sm md:text-base mt-1 ${
                     theme === "dark" ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  {tournament.short_description}
+                  {localizedTournamentShort(tournament, lang)}
                 </p>
               )}
             </div>
@@ -432,190 +515,127 @@ export default function TournamentDetailPage() {
             )}
           </div>
 
-          {/* Membership / Join banner */}
-          {membership?.require_approval && (
-            <div className="mt-5">
-              {!membership.member ? (
-                <div
-                  className={`rounded-lg p-4 flex items-center gap-3 flex-wrap border-l-4 border-amber-500 ${
-                    theme === "dark"
-                      ? "bg-amber-950/30 border border-amber-900/40"
-                      : "bg-amber-50 border border-amber-200"
-                  }`}
-                >
-                  <Sparkles className="w-5 h-5 text-amber-500" />
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-bold ${theme === "dark" ? "text-amber-100" : "text-amber-900"}`}>
-                      Ovaj turnir je zatvoreni — admin odobrava učesnike
-                    </p>
-                    <p className="text-xs text-theme-text-secondary mt-0.5">
-                      Zatraži učešće da bi mogao predviđati. Standings ostaju javni za sve.
-                    </p>
-                  </div>
-                  <button
-                    onClick={requestJoin}
-                    disabled={joining}
-                    className={`px-4 py-2 rounded-md text-sm font-bold text-black ${accentBg} disabled:opacity-60 inline-flex items-center gap-2`}
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    {joining ? "Slanje…" : "Zatraži učešće"}
-                  </button>
-                </div>
-              ) : membership.member.status === "pending" ? (
-                <div
-                  className={`rounded-lg p-3 flex items-center gap-3 ${
-                    theme === "dark"
-                      ? "bg-amber-950/30 border border-amber-900/40 text-amber-200"
-                      : "bg-amber-50 border border-amber-200 text-amber-900"
-                  }`}
-                >
-                  <Clock className="w-5 h-5 text-amber-500" />
-                  <span className="text-sm font-semibold">
-                    Tvoj zahtjev za učešće čeka odobrenje admina.
-                  </span>
-                </div>
-              ) : membership.member.status === "approved" ? (
-                <div
-                  className={`rounded-lg p-3 flex items-center gap-3 ${
-                    theme === "dark"
-                      ? "bg-emerald-950/30 border border-emerald-900/40 text-emerald-200"
-                      : "bg-emerald-50 border border-emerald-200 text-emerald-900"
-                  }`}
-                >
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  <span className="text-sm font-semibold">
-                    Odobren si — možeš predviđati u ovom turniru!
-                  </span>
-                </div>
-              ) : (
-                <div
-                  className={`rounded-lg p-3 flex items-center gap-3 ${
-                    theme === "dark"
-                      ? "bg-red-950/30 border border-red-900/40 text-red-200"
-                      : "bg-red-50 border border-red-200 text-red-900"
-                  }`}
-                >
-                  <AlertCircle className="w-5 h-5 text-red-500" />
-                  <span className="text-sm font-semibold">
-                    Tvoj zahtjev je odbijen ili je nalog blokiran.
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* progress */}
-          {!isFullyLocked && tournament.categories.length > 0 && (
-            <div className="mt-6">
-              <div className="flex items-center justify-between text-xs text-theme-text-secondary mb-1.5">
-                <span>{t("progress", "Predictions completed")}</span>
-                <span className="font-semibold">
-                  {completion.done} / {completion.total}
-                </span>
-              </div>
-              <div
-                className={`h-2 rounded-full overflow-hidden ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}
-              >
-                <motion.div
-                  className={`h-full ${accentBg}`}
-                  initial={{ width: 0 }}
-                  animate={{
-                    width: `${completion.total > 0 ? (completion.done / completion.total) * 100 : 0}%`,
-                  }}
-                  transition={{ duration: 0.5 }}
-                />
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Tabs */}
-      <section className="px-4 sticky top-0 z-30 bg-theme-background/95 backdrop-blur-md border-b border-theme-border">
-        <div className="max-w-5xl mx-auto flex overflow-x-auto -mx-1">
-          {(
-            [
-              {
-                id: "predictions",
-                label: t("tabs.predictions", "Predikcije"),
-                icon: ListChecks,
-              },
-              {
-                id: "matches",
-                label: t("tabs.matches", "Utakmice"),
-                icon: Swords,
-              },
-              {
-                id: "standings",
-                label: t("tabs.standings", "Tabela"),
-                icon: BarChart3,
-              },
-              {
-                id: "rules",
-                label: t("tabs.rules", "Pravila"),
-                icon: ScrollText,
-              },
-              {
-                id: "rewards",
-                label: t("tabs.rewards", "Nagrade"),
-                icon: Gift,
-              },
-            ] as const
-          ).map((it) => {
-            const Icon = it.icon;
-            const active = tab === it.id;
-            return (
-              <button
-                key={it.id}
-                onClick={() => setTab(it.id as PageTab)}
-                className={`py-3 px-3 md:px-4 border-b-2 font-semibold text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap ${
-                  active
-                    ? `${accentText} ${accentBorder.replace("border-l-", "border-b-")}`
-                    : "border-transparent text-theme-text-secondary hover:text-theme-foreground"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {it.label}
-              </button>
-            );
-          })}
+      {/* Tabs — pill style, scrollable on mobile */}
+      <section className="relative z-30 sticky top-0 bg-theme-background/90 backdrop-blur-md border-b border-theme-border">
+        <div className="max-w-5xl mx-auto relative px-3 py-2.5">
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {(
+              [
+                {
+                  id: "predictions",
+                  label: t("tabs.predictions", "Predikcije"),
+                  icon: ListChecks,
+                },
+                {
+                  id: "matches",
+                  label: t("tabs.matches", "Utakmice"),
+                  icon: Swords,
+                },
+                {
+                  id: "standings",
+                  label: t("tabs.standings", "Tabela"),
+                  icon: BarChart3,
+                },
+                {
+                  id: "rules",
+                  label: t("tabs.rules", "Pravila"),
+                  icon: ScrollText,
+                },
+                {
+                  id: "rewards",
+                  label: t("tabs.rewards", "Nagrade"),
+                  icon: Gift,
+                },
+              ] as const
+            ).map((it) => {
+              const Icon = it.icon;
+              const active = tab === it.id;
+              return (
+                <button
+                  key={it.id}
+                  onClick={() => setTab(it.id as PageTab)}
+                  className={`snap-start inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full font-semibold text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 border ${
+                    active
+                      ? `${accentBg} text-black border-transparent shadow-md`
+                      : theme === "dark"
+                        ? "bg-gray-900/60 text-gray-300 border-gray-700 hover:border-amber-500/60 hover:text-amber-300"
+                        : "bg-white/80 text-gray-700 border-gray-200 hover:border-amber-500/60 hover:text-amber-700"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  {it.label}
+                </button>
+              );
+            })}
+          </div>
+          <div
+            className={`pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-theme-background via-theme-background/70 to-transparent`}
+          />
         </div>
       </section>
 
       {/* Content */}
-      <section className="px-4 py-8">
+      <section className="relative z-10 px-4 py-8">
         <div className="max-w-5xl mx-auto">
-          {tab === "predictions" && (
-            <PredictionsTab
-              tournament={tournament}
-              draft={draft}
-              setDraft={setDraft}
-              authStatus={authStatus}
-              accentBorder={accentBorder}
-              accentText={accentText}
-              accentBg={accentBg}
-              accentRing={accentRing}
-              theme={theme}
-              saving={saving}
-              error={error}
-              savedAt={savedAt}
-              submit={submit}
-            />
-          )}
+          {tab === "predictions" &&
+            (membership?.require_approval && !membership?.can_predict ? (
+              <MembershipWall
+                membership={membership}
+                authStatus={authStatus}
+                joining={joining}
+                theme={theme}
+                accentBg={accentBg}
+                onRequestJoin={requestJoin}
+              />
+            ) : (
+              <PredictionsTab
+                tournament={tournament}
+                draft={draft}
+                setDraft={setDraft}
+                authStatus={authStatus}
+                accentBorder={accentBorder}
+                accentText={accentText}
+                accentBg={accentBg}
+                accentRing={accentRing}
+                theme={theme}
+                saving={saving}
+                error={error}
+                savedAt={savedAt}
+                submit={submit}
+                completion={completion}
+                isFullyLocked={isFullyLocked}
+              />
+            ))}
 
-          {tab === "matches" && (
-            <MatchesPublicTab
-              matches={matches}
-              myMatchPredictions={myMatchPredictions}
-              slug={String(slug)}
-              authStatus={authStatus}
-              theme={theme}
-              accentText={accentText}
-              accentBg={accentBg}
-              accentBorder={accentBorder}
-              onSaved={loadMyMatchPredictions}
-            />
-          )}
+          {tab === "matches" &&
+            (membership?.require_approval && !membership?.can_predict ? (
+              <MembershipWall
+                membership={membership}
+                authStatus={authStatus}
+                joining={joining}
+                theme={theme}
+                accentBg={accentBg}
+                onRequestJoin={requestJoin}
+              />
+            ) : (
+              <MatchesPublicTab
+                matches={matches}
+                myMatchPredictions={myMatchPredictions}
+                slug={String(slug)}
+                authStatus={authStatus}
+                theme={theme}
+                accentText={accentText}
+                accentBg={accentBg}
+                accentBorder={accentBorder}
+                onSaved={loadMyMatchPredictions}
+                notify={setToast}
+                isWC={isWC}
+                themeBgSrc={themeBg}
+              />
+            ))}
 
           {tab === "rules" && (
             <RulesTab
@@ -638,6 +658,8 @@ export default function TournamentDetailPage() {
               accentText={accentText}
               accentBg={accentBg}
               currentUserId={currentUserId}
+              isWC={isWC}
+              themeBgSrc={themeBg}
             />
           )}
         </div>
@@ -694,6 +716,8 @@ function PredictionsTab({
   error,
   savedAt,
   submit,
+  completion,
+  isFullyLocked,
 }: {
   tournament: TournamentDetail;
   draft: Record<string, DraftEntry>;
@@ -708,7 +732,11 @@ function PredictionsTab({
   error: string | null;
   savedAt: Date | null;
   submit: () => void;
+  completion: { done: number; total: number };
+  isFullyLocked: boolean;
 }) {
+  const { t, i18n } = useTranslation("predictor");
+  const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
   const update = (catId: string, patch: Partial<DraftEntry>) =>
     setDraft((d) => ({
       ...d,
@@ -716,9 +744,79 @@ function PredictionsTab({
     }));
 
   const isFinished = tournament.status === "finished";
+  const isComplete =
+    completion.total > 0 && completion.done === completion.total;
+
+  // Edit mode lets the user re-open the form after the summary view shows.
+  // Default: when everything is filled in, summary takes over until they
+  // explicitly click Edit. When still filling, the form is always visible.
+  const [editMode, setEditMode] = useState(false);
+  const showSummary = isComplete && !editMode && !isFullyLocked;
+
+  // Wrap submit so that after saving we collapse back to the summary view.
+  const handleSubmit = useCallback(() => {
+    submit();
+    setEditMode(false);
+  }, [submit]);
+
+  if (showSummary) {
+    return (
+      <PredictionsSummary
+        tournament={tournament}
+        draft={draft}
+        theme={theme}
+        accentText={accentText}
+        accentBg={accentBg}
+        accentBorder={accentBorder}
+        lang={lang}
+        completion={completion}
+        onEdit={() => setEditMode(true)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">
+      {!isFullyLocked && completion.total > 0 && (
+        <div
+          className={`relative z-10 rounded-2xl p-5 sm:p-6 backdrop-blur-md ${
+            theme === "dark"
+              ? "bg-gray-900/70 border border-gray-700/60 shadow-lg shadow-black/20"
+              : "bg-white/80 border border-gray-200/80 shadow-md"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <span
+              className={`text-sm font-semibold tracking-wide ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}
+            >
+              {t("progress", "Predictions completed")}
+            </span>
+            <span
+              className={`text-sm font-black tabular-nums ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+            >
+              {completion.done}
+              <span
+                className={`mx-1 font-medium ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}
+              >
+                /
+              </span>
+              {completion.total}
+            </span>
+          </div>
+          <div
+            className={`h-2.5 rounded-full overflow-hidden ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}
+          >
+            <motion.div
+              className={`h-full ${accentBg} rounded-full`}
+              initial={{ width: 0 }}
+              animate={{
+                width: `${(completion.done / completion.total) * 100}%`,
+              }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
+        </div>
+      )}
       {authStatus !== "authenticated" && !isFinished && (
         <div
           className={`rounded-lg border p-4 flex items-center gap-3 ${
@@ -729,13 +827,16 @@ function PredictionsTab({
         >
           <LogIn className="w-5 h-5 flex-shrink-0" />
           <div className="flex-1 text-sm">
-            Prijavi se da bi mogao podnijeti predikcije i takmičiti se za nagrade.
+            {t(
+              "signInBanner.message",
+              "Prijavi se da bi mogao podnijeti predikcije i takmičiti se za nagrade.",
+            )}
           </div>
           <button
             onClick={() => signIn()}
             className={`px-3 py-1.5 rounded-md text-sm font-semibold text-black ${accentBg}`}
           >
-            Prijavi se
+            {t("signIn", "Prijavi se")}
           </button>
         </div>
       )}
@@ -748,7 +849,7 @@ function PredictionsTab({
               : "border-gray-300 text-gray-500"
           }`}
         >
-          Još nema kategorija predikcija.
+          {t("noCategories", "Još nema kategorija predikcija.")}
         </div>
       )}
 
@@ -768,18 +869,18 @@ function PredictionsTab({
             <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
               <div className="min-w-0">
                 <h3 className="text-lg font-bold flex items-center gap-2">
-                  {cat.name}
+                  {localizedCategoryName(cat, lang)}
                   <span
                     className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${accentText} ${theme === "dark" ? "bg-gray-900" : "bg-gray-100"}`}
                   >
                     {cat.points_correct} pts
                   </span>
                 </h3>
-                {cat.description && (
+                {localizedCategoryDescription(cat, lang) && (
                   <p
                     className={`text-sm mt-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
                   >
-                    {cat.description}
+                    {localizedCategoryDescription(cat, lang)}
                   </p>
                 )}
               </div>
@@ -820,30 +921,54 @@ function PredictionsTab({
         </div>
       )}
 
+      {/* Spacer so content doesn't slide under the floating save bar */}
+      {!isFinished && tournament.categories.length > 0 && (
+        <div aria-hidden className="h-40 md:h-0" />
+      )}
+
       {!isFinished && tournament.categories.length > 0 && (
         <div
-          className={`sticky bottom-4 mt-6 rounded-lg p-4 flex items-center justify-between gap-3 backdrop-blur-md ${
+          style={{
+            bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)",
+          }}
+          className={`fixed md:sticky md:!bottom-4 left-3 right-3 md:left-auto md:right-auto z-40 md:z-auto md:mt-6 rounded-2xl md:rounded-lg p-3 md:p-4 flex items-center justify-between gap-3 backdrop-blur-xl shadow-2xl md:shadow-md ${
             theme === "dark"
-              ? "bg-gray-900/85 border border-gray-700"
-              : "bg-white/90 border border-gray-200 shadow-md"
+              ? "bg-gray-900/95 border border-gray-700"
+              : "bg-white/95 border border-gray-200"
           }`}
         >
-          <div className="text-sm">
+          <div className="text-xs text-theme-text-secondary hidden md:block">
             {savedAt && (
-              <span className="text-emerald-500 dark:text-emerald-400 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4" />
-                Sačuvano {savedAt.toLocaleTimeString()}
+              <span className="flex items-center gap-1.5 opacity-70">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {savedAt.toLocaleTimeString()}
               </span>
             )}
           </div>
-          <button
-            disabled={saving || authStatus !== "authenticated"}
-            onClick={submit}
-            className={`px-5 py-2.5 rounded-md font-bold text-sm text-black ${accentBg} disabled:opacity-50 inline-flex items-center gap-2`}
-          >
-            <Save className="w-4 h-4" />
-            {saving ? "Čuvanje…" : "Sačuvaj predikcije"}
-          </button>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            {isComplete && (
+              <button
+                onClick={() => setEditMode(false)}
+                className={`px-3 md:px-4 py-3 md:py-2.5 rounded-xl md:rounded-md font-semibold text-sm inline-flex items-center justify-center gap-2 transition-colors flex-shrink-0 ${
+                  theme === "dark"
+                    ? "bg-gray-800 text-gray-200 hover:bg-gray-700 border border-gray-700"
+                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                }`}
+                aria-label="Otkaži"
+              >
+                <X className="w-4 h-4" />
+                <span className="hidden md:inline">Otkaži</span>
+              </button>
+            )}
+            <button
+              disabled={saving || authStatus !== "authenticated"}
+              onClick={handleSubmit}
+              className={`flex-1 md:flex-initial px-5 py-3 md:py-2.5 rounded-xl md:rounded-md font-bold text-sm text-black ${accentBg} disabled:opacity-50 inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-transform`}
+            >
+              <Save className="w-4 h-4" />
+              {saving ? "Čuvanje…" : "Sačuvaj predikcije"}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -872,6 +997,8 @@ function CategoryInput({
   accentBg: string;
   accentText: string;
 }) {
+  const { i18n } = useTranslation("predictor");
+  const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
   const toggleOption = (id: string) => {
     if (disabled) return;
     if (
@@ -908,10 +1035,10 @@ function CategoryInput({
     category.category_type === "team_selection" ||
     category.category_type === "player_selection"
   ) {
-    // group by group_label if present
+    // group by group_label if present (localized)
     const groups = new Map<string, PredictionOption[]>();
     for (const o of category.options) {
-      const key = o.group_label ?? "";
+      const key = localizedOptionGroup(o, lang) ?? "";
       const arr = groups.get(key) ?? [];
       arr.push(o);
       groups.set(key, arr);
@@ -927,7 +1054,7 @@ function CategoryInput({
                 {groupName}
               </div>
             )}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
               {opts.map((opt) => {
                 const selectedIdx = draft.selected.indexOf(opt.id);
                 const isSelected = selectedIdx >= 0;
@@ -936,46 +1063,93 @@ function CategoryInput({
                     ? selectedIdx + 1
                     : null;
                 const showCorrect = showResults && opt.is_correct;
+                const dark = theme === "dark";
+                // Try to derive a country code from the image URL (flagcdn) when value is empty
+                const codeFromUrl =
+                  opt.image_url && /flagcdn\.com\/[^/]+\/([a-z-]+)\.png/i.exec(
+                    opt.image_url,
+                  )?.[1];
+                const baseLabel = localizedOptionLabel(opt, lang);
+                const localizedLabel =
+                  // If admin provided an explicit EN label, prefer it as-is.
+                  lang === "en" && opt.label_en?.trim()
+                    ? opt.label_en
+                    : opt.value || codeFromUrl
+                      ? localizeTeamName(baseLabel, opt.value || codeFromUrl, lang)
+                      : baseLabel;
                 return (
                   <button
                     key={opt.id}
                     type="button"
                     disabled={disabled}
                     onClick={() => toggleOption(opt.id)}
-                    className={`relative text-left rounded-md border p-3 transition-all duration-200 ${
+                    className={`group relative overflow-hidden text-left rounded-xl border p-2.5 sm:p-3 transition-all duration-200 active:scale-[0.98] ${
                       isSelected
-                        ? `ring-2 ${accentRing} ${theme === "dark" ? "bg-gray-900" : "bg-white shadow-sm"}`
-                        : theme === "dark"
-                          ? "border-gray-700 bg-gray-900/40 hover:bg-gray-900"
-                          : "border-gray-200 bg-white hover:border-gray-300"
+                        ? dark
+                          ? "border-amber-500/80 bg-gradient-to-br from-amber-500/15 via-amber-500/8 to-transparent shadow-lg shadow-amber-500/15"
+                          : "border-amber-500 bg-gradient-to-br from-amber-50 via-white to-white shadow-md shadow-amber-500/20"
+                        : dark
+                          ? "border-gray-700/70 bg-gray-900/50 hover:border-gray-600 hover:bg-gray-900/80"
+                          : "border-gray-200 bg-white/90 hover:border-gray-300 hover:shadow-sm"
                     } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${
-                      showCorrect ? "ring-2 ring-emerald-500" : ""
+                      showCorrect ? "!ring-2 !ring-emerald-500" : ""
                     }`}
                   >
+                    {/* selection halo */}
+                    {isSelected && (
+                      <span
+                        aria-hidden
+                        className={`pointer-events-none absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-30 blur-2xl ${accentBg.split(" ")[0]}`}
+                      />
+                    )}
                     {rankBadge != null && (
                       <span
-                        className={`absolute -top-2 -left-2 w-6 h-6 rounded-full ${accentBg} text-black text-xs font-bold flex items-center justify-center`}
+                        className={`absolute top-1.5 right-1.5 z-20 min-w-[26px] h-[26px] px-1.5 rounded-full ${accentBg} text-black text-sm font-black leading-none flex items-center justify-center shadow-lg ring-2 ring-white dark:ring-gray-900 tabular-nums`}
                       >
                         {rankBadge}
                       </span>
                     )}
-                    {showCorrect && (
-                      <CheckCircle2 className="absolute top-2 right-2 w-4 h-4 text-emerald-500" />
+                    {isSelected && rankBadge == null && (
+                      <CheckCircle2
+                        className={`absolute top-1.5 right-1.5 z-10 w-4 h-4 ${accentText}`}
+                      />
                     )}
-                    <div className="flex items-center gap-2">
+                    {showCorrect && (
+                      <CheckCircle2 className="absolute top-1.5 right-1.5 z-10 w-4 h-4 text-emerald-500" />
+                    )}
+                    <div className="relative z-10 flex items-center gap-2.5">
                       {opt.image_url && (
-                        <Image
-                          src={opt.image_url}
-                          alt={opt.label}
-                          width={24}
-                          height={24}
-                          className="w-6 h-6 object-contain"
-                        />
+                        <div
+                          className={`flex-shrink-0 w-9 h-7 sm:w-10 sm:h-7 rounded-md overflow-hidden ring-1 ${
+                            isSelected
+                              ? dark
+                                ? "ring-amber-500/60"
+                                : "ring-amber-400"
+                              : dark
+                                ? "ring-gray-700"
+                                : "ring-gray-200"
+                          } shadow-sm`}
+                        >
+                          <Image
+                            src={opt.image_url}
+                            alt={localizedLabel}
+                            width={40}
+                            height={28}
+                            className="w-full h-full object-cover"
+                            unoptimized
+                          />
+                        </div>
                       )}
                       <span
-                        className={`text-sm font-medium ${isSelected ? accentText : theme === "dark" ? "text-gray-200" : "text-gray-800"}`}
+                        className={`text-xs sm:text-sm font-semibold truncate flex-1 min-w-0 ${
+                          isSelected
+                            ? accentText
+                            : dark
+                              ? "text-gray-100"
+                              : "text-gray-900"
+                        }`}
                       >
-                        {opt.label}
+                        {localizedLabel}
                       </span>
                     </div>
                   </button>
@@ -1090,42 +1264,62 @@ function RulesTab({
   theme: string;
   accentText: string;
 }) {
+  const { i18n, t } = useTranslation("predictor");
+  const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
+  const rulesMd = pickLocalizedNullable(
+    lang,
+    tournament.rules_md,
+    tournament.rules_md_en,
+  );
+  const pointMd = pickLocalizedNullable(
+    lang,
+    tournament.point_system_md,
+    tournament.point_system_md_en,
+  );
+  const eligibilityMd = pickLocalizedNullable(
+    lang,
+    tournament.eligibility_md,
+    tournament.eligibility_md_en,
+  );
   return (
     <div className="space-y-4 max-w-3xl">
-      {tournament.rules_md && (
+      {rulesMd && (
         <div
           className={`rounded-lg border p-5 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
         >
-          <h3 className={`font-bold mb-2 ${accentText}`}>Overview</h3>
+          <h3 className={`font-bold mb-2 ${accentText}`}>
+            {t("rules.overview", "Overview")}
+          </h3>
           <p className="whitespace-pre-wrap text-sm text-theme-text-secondary">
-            {tournament.rules_md}
+            {rulesMd}
           </p>
         </div>
       )}
-      {tournament.point_system_md && (
+      {pointMd && (
         <div
           className={`rounded-lg border p-5 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
         >
-          <h3 className={`font-bold mb-2 ${accentText}`}>Point system</h3>
+          <h3 className={`font-bold mb-2 ${accentText}`}>
+            {t("rules.pointSystem", "Point system")}
+          </h3>
           <p className="whitespace-pre-wrap text-sm text-theme-text-secondary">
-            {tournament.point_system_md}
+            {pointMd}
           </p>
         </div>
       )}
-      {tournament.eligibility_md && (
+      {eligibilityMd && (
         <div
           className={`rounded-lg border p-5 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
         >
-          <h3 className={`font-bold mb-2 ${accentText}`}>Eligibility</h3>
+          <h3 className={`font-bold mb-2 ${accentText}`}>
+            {t("rules.eligibility", "Eligibility")}
+          </h3>
           <p className="whitespace-pre-wrap text-sm text-theme-text-secondary">
-            {tournament.eligibility_md}
+            {eligibilityMd}
           </p>
         </div>
       )}
-      {tournament.rules.length === 0 &&
-      !tournament.rules_md &&
-      !tournament.point_system_md &&
-      !tournament.eligibility_md ? (
+      {tournament.rules.length === 0 && !rulesMd && !pointMd && !eligibilityMd ? (
         <div
           className={`rounded-lg border border-dashed p-10 text-center text-sm ${
             theme === "dark"
@@ -1133,36 +1327,39 @@ function RulesTab({
               : "border-gray-300 text-gray-500"
           }`}
         >
-          No rules published yet.
+          {t("rules.emptyState", "No rules published yet.")}
         </div>
       ) : (
         <div className="space-y-3">
-          {tournament.rules.map((r) => (
-            <div
-              key={r.id}
-              className={`rounded-lg border p-4 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <h4 className="font-semibold">{r.title}</h4>
-                <span
-                  className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
-                    r.kind === "bonus"
-                      ? "bg-amber-500/20 text-amber-600 dark:text-amber-300"
-                      : r.kind === "deadline"
-                        ? "bg-red-500/20 text-red-600 dark:text-red-300"
-                        : "bg-gray-500/20 text-gray-500 dark:text-gray-300"
-                  }`}
-                >
-                  {r.kind}
-                </span>
+          {tournament.rules.map((r) => {
+            const ruleBody = localizedRuleBody(r, lang);
+            return (
+              <div
+                key={r.id}
+                className={`rounded-lg border p-4 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-semibold">{localizedRuleTitle(r, lang)}</h4>
+                  <span
+                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                      r.kind === "bonus"
+                        ? "bg-amber-500/20 text-amber-600 dark:text-amber-300"
+                        : r.kind === "deadline"
+                          ? "bg-red-500/20 text-red-600 dark:text-red-300"
+                          : "bg-gray-500/20 text-gray-500 dark:text-gray-300"
+                    }`}
+                  >
+                    {r.kind}
+                  </span>
+                </div>
+                {ruleBody && (
+                  <p className="whitespace-pre-wrap text-sm text-theme-text-secondary">
+                    {ruleBody}
+                  </p>
+                )}
               </div>
-              {r.body_md && (
-                <p className="whitespace-pre-wrap text-sm text-theme-text-secondary">
-                  {r.body_md}
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -1181,6 +1378,8 @@ function RewardsTab({
   theme: string;
   accentText: string;
 }) {
+  const { i18n, t } = useTranslation("predictor");
+  const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
   if (tournament.rewards.length === 0) {
     return (
       <div
@@ -1190,13 +1389,15 @@ function RewardsTab({
             : "border-gray-300 text-gray-500"
         }`}
       >
-        No rewards configured yet.
+        {t("rewards.emptyState", "No rewards configured yet.")}
       </div>
     );
   }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {tournament.rewards.map((r) => {
+        const rewardTitle = localizedRewardTitle(r, lang);
+        const rewardDesc = localizedRewardDescription(r, lang);
         const RankIcon =
           r.rank_position === 1
             ? Crown
@@ -1214,16 +1415,16 @@ function RewardsTab({
               <RankIcon className={`w-7 h-7 ${accentText} flex-shrink-0 mt-1`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="font-bold">{r.title}</h4>
+                  <h4 className="font-bold">{rewardTitle}</h4>
                   {r.rank_position && (
                     <span className={`text-xs font-bold ${accentText}`}>
                       #{r.rank_position}
                     </span>
                   )}
                 </div>
-                {r.description && (
+                {rewardDesc && (
                   <p className="text-sm text-theme-text-secondary mt-1">
-                    {r.description}
+                    {rewardDesc}
                   </p>
                 )}
                 {r.prize_value != null && (
@@ -1241,7 +1442,7 @@ function RewardsTab({
               {r.image_url && (
                 <Image
                   src={r.image_url}
-                  alt={r.title}
+                  alt={rewardTitle}
                   width={64}
                   height={64}
                   className="w-16 h-16 object-contain"
@@ -1264,12 +1465,16 @@ function StandingsTab({
   accentText,
   accentBg,
   currentUserId,
+  isWC = false,
+  themeBgSrc = null,
 }: {
   standings: StandingsRow[];
   theme: string;
   accentText: string;
   accentBg: string;
   currentUserId?: string;
+  isWC?: boolean;
+  themeBgSrc?: string | null;
 }) {
   const dark = theme === "dark";
 
@@ -1298,9 +1503,17 @@ function StandingsTab({
     : null;
 
   return (
-    <div className="space-y-6">
-      {/* Stats header */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="relative space-y-6">
+      {themeBgSrc && (
+        <WCBackground
+          variant="table"
+          src={themeBgSrc}
+          opacity={0.35}
+          overlay={0.55}
+          className="rounded-2xl"
+        />
+      )}
+      <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
           theme={theme}
           label="Učesnika"
@@ -1331,7 +1544,7 @@ function StandingsTab({
 
       {/* Top 3 podium */}
       {top3.length >= 3 && (
-        <div className="grid grid-cols-3 gap-2 md:gap-4">
+        <div className="relative z-10 grid grid-cols-3 gap-2 md:gap-4">
           {/* 2nd place — left */}
           <PodiumCard
             row={top3[1]}
@@ -1364,8 +1577,8 @@ function StandingsTab({
 
       {/* Full table */}
       <div
-        className={`rounded-lg border overflow-hidden ${
-          dark ? "bg-gray-800/40 border-gray-700" : "bg-white/80 border-gray-200"
+        className={`relative z-10 rounded-lg border overflow-hidden backdrop-blur-sm ${
+          dark ? "bg-gray-800/60 border-gray-700" : "bg-white/85 border-gray-200"
         }`}
       >
         <div
@@ -1663,6 +1876,9 @@ function MatchesPublicTab({
   accentBg,
   accentBorder,
   onSaved,
+  notify,
+  isWC = false,
+  themeBgSrc = null,
 }: {
   matches: Match[];
   myMatchPredictions: MatchPrediction[];
@@ -1673,7 +1889,14 @@ function MatchesPublicTab({
   accentBg: string;
   accentBorder: string;
   onSaved: () => void;
+  notify?: (t: SaveToastState) => void;
+  isWC?: boolean;
+  themeBgSrc?: string | null;
 }) {
+  const { t, i18n } = useTranslation("predictor");
+  const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as
+    | "en"
+    | "bs";
   // local draft state — key: match_id, val: {home, away}
   type Draft = { home: number | null; away: number | null };
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
@@ -1731,6 +1954,11 @@ function MatchesPublicTab({
     setSaving(true);
     setError(null);
     try {
+      if (authStatus !== "authenticated") {
+        setError(t("errors.mustSignIn"));
+        setSaving(false);
+        return;
+      }
       const items = matches
         .filter((m) => !isMatchLockedClient(m))
         .map((m) => {
@@ -1745,7 +1973,7 @@ function MatchesPublicTab({
         .filter(Boolean) as { match_id: string; home_score: number; away_score: number }[];
 
       if (items.length === 0) {
-        setError("Nema predikcija za snimanje. Unesi rezultate prvo.");
+        setError(t("errors.nothingToSave"));
         setSaving(false);
         return;
       }
@@ -1754,14 +1982,42 @@ function MatchesPublicTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items }),
       });
+      const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "Greška pri čuvanju");
+        let msg = payload?.message || payload?.error;
+        if (!msg) {
+          if (res.status === 401) msg = t("errors.sessionExpired");
+          else if (res.status === 403) msg = t("errors.notAllowed");
+          else if (res.status === 404) msg = t("errors.tournamentNotFound");
+          else if (res.status === 409)
+            msg = t("errors.tournamentNotAcceptingPredictions");
+          else msg = t("errors.genericHttp", { status: res.status });
+        } else if (payload?.error === "draft") {
+          msg = t("errors.draftMessage");
+        } else if (payload?.error === "locked") {
+          msg = t("errors.lockedMessage");
+        }
+        throw new Error(msg);
+      }
+      const saved = payload?.saved ?? items.length;
+      const skipped = Array.isArray(payload?.skipped) ? payload.skipped : [];
+      if (saved === 0 && skipped.length > 0) {
+        const reasons = skipped.map((s: any) => s.reason).join(", ");
+        throw new Error(t("errors.matchSkipped", { reasons }));
       }
       setSavedAt(new Date());
+      notify?.({
+        kind: "success",
+        text:
+          lang === "en"
+            ? `${saved} match prediction${saved === 1 ? "" : "s"} saved`
+            : `Sačuvano ${saved} predikcij${saved === 1 ? "a" : saved < 5 ? "e" : "a"}`,
+      });
       onSaved();
     } catch (e: any) {
-      setError(e.message);
+      const msg = e?.message || t("errors.unknown");
+      setError(msg);
+      notify?.({ kind: "error", text: msg });
     } finally {
       setSaving(false);
     }
@@ -1775,16 +2031,25 @@ function MatchesPublicTab({
         }`}
       >
         <Swords className="w-10 h-10 mx-auto mb-3 opacity-50" />
-        Još nema rasporeda utakmica. Provjeri kasnije.
+        {t("noMatches")}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6">
+      {themeBgSrc && (
+        <WCBackground
+          variant="matches"
+          src={themeBgSrc}
+          opacity={0.35}
+          overlay={0.55}
+          className="rounded-2xl"
+        />
+      )}
       {authStatus !== "authenticated" && (
         <div
-          className={`rounded-lg border p-4 flex items-center gap-3 ${
+          className={`relative z-10 rounded-lg border p-4 flex items-center gap-3 ${
             theme === "dark"
               ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
               : "bg-amber-50 border-amber-200 text-amber-900"
@@ -1792,29 +2057,50 @@ function MatchesPublicTab({
         >
           <LogIn className="w-5 h-5 flex-shrink-0" />
           <div className="flex-1 text-sm">
-            Prijavi se da bi predviđao rezultate utakmica i borio se za nagrade.
+            {t(
+              "auth.signInToPredict",
+              lang === "en"
+                ? "Sign in to predict match results and compete for rewards."
+                : "Prijavi se da bi predviđao rezultate utakmica i borio se za nagrade.",
+            )}
           </div>
           <button
             onClick={() => signIn()}
             className={`px-3 py-1.5 rounded-md text-sm font-semibold text-black ${accentBg}`}
           >
-            Prijava
+            {t("signIn")}
           </button>
         </div>
       )}
 
       {/* progress */}
       {completion.total > 0 && (
-        <div>
-          <div className="flex items-center justify-between text-xs text-theme-text-secondary mb-1.5">
-            <span>Tvoje predikcije utakmica</span>
-            <span className="font-semibold">
-              {completion.done} / {completion.total}
+        <div
+          className={`relative z-10 rounded-2xl p-5 sm:p-6 backdrop-blur-md ${
+            theme === "dark"
+              ? "bg-gray-900/70 border border-gray-700/60 shadow-lg shadow-black/20"
+              : "bg-white/80 border border-gray-200/80 shadow-md"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <span
+              className={`text-sm font-semibold tracking-wide ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}
+            >
+              {t("matchPredictions")}
+            </span>
+            <span
+              className={`text-sm font-black tabular-nums ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+            >
+              {completion.done}
+              <span className={`mx-1 font-medium ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>/</span>
+              {completion.total}
             </span>
           </div>
-          <div className={`h-2 rounded-full overflow-hidden ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}>
+          <div
+            className={`h-2.5 rounded-full overflow-hidden ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}
+          >
             <motion.div
-              className={`h-full ${accentBg}`}
+              className={`h-full ${accentBg} rounded-full`}
               initial={{ width: 0 }}
               animate={{
                 width: `${completion.total > 0 ? (completion.done / completion.total) * 100 : 0}%`,
@@ -1826,19 +2112,36 @@ function MatchesPublicTab({
       )}
 
       {byStage.map(([stage, list]) => (
-        <div key={stage}>
-          <div className="flex items-center gap-2 mb-3">
-            <div className={`w-1.5 h-6 rounded-full ${accentBg}`} />
+        <div
+          key={stage}
+          className={`relative z-10 rounded-2xl p-4 sm:p-6 backdrop-blur-md ${
+            theme === "dark"
+              ? "bg-gray-900/60 border border-gray-700/50"
+              : "bg-white/75 border border-gray-200/70 shadow-sm"
+          }`}
+        >
+          <div
+            className={`flex items-center gap-3 mb-4 pb-3 border-b ${
+              theme === "dark" ? "border-gray-700/60" : "border-gray-200/80"
+            }`}
+          >
+            <div className={`w-1.5 h-7 rounded-full ${accentBg}`} />
             <h3
-              className={`text-base font-black uppercase tracking-wide ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+              className={`text-lg font-black uppercase tracking-wider ${theme === "dark" ? "text-white" : "text-gray-900"}`}
             >
-              {STAGE_LABELS_PUB[stage] ?? stage}
+              {t(`stage.${stage}`, STAGE_LABELS_PUB[stage] ?? stage)}
             </h3>
-            <span className="text-xs text-theme-text-secondary">
-              ({list.length} utakmica)
+            <span
+              className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                theme === "dark"
+                  ? "bg-gray-800/80 text-gray-300"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {t("matchesCount", { count: list.length })}
             </span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {list.map((m) => {
               const d = drafts[m.id] ?? { home: null, away: null };
               const locked = isMatchLockedClient(m);
@@ -1860,6 +2163,7 @@ function MatchesPublicTab({
                   accentText={accentText}
                   accentBorder={accentBorder}
                   accentBg={accentBg}
+                  lang={lang}
                 />
               );
             })}
@@ -1868,35 +2172,190 @@ function MatchesPublicTab({
       ))}
 
       {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 text-red-400 text-sm p-3 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          {error}
+        <div
+          role="alert"
+          className={`relative z-10 rounded-xl border-l-4 border-l-red-500 p-4 flex items-start gap-3 shadow-lg ${
+            theme === "dark"
+              ? "bg-red-950/40 border-y border-r border-red-900/50 text-red-200"
+              : "bg-red-50 border-y border-r border-red-200 text-red-900"
+          }`}
+        >
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold mb-0.5">{t("errors.title")}</p>
+            <p className="text-sm leading-relaxed break-words">{error}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            aria-label={t("errors.close")}
+            className={`flex-shrink-0 p-1 rounded-md transition-colors ${
+              theme === "dark"
+                ? "hover:bg-red-900/50 text-red-300"
+                : "hover:bg-red-100 text-red-700"
+            }`}
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
+      {/* Spacer so content doesn't slide under the floating save bar */}
+      {completion.total > 0 && <div aria-hidden className="h-44 md:h-0" />}
+
       {completion.total > 0 && (
         <div
-          className={`sticky bottom-4 mt-6 rounded-lg p-4 flex items-center justify-between gap-3 backdrop-blur-md ${
+          style={{
+            bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)",
+          }}
+          className={`fixed md:sticky md:!bottom-4 left-3 right-3 md:left-auto md:right-auto z-40 md:z-20 md:mt-6 rounded-2xl md:rounded-xl p-3 md:p-4 backdrop-blur-xl shadow-2xl md:shadow-lg ${
             theme === "dark"
-              ? "bg-gray-900/85 border border-gray-700"
-              : "bg-white/90 border border-gray-200 shadow-md"
+              ? "bg-gray-900/95 border border-gray-700"
+              : "bg-white/95 border border-gray-200"
           }`}
         >
-          <div className="text-sm">
+          <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+            <span className="text-xs text-theme-text-secondary">
+              {completion.done} / {completion.total} {t("filled")}
+            </span>
             {savedAt && (
-              <span className="text-emerald-500 dark:text-emerald-400 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4" />
-                Snimljeno {savedAt.toLocaleTimeString()}
+              <span className="text-xs text-theme-text-secondary flex items-center gap-1 opacity-70">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {savedAt.toLocaleTimeString()}
               </span>
             )}
           </div>
           <button
-            disabled={saving || authStatus !== "authenticated"}
+            disabled={saving || authStatus !== "authenticated" || completion.done === 0}
             onClick={submit}
-            className={`px-5 py-2.5 rounded-md font-bold text-sm text-black ${accentBg} disabled:opacity-50 inline-flex items-center gap-2`}
+            className={`w-full px-5 py-3.5 sm:py-3 rounded-xl sm:rounded-lg font-black text-sm sm:text-base text-black ${accentBg} disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 active:scale-[0.99] transition-transform`}
           >
-            <Save className="w-4 h-4" />
-            {saving ? "Čuvanje…" : "Sačuvaj predikcije"}
+            <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+            {saving
+              ? t("saving")
+              : completion.done === 0
+                ? lang === "en"
+                  ? "Enter scores first"
+                  : "Unesi prvo rezultate"
+                : lang === "en"
+                  ? `Save ${completion.done} prediction${completion.done === 1 ? "" : "s"}`
+                  : `Sačuvaj ${completion.done} predikcij${completion.done === 1 ? "u" : completion.done < 5 ? "e" : "a"}`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScoreRow({
+  team,
+  logo,
+  finalScore,
+  draft,
+  disabled,
+  onChange,
+  dark,
+}: {
+  team: string;
+  logo: string | null | undefined;
+  finalScore: number | null;
+  draft: number | null;
+  disabled: boolean;
+  onChange: (v: number | null) => void;
+  dark: boolean;
+}) {
+  const showFinal = finalScore != null;
+  const value = draft ?? 0;
+  const inc = () => onChange(Math.min(99, (draft ?? 0) + 1));
+  const dec = () => onChange(Math.max(0, (draft ?? 0) - 1));
+
+  return (
+    <div className="flex items-center gap-2.5">
+      {logo && (
+        <div
+          className={`flex-shrink-0 rounded-sm overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}
+        >
+          <Image
+            src={logo}
+            alt={team}
+            width={40}
+            height={28}
+            className="w-10 h-7 object-cover"
+            unoptimized
+          />
+        </div>
+      )}
+      <div
+        className={`font-bold text-base flex-1 min-w-0 truncate ${dark ? "text-white" : "text-gray-900"}`}
+      >
+        {team}
+      </div>
+      {showFinal ? (
+        <div
+          className={`text-2xl font-black tabular-nums flex-shrink-0 px-3 ${dark ? "text-white" : "text-gray-900"}`}
+        >
+          {finalScore}
+        </div>
+      ) : (
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={dec}
+            disabled={disabled || value === 0}
+            aria-label="Smanji rezultat"
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-xl font-black select-none transition-all active:scale-95 ${
+              disabled || value === 0
+                ? dark
+                  ? "bg-gray-900/40 text-gray-600 cursor-not-allowed"
+                  : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                : dark
+                  ? "bg-gray-800 text-amber-300 hover:bg-gray-700 active:bg-gray-700 border border-gray-700"
+                  : "bg-white text-amber-600 hover:bg-amber-50 active:bg-amber-50 border border-gray-300"
+            }`}
+          >
+            −
+          </button>
+          <input
+            type="number"
+            min={0}
+            max={99}
+            disabled={disabled}
+            value={draft ?? ""}
+            onChange={(e) =>
+              onChange(e.target.value === "" ? null : Number(e.target.value))
+            }
+            placeholder="0"
+            inputMode="numeric"
+            className={`w-12 h-12 text-center text-2xl font-black tabular-nums leading-none rounded-lg border-2 outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+              disabled
+                ? dark
+                  ? "bg-gray-900/50 border-gray-800 text-gray-500 cursor-not-allowed placeholder-gray-700"
+                  : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed placeholder-gray-300"
+                : draft != null
+                  ? dark
+                    ? "bg-amber-500/15 border-amber-500 text-amber-300"
+                    : "bg-amber-50 border-amber-500 text-amber-700"
+                  : dark
+                    ? "bg-gray-900 border-gray-700 text-white placeholder-gray-600 focus:border-amber-500"
+                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-300 focus:border-amber-500"
+            }`}
+          />
+          <button
+            type="button"
+            onClick={inc}
+            disabled={disabled || value >= 99}
+            aria-label="Povećaj rezultat"
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-xl font-black select-none transition-all active:scale-95 ${
+              disabled
+                ? dark
+                  ? "bg-gray-900/40 text-gray-600 cursor-not-allowed"
+                  : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                : dark
+                  ? "bg-amber-500 text-black hover:bg-amber-400 active:bg-amber-400 border border-amber-400 shadow-md shadow-amber-500/20"
+                  : "bg-amber-500 text-black hover:bg-amber-400 active:bg-amber-400 border border-amber-400 shadow-md shadow-amber-500/20"
+            }`}
+          >
+            +
           </button>
         </div>
       )}
@@ -1916,6 +2375,7 @@ function MatchCard({
   accentText,
   accentBorder,
   accentBg,
+  lang,
 }: {
   match: Match;
   draft: { home: number | null; away: number | null };
@@ -1928,12 +2388,32 @@ function MatchCard({
   accentText: string;
   accentBorder: string;
   accentBg: string;
+  lang: "en" | "bs";
 }) {
   const dark = theme === "dark";
+  // Prefer admin-entered EN name when present; otherwise translate via code.
+  const homeName =
+    lang === "en" && match.home_team_en?.trim()
+      ? match.home_team_en
+      : localizeTeamName(
+          localizedMatchHomeTeam(match, lang),
+          match.home_team_code,
+          lang,
+        );
+  const awayName =
+    lang === "en" && match.away_team_en?.trim()
+      ? match.away_team_en
+      : localizeTeamName(
+          localizedMatchAwayTeam(match, lang),
+          match.away_team_code,
+          lang,
+        );
+  const venueName = localizedMatchVenue(match, lang);
+  const stageLabel = localizedMatchStageLabel(match, lang);
 
   // compute countdown to kickoff
   let countdown = "";
-  let liveNow = match.status === "live";
+  const liveNow = match.status === "live";
   if (match.kickoff_at && match.status === "scheduled") {
     const ms = Date.parse(match.kickoff_at) - Date.now();
     if (ms > 0) {
@@ -2015,10 +2495,15 @@ function MatchCard({
               })}
             </span>
           )}
-          {match.venue && (
+          {venueName && (
             <span className="text-xs text-theme-text-secondary inline-flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5" />
-              {match.venue}
+              {venueName}
+            </span>
+          )}
+          {stageLabel && (
+            <span className="text-xs text-theme-text-secondary uppercase font-semibold tracking-wide">
+              {stageLabel}
             </span>
           )}
         </div>
@@ -2049,61 +2534,15 @@ function MatchCard({
       {/* MOBILE LAYOUT — stack vertically (<sm) */}
       <div className="sm:hidden">
         {/* Home row */}
-        <div className="flex items-center gap-3">
-          {match.home_logo_url && (
-            <div
-              className={`flex-shrink-0 rounded-sm overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}
-            >
-              <Image
-                src={match.home_logo_url}
-                alt={match.home_team}
-                width={40}
-                height={28}
-                className="w-10 h-7 object-cover"
-                unoptimized
-              />
-            </div>
-          )}
-          <div
-            className={`font-bold text-base flex-1 min-w-0 ${dark ? "text-white" : "text-gray-900"}`}
-          >
-            {match.home_team}
-          </div>
-          {isFinished && match.home_score != null ? (
-            <div
-              className={`text-2xl font-black tabular-nums flex-shrink-0 ${dark ? "text-white" : "text-gray-900"}`}
-            >
-              {match.home_score}
-            </div>
-          ) : (
-            <input
-              type="number"
-              min={0}
-              disabled={disabled}
-              value={draft.home ?? ""}
-              onChange={(e) =>
-                onChange({
-                  home: e.target.value === "" ? null : Number(e.target.value),
-                })
-              }
-              placeholder="0"
-              inputMode="numeric"
-              className={`w-14 h-14 text-center text-2xl font-black tabular-nums leading-none rounded-lg border-2 outline-none transition-all flex-shrink-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-                disabled
-                  ? dark
-                    ? "bg-gray-900/50 border-gray-800 text-gray-500 cursor-not-allowed placeholder-gray-700"
-                    : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed placeholder-gray-300"
-                  : draft.home != null
-                    ? dark
-                      ? "bg-amber-500/15 border-amber-500 text-amber-300"
-                      : "bg-amber-50 border-amber-500 text-amber-700"
-                    : dark
-                      ? "bg-gray-900 border-gray-700 text-white placeholder-gray-600 focus:border-amber-500"
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-300 focus:border-amber-500"
-              }`}
-            />
-          )}
-        </div>
+        <ScoreRow
+          team={homeName}
+          logo={match.home_logo_url}
+          finalScore={isFinished ? match.home_score : null}
+          draft={draft.home}
+          disabled={disabled}
+          onChange={(v) => onChange({ home: v })}
+          dark={dark}
+        />
         {/* Divider */}
         <div className="my-2 flex items-center gap-2">
           <div
@@ -2119,61 +2558,15 @@ function MatchCard({
           />
         </div>
         {/* Away row */}
-        <div className="flex items-center gap-3">
-          {match.away_logo_url && (
-            <div
-              className={`flex-shrink-0 rounded-sm overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}
-            >
-              <Image
-                src={match.away_logo_url}
-                alt={match.away_team}
-                width={40}
-                height={28}
-                className="w-10 h-7 object-cover"
-                unoptimized
-              />
-            </div>
-          )}
-          <div
-            className={`font-bold text-base flex-1 min-w-0 ${dark ? "text-white" : "text-gray-900"}`}
-          >
-            {match.away_team}
-          </div>
-          {isFinished && match.away_score != null ? (
-            <div
-              className={`text-2xl font-black tabular-nums flex-shrink-0 ${dark ? "text-white" : "text-gray-900"}`}
-            >
-              {match.away_score}
-            </div>
-          ) : (
-            <input
-              type="number"
-              min={0}
-              disabled={disabled}
-              value={draft.away ?? ""}
-              onChange={(e) =>
-                onChange({
-                  away: e.target.value === "" ? null : Number(e.target.value),
-                })
-              }
-              placeholder="0"
-              inputMode="numeric"
-              className={`w-14 h-14 text-center text-2xl font-black tabular-nums leading-none rounded-lg border-2 outline-none transition-all flex-shrink-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-                disabled
-                  ? dark
-                    ? "bg-gray-900/50 border-gray-800 text-gray-500 cursor-not-allowed placeholder-gray-700"
-                    : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed placeholder-gray-300"
-                  : draft.away != null
-                    ? dark
-                      ? "bg-amber-500/15 border-amber-500 text-amber-300"
-                      : "bg-amber-50 border-amber-500 text-amber-700"
-                    : dark
-                      ? "bg-gray-900 border-gray-700 text-white placeholder-gray-600 focus:border-amber-500"
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-300 focus:border-amber-500"
-              }`}
-            />
-          )}
-        </div>
+        <ScoreRow
+          team={awayName}
+          logo={match.away_logo_url}
+          finalScore={isFinished ? match.away_score : null}
+          draft={draft.away}
+          disabled={disabled}
+          onChange={(v) => onChange({ away: v })}
+          dark={dark}
+        />
         {isFinished && userPred && (
           <div className="mt-2 text-[11px] text-theme-text-secondary text-center">
             tvoja predikcija: {userPred.home_score} − {userPred.away_score}
@@ -2187,14 +2580,14 @@ function MatchCard({
         <div className="flex items-center gap-3 justify-end min-w-0">
           <div className="text-right min-w-0">
             <div className={`font-bold text-base md:text-lg truncate ${dark ? "text-white" : "text-gray-900"}`}>
-              {match.home_team}
+              {homeName}
             </div>
           </div>
           {match.home_logo_url && (
             <div className={`flex-shrink-0 rounded-sm overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}>
               <Image
                 src={match.home_logo_url}
-                alt={match.home_team}
+                alt={homeName}
                 width={48}
                 height={36}
                 className="w-12 h-9 object-cover"
@@ -2282,7 +2675,7 @@ function MatchCard({
             <div className={`flex-shrink-0 rounded-sm overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}>
               <Image
                 src={match.away_logo_url}
-                alt={match.away_team}
+                alt={awayName}
                 width={48}
                 height={36}
                 className="w-12 h-9 object-cover"
@@ -2292,7 +2685,7 @@ function MatchCard({
           )}
           <div className="min-w-0">
             <div className={`font-bold text-base md:text-lg truncate ${dark ? "text-white" : "text-gray-900"}`}>
-              {match.away_team}
+              {awayName}
             </div>
           </div>
         </div>
@@ -2316,18 +2709,476 @@ function MatchCard({
 
       {/* points info */}
       {!isFinished && !liveNow && !disabled && (
-        <div className="mt-3 pt-2 border-t border-theme-border flex items-center justify-end gap-3 text-[10px] uppercase tracking-wide text-theme-text-secondary">
-          <span>
-            tačno = <span className={accentText}>{match.points_exact}</span>
+        <div className="mt-3 pt-2 border-t border-theme-border flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-[10px] uppercase tracking-wide text-theme-text-secondary">
+          <span className="inline-flex items-center gap-1">
+            tačno <span className={`font-bold ${accentText}`}>{match.points_exact}</span>
           </span>
-          <span>
-            razlika = <span className={accentText}>{match.points_diff}</span>
+          <span className="inline-flex items-center gap-1">
+            razlika <span className={`font-bold ${accentText}`}>{match.points_diff}</span>
           </span>
-          <span>
-            pobjednik = <span className={accentText}>{match.points_winner}</span>
+          <span className="inline-flex items-center gap-1">
+            pobjednik <span className={`font-bold ${accentText}`}>{match.points_winner}</span>
           </span>
         </div>
       )}
     </div>
+  );
+}
+
+// ===========================================================================
+// Predictions summary card — shows when the user has filled in every
+// category. Renders one row per category with the picked answer pretty
+// printed (flag + label / score / value), plus a single Edit button that
+// re-opens the full prediction form.
+// ===========================================================================
+function PredictionsSummary({
+  tournament,
+  draft,
+  theme,
+  accentText,
+  accentBg,
+  accentBorder,
+  lang,
+  completion,
+  onEdit,
+}: {
+  tournament: TournamentDetail;
+  draft: Record<string, DraftEntry>;
+  theme: string;
+  accentText: string;
+  accentBg: string;
+  accentBorder: string;
+  lang: "en" | "bs";
+  completion: { done: number; total: number };
+  onEdit: () => void;
+}) {
+  const dark = theme === "dark";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-4"
+    >
+      {/* Hero summary card — refined: no halos, single small check pill,
+          horizontal layout on mobile too, edit button as a compact pill. */}
+      <div
+        className={`rounded-2xl border p-4 sm:p-5 ${
+          dark
+            ? "bg-gray-950/60 border-gray-800/80"
+            : "bg-white border-gray-200"
+        }`}
+      >
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div
+            className={`flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${
+              dark
+                ? "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30"
+                : "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
+            }`}
+          >
+            <CheckCircle2 className="w-6 h-6" strokeWidth={2.25} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p
+              className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
+                dark ? "text-emerald-400" : "text-emerald-600"
+              }`}
+            >
+              {lang === "en" ? "All set" : "Sve spremno"}
+            </p>
+            <h2
+              className={`text-base sm:text-lg font-bold leading-tight mt-0.5 ${
+                dark ? "text-white" : "text-gray-900"
+              }`}
+            >
+              {lang === "en"
+                ? "Predictions locked in"
+                : "Predikcije su spremne"}
+            </h2>
+            <p
+              className={`text-xs sm:text-sm mt-0.5 ${
+                dark ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              {completion.done}/{completion.total}{" "}
+              {lang === "en" ? "answered" : "odgovoreno"}
+            </p>
+          </div>
+          <button
+            onClick={onEdit}
+            className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              dark
+                ? "bg-gray-800 text-gray-100 hover:bg-gray-700 border border-gray-700"
+                : "bg-gray-50 text-gray-800 hover:bg-gray-100 border border-gray-200"
+            }`}
+            aria-label={lang === "en" ? "Edit picks" : "Izmijeni"}
+          >
+            <Edit3 className="w-4 h-4" />
+            <span className="hidden sm:inline">
+              {lang === "en" ? "Edit" : "Izmijeni"}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* One row per category */}
+      <div className="space-y-3">
+        {tournament.categories.map((cat, idx) => {
+          const d = draft[cat.id] ?? emptyDraft();
+          return (
+            <motion.div
+              key={cat.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.05 + idx * 0.04 }}
+              className={`relative rounded-2xl border-l-4 ${accentBorder} ${
+                dark
+                  ? "bg-gray-900/70 border border-gray-700/60"
+                  : "bg-white/90 border border-gray-200"
+              } p-4 sm:p-5 shadow-sm`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
+                <div className="flex items-center gap-2 min-w-0">
+                  <p
+                    className={`text-[10px] font-black uppercase tracking-wider ${
+                      dark ? "text-gray-500" : "text-gray-400"
+                    }`}
+                  >
+                    #{idx + 1}
+                  </p>
+                  <h3
+                    className={`text-base sm:text-lg font-black ${
+                      dark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {localizedCategoryName(cat, lang)}
+                  </h3>
+                </div>
+                <span
+                  className={`text-[10px] uppercase font-black px-2 py-0.5 rounded ${accentText} ${
+                    dark ? "bg-gray-900" : "bg-gray-100"
+                  }`}
+                >
+                  {cat.points_correct} pts
+                </span>
+              </div>
+              <SummaryAnswer
+                category={cat}
+                draft={d}
+                theme={theme}
+                lang={lang}
+                accentText={accentText}
+              />
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+// Renders the user's selected answer for a single category. Picks the
+// right shape based on category_type (option pill / score / number / text).
+function SummaryAnswer({
+  category,
+  draft,
+  theme,
+  lang,
+  accentText,
+}: {
+  category: PredictionCategory & { options: PredictionOption[] };
+  draft: DraftEntry;
+  theme: string;
+  lang: "en" | "bs";
+  accentText: string;
+}) {
+  const dark = theme === "dark";
+
+  const optionById = useMemo(() => {
+    const m = new Map<string, PredictionOption>();
+    for (const o of category.options) m.set(o.id, o);
+    return m;
+  }, [category.options]);
+
+  const renderOptionPill = (opt: PredictionOption, rank?: number) => {
+    const codeFromUrl =
+      opt.image_url &&
+      /flagcdn\.com\/[^/]+\/([a-z-]+)\.png/i.exec(opt.image_url)?.[1];
+    const baseLabel = localizedOptionLabel(opt, lang);
+    const localized =
+      lang === "en" && opt.label_en?.trim()
+        ? opt.label_en
+        : opt.value || codeFromUrl
+          ? localizeTeamName(baseLabel, opt.value || codeFromUrl, lang)
+          : baseLabel;
+    return (
+      <span
+        key={opt.id}
+        className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 font-bold text-sm ${
+          dark
+            ? "bg-amber-500/15 text-amber-100 ring-1 ring-amber-500/30"
+            : "bg-amber-50 text-amber-900 ring-1 ring-amber-200"
+        }`}
+      >
+        {rank != null && (
+          <span
+            className={`flex-shrink-0 inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full text-[10px] font-black tabular-nums ${
+              dark ? "bg-amber-500 text-black" : "bg-amber-500 text-black"
+            }`}
+          >
+            {rank}
+          </span>
+        )}
+        {opt.image_url && (
+          <Image
+            src={opt.image_url}
+            alt=""
+            width={24}
+            height={16}
+            className="w-6 h-4 object-cover rounded-sm flex-shrink-0"
+            unoptimized
+          />
+        )}
+        <span className="truncate">{localized}</span>
+      </span>
+    );
+  };
+
+  switch (category.category_type) {
+    case "single_choice":
+    case "team_selection":
+    case "player_selection": {
+      const picked = draft.selected[0]
+        ? optionById.get(draft.selected[0])
+        : null;
+      if (!picked) return <EmptyAnswer dark={dark} lang={lang} />;
+      return <div className="flex flex-wrap gap-2">{renderOptionPill(picked)}</div>;
+    }
+    case "multiple_choice": {
+      const picks = draft.selected
+        .map((id) => optionById.get(id))
+        .filter(Boolean) as PredictionOption[];
+      if (picks.length === 0) return <EmptyAnswer dark={dark} lang={lang} />;
+      return (
+        <div className="flex flex-wrap gap-2">
+          {picks.map((p) => renderOptionPill(p))}
+        </div>
+      );
+    }
+    case "ranked_top_n": {
+      const picks = draft.selected
+        .map((id) => optionById.get(id))
+        .filter(Boolean) as PredictionOption[];
+      if (picks.length === 0) return <EmptyAnswer dark={dark} lang={lang} />;
+      return (
+        <div className="flex flex-wrap gap-2">
+          {picks.map((p, i) => renderOptionPill(p, i + 1))}
+        </div>
+      );
+    }
+    case "exact_score": {
+      if (draft.scoreHome == null || draft.scoreAway == null)
+        return <EmptyAnswer dark={dark} lang={lang} />;
+      return (
+        <div className="flex items-center gap-3">
+          <span
+            className={`text-3xl font-black tabular-nums ${accentText}`}
+          >
+            {draft.scoreHome}
+          </span>
+          <span
+            className={`text-2xl font-bold ${dark ? "text-gray-500" : "text-gray-400"}`}
+          >
+            :
+          </span>
+          <span
+            className={`text-3xl font-black tabular-nums ${accentText}`}
+          >
+            {draft.scoreAway}
+          </span>
+        </div>
+      );
+    }
+    case "numeric": {
+      if (draft.numeric == null) return <EmptyAnswer dark={dark} lang={lang} />;
+      return (
+        <span className={`text-2xl font-black tabular-nums ${accentText}`}>
+          {draft.numeric}
+        </span>
+      );
+    }
+    case "free_text": {
+      if (!draft.text.trim()) return <EmptyAnswer dark={dark} lang={lang} />;
+      return (
+        <p
+          className={`text-lg font-black ${
+            dark ? "text-white" : "text-gray-900"
+          }`}
+        >
+          {draft.text}
+        </p>
+      );
+    }
+    default:
+      return <EmptyAnswer dark={dark} lang={lang} />;
+  }
+}
+
+function EmptyAnswer({ dark, lang }: { dark: boolean; lang: "en" | "bs" }) {
+  return (
+    <p
+      className={`text-sm italic ${dark ? "text-gray-500" : "text-gray-400"}`}
+    >
+      {lang === "en" ? "No pick yet" : "Bez odgovora"}
+    </p>
+  );
+}
+
+// ===========================================================================
+// Membership shape and a single refined gate component used in place of
+// the prediction form when the tournament requires approval. One card,
+// quiet styling — no glow halos, no shake animations.
+// ===========================================================================
+type MembershipShape = {
+  require_approval: boolean;
+  member: { status: "pending" | "approved" | "rejected" | "banned" } | null;
+  can_predict: boolean;
+};
+
+
+// ===========================================================================
+// MembershipWall — replaces the prediction form when require_approval=true
+// and the user is not yet approved. Mirrors the banner styling but bigger
+// so it owns the tab content area.
+// ===========================================================================
+function MembershipWall({
+  membership,
+  authStatus,
+  joining,
+  theme,
+  accentBg,
+  onRequestJoin,
+}: {
+  membership: MembershipShape;
+  authStatus: string;
+  joining: boolean;
+  theme: string;
+  accentBg: string;
+  onRequestJoin: () => void;
+}) {
+  const dark = theme === "dark";
+  const status = membership.member?.status;
+
+  // Single quiet card. No gradients, no glow halos, no shake. Accent
+  // colour shows up only on the icon and the kicker label — the rest
+  // is plain card chrome so the message reads at a glance.
+  let accent: "amber" | "red" = "amber";
+  let kicker = "Zatvoreni turnir";
+  let title = "Zatraži učešće u turniru";
+  let subtitle =
+    "Admin pregleda svaki zahtjev. Čim te odobri, predikcije se otključavaju automatski.";
+  let Icon = ShieldCheck;
+  let cta: React.ReactNode = (
+    <button
+      onClick={authStatus === "authenticated" ? onRequestJoin : () => signIn()}
+      disabled={joining}
+      className={`mt-2 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-black ${accentBg} disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.98] transition-all`}
+    >
+      {authStatus !== "authenticated" ? (
+        <>
+          <LogIn className="w-4 h-4" />
+          Prijavi se da zatražiš
+        </>
+      ) : joining ? (
+        <>
+          <Hourglass className="w-4 h-4 animate-spin" />
+          Slanje…
+        </>
+      ) : (
+        <>
+          <Send className="w-4 h-4" />
+          Zatraži učešće
+        </>
+      )}
+    </button>
+  );
+
+  if (status === "pending") {
+    kicker = "Na čekanju";
+    title = "Zahtjev poslan";
+    subtitle =
+      "Admin će pregledati tvoj zahtjev. Otključat ćemo predikcije čim odobri — nema potrebe da osvježavaš.";
+    Icon = Hourglass;
+    cta = null;
+  } else if (status === "rejected" || status === "banned") {
+    accent = "red";
+    kicker = status === "banned" ? "Blokiran" : "Odbijen";
+    title = status === "banned" ? "Nalog je blokiran" : "Zahtjev je odbijen";
+    subtitle =
+      "Kontaktiraj admina ako misliš da je greška. Tabela i pravila ostaju vidljivi.";
+    Icon = Ban;
+    cta = null;
+  }
+
+  const accentText =
+    accent === "amber"
+      ? dark
+        ? "text-amber-300"
+        : "text-amber-600"
+      : dark
+        ? "text-red-300"
+        : "text-red-500";
+  const accentIconBg =
+    accent === "amber"
+      ? dark
+        ? "bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/25"
+        : "bg-amber-50 text-amber-600 ring-1 ring-amber-200"
+      : dark
+        ? "bg-red-500/10 text-red-400 ring-1 ring-red-500/25"
+        : "bg-red-50 text-red-500 ring-1 ring-red-200";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className={`rounded-2xl border px-6 py-10 sm:px-10 sm:py-14 ${
+        dark
+          ? "bg-gray-950/60 border-gray-800/80"
+          : "bg-white border-gray-200"
+      }`}
+    >
+      <div className="mx-auto max-w-md flex flex-col items-center text-center gap-5">
+        <div
+          className={`w-14 h-14 rounded-2xl flex items-center justify-center ${accentIconBg}`}
+        >
+          <Icon className="w-7 h-7" strokeWidth={2} />
+        </div>
+        <div className="space-y-2">
+          <p
+            className={`text-[10px] font-bold uppercase tracking-[0.2em] ${accentText}`}
+          >
+            {kicker}
+          </p>
+          <h2
+            className={`text-xl sm:text-2xl font-bold leading-tight ${
+              dark ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {title}
+          </h2>
+          <p
+            className={`text-sm leading-relaxed max-w-sm mx-auto ${
+              dark ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            {subtitle}
+          </p>
+        </div>
+        {cta}
+      </div>
+    </motion.div>
   );
 }

@@ -51,8 +51,11 @@ export interface Tournament {
   id: string;
   slug: string;
   name: string;
+  name_en: string | null;
   short_description: string | null;
+  short_description_en: string | null;
   long_description: string | null;
+  long_description_en: string | null;
   banner_image_url: string | null;
   hero_image_url: string | null;
   logo_url: string | null;
@@ -63,8 +66,11 @@ export interface Tournament {
   ends_at: string | null;
   registration_lock_at: string | null;
   rules_md: string | null;
+  rules_md_en: string | null;
   point_system_md: string | null;
+  point_system_md_en: string | null;
   eligibility_md: string | null;
+  eligibility_md_en: string | null;
   prize_pool_amount: number | null;
   prize_pool_currency: string | null;
   sponsor_name: string | null;
@@ -73,6 +79,10 @@ export interface Tournament {
   is_featured: boolean;
   sort_order: number;
   require_approval: boolean;
+  /** Root-relative path to a WC theme background image (admin-picked). */
+  theme_background_image: string | null;
+  /** If true, the WC theme music auto-mounts on this tournament's pages. */
+  theme_music_enabled: boolean;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -100,8 +110,11 @@ export interface PredictionCategory {
   tournament_id: string;
   slug: string;
   name: string;
+  name_en: string | null;
   description: string | null;
+  description_en: string | null;
   rules_md: string | null;
+  rules_md_en: string | null;
   icon: string | null;
   category_type: CategoryType;
   max_selections: number;
@@ -120,9 +133,11 @@ export interface PredictionOption {
   id: string;
   category_id: string;
   label: string;
+  label_en: string | null;
   value: string | null;
   image_url: string | null;
   group_label: string | null;
+  group_label_en: string | null;
   metadata: Record<string, unknown>;
   sort_order: number;
   is_correct: boolean;
@@ -154,7 +169,9 @@ export interface TournamentRule {
   tournament_id: string;
   kind: RuleKind;
   title: string;
+  title_en: string | null;
   body_md: string | null;
+  body_md_en: string | null;
   icon: string | null;
   sort_order: number;
   created_at: string;
@@ -166,7 +183,9 @@ export interface TournamentReward {
   tournament_id: string;
   rank_position: number | null;
   title: string;
+  title_en: string | null;
   description: string | null;
+  description_en: string | null;
   prize_type: PrizeType;
   prize_value: number | null;
   prize_currency: string | null;
@@ -239,14 +258,19 @@ export interface Match {
   tournament_id: string;
   stage: string;
   stage_label: string | null;
+  stage_label_en: string | null;
   match_label: string | null;
+  match_label_en: string | null;
   home_team: string;
+  home_team_en: string | null;
   away_team: string;
+  away_team_en: string | null;
   home_logo_url: string | null;
   away_logo_url: string | null;
   home_team_code: string | null;
   away_team_code: string | null;
   venue: string | null;
+  venue_en: string | null;
   kickoff_at: string | null;
   status: MatchStatus;
   home_score: number | null;
@@ -293,4 +317,6 @@ export interface SubmitPredictionItem {
 
 export interface SubmitPredictionsPayload {
   items: SubmitPredictionItem[];
+  /** Category IDs the user previously saved but is now clearing. */
+  delete_category_ids?: string[];
 }

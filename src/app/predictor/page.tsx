@@ -16,8 +16,14 @@ import {
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import LoadingCard from "@/components/shared/LoadingCard";
+import WCBackground from "@/components/shared/WCBackground";
 import type { Tournament, TournamentStatus } from "@/types/predictor";
 import { getLogoFilter } from "@/utils/predictor-logo";
+import {
+  localizedTournamentName,
+  localizedTournamentShort,
+  normalizeLang,
+} from "@/utils/predictor-i18n";
 
 const ACCENT_BORDER: Record<string, string> = {
   amber: "border-l-amber-500",
@@ -82,11 +88,25 @@ export default function PredictorIndexPage() {
 
   const featured = tournaments.filter((x) => x.is_featured);
   const others = tournaments.filter((x) => !x.is_featured);
+  // List page stays clean — bg + theme music only appear on the specific
+  // tournament page that admin opted into via the settings picker.
+  const featuredThemeBg =
+    featured.find((t) => t.theme_background_image)?.theme_background_image ??
+    null;
 
   return (
-    <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
+    <main className="relative w-full min-h-screen overflow-x-hidden bg-theme-background">
+      {featuredThemeBg && (
+        <WCBackground
+          variant="hero"
+          src={featuredThemeBg}
+          opacity={0.3}
+          overlay={0.6}
+          fixed
+        />
+      )}
       {/* Hero */}
-      <section className="relative overflow-hidden pb-10 px-4 pt-6 md:pt-10">
+      <section className="relative z-10 overflow-hidden pb-10 px-4 pt-6 md:pt-10">
         <div className="max-w-6xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -142,7 +162,7 @@ export default function PredictorIndexPage() {
       </section>
 
       {/* Tournament grid */}
-      <section className="px-4 pb-16">
+      <section className="relative z-10 px-4 pb-16">
         <div className="max-w-6xl mx-auto">
           {tournaments.length === 0 ? (
             <div
@@ -236,10 +256,14 @@ function TournamentCard({
   theme: string;
   large?: boolean;
 }) {
+  const { i18n } = useTranslation("predictor");
+  const lang = normalizeLang(i18n.language);
   const accent = tournament.accent_color || "amber";
   const borderClass = ACCENT_BORDER[accent] ?? "border-l-amber-500";
   const textClass = ACCENT_TEXT[accent] ?? "text-amber-500 dark:text-amber-400";
   const badge = STATUS_BADGE[tournament.status];
+  const displayName = localizedTournamentName(tournament, lang);
+  const displayShort = localizedTournamentShort(tournament, lang);
 
   return (
     <Link
@@ -269,7 +293,7 @@ function TournamentCard({
             {tournament.logo_url ? (
               <Image
                 src={tournament.logo_url}
-                alt={tournament.name}
+                alt={displayName}
                 width={36}
                 height={36}
                 className="w-9 h-9 object-contain"
@@ -288,23 +312,37 @@ function TournamentCard({
                 theme === "dark" ? "text-white" : "text-gray-800"
               }`}
             >
-              {tournament.name}
+              {displayName}
             </h3>
           </div>
-          <span
-            className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${badge.cls}`}
-          >
-            {badge.label}
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+            {tournament.require_approval && (
+              <span
+                className={`inline-flex items-center gap-1 text-[10px] uppercase font-black px-2 py-0.5 rounded ${
+                  theme === "dark"
+                    ? "bg-amber-500/15 text-amber-300 border border-amber-500/40"
+                    : "bg-amber-50 text-amber-700 border border-amber-300"
+                }`}
+              >
+                <Lock className="w-3 h-3" />
+                Zatvoren
+              </span>
+            )}
+            <span
+              className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${badge.cls}`}
+            >
+              {badge.label}
+            </span>
+          </div>
         </div>
 
-        {tournament.short_description && (
+        {displayShort && (
           <p
             className={`relative z-10 text-sm leading-relaxed mb-4 flex-grow ${
               theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}
           >
-            {tournament.short_description}
+            {displayShort}
           </p>
         )}
 
@@ -343,8 +381,17 @@ function TournamentCard({
         <span
           className={`relative z-10 inline-flex items-center gap-1 text-sm font-semibold ${textClass} group-hover:gap-2 transition-all duration-300 mt-auto`}
         >
-          <CheckCircle2 className="w-4 h-4" />
-          Otvori predictor
+          {tournament.require_approval ? (
+            <>
+              <Lock className="w-4 h-4" />
+              Pogledaj i zatraži učešće
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="w-4 h-4" />
+              Otvori predictor
+            </>
+          )}
           <ArrowRight className="w-4 h-4" />
         </span>
       </div>

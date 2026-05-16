@@ -42,5 +42,78 @@
   "notFound": {
     "title": "Tournament not found",
     "subtitle": "This tournament does not exist or is not yet public."
-  }
+  },
+  "matchPredictions": "Your match predictions",
+  "incDec": {
+    "inc": "Increase score",
+    "dec": "Decrease score"
+  },
+  "savedAt": "Saved",
+  "filled": "filled",
+  "errors": {
+    "title": "Not saved",
+    "close": "Close",
+    "mustSignIn": "You must be signed in to save predictions. Click Sign in above.",
+    "nothingToSave": "Nothing to save — enter scores first (use + and − buttons).",
+    "sessionExpired": "Session expired. Please sign in again.",
+    "notAllowed": "You don't have permission for this tournament. Request to join if needed.",
+    "tournamentNotFound": "Tournament not found.",
+    "tournamentNotAcceptingPredictions": "This tournament isn't accepting predictions right now.",
+    "draftMessage": "Tournament hasn't been published yet. Admin must publish it before predictions can be saved.",
+    "lockedMessage": "Tournament is locked or finished — predictions can no longer be changed.",
+    "genericHttp": "Save failed (HTTP {{status}}).",
+    "unknown": "Unknown error while saving.",
+    "matchSkipped": "Predictions weren't saved. Reasons: {{reasons}}. Check that matches aren't locked."
+  },
+  "live": "LIVE",
+  "locked": "Locked",
+  "unlockedExtended": "Extended",
+  "pointsLabels": {
+    "exact": "exact",
+    "diff": "diff",
+    "winner": "winner"
+  },
+  "outcome": {
+    "exact": "Exact score",
+    "diff": "Correct difference",
+    "winner": "Correct winner",
+    "wrong": "Wrong"
+  },
+  "stage": {
+    "group_a": "Group A",
+    "group_b": "Group B",
+    "group_c": "Group C",
+    "group_d": "Group D",
+    "group_e": "Group E",
+    "group_f": "Group F",
+    "group_g": "Group G",
+    "group_h": "Group H",
+    "group_i": "Group I",
+    "group_j": "Group J",
+    "group_k": "Group K",
+    "group_l": "Group L",
+    "round_of_32": "Round of 32",
+    "round_of_16": "Round of 16",
+    "quarter_final": "Quarter-final",
+    "semi_final": "Semi-final",
+    "third_place": "Third place",
+    "final": "Final",
+    "other": "Other"
+  },
+  "matchesCount": "{{count}} matches",
+  "noMatches": "No match schedule yet. Check back later.",
+  "yourPrediction": "your prediction",
+  "rules": {
+    "overview": "Overview",
+    "pointSystem": "Point system",
+    "eligibility": "Eligibility",
+    "emptyState": "No rules published yet."
+  },
+  "rewards": {
+    "emptyState": "No rewards configured yet."
+  },
+  "signInBanner": {
+    "message": "Sign in to submit predictions and compete for rewards."
+  },
+  "noCategories": "No prediction categories yet."
 }

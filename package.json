@@ -28,7 +28,7 @@
     "lucide-react": "^0.575.0",
     "next": "^16.1.6",
     "next-auth": "^4.24.11",
-    "nodemailer": "^7.0.12",
+    "nodemailer": "^8.0.7",
     "openai": "^4.104.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -42,7 +42,9 @@
     "zod": "^4.1.5"
   },
   "overrides": {
-    "fast-xml-parser": ">=5.3.8"
+    "fast-xml-parser": ">=5.3.8",
+    "postcss": "^8.5.10",
+    "nodemailer": "^8.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

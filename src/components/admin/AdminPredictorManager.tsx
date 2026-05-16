@@ -5,6 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "@/contexts/ThemeContext";
+import SaveToast, {
+  type SaveToastState,
+} from "@/components/shared/SaveToast";
 import {
   ArrowLeft,
   Plus,
@@ -49,6 +52,8 @@ import {
   UserPlus,
   Ban,
   Unlock,
+  Music2,
+  ImageIcon,
 } from "lucide-react";
 import type {
   Tournament,
@@ -90,6 +95,16 @@ const CATEGORY_TYPE_LABEL: Record<CategoryType, string> = {
   numeric: "Brojčana procjena",
   free_text: "Slobodan tekst",
 };
+
+// Available WC2026 backdrops shown in the admin picker. Files live in
+// public/wc2026/. Order = display order in the dropdown.
+const WC_BACKGROUND_OPTIONS: Array<{ src: string; label: string }> = [
+  { src: "/wc2026/bg-full-wc-2026.jpg", label: "FIFA 26 logo (tamna, brutalna)" },
+  { src: "/wc2026/wc-bg.jpg", label: "Hero #1" },
+  { src: "/wc2026/wc-bg1.jpg", label: "Hero #2 (tabele)" },
+  { src: "/wc2026/wc-bg-2.webp", label: "Match-day apstrakcija" },
+  { src: "/wc2026/wc-bg-3.webp", label: "Stadion blur" },
+];
 
 const ACCENT_ICON_CLASS: Record<string, string> = {
   amber: "text-amber-500 dark:text-amber-400",
@@ -159,6 +174,29 @@ const STAGE_LABEL: Record<string, string> = {
   third_place: "Utakmica za 3. mjesto",
   final: "Finale",
   other: "Ostalo",
+};
+
+const STAGE_LABEL_EN: Record<string, string> = {
+  group: "Group stage",
+  group_a: "Group A",
+  group_b: "Group B",
+  group_c: "Group C",
+  group_d: "Group D",
+  group_e: "Group E",
+  group_f: "Group F",
+  group_g: "Group G",
+  group_h: "Group H",
+  group_i: "Group I",
+  group_j: "Group J",
+  group_k: "Group K",
+  group_l: "Group L",
+  round_of_32: "Round of 32",
+  round_of_16: "Round of 16",
+  quarter_final: "Quarter-finals",
+  semi_final: "Semi-finals",
+  third_place: "Third-place play-off",
+  final: "Final",
+  other: "Other",
 };
 
 const MATCH_STATUS_LABEL: Record<MatchStatus, string> = {
@@ -620,7 +658,9 @@ function TournamentList({
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [name, setName] = useState("");
+  const [nameEn, setNameEn] = useState("");
   const [shortDesc, setShortDesc] = useState("");
+  const [shortDescEn, setShortDescEn] = useState("");
   const [accent, setAccent] = useState("amber");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -635,7 +675,9 @@ function TournamentList({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          name_en: nameEn || null,
           short_description: shortDesc || null,
+          short_description_en: shortDescEn || null,
           accent_color: accent,
           status: "draft",
         }),
@@ -646,7 +688,9 @@ function TournamentList({
       }
       const t = await res.json();
       setName("");
+      setNameEn("");
       setShortDesc("");
+      setShortDescEn("");
       setCreating(false);
       onCreated(t);
     } catch (e: any) {
@@ -703,11 +747,19 @@ function TournamentList({
       {creating && (
         <div className={`rounded-md p-5 space-y-4 ${cardCls(theme)}`}>
           <div className="grid md:grid-cols-2 gap-4">
-            <Field theme={theme} label="Naziv">
+            <Field theme={theme} label="Naziv (BS)">
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="npr. Euro 2026 Predictor"
+                className={inputCls(theme)}
+              />
+            </Field>
+            <Field theme={theme} label="Name (EN)">
+              <input
+                value={nameEn}
+                onChange={(e) => setNameEn(e.target.value)}
+                placeholder="e.g. Euro 2026 Predictor"
                 className={inputCls(theme)}
               />
             </Field>
@@ -725,14 +777,24 @@ function TournamentList({
               </select>
             </Field>
           </div>
-          <Field theme={theme} label="Kratki opis">
-            <input
-              value={shortDesc}
-              onChange={(e) => setShortDesc(e.target.value)}
-              placeholder="Kratki tekst koji se pojavljuje u listi turnira"
-              className={inputCls(theme)}
-            />
-          </Field>
+          <div className="grid md:grid-cols-2 gap-4">
+            <Field theme={theme} label="Kratki opis (BS)">
+              <input
+                value={shortDesc}
+                onChange={(e) => setShortDesc(e.target.value)}
+                placeholder="Kratki tekst koji se pojavljuje u listi turnira"
+                className={inputCls(theme)}
+              />
+            </Field>
+            <Field theme={theme} label="Short description (EN)">
+              <input
+                value={shortDescEn}
+                onChange={(e) => setShortDescEn(e.target.value)}
+                placeholder="Short text that appears in the tournament list"
+                className={inputCls(theme)}
+              />
+            </Field>
+          </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <div className="flex justify-end gap-2">
             <button
@@ -1221,20 +1283,56 @@ function TournamentEditor({
   const [tab, setTab] = useState<ManagerTab>("settings");
   const [rescoring, setRescoring] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [rescoreMsg, setRescoreMsg] = useState<string | null>(null);
+  const [headerToast, setHeaderToast] = useState<SaveToastState>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Poll the pending-approvals count so the tab badge stays fresh
+  // whenever the admin lands on this tournament or comes back from
+  // approving inside the Approvals tab.
+  const refreshPendingCount = useCallback(async () => {
+    if (!tournament.require_approval) {
+      setPendingCount(0);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `/api/admin/predictor/members?tournament_id=${tournament.id}&status=pending`,
+      );
+      if (res.ok) {
+        const data = (await res.json()) as Array<unknown>;
+        setPendingCount(Array.isArray(data) ? data.length : 0);
+      }
+    } catch {
+      /* ignore network errors — badge just stays stale */
+    }
+  }, [tournament.id, tournament.require_approval]);
+
+  useEffect(() => {
+    refreshPendingCount();
+  }, [refreshPendingCount, tab]);
 
   const rescore = async () => {
     setRescoring(true);
-    setRescoreMsg(null);
+    setHeaderToast(null);
     try {
       const res = await fetch("/api/admin/predictor/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tournament_id: tournament.id }),
       });
-      const j = await res.json();
-      setRescoreMsg(`Ažurirano ${j.updated ?? 0} predikcija.`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setHeaderToast({
+          kind: "error",
+          text: j?.error || "Greška pri bodovanju",
+        });
+      } else {
+        setHeaderToast({
+          kind: "success",
+          text: `Ažurirano ${j.updated ?? 0} predikcija`,
+        });
+      }
     } finally {
       setRescoring(false);
     }
@@ -1325,45 +1423,73 @@ function TournamentEditor({
         rescoring={rescoring}
       />
 
-      {rescoreMsg && (
-        <div className="text-sm text-emerald-500">{rescoreMsg}</div>
-      )}
+      <SaveToast
+        toast={headerToast}
+        onDismiss={() => setHeaderToast(null)}
+      />
 
       <div
-        className={`border-b flex gap-1 overflow-x-auto ${
-          theme === "dark" ? "border-gray-800" : "border-gray-200"
+        className={`relative -mx-1 px-1 ${
+          theme === "dark"
+            ? "[--fade-from:#0a0a0a]"
+            : "[--fade-from:#fafafa]"
         }`}
       >
-        {(
-          [
-            { id: "settings", label: "Postavke", icon: Settings },
-            { id: "categories", label: "Kategorije", icon: ListChecks },
-            { id: "matches", label: "Utakmice", icon: Swords },
-            { id: "approvals", label: "Odobrenja", icon: ShieldCheck },
-            { id: "members", label: "Predikcije", icon: Users },
-            { id: "rules", label: "Pravila", icon: ScrollText },
-            { id: "rewards", label: "Nagrade", icon: Gift },
-          ] as const
-        ).map((it) => {
-          const Icon = it.icon;
-          const active = tab === it.id;
-          return (
-            <button
-              key={it.id}
-              onClick={() => setTab(it.id)}
-              className={`py-2.5 px-4 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 whitespace-nowrap ${
-                active
-                  ? "border-amber-500 text-amber-500"
-                  : theme === "dark"
-                    ? "border-transparent text-gray-500 hover:text-gray-300"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {it.label}
-            </button>
-          );
-        })}
+        <div
+          className={`flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 pt-1 px-1 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}
+        >
+          {(
+            [
+              { id: "settings", label: "Postavke", icon: Settings },
+              { id: "categories", label: "Kategorije", icon: ListChecks },
+              { id: "matches", label: "Utakmice", icon: Swords },
+              { id: "approvals", label: "Odobrenja", icon: ShieldCheck },
+              { id: "members", label: "Predikcije", icon: Users },
+              { id: "rules", label: "Pravila", icon: ScrollText },
+              { id: "rewards", label: "Nagrade", icon: Gift },
+            ] as const
+          ).map((it) => {
+            const Icon = it.icon;
+            const active = tab === it.id;
+            const showPendingBadge =
+              it.id === "approvals" && pendingCount > 0;
+            return (
+              <button
+                key={it.id}
+                onClick={() => setTab(it.id)}
+                className={`snap-start inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full font-semibold text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 border relative ${
+                  active
+                    ? "bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/30"
+                    : theme === "dark"
+                      ? "bg-gray-900/60 text-gray-300 border-gray-700 hover:border-amber-500/60 hover:text-amber-300"
+                      : "bg-white/80 text-gray-700 border-gray-200 hover:border-amber-500/60 hover:text-amber-700"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                {it.label}
+                {showPendingBadge && (
+                  <span
+                    aria-label={`${pendingCount} zahtjeva na čekanju`}
+                    className={`ml-0.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black tabular-nums ${
+                      active
+                        ? "bg-black/85 text-amber-300"
+                        : "bg-red-500 text-white ring-2 ring-red-500/40 animate-pulse"
+                    }`}
+                  >
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div
+          className={`pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l ${
+            theme === "dark"
+              ? "from-[#0a0a0a] via-[#0a0a0a]/70 to-transparent"
+              : "from-[#fafafa] via-[#fafafa]/70 to-transparent"
+          }`}
+        />
       </div>
 
       {tab === "settings" && (
@@ -1387,7 +1513,11 @@ function TournamentEditor({
         <MembersTab tournament={tournament} theme={theme} />
       )}
       {tab === "approvals" && (
-        <ApprovalsTab tournament={tournament} theme={theme} />
+        <ApprovalsTab
+          tournament={tournament}
+          theme={theme}
+          onPendingChanged={refreshPendingCount}
+        />
       )}
     </div>
   );
@@ -1399,9 +1529,11 @@ function TournamentEditor({
 function ApprovalsTab({
   tournament,
   theme,
+  onPendingChanged,
 }: {
   tournament: Tournament;
   theme: string;
+  onPendingChanged?: () => void;
 }) {
   const [members, setMembers] = useState<TournamentMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1429,7 +1561,10 @@ function ApprovalsTab({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, status }),
     });
-    if (res.ok) load();
+    if (res.ok) {
+      load();
+      onPendingChanged?.();
+    }
   };
 
   const remove = async (id: string) => {
@@ -1437,7 +1572,10 @@ function ApprovalsTab({
     const res = await fetch(`/api/admin/predictor/members?id=${id}`, {
       method: "DELETE",
     });
-    if (res.ok) load();
+    if (res.ok) {
+      load();
+      onPendingChanged?.();
+    }
   };
 
   const filtered =
@@ -1468,7 +1606,7 @@ function ApprovalsTab({
             <p className={`text-sm mt-1 ${mutedTextCls(theme)}`}>
               Svi prijavljeni korisnici mogu odmah predviđati. Da bi koristio
               sistem odobrenja, idi na <b>Postavke</b> i uključi opciju{" "}
-              <b>"Zahtijevaj odobrenje admina"</b>. Tada korisnici moraju zatražiti
+              <b>&quot;Zahtijevaj odobrenje admina&quot;</b>. Tada korisnici moraju zatražiti
               učešće, a ti odobravaš/odbijaš zahtjeve ovdje.
             </p>
           </div>
@@ -1665,6 +1803,9 @@ function MatchesTab({
   const [bulkOpen, setBulkOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [resultId, setResultId] = useState<string | null>(null);
+  const [rescoring, setRescoring] = useState(false);
+  const [promoting, setPromoting] = useState(false);
+  const [toast, setToast] = useState<SaveToastState>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1682,12 +1823,120 @@ function MatchesTab({
     load();
   }, [load]);
 
+  const finishedCount = useMemo(
+    () => matches.filter((m) => m.status === "finished").length,
+    [matches],
+  );
+
+  const rescoreAll = async () => {
+    if (finishedCount === 0) {
+      setToast({
+        kind: "error",
+        text: "Nema nijedne završene utakmice za bodovanje.",
+      });
+      return;
+    }
+    if (
+      !confirm(
+        `Bodovati sve završene utakmice (${finishedCount})? Postojeći bodovi se prepisuju novim izračunom.`,
+      )
+    )
+      return;
+    setRescoring(true);
+    try {
+      const res = await fetch("/api/admin/predictor/matches/rescore-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tournament_id: tournament.id }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setToast({
+          kind: "success",
+          text: `Bodovano ${j.scored_matches ?? 0} utakmica · ${j.updated_predictions ?? 0} predikcija`,
+        });
+      } else {
+        setToast({
+          kind: "error",
+          text: j.error || "Greška pri bodovanju",
+        });
+      }
+    } catch (e: any) {
+      setToast({ kind: "error", text: e?.message ?? "Greška pri bodovanju" });
+    } finally {
+      setRescoring(false);
+    }
+  };
+
   const removeMatch = async (id: string) => {
     if (!confirm("Obriši ovu utakmicu i sve njene predikcije?")) return;
     const res = await fetch(`/api/admin/predictor/matches?id=${id}`, {
       method: "DELETE",
     });
     if (res.ok) load();
+  };
+
+  const promoteKnockout = async () => {
+    if (
+      !confirm(
+        "Popuniti knockout fazu na osnovu rezultata grupne faze i prethodnih nokaut rundi? Mijenjaju se samo SCHEDULED utakmice sa placeholder timovima (1A, 2B, Pob. R32-X, ...).",
+      )
+    )
+      return;
+    setPromoting(true);
+    try {
+      const res = await fetch(
+        "/api/admin/predictor/matches/promote-knockout",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tournament_id: tournament.id }),
+        },
+      );
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setToast({ kind: "error", text: j.error || "Greška pri popunjavanju" });
+        return;
+      }
+      const updated = j.updated_count ?? 0;
+      const unresolved: Array<{
+        match_label: string | null;
+        reasons: string[];
+      }> = j.unresolved ?? [];
+      if (updated === 0 && unresolved.length === 0) {
+        setToast({
+          kind: "success",
+          text: "Sve knockout utakmice već imaju popunjene timove.",
+        });
+      } else if (unresolved.length === 0) {
+        setToast({
+          kind: "success",
+          text: `Popunjeno ${updated} knockout utakmica.`,
+        });
+      } else {
+        const top = unresolved
+          .slice(0, 3)
+          .map(
+            (u) =>
+              `${u.match_label ?? "?"}: ${u.reasons.join("; ") || "nepoznato"}`,
+          )
+          .join(" · ");
+        const more =
+          unresolved.length > 3 ? ` (+ još ${unresolved.length - 3})` : "";
+        setToast({
+          kind: updated > 0 ? "success" : "error",
+          text: `Popunjeno ${updated}. Nerazriješeno ${unresolved.length}: ${top}${more}`,
+        });
+      }
+      await load();
+    } catch (e: any) {
+      setToast({
+        kind: "error",
+        text: e?.message ?? "Greška pri popunjavanju",
+      });
+    } finally {
+      setPromoting(false);
+    }
   };
 
   // grupiši po fazi
@@ -1726,6 +1975,46 @@ function MatchesTab({
         </div>
         <div className="flex flex-wrap gap-2">
           <button
+            onClick={rescoreAll}
+            disabled={rescoring || finishedCount === 0}
+            title={
+              finishedCount === 0
+                ? "Nema završenih utakmica"
+                : `Boduj sve završene utakmice (${finishedCount})`
+            }
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              theme === "dark"
+                ? "bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 hover:bg-emerald-950/60"
+                : "bg-emerald-50 border border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+            }`}
+          >
+            {rescoring ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCcw className="w-4 h-4" />
+            )}
+            {rescoring
+              ? "Bodovanje…"
+              : `Boduj sve utakmice${finishedCount > 0 ? ` (${finishedCount})` : ""}`}
+          </button>
+          <button
+            onClick={promoteKnockout}
+            disabled={promoting}
+            title="Auto-popuni nokaut utakmice (1A, 2B, Pob. R32-X…) na osnovu rezultata"
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              theme === "dark"
+                ? "bg-purple-950/40 border border-purple-800/60 text-purple-300 hover:bg-purple-950/60"
+                : "bg-purple-50 border border-purple-300 text-purple-700 hover:bg-purple-100"
+            }`}
+          >
+            {promoting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            {promoting ? "Popunjavanje…" : "Popuni knockout"}
+          </button>
+          <button
             onClick={() => setBulkOpen(true)}
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
               theme === "dark"
@@ -1741,6 +2030,7 @@ function MatchesTab({
           </button>
         </div>
       </div>
+      <SaveToast toast={toast} onDismiss={() => setToast(null)} />
 
       {creating && (
         <MatchForm
@@ -1865,15 +2155,14 @@ function MatchRow({
 
   return (
     <div className={`rounded-md p-3 ${cardCls(theme)}`}>
-      <div className="flex items-center gap-3 flex-wrap">
-        {/* status badge */}
+      {/* Top meta row: status + lock badges */}
+      <div className="flex items-center gap-2 flex-wrap mb-2">
         <span
           className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${MATCH_STATUS_CLASS(theme, match.status)}`}
         >
           {MATCH_STATUS_LABEL[match.status]}
         </span>
 
-        {/* lock status badges */}
         {match.force_unlocked && (
           <span
             className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border inline-flex items-center gap-1 ${
@@ -1901,54 +2190,9 @@ function MatchRow({
           </span>
         )}
 
-        {/* timovi + zastave */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {match.home_logo_url && (
-            <Image
-              src={match.home_logo_url}
-              alt={match.home_team}
-              width={20}
-              height={14}
-              className="object-contain rounded-sm flex-shrink-0"
-              unoptimized
-            />
-          )}
-          <span
-            className={`text-sm font-semibold truncate ${headingCls(theme)}`}
-          >
-            {match.home_team}
-          </span>
-          <span className={`text-xs ${mutedTextCls(theme)}`}>vs</span>
-          {match.away_logo_url && (
-            <Image
-              src={match.away_logo_url}
-              alt={match.away_team}
-              width={20}
-              height={14}
-              className="object-contain rounded-sm flex-shrink-0"
-              unoptimized
-            />
-          )}
-          <span
-            className={`text-sm font-semibold truncate ${headingCls(theme)}`}
-          >
-            {match.away_team}
-          </span>
-        </div>
-
-        {/* rezultat (ako ima) */}
-        {match.home_score != null && match.away_score != null && (
-          <span
-            className={`text-lg font-black tabular-nums ${headingCls(theme)}`}
-          >
-            {match.home_score} : {match.away_score}
-          </span>
-        )}
-
-        {/* kickoff */}
         {match.kickoff_at && (
           <span
-            className={`text-xs inline-flex items-center gap-1 ${mutedTextCls(theme)}`}
+            className={`text-xs inline-flex items-center gap-1 ml-auto ${mutedTextCls(theme)}`}
           >
             <CalendarClock className="w-3.5 h-3.5" />
             {new Date(match.kickoff_at).toLocaleString([], {
@@ -1959,63 +2203,125 @@ function MatchRow({
             })}
           </span>
         )}
+      </div>
 
-        {/* venue */}
-        {match.venue && (
-          <span
-            className={`text-xs inline-flex items-center gap-1 ${mutedTextCls(theme)}`}
-          >
-            <MapPin className="w-3.5 h-3.5" />
-            {match.venue}
-          </span>
-        )}
-
-        {/* actions */}
-        <div className="flex items-center gap-1 ml-auto">
-          {/* unlock toggle — vidljiv samo ako bi inače bio zaključan */}
-          {(autoLocked || match.force_unlocked) && match.status === "scheduled" && (
-            <button
-              onClick={toggleUnlock}
-              className={`p-2 rounded-md transition-colors ${
-                match.force_unlocked
-                  ? theme === "dark"
-                    ? "bg-emerald-950/40 hover:bg-emerald-950/60 text-emerald-300"
-                    : "bg-emerald-100 hover:bg-emerald-200 text-emerald-700"
-                  : theme === "dark"
-                    ? "hover:bg-amber-950/40 text-amber-300"
-                    : "hover:bg-amber-50 text-amber-700"
-              }`}
-              title={
-                match.force_unlocked
-                  ? "Vrati na automatsko zaključavanje"
-                  : "Ručno otključaj (produži rok)"
-              }
-            >
-              {match.force_unlocked ? (
-                <Unlock className="w-4 h-4" />
-              ) : (
-                <Lock className="w-4 h-4" />
-              )}
-            </button>
+      {/* Teams row — stacked on mobile, dense on sm+ */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {match.home_logo_url && (
+            <Image
+              src={match.home_logo_url}
+              alt={match.home_team}
+              width={24}
+              height={16}
+              className="object-contain rounded-sm flex-shrink-0"
+              unoptimized
+            />
           )}
-          <button
-            onClick={onResult}
-            className={`p-2 rounded-md transition-colors ${
-              theme === "dark"
-                ? "hover:bg-emerald-950/40 text-emerald-300"
-                : "hover:bg-emerald-50 text-emerald-700"
-            }`}
-            title="Unesi rezultat"
+          <span
+            className={`text-sm font-semibold truncate flex-1 min-w-0 ${headingCls(theme)}`}
           >
-            <Flag className="w-4 h-4" />
-          </button>
-          <button onClick={onEdit} className={editBtnCls(theme)}>
-            <Edit3 className="w-4 h-4" />
-          </button>
-          <button onClick={onDelete} className={dangerBtnCls(theme)}>
-            <Trash2 className="w-4 h-4" />
-          </button>
+            {match.home_team}
+          </span>
+          {match.home_score != null && (
+            <span
+              className={`text-base font-black tabular-nums ${headingCls(theme)}`}
+            >
+              {match.home_score}
+            </span>
+          )}
         </div>
+
+        <span
+          className={`hidden sm:inline text-xs font-bold ${mutedTextCls(theme)}`}
+        >
+          vs
+        </span>
+
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {match.away_logo_url && (
+            <Image
+              src={match.away_logo_url}
+              alt={match.away_team}
+              width={24}
+              height={16}
+              className="object-contain rounded-sm flex-shrink-0"
+              unoptimized
+            />
+          )}
+          <span
+            className={`text-sm font-semibold truncate flex-1 min-w-0 ${headingCls(theme)}`}
+          >
+            {match.away_team}
+          </span>
+          {match.away_score != null && (
+            <span
+              className={`text-base font-black tabular-nums ${headingCls(theme)}`}
+            >
+              {match.away_score}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Venue row */}
+      {match.venue && (
+        <div
+          className={`mt-2 text-xs inline-flex items-center gap-1 ${mutedTextCls(theme)}`}
+        >
+          <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate">{match.venue}</span>
+        </div>
+      )}
+
+      {/* Actions row */}
+      <div
+        className={`mt-3 pt-2 border-t flex items-center justify-end gap-1 ${
+          theme === "dark" ? "border-gray-800" : "border-gray-200"
+        }`}
+      >
+        {(autoLocked || match.force_unlocked) && match.status === "scheduled" && (
+          <button
+            onClick={toggleUnlock}
+            className={`p-2 rounded-md transition-colors ${
+              match.force_unlocked
+                ? theme === "dark"
+                  ? "bg-emerald-950/40 hover:bg-emerald-950/60 text-emerald-300"
+                  : "bg-emerald-100 hover:bg-emerald-200 text-emerald-700"
+                : theme === "dark"
+                  ? "hover:bg-amber-950/40 text-amber-300"
+                  : "hover:bg-amber-50 text-amber-700"
+            }`}
+            title={
+              match.force_unlocked
+                ? "Vrati na automatsko zaključavanje"
+                : "Ručno otključaj (produži rok)"
+            }
+          >
+            {match.force_unlocked ? (
+              <Unlock className="w-4 h-4" />
+            ) : (
+              <Lock className="w-4 h-4" />
+            )}
+          </button>
+        )}
+        <button
+          onClick={onResult}
+          className={`p-2 rounded-md transition-colors ${
+            theme === "dark"
+              ? "hover:bg-emerald-950/40 text-emerald-300"
+              : "hover:bg-emerald-50 text-emerald-700"
+          }`}
+          title="Unesi rezultat"
+        >
+          <Flag className="w-4 h-4" />
+        </button>
+        <button onClick={onEdit} className={editBtnCls(theme)} title="Uredi">
+          <Edit3 className="w-4 h-4" />
+        </button>
+        <button onClick={onDelete} className={dangerBtnCls(theme)} title="Obriši">
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
 
       {showResult && (
@@ -2059,11 +2365,14 @@ function MatchForm({
 }) {
   const [stage, setStage] = useState(initial?.stage ?? "group");
   const [homeTeam, setHomeTeam] = useState(initial?.home_team ?? "");
+  const [homeTeamEn, setHomeTeamEn] = useState(initial?.home_team_en ?? "");
   const [awayTeam, setAwayTeam] = useState(initial?.away_team ?? "");
+  const [awayTeamEn, setAwayTeamEn] = useState(initial?.away_team_en ?? "");
   const [homeCode, setHomeCode] = useState(initial?.home_team_code ?? "");
   const [awayCode, setAwayCode] = useState(initial?.away_team_code ?? "");
   const [kickoff, setKickoff] = useState(dtLocal(initial?.kickoff_at ?? null));
   const [venue, setVenue] = useState(initial?.venue ?? "");
+  const [venueEn, setVenueEn] = useState(initial?.venue_en ?? "");
   const [pExact, setPExact] = useState(initial?.points_exact ?? 5);
   const [pDiff, setPDiff] = useState(initial?.points_diff ?? 3);
   const [pWinner, setPWinner] = useState(initial?.points_winner ?? 2);
@@ -2083,14 +2392,18 @@ function MatchForm({
         ...(initial ? { id: initial.id } : { tournament_id: tournamentId }),
         stage,
         stage_label: STAGE_LABEL[stage] ?? null,
+        stage_label_en: STAGE_LABEL_EN[stage] ?? null,
         home_team: homeTeam,
+        home_team_en: homeTeamEn || null,
         away_team: awayTeam,
+        away_team_en: awayTeamEn || null,
         home_team_code: homeCode || null,
         away_team_code: awayCode || null,
         home_logo_url: homeCode ? flagFromCode(homeCode) : null,
         away_logo_url: awayCode ? flagFromCode(awayCode) : null,
         kickoff_at: fromDtLocal(kickoff),
         venue: venue || null,
+        venue_en: venueEn || null,
         points_exact: pExact,
         points_diff: pDiff,
         points_winner: pWinner,
@@ -2134,17 +2447,16 @@ function MatchForm({
             onChange={setKickoff}
           />
         </Field>
-        <Field
-          theme={theme}
-          label="Stadion"
-          hint="opcionalno (npr. MetLife Stadium)"
-        >
+        <Field theme={theme} label="Stadion (BS)">
           <Input theme={theme} value={venue} onChange={setVenue} />
+        </Field>
+        <Field theme={theme} label="Venue (EN)">
+          <Input theme={theme} value={venueEn} onChange={setVenueEn} />
         </Field>
       </div>
       <div className="grid md:grid-cols-2 gap-3">
         <div className="grid grid-cols-3 gap-2">
-          <Field theme={theme} label="Domaćin">
+          <Field theme={theme} label="Domaćin (BS)">
             <Input
               theme={theme}
               value={homeTeam}
@@ -2174,7 +2486,7 @@ function MatchForm({
           )}
         </div>
         <div className="grid grid-cols-3 gap-2">
-          <Field theme={theme} label="Gost">
+          <Field theme={theme} label="Gost (BS)">
             <Input
               theme={theme}
               value={awayTeam}
@@ -2203,6 +2515,24 @@ function MatchForm({
             </div>
           )}
         </div>
+      </div>
+      <div className="grid md:grid-cols-2 gap-3">
+        <Field theme={theme} label="Home team (EN)" hint="opcionalno — engleski naziv ekipe">
+          <Input
+            theme={theme}
+            value={homeTeamEn}
+            onChange={setHomeTeamEn}
+            placeholder="e.g. Brazil"
+          />
+        </Field>
+        <Field theme={theme} label="Away team (EN)" hint="opcionalno — engleski naziv ekipe">
+          <Input
+            theme={theme}
+            value={awayTeamEn}
+            onChange={setAwayTeamEn}
+            placeholder="e.g. Argentina"
+          />
+        </Field>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <Field theme={theme} label="Tačan rezultat">
@@ -2260,12 +2590,12 @@ function MatchResultForm({
     match.status === "finished" ? "finished" : "finished",
   );
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [toast, setToast] = useState<SaveToastState>(null);
 
   const save = async () => {
     if (home == null || away == null) return;
     setSaving(true);
-    setMsg(null);
+    setToast(null);
     try {
       const res = await fetch("/api/admin/predictor/matches/result", {
         method: "POST",
@@ -2279,10 +2609,13 @@ function MatchResultForm({
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Greška");
-      setMsg(`Bodovano ${j.updated ?? 0} predikcija.`);
-      setTimeout(onSaved, 800);
+      setToast({
+        kind: "success",
+        text: `Rezultat upisan · bodovano ${j.updated ?? 0} predikcija`,
+      });
+      setTimeout(onSaved, 900);
     } catch (e: any) {
-      setMsg(e.message);
+      setToast({ kind: "error", text: e?.message || "Greška pri bodovanju" });
     } finally {
       setSaving(false);
     }
@@ -2343,13 +2676,7 @@ function MatchResultForm({
           Otkaži
         </button>
       </div>
-      {msg && (
-        <p
-          className={`text-sm mt-2 ${msg.startsWith("Bodovano") ? "text-emerald-500" : "text-red-500"}`}
-        >
-          {msg}
-        </p>
-      )}
+      <SaveToast toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 }
@@ -2371,35 +2698,33 @@ function BulkMatchImport({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className={`relative w-full max-w-4xl rounded-lg p-6 max-h-[90vh] overflow-y-auto ${cardCls(theme)}`}
+        className={`relative w-full max-w-4xl rounded-t-2xl sm:rounded-lg p-4 sm:p-6 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto ${cardCls(theme)}`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className={`absolute top-3 right-3 ${editBtnCls(theme)}`}
+          className={`absolute top-3 right-3 z-10 ${editBtnCls(theme)}`}
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-2 mb-1">
-          <ClipboardPaste className="w-5 h-5 text-blue-500" />
-          <h3 className={`text-xl font-bold ${headingCls(theme)}`}>
+        <div className="flex items-center gap-2 mb-1 pr-10">
+          <ClipboardPaste className="w-5 h-5 text-blue-500 flex-shrink-0" />
+          <h3 className={`text-lg sm:text-xl font-bold truncate ${headingCls(theme)}`}>
             Uvezi utakmice
           </h3>
         </div>
-        <p className={`text-sm mb-4 ${mutedTextCls(theme)}`}>
+        <p className={`text-xs sm:text-sm mb-4 ${mutedTextCls(theme)}`}>
           Tri načina za dodavanje više utakmica odjednom.
         </p>
 
-        {/* sub-tabs */}
+        {/* sub-tabs — pill style, scrollable on mobile */}
         <div
-          className={`border-b flex gap-1 mb-4 ${
-            theme === "dark" ? "border-gray-800" : "border-gray-200"
-          }`}
+          className={`flex gap-1.5 sm:gap-2 mb-4 -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}
         >
           {(
             [
@@ -2414,15 +2739,15 @@ function BulkMatchImport({
               <button
                 key={it.id}
                 onClick={() => setMode(it.id)}
-                className={`py-2 px-3 border-b-2 font-medium text-sm transition-colors flex items-center gap-1.5 ${
+                className={`snap-start inline-flex items-center gap-1.5 px-3 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 border ${
                   active
-                    ? "border-amber-500 text-amber-500"
+                    ? "bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/30"
                     : theme === "dark"
-                      ? "border-transparent text-gray-500 hover:text-gray-300"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      ? "bg-gray-900/60 text-gray-300 border-gray-700 hover:border-amber-500/60 hover:text-amber-300"
+                      : "bg-white/80 text-gray-700 border-gray-200 hover:border-amber-500/60 hover:text-amber-700"
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4 flex-shrink-0" />
                 {it.label}
               </button>
             );
@@ -2493,7 +2818,7 @@ function QuickDayImport({
     emptyRow(),
   ]);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [toast, setToast] = useState<SaveToastState>(null);
 
   const updateRow = (idx: number, patch: Partial<QuickRow>) =>
     setRows((rs) => rs.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
@@ -2504,10 +2829,13 @@ function QuickDayImport({
   const addRow = () => setRows((rs) => [...rs, emptyRow()]);
 
   const importRows = async () => {
-    setMsg(null);
+    setToast(null);
     const valid = rows.filter((r) => r.home.trim() && r.away.trim());
     if (valid.length === 0) {
-      setMsg("Nema utakmica — popuni barem jedan red.");
+      setToast({
+        kind: "error",
+        text: "Nema utakmica — popuni barem jedan red.",
+      });
       return;
     }
     setSaving(true);
@@ -2540,10 +2868,13 @@ function QuickDayImport({
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Greška");
-      setMsg(`Uvezeno ${j.inserted ?? 0} utakmica.`);
-      setTimeout(onImported, 600);
+      setToast({
+        kind: "success",
+        text: `Uvezeno ${j.inserted ?? 0} utakmica`,
+      });
+      setTimeout(onImported, 800);
     } catch (e: any) {
-      setMsg(e.message);
+      setToast({ kind: "error", text: e?.message || "Greška pri uvozu" });
     } finally {
       setSaving(false);
     }
@@ -2579,9 +2910,10 @@ function QuickDayImport({
         </Field>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
+        {/* Desktop-only column header */}
         <div
-          className={`grid grid-cols-[80px_1fr_70px_30px_1fr_70px_120px_30px] gap-2 px-2 text-[10px] uppercase font-bold ${mutedTextCls(theme)}`}
+          className={`hidden md:grid md:grid-cols-[80px_1fr_70px_30px_1fr_70px_120px_30px] gap-2 px-2 text-[10px] uppercase font-bold ${mutedTextCls(theme)}`}
         >
           <span>Vrijeme</span>
           <span>Domaćin</span>
@@ -2595,60 +2927,195 @@ function QuickDayImport({
         {rows.map((r, idx) => (
           <div
             key={idx}
-            className={`grid grid-cols-[80px_1fr_70px_30px_1fr_70px_120px_30px] gap-2 items-center p-2 rounded-md ${subCardCls(theme)}`}
+            className={`p-3 rounded-md md:p-2 ${subCardCls(theme)}`}
           >
-            <input
-              type="time"
-              value={r.time}
-              onChange={(e) => updateRow(idx, { time: e.target.value })}
-              className={inputCls(theme)}
-            />
-            <input
-              value={r.home}
-              onChange={(e) => updateRow(idx, { home: e.target.value })}
-              placeholder="Brazil"
-              className={inputCls(theme)}
-            />
-            <input
-              value={r.homeCode}
-              onChange={(e) =>
-                updateRow(idx, { homeCode: e.target.value.toLowerCase() })
-              }
-              placeholder="br"
-              className={inputCls(theme)}
-            />
-            <span
-              className={`text-center text-xs font-bold ${mutedTextCls(theme)}`}
-            >
-              vs
-            </span>
-            <input
-              value={r.away}
-              onChange={(e) => updateRow(idx, { away: e.target.value })}
-              placeholder="Argentina"
-              className={inputCls(theme)}
-            />
-            <input
-              value={r.awayCode}
-              onChange={(e) =>
-                updateRow(idx, { awayCode: e.target.value.toLowerCase() })
-              }
-              placeholder="ar"
-              className={inputCls(theme)}
-            />
-            <input
-              value={r.venue}
-              onChange={(e) => updateRow(idx, { venue: e.target.value })}
-              placeholder="MetLife"
-              className={inputCls(theme)}
-            />
-            <button
-              onClick={() => removeRow(idx)}
-              className={dangerBtnCls(theme)}
-              disabled={rows.length <= 1}
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {/* Desktop: dense grid */}
+            <div className="hidden md:grid md:grid-cols-[80px_1fr_70px_30px_1fr_70px_120px_30px] gap-2 items-center">
+              <input
+                type="time"
+                value={r.time}
+                onChange={(e) => updateRow(idx, { time: e.target.value })}
+                className={inputCls(theme)}
+              />
+              <input
+                value={r.home}
+                onChange={(e) => updateRow(idx, { home: e.target.value })}
+                placeholder="Brazil"
+                className={inputCls(theme)}
+              />
+              <input
+                value={r.homeCode}
+                onChange={(e) =>
+                  updateRow(idx, { homeCode: e.target.value.toLowerCase() })
+                }
+                placeholder="br"
+                className={inputCls(theme)}
+              />
+              <span
+                className={`text-center text-xs font-bold ${mutedTextCls(theme)}`}
+              >
+                vs
+              </span>
+              <input
+                value={r.away}
+                onChange={(e) => updateRow(idx, { away: e.target.value })}
+                placeholder="Argentina"
+                className={inputCls(theme)}
+              />
+              <input
+                value={r.awayCode}
+                onChange={(e) =>
+                  updateRow(idx, { awayCode: e.target.value.toLowerCase() })
+                }
+                placeholder="ar"
+                className={inputCls(theme)}
+              />
+              <input
+                value={r.venue}
+                onChange={(e) => updateRow(idx, { venue: e.target.value })}
+                placeholder="MetLife"
+                className={inputCls(theme)}
+              />
+              <button
+                onClick={() => removeRow(idx)}
+                className={dangerBtnCls(theme)}
+                disabled={rows.length <= 1}
+                title="Ukloni red"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Mobile: stacked card */}
+            <div className="md:hidden space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <span
+                  className={`text-[10px] uppercase font-bold tracking-wider ${mutedTextCls(theme)}`}
+                >
+                  Utakmica {idx + 1}
+                </span>
+                <button
+                  onClick={() => removeRow(idx)}
+                  className={dangerBtnCls(theme)}
+                  disabled={rows.length <= 1}
+                  title="Ukloni red"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div>
+                <label
+                  className={`block text-[10px] uppercase font-bold mb-1 ${mutedTextCls(theme)}`}
+                >
+                  Vrijeme
+                </label>
+                <input
+                  type="time"
+                  value={r.time}
+                  onChange={(e) => updateRow(idx, { time: e.target.value })}
+                  className={`${inputCls(theme)} w-full`}
+                />
+              </div>
+
+              <div className="grid grid-cols-[1fr_72px] gap-2">
+                <div>
+                  <label
+                    className={`block text-[10px] uppercase font-bold mb-1 ${mutedTextCls(theme)}`}
+                  >
+                    Domaćin
+                  </label>
+                  <input
+                    value={r.home}
+                    onChange={(e) => updateRow(idx, { home: e.target.value })}
+                    placeholder="Brazil"
+                    className={`${inputCls(theme)} w-full`}
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`block text-[10px] uppercase font-bold mb-1 ${mutedTextCls(theme)}`}
+                  >
+                    Kod
+                  </label>
+                  <input
+                    value={r.homeCode}
+                    onChange={(e) =>
+                      updateRow(idx, {
+                        homeCode: e.target.value.toLowerCase(),
+                      })
+                    }
+                    placeholder="br"
+                    className={`${inputCls(theme)} w-full`}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div
+                  className={`flex-1 h-px ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                />
+                <span
+                  className={`text-[10px] uppercase font-bold ${mutedTextCls(theme)}`}
+                >
+                  vs
+                </span>
+                <div
+                  className={`flex-1 h-px ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                />
+              </div>
+
+              <div className="grid grid-cols-[1fr_72px] gap-2">
+                <div>
+                  <label
+                    className={`block text-[10px] uppercase font-bold mb-1 ${mutedTextCls(theme)}`}
+                  >
+                    Gost
+                  </label>
+                  <input
+                    value={r.away}
+                    onChange={(e) => updateRow(idx, { away: e.target.value })}
+                    placeholder="Argentina"
+                    className={`${inputCls(theme)} w-full`}
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`block text-[10px] uppercase font-bold mb-1 ${mutedTextCls(theme)}`}
+                  >
+                    Kod
+                  </label>
+                  <input
+                    value={r.awayCode}
+                    onChange={(e) =>
+                      updateRow(idx, {
+                        awayCode: e.target.value.toLowerCase(),
+                      })
+                    }
+                    placeholder="ar"
+                    className={`${inputCls(theme)} w-full`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  className={`block text-[10px] uppercase font-bold mb-1 ${mutedTextCls(theme)}`}
+                >
+                  Stadion
+                </label>
+                <input
+                  value={r.venue}
+                  onChange={(e) => updateRow(idx, { venue: e.target.value })}
+                  placeholder="MetLife"
+                  className={`${inputCls(theme)} w-full`}
+                />
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -2660,13 +3127,7 @@ function QuickDayImport({
         <Plus className="w-4 h-4" /> Dodaj red
       </button>
 
-      {msg && (
-        <p
-          className={`text-sm ${msg.startsWith("Uvezeno") ? "text-emerald-500" : "text-red-500"}`}
-        >
-          {msg}
-        </p>
-      )}
+      <SaveToast toast={toast} onDismiss={() => setToast(null)} />
 
       <div className="flex justify-end gap-2">
         <button
@@ -2694,7 +3155,7 @@ function BulkPasteImport({
 }) {
   const [text, setText] = useState("");
   const [parsing, setParsing] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [toast, setToast] = useState<SaveToastState>(null);
 
   const example = `# Format (jedna utakmica po liniji):
 # Faza | YYYY-MM-DD HH:MM | Domaćin (kod) | Gost (kod) | Stadion(opc.)
@@ -2705,7 +3166,7 @@ group_a | 2026-06-12 21:00 | SAD (us) | Novi Zeland (nz) | SoFi Stadium
 round_of_16 | 2026-07-04 21:00 | Brazil (br) | Argentina (ar) | MetLife Stadium`;
 
   const parseAndImport = async () => {
-    setMsg(null);
+    setToast(null);
     const lines = text
       .split("\n")
       .map((l) => l.trim())
@@ -2746,7 +3207,10 @@ round_of_16 | 2026-07-04 21:00 | Brazil (br) | Argentina (ar) | MetLife Stadium`
     }
 
     if (matches.length === 0) {
-      setMsg("Nije parsirana nijedna utakmica. Provjeri format.");
+      setToast({
+        kind: "error",
+        text: "Nije parsirana nijedna utakmica. Provjeri format.",
+      });
       return;
     }
     setParsing(true);
@@ -2758,10 +3222,13 @@ round_of_16 | 2026-07-04 21:00 | Brazil (br) | Argentina (ar) | MetLife Stadium`
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Greška");
-      setMsg(`Uvezeno ${j.inserted ?? 0} utakmica.`);
-      setTimeout(onImported, 600);
+      setToast({
+        kind: "success",
+        text: `Uvezeno ${j.inserted ?? 0} utakmica`,
+      });
+      setTimeout(onImported, 800);
     } catch (e: any) {
-      setMsg(e.message);
+      setToast({ kind: "error", text: e?.message || "Greška pri uvozu" });
     } finally {
       setParsing(false);
     }
@@ -2786,11 +3253,7 @@ round_of_16 | 2026-07-04 21:00 | Brazil (br) | Argentina (ar) | MetLife Stadium`
           {example}
         </pre>
       </details>
-      {msg && (
-        <p className={`text-sm ${msg.startsWith("Uvezeno") ? "text-emerald-500" : "text-red-500"}`}>
-          {msg}
-        </p>
-      )}
+      <SaveToast toast={toast} onDismiss={() => setToast(null)} />
       <div className="flex justify-end">
         <button onClick={parseAndImport} disabled={parsing} className={primaryBtnCls}>
           <Download className="w-4 h-4" />
@@ -2822,7 +3285,7 @@ function MatchTemplateImport({
   const [templates, setTemplates] = useState<MatchTemplateSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [importingId, setImportingId] = useState<string | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [toast, setToast] = useState<SaveToastState>(null);
 
   useEffect(() => {
     fetch("/api/admin/predictor/match-templates")
@@ -2833,7 +3296,7 @@ function MatchTemplateImport({
 
   const importTpl = async (id: string) => {
     setImportingId(id);
-    setMsg(null);
+    setToast(null);
     try {
       const res = await fetch(
         "/api/admin/predictor/match-templates/import",
@@ -2845,10 +3308,13 @@ function MatchTemplateImport({
       );
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Greška");
-      setMsg(`Uvezeno ${j.inserted ?? 0} utakmica.`);
-      setTimeout(onImported, 600);
+      setToast({
+        kind: "success",
+        text: `Uvezeno ${j.inserted ?? 0} utakmica`,
+      });
+      setTimeout(onImported, 800);
     } catch (e: any) {
-      setMsg(e.message);
+      setToast({ kind: "error", text: e?.message || "Greška pri uvozu" });
     } finally {
       setImportingId(null);
     }
@@ -2903,13 +3369,7 @@ function MatchTemplateImport({
           ))}
         </div>
       )}
-      {msg && (
-        <p
-          className={`text-sm ${msg.startsWith("Uvezeno") ? "text-emerald-500" : "text-red-500"}`}
-        >
-          {msg}
-        </p>
-      )}
+      <SaveToast toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 }
@@ -3302,7 +3762,7 @@ function SettingsTab({
 }) {
   const [form, setForm] = useState<Tournament>(tournament);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [toast, setToast] = useState<SaveToastState>(null);
 
   useEffect(() => setForm(tournament), [tournament]);
 
@@ -3311,7 +3771,7 @@ function SettingsTab({
 
   const save = async () => {
     setSaving(true);
-    setMsg(null);
+    setToast(null);
     try {
       const res = await fetch("/api/admin/predictor/tournaments", {
         method: "PUT",
@@ -3319,11 +3779,14 @@ function SettingsTab({
         body: JSON.stringify(form),
       });
       if (res.ok) {
-        setMsg("Sačuvano.");
+        setToast({ kind: "success", text: "Postavke sačuvane" });
         onUpdated();
       } else {
         const j = await res.json().catch(() => ({}));
-        setMsg(j.error || "Greška pri čuvanju");
+        setToast({
+          kind: "error",
+          text: j.error || "Greška pri čuvanju",
+        });
       }
     } finally {
       setSaving(false);
@@ -3332,12 +3795,109 @@ function SettingsTab({
 
   return (
     <div className={`rounded-md p-5 space-y-5 ${cardCls(theme)}`}>
+      {/* Pristup turniru — istaknuto na vrhu da admin odmah vidi i odluči */}
+      <div
+        className={`relative overflow-hidden rounded-2xl p-5 sm:p-6 ${
+          form.require_approval
+            ? theme === "dark"
+              ? "bg-gradient-to-br from-amber-950/50 via-amber-900/20 to-gray-900/80 border border-amber-700/50"
+              : "bg-gradient-to-br from-amber-50 via-orange-50 to-white border border-amber-300"
+            : theme === "dark"
+              ? "bg-gradient-to-br from-emerald-950/40 via-gray-900/60 to-gray-900/80 border border-emerald-800/40"
+              : "bg-gradient-to-br from-emerald-50 via-green-50 to-white border border-emerald-200"
+        }`}
+      >
+        <div
+          aria-hidden
+          className={`absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl ${
+            form.require_approval ? "bg-amber-500/20" : "bg-emerald-500/15"
+          }`}
+        />
+        <div className="relative flex items-start sm:items-center gap-4 flex-col sm:flex-row">
+          <div
+            className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${
+              form.require_approval
+                ? "bg-amber-500 text-black"
+                : "bg-emerald-500 text-white"
+            }`}
+          >
+            {form.require_approval ? (
+              <Lock className="w-6 h-6" strokeWidth={2.5} />
+            ) : (
+              <Unlock className="w-6 h-6" strokeWidth={2.5} />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p
+              className={`text-[11px] font-black uppercase tracking-[0.18em] ${
+                form.require_approval
+                  ? theme === "dark"
+                    ? "text-amber-300"
+                    : "text-amber-600"
+                  : theme === "dark"
+                    ? "text-emerald-300"
+                    : "text-emerald-600"
+              }`}
+            >
+              Pristup turniru
+            </p>
+            <h4
+              className={`text-base sm:text-lg font-black mt-0.5 ${headingCls(theme)}`}
+            >
+              {form.require_approval
+                ? "Zatvoren turnir — admin odobrava učesnike"
+                : "Otvoren turnir — svi prijavljeni mogu predviđati"}
+            </h4>
+            <p className={`text-xs sm:text-sm mt-1 ${mutedTextCls(theme)}`}>
+              {form.require_approval
+                ? "Korisnici klikaju 'Zatraži učešće', pojavljuju se u tabu 'Odobrenja'. Tek kad ih odobriš, mogu unositi predikcije."
+                : "Bilo ko prijavljen može odmah unositi predikcije. Bez čekanja, bez odobrenja."}
+            </p>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => update({ require_approval: false })}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                !form.require_approval
+                  ? "bg-emerald-500 text-white shadow-md ring-2 ring-emerald-400/50"
+                  : theme === "dark"
+                    ? "bg-gray-900/60 text-gray-400 border border-gray-700 hover:border-emerald-500/50"
+                    : "bg-white text-gray-600 border border-gray-300 hover:border-emerald-400"
+              }`}
+            >
+              Otvoren
+            </button>
+            <button
+              type="button"
+              onClick={() => update({ require_approval: true })}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                form.require_approval
+                  ? "bg-amber-500 text-black shadow-md ring-2 ring-amber-400/50"
+                  : theme === "dark"
+                    ? "bg-gray-900/60 text-gray-400 border border-gray-700 hover:border-amber-500/50"
+                    : "bg-white text-gray-600 border border-gray-300 hover:border-amber-400"
+              }`}
+            >
+              Zatvoren
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-4">
-        <Field theme={theme} label="Naziv">
+        <Field theme={theme} label="Naziv (BS)">
           <Input
             theme={theme}
             value={form.name}
             onChange={(v) => update({ name: v })}
+          />
+        </Field>
+        <Field theme={theme} label="Name (EN)">
+          <Input
+            theme={theme}
+            value={form.name_en ?? ""}
+            onChange={(v) => update({ name_en: v || null })}
           />
         </Field>
         <Field theme={theme} label="Slug (URL)">
@@ -3345,30 +3905,6 @@ function SettingsTab({
             theme={theme}
             value={form.slug}
             onChange={(v) => update({ slug: v })}
-          />
-        </Field>
-        <Field theme={theme} label="Status">
-          <Select
-            theme={theme}
-            value={form.status}
-            onChange={(v) => update({ status: v as TournamentStatus })}
-            options={[
-              { value: "draft", label: "Nacrt (sakriven)" },
-              { value: "published", label: "Aktivan (vidljiv)" },
-              { value: "locked", label: "Zaključan (bez novih predikcija)" },
-              { value: "finished", label: "Završen (rezultati vidljivi)" },
-            ]}
-          />
-        </Field>
-        <Field theme={theme} label="Vidljivost">
-          <Select
-            theme={theme}
-            value={form.visibility}
-            onChange={(v) => update({ visibility: v as any })}
-            options={[
-              { value: "public", label: "Javan" },
-              { value: "private", label: "Privatan" },
-            ]}
           />
         </Field>
         <Field theme={theme} label="Akcent boja">
@@ -3393,21 +3929,6 @@ function SettingsTab({
             options={[
               { value: "no", label: "Ne" },
               { value: "yes", label: "Da" },
-            ]}
-          />
-        </Field>
-        <Field
-          theme={theme}
-          label="Zahtijevaj odobrenje admina"
-          hint="Ako uključiš, korisnici moraju zatražiti učešće — samo odobreni mogu predviđati. Standings ostaju javni za sve."
-        >
-          <Select
-            theme={theme}
-            value={form.require_approval ? "yes" : "no"}
-            onChange={(v) => update({ require_approval: v === "yes" })}
-            options={[
-              { value: "no", label: "Ne — otvoreno za sve" },
-              { value: "yes", label: "Da — samo odobreni igraju" },
             ]}
           />
         </Field>
@@ -3489,55 +4010,215 @@ function SettingsTab({
         </Field>
       </div>
 
-      <Field theme={theme} label="Kratki opis">
-        <Input
-          theme={theme}
-          value={form.short_description ?? ""}
-          onChange={(v) => update({ short_description: v || null })}
-        />
-      </Field>
-      <Field theme={theme} label="Detaljan opis / uvod">
-        <Textarea
-          theme={theme}
-          value={form.long_description ?? ""}
-          onChange={(v) => update({ long_description: v || null })}
-          rows={4}
-        />
-      </Field>
-      <Field theme={theme} label="Pravila (markdown)">
-        <Textarea
-          theme={theme}
-          value={form.rules_md ?? ""}
-          onChange={(v) => update({ rules_md: v || null })}
-          rows={5}
-        />
-      </Field>
-      <Field theme={theme} label="Objašnjenje bodovanja (markdown)">
-        <Textarea
-          theme={theme}
-          value={form.point_system_md ?? ""}
-          onChange={(v) => update({ point_system_md: v || null })}
-          rows={4}
-        />
-      </Field>
-      <Field theme={theme} label="Uslovi učešća (markdown)">
-        <Textarea
-          theme={theme}
-          value={form.eligibility_md ?? ""}
-          onChange={(v) => update({ eligibility_md: v || null })}
-          rows={3}
-        />
-      </Field>
+      <div
+        className={`rounded-lg border p-4 ${
+          theme === "dark"
+            ? "border-gray-700/70 bg-gray-900/40"
+            : "border-gray-200 bg-gray-50/70"
+        }`}
+      >
+        <div className="flex items-center gap-2 mb-1">
+          <ImageIcon className="w-4 h-4 text-amber-500" />
+          <h4 className={`text-sm font-bold ${headingCls(theme)}`}>
+            WC 2026 tema (samo za svjetsko prvenstvo)
+          </h4>
+        </div>
+        <p className={`text-xs mb-4 ${mutedTextCls(theme)}`}>
+          Pozadina i tema muzika se aktiviraju isključivo za turnir kome ovdje
+          eksplicitno postaviš sliku/muziku. Ostali turniri ostaju čisti.
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label
+              className={`block text-xs font-semibold mb-2 ${mutedTextCls(theme)}`}
+            >
+              Pozadinska slika
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <button
+                type="button"
+                onClick={() => update({ theme_background_image: null })}
+                className={`relative aspect-video rounded-md overflow-hidden border-2 transition-all ${
+                  !form.theme_background_image
+                    ? "border-amber-500 ring-2 ring-amber-500/30"
+                    : theme === "dark"
+                      ? "border-gray-700 hover:border-gray-500"
+                      : "border-gray-300 hover:border-gray-400"
+                } ${theme === "dark" ? "bg-gray-900" : "bg-gray-100"}`}
+              >
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Ban
+                    className={`w-6 h-6 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}
+                  />
+                </div>
+                <span
+                  className={`absolute bottom-1 left-1 right-1 text-[10px] font-semibold text-center ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
+                  Bez pozadine
+                </span>
+              </button>
+              {WC_BACKGROUND_OPTIONS.map((opt) => {
+                const selected = form.theme_background_image === opt.src;
+                return (
+                  <button
+                    key={opt.src}
+                    type="button"
+                    onClick={() => update({ theme_background_image: opt.src })}
+                    className={`relative aspect-video rounded-md overflow-hidden border-2 transition-all group ${
+                      selected
+                        ? "border-amber-500 ring-2 ring-amber-500/30"
+                        : theme === "dark"
+                          ? "border-gray-700 hover:border-gray-500"
+                          : "border-gray-300 hover:border-gray-400"
+                    }`}
+                    title={opt.label}
+                  >
+                    <Image
+                      src={opt.src}
+                      alt={opt.label}
+                      fill
+                      sizes="200px"
+                      className="object-cover"
+                    />
+                    <div
+                      className={`absolute inset-0 transition-opacity ${
+                        selected
+                          ? "bg-black/20"
+                          : "bg-black/40 group-hover:bg-black/20"
+                      }`}
+                    />
+                    {selected && (
+                      <div className="absolute top-1 right-1 bg-amber-500 rounded-full p-0.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-black" />
+                      </div>
+                    )}
+                    <span className="absolute bottom-1 left-1 right-1 text-[10px] font-semibold text-center text-white drop-shadow-lg line-clamp-1">
+                      {opt.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <Field
+            theme={theme}
+            label="Auto-pusti WC 2026 himnu"
+            hint="Ako uključiš, na stranici turnira će se prikazati toggle za FIFA WC 2026 himnu. Stanje se pamti po korisniku — ne pušta se automatski uz autoplay-block."
+          >
+            <Select
+              theme={theme}
+              value={form.theme_music_enabled ? "yes" : "no"}
+              onChange={(v) => update({ theme_music_enabled: v === "yes" })}
+              options={[
+                { value: "no", label: "Ne — bez himne" },
+                { value: "yes", label: "Da — prikaži dugme za himnu" },
+              ]}
+            />
+          </Field>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field theme={theme} label="Kratki opis (BS)">
+          <Input
+            theme={theme}
+            value={form.short_description ?? ""}
+            onChange={(v) => update({ short_description: v || null })}
+          />
+        </Field>
+        <Field theme={theme} label="Short description (EN)">
+          <Input
+            theme={theme}
+            value={form.short_description_en ?? ""}
+            onChange={(v) => update({ short_description_en: v || null })}
+          />
+        </Field>
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field theme={theme} label="Detaljan opis / uvod (BS)">
+          <Textarea
+            theme={theme}
+            value={form.long_description ?? ""}
+            onChange={(v) => update({ long_description: v || null })}
+            rows={4}
+          />
+        </Field>
+        <Field theme={theme} label="Long description / intro (EN)">
+          <Textarea
+            theme={theme}
+            value={form.long_description_en ?? ""}
+            onChange={(v) => update({ long_description_en: v || null })}
+            rows={4}
+          />
+        </Field>
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field theme={theme} label="Pravila — markdown (BS)">
+          <Textarea
+            theme={theme}
+            value={form.rules_md ?? ""}
+            onChange={(v) => update({ rules_md: v || null })}
+            rows={5}
+          />
+        </Field>
+        <Field theme={theme} label="Rules — markdown (EN)">
+          <Textarea
+            theme={theme}
+            value={form.rules_md_en ?? ""}
+            onChange={(v) => update({ rules_md_en: v || null })}
+            rows={5}
+          />
+        </Field>
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field theme={theme} label="Objašnjenje bodovanja — markdown (BS)">
+          <Textarea
+            theme={theme}
+            value={form.point_system_md ?? ""}
+            onChange={(v) => update({ point_system_md: v || null })}
+            rows={4}
+          />
+        </Field>
+        <Field theme={theme} label="Point system — markdown (EN)">
+          <Textarea
+            theme={theme}
+            value={form.point_system_md_en ?? ""}
+            onChange={(v) => update({ point_system_md_en: v || null })}
+            rows={4}
+          />
+        </Field>
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field theme={theme} label="Uslovi učešća — markdown (BS)">
+          <Textarea
+            theme={theme}
+            value={form.eligibility_md ?? ""}
+            onChange={(v) => update({ eligibility_md: v || null })}
+            rows={3}
+          />
+        </Field>
+        <Field theme={theme} label="Eligibility — markdown (EN)">
+          <Textarea
+            theme={theme}
+            value={form.eligibility_md_en ?? ""}
+            onChange={(v) => update({ eligibility_md_en: v || null })}
+            rows={3}
+          />
+        </Field>
+      </div>
 
       <div className="flex items-center gap-3">
         <button onClick={save} disabled={saving} className={primaryBtnCls}>
           <Save className="w-4 h-4" />
           {saving ? "Čuvanje…" : "Sačuvaj postavke"}
         </button>
-        {msg && (
-          <span className={`text-sm ${mutedTextCls(theme)}`}>{msg}</span>
-        )}
       </div>
+
+      <SaveToast toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 }
@@ -3730,8 +4411,12 @@ function CategoryForm({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
+  const [nameEn, setNameEn] = useState(initial?.name_en ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [descriptionEn, setDescriptionEn] = useState(
+    initial?.description_en ?? "",
+  );
   const [type, setType] = useState<CategoryType>(
     initial?.category_type ?? "single_choice",
   );
@@ -3753,8 +4438,10 @@ function CategoryForm({
       const body = {
         ...(initial ? { id: initial.id } : { tournament_id: tournament.id }),
         name,
+        name_en: nameEn || null,
         slug: slug || name,
         description,
+        description_en: descriptionEn || null,
         category_type: type,
         max_selections: maxSel,
         points_correct: pCorrect,
@@ -3784,12 +4471,20 @@ function CategoryForm({
   return (
     <div className={`space-y-4 rounded-md p-4 ${subCardCls(theme)}`}>
       <div className="grid md:grid-cols-2 gap-4">
-        <Field theme={theme} label="Naziv">
+        <Field theme={theme} label="Naziv (BS)">
           <Input
             theme={theme}
             value={name}
             onChange={setName}
             placeholder="npr. Pobjednik turnira"
+          />
+        </Field>
+        <Field theme={theme} label="Name (EN)">
+          <Input
+            theme={theme}
+            value={nameEn}
+            onChange={setNameEn}
+            placeholder="e.g. Tournament Winner"
           />
         </Field>
         <Field theme={theme} label="Slug">
@@ -3875,14 +4570,24 @@ function CategoryForm({
           />
         </Field>
       </div>
-      <Field theme={theme} label="Opis">
-        <Textarea
-          theme={theme}
-          value={description}
-          onChange={setDescription}
-          rows={2}
-        />
-      </Field>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field theme={theme} label="Opis (BS)">
+          <Textarea
+            theme={theme}
+            value={description}
+            onChange={setDescription}
+            rows={2}
+          />
+        </Field>
+        <Field theme={theme} label="Description (EN)">
+          <Textarea
+            theme={theme}
+            value={descriptionEn}
+            onChange={setDescriptionEn}
+            rows={2}
+          />
+        </Field>
+      </div>
       {err && <p className="text-sm text-red-500">{err}</p>}
       <div className="flex justify-end gap-2">
         <button onClick={onCancel} className={ghostBtnCls(theme)}>
@@ -3913,9 +4618,16 @@ function OptionsManager({
   onChanged: () => void;
 }) {
   const [label, setLabel] = useState("");
+  const [labelEn, setLabelEn] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [groupLabel, setGroupLabel] = useState("");
+  const [groupLabelEn, setGroupLabelEn] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editLabelEn, setEditLabelEn] = useState("");
+  const [editGroup, setEditGroup] = useState("");
+  const [editGroupEn, setEditGroupEn] = useState("");
 
   const isChoice =
     category.category_type === "single_choice" ||
@@ -3939,15 +4651,19 @@ function OptionsManager({
         body: JSON.stringify({
           category_id: category.id,
           label,
+          label_en: labelEn || null,
           image_url: imageUrl || null,
           group_label: groupLabel || null,
+          group_label_en: groupLabelEn || null,
           sort_order: options.length,
         }),
       });
       if (res.ok) {
         setLabel("");
+        setLabelEn("");
         setImageUrl("");
         setGroupLabel("");
+        setGroupLabelEn("");
         onChanged();
       }
     } finally {
@@ -3987,38 +4703,58 @@ function OptionsManager({
       </div>
 
       {isChoice && (
-        <div className="grid md:grid-cols-4 gap-2 items-end">
-          <Field theme={theme} label="Naziv">
-            <Input
-              theme={theme}
-              value={label}
-              onChange={setLabel}
-              placeholder="npr. Brazil"
-            />
-          </Field>
-          <Field theme={theme} label="URL slike (opcionalno)">
-            <Input
-              theme={theme}
-              value={imageUrl}
-              onChange={setImageUrl}
-              placeholder="https://…"
-            />
-          </Field>
-          <Field theme={theme} label="Grupa (opcionalno)">
-            <Input
-              theme={theme}
-              value={groupLabel}
-              onChange={setGroupLabel}
-              placeholder="Grupa A"
-            />
-          </Field>
-          <button
-            onClick={addOption}
-            disabled={saving}
-            className={primaryBtnCls + " justify-center"}
-          >
-            <Plus className="w-4 h-4" /> Dodaj
-          </button>
+        <div className="space-y-2">
+          <div className="grid md:grid-cols-2 gap-2">
+            <Field theme={theme} label="Naziv (BS)">
+              <Input
+                theme={theme}
+                value={label}
+                onChange={setLabel}
+                placeholder="npr. Brazil"
+              />
+            </Field>
+            <Field theme={theme} label="Name (EN)">
+              <Input
+                theme={theme}
+                value={labelEn}
+                onChange={setLabelEn}
+                placeholder="e.g. Brazil"
+              />
+            </Field>
+          </div>
+          <div className="grid md:grid-cols-4 gap-2 items-end">
+            <Field theme={theme} label="URL slike (opcionalno)">
+              <Input
+                theme={theme}
+                value={imageUrl}
+                onChange={setImageUrl}
+                placeholder="https://…"
+              />
+            </Field>
+            <Field theme={theme} label="Grupa BS (opc.)">
+              <Input
+                theme={theme}
+                value={groupLabel}
+                onChange={setGroupLabel}
+                placeholder="Grupa A"
+              />
+            </Field>
+            <Field theme={theme} label="Group EN (opt.)">
+              <Input
+                theme={theme}
+                value={groupLabelEn}
+                onChange={setGroupLabelEn}
+                placeholder="Group A"
+              />
+            </Field>
+            <button
+              onClick={addOption}
+              disabled={saving}
+              className={primaryBtnCls + " justify-center"}
+            >
+              <Plus className="w-4 h-4" /> Dodaj
+            </button>
+          </div>
         </div>
       )}
 
@@ -4076,13 +4812,106 @@ function OptionsManager({
                 <CheckCircle2 className="w-4 h-4" />
               </button>
             )}
-            <span
-              className={`text-sm font-medium flex-1 min-w-0 truncate ${headingCls(theme)}`}
-            >
-              {opt.label}
-            </span>
-            {opt.group_label && (
-              <span className={chipCls(theme)}>{opt.group_label}</span>
+            {editingLabelId === opt.id ? (
+              <div className="flex-1 grid md:grid-cols-2 gap-1 min-w-0">
+                <input
+                  value={editLabel}
+                  onChange={(e) => setEditLabel(e.target.value)}
+                  placeholder="Naziv (BS)"
+                  className={`px-2 py-1 rounded text-xs ${
+                    theme === "dark"
+                      ? "bg-gray-800 border border-gray-700 text-white"
+                      : "bg-white border border-gray-300 text-gray-900"
+                  }`}
+                />
+                <input
+                  value={editLabelEn}
+                  onChange={(e) => setEditLabelEn(e.target.value)}
+                  placeholder="Name (EN)"
+                  className={`px-2 py-1 rounded text-xs ${
+                    theme === "dark"
+                      ? "bg-gray-800 border border-gray-700 text-white"
+                      : "bg-white border border-gray-300 text-gray-900"
+                  }`}
+                />
+                <input
+                  value={editGroup}
+                  onChange={(e) => setEditGroup(e.target.value)}
+                  placeholder="Grupa (BS)"
+                  className={`px-2 py-1 rounded text-xs ${
+                    theme === "dark"
+                      ? "bg-gray-800 border border-gray-700 text-white"
+                      : "bg-white border border-gray-300 text-gray-900"
+                  }`}
+                />
+                <input
+                  value={editGroupEn}
+                  onChange={(e) => setEditGroupEn(e.target.value)}
+                  placeholder="Group (EN)"
+                  className={`px-2 py-1 rounded text-xs ${
+                    theme === "dark"
+                      ? "bg-gray-800 border border-gray-700 text-white"
+                      : "bg-white border border-gray-300 text-gray-900"
+                  }`}
+                />
+              </div>
+            ) : (
+              <span
+                className={`text-sm font-medium flex-1 min-w-0 truncate ${headingCls(theme)}`}
+              >
+                {opt.label}
+                {opt.label_en && (
+                  <span className={`ml-2 text-[10px] ${subtleTextCls(theme)}`}>
+                    / {opt.label_en}
+                  </span>
+                )}
+              </span>
+            )}
+            {opt.group_label && editingLabelId !== opt.id && (
+              <span className={chipCls(theme)}>
+                {opt.group_label}
+                {opt.group_label_en ? ` / ${opt.group_label_en}` : ""}
+              </span>
+            )}
+            {editingLabelId === opt.id ? (
+              <>
+                <button
+                  onClick={async () => {
+                    await updateOption(opt.id, {
+                      label: editLabel,
+                      label_en: editLabelEn || null,
+                      group_label: editGroup || null,
+                      group_label_en: editGroupEn || null,
+                    });
+                    setEditingLabelId(null);
+                  }}
+                  className={primaryBtnCls}
+                  title="Sačuvaj"
+                >
+                  <Save className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setEditingLabelId(null)}
+                  className={ghostBtnCls(theme)}
+                  title="Otkaži"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  setEditingLabelId(opt.id);
+                  setEditLabel(opt.label);
+                  setEditLabelEn(opt.label_en ?? "");
+                  setEditGroup(opt.group_label ?? "");
+                  setEditGroupEn(opt.group_label_en ?? "");
+                }}
+                className={editBtnCls(theme)}
+                title="Uredi nazive"
+              >
+                <Edit3 className="w-4 h-4" />
+              </button>
             )}
             {category.category_type === "ranked_top_n" && opt.is_correct && (
               <input
@@ -4344,7 +5173,9 @@ function RuleForm({
   onSaved: () => void;
 }) {
   const [title, setTitle] = useState(initial?.title ?? "");
+  const [titleEn, setTitleEn] = useState(initial?.title_en ?? "");
   const [body, setBody] = useState(initial?.body_md ?? "");
+  const [bodyEn, setBodyEn] = useState(initial?.body_md_en ?? "");
   const [kind, setKind] = useState<RuleKind>(initial?.kind ?? "rule");
   const [order, setOrder] = useState(initial?.sort_order ?? 0);
   const [saving, setSaving] = useState(false);
@@ -4355,7 +5186,9 @@ function RuleForm({
     const body_ = {
       ...(initial ? { id: initial.id } : { tournament_id: tournamentId }),
       title,
+      title_en: titleEn || null,
       body_md: body || null,
+      body_md_en: bodyEn || null,
       kind,
       sort_order: order,
     };
@@ -4370,10 +5203,15 @@ function RuleForm({
 
   return (
     <div className={`space-y-3 rounded-md p-3 ${subCardCls(theme)}`}>
-      <div className="grid md:grid-cols-3 gap-3">
-        <Field theme={theme} label="Naslov">
+      <div className="grid md:grid-cols-2 gap-3">
+        <Field theme={theme} label="Naslov (BS)">
           <Input theme={theme} value={title} onChange={setTitle} />
         </Field>
+        <Field theme={theme} label="Title (EN)">
+          <Input theme={theme} value={titleEn} onChange={setTitleEn} />
+        </Field>
+      </div>
+      <div className="grid md:grid-cols-2 gap-3">
         <Field theme={theme} label="Tip">
           <Select
             theme={theme}
@@ -4394,9 +5232,14 @@ function RuleForm({
           />
         </Field>
       </div>
-      <Field theme={theme} label="Tekst (markdown)">
-        <Textarea theme={theme} value={body} onChange={setBody} rows={3} />
-      </Field>
+      <div className="grid md:grid-cols-2 gap-3">
+        <Field theme={theme} label="Tekst — markdown (BS)">
+          <Textarea theme={theme} value={body} onChange={setBody} rows={3} />
+        </Field>
+        <Field theme={theme} label="Body — markdown (EN)">
+          <Textarea theme={theme} value={bodyEn} onChange={setBodyEn} rows={3} />
+        </Field>
+      </div>
       <div className="flex justify-end gap-2">
         <button onClick={onCancel} className={ghostBtnCls(theme)}>
           Otkaži
@@ -4594,6 +5437,7 @@ function RewardForm({
   onSaved: () => void;
 }) {
   const [title, setTitle] = useState(initial?.title ?? "");
+  const [titleEn, setTitleEn] = useState(initial?.title_en ?? "");
   const [rank, setRank] = useState(initial?.rank_position ?? 1);
   const [type, setType] = useState<PrizeType>(initial?.prize_type ?? "cash");
   const [value, setValue] = useState(
@@ -4601,6 +5445,9 @@ function RewardForm({
   );
   const [currency, setCurrency] = useState(initial?.prize_currency ?? "EUR");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [descriptionEn, setDescriptionEn] = useState(
+    initial?.description_en ?? "",
+  );
   const [image, setImage] = useState(initial?.image_url ?? "");
   const [sponsorName, setSponsorName] = useState(initial?.sponsor_name ?? "");
   const [sponsorLogo, setSponsorLogo] = useState(
@@ -4615,11 +5462,13 @@ function RewardForm({
     const body = {
       ...(initial ? { id: initial.id } : { tournament_id: tournamentId }),
       title,
+      title_en: titleEn || null,
       rank_position: rank ?? null,
       prize_type: type,
       prize_value: value ? Number(value) : null,
       prize_currency: currency,
       description: description || null,
+      description_en: descriptionEn || null,
       image_url: image || null,
       sponsor_name: sponsorName || null,
       sponsor_logo_url: sponsorLogo || null,
@@ -4636,10 +5485,15 @@ function RewardForm({
 
   return (
     <div className={`space-y-3 rounded-md p-3 md:col-span-2 ${subCardCls(theme)}`}>
-      <div className="grid md:grid-cols-3 gap-3">
-        <Field theme={theme} label="Naziv">
+      <div className="grid md:grid-cols-2 gap-3">
+        <Field theme={theme} label="Naziv (BS)">
           <Input theme={theme} value={title} onChange={setTitle} />
         </Field>
+        <Field theme={theme} label="Title (EN)">
+          <Input theme={theme} value={titleEn} onChange={setTitleEn} />
+        </Field>
+      </div>
+      <div className="grid md:grid-cols-3 gap-3">
         <Field theme={theme} label="Plasman">
           <Input
             theme={theme}
@@ -4695,14 +5549,24 @@ function RewardForm({
           <Input theme={theme} value={sponsorUrl} onChange={setSponsorUrl} />
         </Field>
       </div>
-      <Field theme={theme} label="Opis">
-        <Textarea
-          theme={theme}
-          value={description}
-          onChange={setDescription}
-          rows={2}
-        />
-      </Field>
+      <div className="grid md:grid-cols-2 gap-3">
+        <Field theme={theme} label="Opis (BS)">
+          <Textarea
+            theme={theme}
+            value={description}
+            onChange={setDescription}
+            rows={2}
+          />
+        </Field>
+        <Field theme={theme} label="Description (EN)">
+          <Textarea
+            theme={theme}
+            value={descriptionEn}
+            onChange={setDescriptionEn}
+            rows={2}
+          />
+        </Field>
+      </div>
       <div className="flex justify-end gap-2">
         <button onClick={onCancel} className={ghostBtnCls(theme)}>
           Otkaži

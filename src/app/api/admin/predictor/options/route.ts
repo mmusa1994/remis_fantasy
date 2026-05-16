@@ -22,9 +22,11 @@ export async function POST(req: NextRequest) {
     const rows = body.options.map((o: any, idx: number) => ({
       category_id: body.category_id,
       label: o.label,
+      label_en: o.label_en ?? null,
       value: o.value ?? null,
       image_url: o.image_url ?? null,
       group_label: o.group_label ?? null,
+      group_label_en: o.group_label_en ?? null,
       metadata: o.metadata ?? {},
       sort_order: o.sort_order ?? idx,
       is_correct: !!o.is_correct,
@@ -44,9 +46,11 @@ export async function POST(req: NextRequest) {
   const insert = {
     category_id: body.category_id,
     label: body.label,
+    label_en: body.label_en ?? null,
     value: body.value ?? null,
     image_url: body.image_url ?? null,
     group_label: body.group_label ?? null,
+    group_label_en: body.group_label_en ?? null,
     metadata: body.metadata ?? {},
     sort_order: body.sort_order ?? 0,
     is_correct: !!body.is_correct,
@@ -71,9 +75,11 @@ export async function PUT(req: NextRequest) {
   const updates: Record<string, unknown> = {};
   const allowed = [
     "label",
+    "label_en",
     "value",
     "image_url",
     "group_label",
+    "group_label_en",
     "metadata",
     "sort_order",
     "is_correct",

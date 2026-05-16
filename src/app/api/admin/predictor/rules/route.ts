@@ -14,7 +14,9 @@ export async function POST(req: NextRequest) {
     tournament_id: body.tournament_id,
     kind: body.kind ?? "rule",
     title: body.title,
+    title_en: body.title_en ?? null,
     body_md: body.body_md ?? null,
+    body_md_en: body.body_md_en ?? null,
     icon: body.icon ?? null,
     sort_order: body.sort_order ?? 0,
   };
@@ -35,7 +37,15 @@ export async function PUT(req: NextRequest) {
   if (!body?.id) return jsonError("id is required");
 
   const updates: Record<string, unknown> = {};
-  const allowed = ["kind", "title", "body_md", "icon", "sort_order"];
+  const allowed = [
+    "kind",
+    "title",
+    "title_en",
+    "body_md",
+    "body_md_en",
+    "icon",
+    "sort_order",
+  ];
   for (const k of allowed) if (k in body) updates[k] = body[k];
 
   const { data, error } = await supabaseServer
