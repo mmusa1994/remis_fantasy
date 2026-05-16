@@ -24,10 +24,7 @@ export async function GET(
   if (!tournament) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
-  if (
-    tournament.visibility === "private" ||
-    tournament.status === "draft"
-  ) {
+  if (tournament.status === "draft") {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 

@@ -66,7 +66,7 @@ export default function PredictorIndexPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/predictor/tournaments")
+    fetch("/api/predictor/tournaments", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : []))
       .then((d) => setTournaments(d ?? []))
       .finally(() => setLoading(false));
