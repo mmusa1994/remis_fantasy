@@ -4,7 +4,7 @@
   "badge": "Remis Predictor",
   "hero": {
     "title": "Predvidi. Takmiči se. Pobijedi.",
-    "subtitle": "Pobjednik turnira, najbolji strijelac, najbolji golman, top 4 ekipe — predvidi sve. Penji se na tabelu. Osvoji nagrade."
+    "subtitle": "Zvanični Remis Predictor — pogodi poredak u grupama, finaliste, najbolje strijelce i prvaka najvećih svjetskih turnira. Jedan tip. Jedna tabela. Prave nagrade."
   },
   "features": {
     "tournamentWinner": "Pobjednik turnira",
@@ -115,5 +115,123 @@
   "signInBanner": {
     "message": "Prijavi se da bi mogao podnijeti predikcije i takmičiti se za nagrade."
   },
-  "noCategories": "Još nema kategorija predikcija."
+  "noCategories": "Još nema kategorija predikcija.",
+  "quickPick": "Brzi tip",
+  "savedBurst": "Sjajno! Sačuvano",
+  "streak": {
+    "label": "predikcija",
+    "milestone": "Milestone! {{count}} predikcija"
+  },
+  "tapTeamHint": "Tapni tim da dodaš gol · drži za reset",
+  "winningTeam": "Vodi po tvom tipu",
+  "groupMinHint": "Min. 2 po grupi prolaze",
+  "groupPicksLabel": "{{count}} u grupi",
+  "groupNeedsMore": "Treba još ekipa iz grupe {{group}}",
+  "limits": {
+    "groupCapHit": "Iz grupe {{group}} maks. {{max}} ekipe mogu proći",
+    "totalCapHit": "Maksimalno {{max}} ukupno",
+    "groupOneHit": "Iz svake grupe ide samo 1 pobjednik — tap mijenja prethodni",
+    "rankedSwap": "Top {{max}} je popunjen — prvi izbor je zamijenjen",
+    "tooManyForGroup": "Ne možeš izabrati {{count}} ekipe iz jedne grupe",
+    "groupBelowMin": "Iz grupe {{group}} mora proći bar {{min}} ekipe"
+  },
+  "admin": {
+    "explorer": {
+      "title": "Pregled predikcija",
+      "subtitle": "Sve predikcije svih korisnika — po danu, po utakmici i po kategoriji turnira.",
+      "tabs": {
+        "leaderboard": "Tabela",
+        "matches": "Utakmice po danu",
+        "awards": "Šablon turnira",
+        "user": "Po korisniku"
+      },
+      "searchUser": "Pretraži korisnika…",
+      "searchTeam": "Pretraži tim ili stage…",
+      "filterStage": "Sve faze",
+      "filterDay": "Svi dani",
+      "filterCategory": "Sve kategorije",
+      "filterScored": "Sve",
+      "filterScoredOnly": "Samo bodovane",
+      "filterUnscoredOnly": "Nije bodovano",
+      "perPage": "Po stranici",
+      "noPredictionsYet": "Još niko nije podnio predikciju.",
+      "noMatchesYet": "Nema utakmica koje odgovaraju filteru.",
+      "noAwardsYet": "Šablon turnira nema kategorija sa predikcijama.",
+      "predictionsCount": "Predikcija",
+      "totalPoints": "Poena",
+      "rank": "Pozicija",
+      "matchPredictions": "Predikcije utakmica",
+      "categoryPredictions": "Predikcije turnira",
+      "actualResult": "Stvarni rezultat",
+      "yourPick": "Tip",
+      "noPick": "Nije tipovao",
+      "loading": "Učitavanje predikcija…",
+      "scored": "Bodovano",
+      "notScored": "Nije bodovano",
+      "selectUser": "Odaberi korisnika sa tabele",
+      "stickyResult": "Rezultat",
+      "dayOf": "od",
+      "exportCsv": "Izvezi CSV",
+      "openUser": "Otvori korisnika",
+      "back": "Nazad",
+      "matchKickoff": "Početak",
+      "matchStage": "Stage",
+      "predictions": "predikcija",
+      "users": "korisnika",
+      "tip": "Tip",
+      "actual": "Stvarno",
+      "groupedBy": "Grupisanje",
+      "groupedByDate": "Po danu",
+      "groupedByStage": "Po fazi",
+      "noUsersForCategory": "Nema predikcija u ovoj kategoriji.",
+      "score": {
+        "edit": "Bodovaj",
+        "save": "Sačuvaj",
+        "cancel": "Otkaži",
+        "pointsLabel": "Poena",
+        "markScored": "Označi bodovano",
+        "markUnscored": "Označi nebodovano",
+        "saved": "Bodovi sačuvani",
+        "saveFailed": "Greška pri čuvanju bodova"
+      }
+    },
+    "settings": {
+      "theme": {
+        "title": "WC 2026 tema (samo za svjetsko prvenstvo)",
+        "description": "Pozadina i tema muzika se aktiviraju isključivo za turnir kome ovdje eksplicitno postaviš sliku/muziku. Ostali turniri ostaju čisti.",
+        "bgLabel": "Pozadinska slika",
+        "noBg": "Bez pozadine",
+        "musicLabel": "Auto-pusti WC 2026 himnu",
+        "musicHint": "Ako uključiš, na stranici turnira će se prikazati toggle za FIFA WC 2026 himnu. Stanje se pamti po korisniku — ne pušta se automatski uz autoplay-block.",
+        "musicOn": "Da — prikaži dugme za himnu",
+        "musicOff": "Ne — bez himne",
+        "bg": {
+          "bgFull": "FIFA 26 logo (tamna, brutalna)",
+          "bg1": "Hero #1",
+          "bg2": "Hero #2 (tabele)",
+          "bg3": "Match-day apstrakcija",
+          "bg4": "Stadion blur"
+        }
+      }
+    },
+    "approvals": {
+      "title": "Odobrenja korisnika",
+      "subtitle": "Odobri, odbij ili banuj zahtjeve za učešće u turniru.",
+      "approve": "Odobri",
+      "reject": "Odbij",
+      "ban": "Banuj",
+      "delete": "Obriši",
+      "noPending": "Nema zahtjeva na čekanju.",
+      "confirmRemove": "Ukloni ovog člana iz turnira?",
+      "disabledTitle": "Odobrenja su trenutno isključena",
+      "disabledBody": "Svi prijavljeni korisnici mogu odmah predviđati. Da bi koristio sistem odobrenja, idi na Postavke i uključi opciju \"Zahtijevaj odobrenje admina\".",
+      "filter": {
+        "pending": "Na čekanju",
+        "approved": "Odobreni",
+        "rejected": "Odbijeni",
+        "banned": "Banovani",
+        "all": "Svi"
+      }
+    }
+  }
 }

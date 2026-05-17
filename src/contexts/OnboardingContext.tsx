@@ -29,29 +29,25 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // The onboarding tour is now strictly opt-in: the floating widget on
+  // /premier-league/* opens it manually. We still read the API state in case
+  // a future page wants to deep-link / re-trigger, but we never set
+  // `showOnboarding` automatically.
   useEffect(() => {
-    const checkOnboardingStatus = async () => {
-      if (status === "loading" || !session?.user?.id) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch("/api/user/onboarding");
-        if (response.ok) {
-          const data = await response.json();
-          setShowOnboarding(!data.onboardingShown);
-        } else {
-          console.error("🧪 Onboarding API failed:", response.status);
-        }
-      } catch (error) {
-        console.error("Failed to check onboarding status:", error);
-      } finally {
-        setIsLoading(false);
-      }
+    if (status === "loading") return;
+    if (!session?.user?.id) {
+      setIsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/user/onboarding")
+      .catch(() => null)
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
     };
-
-    checkOnboardingStatus();
   }, [session?.user?.id, status]);
 
   const completeOnboarding = async () => {

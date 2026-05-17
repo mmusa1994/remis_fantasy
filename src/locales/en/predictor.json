@@ -4,7 +4,7 @@
   "badge": "Remis Predictor",
   "hero": {
     "title": "Predict. Compete. Win.",
-    "subtitle": "Tournament winner, top scorer, best goalkeeper, top 4 teams — call every shot. Climb the leaderboard. Claim the rewards."
+    "subtitle": "The official Remis Predictor — call group standings, finalists, top scorers and the champion of the world's biggest tournaments. One bracket. One leaderboard. Real rewards."
   },
   "features": {
     "tournamentWinner": "Tournament winner",
@@ -115,5 +115,123 @@
   "signInBanner": {
     "message": "Sign in to submit predictions and compete for rewards."
   },
-  "noCategories": "No prediction categories yet."
+  "noCategories": "No prediction categories yet.",
+  "quickPick": "Quick pick",
+  "savedBurst": "Saved!",
+  "streak": {
+    "label": "predictions",
+    "milestone": "Milestone! {{count}} predictions"
+  },
+  "tapTeamHint": "Tap a team to add a goal · hold to reset",
+  "winningTeam": "Your pick to win",
+  "groupMinHint": "Min 2 per group advance",
+  "groupPicksLabel": "{{count}} from group",
+  "groupNeedsMore": "Pick more from group {{group}}",
+  "limits": {
+    "groupCapHit": "Group {{group}}: maximum {{max}} can advance",
+    "totalCapHit": "Maximum {{max}} total",
+    "groupOneHit": "Only 1 winner per group — tap replaces the previous pick",
+    "rankedSwap": "Top {{max}} is full — your earliest pick was replaced",
+    "tooManyForGroup": "You can't pick {{count}} from one group",
+    "groupBelowMin": "Group {{group}} needs at least {{min}} picks"
+  },
+  "admin": {
+    "explorer": {
+      "title": "Predictions overview",
+      "subtitle": "Every prediction from every user — by day, by match, and by tournament category.",
+      "tabs": {
+        "leaderboard": "Leaderboard",
+        "matches": "Matches by day",
+        "awards": "Tournament template",
+        "user": "By user"
+      },
+      "searchUser": "Search user…",
+      "searchTeam": "Search team or stage…",
+      "filterStage": "All stages",
+      "filterDay": "All days",
+      "filterCategory": "All categories",
+      "filterScored": "All",
+      "filterScoredOnly": "Scored only",
+      "filterUnscoredOnly": "Not scored",
+      "perPage": "Per page",
+      "noPredictionsYet": "No predictions submitted yet.",
+      "noMatchesYet": "No matches match the filter.",
+      "noAwardsYet": "Tournament template has no categories with predictions.",
+      "predictionsCount": "Predictions",
+      "totalPoints": "Points",
+      "rank": "Rank",
+      "matchPredictions": "Match predictions",
+      "categoryPredictions": "Tournament predictions",
+      "actualResult": "Actual result",
+      "yourPick": "Pick",
+      "noPick": "No pick",
+      "loading": "Loading predictions…",
+      "scored": "Scored",
+      "notScored": "Not scored",
+      "selectUser": "Pick a user from the leaderboard",
+      "stickyResult": "Result",
+      "dayOf": "of",
+      "exportCsv": "Export CSV",
+      "openUser": "Open user",
+      "back": "Back",
+      "matchKickoff": "Kickoff",
+      "matchStage": "Stage",
+      "predictions": "predictions",
+      "users": "users",
+      "tip": "Pick",
+      "actual": "Actual",
+      "groupedBy": "Grouped by",
+      "groupedByDate": "By day",
+      "groupedByStage": "By stage",
+      "noUsersForCategory": "No predictions in this category.",
+      "score": {
+        "edit": "Score",
+        "save": "Save",
+        "cancel": "Cancel",
+        "pointsLabel": "Points",
+        "markScored": "Mark scored",
+        "markUnscored": "Mark unscored",
+        "saved": "Points saved",
+        "saveFailed": "Failed to save points"
+      }
+    },
+    "settings": {
+      "theme": {
+        "title": "WC 2026 theme (World Cup only)",
+        "description": "Background image and theme music only activate for the tournament you explicitly opt in here. Other tournaments stay clean.",
+        "bgLabel": "Background image",
+        "noBg": "No background",
+        "musicLabel": "Auto-play the WC 2026 anthem",
+        "musicHint": "When on, the tournament page shows a toggle for the FIFA WC 2026 anthem. State is remembered per user — autoplay-block keeps it from playing without consent.",
+        "musicOn": "Yes — show anthem button",
+        "musicOff": "No — no anthem",
+        "bg": {
+          "bgFull": "FIFA 26 logo (dark, bold)",
+          "bg1": "Hero #1",
+          "bg2": "Hero #2 (tables)",
+          "bg3": "Match-day abstract",
+          "bg4": "Stadium blur"
+        }
+      }
+    },
+    "approvals": {
+      "title": "Membership approvals",
+      "subtitle": "Approve, reject or ban participation requests.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "ban": "Ban",
+      "delete": "Delete",
+      "noPending": "No pending requests.",
+      "confirmRemove": "Remove this member from the tournament?",
+      "disabledTitle": "Approvals are currently disabled",
+      "disabledBody": "Every signed-in user can predict immediately. To enable the approval system, go to Settings and turn on \"Require admin approval\".",
+      "filter": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "banned": "Banned",
+        "all": "All"
+      }
+    }
+  }
 }

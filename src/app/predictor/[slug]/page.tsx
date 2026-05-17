@@ -1,16 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSession, signIn } from "next-auth/react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import LoadingCard from "@/components/shared/LoadingCard";
 import WCBackground from "@/components/shared/WCBackground";
 import WCMusicPlayer from "@/components/shared/WCMusicPlayer";
+import ConfettiBurst from "@/components/shared/ConfettiBurst";
+import QuickScoreChips from "@/components/shared/QuickScoreChips";
+import StreakBadge from "@/components/shared/StreakBadge";
 import SaveToast, {
   type SaveToastState,
 } from "@/components/shared/SaveToast";
@@ -151,6 +154,7 @@ export default function TournamentDetailPage() {
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<SaveToastState>(null);
+  const [categoryConfetti, setCategoryConfetti] = useState(0);
   // matches state
   const [matches, setMatches] = useState<Match[]>([]);
   const [myMatchPredictions, setMyMatchPredictions] = useState<
@@ -330,6 +334,7 @@ export default function TournamentDetailPage() {
         throw new Error(j.error || t("saveFailed", "Save failed"));
       }
       setSavedAt(new Date());
+      setCategoryConfetti((n) => n + 1);
       setToast({
         kind: "success",
         text: lang === "en" ? "Predictions saved" : "Predikcije sačuvane",
@@ -378,7 +383,7 @@ export default function TournamentDetailPage() {
           </p>
           <Link
             href="/predictor"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-amber-500 hover:bg-amber-400 text-black font-semibold"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-semibold shadow-sm"
           >
             ← {t("backToList", "Back to tournaments")}
           </Link>
@@ -410,6 +415,7 @@ export default function TournamentDetailPage() {
         onDismiss={() => setToast(null)}
         anchor="bottom"
       />
+      <ConfettiBurst trigger={categoryConfetti} />
       {themeBg && (
         <WCBackground
           variant="hero"
@@ -444,21 +450,37 @@ export default function TournamentDetailPage() {
           </div>
           <div className="flex items-center gap-4 flex-wrap">
             {tournament.logo_url ? (
-              <Image
-                src={tournament.logo_url}
-                alt={localizedTournamentName(tournament, lang)}
-                width={64}
-                height={64}
-                className="w-14 h-14 md:w-16 md:h-16 object-contain"
-                style={{
-                  filter: getLogoFilter(
-                    tournament.logo_url,
-                    tournament.accent_color,
-                  ),
-                }}
-              />
+              <div
+                className={`flex-shrink-0 inline-flex items-center justify-center rounded-3xl w-20 h-20 md:w-24 md:h-24 ${
+                  theme === "dark"
+                    ? "bg-gray-900/60 border border-gray-700 shadow-lg shadow-black/20"
+                    : "bg-white/90 border border-gray-200 shadow-md"
+                }`}
+              >
+                <Image
+                  src={tournament.logo_url}
+                  alt={localizedTournamentName(tournament, lang)}
+                  width={96}
+                  height={96}
+                  className="w-16 h-16 md:w-20 md:h-20 object-contain"
+                  style={{
+                    filter: getLogoFilter(
+                      tournament.logo_url,
+                      tournament.accent_color,
+                    ),
+                  }}
+                />
+              </div>
             ) : (
-              <Trophy className={`w-12 h-12 ${accentText}`} />
+              <div
+                className={`flex-shrink-0 inline-flex items-center justify-center rounded-3xl w-20 h-20 md:w-24 md:h-24 ${
+                  theme === "dark"
+                    ? "bg-gray-900/60 border border-gray-700"
+                    : "bg-white/90 border border-gray-200 shadow-md"
+                }`}
+              >
+                <Trophy className={`w-12 h-12 ${accentText}`} />
+              </div>
             )}
             <div className="flex-1 min-w-0">
               <h1
@@ -607,6 +629,7 @@ export default function TournamentDetailPage() {
                 submit={submit}
                 completion={completion}
                 isFullyLocked={isFullyLocked}
+                hasSavedPredictions={myPredictions.length > 0}
               />
             ))}
 
@@ -702,6 +725,156 @@ function hasEntry(type: CategoryType, d: DraftEntry): boolean {
   }
 }
 
+// Hard validation — runs on save to catch incomplete categories. Returns a
+// localized message per offending category so the user gets a clear list
+// of what still needs to be filled in.
+function collectIncompleteIssues(
+  tournament: TournamentDetail,
+  draft: Record<string, DraftEntry>,
+  lang: "en" | "bs",
+): { id: string; msg: string }[] {
+  const issues: { id: string; msg: string }[] = [];
+  const t = (bs: string, en: string) => (lang === "en" ? en : bs);
+
+  for (const cat of tournament.categories) {
+    const name = localizedCategoryName(cat, lang);
+    const d = draft[cat.id];
+    const sel = d?.selected ?? [];
+
+    switch (cat.category_type) {
+      case "single_choice":
+      case "team_selection":
+      case "player_selection":
+        if (sel.length === 0) {
+          issues.push({
+            id: cat.id,
+            msg: t(`„${name}" — odaberi ekipu`, `"${name}" — pick a team`),
+          });
+        }
+        break;
+      case "multiple_choice": {
+        const need = cat.max_selections || 0;
+        if (need > 0 && sel.length < need) {
+          issues.push({
+            id: cat.id,
+            msg: t(
+              `„${name}" — izabrao si ${sel.length}, treba ${need}`,
+              `"${name}" — you picked ${sel.length}, need ${need}`,
+            ),
+          });
+        } else if (need === 0 && sel.length === 0) {
+          issues.push({
+            id: cat.id,
+            msg: t(`„${name}" je nepotpun`, `"${name}" is incomplete`),
+          });
+        }
+        // Per-group hard rules (Šesnaestina finala): min 2 per group
+        if (
+          cat.slug === "sesnaestina-finala-32" ||
+          cat.slug === "osmina-finala-16" ||
+          cat.slug === "round-of-32" ||
+          (cat.max_selections ?? 0) >= 24
+        ) {
+          const groupCount = new Map<string, number>();
+          for (const o of cat.options) {
+            if (sel.includes(o.id)) {
+              const g = localizedOptionGroup(o, lang) ?? "";
+              groupCount.set(g, (groupCount.get(g) ?? 0) + 1);
+            }
+          }
+          // Make sure every group that exists in options has at least 2 picks
+          const groupsSeen = new Set<string>();
+          for (const o of cat.options) {
+            const g = localizedOptionGroup(o, lang) ?? "";
+            if (g) groupsSeen.add(g);
+          }
+          for (const g of groupsSeen) {
+            const cnt = groupCount.get(g) ?? 0;
+            if (cnt < 2) {
+              issues.push({
+                id: `${cat.id}-${g}`,
+                msg: t(
+                  `„${name}" — iz ${g} treba bar 2 ekipe (imaš ${cnt})`,
+                  `"${name}" — group ${g} needs at least 2 picks (you have ${cnt})`,
+                ),
+              });
+            }
+          }
+        }
+        // 1-per-group hard rule (Pobjednici grupa): every group needs exactly 1
+        if (cat.slug === "pobjednici-grupa") {
+          const groupCount = new Map<string, number>();
+          for (const o of cat.options) {
+            if (sel.includes(o.id)) {
+              const g = localizedOptionGroup(o, lang) ?? "";
+              groupCount.set(g, (groupCount.get(g) ?? 0) + 1);
+            }
+          }
+          const groupsSeen = new Set<string>();
+          for (const o of cat.options) {
+            const g = localizedOptionGroup(o, lang) ?? "";
+            if (g) groupsSeen.add(g);
+          }
+          for (const g of groupsSeen) {
+            const cnt = groupCount.get(g) ?? 0;
+            if (cnt !== 1) {
+              issues.push({
+                id: `${cat.id}-${g}`,
+                msg: t(
+                  `„${name}" — ${g} treba tačno 1 pobjednika (imaš ${cnt})`,
+                  `"${name}" — ${g} needs exactly 1 winner (you have ${cnt})`,
+                ),
+              });
+            }
+          }
+        }
+        break;
+      }
+      case "ranked_top_n": {
+        const need = cat.max_selections || 0;
+        if (need > 0 && sel.length < need) {
+          issues.push({
+            id: cat.id,
+            msg: t(
+              `„${name}" — rangiraj svih ${need} (imaš ${sel.length})`,
+              `"${name}" — rank all ${need} (you have ${sel.length})`,
+            ),
+          });
+        }
+        break;
+      }
+      case "exact_score":
+        if (d?.scoreHome == null || d?.scoreAway == null) {
+          issues.push({
+            id: cat.id,
+            msg: t(
+              `„${name}" — unesi oba rezultata`,
+              `"${name}" — enter both scores`,
+            ),
+          });
+        }
+        break;
+      case "numeric":
+        if (d?.numeric == null || Number.isNaN(d.numeric)) {
+          issues.push({
+            id: cat.id,
+            msg: t(`„${name}" — unesi broj`, `"${name}" — enter a number`),
+          });
+        }
+        break;
+      case "free_text":
+        if (!d?.text?.trim()) {
+          issues.push({
+            id: cat.id,
+            msg: t(`„${name}" — unesi odgovor`, `"${name}" — enter an answer`),
+          });
+        }
+        break;
+    }
+  }
+  return issues;
+}
+
 function PredictionsTab({
   tournament,
   draft,
@@ -718,6 +891,7 @@ function PredictionsTab({
   submit,
   completion,
   isFullyLocked,
+  hasSavedPredictions,
 }: {
   tournament: TournamentDetail;
   draft: Record<string, DraftEntry>;
@@ -734,30 +908,85 @@ function PredictionsTab({
   submit: () => void;
   completion: { done: number; total: number };
   isFullyLocked: boolean;
+  hasSavedPredictions: boolean;
 }) {
   const { t, i18n } = useTranslation("predictor");
   const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
-  const update = (catId: string, patch: Partial<DraftEntry>) =>
-    setDraft((d) => ({
-      ...d,
-      [catId]: { ...(d[catId] ?? emptyDraft()), ...patch },
-    }));
 
   const isFinished = tournament.status === "finished";
   const isComplete =
     completion.total > 0 && completion.done === completion.total;
 
   // Edit mode lets the user re-open the form after the summary view shows.
-  // Default: when everything is filled in, summary takes over until they
-  // explicitly click Edit. When still filling, the form is always visible.
-  const [editMode, setEditMode] = useState(false);
-  const showSummary = isComplete && !editMode && !isFullyLocked;
+  // - If they already have saved predictions, default to summary view.
+  // - Once they touch any option (or start with no saved data), stay in edit
+  //   mode until they explicitly click Save. The summary never replaces the
+  //   form mid-edit — the user keeps full control of when to commit.
+  const [editMode, setEditMode] = useState(!hasSavedPredictions);
+
+  // Sync editMode to saved-state on first load (if predictions arrive after
+  // mount, switch to summary by default — but not once user has touched).
+  const userTouchedRef = useRef(false);
+  useEffect(() => {
+    if (!userTouchedRef.current) {
+      setEditMode(!hasSavedPredictions);
+    }
+  }, [hasSavedPredictions]);
+
+  const update = (catId: string, patch: Partial<DraftEntry>) => {
+    userTouchedRef.current = true;
+    setEditMode(true);
+    setDraft((d) => ({
+      ...d,
+      [catId]: { ...(d[catId] ?? emptyDraft()), ...patch },
+    }));
+  };
+
+  const showSummary = !editMode && hasSavedPredictions && !isFullyLocked;
+
+  // Validation state — slides in from the top when user tries to save with
+  // incomplete categories. Holds the list of human-readable issues.
+  const [validationErrors, setValidationErrors] = useState<
+    { id: string; msg: string }[]
+  >([]);
+
+  // Auto-dismiss the validation banner after a short while so it doesn't
+  // linger forever once the user is aware.
+  useEffect(() => {
+    if (validationErrors.length === 0) return;
+    const id = setTimeout(() => setValidationErrors([]), 6000);
+    return () => clearTimeout(id);
+  }, [validationErrors]);
 
   // Wrap submit so that after saving we collapse back to the summary view.
+  // Runs hard client-side validation first — if anything is incomplete we
+  // show a banner instead of calling the server.
   const handleSubmit = useCallback(() => {
+    const issues = collectIncompleteIssues(tournament, draft, lang);
+    if (issues.length > 0) {
+      setValidationErrors(issues);
+      // Scroll to the top so the banner is in view (banner is fixed but
+      // user often spots the rest of the page context better up there).
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        try {
+          navigator.vibrate?.(40);
+        } catch {
+          /* ignore */
+        }
+      }
+      return;
+    }
+    setValidationErrors([]);
     submit();
+    userTouchedRef.current = false;
     setEditMode(false);
-  }, [submit]);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [tournament, draft, lang, submit]);
 
   if (showSummary) {
     return (
@@ -777,6 +1006,84 @@ function PredictionsTab({
 
   return (
     <div className="space-y-5">
+      {/* Validation banner — slides in from the top of the viewport when
+          user tries to save with incomplete predictions. Fixed position so
+          it floats over the page chrome and is impossible to miss. */}
+      <AnimatePresence>
+        {validationErrors.length > 0 && (
+          <motion.div
+            key="validation-banner"
+            initial={{ y: -120, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -120, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 240, damping: 26 }}
+            className="fixed top-3 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full sm:max-w-lg z-[60]"
+          >
+            <div
+              role="alert"
+              aria-live="polite"
+              className={`rounded-2xl p-4 shadow-2xl border backdrop-blur-xl ${
+                theme === "dark"
+                  ? "bg-red-950/90 border-red-800/80 text-red-100"
+                  : "bg-red-50/95 border-red-300 text-red-900"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={`flex-shrink-0 mt-0.5 w-7 h-7 rounded-full flex items-center justify-center ${
+                    theme === "dark"
+                      ? "bg-red-900/60 text-red-200"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  <AlertCircle className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold leading-tight">
+                    {lang === "en"
+                      ? "Some predictions are incomplete"
+                      : "Neke predikcije su nepotpune"}
+                  </p>
+                  <ul className="mt-1.5 space-y-1 text-[12px] leading-snug">
+                    {validationErrors.slice(0, 6).map((e) => (
+                      <li
+                        key={e.id}
+                        className="flex items-start gap-1.5 break-words"
+                      >
+                        <span
+                          aria-hidden
+                          className="flex-shrink-0 mt-1 w-1 h-1 rounded-full bg-current opacity-60"
+                        />
+                        <span>{e.msg}</span>
+                      </li>
+                    ))}
+                    {validationErrors.length > 6 && (
+                      <li
+                        className={`text-[11px] italic ${theme === "dark" ? "text-red-300/70" : "text-red-700/70"}`}
+                      >
+                        +{validationErrors.length - 6} {lang === "en" ? "more" : "još"}
+                      </li>
+                    )}
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setValidationErrors([])}
+                  aria-label={lang === "en" ? "Dismiss" : "Zatvori"}
+                  className={`flex-shrink-0 p-1.5 rounded-xl transition-colors ${
+                    theme === "dark"
+                      ? "hover:bg-red-900/60 text-red-300"
+                      : "hover:bg-red-100 text-red-700"
+                  }`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {!isFullyLocked && completion.total > 0 && (
         <div
           className={`relative z-10 rounded-2xl p-5 sm:p-6 backdrop-blur-md ${
@@ -819,7 +1126,7 @@ function PredictionsTab({
       )}
       {authStatus !== "authenticated" && !isFinished && (
         <div
-          className={`rounded-lg border p-4 flex items-center gap-3 ${
+          className={`rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 ${
             theme === "dark"
               ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
               : "bg-amber-50 border-amber-200 text-amber-900"
@@ -834,7 +1141,7 @@ function PredictionsTab({
           </div>
           <button
             onClick={() => signIn()}
-            className={`px-3 py-1.5 rounded-md text-sm font-semibold text-black ${accentBg}`}
+            className={`px-4 py-2 rounded-2xl text-sm font-bold text-black ${accentBg} shadow-sm w-full sm:w-auto`}
           >
             {t("signIn", "Prijavi se")}
           </button>
@@ -843,7 +1150,7 @@ function PredictionsTab({
 
       {tournament.categories.length === 0 && (
         <div
-          className={`rounded-lg border border-dashed p-10 text-center text-sm ${
+          className={`rounded-2xl border border-dashed p-10 text-center text-sm ${
             theme === "dark"
               ? "border-gray-700 text-gray-400"
               : "border-gray-300 text-gray-500"
@@ -860,32 +1167,37 @@ function PredictionsTab({
         return (
           <div
             key={cat.id}
-            className={`rounded-lg border-l-4 ${accentBorder} ${
+            className={`rounded-2xl border-l-4 ${accentBorder} ${
               theme === "dark"
-                ? "bg-gray-800/60 border border-gray-700"
-                : "bg-white/80 border border-gray-200"
-            } p-5`}
+                ? "bg-gray-800/60 border border-gray-700 shadow-md shadow-black/10"
+                : "bg-white/80 border border-gray-200 shadow-sm"
+            } p-3.5 sm:p-5`}
           >
-            <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
-              <div className="min-w-0">
-                <h3 className="text-lg font-bold flex items-center gap-2">
+            <div className="flex items-start justify-between gap-2 mb-2.5">
+              <div className="min-w-0 flex-1">
+                <h3 className={`text-[15px] sm:text-base font-bold leading-snug ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                   {localizedCategoryName(cat, lang)}
-                  <span
-                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${accentText} ${theme === "dark" ? "bg-gray-900" : "bg-gray-100"}`}
-                  >
-                    {cat.points_correct} pts
-                  </span>
                 </h3>
                 {localizedCategoryDescription(cat, lang) && (
                   <p
-                    className={`text-sm mt-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
+                    className={`text-[12px] sm:text-sm mt-0.5 leading-snug ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
                   >
                     {localizedCategoryDescription(cat, lang)}
                   </p>
                 )}
               </div>
+              <span
+                className={`flex-shrink-0 inline-flex items-baseline gap-1 px-2 py-0.5 rounded-full whitespace-nowrap ${accentText} ${theme === "dark" ? "bg-gray-900 border border-gray-700" : "bg-amber-50 border border-amber-200"}`}
+              >
+                <span className="text-[13px] font-black tabular-nums leading-none">
+                  {cat.points_correct}
+                </span>
+                <span className="text-[9px] uppercase font-bold tracking-wider leading-none">
+                  pts
+                </span>
+              </span>
               {locked && (
-                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 inline-flex items-center gap-1">
+                <span className="flex-shrink-0 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300 inline-flex items-center gap-1 whitespace-nowrap">
                   <Lock className="w-3 h-3" />
                   Locked
                 </span>
@@ -915,7 +1227,7 @@ function PredictionsTab({
       })}
 
       {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 text-red-400 text-sm p-3 flex items-start gap-2">
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 text-red-400 text-sm p-4 flex items-start gap-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           {error}
         </div>
@@ -931,7 +1243,7 @@ function PredictionsTab({
           style={{
             bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)",
           }}
-          className={`fixed md:sticky md:!bottom-4 left-3 right-3 md:left-auto md:right-auto z-40 md:z-auto md:mt-6 rounded-2xl md:rounded-lg p-3 md:p-4 flex items-center justify-between gap-3 backdrop-blur-xl shadow-2xl md:shadow-md ${
+          className={`fixed md:sticky md:!bottom-4 left-3 right-3 md:left-auto md:right-auto z-40 md:z-auto md:mt-6 rounded-3xl p-3 md:p-4 flex items-center justify-between gap-3 backdrop-blur-xl shadow-2xl md:shadow-md ${
             theme === "dark"
               ? "bg-gray-900/95 border border-gray-700"
               : "bg-white/95 border border-gray-200"
@@ -949,7 +1261,7 @@ function PredictionsTab({
             {isComplete && (
               <button
                 onClick={() => setEditMode(false)}
-                className={`px-3 md:px-4 py-3 md:py-2.5 rounded-xl md:rounded-md font-semibold text-sm inline-flex items-center justify-center gap-2 transition-colors flex-shrink-0 ${
+                className={`px-3 md:px-4 py-3 md:py-2.5 rounded-2xl font-semibold text-sm inline-flex items-center justify-center gap-2 transition-colors flex-shrink-0 ${
                   theme === "dark"
                     ? "bg-gray-800 text-gray-200 hover:bg-gray-700 border border-gray-700"
                     : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
@@ -963,7 +1275,7 @@ function PredictionsTab({
             <button
               disabled={saving || authStatus !== "authenticated"}
               onClick={handleSubmit}
-              className={`flex-1 md:flex-initial px-5 py-3 md:py-2.5 rounded-xl md:rounded-md font-bold text-sm text-black ${accentBg} disabled:opacity-50 inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-transform`}
+              className={`flex-1 md:flex-initial px-5 py-3.5 md:py-3 rounded-2xl font-bold text-base text-black ${accentBg} disabled:opacity-50 inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg shadow-amber-500/20`}
             >
               <Save className="w-4 h-4" />
               {saving ? "Čuvanje…" : "Sačuvaj predikcije"}
@@ -997,8 +1309,50 @@ function CategoryInput({
   accentBg: string;
   accentText: string;
 }) {
-  const { i18n } = useTranslation("predictor");
+  const { i18n, t } = useTranslation("predictor");
   const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
+
+  // Transient validation message — appears for ~2.4s when a rule blocks
+  // (e.g. trying to pick a 4th team from one group in Round of 32).
+  const [blockedMsg, setBlockedMsg] = useState<string | null>(null);
+  const blockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashBlock = useCallback((msg: string) => {
+    setBlockedMsg(msg);
+    if (blockTimerRef.current) clearTimeout(blockTimerRef.current);
+    blockTimerRef.current = setTimeout(() => setBlockedMsg(null), 2400);
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate?.(28);
+      } catch {
+        /* ignore */
+      }
+    }
+  }, []);
+
+  // Build option-id → group-label map once per render so group-aware rules
+  // can quickly resolve "which group does this pick belong to".
+  const optGroupMap = useMemo(() => {
+    const map = new Map<string, string | null>();
+    for (const o of category.options) {
+      map.set(o.id, localizedOptionGroup(o, lang));
+    }
+    return map;
+  }, [category.options, lang]);
+
+  // Group-aware selection rules tied to specific template categories:
+  // - pobjednici-grupa: EXACTLY 1 pick per group (replace previous on tap).
+  // - sesnaestina-finala-32 (or similar ≥24-cap multi-choice): MAX 3 per
+  //   group (block 4th tap), soft min 2 enforced via UI warning.
+  const oneToOnePerGroup = category.slug === "pobjednici-grupa";
+  const capPerGroup =
+    category.category_type === "multiple_choice" &&
+    (category.slug === "sesnaestina-finala-32" ||
+      category.slug === "osmina-finala-16" ||
+      category.slug === "round-of-32" ||
+      (category.max_selections ?? 0) >= 24)
+      ? 3
+      : null;
+
   const toggleOption = (id: string) => {
     if (disabled) return;
     if (
@@ -1013,17 +1367,67 @@ function CategoryInput({
     const idx = cur.indexOf(id);
     if (idx >= 0) {
       cur.splice(idx, 1);
-    } else {
-      if (cur.length >= (category.max_selections || 1)) {
-        if (category.category_type === "ranked_top_n") {
-          cur.push(id);
-          if (cur.length > category.max_selections) cur.shift();
-        } else {
-          return;
+      onChange({ selected: cur });
+      return;
+    }
+    // Adding a new pick — apply group-aware rules first.
+    const optGroup = optGroupMap.get(id) ?? null;
+    if (oneToOnePerGroup && optGroup) {
+      // Replace any previous pick from the same group (FIFO swap).
+      const hadPrior = cur.some((pid) => optGroupMap.get(pid) === optGroup);
+      const filtered = cur.filter((pid) => optGroupMap.get(pid) !== optGroup);
+      filtered.push(id);
+      while (filtered.length > (category.max_selections || filtered.length)) {
+        filtered.shift();
+      }
+      onChange({ selected: filtered });
+      if (hadPrior) {
+        flashBlock(
+          t("limits.groupOneHit", {
+            defaultValue: "Iz svake grupe ide samo 1 — zamijenjeno",
+          }) as string,
+        );
+      }
+      return;
+    }
+    if (capPerGroup && optGroup) {
+      const countInGroup = cur.filter(
+        (pid) => optGroupMap.get(pid) === optGroup,
+      ).length;
+      if (countInGroup >= capPerGroup) {
+        flashBlock(
+          t("limits.groupCapHit", {
+            group: optGroup,
+            max: capPerGroup,
+            defaultValue: `Iz grupe ${optGroup} maks. ${capPerGroup} ekipe`,
+          }) as string,
+        );
+        return;
+      }
+    }
+    if (cur.length >= (category.max_selections || 1)) {
+      if (category.category_type === "ranked_top_n") {
+        cur.push(id);
+        if (cur.length > category.max_selections) {
+          cur.shift();
+          flashBlock(
+            t("limits.rankedSwap", {
+              max: category.max_selections,
+              defaultValue: `Top ${category.max_selections} popunjen — prvi izbor zamijenjen`,
+            }) as string,
+          );
         }
       } else {
-        cur.push(id);
+        flashBlock(
+          t("limits.totalCapHit", {
+            max: category.max_selections,
+            defaultValue: `Maksimalno ${category.max_selections} ukupno`,
+          }) as string,
+        );
+        return;
       }
+    } else {
+      cur.push(id);
     }
     onChange({ selected: cur });
   };
@@ -1045,16 +1449,103 @@ function CategoryInput({
     }
     const orderedGroups = Array.from(groups.entries());
 
+    // Per-group rules for picker UI:
+    //  - oneToOnePerGroup → exactly 1 must be picked from each group
+    //  - capPerGroup      → min 2 / max 3 per group (Round of 32)
+    const groupRule: "one" | "two-to-three" | null = oneToOnePerGroup
+      ? "one"
+      : capPerGroup
+        ? "two-to-three"
+        : null;
+    const minPerGroup =
+      groupRule === "one" ? 1 : groupRule === "two-to-three" ? 2 : 0;
+    const maxPerGroup =
+      groupRule === "one" ? 1 : groupRule === "two-to-three" ? 3 : null;
+
+    // Pre-compute per-group selected counts so we can decorate group headers.
+    const groupCounts = new Map<string, number>();
+    if (groupRule) {
+      const optIdToGroup = new Map<string, string>();
+      for (const [gName, gOpts] of orderedGroups) {
+        for (const o of gOpts) optIdToGroup.set(o.id, gName);
+      }
+      for (const id of draft.selected) {
+        const gName = optIdToGroup.get(id);
+        if (!gName) continue;
+        groupCounts.set(gName, (groupCounts.get(gName) ?? 0) + 1);
+      }
+    }
+    const ruleHint =
+      groupRule === "one"
+        ? lang === "en"
+          ? "1 pick per group (auto-replaces previous)"
+          : "Po 1 izbor iz svake grupe (auto-zamjena)"
+        : groupRule === "two-to-three"
+          ? lang === "en"
+            ? "Min 2 · max 3 per group (32 total)"
+            : "Min 2 · maks 3 po grupi (32 ukupno)"
+          : null;
+
     return (
-      <div className="space-y-3">
-        {orderedGroups.map(([groupName, opts]) => (
-          <div key={groupName} className="space-y-2">
+      <div className="space-y-2.5">
+        {ruleHint && (
+          <p
+            className={`text-[11px] font-semibold px-0.5 ${theme === "dark" ? "text-amber-400" : "text-amber-700"}`}
+          >
+            {ruleHint}
+          </p>
+        )}
+        {blockedMsg && (
+          <div
+            role="alert"
+            aria-live="polite"
+            className={`relative overflow-hidden rounded-xl px-3 py-2 text-[12px] font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200 ${
+              theme === "dark"
+                ? "bg-red-950/40 text-red-200 border border-red-800/60"
+                : "bg-red-50 text-red-800 border border-red-200"
+            }`}
+          >
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span className="leading-tight">{blockedMsg}</span>
+          </div>
+        )}
+        {orderedGroups.map(([groupName, opts]) => {
+          const groupCount = groupCounts.get(groupName) ?? 0;
+          const groupBelowMin =
+            groupRule && groupName && groupCount < minPerGroup;
+          const groupAtCap =
+            groupRule && groupName && maxPerGroup != null && groupCount >= maxPerGroup;
+          return (
+          <div key={groupName} className="space-y-1.5">
             {groupName && (
-              <div className="text-xs uppercase font-bold tracking-wide text-theme-text-secondary">
-                {groupName}
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-theme-text-secondary">
+                  {groupName}
+                </span>
+                {groupRule && (
+                  <span
+                    className={`text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full ${
+                      groupBelowMin
+                        ? theme === "dark"
+                          ? "bg-red-950/40 text-red-300 border border-red-800/60"
+                          : "bg-red-50 text-red-700 border border-red-200"
+                        : groupAtCap
+                          ? theme === "dark"
+                            ? "bg-amber-950/40 text-amber-300 border border-amber-800/60"
+                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                          : theme === "dark"
+                            ? "bg-emerald-950/40 text-emerald-300 border border-emerald-800/60"
+                            : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    }`}
+                  >
+                    {groupRule === "one"
+                      ? `${groupCount}/1`
+                      : `${groupCount}/${maxPerGroup} (min ${minPerGroup})`}
+                  </span>
+                )}
               </div>
             )}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 sm:gap-2">
               {opts.map((opt) => {
                 const selectedIdx = draft.selected.indexOf(opt.id);
                 const isSelected = selectedIdx >= 0;
@@ -1083,11 +1574,11 @@ function CategoryInput({
                     type="button"
                     disabled={disabled}
                     onClick={() => toggleOption(opt.id)}
-                    className={`group relative overflow-hidden text-left rounded-xl border p-2.5 sm:p-3 transition-all duration-200 active:scale-[0.98] ${
+                    className={`group relative overflow-hidden text-left rounded-xl border p-2 sm:p-2.5 transition-all duration-200 active:scale-[0.98] ${
                       isSelected
                         ? dark
-                          ? "border-amber-500/80 bg-gradient-to-br from-amber-500/15 via-amber-500/8 to-transparent shadow-lg shadow-amber-500/15"
-                          : "border-amber-500 bg-gradient-to-br from-amber-50 via-white to-white shadow-md shadow-amber-500/20"
+                          ? "border-amber-500/80 bg-gradient-to-br from-amber-500/15 via-amber-500/8 to-transparent shadow-md shadow-amber-500/15"
+                          : "border-amber-500 bg-gradient-to-br from-amber-50 via-white to-white shadow-sm shadow-amber-500/20"
                         : dark
                           ? "border-gray-700/70 bg-gray-900/50 hover:border-gray-600 hover:bg-gray-900/80"
                           : "border-gray-200 bg-white/90 hover:border-gray-300 hover:shadow-sm"
@@ -1099,28 +1590,28 @@ function CategoryInput({
                     {isSelected && (
                       <span
                         aria-hidden
-                        className={`pointer-events-none absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-30 blur-2xl ${accentBg.split(" ")[0]}`}
+                        className={`pointer-events-none absolute -top-6 -right-6 w-16 h-16 rounded-full opacity-30 blur-2xl ${accentBg.split(" ")[0]}`}
                       />
                     )}
                     {rankBadge != null && (
                       <span
-                        className={`absolute top-1.5 right-1.5 z-20 min-w-[26px] h-[26px] px-1.5 rounded-full ${accentBg} text-black text-sm font-black leading-none flex items-center justify-center shadow-lg ring-2 ring-white dark:ring-gray-900 tabular-nums`}
+                        className={`absolute top-1 right-1 z-20 min-w-[20px] h-[20px] px-1 rounded-full ${accentBg} text-black text-[11px] font-black leading-none flex items-center justify-center shadow-md ring-2 ring-white dark:ring-gray-900 tabular-nums`}
                       >
                         {rankBadge}
                       </span>
                     )}
                     {isSelected && rankBadge == null && (
                       <CheckCircle2
-                        className={`absolute top-1.5 right-1.5 z-10 w-4 h-4 ${accentText}`}
+                        className={`absolute top-1 right-1 z-10 w-3.5 h-3.5 ${accentText}`}
                       />
                     )}
                     {showCorrect && (
-                      <CheckCircle2 className="absolute top-1.5 right-1.5 z-10 w-4 h-4 text-emerald-500" />
+                      <CheckCircle2 className="absolute top-1 right-1 z-10 w-3.5 h-3.5 text-emerald-500" />
                     )}
-                    <div className="relative z-10 flex items-center gap-2.5">
+                    <div className="relative z-10 flex items-center gap-2">
                       {opt.image_url && (
                         <div
-                          className={`flex-shrink-0 w-9 h-7 sm:w-10 sm:h-7 rounded-md overflow-hidden ring-1 ${
+                          className={`flex-shrink-0 w-7 h-5 sm:w-8 sm:h-6 rounded-md overflow-hidden ring-1 ${
                             isSelected
                               ? dark
                                 ? "ring-amber-500/60"
@@ -1128,20 +1619,20 @@ function CategoryInput({
                               : dark
                                 ? "ring-gray-700"
                                 : "ring-gray-200"
-                          } shadow-sm`}
+                          }`}
                         >
                           <Image
                             src={opt.image_url}
                             alt={localizedLabel}
-                            width={40}
-                            height={28}
+                            width={32}
+                            height={24}
                             className="w-full h-full object-cover"
                             unoptimized
                           />
                         </div>
                       )}
                       <span
-                        className={`text-xs sm:text-sm font-semibold truncate flex-1 min-w-0 ${
+                        className={`text-[12px] sm:text-[13px] font-semibold leading-tight flex-1 min-w-0 break-words ${
                           isSelected
                             ? accentText
                             : dark
@@ -1157,7 +1648,8 @@ function CategoryInput({
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
         {category.category_type === "ranked_top_n" && (
           <p className="text-xs text-theme-text-secondary">
             Izaberi {category.max_selections} po tačnom redoslijedu. Brojevi prikazuju
@@ -1175,19 +1667,21 @@ function CategoryInput({
 
   if (category.category_type === "exact_score") {
     return (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-center gap-2.5">
         <NumInput
           value={draft.scoreHome}
           onChange={(v) => onChange({ scoreHome: v })}
           disabled={disabled}
-          placeholder="Domaćin"
+          placeholder="0"
         />
-        <span className="text-xl font-bold text-theme-text-secondary">:</span>
+        <span className={`text-2xl font-black ${theme === "dark" ? "text-gray-600" : "text-gray-400"}`}>
+          :
+        </span>
         <NumInput
           value={draft.scoreAway}
           onChange={(v) => onChange({ scoreAway: v })}
           disabled={disabled}
-          placeholder="Gost"
+          placeholder="0"
         />
       </div>
     );
@@ -1212,11 +1706,11 @@ function CategoryInput({
         disabled={disabled}
         value={draft.text}
         onChange={(e) => onChange({ text: e.target.value })}
-        placeholder="Your answer"
-        className={`w-full px-3 py-2 rounded-md border outline-none text-sm ${
+        placeholder="Tvoj odgovor"
+        className={`w-full px-3.5 py-2.5 rounded-xl border outline-none text-[15px] font-semibold ${
           theme === "dark"
-            ? "bg-gray-900 border-gray-700 focus:border-amber-500"
-            : "bg-white border-gray-300 focus:border-amber-500"
+            ? "bg-gray-900 border-gray-700 focus:border-amber-500 placeholder-gray-600"
+            : "bg-white border-gray-300 focus:border-amber-500 placeholder-gray-400"
         } disabled:opacity-60`}
       />
     );
@@ -1247,7 +1741,7 @@ function NumInput({
         onChange(e.target.value === "" ? null : Number(e.target.value))
       }
       placeholder={placeholder}
-      className={`${wide ? "w-full" : "w-20 text-center"} px-3 py-2 rounded-md border outline-none text-sm bg-theme-background border-theme-border focus:border-amber-500 disabled:opacity-60`}
+      className={`${wide ? "w-full max-w-[10rem] text-center mx-auto block" : "w-20 text-center"} px-3 py-2.5 rounded-xl border outline-none text-lg font-black tabular-nums bg-theme-background border-theme-border focus:border-amber-500 disabled:opacity-60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
     />
   );
 }
@@ -1285,7 +1779,7 @@ function RulesTab({
     <div className="space-y-4 max-w-3xl">
       {rulesMd && (
         <div
-          className={`rounded-lg border p-5 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
+          className={`rounded-3xl border p-5 sm:p-6 ${theme === "dark" ? "bg-gray-800/60 border-gray-700 shadow-lg shadow-black/10" : "bg-white/80 border-gray-200 shadow-sm"}`}
         >
           <h3 className={`font-bold mb-2 ${accentText}`}>
             {t("rules.overview", "Overview")}
@@ -1297,7 +1791,7 @@ function RulesTab({
       )}
       {pointMd && (
         <div
-          className={`rounded-lg border p-5 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
+          className={`rounded-3xl border p-5 sm:p-6 ${theme === "dark" ? "bg-gray-800/60 border-gray-700 shadow-lg shadow-black/10" : "bg-white/80 border-gray-200 shadow-sm"}`}
         >
           <h3 className={`font-bold mb-2 ${accentText}`}>
             {t("rules.pointSystem", "Point system")}
@@ -1309,7 +1803,7 @@ function RulesTab({
       )}
       {eligibilityMd && (
         <div
-          className={`rounded-lg border p-5 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
+          className={`rounded-3xl border p-5 sm:p-6 ${theme === "dark" ? "bg-gray-800/60 border-gray-700 shadow-lg shadow-black/10" : "bg-white/80 border-gray-200 shadow-sm"}`}
         >
           <h3 className={`font-bold mb-2 ${accentText}`}>
             {t("rules.eligibility", "Eligibility")}
@@ -1321,7 +1815,7 @@ function RulesTab({
       )}
       {tournament.rules.length === 0 && !rulesMd && !pointMd && !eligibilityMd ? (
         <div
-          className={`rounded-lg border border-dashed p-10 text-center text-sm ${
+          className={`rounded-3xl border border-dashed p-10 text-center text-sm ${
             theme === "dark"
               ? "border-gray-700 text-gray-400"
               : "border-gray-300 text-gray-500"
@@ -1336,7 +1830,7 @@ function RulesTab({
             return (
               <div
                 key={r.id}
-                className={`rounded-lg border p-4 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
+                className={`rounded-2xl border p-4 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
               >
                 <div className="flex items-center gap-2 mb-1">
                   <h4 className="font-semibold">{localizedRuleTitle(r, lang)}</h4>
@@ -1383,7 +1877,7 @@ function RewardsTab({
   if (tournament.rewards.length === 0) {
     return (
       <div
-        className={`rounded-lg border border-dashed p-10 text-center text-sm ${
+        className={`rounded-3xl border border-dashed p-10 text-center text-sm ${
           theme === "dark"
             ? "border-gray-700 text-gray-400"
             : "border-gray-300 text-gray-500"
@@ -1409,7 +1903,7 @@ function RewardsTab({
         return (
           <div
             key={r.id}
-            className={`rounded-lg border p-5 ${theme === "dark" ? "bg-gray-800/60 border-gray-700" : "bg-white/80 border-gray-200"}`}
+            className={`rounded-3xl border p-5 sm:p-6 ${theme === "dark" ? "bg-gray-800/60 border-gray-700 shadow-lg shadow-black/10" : "bg-white/80 border-gray-200 shadow-sm"}`}
           >
             <div className="flex items-start gap-3">
               <RankIcon className={`w-7 h-7 ${accentText} flex-shrink-0 mt-1`} />
@@ -1481,7 +1975,7 @@ function StandingsTab({
   if (standings.length === 0) {
     return (
       <div
-        className={`rounded-lg border border-dashed p-12 text-center ${
+        className={`rounded-3xl border border-dashed p-12 text-center ${
           dark
             ? "border-gray-700 text-gray-400"
             : "border-gray-300 text-gray-500"
@@ -1504,15 +1998,7 @@ function StandingsTab({
 
   return (
     <div className="relative space-y-6">
-      {themeBgSrc && (
-        <WCBackground
-          variant="table"
-          src={themeBgSrc}
-          opacity={0.35}
-          overlay={0.55}
-          className="rounded-2xl"
-        />
-      )}
+
       <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
           theme={theme}
@@ -1575,142 +2061,147 @@ function StandingsTab({
         </div>
       )}
 
-      {/* Full table */}
+      {/* Full leaderboard — card-style rows */}
       <div
-        className={`relative z-10 rounded-lg border overflow-hidden backdrop-blur-sm ${
-          dark ? "bg-gray-800/60 border-gray-700" : "bg-white/85 border-gray-200"
+        className={`relative z-10 rounded-2xl border overflow-hidden backdrop-blur-sm ${
+          dark ? "bg-gray-800/60 border-gray-700 shadow-md shadow-black/10" : "bg-white/85 border-gray-200 shadow-sm"
         }`}
       >
         <div
-          className={`flex items-center gap-2 px-4 py-3 border-b ${
-            dark ? "bg-gray-900/60 border-gray-700" : "bg-gray-50 border-gray-200"
+          className={`flex items-center justify-between gap-3 px-4 py-3 border-b ${
+            dark ? "bg-gray-900/60 border-gray-700" : "bg-gray-50/80 border-gray-200"
           }`}
         >
-          <Trophy className={`w-4 h-4 ${accentText}`} />
-          <h3 className={`font-bold ${dark ? "text-white" : "text-gray-900"}`}>
-            Kompletna tabela
-          </h3>
-          <span className={`text-xs ml-auto ${dark ? "text-gray-400" : "text-gray-500"}`}>
-            sortirano po ukupnim poenima
+          <div className="flex items-center gap-2 min-w-0">
+            <Trophy className={`w-4 h-4 flex-shrink-0 ${accentText}`} />
+            <h3 className={`text-sm font-bold leading-tight whitespace-nowrap ${dark ? "text-white" : "text-gray-900"}`}>
+              Kompletna tabela
+            </h3>
+          </div>
+          <span
+            className={`text-[10px] uppercase tracking-wider font-bold flex-shrink-0 ${dark ? "text-gray-500" : "text-gray-500"}`}
+          >
+            po poenima
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead
-              className={`text-[10px] uppercase tracking-wider ${
-                dark ? "bg-gray-900/40 text-gray-400" : "bg-gray-50/60 text-gray-600"
-              }`}
-            >
-              <tr>
-                <th className="py-2.5 px-3 text-left w-12">#</th>
-                <th className="py-2.5 px-3 text-left">Igrač</th>
-                <th
-                  className="py-2.5 px-3 text-right hidden sm:table-cell"
-                  title="Poeni iz kategorija (pobjednik turnira, top 4…)"
-                >
-                  Kategorije
-                </th>
-                <th
-                  className="py-2.5 px-3 text-right hidden sm:table-cell"
-                  title="Poeni iz pogađanja rezultata utakmica"
-                >
-                  Utakmice
-                </th>
-                <th className="py-2.5 px-3 text-right">Ukupno</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(rest.length > 0 ? rest : standings).map((s) => {
-                const isMe = currentUserId === s.user_id;
-                const medal =
-                  s.rank === 1 ? "🥇" : s.rank === 2 ? "🥈" : s.rank === 3 ? "🥉" : null;
-                return (
-                  <tr
-                    key={s.user_id}
-                    className={`border-t transition-colors ${
-                      dark ? "border-gray-700/50" : "border-gray-100"
-                    } ${
-                      isMe
-                        ? dark
-                          ? "bg-amber-500/10"
-                          : "bg-amber-50"
-                        : ""
+        <ul
+          className={`divide-y ${dark ? "divide-gray-700/50" : "divide-gray-100"}`}
+        >
+          {(rest.length > 0 ? rest : standings).map((s) => {
+            const isMe = currentUserId === s.user_id;
+            const isTop3 = s.rank <= 3;
+            const medal =
+              s.rank === 1 ? "🥇" : s.rank === 2 ? "🥈" : s.rank === 3 ? "🥉" : null;
+            const initial = (s.user_display_name || s.user_email || "?")
+              .charAt(0)
+              .toUpperCase();
+            return (
+              <li
+                key={s.user_id}
+                className={`relative flex items-center gap-3 px-3.5 py-2.5 transition-colors ${
+                  isMe
+                    ? dark
+                      ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent"
+                      : "bg-gradient-to-r from-amber-50 via-amber-50/40 to-transparent"
+                    : dark
+                      ? "hover:bg-gray-800/40"
+                      : "hover:bg-gray-50/60"
+                }`}
+              >
+                {isMe && (
+                  <span
+                    aria-hidden
+                    className={`absolute left-0 top-0 bottom-0 w-1 ${accentBg.split(" ")[0]}`}
+                  />
+                )}
+                {/* Rank + avatar combined */}
+                <div className="flex items-center gap-2.5 flex-shrink-0">
+                  <span
+                    className={`w-7 text-center text-[15px] font-black tabular-nums leading-none ${
+                      isTop3
+                        ? ""
+                        : dark
+                          ? "text-gray-500"
+                          : "text-gray-400"
                     }`}
                   >
-                    <td className="py-2.5 px-3 font-bold tabular-nums">
-                      {medal ?? s.rank}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${
-                            isMe
-                              ? "bg-amber-500 text-black"
-                              : dark
-                                ? "bg-gray-700 text-gray-300"
-                                : "bg-gray-200 text-gray-700"
-                          }`}
-                        >
-                          {(s.user_display_name || s.user_email || "?")
-                            .charAt(0)
-                            .toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <div
-                            className={`font-semibold truncate ${
-                              dark ? "text-white" : "text-gray-900"
-                            }`}
-                          >
-                            {s.user_display_name ||
-                              s.user_email?.split("@")[0] ||
-                              "Igrač"}
-                            {isMe && (
-                              <span
-                                className={`ml-2 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
-                                  dark
-                                    ? "bg-amber-500/20 text-amber-300"
-                                    : "bg-amber-100 text-amber-700"
-                                }`}
-                              >
-                                ti
-                              </span>
-                            )}
-                          </div>
-                          <div
-                            className={`text-[11px] sm:hidden ${
-                              dark ? "text-gray-500" : "text-gray-500"
-                            }`}
-                          >
-                            kat {s.category_points} · utakmice {s.match_points}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td
-                      className={`py-2.5 px-3 text-right tabular-nums hidden sm:table-cell ${
-                        dark ? "text-gray-300" : "text-gray-700"
+                    {medal ?? s.rank}
+                  </span>
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0 ${
+                      isMe
+                        ? "bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-md shadow-amber-500/30"
+                        : isTop3
+                          ? dark
+                            ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                          : dark
+                            ? "bg-gray-800 text-gray-300 border border-gray-700"
+                            : "bg-gray-100 text-gray-700 border border-gray-200"
+                    }`}
+                  >
+                    {initial}
+                  </div>
+                </div>
+                {/* Name + sub-stats */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span
+                      className={`text-sm font-bold break-words leading-tight ${
+                        dark ? "text-white" : "text-gray-900"
                       }`}
                     >
-                      {s.category_points}
-                    </td>
-                    <td
-                      className={`py-2.5 px-3 text-right tabular-nums hidden sm:table-cell ${
-                        dark ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      {s.match_points}
-                    </td>
-                    <td
-                      className={`py-2.5 px-3 text-right font-black text-base tabular-nums ${accentText}`}
-                    >
+                      {s.user_display_name ||
+                        s.user_email?.split("@")[0] ||
+                        "Igrač"}
+                    </span>
+                    {isMe && (
+                      <span
+                        className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                          dark
+                            ? "bg-amber-500/20 text-amber-300"
+                            : "bg-amber-200/80 text-amber-900"
+                        }`}
+                      >
+                        ti
+                      </span>
+                    )}
+                  </div>
+                  <div
+                    className={`mt-0.5 text-[11px] flex items-center gap-2 ${dark ? "text-gray-500" : "text-gray-500"}`}
+                  >
+                    <span className="inline-flex items-baseline gap-1">
+                      <span className="opacity-60">kategorije</span>
+                      <span className={`font-bold tabular-nums ${dark ? "text-gray-300" : "text-gray-700"}`}>
+                        {s.category_points}
+                      </span>
+                    </span>
+                    <span className="opacity-30">·</span>
+                    <span className="inline-flex items-baseline gap-1">
+                      <span className="opacity-60">utakmice</span>
+                      <span className={`font-bold tabular-nums ${dark ? "text-gray-300" : "text-gray-700"}`}>
+                        {s.match_points}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                {/* Total points */}
+                <div className="flex-shrink-0 text-right">
+                  <div
+                    className={`inline-flex items-baseline gap-1 ${accentText}`}
+                  >
+                    <span className="text-xl font-black tabular-nums leading-none">
                       {s.total_points}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </span>
+                    <span className="text-[9px] uppercase font-bold tracking-wider leading-none">
+                      pts
+                    </span>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </div>
   );
@@ -1732,30 +2223,44 @@ function StatCard({
   const dark = theme === "dark";
   return (
     <div
-      className={`rounded-lg p-4 border transition-colors ${
+      className={`relative overflow-hidden rounded-2xl p-3.5 border transition-colors ${
         highlight
           ? dark
-            ? "bg-amber-500/10 border-amber-500/40"
-            : "bg-amber-50 border-amber-200"
+            ? "bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/40 shadow-md shadow-amber-500/10"
+            : "bg-gradient-to-br from-amber-50 via-white to-white border-amber-300 shadow-sm shadow-amber-500/10"
           : dark
             ? "bg-gray-800/60 border-gray-700"
-            : "bg-white/80 border-gray-200"
+            : "bg-white/85 border-gray-200 shadow-sm"
       }`}
     >
-      <div className="flex items-center justify-between mb-1">
+      {/* Decorative icon glow in the corner */}
+      <Icon
+        aria-hidden
+        className={`absolute -right-2 -bottom-2 w-14 h-14 pointer-events-none ${
+          highlight
+            ? dark
+              ? "text-amber-500/10"
+              : "text-amber-400/15"
+            : dark
+              ? "text-gray-700/40"
+              : "text-gray-200/70"
+        }`}
+        strokeWidth={1.5}
+      />
+      <div className="relative z-10 flex items-center gap-1.5 mb-1.5">
+        <Icon
+          className={`w-3 h-3 ${highlight ? "text-amber-500" : dark ? "text-gray-500" : "text-gray-400"}`}
+        />
         <span
           className={`text-[10px] uppercase font-bold tracking-wider ${
-            dark ? "text-gray-400" : "text-gray-600"
+            dark ? "text-gray-400" : "text-gray-500"
           }`}
         >
           {label}
         </span>
-        <Icon
-          className={`w-4 h-4 ${highlight ? "text-amber-500" : dark ? "text-gray-500" : "text-gray-400"}`}
-        />
       </div>
       <div
-        className={`text-2xl font-black tabular-nums ${
+        className={`relative z-10 text-2xl sm:text-3xl font-black tabular-nums leading-none ${
           highlight ? "text-amber-500" : dark ? "text-white" : "text-gray-900"
         }`}
       >
@@ -1797,13 +2302,13 @@ function PodiumCard({
 
   return (
     <div
-      className={`relative rounded-lg border-2 p-3 md:p-4 ${colors} ${heightClass} flex flex-col justify-end ${
+      className={`relative rounded-3xl border-2 p-3 md:p-4 ${colors} ${heightClass} flex flex-col justify-end ${
         isMe ? "ring-2 ring-amber-500/60" : ""
       }`}
     >
       <div className="text-3xl md:text-4xl mb-1">{medal}</div>
       <div
-        className={`font-bold text-sm md:text-base truncate ${
+        className={`font-bold text-[13px] md:text-sm leading-tight break-words ${
           dark ? "text-white" : "text-gray-900"
         }`}
       >
@@ -1904,6 +2409,8 @@ function MatchesPublicTab({
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0); // for re-rendering countdown
+  const [confettiTrigger, setConfettiTrigger] = useState(0);
+  const [dirty, setDirty] = useState(false);
 
   // seed drafts from existing predictions
   useEffect(() => {
@@ -1933,11 +2440,13 @@ function MatchesPublicTab({
     );
   }, [matches]);
 
-  const update = (mid: string, patch: Partial<Draft>) =>
+  const update = (mid: string, patch: Partial<Draft>) => {
+    setDirty(true);
     setDrafts((d) => ({
       ...d,
       [mid]: { ...(d[mid] ?? { home: null, away: null }), ...patch },
     }));
+  };
 
   const completion = useMemo(() => {
     const total = matches.filter((m) => !isMatchLockedClient(m)).length;
@@ -2006,6 +2515,8 @@ function MatchesPublicTab({
         throw new Error(t("errors.matchSkipped", { reasons }));
       }
       setSavedAt(new Date());
+      setDirty(false);
+      setConfettiTrigger((n) => n + 1);
       notify?.({
         kind: "success",
         text:
@@ -2014,6 +2525,11 @@ function MatchesPublicTab({
             : `Sačuvano ${saved} predikcij${saved === 1 ? "a" : saved < 5 ? "e" : "a"}`,
       });
       onSaved();
+      // Pull the user back to the top so they see their saved standings /
+      // confetti instead of remaining buried at the save bar.
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } catch (e: any) {
       const msg = e?.message || t("errors.unknown");
       setError(msg);
@@ -2026,7 +2542,7 @@ function MatchesPublicTab({
   if (matches.length === 0) {
     return (
       <div
-        className={`rounded-lg border border-dashed p-10 text-center text-sm ${
+        className={`rounded-3xl border border-dashed p-10 text-center text-sm ${
           theme === "dark" ? "border-gray-700 text-gray-400" : "border-gray-300 text-gray-500"
         }`}
       >
@@ -2038,18 +2554,9 @@ function MatchesPublicTab({
 
   return (
     <div className="relative space-y-6">
-      {themeBgSrc && (
-        <WCBackground
-          variant="matches"
-          src={themeBgSrc}
-          opacity={0.35}
-          overlay={0.55}
-          className="rounded-2xl"
-        />
-      )}
       {authStatus !== "authenticated" && (
         <div
-          className={`relative z-10 rounded-lg border p-4 flex items-center gap-3 ${
+          className={`relative z-10 rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 ${
             theme === "dark"
               ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
               : "bg-amber-50 border-amber-200 text-amber-900"
@@ -2066,7 +2573,7 @@ function MatchesPublicTab({
           </div>
           <button
             onClick={() => signIn()}
-            className={`px-3 py-1.5 rounded-md text-sm font-semibold text-black ${accentBg}`}
+            className={`px-4 py-2 rounded-2xl text-sm font-bold text-black ${accentBg} shadow-sm w-full sm:w-auto`}
           >
             {t("signIn")}
           </button>
@@ -2076,18 +2583,25 @@ function MatchesPublicTab({
       {/* progress */}
       {completion.total > 0 && (
         <div
-          className={`relative z-10 rounded-2xl p-5 sm:p-6 backdrop-blur-md ${
+          className={`relative z-10 rounded-3xl p-5 sm:p-6 backdrop-blur-md ${
             theme === "dark"
               ? "bg-gray-900/70 border border-gray-700/60 shadow-lg shadow-black/20"
               : "bg-white/80 border border-gray-200/80 shadow-md"
           }`}
         >
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <span
-              className={`text-sm font-semibold tracking-wide ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}
-            >
-              {t("matchPredictions")}
-            </span>
+          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span
+                className={`text-sm font-semibold tracking-wide ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}
+              >
+                {t("matchPredictions")}
+              </span>
+              <StreakBadge
+                done={completion.done}
+                total={completion.total}
+                theme={theme}
+              />
+            </div>
             <span
               className={`text-sm font-black tabular-nums ${theme === "dark" ? "text-white" : "text-gray-900"}`}
             >
@@ -2111,37 +2625,38 @@ function MatchesPublicTab({
         </div>
       )}
 
+      <ConfettiBurst trigger={confettiTrigger} />
+
+
       {byStage.map(([stage, list]) => (
         <div
           key={stage}
-          className={`relative z-10 rounded-2xl p-4 sm:p-6 backdrop-blur-md ${
+          className={`relative z-10 rounded-2xl p-3 sm:p-5 backdrop-blur-md ${
             theme === "dark"
               ? "bg-gray-900/60 border border-gray-700/50"
               : "bg-white/75 border border-gray-200/70 shadow-sm"
           }`}
         >
           <div
-            className={`flex items-center gap-3 mb-4 pb-3 border-b ${
+            className={`flex items-center gap-2 mb-3 pb-2.5 border-b ${
               theme === "dark" ? "border-gray-700/60" : "border-gray-200/80"
             }`}
           >
-            <div className={`w-1.5 h-7 rounded-full ${accentBg}`} />
+            <div className={`w-1 h-5 rounded-full ${accentBg}`} />
             <h3
-              className={`text-lg font-black uppercase tracking-wider ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+              className={`text-sm font-black uppercase tracking-wider ${theme === "dark" ? "text-white" : "text-gray-900"}`}
             >
               {t(`stage.${stage}`, STAGE_LABELS_PUB[stage] ?? stage)}
             </h3>
             <span
-              className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                theme === "dark"
-                  ? "bg-gray-800/80 text-gray-300"
-                  : "bg-gray-100 text-gray-600"
+              className={`text-[11px] font-medium ${
+                theme === "dark" ? "text-gray-500" : "text-gray-500"
               }`}
             >
               {t("matchesCount", { count: list.length })}
             </span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {list.map((m) => {
               const d = drafts[m.id] ?? { home: null, away: null };
               const locked = isMatchLockedClient(m);
@@ -2189,7 +2704,7 @@ function MatchesPublicTab({
             type="button"
             onClick={() => setError(null)}
             aria-label={t("errors.close")}
-            className={`flex-shrink-0 p-1 rounded-md transition-colors ${
+            className={`flex-shrink-0 p-1.5 rounded-xl transition-colors ${
               theme === "dark"
                 ? "hover:bg-red-900/50 text-red-300"
                 : "hover:bg-red-100 text-red-700"
@@ -2208,7 +2723,7 @@ function MatchesPublicTab({
           style={{
             bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)",
           }}
-          className={`fixed md:sticky md:!bottom-4 left-3 right-3 md:left-auto md:right-auto z-40 md:z-20 md:mt-6 rounded-2xl md:rounded-xl p-3 md:p-4 backdrop-blur-xl shadow-2xl md:shadow-lg ${
+          className={`fixed md:sticky md:!bottom-4 left-3 right-3 md:left-auto md:right-auto z-40 md:z-20 md:mt-6 rounded-3xl p-3 md:p-4 backdrop-blur-xl shadow-2xl md:shadow-lg ${
             theme === "dark"
               ? "bg-gray-900/95 border border-gray-700"
               : "bg-white/95 border border-gray-200"
@@ -2228,7 +2743,7 @@ function MatchesPublicTab({
           <button
             disabled={saving || authStatus !== "authenticated" || completion.done === 0}
             onClick={submit}
-            className={`w-full px-5 py-3.5 sm:py-3 rounded-xl sm:rounded-lg font-black text-sm sm:text-base text-black ${accentBg} disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 active:scale-[0.99] transition-transform`}
+            className={`w-full px-5 py-4 sm:py-3.5 rounded-2xl font-black text-base sm:text-lg text-black ${accentBg} disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 active:scale-[0.99] transition-transform shadow-lg shadow-amber-500/30 ${dirty && completion.done > 0 && !saving ? "save-pulse" : ""}`}
           >
             <Save className="w-4 h-4 sm:w-5 sm:h-5" />
             {saving
@@ -2241,6 +2756,29 @@ function MatchesPublicTab({
                   ? `Save ${completion.done} prediction${completion.done === 1 ? "" : "s"}`
                   : `Sačuvaj ${completion.done} predikcij${completion.done === 1 ? "u" : completion.done < 5 ? "e" : "a"}`}
           </button>
+          <style jsx>{`
+            .save-pulse {
+              animation: save-pulse 1.4s ease-in-out infinite;
+            }
+            @keyframes save-pulse {
+              0%,
+              100% {
+                box-shadow:
+                  0 10px 25px -5px rgba(245, 158, 11, 0.3),
+                  0 0 0 0 rgba(245, 158, 11, 0.6);
+              }
+              50% {
+                box-shadow:
+                  0 12px 30px -5px rgba(245, 158, 11, 0.45),
+                  0 0 0 10px rgba(245, 158, 11, 0);
+              }
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .save-pulse {
+                animation: none;
+              }
+            }
+          `}</style>
         </div>
       )}
     </div>
@@ -2269,41 +2807,97 @@ function ScoreRow({
   const inc = () => onChange(Math.min(99, (draft ?? 0) + 1));
   const dec = () => onChange(Math.max(0, (draft ?? 0) - 1));
 
+  // Tap-team-to-score: tapping the team logo + name area increments by 1.
+  // Long-press resets to 0 — same as the small "−" hammered to zero.
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heldRef = useRef(false);
+  const startHold = () => {
+    if (disabled || showFinal) return;
+    heldRef.current = false;
+    holdTimer.current = setTimeout(() => {
+      heldRef.current = true;
+      onChange(0);
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        try {
+          navigator.vibrate?.(18);
+        } catch {
+          /* ignore */
+        }
+      }
+    }, 420);
+  };
+  const endHold = (skipTap?: boolean) => {
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+    if (skipTap || disabled || showFinal) return;
+    if (!heldRef.current) inc();
+  };
+  const cancelHold = () => {
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  };
+
+  const isWinner = value > 0 && !showFinal;
+
   return (
-    <div className="flex items-center gap-2.5">
-      {logo && (
-        <div
-          className={`flex-shrink-0 rounded-sm overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}
-        >
-          <Image
-            src={logo}
-            alt={team}
-            width={40}
-            height={28}
-            className="w-10 h-7 object-cover"
-            unoptimized
-          />
-        </div>
-      )}
-      <div
-        className={`font-bold text-base flex-1 min-w-0 truncate ${dark ? "text-white" : "text-gray-900"}`}
+    <div className="flex items-center gap-2">
+      {/* Team identity — tap to +1, hold to reset. Compact horizontal. */}
+      <button
+        type="button"
+        onPointerDown={startHold}
+        onPointerUp={() => endHold()}
+        onPointerLeave={cancelHold}
+        onPointerCancel={cancelHold}
+        onContextMenu={(e) => e.preventDefault()}
+        disabled={disabled || showFinal}
+        aria-label={`${team} — tap za +1 gol, drži za reset`}
+        className={`flex-1 min-w-0 flex items-center gap-2 rounded-xl px-1.5 py-1 transition-all active:scale-[0.99] ${
+          disabled || showFinal
+            ? "cursor-default"
+            : dark
+              ? "cursor-pointer hover:bg-gray-700/40 active:bg-amber-500/15"
+              : "cursor-pointer hover:bg-gray-100 active:bg-amber-50"
+        } ${isWinner ? (dark ? "ring-1 ring-amber-500/40" : "ring-1 ring-amber-400/70") : ""}`}
       >
-        {team}
-      </div>
+        {logo && (
+          <div
+            className={`flex-shrink-0 rounded-md overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}
+          >
+            <Image
+              src={logo}
+              alt={team}
+              width={36}
+              height={28}
+              className="w-9 h-7 object-cover"
+              unoptimized
+            />
+          </div>
+        )}
+        <div
+          className={`font-bold text-[13px] leading-[1.15] flex-1 min-w-0 text-left ${dark ? "text-white" : "text-gray-900"}`}
+        >
+          {team}
+        </div>
+      </button>
+      {/* Score controls — compact +/- with input */}
       {showFinal ? (
         <div
-          className={`text-2xl font-black tabular-nums flex-shrink-0 px-3 ${dark ? "text-white" : "text-gray-900"}`}
+          className={`flex-shrink-0 text-2xl font-black tabular-nums px-3 ${dark ? "text-white" : "text-gray-900"}`}
         >
           {finalScore}
         </div>
       ) : (
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0">
           <button
             type="button"
             onClick={dec}
             disabled={disabled || value === 0}
             aria-label="Smanji rezultat"
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-xl font-black select-none transition-all active:scale-95 ${
+            className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black select-none transition-all active:scale-95 ${
               disabled || value === 0
                 ? dark
                   ? "bg-gray-900/40 text-gray-600 cursor-not-allowed"
@@ -2326,7 +2920,7 @@ function ScoreRow({
             }
             placeholder="0"
             inputMode="numeric"
-            className={`w-12 h-12 text-center text-2xl font-black tabular-nums leading-none rounded-lg border-2 outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+            className={`w-11 h-9 text-center text-xl font-black tabular-nums leading-none rounded-xl border outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
               disabled
                 ? dark
                   ? "bg-gray-900/50 border-gray-800 text-gray-500 cursor-not-allowed placeholder-gray-700"
@@ -2345,14 +2939,12 @@ function ScoreRow({
             onClick={inc}
             disabled={disabled || value >= 99}
             aria-label="Povećaj rezultat"
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-xl font-black select-none transition-all active:scale-95 ${
+            className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black select-none transition-all active:scale-95 ${
               disabled
                 ? dark
                   ? "bg-gray-900/40 text-gray-600 cursor-not-allowed"
                   : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                : dark
-                  ? "bg-amber-500 text-black hover:bg-amber-400 active:bg-amber-400 border border-amber-400 shadow-md shadow-amber-500/20"
-                  : "bg-amber-500 text-black hover:bg-amber-400 active:bg-amber-400 border border-amber-400 shadow-md shadow-amber-500/20"
+                : "bg-amber-500 text-black hover:bg-amber-400 active:bg-amber-400 border border-amber-400 shadow-sm shadow-amber-500/30"
             }`}
           >
             +
@@ -2411,6 +3003,59 @@ function MatchCard({
   const venueName = localizedMatchVenue(match, lang);
   const stageLabel = localizedMatchStageLabel(match, lang);
 
+  // Tap-team-to-score handler (long-press = reset). Shared between home + away.
+  const holdTimers = useRef<Record<"home" | "away", ReturnType<typeof setTimeout> | null>>({
+    home: null,
+    away: null,
+  });
+  const heldRef = useRef<{ home: boolean; away: boolean }>({
+    home: false,
+    away: false,
+  });
+  const startHold = (side: "home" | "away") => {
+    if (disabled || isFinished) return;
+    heldRef.current[side] = false;
+    holdTimers.current[side] = setTimeout(() => {
+      heldRef.current[side] = true;
+      onChange({ [side]: 0 } as { home?: number | null; away?: number | null });
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        try {
+          navigator.vibrate?.(18);
+        } catch {
+          /* ignore */
+        }
+      }
+    }, 420);
+  };
+  const endHold = (side: "home" | "away") => {
+    if (holdTimers.current[side]) {
+      clearTimeout(holdTimers.current[side]!);
+      holdTimers.current[side] = null;
+    }
+    if (disabled || isFinished) return;
+    if (!heldRef.current[side]) {
+      const cur = side === "home" ? draft.home : draft.away;
+      const next = Math.min(99, (cur ?? 0) + 1);
+      onChange({ [side]: next } as { home?: number | null; away?: number | null });
+    }
+  };
+  const cancelHold = (side: "home" | "away") => {
+    if (holdTimers.current[side]) {
+      clearTimeout(holdTimers.current[side]!);
+      holdTimers.current[side] = null;
+    }
+  };
+
+  // Winner glow ring derived from the draft scores.
+  const homeLead =
+    draft.home != null &&
+    draft.away != null &&
+    draft.home > draft.away;
+  const awayLead =
+    draft.home != null &&
+    draft.away != null &&
+    draft.away > draft.home;
+
   // compute countdown to kickoff
   let countdown = "";
   const liveNow = match.status === "live";
@@ -2463,7 +3108,7 @@ function MatchCard({
 
   return (
     <div
-      className={`rounded-lg p-4 transition-colors ${
+      className={`rounded-2xl p-3 sm:p-4 transition-colors ${
         liveNow
           ? "border-2 border-red-500 ring-1 ring-red-500/40 " +
             (dark ? "bg-red-950/20" : "bg-red-50/40")
@@ -2472,64 +3117,72 @@ function MatchCard({
               ? "bg-gray-800/40 border border-gray-700"
               : "bg-gray-50 border border-gray-200"
             : dark
-              ? "bg-gray-800/60 border border-gray-700 hover:border-gray-600"
-              : "bg-white border border-gray-200 hover:border-gray-300"
+              ? "bg-gray-800/60 border border-gray-700 hover:border-gray-600 shadow-md shadow-black/10"
+              : "bg-white border border-gray-200 hover:border-gray-300 shadow-sm"
       }`}
     >
-      <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-        <div className="flex items-center gap-2 flex-wrap">
+      {/* Compact meta header — single inline row with the bits that matter */}
+      <div className="flex items-center justify-between gap-2 mb-2.5 text-[11px]">
+        <div className={`flex items-center gap-1.5 flex-wrap min-w-0 ${dark ? "text-gray-400" : "text-gray-500"}`}>
           {liveNow && (
-            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-red-500 text-white animate-pulse inline-flex items-center gap-1">
-              <Flame className="w-3 h-3" /> UŽIVO
-            </span>
-          )}
-          {match.kickoff_at && (
-            <span className="text-xs text-theme-text-secondary inline-flex items-center gap-1">
-              <CalendarClock className="w-3.5 h-3.5" />
-              {new Date(match.kickoff_at).toLocaleString([], {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          )}
-          {venueName && (
-            <span className="text-xs text-theme-text-secondary inline-flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5" />
-              {venueName}
+            <span className="font-black uppercase px-1.5 py-0.5 rounded-md bg-red-500 text-white animate-pulse inline-flex items-center gap-1 text-[10px] shadow-sm shadow-red-500/30">
+              <Flame className="w-2.5 h-2.5" /> UŽIVO
             </span>
           )}
           {stageLabel && (
-            <span className="text-xs text-theme-text-secondary uppercase font-semibold tracking-wide">
+            <span
+              className={`uppercase font-bold tracking-wide ${dark ? "text-amber-400" : "text-amber-600"}`}
+            >
               {stageLabel}
             </span>
           )}
+          {match.kickoff_at && (
+            <>
+              {stageLabel && <span className="opacity-50">·</span>}
+              <span className="inline-flex items-center gap-1 font-semibold">
+                <CalendarClock className="w-3 h-3 opacity-70" />
+                {new Date(match.kickoff_at).toLocaleString([], {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </>
+          )}
         </div>
-        {match.force_unlocked && !isFinished && !liveNow && (
-          <span
-            className={`text-[10px] uppercase font-bold inline-flex items-center gap-1 px-2 py-0.5 rounded ${
-              dark
-                ? "bg-emerald-950/40 text-emerald-300 border border-emerald-800/60"
-                : "bg-emerald-100 text-emerald-700 border border-emerald-300"
-            }`}
-            title="Admin je produžio rok za predviđanje"
-          >
-            <Unlock className="w-3 h-3" /> Produženo
-          </span>
-        )}
-        {locked && !isFinished && !liveNow && !match.force_unlocked && (
-          <span className="text-xs inline-flex items-center gap-1 text-amber-500">
-            <Lock className="w-3.5 h-3.5" /> Zaključano
-          </span>
-        )}
-        {countdown && (
-          <span className="text-xs inline-flex items-center gap-1 text-theme-text-secondary">
-            <Clock className="w-3.5 h-3.5" /> {countdown}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {match.force_unlocked && !isFinished && !liveNow && (
+            <span
+              className={`text-[10px] uppercase font-bold inline-flex items-center gap-1 ${dark ? "text-emerald-400" : "text-emerald-600"}`}
+              title="Admin je produžio rok za predviđanje"
+            >
+              <Unlock className="w-2.5 h-2.5" /> Produženo
+            </span>
+          )}
+          {locked && !isFinished && !liveNow && !match.force_unlocked && (
+            <span className="text-[10px] uppercase font-bold inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+              <Lock className="w-2.5 h-2.5" /> Zaključano
+            </span>
+          )}
+          {countdown && (
+            <span
+              className={`font-bold tabular-nums inline-flex items-center gap-1 ${dark ? "text-amber-400" : "text-amber-600"}`}
+            >
+              <Clock className="w-3 h-3" /> {countdown}
+            </span>
+          )}
+        </div>
       </div>
+      {venueName && (
+        <div
+          className={`flex items-center gap-1 text-[11px] mb-2.5 ${dark ? "text-gray-500" : "text-gray-500"}`}
+        >
+          <MapPin className="w-3 h-3 opacity-60 flex-shrink-0" />
+          <span className="truncate">{venueName}</span>
+        </div>
+      )}
 
       {/* MOBILE LAYOUT — stack vertically (<sm) */}
       <div className="sm:hidden">
@@ -2543,19 +3196,13 @@ function MatchCard({
           onChange={(v) => onChange({ home: v })}
           dark={dark}
         />
-        {/* Divider */}
-        <div className="my-2 flex items-center gap-2">
-          <div
-            className={`flex-1 h-px ${dark ? "bg-gray-700" : "bg-gray-200"}`}
-          />
+        {/* Subtle divider between teams */}
+        <div className="my-1.5 flex items-center justify-center">
           <span
-            className={`text-[10px] uppercase font-bold tracking-widest ${dark ? "text-gray-500" : "text-gray-400"}`}
+            className={`text-[9px] uppercase font-bold tracking-[0.25em] ${dark ? "text-gray-600" : "text-gray-400"}`}
           >
             vs
           </span>
-          <div
-            className={`flex-1 h-px ${dark ? "bg-gray-700" : "bg-gray-200"}`}
-          />
         </div>
         {/* Away row */}
         <ScoreRow
@@ -2567,6 +3214,16 @@ function MatchCard({
           onChange={(v) => onChange({ away: v })}
           dark={dark}
         />
+        {!isFinished && (
+          <QuickScoreChips
+            homeName={homeName}
+            awayName={awayName}
+            selected={draft}
+            disabled={disabled}
+            onPick={(h, a) => onChange({ home: h, away: a })}
+            theme={theme}
+          />
+        )}
         {isFinished && userPred && (
           <div className="mt-2 text-[11px] text-theme-text-secondary text-center">
             tvoja predikcija: {userPred.home_score} − {userPred.away_score}
@@ -2576,29 +3233,45 @@ function MatchCard({
 
       {/* TABLET+ LAYOUT — side by side (sm+) */}
       <div className="hidden sm:grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-        {/* Home team */}
-        <div className="flex items-center gap-3 justify-end min-w-0">
+        {/* Home team — tap to add a goal, long-press to reset */}
+        <button
+          type="button"
+          onPointerDown={() => startHold("home")}
+          onPointerUp={() => endHold("home")}
+          onPointerLeave={() => cancelHold("home")}
+          onPointerCancel={() => cancelHold("home")}
+          onContextMenu={(e) => e.preventDefault()}
+          disabled={disabled || isFinished}
+          aria-label={`${homeName} — tap za +1 gol, drži za reset`}
+          className={`flex items-center gap-3 justify-end min-w-0 rounded-2xl px-3 py-2 transition-all active:scale-[0.98] ${
+            disabled || isFinished
+              ? "cursor-default"
+              : dark
+                ? "cursor-pointer hover:bg-gray-700/40 active:bg-amber-500/15"
+                : "cursor-pointer hover:bg-gray-100 active:bg-amber-100"
+          } ${homeLead ? (dark ? "ring-2 ring-amber-500/50 bg-amber-500/10" : "ring-2 ring-amber-400 bg-amber-50") : ""}`}
+        >
           <div className="text-right min-w-0">
-            <div className={`font-bold text-base md:text-lg truncate ${dark ? "text-white" : "text-gray-900"}`}>
+            <div className={`font-black text-base md:text-lg leading-tight break-words ${dark ? "text-white" : "text-gray-900"}`}>
               {homeName}
             </div>
           </div>
           {match.home_logo_url && (
-            <div className={`flex-shrink-0 rounded-sm overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}>
+            <div className={`flex-shrink-0 rounded-xl overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}>
               <Image
                 src={match.home_logo_url}
                 alt={homeName}
-                width={48}
-                height={36}
-                className="w-12 h-9 object-cover"
+                width={56}
+                height={42}
+                className="w-14 h-10 object-cover"
                 unoptimized
               />
             </div>
           )}
-        </div>
+        </button>
 
         {/* Score area */}
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-2.5">
           {isFinished && match.home_score != null && match.away_score != null ? (
             <div className="text-center">
               <div className={`text-3xl font-black tabular-nums ${dark ? "text-white" : "text-gray-900"}`}>
@@ -2624,7 +3297,7 @@ function MatchCard({
                 }
                 placeholder="0"
                 inputMode="numeric"
-                className={`w-16 h-16 text-center text-3xl font-black tabular-nums leading-none rounded-xl border-2 outline-none transition-all duration-200 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+                className={`w-20 h-20 text-center text-4xl font-black tabular-nums leading-none rounded-2xl border-2 outline-none transition-all duration-200 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
                   disabled
                     ? dark
                       ? "bg-gray-900/50 border-gray-800 text-gray-500 cursor-not-allowed placeholder-gray-700"
@@ -2651,7 +3324,7 @@ function MatchCard({
                 }
                 placeholder="0"
                 inputMode="numeric"
-                className={`w-16 h-16 text-center text-3xl font-black tabular-nums leading-none rounded-xl border-2 outline-none transition-all duration-200 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+                className={`w-20 h-20 text-center text-4xl font-black tabular-nums leading-none rounded-2xl border-2 outline-none transition-all duration-200 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
                   disabled
                     ? dark
                       ? "bg-gray-900/50 border-gray-800 text-gray-500 cursor-not-allowed placeholder-gray-700"
@@ -2669,55 +3342,105 @@ function MatchCard({
           )}
         </div>
 
-        {/* Away team */}
-        <div className="flex items-center gap-3 min-w-0">
+        {/* Away team — tap to add a goal, long-press to reset */}
+        <button
+          type="button"
+          onPointerDown={() => startHold("away")}
+          onPointerUp={() => endHold("away")}
+          onPointerLeave={() => cancelHold("away")}
+          onPointerCancel={() => cancelHold("away")}
+          onContextMenu={(e) => e.preventDefault()}
+          disabled={disabled || isFinished}
+          aria-label={`${awayName} — tap za +1 gol, drži za reset`}
+          className={`flex items-center gap-3 min-w-0 rounded-2xl px-3 py-2 transition-all active:scale-[0.98] ${
+            disabled || isFinished
+              ? "cursor-default"
+              : dark
+                ? "cursor-pointer hover:bg-gray-700/40 active:bg-amber-500/15"
+                : "cursor-pointer hover:bg-gray-100 active:bg-amber-100"
+          } ${awayLead ? (dark ? "ring-2 ring-amber-500/50 bg-amber-500/10" : "ring-2 ring-amber-400 bg-amber-50") : ""}`}
+        >
           {match.away_logo_url && (
-            <div className={`flex-shrink-0 rounded-sm overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}>
+            <div className={`flex-shrink-0 rounded-xl overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}>
               <Image
                 src={match.away_logo_url}
                 alt={awayName}
-                width={48}
-                height={36}
-                className="w-12 h-9 object-cover"
+                width={56}
+                height={42}
+                className="w-14 h-10 object-cover"
                 unoptimized
               />
             </div>
           )}
           <div className="min-w-0">
-            <div className={`font-bold text-base md:text-lg truncate ${dark ? "text-white" : "text-gray-900"}`}>
+            <div className={`font-black text-base md:text-lg leading-tight break-words ${dark ? "text-white" : "text-gray-900"}`}>
               {awayName}
             </div>
           </div>
-        </div>
+        </button>
       </div>
+
+      {/* Quick score chips (tablet+ only — mobile renders them inside the stacked layout) */}
+      {!isFinished && (
+        <div className="hidden sm:block">
+          <QuickScoreChips
+            homeName={homeName}
+            awayName={awayName}
+            selected={draft}
+            disabled={disabled}
+            onPick={(h, a) => onChange({ home: h, away: a })}
+            theme={theme}
+          />
+        </div>
+      )}
 
       {/* outcome badge for finished matches */}
       {outcomeBadge && (
-        <div className="mt-3 pt-3 border-t border-theme-border flex items-center justify-between flex-wrap gap-2">
+        <div className="mt-2.5 pt-2 border-t border-theme-border flex items-center justify-between gap-2">
           <span
-            className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${outcomeBadge.cls}`}
+            className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${outcomeBadge.cls}`}
           >
             {outcomeBadge.text}
           </span>
           {userPred && (
-            <span className={`text-sm font-bold ${accentText}`}>
-              +{userPred.points_awarded} pts
+            <span
+              className={`inline-flex items-baseline gap-1 ${accentText}`}
+            >
+              <span className="text-sm font-black tabular-nums leading-none">
+                +{userPred.points_awarded}
+              </span>
+              <span className="text-[9px] uppercase tracking-wider font-bold leading-none">
+                pts
+              </span>
             </span>
           )}
         </div>
       )}
 
-      {/* points info */}
+      {/* Compact points info — single inline strip, not chips */}
       {!isFinished && !liveNow && !disabled && (
-        <div className="mt-3 pt-2 border-t border-theme-border flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-[10px] uppercase tracking-wide text-theme-text-secondary">
-          <span className="inline-flex items-center gap-1">
-            tačno <span className={`font-bold ${accentText}`}>{match.points_exact}</span>
+        <div
+          className={`mt-2.5 pt-2 border-t flex items-center justify-end gap-3 text-[10px] uppercase tracking-wider font-bold ${dark ? "border-gray-700/60 text-gray-500" : "border-gray-200/80 text-gray-500"}`}
+        >
+          <span>
+            {lang === "en" ? "Exact" : "Tačno"}{" "}
+            <span className={`${dark ? "text-amber-400" : "text-amber-600"} font-black`}>
+              {match.points_exact}
+            </span>
           </span>
-          <span className="inline-flex items-center gap-1">
-            razlika <span className={`font-bold ${accentText}`}>{match.points_diff}</span>
+          <span className="opacity-30">·</span>
+          <span>
+            {lang === "en" ? "Margin" : "Razlika"}{" "}
+            <span className={`${dark ? "text-amber-400" : "text-amber-600"} font-black`}>
+              {match.points_diff}
+            </span>
           </span>
-          <span className="inline-flex items-center gap-1">
-            pobjednik <span className={`font-bold ${accentText}`}>{match.points_winner}</span>
+          <span className="opacity-30">·</span>
+          <span>
+            {lang === "en" ? "Winner" : "Pobjednik"}{" "}
+            <span className={`${dark ? "text-amber-400" : "text-amber-600"} font-black`}>
+              {match.points_winner}
+            </span>
           </span>
         </div>
       )}
@@ -2823,33 +3546,34 @@ function PredictionsSummary({
         </div>
       </div>
 
-      {/* One row per category */}
-      <div className="space-y-3">
+      {/* One row per category — refined, less heavy, mobile-first */}
+      <div className="space-y-2">
         {tournament.categories.map((cat, idx) => {
           const d = draft[cat.id] ?? emptyDraft();
           return (
-            <motion.div
+            <div
               key={cat.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.05 + idx * 0.04 }}
-              className={`relative rounded-2xl border-l-4 ${accentBorder} ${
+              className={`relative rounded-xl ${
                 dark
-                  ? "bg-gray-900/70 border border-gray-700/60"
-                  : "bg-white/90 border border-gray-200"
-              } p-4 sm:p-5 shadow-sm`}
+                  ? "bg-gray-900/60 border border-gray-700/60"
+                  : "bg-white/95 border border-gray-200/80"
+              } px-3 py-2.5 sm:px-4 sm:py-3`}
             >
-              <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
-                <div className="flex items-center gap-2 min-w-0">
-                  <p
-                    className={`text-[10px] font-black uppercase tracking-wider ${
+              <span
+                aria-hidden
+                className={`absolute left-0 top-2 bottom-2 w-0.5 rounded-full ${accentBg.split(" ")[0]}`}
+              />
+              <div className="flex items-start justify-between gap-2 mb-1.5">
+                <div className="flex items-baseline gap-1.5 min-w-0 flex-1">
+                  <span
+                    className={`text-[10px] font-bold tabular-nums leading-none ${
                       dark ? "text-gray-500" : "text-gray-400"
                     }`}
                   >
-                    #{idx + 1}
-                  </p>
+                    {idx + 1}.
+                  </span>
                   <h3
-                    className={`text-base sm:text-lg font-black ${
+                    className={`text-[13px] sm:text-sm font-bold leading-snug break-words ${
                       dark ? "text-white" : "text-gray-900"
                     }`}
                   >
@@ -2857,11 +3581,14 @@ function PredictionsSummary({
                   </h3>
                 </div>
                 <span
-                  className={`text-[10px] uppercase font-black px-2 py-0.5 rounded ${accentText} ${
-                    dark ? "bg-gray-900" : "bg-gray-100"
-                  }`}
+                  className={`flex-shrink-0 inline-flex items-baseline gap-0.5 ${accentText}`}
                 >
-                  {cat.points_correct} pts
+                  <span className="text-[13px] font-black tabular-nums leading-none">
+                    {cat.points_correct}
+                  </span>
+                  <span className="text-[9px] uppercase font-bold tracking-wider leading-none opacity-70">
+                    pts
+                  </span>
                 </span>
               </div>
               <SummaryAnswer
@@ -2871,7 +3598,7 @@ function PredictionsSummary({
                 lang={lang}
                 accentText={accentText}
               />
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -2902,47 +3629,89 @@ function SummaryAnswer({
     return m;
   }, [category.options]);
 
-  const renderOptionPill = (opt: PredictionOption, rank?: number) => {
+  const localizedOptionName = (opt: PredictionOption) => {
     const codeFromUrl =
       opt.image_url &&
       /flagcdn\.com\/[^/]+\/([a-z-]+)\.png/i.exec(opt.image_url)?.[1];
     const baseLabel = localizedOptionLabel(opt, lang);
-    const localized =
-      lang === "en" && opt.label_en?.trim()
-        ? opt.label_en
-        : opt.value || codeFromUrl
-          ? localizeTeamName(baseLabel, opt.value || codeFromUrl, lang)
-          : baseLabel;
+    return lang === "en" && opt.label_en?.trim()
+      ? opt.label_en
+      : opt.value || codeFromUrl
+        ? localizeTeamName(baseLabel, opt.value || codeFromUrl, lang)
+        : baseLabel;
+  };
+
+  // Pill — kept for single_choice (one team highlighted as the pick).
+  const renderOptionPill = (opt: PredictionOption) => {
+    const localized = localizedOptionName(opt);
     return (
       <span
         key={opt.id}
-        className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 font-bold text-sm ${
+        className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 font-semibold text-[12px] max-w-full ${
           dark
-            ? "bg-amber-500/15 text-amber-100 ring-1 ring-amber-500/30"
-            : "bg-amber-50 text-amber-900 ring-1 ring-amber-200"
+            ? "bg-gray-800/60 text-gray-100 ring-1 ring-gray-700"
+            : "bg-gray-50 text-gray-800 ring-1 ring-gray-200"
         }`}
       >
-        {rank != null && (
+        {opt.image_url && (
+          <Image
+            src={opt.image_url}
+            alt=""
+            width={20}
+            height={14}
+            className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0"
+            unoptimized
+          />
+        )}
+        <span className="truncate min-w-0">{localized}</span>
+      </span>
+    );
+  };
+
+  // Row — for multi-pick categories. Renders as a discreet table-like list
+  // with a numbered badge so order is obvious (1, 2, 3, 4…).
+  const renderOptionRow = (
+    opt: PredictionOption,
+    rank: number,
+    showRank: boolean,
+  ) => {
+    const localized = localizedOptionName(opt);
+    return (
+      <li
+        key={opt.id}
+        className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg ${
+          dark
+            ? "bg-gray-800/50 ring-1 ring-gray-700/60"
+            : "bg-gray-50 ring-1 ring-gray-200/80"
+        }`}
+      >
+        {showRank && (
           <span
-            className={`flex-shrink-0 inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full text-[10px] font-black tabular-nums ${
-              dark ? "bg-amber-500 text-black" : "bg-amber-500 text-black"
-            }`}
+            className={`flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black tabular-nums bg-amber-500 text-black shadow-sm shadow-amber-500/30`}
           >
             {rank}
           </span>
         )}
         {opt.image_url && (
-          <Image
-            src={opt.image_url}
-            alt=""
-            width={24}
-            height={16}
-            className="w-6 h-4 object-cover rounded-sm flex-shrink-0"
-            unoptimized
-          />
+          <div
+            className={`flex-shrink-0 rounded overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}
+          >
+            <Image
+              src={opt.image_url}
+              alt=""
+              width={22}
+              height={16}
+              className="w-[22px] h-4 object-cover"
+              unoptimized
+            />
+          </div>
         )}
-        <span className="truncate">{localized}</span>
-      </span>
+        <span
+          className={`text-[12px] font-semibold leading-tight min-w-0 break-words ${dark ? "text-gray-100" : "text-gray-900"}`}
+        >
+          {localized}
+        </span>
+      </li>
     );
   };
 
@@ -2954,7 +3723,7 @@ function SummaryAnswer({
         ? optionById.get(draft.selected[0])
         : null;
       if (!picked) return <EmptyAnswer dark={dark} lang={lang} />;
-      return <div className="flex flex-wrap gap-2">{renderOptionPill(picked)}</div>;
+      return <div className="flex flex-wrap gap-1.5">{renderOptionPill(picked)}</div>;
     }
     case "multiple_choice": {
       const picks = draft.selected
@@ -2962,9 +3731,9 @@ function SummaryAnswer({
         .filter(Boolean) as PredictionOption[];
       if (picks.length === 0) return <EmptyAnswer dark={dark} lang={lang} />;
       return (
-        <div className="flex flex-wrap gap-2">
-          {picks.map((p) => renderOptionPill(p))}
-        </div>
+        <ol className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          {picks.map((p, i) => renderOptionRow(p, i + 1, false))}
+        </ol>
       );
     }
     case "ranked_top_n": {
@@ -2973,29 +3742,25 @@ function SummaryAnswer({
         .filter(Boolean) as PredictionOption[];
       if (picks.length === 0) return <EmptyAnswer dark={dark} lang={lang} />;
       return (
-        <div className="flex flex-wrap gap-2">
-          {picks.map((p, i) => renderOptionPill(p, i + 1))}
-        </div>
+        <ol className="space-y-1.5">
+          {picks.map((p, i) => renderOptionRow(p, i + 1, true))}
+        </ol>
       );
     }
     case "exact_score": {
       if (draft.scoreHome == null || draft.scoreAway == null)
         return <EmptyAnswer dark={dark} lang={lang} />;
       return (
-        <div className="flex items-center gap-3">
-          <span
-            className={`text-3xl font-black tabular-nums ${accentText}`}
-          >
+        <div className="inline-flex items-baseline gap-2">
+          <span className={`text-xl font-black tabular-nums leading-none ${accentText}`}>
             {draft.scoreHome}
           </span>
           <span
-            className={`text-2xl font-bold ${dark ? "text-gray-500" : "text-gray-400"}`}
+            className={`text-base font-bold leading-none ${dark ? "text-gray-600" : "text-gray-400"}`}
           >
             :
           </span>
-          <span
-            className={`text-3xl font-black tabular-nums ${accentText}`}
-          >
+          <span className={`text-xl font-black tabular-nums leading-none ${accentText}`}>
             {draft.scoreAway}
           </span>
         </div>
@@ -3004,7 +3769,7 @@ function SummaryAnswer({
     case "numeric": {
       if (draft.numeric == null) return <EmptyAnswer dark={dark} lang={lang} />;
       return (
-        <span className={`text-2xl font-black tabular-nums ${accentText}`}>
+        <span className={`text-xl font-black tabular-nums ${accentText}`}>
           {draft.numeric}
         </span>
       );
@@ -3013,7 +3778,7 @@ function SummaryAnswer({
       if (!draft.text.trim()) return <EmptyAnswer dark={dark} lang={lang} />;
       return (
         <p
-          className={`text-lg font-black ${
+          className={`text-[13px] font-bold leading-snug break-words ${
             dark ? "text-white" : "text-gray-900"
           }`}
         >

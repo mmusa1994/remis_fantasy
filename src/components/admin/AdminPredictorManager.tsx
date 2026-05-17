@@ -4,6 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import SaveToast, {
   type SaveToastState,
@@ -52,7 +53,6 @@ import {
   UserPlus,
   Ban,
   Unlock,
-  Music2,
   ImageIcon,
 } from "lucide-react";
 import type {
@@ -71,6 +71,7 @@ import type {
   MemberStatus,
 } from "@/types/predictor";
 import { getLogoFilter } from "@/utils/predictor-logo";
+import AdminPredictionsExplorer from "./AdminPredictionsExplorer";
 
 type CategoryWithOptions = PredictionCategory & {
   predictor_options?: PredictionOption[];
@@ -97,13 +98,17 @@ const CATEGORY_TYPE_LABEL: Record<CategoryType, string> = {
 };
 
 // Available WC2026 backdrops shown in the admin picker. Files live in
-// public/wc2026/. Order = display order in the dropdown.
-const WC_BACKGROUND_OPTIONS: Array<{ src: string; label: string }> = [
-  { src: "/wc2026/bg-full-wc-2026.jpg", label: "FIFA 26 logo (tamna, brutalna)" },
-  { src: "/wc2026/wc-bg.jpg", label: "Hero #1" },
-  { src: "/wc2026/wc-bg1.jpg", label: "Hero #2 (tabele)" },
-  { src: "/wc2026/wc-bg-2.webp", label: "Match-day apstrakcija" },
-  { src: "/wc2026/wc-bg-3.webp", label: "Stadion blur" },
+// public/wc2026/. `labelKey` resolves through i18n at render time so the
+// admin sees BS or EN labels based on the active language.
+const WC_BACKGROUND_OPTIONS: Array<{ src: string; labelKey: string }> = [
+  {
+    src: "/wc2026/bg-full-wc-2026.jpg",
+    labelKey: "admin.settings.theme.bg.bgFull",
+  },
+  { src: "/wc2026/wc-bg.jpg", labelKey: "admin.settings.theme.bg.bg1" },
+  { src: "/wc2026/wc-bg1.jpg", labelKey: "admin.settings.theme.bg.bg2" },
+  { src: "/wc2026/wc-bg-2.webp", labelKey: "admin.settings.theme.bg.bg3" },
+  { src: "/wc2026/wc-bg-3.webp", labelKey: "admin.settings.theme.bg.bg4" },
 ];
 
 const ACCENT_ICON_CLASS: Record<string, string> = {
@@ -247,7 +252,7 @@ const subCardCls = (theme: string) =>
     : "bg-gray-50 border border-gray-200";
 
 const inputCls = (theme: string) =>
-  `w-full px-3 py-2 rounded-md outline-none text-sm transition-colors ${
+  `w-full px-3 py-2.5 rounded-xl outline-none text-sm transition-colors min-h-[40px] ${
     theme === "dark"
       ? "bg-gray-800 border border-gray-700 text-white focus:border-amber-500 placeholder-gray-500"
       : "bg-white border border-gray-300 text-gray-900 focus:border-amber-500 placeholder-gray-400"
@@ -263,27 +268,27 @@ const subtleTextCls = (theme: string) =>
   theme === "dark" ? "text-gray-500" : "text-gray-500";
 
 const primaryBtnCls =
-  "inline-flex items-center gap-2 px-4 py-2 rounded-md bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm disabled:opacity-60 transition-colors";
+  "inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm disabled:opacity-60 transition-colors shadow-sm shadow-amber-500/30 min-h-[40px]";
 
 const ghostBtnCls = (theme: string) =>
-  `px-3 py-2 rounded-md text-sm transition-colors ${
+  `px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors min-h-[40px] inline-flex items-center justify-center gap-1.5 ${
     theme === "dark"
       ? "border border-gray-700 hover:bg-gray-800 text-gray-200"
       : "border border-gray-300 hover:bg-gray-50 text-gray-700"
   }`;
 
 const dangerBtnCls = (theme: string) =>
-  `p-2 rounded-md transition-colors ${
+  `p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] inline-flex items-center justify-center ${
     theme === "dark"
-      ? "hover:bg-red-900/30 text-red-400"
-      : "hover:bg-red-50 text-red-600"
+      ? "hover:bg-red-900/30 text-red-400 border border-gray-700"
+      : "hover:bg-red-50 text-red-600 border border-gray-200"
   }`;
 
 const editBtnCls = (theme: string) =>
-  `p-2 rounded-md transition-colors ${
+  `p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] inline-flex items-center justify-center ${
     theme === "dark"
-      ? "hover:bg-gray-800 text-gray-300"
-      : "hover:bg-gray-100 text-gray-700"
+      ? "hover:bg-gray-800 text-gray-300 border border-gray-700"
+      : "hover:bg-gray-100 text-gray-700 border border-gray-200"
   }`;
 
 const chipCls = (theme: string) =>
@@ -513,7 +518,7 @@ function ImportTemplateModal({
       onClick={onClose}
     >
       <div
-        className={`relative w-full max-w-2xl rounded-lg p-6 max-h-[90vh] overflow-y-auto ${cardCls(theme)}`}
+        className={`relative w-full max-w-2xl rounded-3xl p-6 max-h-[90vh] overflow-y-auto ${cardCls(theme)}`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -547,13 +552,13 @@ function ImportTemplateModal({
             {templates.map((tmpl) => (
               <div
                 key={tmpl.id}
-                className={`rounded-md p-4 ${subCardCls(theme)}`}
+                className={`rounded-2xl p-4 ${subCardCls(theme)}`}
               >
                 <div className="flex items-start gap-3">
                   {tmpl.logo_url ? (
                     <div
-                      className={`relative w-14 h-14 rounded-md flex-shrink-0 flex items-center justify-center ${
-                        theme === "dark" ? "bg-gray-900" : "bg-white"
+                      className={`relative w-16 h-16 rounded-2xl flex-shrink-0 flex items-center justify-center ${
+                        theme === "dark" ? "bg-gray-900 border border-gray-700" : "bg-white border border-gray-200"
                       }`}
                     >
                       <Image
@@ -831,7 +836,7 @@ function TournamentList({
           započneš.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {tournaments.map((t) => {
             const badge =
               theme === "dark"
@@ -1510,7 +1515,7 @@ function TournamentEditor({
         <RewardsTab tournament={tournament} theme={theme} />
       )}
       {tab === "members" && (
-        <MembersTab tournament={tournament} theme={theme} />
+        <AdminPredictionsExplorer tournament={tournament} theme={theme} />
       )}
       {tab === "approvals" && (
         <ApprovalsTab
@@ -1535,6 +1540,7 @@ function ApprovalsTab({
   theme: string;
   onPendingChanged?: () => void;
 }) {
+  const { t } = useApprovalsT();
   const [members, setMembers] = useState<TournamentMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<MemberStatus | "all">("pending");
@@ -1568,7 +1574,7 @@ function ApprovalsTab({
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Ukloni ovog člana iz turnira?")) return;
+    if (!confirm(t("admin.approvals.confirmRemove", "Ukloni ovog člana?"))) return;
     const res = await fetch(`/api/admin/predictor/members?id=${id}`, {
       method: "DELETE",
     });
@@ -1591,7 +1597,7 @@ function ApprovalsTab({
   if (!tournament.require_approval) {
     return (
       <div
-        className={`rounded-lg p-6 ${
+        className={`rounded-3xl p-6 ${
           theme === "dark"
             ? "bg-amber-950/30 border border-amber-900/50"
             : "bg-amber-50 border border-amber-200"
@@ -1601,13 +1607,16 @@ function ApprovalsTab({
           <Info className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
             <h3 className={`font-bold ${headingCls(theme)}`}>
-              Odobrenja su trenutno isključena
+              {t(
+                "admin.approvals.disabledTitle",
+                "Odobrenja su trenutno isključena",
+              )}
             </h3>
             <p className={`text-sm mt-1 ${mutedTextCls(theme)}`}>
-              Svi prijavljeni korisnici mogu odmah predviđati. Da bi koristio
-              sistem odobrenja, idi na <b>Postavke</b> i uključi opciju{" "}
-              <b>&quot;Zahtijevaj odobrenje admina&quot;</b>. Tada korisnici moraju zatražiti
-              učešće, a ti odobravaš/odbijaš zahtjeve ovdje.
+              {t(
+                "admin.approvals.disabledBody",
+                "Svi prijavljeni korisnici mogu odmah predviđati. Da bi koristio sistem odobrenja, idi na Postavke i uključi opciju \"Zahtijevaj odobrenje admina\".",
+              )}
             </p>
           </div>
         </div>
@@ -1634,31 +1643,34 @@ function ApprovalsTab({
         : "bg-gray-200 text-gray-600 border-gray-300",
   };
   const STATUS_LABEL: Record<MemberStatus, string> = {
-    pending: "Na čekanju",
-    approved: "Odobren",
-    rejected: "Odbijen",
-    banned: "Blokiran",
+    pending: t("admin.approvals.filter.pending", "Na čekanju"),
+    approved: t("admin.approvals.filter.approved", "Odobreni"),
+    rejected: t("admin.approvals.filter.rejected", "Odbijeni"),
+    banned: t("admin.approvals.filter.banned", "Banovani"),
   };
 
   return (
     <div className="space-y-4">
       <div>
-        <h3 className={`font-semibold ${headingCls(theme)}`}>
-          Odobrenja korisnika
+        <h3 className={`text-lg font-bold ${headingCls(theme)}`}>
+          {t("admin.approvals.title", "Odobrenja korisnika")}
         </h3>
-        <p className={`text-xs ${subtleTextCls(theme)}`}>
-          Samo odobreni korisnici mogu predviđati. Standings ostaju javni za sve.
+        <p className={`text-xs sm:text-sm mt-1 ${subtleTextCls(theme)}`}>
+          {t(
+            "admin.approvals.subtitle",
+            "Odobri, odbij ili banuj zahtjeve za učešće u turniru.",
+          )}
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {(
           [
-            { id: "pending", label: "Na čekanju", count: counts.pending, icon: UserPlus },
-            { id: "approved", label: "Odobreni", count: counts.approved, icon: UserCheck },
-            { id: "rejected", label: "Odbijeni", count: counts.rejected, icon: UserX },
-            { id: "banned", label: "Blokirani", count: counts.banned, icon: Ban },
-            { id: "all", label: "Svi", count: members.length, icon: Users },
+            { id: "pending", label: STATUS_LABEL.pending, count: counts.pending, icon: UserPlus },
+            { id: "approved", label: STATUS_LABEL.approved, count: counts.approved, icon: UserCheck },
+            { id: "rejected", label: STATUS_LABEL.rejected, count: counts.rejected, icon: UserX },
+            { id: "banned", label: STATUS_LABEL.banned, count: counts.banned, icon: Ban },
+            { id: "all", label: t("admin.approvals.filter.all", "Svi"), count: members.length, icon: Users },
           ] as const
         ).map((f) => {
           const Icon = f.icon;
@@ -1667,18 +1679,18 @@ function ApprovalsTab({
             <button
               key={f.id}
               onClick={() => setFilter(f.id as any)}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+              className={`flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold border transition-colors whitespace-nowrap ${
                 active
-                  ? "bg-amber-500 text-black"
+                  ? "bg-amber-500 text-black border-amber-400 shadow-sm shadow-amber-500/30"
                   : theme === "dark"
-                    ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-gray-900/60 text-gray-300 border-gray-700 hover:border-amber-500/60"
+                    : "bg-white text-gray-700 border-gray-200 hover:border-amber-500/60"
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               {f.label}
               <span
-                className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${active ? "bg-black/20" : theme === "dark" ? "bg-gray-900" : "bg-white"}`}
+                className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-black/20" : theme === "dark" ? "bg-gray-900" : "bg-gray-100"}`}
               >
                 {f.count}
               </span>
@@ -1693,22 +1705,22 @@ function ApprovalsTab({
         </div>
       ) : filtered.length === 0 ? (
         <div
-          className={`rounded-md border border-dashed p-10 text-center text-sm ${
+          className={`rounded-3xl border border-dashed p-10 text-center text-sm ${
             theme === "dark"
               ? "border-gray-700 text-gray-400"
               : "border-gray-300 text-gray-500"
           }`}
         >
-          Nema zapisa u ovoj kategoriji.
+          {t("admin.approvals.noPending", "Nema zapisa u ovoj kategoriji.")}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {filtered.map((m) => (
-            <div key={m.id} className={`rounded-md p-3 ${cardCls(theme)}`}>
-              <div className="flex items-center gap-3 flex-wrap">
+            <div key={m.id} className={`rounded-2xl p-4 ${cardCls(theme)}`}>
+              <div className="flex items-start gap-3">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                    theme === "dark" ? "bg-gray-800 text-amber-400" : "bg-amber-50 text-amber-700"
+                  className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${
+                    theme === "dark" ? "bg-gray-800 text-amber-300" : "bg-amber-50 text-amber-700"
                   }`}
                 >
                   {(m.user_display_name || m.user_email || "U")
@@ -1716,12 +1728,26 @@ function ApprovalsTab({
                     .toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className={`font-semibold ${headingCls(theme)}`}>
-                    {m.user_display_name || m.user_email?.split("@")[0] || "Korisnik"}
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div className="min-w-0">
+                      <div className={`font-bold ${headingCls(theme)} truncate`}>
+                        {m.user_display_name || m.user_email?.split("@")[0] || "Korisnik"}
+                      </div>
+                      {m.user_email && (
+                        <div className={`text-xs ${subtleTextCls(theme)} truncate`}>
+                          {m.user_email}
+                        </div>
+                      )}
+                    </div>
+                    <span
+                      className={`flex-shrink-0 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${STATUS_BADGE[m.status]}`}
+                    >
+                      {STATUS_LABEL[m.status]}
+                    </span>
                   </div>
-                  <div className={`text-xs ${subtleTextCls(theme)}`}>
-                    {m.user_email} · zatraženo{" "}
+                  <div className={`mt-1 text-[11px] ${subtleTextCls(theme)}`}>
                     {new Date(m.requested_at).toLocaleString([], {
+                      weekday: "short",
                       month: "short",
                       day: "numeric",
                       hour: "2-digit",
@@ -1729,55 +1755,58 @@ function ApprovalsTab({
                     })}
                   </div>
                 </div>
-                <span
-                  className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${STATUS_BADGE[m.status]}`}
-                >
-                  {STATUS_LABEL[m.status]}
-                </span>
-                <div className="flex items-center gap-1">
-                  {m.status !== "approved" && (
-                    <button
-                      onClick={() => changeStatus(m.id, "approved")}
-                      className={`p-2 rounded-md transition-colors ${
-                        theme === "dark"
-                          ? "hover:bg-emerald-950/40 text-emerald-400"
-                          : "hover:bg-emerald-50 text-emerald-600"
-                      }`}
-                      title="Odobri"
-                    >
-                      <UserCheck className="w-4 h-4" />
-                    </button>
-                  )}
-                  {m.status !== "rejected" && (
-                    <button
-                      onClick={() => changeStatus(m.id, "rejected")}
-                      className={`p-2 rounded-md transition-colors ${
-                        theme === "dark"
-                          ? "hover:bg-red-950/40 text-red-400"
-                          : "hover:bg-red-50 text-red-600"
-                      }`}
-                      title="Odbij"
-                    >
-                      <UserX className="w-4 h-4" />
-                    </button>
-                  )}
-                  {m.status !== "banned" && (
-                    <button
-                      onClick={() => changeStatus(m.id, "banned")}
-                      className={editBtnCls(theme)}
-                      title="Blokiraj"
-                    >
-                      <Ban className="w-4 h-4" />
-                    </button>
-                  )}
+              </div>
+              <div className="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+                {m.status !== "approved" && (
                   <button
-                    onClick={() => remove(m.id)}
-                    className={dangerBtnCls(theme)}
-                    title="Ukloni"
+                    onClick={() => changeStatus(m.id, "approved")}
+                    className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                      theme === "dark"
+                        ? "bg-emerald-950/40 text-emerald-300 hover:bg-emerald-950/60 border border-emerald-800/60"
+                        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                    }`}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <UserCheck className="w-3.5 h-3.5" />
+                    {t("admin.approvals.approve", "Odobri")}
                   </button>
-                </div>
+                )}
+                {m.status !== "rejected" && (
+                  <button
+                    onClick={() => changeStatus(m.id, "rejected")}
+                    className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                      theme === "dark"
+                        ? "bg-red-950/40 text-red-300 hover:bg-red-950/60 border border-red-800/60"
+                        : "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+                    }`}
+                  >
+                    <UserX className="w-3.5 h-3.5" />
+                    {t("admin.approvals.reject", "Odbij")}
+                  </button>
+                )}
+                {m.status !== "banned" && (
+                  <button
+                    onClick={() => changeStatus(m.id, "banned")}
+                    className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                      theme === "dark"
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
+                    }`}
+                  >
+                    <Ban className="w-3.5 h-3.5" />
+                    {t("admin.approvals.ban", "Banuj")}
+                  </button>
+                )}
+                <button
+                  onClick={() => remove(m.id)}
+                  className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                    theme === "dark"
+                      ? "bg-red-950/20 text-red-400 hover:bg-red-950/40 border border-red-900/40"
+                      : "bg-red-50/60 text-red-600 hover:bg-red-100 border border-red-200"
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  {t("admin.approvals.delete", "Obriši")}
+                </button>
               </div>
             </div>
           ))}
@@ -1786,6 +1815,12 @@ function ApprovalsTab({
     </div>
   );
 }
+
+// Simple wrapper used by ApprovalsTab so it can call t(...) without re-importing.
+function useApprovalsT() {
+  return useTranslation("predictor");
+}
+
 
 // ============================================================
 // Matches tab — admin upravlja utakmicama + unos rezultata
@@ -2274,23 +2309,23 @@ function MatchRow({
         </div>
       )}
 
-      {/* Actions row */}
+      {/* Actions row — larger touch targets, wraps on tight screens */}
       <div
-        className={`mt-3 pt-2 border-t flex items-center justify-end gap-1 ${
+        className={`mt-3 pt-2 border-t flex items-center justify-end gap-1.5 flex-wrap ${
           theme === "dark" ? "border-gray-800" : "border-gray-200"
         }`}
       >
         {(autoLocked || match.force_unlocked) && match.status === "scheduled" && (
           <button
             onClick={toggleUnlock}
-            className={`p-2 rounded-md transition-colors ${
+            className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
               match.force_unlocked
                 ? theme === "dark"
                   ? "bg-emerald-950/40 hover:bg-emerald-950/60 text-emerald-300"
                   : "bg-emerald-100 hover:bg-emerald-200 text-emerald-700"
                 : theme === "dark"
-                  ? "hover:bg-amber-950/40 text-amber-300"
-                  : "hover:bg-amber-50 text-amber-700"
+                  ? "hover:bg-amber-950/40 text-amber-300 border border-gray-700"
+                  : "hover:bg-amber-50 text-amber-700 border border-gray-200"
             }`}
             title={
               match.force_unlocked
@@ -2307,19 +2342,35 @@ function MatchRow({
         )}
         <button
           onClick={onResult}
-          className={`p-2 rounded-md transition-colors ${
+          className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
             theme === "dark"
-              ? "hover:bg-emerald-950/40 text-emerald-300"
-              : "hover:bg-emerald-50 text-emerald-700"
+              ? "hover:bg-emerald-950/40 text-emerald-300 border border-gray-700"
+              : "hover:bg-emerald-50 text-emerald-700 border border-gray-200"
           }`}
           title="Unesi rezultat"
         >
           <Flag className="w-4 h-4" />
         </button>
-        <button onClick={onEdit} className={editBtnCls(theme)} title="Uredi">
+        <button
+          onClick={onEdit}
+          className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
+            theme === "dark"
+              ? "hover:bg-gray-800 text-gray-300 border border-gray-700"
+              : "hover:bg-gray-100 text-gray-700 border border-gray-200"
+          }`}
+          title="Uredi"
+        >
           <Edit3 className="w-4 h-4" />
         </button>
-        <button onClick={onDelete} className={dangerBtnCls(theme)} title="Obriši">
+        <button
+          onClick={onDelete}
+          className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
+            theme === "dark"
+              ? "hover:bg-red-900/30 text-red-400 border border-gray-700"
+              : "hover:bg-red-50 text-red-600 border border-gray-200"
+          }`}
+          title="Obriši"
+        >
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
@@ -2455,7 +2506,7 @@ function MatchForm({
         </Field>
       </div>
       <div className="grid md:grid-cols-2 gap-3">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-[1fr_80px_auto] gap-2 items-end">
           <Field theme={theme} label="Domaćin (BS)">
             <Input
               theme={theme}
@@ -2485,7 +2536,7 @@ function MatchForm({
             </div>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-[1fr_80px_auto] gap-2 items-end">
           <Field theme={theme} label="Gost (BS)">
             <Input
               theme={theme}
@@ -3374,383 +3425,8 @@ function MatchTemplateImport({
   );
 }
 
-// ============================================================
-// Members tab — admin pregled svih korisničkih predikcija
-// ============================================================
-type AdminPredictionRow = {
-  id: string;
-  user_id: string;
-  user_email: string | null;
-  user_display_name: string | null;
-  category_id: string;
-  category_name: string;
-  category_type: string;
-  selected_option_ids: string[];
-  text_value: string | null;
-  numeric_value: number | null;
-  score_home: number | null;
-  score_away: number | null;
-  points_awarded: number;
-  is_scored: boolean;
-  option_labels: string[];
-  created_at: string;
-  updated_at: string;
-};
+// Legacy MembersTab + UserPredictionsList were replaced by AdminPredictionsExplorer.
 
-type MemberSummary = {
-  user_id: string;
-  user_display_name: string | null;
-  user_email: string | null;
-  predictions_count: number;
-  total_points: number;
-  rank: number;
-};
-
-function MembersTab({
-  tournament,
-  theme,
-}: {
-  tournament: Tournament;
-  theme: string;
-}) {
-  const [rows, setRows] = useState<AdminPredictionRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [openUser, setOpenUser] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/admin/predictor/predictions?tournament_id=${tournament.id}`,
-      );
-      if (res.ok) setRows(await res.json());
-    } finally {
-      setLoading(false);
-    }
-  }, [tournament.id]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // reset stranice kada se promijeni pretraga ili veličina stranice
-  useEffect(() => {
-    setPage(1);
-  }, [query, pageSize]);
-
-  // sumiranje po korisniku + ranking
-  const members: MemberSummary[] = useMemo(() => {
-    const map = new Map<string, MemberSummary>();
-    for (const r of rows) {
-      const cur = map.get(r.user_id) ?? {
-        user_id: r.user_id,
-        user_display_name: r.user_display_name,
-        user_email: r.user_email,
-        predictions_count: 0,
-        total_points: 0,
-        rank: 0,
-      };
-      cur.predictions_count += 1;
-      cur.total_points += r.points_awarded ?? 0;
-      if (!cur.user_display_name && r.user_display_name) {
-        cur.user_display_name = r.user_display_name;
-      }
-      map.set(r.user_id, cur);
-    }
-    const arr = Array.from(map.values()).sort(
-      (a, b) => b.total_points - a.total_points,
-    );
-    arr.forEach((m, idx) => (m.rank = idx + 1));
-    return arr;
-  }, [rows]);
-
-  const filtered = useMemo(() => {
-    if (!query) return members;
-    const q = query.toLowerCase();
-    return members.filter(
-      (m) =>
-        (m.user_display_name ?? "").toLowerCase().includes(q) ||
-        (m.user_email ?? "").toLowerCase().includes(q),
-    );
-  }, [members, query]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const paged = useMemo(() => {
-    const start = (safePage - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, safePage, pageSize]);
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h3 className={`font-semibold ${headingCls(theme)}`}>
-            Korisnici i njihove predikcije
-          </h3>
-          <p className={`text-xs ${subtleTextCls(theme)}`}>
-            Pregled svake predikcije, ukupnih poena i konačnog poretka.
-          </p>
-        </div>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Pretraži po imenu ili e-mailu…"
-          className={`${inputCls(theme)} max-w-xs`}
-        />
-      </div>
-
-      {loading ? (
-        <div className="py-10 flex justify-center">
-          <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
-        </div>
-      ) : members.length === 0 ? (
-        <div
-          className={`rounded-md border border-dashed p-10 text-center text-sm ${
-            theme === "dark"
-              ? "border-gray-700 text-gray-400"
-              : "border-gray-300 text-gray-500"
-          }`}
-        >
-          Još niko nije podnio predikciju.
-        </div>
-      ) : (
-        <div className={`rounded-md overflow-hidden ${cardCls(theme)}`}>
-          <table className="w-full text-sm">
-            <thead
-              className={`text-xs uppercase ${
-                theme === "dark"
-                  ? "bg-gray-800 text-gray-400"
-                  : "bg-gray-50 text-gray-600"
-              }`}
-            >
-              <tr>
-                <th className="px-3 py-2 text-left">#</th>
-                <th className="px-3 py-2 text-left">Korisnik</th>
-                <th className="px-3 py-2 text-right">Predikcija</th>
-                <th className="px-3 py-2 text-right">Poena</th>
-                <th className="px-3 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {paged.map((m) => (
-                <Fragment key={m.user_id}>
-                  <tr
-                    className={`border-t cursor-pointer transition-colors ${
-                      theme === "dark"
-                        ? "border-gray-800 hover:bg-gray-800/40"
-                        : "border-gray-100 hover:bg-gray-50"
-                    }`}
-                    onClick={() =>
-                      setOpenUser(openUser === m.user_id ? null : m.user_id)
-                    }
-                  >
-                    <td className="px-3 py-2 font-bold">
-                      {m.rank === 1
-                        ? "🥇"
-                        : m.rank === 2
-                          ? "🥈"
-                          : m.rank === 3
-                            ? "🥉"
-                            : m.rank}
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className={headingCls(theme)}>
-                        {m.user_display_name ||
-                          m.user_email?.split("@")[0] ||
-                          "Korisnik"}
-                      </div>
-                      {m.user_email && (
-                        <div className={`text-xs ${subtleTextCls(theme)}`}>
-                          {m.user_email}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      {m.predictions_count}
-                    </td>
-                    <td className={`px-3 py-2 text-right font-bold ${ACCENT_ICON_CLASS[tournament.accent_color] ?? "text-amber-500"}`}>
-                      {m.total_points}
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <ChevronRight
-                        className={`w-4 h-4 inline transition-transform ${openUser === m.user_id ? "rotate-90" : ""} ${subtleTextCls(theme)}`}
-                      />
-                    </td>
-                  </tr>
-                  {openUser === m.user_id && (
-                    <tr
-                      className={
-                        theme === "dark"
-                          ? "bg-gray-800/30"
-                          : "bg-gray-50/60"
-                      }
-                    >
-                      <td colSpan={5} className="px-3 py-3">
-                        <UserPredictionsList
-                          rows={rows.filter((r) => r.user_id === m.user_id)}
-                          theme={theme}
-                        />
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Pagination */}
-          {filtered.length > 0 && (
-            <div
-              className={`flex items-center justify-between gap-3 flex-wrap px-4 py-3 border-t ${
-                theme === "dark"
-                  ? "bg-gray-900/40 border-gray-800"
-                  : "bg-gray-50/60 border-gray-200"
-              }`}
-            >
-              <div className="flex items-center gap-2 text-xs">
-                <span className={mutedTextCls(theme)}>
-                  {(safePage - 1) * pageSize + 1}
-                  {"–"}
-                  {Math.min(safePage * pageSize, filtered.length)} od{" "}
-                  <span className={headingCls(theme)}>{filtered.length}</span>
-                </span>
-                <span className={`mx-2 ${subtleTextCls(theme)}`}>·</span>
-                <span className={mutedTextCls(theme)}>Po stranici:</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  className={`px-2 py-1 rounded text-xs ${
-                    theme === "dark"
-                      ? "bg-gray-800 border border-gray-700 text-white"
-                      : "bg-white border border-gray-300 text-gray-900"
-                  }`}
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  disabled={safePage === 1}
-                  onClick={() => setPage(1)}
-                  className={`px-2 py-1 rounded text-xs ${
-                    theme === "dark"
-                      ? "hover:bg-gray-800 text-gray-300 disabled:opacity-30"
-                      : "hover:bg-gray-100 text-gray-700 disabled:opacity-30"
-                  } disabled:cursor-not-allowed`}
-                >
-                  «
-                </button>
-                <button
-                  disabled={safePage === 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className={`px-3 py-1 rounded text-xs ${
-                    theme === "dark"
-                      ? "hover:bg-gray-800 text-gray-300 disabled:opacity-30"
-                      : "hover:bg-gray-100 text-gray-700 disabled:opacity-30"
-                  } disabled:cursor-not-allowed`}
-                >
-                  ‹ Prethodna
-                </button>
-                <span
-                  className={`px-3 py-1 text-xs font-semibold ${headingCls(theme)}`}
-                >
-                  {safePage} / {totalPages}
-                </span>
-                <button
-                  disabled={safePage === totalPages}
-                  onClick={() =>
-                    setPage((p) => Math.min(totalPages, p + 1))
-                  }
-                  className={`px-3 py-1 rounded text-xs ${
-                    theme === "dark"
-                      ? "hover:bg-gray-800 text-gray-300 disabled:opacity-30"
-                      : "hover:bg-gray-100 text-gray-700 disabled:opacity-30"
-                  } disabled:cursor-not-allowed`}
-                >
-                  Sljedeća ›
-                </button>
-                <button
-                  disabled={safePage === totalPages}
-                  onClick={() => setPage(totalPages)}
-                  className={`px-2 py-1 rounded text-xs ${
-                    theme === "dark"
-                      ? "hover:bg-gray-800 text-gray-300 disabled:opacity-30"
-                      : "hover:bg-gray-100 text-gray-700 disabled:opacity-30"
-                  } disabled:cursor-not-allowed`}
-                >
-                  »
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function UserPredictionsList({
-  rows,
-  theme,
-}: {
-  rows: AdminPredictionRow[];
-  theme: string;
-}) {
-  return (
-    <div className="space-y-2">
-      {rows.map((r) => {
-        let answer = "";
-        if (r.score_home != null && r.score_away != null) {
-          answer = `${r.score_home} : ${r.score_away}`;
-        } else if (r.numeric_value != null) {
-          answer = String(r.numeric_value);
-        } else if (r.text_value) {
-          answer = r.text_value;
-        } else if (r.option_labels?.length) {
-          answer = r.option_labels.join(", ");
-        } else {
-          answer = "—";
-        }
-        return (
-          <div
-            key={r.id}
-            className={`rounded-md p-3 flex items-start justify-between gap-3 ${subCardCls(theme)}`}
-          >
-            <div className="min-w-0 flex-1">
-              <div
-                className={`text-xs uppercase font-bold ${mutedTextCls(theme)}`}
-              >
-                {r.category_name}
-              </div>
-              <div className={`mt-0.5 ${headingCls(theme)}`}>{answer}</div>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <div
-                className={`text-xs ${subtleTextCls(theme)}`}
-              >
-                {r.is_scored ? "Bodovano" : "Nije bodovano"}
-              </div>
-              <div className="text-lg font-bold text-amber-500">
-                {r.points_awarded} pts
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ============================================================
-// Settings tab
-// ============================================================
 function SettingsTab({
   tournament,
   theme,
@@ -3760,6 +3436,7 @@ function SettingsTab({
   theme: string;
   onUpdated: () => void;
 }) {
+  const { t } = useTranslation("predictor");
   const [form, setForm] = useState<Tournament>(tournament);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<SaveToastState>(null);
@@ -4011,7 +3688,7 @@ function SettingsTab({
       </div>
 
       <div
-        className={`rounded-lg border p-4 ${
+        className={`rounded-3xl border p-5 sm:p-6 ${
           theme === "dark"
             ? "border-gray-700/70 bg-gray-900/40"
             : "border-gray-200 bg-gray-50/70"
@@ -4019,29 +3696,28 @@ function SettingsTab({
       >
         <div className="flex items-center gap-2 mb-1">
           <ImageIcon className="w-4 h-4 text-amber-500" />
-          <h4 className={`text-sm font-bold ${headingCls(theme)}`}>
-            WC 2026 tema (samo za svjetsko prvenstvo)
+          <h4 className={`text-base font-bold ${headingCls(theme)}`}>
+            {t("admin.settings.theme.title")}
           </h4>
         </div>
         <p className={`text-xs mb-4 ${mutedTextCls(theme)}`}>
-          Pozadina i tema muzika se aktiviraju isključivo za turnir kome ovdje
-          eksplicitno postaviš sliku/muziku. Ostali turniri ostaju čisti.
+          {t("admin.settings.theme.description")}
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
             <label
               className={`block text-xs font-semibold mb-2 ${mutedTextCls(theme)}`}
             >
-              Pozadinska slika
+              {t("admin.settings.theme.bgLabel")}
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               <button
                 type="button"
                 onClick={() => update({ theme_background_image: null })}
-                className={`relative aspect-video rounded-md overflow-hidden border-2 transition-all ${
+                className={`relative aspect-video rounded-2xl overflow-hidden border-2 transition-all ${
                   !form.theme_background_image
-                    ? "border-amber-500 ring-2 ring-amber-500/30"
+                    ? "border-amber-500 ring-2 ring-amber-500/30 shadow-md shadow-amber-500/20"
                     : theme === "dark"
                       ? "border-gray-700 hover:border-gray-500"
                       : "border-gray-300 hover:border-gray-400"
@@ -4049,36 +3725,37 @@ function SettingsTab({
               >
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Ban
-                    className={`w-6 h-6 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}
+                    className={`w-7 h-7 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}
                   />
                 </div>
                 <span
-                  className={`absolute bottom-1 left-1 right-1 text-[10px] font-semibold text-center ${
+                  className={`absolute bottom-1.5 left-1.5 right-1.5 text-[10px] font-semibold text-center ${
                     theme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
-                  Bez pozadine
+                  {t("admin.settings.theme.noBg")}
                 </span>
               </button>
               {WC_BACKGROUND_OPTIONS.map((opt) => {
                 const selected = form.theme_background_image === opt.src;
+                const label = t(opt.labelKey);
                 return (
                   <button
                     key={opt.src}
                     type="button"
                     onClick={() => update({ theme_background_image: opt.src })}
-                    className={`relative aspect-video rounded-md overflow-hidden border-2 transition-all group ${
+                    className={`relative aspect-video rounded-2xl overflow-hidden border-2 transition-all group ${
                       selected
-                        ? "border-amber-500 ring-2 ring-amber-500/30"
+                        ? "border-amber-500 ring-2 ring-amber-500/30 shadow-md shadow-amber-500/30"
                         : theme === "dark"
                           ? "border-gray-700 hover:border-gray-500"
                           : "border-gray-300 hover:border-gray-400"
                     }`}
-                    title={opt.label}
+                    title={label}
                   >
                     <Image
                       src={opt.src}
-                      alt={opt.label}
+                      alt={label}
                       fill
                       sizes="200px"
                       className="object-cover"
@@ -4091,12 +3768,12 @@ function SettingsTab({
                       }`}
                     />
                     {selected && (
-                      <div className="absolute top-1 right-1 bg-amber-500 rounded-full p-0.5">
+                      <div className="absolute top-1.5 right-1.5 bg-amber-500 rounded-full p-0.5 shadow">
                         <CheckCircle2 className="w-3.5 h-3.5 text-black" />
                       </div>
                     )}
-                    <span className="absolute bottom-1 left-1 right-1 text-[10px] font-semibold text-center text-white drop-shadow-lg line-clamp-1">
-                      {opt.label}
+                    <span className="absolute bottom-1.5 left-1.5 right-1.5 text-[10px] font-semibold text-center text-white drop-shadow-lg line-clamp-1">
+                      {label}
                     </span>
                   </button>
                 );
@@ -4106,16 +3783,16 @@ function SettingsTab({
 
           <Field
             theme={theme}
-            label="Auto-pusti WC 2026 himnu"
-            hint="Ako uključiš, na stranici turnira će se prikazati toggle za FIFA WC 2026 himnu. Stanje se pamti po korisniku — ne pušta se automatski uz autoplay-block."
+            label={t("admin.settings.theme.musicLabel")}
+            hint={t("admin.settings.theme.musicHint")}
           >
             <Select
               theme={theme}
               value={form.theme_music_enabled ? "yes" : "no"}
               onChange={(v) => update({ theme_music_enabled: v === "yes" })}
               options={[
-                { value: "no", label: "Ne — bez himne" },
-                { value: "yes", label: "Da — prikaži dugme za himnu" },
+                { value: "no", label: t("admin.settings.theme.musicOff") },
+                { value: "yes", label: t("admin.settings.theme.musicOn") },
               ]}
             />
           </Field>
@@ -4722,7 +4399,7 @@ function OptionsManager({
               />
             </Field>
           </div>
-          <div className="grid md:grid-cols-4 gap-2 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             <Field theme={theme} label="URL slike (opcionalno)">
               <Input
                 theme={theme}
@@ -4747,14 +4424,14 @@ function OptionsManager({
                 placeholder="Group A"
               />
             </Field>
-            <button
-              onClick={addOption}
-              disabled={saving}
-              className={primaryBtnCls + " justify-center"}
-            >
-              <Plus className="w-4 h-4" /> Dodaj
-            </button>
           </div>
+          <button
+            onClick={addOption}
+            disabled={saving}
+            className={primaryBtnCls + " justify-center w-full sm:w-auto"}
+          >
+            <Plus className="w-4 h-4" /> Dodaj opciju
+          </button>
         </div>
       )}
 
@@ -5493,7 +5170,7 @@ function RewardForm({
           <Input theme={theme} value={titleEn} onChange={setTitleEn} />
         </Field>
       </div>
-      <div className="grid md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <Field theme={theme} label="Plasman">
           <Input
             theme={theme}
@@ -5528,26 +5205,28 @@ function RewardForm({
             onChange={setCurrency}
           />
         </Field>
-        <Field theme={theme} label="URL slike">
-          <Input theme={theme} value={image} onChange={setImage} />
-        </Field>
-        <Field theme={theme} label="Naziv sponzora">
-          <Input
-            theme={theme}
-            value={sponsorName}
-            onChange={setSponsorName}
-          />
-        </Field>
-        <Field theme={theme} label="URL logoa sponzora">
-          <Input
-            theme={theme}
-            value={sponsorLogo}
-            onChange={setSponsorLogo}
-          />
-        </Field>
-        <Field theme={theme} label="URL sponzora">
-          <Input theme={theme} value={sponsorUrl} onChange={setSponsorUrl} />
-        </Field>
+        <div className="col-span-2 md:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field theme={theme} label="URL slike">
+            <Input theme={theme} value={image} onChange={setImage} />
+          </Field>
+          <Field theme={theme} label="Naziv sponzora">
+            <Input
+              theme={theme}
+              value={sponsorName}
+              onChange={setSponsorName}
+            />
+          </Field>
+          <Field theme={theme} label="URL logoa sponzora">
+            <Input
+              theme={theme}
+              value={sponsorLogo}
+              onChange={setSponsorLogo}
+            />
+          </Field>
+          <Field theme={theme} label="URL sponzora">
+            <Input theme={theme} value={sponsorUrl} onChange={setSponsorUrl} />
+          </Field>
+        </div>
       </div>
       <div className="grid md:grid-cols-2 gap-3">
         <Field theme={theme} label="Opis (BS)">

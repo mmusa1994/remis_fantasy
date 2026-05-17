@@ -146,6 +146,44 @@ const WC_2026_TEAMS: TemplateOption[] = [
   T("Panama", "pa", "Grupa L"),
 ];
 
+// Group standings categories — admin gets one ranked_top_n category per group
+// so users predict the full 1-4 finish AND see who advances to round of 16.
+const WC_2026_GROUP_LETTERS = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+];
+
+const wc2026GroupCategories: TemplateCategory[] = WC_2026_GROUP_LETTERS.map(
+  (letter, idx) => {
+    const groupLabel = `Grupa ${letter}`;
+    const teams = WC_2026_TEAMS.filter((t) => t.group_label === groupLabel);
+    return {
+      name: `Poredak ${groupLabel}`,
+      slug: `grupa-${letter.toLowerCase()}-poredak`,
+      description: `Predvidi konačan poredak ${groupLabel.toLowerCase()} (1. — 4. mjesto). Prva dva tima prolaze u nokaut fazu.`,
+      category_type: "ranked_top_n" as CategoryType,
+      points_correct: 20,
+      points_partial: 3,
+      points_ranked_bonus: 2,
+      max_selections: 4,
+      sort_order: 20 + idx,
+      rules_md:
+        "Bodovi: 3 po tačnoj ekipi (bez obzira na poziciju), +2 za tačnu poziciju, ukupno 20 za savršen poredak grupe.",
+      options: teams,
+    };
+  },
+);
+
 const worldCup2026: PredictorTemplate = {
   id: "world-cup-2026",
   name: "Svjetsko prvenstvo 2026",
@@ -265,6 +303,35 @@ const worldCup2026: PredictorTemplate = {
       points_partial: 15,
       sort_order: 10,
     },
+    {
+      name: "Pobjednici grupa (12 ekipa)",
+      slug: "pobjednici-grupa",
+      description:
+        "Predvidi po jednu ekipu koja osvaja svaku od 12 grupa (1. mjesto).",
+      category_type: "multiple_choice",
+      points_correct: 60,
+      points_partial: 5,
+      max_selections: 12,
+      sort_order: 11,
+      rules_md:
+        "Tačno predviđen pobjednik grupe: 5 poena. Bonus 60 ako su svi tačni.",
+      options: WC_2026_TEAMS,
+    },
+    {
+      name: "Šesnaestina finala — 32 ekipa koje prolaze",
+      slug: "sesnaestina-finala-32",
+      description:
+        "Predvidi 32 ekipe koje prolaze u nokaut fazu (Round of 32). Minimalno 2 po grupi prolaze automatski (1. i 2. mjesto), dodatnih 8 najboljih 3. plasiranih popunjava do 32.",
+      category_type: "multiple_choice",
+      points_correct: 80,
+      points_partial: 3,
+      max_selections: 32,
+      sort_order: 12,
+      rules_md:
+        "Pravilo: prva 2 iz svake grupe prolaze automatski (24 ekipe). Dodatnih 8 najboljih 3. plasiranih popunjava broj na 32. Tip: nemoj ostaviti grupe bez minimum 2 ekipe.",
+      options: WC_2026_TEAMS,
+    },
+    ...wc2026GroupCategories,
   ],
   rules: [
     {

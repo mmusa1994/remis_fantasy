@@ -137,7 +137,7 @@ export default function PredictorIndexPage() {
           </p>
 
           {/* Feature pills */}
-          <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-4">
+          <div className="flex flex-wrap justify-center gap-2 md:gap-2.5 mb-4">
             {[
               t("features.tournamentWinner", "Tournament winner"),
               t("features.topScorer", "Top scorer"),
@@ -148,10 +148,10 @@ export default function PredictorIndexPage() {
             ].map((f) => (
               <span
                 key={f}
-                className={`text-xs px-3 py-1.5 rounded-full border ${
+                className={`text-xs md:text-sm font-medium px-3.5 py-1.5 rounded-full border transition-colors ${
                   theme === "dark"
                     ? "bg-gray-800/60 border-gray-700 text-gray-300"
-                    : "bg-white/70 border-gray-200 text-gray-700"
+                    : "bg-white/80 border-gray-200 text-gray-700 shadow-sm"
                 }`}
               >
                 {f}
@@ -166,7 +166,7 @@ export default function PredictorIndexPage() {
         <div className="max-w-6xl mx-auto">
           {tournaments.length === 0 ? (
             <div
-              className={`rounded-lg border border-dashed p-12 text-center ${
+              className={`rounded-3xl border border-dashed p-12 text-center ${
                 theme === "dark"
                   ? "border-gray-700 text-gray-400"
                   : "border-gray-300 text-gray-500"
@@ -271,14 +271,21 @@ function TournamentCard({
       className="block h-full group"
     >
       <div
-        className={`relative flex flex-col h-full ${large ? "p-6 md:p-7" : "p-5 md:p-6"} rounded-lg border-l-4 ${borderClass} transition-all duration-300 hover:-translate-y-1 ${
+        className={`relative flex flex-col h-full ${large ? "p-6 md:p-7" : "p-5 md:p-6"} rounded-3xl border-l-4 ${borderClass} transition-all duration-300 hover:-translate-y-0.5 overflow-hidden ${
           theme === "dark"
-            ? "bg-gray-800/60 border border-gray-700 hover:bg-gray-800/80"
-            : "bg-white/80 border border-gray-200 hover:bg-white hover:shadow-md"
+            ? "bg-gradient-to-br from-gray-800/70 via-gray-800/60 to-gray-900/70 border border-gray-700/80 hover:border-gray-600 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"
+            : "bg-gradient-to-br from-white via-white to-gray-50/60 border border-gray-200/80 hover:border-gray-300 shadow-sm hover:shadow-xl hover:shadow-gray-900/5"
         }`}
       >
+        {/* Soft accent halo in the corner — purely decorative */}
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl opacity-40 ${textClass.split(" ")[0]}`}
+          style={{ background: "currentColor", opacity: 0.04 }}
+        />
+
         {tournament.banner_image_url && large && (
-          <div className="absolute inset-0 rounded-lg overflow-hidden opacity-10 pointer-events-none">
+          <div className="absolute inset-0 rounded-3xl overflow-hidden opacity-10 pointer-events-none">
             <Image
               src={tournament.banner_image_url}
               alt=""
@@ -288,37 +295,67 @@ function TournamentCard({
           </div>
         )}
 
-        <div className="relative z-10 flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
+        <div className="relative z-10 flex items-center justify-between mb-4 gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {tournament.logo_url ? (
-              <Image
-                src={tournament.logo_url}
-                alt={displayName}
-                width={36}
-                height={36}
-                className="w-9 h-9 object-contain"
-                style={{
-                  filter: getLogoFilter(
-                    tournament.logo_url,
-                    tournament.accent_color,
-                  ),
-                }}
-              />
+              <div
+                className={`flex-shrink-0 inline-flex items-center justify-center rounded-2xl overflow-hidden transition-transform duration-300 group-hover:scale-105 ${
+                  large
+                    ? "w-16 h-16 md:w-[72px] md:h-[72px]"
+                    : "w-14 h-14 md:w-16 md:h-16"
+                } ${
+                  theme === "dark"
+                    ? "bg-gray-900/80 border border-gray-700/80 shadow-lg shadow-black/30 ring-1 ring-white/5"
+                    : "bg-white border border-gray-200 shadow-md ring-1 ring-gray-100"
+                }`}
+              >
+                <Image
+                  src={tournament.logo_url}
+                  alt={displayName}
+                  width={large ? 96 : 80}
+                  height={large ? 96 : 80}
+                  className={`${
+                    large
+                      ? "w-[58px] h-[58px] md:w-[64px] md:h-[64px]"
+                      : "w-[52px] h-[52px] md:w-[58px] md:h-[58px]"
+                  } object-contain`}
+                  style={{
+                    filter: getLogoFilter(
+                      tournament.logo_url,
+                      tournament.accent_color,
+                    ),
+                  }}
+                />
+              </div>
             ) : (
-              <Trophy className={`w-7 h-7 ${textClass}`} />
+              <div
+                className={`flex-shrink-0 inline-flex items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105 ${
+                  large
+                    ? "w-16 h-16 md:w-[72px] md:h-[72px]"
+                    : "w-14 h-14 md:w-16 md:h-16"
+                } ${
+                  theme === "dark"
+                    ? "bg-gray-900/80 border border-gray-700/80 shadow-lg shadow-black/30 ring-1 ring-white/5"
+                    : "bg-white border border-gray-200 shadow-md ring-1 ring-gray-100"
+                }`}
+              >
+                <Trophy
+                  className={`${large ? "w-9 h-9" : "w-8 h-8"} ${textClass}`}
+                />
+              </div>
             )}
             <h3
-              className={`${large ? "text-xl md:text-2xl" : "text-lg"} font-bold ${
-                theme === "dark" ? "text-white" : "text-gray-800"
+              className={`${large ? "text-xl md:text-2xl" : "text-lg"} font-bold leading-tight tracking-tight ${
+                theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >
               {displayName}
             </h3>
           </div>
-          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          <div className="flex items-center gap-1.5 flex-wrap justify-end flex-shrink-0">
             {tournament.require_approval && (
               <span
-                className={`inline-flex items-center gap-1 text-[10px] uppercase font-black px-2 py-0.5 rounded ${
+                className={`inline-flex items-center gap-1 text-[10px] uppercase font-black px-2.5 py-1 rounded-full ${
                   theme === "dark"
                     ? "bg-amber-500/15 text-amber-300 border border-amber-500/40"
                     : "bg-amber-50 text-amber-700 border border-amber-300"
@@ -329,7 +366,7 @@ function TournamentCard({
               </span>
             )}
             <span
-              className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${badge.cls}`}
+              className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded-full ${badge.cls}`}
             >
               {badge.label}
             </span>
@@ -346,16 +383,28 @@ function TournamentCard({
           </p>
         )}
 
-        <div className="relative z-10 flex flex-wrap gap-3 text-xs text-theme-text-secondary mb-4">
+        <div className="relative z-10 flex flex-wrap items-center gap-1.5 mb-3">
           {tournament.starts_at && (
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" />
+            <span
+              className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full ${
+                theme === "dark"
+                  ? "bg-gray-900/40 text-gray-400 border border-gray-700/60"
+                  : "bg-gray-50 text-gray-600 border border-gray-200/80"
+              }`}
+            >
+              <Calendar className="w-3 h-3 opacity-70" />
               {new Date(tournament.starts_at).toLocaleDateString()}
             </span>
           )}
           {tournament.registration_lock_at && (
-            <span className="inline-flex items-center gap-1">
-              <Lock className="w-3.5 h-3.5" />
+            <span
+              className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full ${
+                theme === "dark"
+                  ? "bg-gray-900/40 text-gray-400 border border-gray-700/60"
+                  : "bg-gray-50 text-gray-600 border border-gray-200/80"
+              }`}
+            >
+              <Lock className="w-3 h-3 opacity-70" />
               {new Date(tournament.registration_lock_at).toLocaleString([], {
                 month: "short",
                 day: "numeric",
@@ -365,21 +414,35 @@ function TournamentCard({
             </span>
           )}
           {tournament.prize_pool_amount != null && (
-            <span className="inline-flex items-center gap-1 font-semibold text-amber-500">
-              <Trophy className="w-3.5 h-3.5" />
-              {tournament.prize_pool_amount} {tournament.prize_pool_currency}
+            <span
+              className={`inline-flex items-baseline gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${
+                theme === "dark"
+                  ? "bg-amber-500/15 text-amber-300 border border-amber-500/40"
+                  : "bg-amber-50 text-amber-700 border border-amber-300"
+              }`}
+            >
+              <Trophy className="w-3 h-3 self-center" />
+              <span className="text-[13px] font-black tabular-nums leading-none">
+                {tournament.prize_pool_amount}
+              </span>
+              <span className="text-[9px] uppercase tracking-wider font-bold leading-none">
+                {tournament.prize_pool_currency}
+              </span>
             </span>
           )}
         </div>
 
         {tournament.sponsor_name && (
-          <p className="relative z-10 text-[11px] text-theme-text-secondary mb-3">
-            Sponsor: <span className="font-semibold">{tournament.sponsor_name}</span>
+          <p
+            className={`relative z-10 text-[10px] uppercase tracking-wider mb-3 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}
+          >
+            <span className="opacity-70">Sponzor · </span>
+            <span className="font-bold">{tournament.sponsor_name}</span>
           </p>
         )}
 
         <span
-          className={`relative z-10 inline-flex items-center gap-1 text-sm font-semibold ${textClass} group-hover:gap-2 transition-all duration-300 mt-auto`}
+          className={`relative z-10 inline-flex items-center gap-1.5 text-sm font-bold ${textClass} group-hover:gap-2.5 transition-all duration-300 mt-auto`}
         >
           {tournament.require_approval ? (
             <>

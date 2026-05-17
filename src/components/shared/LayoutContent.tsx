@@ -34,6 +34,10 @@ export default function LayoutContent({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isAdmin = isAdminPath(pathname);
   const isLoginPanelBool = isLoginPanel(pathname);
+  // The Fantasy Command Center onboarding tour is FPL-specific. We only
+  // mount it on /premier-league/* routes so it never auto-pops on other
+  // sections (predictor, F1, champions, registration, etc.).
+  const isPremierLeague = pathname.startsWith("/premier-league");
 
   // Determine current section for mobile menu
   const getCurrentSection = (): string | undefined => {
@@ -66,9 +70,7 @@ export default function LayoutContent({
           currentSection={getCurrentSection()}
         />
 
-        {/* Onboarding Widget for login pages too */}
-        <OnboardingWidget />
-      </main>
+        </main>
     );
   }
 
@@ -90,15 +92,18 @@ export default function LayoutContent({
         currentSection={getCurrentSection()}
       />
 
-      {/* Onboarding Modal */}
-      <OnboardingModal
-        isOpen={showOnboarding}
-        onClose={() => setShowOnboarding(false)}
-        onComplete={completeOnboarding}
-      />
-
-      {/* Permanent Onboarding Widget */}
-      <OnboardingWidget />
+      {/* Onboarding modal + floating widget — FPL-only, opt-in.
+          The widget button is what opens the modal; nothing auto-pops. */}
+      {isPremierLeague && (
+        <>
+          <OnboardingModal
+            isOpen={showOnboarding}
+            onClose={() => setShowOnboarding(false)}
+            onComplete={completeOnboarding}
+          />
+          <OnboardingWidget />
+        </>
+      )}
     </>
   );
 }
