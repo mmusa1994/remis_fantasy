@@ -1,10 +1,32 @@
 import type { Config } from "tailwindcss";
 
+// Tournament accent colors are picked by the predictor admin at
+// runtime (amber / gold / blue / purple / red / green→emerald).
+// Tailwind's JIT only generates the classes it sees in source, so
+// any class built from template-literal interpolation (e.g. the
+// MatchCard's `active:${ac.bg15}`) needs to be guaranteed via the
+// safelist. The patterns below keep dynamic accents working without
+// forcing every variant to be hand-spelled in predictor-accent.ts.
+const accentColors = ["amber", "blue", "purple", "red", "emerald"];
+
 const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  safelist: [
+    {
+      pattern: new RegExp(
+        `^(text|bg|border|ring|shadow|from|via|to)-(${accentColors.join("|")})-(50|100|200|300|400|500|600|700|800|900|950)(/[0-9]+)?$`,
+      ),
+      variants: ["hover", "active", "focus", "dark", "dark:hover"],
+    },
+    {
+      pattern: new RegExp(
+        `^border-l-(${accentColors.join("|")})-(500|600)$`,
+      ),
+    },
   ],
   darkMode: 'class',
   theme: {

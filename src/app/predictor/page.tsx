@@ -19,29 +19,12 @@ import LoadingCard from "@/components/shared/LoadingCard";
 import WCBackground from "@/components/shared/WCBackground";
 import type { Tournament, TournamentStatus } from "@/types/predictor";
 import { getLogoFilter } from "@/utils/predictor-logo";
+import { getAccentClasses } from "@/utils/predictor-accent";
 import {
   localizedTournamentName,
   localizedTournamentShort,
   normalizeLang,
 } from "@/utils/predictor-i18n";
-
-const ACCENT_BORDER: Record<string, string> = {
-  amber: "border-l-amber-500",
-  gold: "border-l-amber-500",
-  purple: "border-l-purple-600",
-  blue: "border-l-blue-600",
-  red: "border-l-red-600",
-  green: "border-l-emerald-600",
-};
-
-const ACCENT_TEXT: Record<string, string> = {
-  amber: "text-amber-500 dark:text-amber-400",
-  gold: "text-amber-500 dark:text-amber-400",
-  purple: "text-purple-600 dark:text-purple-400",
-  blue: "text-blue-600 dark:text-blue-400",
-  red: "text-red-600 dark:text-red-400",
-  green: "text-emerald-600 dark:text-emerald-400",
-};
 
 const STATUS_BADGE: Record<TournamentStatus, { label: string; cls: string }> = {
   draft: { label: "Draft", cls: "bg-gray-500/20 text-gray-400" },
@@ -258,9 +241,9 @@ function TournamentCard({
 }) {
   const { i18n } = useTranslation("predictor");
   const lang = normalizeLang(i18n.language);
-  const accent = tournament.accent_color || "amber";
-  const borderClass = ACCENT_BORDER[accent] ?? "border-l-amber-500";
-  const textClass = ACCENT_TEXT[accent] ?? "text-amber-500 dark:text-amber-400";
+  const ac = getAccentClasses(tournament.accent_color);
+  const borderClass = ac.border;
+  const textClass = ac.text;
   const badge = STATUS_BADGE[tournament.status];
   const displayName = localizedTournamentName(tournament, lang);
   const displayShort = localizedTournamentShort(tournament, lang);
@@ -357,8 +340,8 @@ function TournamentCard({
               <span
                 className={`inline-flex items-center gap-1 text-[10px] uppercase font-black px-2.5 py-1 rounded-full ${
                   theme === "dark"
-                    ? "bg-amber-500/15 text-amber-300 border border-amber-500/40"
-                    : "bg-amber-50 text-amber-700 border border-amber-300"
+                    ? `${ac.bg15} ${ac.textBrighter} border ${ac.border500_40}`
+                    : `${ac.bgPale} ${ac.textDeeper} border ${ac.border300}`
                 }`}
               >
                 <Lock className="w-3 h-3" />
@@ -417,8 +400,8 @@ function TournamentCard({
             <span
               className={`inline-flex items-baseline gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${
                 theme === "dark"
-                  ? "bg-amber-500/15 text-amber-300 border border-amber-500/40"
-                  : "bg-amber-50 text-amber-700 border border-amber-300"
+                  ? `${ac.bg15} ${ac.textBrighter} border ${ac.border500_40}`
+                  : `${ac.bgPale} ${ac.textDeeper} border ${ac.border300}`
               }`}
             >
               <Trophy className="w-3 h-3 self-center" />

@@ -64,6 +64,10 @@ import type {
 } from "@/types/predictor";
 import { getLogoFilter } from "@/utils/predictor-logo";
 import {
+  getAccentClasses,
+  type AccentClasses,
+} from "@/utils/predictor-accent";
+import {
   localizedTournamentName,
   localizedTournamentShort,
   localizedTournamentLong,
@@ -91,38 +95,8 @@ type TournamentDetail = Tournament & {
 
 type PageTab = "predictions" | "matches" | "rules" | "rewards" | "standings";
 
-const ACCENT_BORDER: Record<string, string> = {
-  amber: "border-l-amber-500",
-  gold: "border-l-amber-500",
-  purple: "border-l-purple-600",
-  blue: "border-l-blue-600",
-  red: "border-l-red-600",
-  green: "border-l-emerald-600",
-};
-const ACCENT_TEXT: Record<string, string> = {
-  amber: "text-amber-500 dark:text-amber-400",
-  gold: "text-amber-500 dark:text-amber-400",
-  purple: "text-purple-600 dark:text-purple-400",
-  blue: "text-blue-600 dark:text-blue-400",
-  red: "text-red-600 dark:text-red-400",
-  green: "text-emerald-600 dark:text-emerald-400",
-};
-const ACCENT_RING: Record<string, string> = {
-  amber: "ring-amber-500",
-  gold: "ring-amber-500",
-  purple: "ring-purple-600",
-  blue: "ring-blue-600",
-  red: "ring-red-600",
-  green: "ring-emerald-600",
-};
-const ACCENT_BG: Record<string, string> = {
-  amber: "bg-amber-500 hover:bg-amber-400",
-  gold: "bg-amber-500 hover:bg-amber-400",
-  purple: "bg-purple-600 hover:bg-purple-500",
-  blue: "bg-blue-600 hover:bg-blue-500",
-  red: "bg-red-600 hover:bg-red-500",
-  green: "bg-emerald-600 hover:bg-emerald-500",
-};
+// Accent class bundles live in @/utils/predictor-accent so every
+// surface on the page picks up the admin-chosen tournament color.
 
 function isLockedClient(
   t: Pick<Tournament, "registration_lock_at" | "status">,
@@ -392,11 +366,11 @@ export default function TournamentDetailPage() {
     );
   }
 
-  const accent = tournament.accent_color || "amber";
-  const accentBorder = ACCENT_BORDER[accent] ?? "border-l-amber-500";
-  const accentText = ACCENT_TEXT[accent] ?? "text-amber-500 dark:text-amber-400";
-  const accentBg = ACCENT_BG[accent] ?? "bg-amber-500 hover:bg-amber-400";
-  const accentRing = ACCENT_RING[accent] ?? "ring-amber-500";
+  const ac = getAccentClasses(tournament.accent_color);
+  const accentBorder = ac.border;
+  const accentText = ac.text;
+  const accentBg = ac.bg;
+  const accentRing = ac.ring;
 
   const isFullyLocked =
     tournament.status === "locked" || tournament.status === "finished";
@@ -524,7 +498,7 @@ export default function TournamentDetailPage() {
               </span>
             )}
             {tournament.prize_pool_amount != null && (
-              <span className="inline-flex items-center gap-1.5 font-semibold text-amber-500">
+              <span className={`inline-flex items-center gap-1.5 font-semibold ${ac.text}`}>
                 <Trophy className="w-4 h-4" />
                 {tournament.prize_pool_amount} {tournament.prize_pool_currency}
               </span>
@@ -581,10 +555,10 @@ export default function TournamentDetailPage() {
                   onClick={() => setTab(it.id as PageTab)}
                   className={`snap-start inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full font-semibold text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 border ${
                     active
-                      ? `${accentBg} text-black border-transparent shadow-md`
+                      ? `${accentBg} ${ac.textOn} border-transparent shadow-md`
                       : theme === "dark"
-                        ? "bg-gray-900/60 text-gray-300 border-gray-700 hover:border-amber-500/60 hover:text-amber-300"
-                        : "bg-white/80 text-gray-700 border-gray-200 hover:border-amber-500/60 hover:text-amber-700"
+                        ? `bg-gray-900/60 text-gray-300 border-gray-700 ${ac.hoverBorder500_60} ${ac.hoverTextDark}`
+                        : `bg-white/80 text-gray-700 border-gray-200 ${ac.hoverBorder500_60} ${ac.hoverTextLight}`
                   }`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
@@ -609,7 +583,7 @@ export default function TournamentDetailPage() {
                 authStatus={authStatus}
                 joining={joining}
                 theme={theme}
-                accentBg={accentBg}
+                ac={ac}
                 onRequestJoin={requestJoin}
               />
             ) : (
@@ -618,10 +592,7 @@ export default function TournamentDetailPage() {
                 draft={draft}
                 setDraft={setDraft}
                 authStatus={authStatus}
-                accentBorder={accentBorder}
-                accentText={accentText}
-                accentBg={accentBg}
-                accentRing={accentRing}
+                ac={ac}
                 theme={theme}
                 saving={saving}
                 error={error}
@@ -640,7 +611,7 @@ export default function TournamentDetailPage() {
                 authStatus={authStatus}
                 joining={joining}
                 theme={theme}
-                accentBg={accentBg}
+                ac={ac}
                 onRequestJoin={requestJoin}
               />
             ) : (
@@ -650,9 +621,7 @@ export default function TournamentDetailPage() {
                 slug={String(slug)}
                 authStatus={authStatus}
                 theme={theme}
-                accentText={accentText}
-                accentBg={accentBg}
-                accentBorder={accentBorder}
+                ac={ac}
                 onSaved={loadMyMatchPredictions}
                 notify={setToast}
                 isWC={isWC}
@@ -664,22 +633,21 @@ export default function TournamentDetailPage() {
             <RulesTab
               tournament={tournament}
               theme={theme}
-              accentText={accentText}
+              ac={ac}
             />
           )}
           {tab === "rewards" && (
             <RewardsTab
               tournament={tournament}
               theme={theme}
-              accentText={accentText}
+              ac={ac}
             />
           )}
           {tab === "standings" && (
             <StandingsTab
               standings={standings}
               theme={theme}
-              accentText={accentText}
-              accentBg={accentBg}
+              ac={ac}
               currentUserId={currentUserId}
               isWC={isWC}
               themeBgSrc={themeBg}
@@ -880,10 +848,7 @@ function PredictionsTab({
   draft,
   setDraft,
   authStatus,
-  accentBorder,
-  accentText,
-  accentBg,
-  accentRing,
+  ac,
   theme,
   saving,
   error,
@@ -897,10 +862,7 @@ function PredictionsTab({
   draft: Record<string, DraftEntry>;
   setDraft: React.Dispatch<React.SetStateAction<Record<string, DraftEntry>>>;
   authStatus: string;
-  accentBorder: string;
-  accentText: string;
-  accentBg: string;
-  accentRing: string;
+  ac: AccentClasses;
   theme: string;
   saving: boolean;
   error: string | null;
@@ -910,6 +872,10 @@ function PredictionsTab({
   isFullyLocked: boolean;
   hasSavedPredictions: boolean;
 }) {
+  const accentBorder = ac.border;
+  const accentText = ac.text;
+  const accentBg = ac.bg;
+  const accentRing = ac.ring;
   const { t, i18n } = useTranslation("predictor");
   const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
 
@@ -973,9 +939,7 @@ function PredictionsTab({
         tournament={tournament}
         draft={draft}
         theme={theme}
-        accentText={accentText}
-        accentBg={accentBg}
-        accentBorder={accentBorder}
+        ac={ac}
         lang={lang}
         completion={completion}
         onEdit={() => setEditMode(true)}
@@ -1107,8 +1071,8 @@ function PredictionsTab({
         <div
           className={`rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 ${
             theme === "dark"
-              ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
-              : "bg-amber-50 border-amber-200 text-amber-900"
+              ? `${ac.bg10} ${ac.border500_30} ${ac.textBrighter}`
+              : `${ac.bgPale} ${ac.border200} ${ac.textDeeper}`
           }`}
         >
           <LogIn className="w-5 h-5 flex-shrink-0" />
@@ -1120,7 +1084,7 @@ function PredictionsTab({
           </div>
           <button
             onClick={() => signIn()}
-            className={`px-4 py-2 rounded-2xl text-sm font-bold text-black ${accentBg} shadow-sm w-full sm:w-auto`}
+            className={`px-4 py-2 rounded-2xl text-sm font-bold ${ac.textOn} ${accentBg} shadow-sm w-full sm:w-auto`}
           >
             {t("signIn", "Prijavi se")}
           </button>
@@ -1166,7 +1130,7 @@ function PredictionsTab({
                 )}
               </div>
               <span
-                className={`flex-shrink-0 inline-flex items-baseline gap-1 px-2 py-0.5 rounded-full whitespace-nowrap ${accentText} ${theme === "dark" ? "bg-gray-900 border border-gray-700" : "bg-amber-50 border border-amber-200"}`}
+                className={`flex-shrink-0 inline-flex items-baseline gap-1 px-2 py-0.5 rounded-full whitespace-nowrap ${accentText} ${theme === "dark" ? "bg-gray-900 border border-gray-700" : `${ac.bgPale} border ${ac.border200}`}`}
               >
                 <span className="text-[13px] font-black tabular-nums leading-none">
                   {cat.points_correct}
@@ -1176,7 +1140,7 @@ function PredictionsTab({
                 </span>
               </span>
               {locked && (
-                <span className="flex-shrink-0 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300 inline-flex items-center gap-1 whitespace-nowrap">
+                <span className={`flex-shrink-0 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${ac.bgGhostInk} inline-flex items-center gap-1 whitespace-nowrap`}>
                   <Lock className="w-3 h-3" />
                   Locked
                 </span>
@@ -1190,9 +1154,7 @@ function PredictionsTab({
               disabled={disabled}
               showResults={isFinished}
               theme={theme}
-              accentRing={accentRing}
-              accentBg={accentBg}
-              accentText={accentText}
+              ac={ac}
             />
 
             {cat.lock_at && !locked && (
@@ -1254,7 +1216,7 @@ function PredictionsTab({
             <button
               disabled={saving || authStatus !== "authenticated"}
               onClick={handleSubmit}
-              className={`flex-1 md:flex-initial px-5 py-3.5 md:py-3 rounded-2xl font-bold text-base text-black ${accentBg} disabled:opacity-50 inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg shadow-amber-500/20`}
+              className={`flex-1 md:flex-initial px-5 py-3.5 md:py-3 rounded-2xl font-bold text-base ${ac.textOn} ${accentBg} disabled:opacity-50 inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg ${ac.shadow500_20}`}
             >
               <Save className="w-4 h-4" />
               {saving ? "Čuvanje…" : "Sačuvaj predikcije"}
@@ -1274,9 +1236,7 @@ function CategoryInput({
   disabled,
   showResults,
   theme,
-  accentRing,
-  accentBg,
-  accentText,
+  ac,
 }: {
   category: CategoryWithOptions;
   draft: DraftEntry;
@@ -1284,10 +1244,10 @@ function CategoryInput({
   disabled: boolean;
   showResults: boolean;
   theme: string;
-  accentRing: string;
-  accentBg: string;
-  accentText: string;
+  ac: AccentClasses;
 }) {
+  const accentBg = ac.bg;
+  const accentText = ac.text;
   const { i18n, t } = useTranslation("predictor");
   const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
 
@@ -1469,7 +1429,7 @@ function CategoryInput({
       <div className="space-y-2.5">
         {ruleHint && (
           <p
-            className={`text-[11px] font-semibold px-0.5 ${theme === "dark" ? "text-amber-400" : "text-amber-700"}`}
+            className={`text-[11px] font-semibold px-0.5 ${theme === "dark" ? ac.textBright : ac.textDeeper}`}
           >
             {ruleHint}
           </p>
@@ -1510,8 +1470,8 @@ function CategoryInput({
                           : "bg-red-50 text-red-700 border border-red-200"
                         : groupAtCap
                           ? theme === "dark"
-                            ? "bg-amber-950/40 text-amber-300 border border-amber-800/60"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                            ? `${ac.bgDarkDeep} ${ac.textBrighter} border ${ac.border800}`
+                            : `${ac.bgPale} ${ac.textDeeper} border ${ac.border200}`
                           : theme === "dark"
                             ? "bg-emerald-950/40 text-emerald-300 border border-emerald-800/60"
                             : "bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -1556,8 +1516,8 @@ function CategoryInput({
                     className={`group relative overflow-hidden text-left rounded-xl border p-2 sm:p-2.5 transition-all duration-200 active:scale-[0.98] ${
                       isSelected
                         ? dark
-                          ? "border-amber-500/80 bg-gradient-to-br from-amber-500/15 via-amber-500/8 to-transparent shadow-md shadow-amber-500/15"
-                          : "border-amber-500 bg-gradient-to-br from-amber-50 via-white to-white shadow-sm shadow-amber-500/20"
+                          ? `${ac.border500_80} bg-gradient-to-br ${ac.gradMiddleDark} shadow-md ${ac.shadow500_15}`
+                          : `${ac.border500} bg-gradient-to-br ${ac.gradLightCard} shadow-sm ${ac.shadow500_20}`
                         : dark
                           ? "border-gray-700/70 bg-gray-900/50 hover:border-gray-600 hover:bg-gray-900/80"
                           : "border-gray-200 bg-white/90 hover:border-gray-300 hover:shadow-sm"
@@ -1593,8 +1553,8 @@ function CategoryInput({
                           className={`flex-shrink-0 w-7 h-5 sm:w-8 sm:h-6 rounded-md overflow-hidden ring-1 ${
                             isSelected
                               ? dark
-                                ? "ring-amber-500/60"
-                                : "ring-amber-400"
+                                ? ac.ring500_60
+                                : ac.ring400
                               : dark
                                 ? "ring-gray-700"
                                 : "ring-gray-200"
@@ -1652,6 +1612,7 @@ function CategoryInput({
           onChange={(v) => onChange({ scoreHome: v })}
           disabled={disabled}
           placeholder="0"
+          ac={ac}
         />
         <span className={`text-2xl font-black ${theme === "dark" ? "text-gray-600" : "text-gray-400"}`}>
           :
@@ -1661,6 +1622,7 @@ function CategoryInput({
           onChange={(v) => onChange({ scoreAway: v })}
           disabled={disabled}
           placeholder="0"
+          ac={ac}
         />
       </div>
     );
@@ -1674,6 +1636,7 @@ function CategoryInput({
         disabled={disabled}
         placeholder="Your guess"
         wide
+        ac={ac}
       />
     );
   }
@@ -1688,8 +1651,8 @@ function CategoryInput({
         placeholder="Tvoj odgovor"
         className={`w-full px-3.5 py-2.5 rounded-xl border outline-none text-[15px] font-semibold ${
           theme === "dark"
-            ? "bg-gray-900 border-gray-700 focus:border-amber-500 placeholder-gray-600"
-            : "bg-white border-gray-300 focus:border-amber-500 placeholder-gray-400"
+            ? `bg-gray-900 border-gray-700 ${ac.focusBorder500} placeholder-gray-600`
+            : `bg-white border-gray-300 ${ac.focusBorder500} placeholder-gray-400`
         } disabled:opacity-60`}
       />
     );
@@ -1704,12 +1667,14 @@ function NumInput({
   disabled,
   placeholder,
   wide,
+  ac,
 }: {
   value: number | null;
   onChange: (v: number | null) => void;
   disabled?: boolean;
   placeholder?: string;
   wide?: boolean;
+  ac: AccentClasses;
 }) {
   return (
     <input
@@ -1720,7 +1685,7 @@ function NumInput({
         onChange(e.target.value === "" ? null : Number(e.target.value))
       }
       placeholder={placeholder}
-      className={`${wide ? "w-full max-w-[10rem] text-center mx-auto block" : "w-20 text-center"} px-3 py-2.5 rounded-xl border outline-none text-lg font-black tabular-nums bg-theme-background border-theme-border focus:border-amber-500 disabled:opacity-60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+      className={`${wide ? "w-full max-w-[10rem] text-center mx-auto block" : "w-20 text-center"} px-3 py-2.5 rounded-xl border outline-none text-lg font-black tabular-nums bg-theme-background border-theme-border ${ac.focusBorder500} disabled:opacity-60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
     />
   );
 }
@@ -1731,12 +1696,13 @@ function NumInput({
 function RulesTab({
   tournament,
   theme,
-  accentText,
+  ac,
 }: {
   tournament: TournamentDetail;
   theme: string;
-  accentText: string;
+  ac: AccentClasses;
 }) {
+  const accentText = ac.text;
   const { i18n, t } = useTranslation("predictor");
   const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
   const rulesMd = pickLocalizedNullable(
@@ -1816,7 +1782,7 @@ function RulesTab({
                   <span
                     className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
                       r.kind === "bonus"
-                        ? "bg-amber-500/20 text-amber-600 dark:text-amber-300"
+                        ? ac.bgGhostInk
                         : r.kind === "deadline"
                           ? "bg-red-500/20 text-red-600 dark:text-red-300"
                           : "bg-gray-500/20 text-gray-500 dark:text-gray-300"
@@ -1845,12 +1811,13 @@ function RulesTab({
 function RewardsTab({
   tournament,
   theme,
-  accentText,
+  ac,
 }: {
   tournament: TournamentDetail;
   theme: string;
-  accentText: string;
+  ac: AccentClasses;
 }) {
+  const accentText = ac.text;
   const { i18n, t } = useTranslation("predictor");
   const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
   if (tournament.rewards.length === 0) {
@@ -1935,20 +1902,20 @@ function RewardsTab({
 function StandingsTab({
   standings,
   theme,
-  accentText,
-  accentBg,
+  ac,
   currentUserId,
   isWC = false,
   themeBgSrc = null,
 }: {
   standings: StandingsRow[];
   theme: string;
-  accentText: string;
-  accentBg: string;
+  ac: AccentClasses;
   currentUserId?: string;
   isWC?: boolean;
   themeBgSrc?: string | null;
 }) {
+  const accentText = ac.text;
+  const accentBg = ac.bg;
   const dark = theme === "dark";
 
   if (standings.length === 0) {
@@ -1981,12 +1948,14 @@ function StandingsTab({
       <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
           theme={theme}
+          ac={ac}
           label="Učesnika"
           value={standings.length}
           icon={Trophy}
         />
         <StatCard
           theme={theme}
+          ac={ac}
           label="Tvoj plasman"
           value={me ? `#${me.rank}` : "—"}
           icon={Award}
@@ -1994,6 +1963,7 @@ function StandingsTab({
         />
         <StatCard
           theme={theme}
+          ac={ac}
           label="Tvoji poeni"
           value={me ? me.total_points : "—"}
           icon={Star}
@@ -2001,6 +1971,7 @@ function StandingsTab({
         />
         <StatCard
           theme={theme}
+          ac={ac}
           label="Lider"
           value={standings[0].total_points}
           icon={Crown}
@@ -2015,7 +1986,7 @@ function StandingsTab({
             row={top3[1]}
             place={2}
             theme={theme}
-            accentText={accentText}
+            ac={ac}
             currentUserId={currentUserId}
             heightClass="h-32 md:h-40"
           />
@@ -2024,7 +1995,7 @@ function StandingsTab({
             row={top3[0]}
             place={1}
             theme={theme}
-            accentText={accentText}
+            ac={ac}
             currentUserId={currentUserId}
             heightClass="h-40 md:h-52"
           />
@@ -2033,7 +2004,7 @@ function StandingsTab({
             row={top3[2]}
             place={3}
             theme={theme}
-            accentText={accentText}
+            ac={ac}
             currentUserId={currentUserId}
             heightClass="h-28 md:h-36"
           />
@@ -2080,8 +2051,8 @@ function StandingsTab({
                 className={`relative flex items-center gap-3 px-3.5 py-2.5 transition-colors ${
                   isMe
                     ? dark
-                      ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent"
-                      : "bg-gradient-to-r from-amber-50 via-amber-50/40 to-transparent"
+                      ? `bg-gradient-to-r ${ac.gradRowDark}`
+                      : `bg-gradient-to-r ${ac.gradRowLight}`
                     : dark
                       ? "hover:bg-gray-800/40"
                       : "hover:bg-gray-50/60"
@@ -2090,7 +2061,7 @@ function StandingsTab({
                 {isMe && (
                   <span
                     aria-hidden
-                    className={`absolute left-0 top-0 bottom-0 w-1 ${accentBg.split(" ")[0]}`}
+                    className={`absolute left-0 top-0 bottom-0 w-1 ${ac.bgSolid}`}
                   />
                 )}
                 {/* Rank + avatar combined */}
@@ -2109,11 +2080,11 @@ function StandingsTab({
                   <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0 ${
                       isMe
-                        ? "bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-md shadow-amber-500/30"
+                        ? `bg-gradient-to-br ${ac.gradAvatarMe} ${ac.textOn} shadow-md ${ac.shadow500_30}`
                         : isTop3
                           ? dark
-                            ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                            ? `${ac.bg15} ${ac.textBrighter} border ${ac.border500_30}`
+                            : `${ac.bgPale} ${ac.textDeeper} border ${ac.border200}`
                           : dark
                             ? "bg-gray-800 text-gray-300 border border-gray-700"
                             : "bg-gray-100 text-gray-700 border border-gray-200"
@@ -2137,9 +2108,7 @@ function StandingsTab({
                     {isMe && (
                       <span
                         className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                          dark
-                            ? "bg-amber-500/20 text-amber-300"
-                            : "bg-amber-200/80 text-amber-900"
+                          dark ? ac.bgGhostDark : ac.bgGhostLight
                         }`}
                       >
                         ti
@@ -2188,12 +2157,14 @@ function StandingsTab({
 
 function StatCard({
   theme,
+  ac,
   label,
   value,
   icon: Icon,
   highlight,
 }: {
   theme: string;
+  ac: AccentClasses;
   label: string;
   value: number | string;
   icon: any;
@@ -2205,8 +2176,8 @@ function StatCard({
       className={`relative overflow-hidden rounded-2xl p-3.5 border transition-colors ${
         highlight
           ? dark
-            ? "bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/40 shadow-md shadow-amber-500/10"
-            : "bg-gradient-to-br from-amber-50 via-white to-white border-amber-300 shadow-sm shadow-amber-500/10"
+            ? `bg-gradient-to-br ${ac.gradStatDark} ${ac.border500_40} shadow-md ${ac.shadow500_10}`
+            : `bg-gradient-to-br ${ac.gradStatLight} ${ac.border300} shadow-sm ${ac.shadow500_10}`
           : dark
             ? "bg-gray-800/60 border-gray-700"
             : "bg-white/85 border-gray-200 shadow-sm"
@@ -2218,8 +2189,8 @@ function StatCard({
         className={`absolute -right-2 -bottom-2 w-14 h-14 pointer-events-none ${
           highlight
             ? dark
-              ? "text-amber-500/10"
-              : "text-amber-400/15"
+              ? ac.text500_10
+              : ac.text400_15
             : dark
               ? "text-gray-700/40"
               : "text-gray-200/70"
@@ -2228,7 +2199,7 @@ function StatCard({
       />
       <div className="relative z-10 flex items-center gap-1.5 mb-1.5">
         <Icon
-          className={`w-3 h-3 ${highlight ? "text-amber-500" : dark ? "text-gray-500" : "text-gray-400"}`}
+          className={`w-3 h-3 ${highlight ? ac.textSolid : dark ? "text-gray-500" : "text-gray-400"}`}
         />
         <span
           className={`text-[10px] uppercase font-bold tracking-wider ${
@@ -2240,7 +2211,7 @@ function StatCard({
       </div>
       <div
         className={`relative z-10 text-2xl sm:text-3xl font-black tabular-nums leading-none ${
-          highlight ? "text-amber-500" : dark ? "text-white" : "text-gray-900"
+          highlight ? ac.textSolid : dark ? "text-white" : "text-gray-900"
         }`}
       >
         {value}
@@ -2253,24 +2224,27 @@ function PodiumCard({
   row,
   place,
   theme,
-  accentText,
+  ac,
   currentUserId,
   heightClass,
 }: {
   row: StandingsRow;
   place: 1 | 2 | 3;
   theme: string;
-  accentText: string;
+  ac: AccentClasses;
   currentUserId?: string;
   heightClass: string;
 }) {
   const dark = theme === "dark";
   const isMe = currentUserId === row.user_id;
   const medal = place === 1 ? "🥇" : place === 2 ? "🥈" : "🥉";
+  // 1st place wears the tournament accent — that's the winner's
+  // halo and should always echo the admin-picked theme. 2nd/3rd
+  // keep their universal silver/bronze gradients.
   const colors = {
     1: dark
-      ? "bg-gradient-to-b from-amber-500/30 to-amber-500/10 border-amber-500/50"
-      : "bg-gradient-to-b from-amber-100 to-amber-50 border-amber-300",
+      ? `bg-gradient-to-b ${ac.gradPodiumDark} ${ac.border500_60}`
+      : `bg-gradient-to-b ${ac.gradPodiumLight} ${ac.border300}`,
     2: dark
       ? "bg-gradient-to-b from-gray-400/20 to-gray-400/5 border-gray-400/40"
       : "bg-gradient-to-b from-gray-200 to-gray-100 border-gray-300",
@@ -2282,7 +2256,7 @@ function PodiumCard({
   return (
     <div
       className={`relative rounded-3xl border-2 p-3 md:p-4 ${colors} ${heightClass} flex flex-col justify-end ${
-        isMe ? "ring-2 ring-amber-500/60" : ""
+        isMe ? `ring-2 ${ac.ring500_60}` : ""
       }`}
     >
       <div className="text-3xl md:text-4xl mb-1">{medal}</div>
@@ -2292,9 +2266,9 @@ function PodiumCard({
         }`}
       >
         {row.user_display_name || row.user_email?.split("@")[0] || "Igrač"}
-        {isMe && <span className="text-[10px] ml-1.5 text-amber-500">★</span>}
+        {isMe && <span className={`text-[10px] ml-1.5 ${ac.textSolid}`}>★</span>}
       </div>
-      <div className={`text-2xl md:text-3xl font-black tabular-nums ${accentText}`}>
+      <div className={`text-2xl md:text-3xl font-black tabular-nums ${ac.text}`}>
         {row.total_points}
         <span className="text-[10px] font-normal ml-1 text-theme-text-secondary">
           pts
@@ -2356,9 +2330,7 @@ function MatchesPublicTab({
   slug,
   authStatus,
   theme,
-  accentText,
-  accentBg,
-  accentBorder,
+  ac,
   onSaved,
   notify,
   isWC = false,
@@ -2369,14 +2341,15 @@ function MatchesPublicTab({
   slug: string;
   authStatus: string;
   theme: string;
-  accentText: string;
-  accentBg: string;
-  accentBorder: string;
+  ac: AccentClasses;
   onSaved: () => void;
   notify?: (t: SaveToastState) => void;
   isWC?: boolean;
   themeBgSrc?: string | null;
 }) {
+  const accentText = ac.text;
+  const accentBg = ac.bg;
+  const accentBorder = ac.border;
   const { t, i18n } = useTranslation("predictor");
   const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as
     | "en"
@@ -2537,8 +2510,8 @@ function MatchesPublicTab({
         <div
           className={`relative z-10 rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 ${
             theme === "dark"
-              ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
-              : "bg-amber-50 border-amber-200 text-amber-900"
+              ? `${ac.bg10} ${ac.border500_30} ${ac.textBrighter}`
+              : `${ac.bgPale} ${ac.border200} ${ac.textDeeper}`
           }`}
         >
           <LogIn className="w-5 h-5 flex-shrink-0" />
@@ -2552,7 +2525,7 @@ function MatchesPublicTab({
           </div>
           <button
             onClick={() => signIn()}
-            className={`px-4 py-2 rounded-2xl text-sm font-bold text-black ${accentBg} shadow-sm w-full sm:w-auto`}
+            className={`px-4 py-2 rounded-2xl text-sm font-bold ${ac.textOn} ${accentBg} shadow-sm w-full sm:w-auto`}
           >
             {t("signIn")}
           </button>
@@ -2654,9 +2627,7 @@ function MatchesPublicTab({
                   isFinished={isFinished}
                   userPred={userPred}
                   theme={theme}
-                  accentText={accentText}
-                  accentBorder={accentBorder}
-                  accentBg={accentBg}
+                  ac={ac}
                   lang={lang}
                 />
               );
@@ -2722,7 +2693,7 @@ function MatchesPublicTab({
           <button
             disabled={saving || authStatus !== "authenticated" || completion.done === 0}
             onClick={submit}
-            className={`w-full px-5 py-4 sm:py-3.5 rounded-2xl font-black text-base sm:text-lg text-black ${accentBg} disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 active:scale-[0.99] transition-transform shadow-lg shadow-amber-500/30 ${dirty && completion.done > 0 && !saving ? "save-pulse" : ""}`}
+            className={`w-full px-5 py-4 sm:py-3.5 rounded-2xl font-black text-base sm:text-lg ${ac.textOn} ${accentBg} disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 active:scale-[0.99] transition-transform shadow-lg ${ac.shadow500_30} ${dirty && completion.done > 0 && !saving ? "save-pulse" : ""}`}
           >
             <Save className="w-4 h-4 sm:w-5 sm:h-5" />
             {saving
@@ -2743,13 +2714,13 @@ function MatchesPublicTab({
               0%,
               100% {
                 box-shadow:
-                  0 10px 25px -5px rgba(245, 158, 11, 0.3),
-                  0 0 0 0 rgba(245, 158, 11, 0.6);
+                  0 10px 25px -5px rgb(${ac.rgb} / 0.3),
+                  0 0 0 0 rgb(${ac.rgb} / 0.6);
               }
               50% {
                 box-shadow:
-                  0 12px 30px -5px rgba(245, 158, 11, 0.45),
-                  0 0 0 10px rgba(245, 158, 11, 0);
+                  0 12px 30px -5px rgb(${ac.rgb} / 0.45),
+                  0 0 0 10px rgb(${ac.rgb} / 0);
               }
             }
             @media (prefers-reduced-motion: reduce) {
@@ -2772,6 +2743,7 @@ function ScoreRow({
   disabled,
   onChange,
   dark,
+  ac,
 }: {
   team: string;
   logo: string | null | undefined;
@@ -2780,6 +2752,7 @@ function ScoreRow({
   disabled: boolean;
   onChange: (v: number | null) => void;
   dark: boolean;
+  ac: AccentClasses;
 }) {
   const showFinal = finalScore != null;
   const value = draft ?? 0;
@@ -2838,9 +2811,9 @@ function ScoreRow({
           disabled || showFinal
             ? "cursor-default"
             : dark
-              ? "cursor-pointer hover:bg-gray-700/40 active:bg-amber-500/15"
-              : "cursor-pointer hover:bg-gray-100 active:bg-amber-50"
-        } ${isWinner ? (dark ? "ring-1 ring-amber-500/40" : "ring-1 ring-amber-400/70") : ""}`}
+              ? `cursor-pointer hover:bg-gray-700/40 active:${ac.bg15}`
+              : `cursor-pointer hover:bg-gray-100 active:${ac.bgPale}`
+        } ${isWinner ? (dark ? `ring-1 ${ac.ring500_40}` : `ring-1 ${ac.ring400_70}`) : ""}`}
       >
         {logo && (
           <div
@@ -2882,8 +2855,8 @@ function ScoreRow({
                   ? "bg-gray-900/40 text-gray-600 cursor-not-allowed"
                   : "bg-gray-100 text-gray-300 cursor-not-allowed"
                 : dark
-                  ? "bg-gray-800 text-amber-300 hover:bg-gray-700 active:bg-gray-700 border border-gray-700"
-                  : "bg-white text-amber-600 hover:bg-amber-50 active:bg-amber-50 border border-gray-300"
+                  ? `bg-gray-800 ${ac.textBrighter} hover:bg-gray-700 active:bg-gray-700 border border-gray-700`
+                  : `bg-white ${ac.textDeep} hover:${ac.bgPale} active:${ac.bgPale} border border-gray-300`
             }`}
           >
             −
@@ -2906,11 +2879,11 @@ function ScoreRow({
                   : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed placeholder-gray-300"
                 : draft != null
                   ? dark
-                    ? "bg-amber-500/15 border-amber-500 text-amber-300"
-                    : "bg-amber-50 border-amber-500 text-amber-700"
+                    ? `${ac.bg15} ${ac.border500} ${ac.textBrighter}`
+                    : `${ac.bgPale} ${ac.border500} ${ac.textDeeper}`
                   : dark
-                    ? "bg-gray-900 border-gray-700 text-white placeholder-gray-600 focus:border-amber-500"
-                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-300 focus:border-amber-500"
+                    ? `bg-gray-900 border-gray-700 text-white placeholder-gray-600 ${ac.focusBorder500}`
+                    : `bg-white border-gray-300 text-gray-900 placeholder-gray-300 ${ac.focusBorder500}`
             }`}
           />
           <button
@@ -2923,7 +2896,7 @@ function ScoreRow({
                 ? dark
                   ? "bg-gray-900/40 text-gray-600 cursor-not-allowed"
                   : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                : "bg-amber-500 text-black hover:bg-amber-400 active:bg-amber-400 border border-amber-400 shadow-sm shadow-amber-500/30"
+                : `${ac.bg} ${ac.textOn} active:bg-opacity-90 border ${ac.border500} shadow-sm ${ac.shadow500_30}`
             }`}
           >
             +
@@ -2943,9 +2916,7 @@ function MatchCard({
   isFinished,
   userPred,
   theme,
-  accentText,
-  accentBorder,
-  accentBg,
+  ac,
   lang,
 }: {
   match: Match;
@@ -2956,11 +2927,10 @@ function MatchCard({
   isFinished: boolean;
   userPred: MatchPrediction | undefined;
   theme: string;
-  accentText: string;
-  accentBorder: string;
-  accentBg: string;
+  ac: AccentClasses;
   lang: "en" | "bs";
 }) {
+  const accentText = ac.text;
   const dark = theme === "dark";
   // Prefer admin-entered EN name when present; otherwise translate via code.
   const homeName =
@@ -3110,7 +3080,7 @@ function MatchCard({
           )}
           {stageLabel && (
             <span
-              className={`uppercase font-bold tracking-wide ${dark ? "text-amber-400" : "text-amber-600"}`}
+              className={`uppercase font-bold tracking-wide ${ac.textPair600_400}`}
             >
               {stageLabel}
             </span>
@@ -3141,13 +3111,13 @@ function MatchCard({
             </span>
           )}
           {locked && !isFinished && !liveNow && !match.force_unlocked && (
-            <span className="text-[10px] uppercase font-bold inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+            <span className={`text-[10px] uppercase font-bold inline-flex items-center gap-1 ${ac.textPair600_400}`}>
               <Lock className="w-2.5 h-2.5" /> Zaključano
             </span>
           )}
           {countdown && (
             <span
-              className={`font-bold tabular-nums inline-flex items-center gap-1 ${dark ? "text-amber-400" : "text-amber-600"}`}
+              className={`font-bold tabular-nums inline-flex items-center gap-1 ${ac.textPair600_400}`}
             >
               <Clock className="w-3 h-3" /> {countdown}
             </span>
@@ -3174,6 +3144,7 @@ function MatchCard({
           disabled={disabled}
           onChange={(v) => onChange({ home: v })}
           dark={dark}
+          ac={ac}
         />
         {/* Subtle divider between teams */}
         <div className="my-1.5 flex items-center justify-center">
@@ -3192,6 +3163,7 @@ function MatchCard({
           disabled={disabled}
           onChange={(v) => onChange({ away: v })}
           dark={dark}
+          ac={ac}
         />
         {!isFinished && (
           <QuickScoreChips
@@ -3226,9 +3198,9 @@ function MatchCard({
             disabled || isFinished
               ? "cursor-default"
               : dark
-                ? "cursor-pointer hover:bg-gray-700/40 active:bg-amber-500/15"
-                : "cursor-pointer hover:bg-gray-100 active:bg-amber-100"
-          } ${homeLead ? (dark ? "ring-2 ring-amber-500/50 bg-amber-500/10" : "ring-2 ring-amber-400 bg-amber-50") : ""}`}
+                ? `cursor-pointer hover:bg-gray-700/40 active:${ac.bg15}`
+                : `cursor-pointer hover:bg-gray-100 active:${ac.bgPaleStrong}`
+          } ${homeLead ? (dark ? `ring-2 ${ac.ring500_50} ${ac.bg10}` : `ring-2 ${ac.ring400} ${ac.bgPale}`) : ""}`}
         >
           <div className="text-right min-w-0">
             <div className={`font-black text-base md:text-lg leading-tight break-words ${dark ? "text-white" : "text-gray-900"}`}>
@@ -3283,11 +3255,11 @@ function MatchCard({
                       : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed placeholder-gray-300"
                     : draft.home != null
                       ? dark
-                        ? "bg-amber-500/15 border-amber-500 text-amber-300 shadow-lg shadow-amber-500/10"
-                        : "bg-amber-50 border-amber-500 text-amber-700 shadow-md shadow-amber-500/20"
+                        ? `${ac.bg15} ${ac.border500} ${ac.textBrighter} shadow-lg ${ac.shadow500_10}`
+                        : `${ac.bgPale} ${ac.border500} ${ac.textDeeper} shadow-md ${ac.shadow500_20}`
                       : dark
-                        ? "bg-gray-900 border-gray-700 text-white placeholder-gray-600 hover:border-gray-600 focus:border-amber-500 focus:shadow-lg focus:shadow-amber-500/10"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-300 hover:border-gray-400 focus:border-amber-500 focus:shadow-md focus:shadow-amber-500/10"
+                        ? `bg-gray-900 border-gray-700 text-white placeholder-gray-600 hover:border-gray-600 ${ac.focusBorder500} focus:shadow-lg focus:${ac.shadow500_10}`
+                        : `bg-white border-gray-300 text-gray-900 placeholder-gray-300 hover:border-gray-400 ${ac.focusBorder500} focus:shadow-md focus:${ac.shadow500_10}`
                 }`}
               />
               <span className={`text-3xl font-black ${dark ? "text-gray-600" : "text-gray-400"}`}>
@@ -3310,11 +3282,11 @@ function MatchCard({
                       : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed placeholder-gray-300"
                     : draft.away != null
                       ? dark
-                        ? "bg-amber-500/15 border-amber-500 text-amber-300 shadow-lg shadow-amber-500/10"
-                        : "bg-amber-50 border-amber-500 text-amber-700 shadow-md shadow-amber-500/20"
+                        ? `${ac.bg15} ${ac.border500} ${ac.textBrighter} shadow-lg ${ac.shadow500_10}`
+                        : `${ac.bgPale} ${ac.border500} ${ac.textDeeper} shadow-md ${ac.shadow500_20}`
                       : dark
-                        ? "bg-gray-900 border-gray-700 text-white placeholder-gray-600 hover:border-gray-600 focus:border-amber-500 focus:shadow-lg focus:shadow-amber-500/10"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-300 hover:border-gray-400 focus:border-amber-500 focus:shadow-md focus:shadow-amber-500/10"
+                        ? `bg-gray-900 border-gray-700 text-white placeholder-gray-600 hover:border-gray-600 ${ac.focusBorder500} focus:shadow-lg focus:${ac.shadow500_10}`
+                        : `bg-white border-gray-300 text-gray-900 placeholder-gray-300 hover:border-gray-400 ${ac.focusBorder500} focus:shadow-md focus:${ac.shadow500_10}`
                 }`}
               />
             </>
@@ -3335,9 +3307,9 @@ function MatchCard({
             disabled || isFinished
               ? "cursor-default"
               : dark
-                ? "cursor-pointer hover:bg-gray-700/40 active:bg-amber-500/15"
-                : "cursor-pointer hover:bg-gray-100 active:bg-amber-100"
-          } ${awayLead ? (dark ? "ring-2 ring-amber-500/50 bg-amber-500/10" : "ring-2 ring-amber-400 bg-amber-50") : ""}`}
+                ? `cursor-pointer hover:bg-gray-700/40 active:${ac.bg15}`
+                : `cursor-pointer hover:bg-gray-100 active:${ac.bgPaleStrong}`
+          } ${awayLead ? (dark ? `ring-2 ${ac.ring500_50} ${ac.bg10}` : `ring-2 ${ac.ring400} ${ac.bgPale}`) : ""}`}
         >
           {match.away_logo_url && (
             <div className={`flex-shrink-0 rounded-xl overflow-hidden ring-1 ${dark ? "ring-gray-700" : "ring-gray-200"}`}>
@@ -3403,21 +3375,21 @@ function MatchCard({
         >
           <span>
             {lang === "en" ? "Exact" : "Tačno"}{" "}
-            <span className={`${dark ? "text-amber-400" : "text-amber-600"} font-black`}>
+            <span className={`${ac.textPair600_400} font-black`}>
               {match.points_exact}
             </span>
           </span>
           <span className="opacity-30">·</span>
           <span>
             {lang === "en" ? "Margin" : "Razlika"}{" "}
-            <span className={`${dark ? "text-amber-400" : "text-amber-600"} font-black`}>
+            <span className={`${ac.textPair600_400} font-black`}>
               {match.points_diff}
             </span>
           </span>
           <span className="opacity-30">·</span>
           <span>
             {lang === "en" ? "Winner" : "Pobjednik"}{" "}
-            <span className={`${dark ? "text-amber-400" : "text-amber-600"} font-black`}>
+            <span className={`${ac.textPair600_400} font-black`}>
               {match.points_winner}
             </span>
           </span>
@@ -3437,9 +3409,7 @@ function PredictionsSummary({
   tournament,
   draft,
   theme,
-  accentText,
-  accentBg,
-  accentBorder,
+  ac,
   lang,
   completion,
   onEdit,
@@ -3447,13 +3417,13 @@ function PredictionsSummary({
   tournament: TournamentDetail;
   draft: Record<string, DraftEntry>;
   theme: string;
-  accentText: string;
-  accentBg: string;
-  accentBorder: string;
+  ac: AccentClasses;
   lang: "en" | "bs";
   completion: { done: number; total: number };
   onEdit: () => void;
 }) {
+  const accentText = ac.text;
+  const accentBg = ac.bg;
   const dark = theme === "dark";
 
   return (
@@ -3575,7 +3545,7 @@ function PredictionsSummary({
                 draft={d}
                 theme={theme}
                 lang={lang}
-                accentText={accentText}
+                ac={ac}
               />
             </div>
           );
@@ -3592,14 +3562,15 @@ function SummaryAnswer({
   draft,
   theme,
   lang,
-  accentText,
+  ac,
 }: {
   category: PredictionCategory & { options: PredictionOption[] };
   draft: DraftEntry;
   theme: string;
   lang: "en" | "bs";
-  accentText: string;
+  ac: AccentClasses;
 }) {
+  const accentText = ac.text;
   const dark = theme === "dark";
 
   const optionById = useMemo(() => {
@@ -3666,7 +3637,7 @@ function SummaryAnswer({
       >
         {showRank && (
           <span
-            className={`flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black tabular-nums bg-amber-500 text-black shadow-sm shadow-amber-500/30`}
+            className={`flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black tabular-nums ${ac.bgSolid} ${ac.textOn} shadow-sm ${ac.shadow500_30}`}
           >
             {rank}
           </span>
@@ -3802,23 +3773,25 @@ function MembershipWall({
   authStatus,
   joining,
   theme,
-  accentBg,
+  ac,
   onRequestJoin,
 }: {
   membership: MembershipShape;
   authStatus: string;
   joining: boolean;
   theme: string;
-  accentBg: string;
+  ac: AccentClasses;
   onRequestJoin: () => void;
 }) {
+  const accentBg = ac.bg;
   const dark = theme === "dark";
   const status = membership.member?.status;
 
-  // Single quiet card. No gradients, no glow halos, no shake. Accent
-  // colour shows up only on the icon and the kicker label — the rest
-  // is plain card chrome so the message reads at a glance.
-  let accent: "amber" | "red" = "amber";
+  // Single quiet card. No gradients, no glow halos, no shake. Open/
+  // pending states echo the tournament accent so the gate visually
+  // belongs to *this* tournament; rejected/banned stays red since
+  // that's a universal warning state, not a brand color.
+  let useAccent: "tournament" | "red" = "tournament";
   let kicker = "Zatvoreni turnir";
   let title = "Zatraži učešće u turniru";
   let subtitle =
@@ -3828,7 +3801,7 @@ function MembershipWall({
     <button
       onClick={authStatus === "authenticated" ? onRequestJoin : () => signIn()}
       disabled={joining}
-      className={`mt-2 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-black ${accentBg} disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.98] transition-all`}
+      className={`mt-2 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold ${ac.textOn} ${accentBg} disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.98] transition-all`}
     >
       {authStatus !== "authenticated" ? (
         <>
@@ -3857,7 +3830,7 @@ function MembershipWall({
     Icon = Hourglass;
     cta = null;
   } else if (status === "rejected" || status === "banned") {
-    accent = "red";
+    useAccent = "red";
     kicker = status === "banned" ? "Blokiran" : "Odbijen";
     title = status === "banned" ? "Nalog je blokiran" : "Zahtjev je odbijen";
     subtitle =
@@ -3867,18 +3840,18 @@ function MembershipWall({
   }
 
   const accentText =
-    accent === "amber"
+    useAccent === "tournament"
       ? dark
-        ? "text-amber-300"
-        : "text-amber-600"
+        ? ac.textBrighter
+        : ac.textDeep
       : dark
         ? "text-red-300"
         : "text-red-500";
   const accentIconBg =
-    accent === "amber"
+    useAccent === "tournament"
       ? dark
-        ? "bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/25"
-        : "bg-amber-50 text-amber-600 ring-1 ring-amber-200"
+        ? `${ac.bg10} ${ac.textBright} ring-1 ${ac.ring500_40}`
+        : `${ac.bgPale} ${ac.textDeep} ring-1 ${ac.border200}`
       : dark
         ? "bg-red-500/10 text-red-400 ring-1 ring-red-500/25"
         : "bg-red-50 text-red-500 ring-1 ring-red-200";
