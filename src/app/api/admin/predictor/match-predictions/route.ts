@@ -14,22 +14,42 @@ export async function GET(req: NextRequest) {
   const tournamentId = searchParams.get("tournament_id");
   if (!tournamentId) return jsonError("tournament_id je obavezan");
 
-  const [{ data: predictions, error: pErr }, { data: matches, error: mErr }] =
-    await Promise.all([
-      supabaseServer
-        .from("predictor_match_predictions")
-        .select("*")
-        .eq("tournament_id", tournamentId),
-      supabaseServer
-        .from("predictor_matches")
-        .select(
-          "id, stage, stage_label, stage_label_en, match_label, match_label_en, home_team, home_team_en, away_team, away_team_en, home_logo_url, away_logo_url, home_team_code, away_team_code, kickoff_at, status, home_score, away_score, points_exact, points_diff, points_winner",
-        )
-        .eq("tournament_id", tournamentId),
-    ]);
+  // Use select("*") so missing optional i18n columns don't 500 the whole
+  // route on databases where the i18n migration hasn't been applied yet.
+  // Paginate predictions so the default 1000-row cap doesn't silently hide
+  // users' picks once the tournament gets popular.
+  const PAGE = 1000;
+  const predictions: any[] = [];
+  let pErr: { message: string } | null = null;
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabaseServer
+      .from("predictor_match_predictions")
+      .select("*")
+      .eq("tournament_id", tournamentId)
+      .order("id", { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) {
+      pErr = error;
+      break;
+    }
+    if (!data || data.length === 0) break;
+    predictions.push(...data);
+    if (data.length < PAGE) break;
+  }
+  if (pErr) {
+    console.error("[admin/match-predictions] predictions error:", pErr);
+    return jsonError(pErr.message, 500);
+  }
 
-  if (pErr) return jsonError(pErr.message, 500);
-  if (mErr) return jsonError(mErr.message, 500);
+  const { data: matches, error: mErr } = await supabaseServer
+    .from("predictor_matches")
+    .select("*")
+    .eq("tournament_id", tournamentId);
+
+  if (mErr) {
+    console.error("[admin/match-predictions] matches error:", mErr);
+    return jsonError(mErr.message, 500);
+  }
 
   const matchMap = new Map((matches ?? []).map((m: any) => [m.id, m]));
 

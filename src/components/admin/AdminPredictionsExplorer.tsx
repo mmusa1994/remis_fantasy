@@ -36,6 +36,8 @@ export type AdminPredictionRow = {
   category_id: string;
   category_name: string;
   category_type: string;
+  category_slug?: string | null;
+  category_sort_order?: number;
   selected_option_ids: string[];
   text_value: string | null;
   numeric_value: number | null;
@@ -44,6 +46,14 @@ export type AdminPredictionRow = {
   points_awarded: number;
   is_scored: boolean;
   option_labels: string[];
+  option_picks?: Array<{
+    id: string;
+    label: string;
+    label_en: string | null;
+    value: string | null;
+    image_url: string | null;
+    group_label: string | null;
+  }>;
   created_at: string;
   updated_at: string;
 };
@@ -486,10 +496,10 @@ function ScoreEditor({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full transition-colors ${
+        className={`inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl transition-all active:scale-95 ${
           theme === "dark"
-            ? "bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700"
-            : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+            ? "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 ring-1 ring-amber-500/40"
+            : "bg-amber-100 text-amber-800 hover:bg-amber-200 ring-1 ring-amber-300"
         }`}
         title={t("admin.explorer.score.edit") as string}
       >
@@ -779,6 +789,40 @@ function UserDetailView({
   const { t } = useTranslation("predictor");
   const accentText = tournamentAccentText(tournament.accent_color);
 
+  // Sort category predictions into clear buckets so the admin reads them
+  // in a sensible order instead of the raw template sort_order, which
+  // interleaves per-group standings with text answers.
+  // 1) Big global team picks (Pobjednik turnira, Top 4, Iznenađenje, Razočarenje)
+  // 2) Multi-pick mass picks (Pobjednici grupa, Šesnaestina finala)
+  // 3) Per-group standings (Poredak Grupa A..L) in alphabetical order
+  // 4) Free-text / numeric / exact score answers at the bottom
+  const sortedCategoryRows = useMemo(() => {
+    const bucketOf = (r: AdminPredictionRow): number => {
+      const type = r.category_type;
+      if (type === "free_text" || type === "numeric" || type === "exact_score")
+        return 40;
+      const slug = (r.category_slug ?? "").toLowerCase();
+      const name = (r.category_name ?? "").toLowerCase();
+      const isPerGroupStandings =
+        slug.includes("-poredak") ||
+        slug.startsWith("grupa-") ||
+        name.startsWith("poredak grupa") ||
+        name.startsWith("poredak ");
+      if (isPerGroupStandings) return 30;
+      if (type === "multiple_choice") return 20;
+      return 10;
+    };
+    return [...categoryRows].sort((a, b) => {
+      const ba = bucketOf(a);
+      const bb = bucketOf(b);
+      if (ba !== bb) return ba - bb;
+      const sa = a.category_sort_order ?? 0;
+      const sb = b.category_sort_order ?? 0;
+      if (sa !== sb) return sa - sb;
+      return (a.category_name ?? "").localeCompare(b.category_name ?? "");
+    });
+  }, [categoryRows]);
+
   // Group match predictions by day
   const matchesByDay = useMemo(() => {
     const map = new Map<string, AdminMatchPredictionRow[]>();
@@ -841,15 +885,15 @@ function UserDetailView({
       </div>
 
       {/* Tournament template (category) predictions */}
-      {categoryRows.length > 0 && (
+      {sortedCategoryRows.length > 0 && (
         <Section
           theme={theme}
           icon={Target}
           title={t("admin.explorer.categoryPredictions")}
-          count={categoryRows.length}
+          count={sortedCategoryRows.length}
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {categoryRows.map((r) => (
+            {sortedCategoryRows.map((r) => (
               <CategoryPredictionCard
                 key={r.id}
                 row={r}
@@ -909,6 +953,86 @@ function UserDetailView({
   );
 }
 
+// Medal-style colors for the top three ranked picks, neutral for the rest.
+function rankColor(rank: number, dark: boolean) {
+  if (rank === 1)
+    return dark
+      ? "bg-gradient-to-br from-amber-400 to-amber-600 text-black ring-amber-300/60"
+      : "bg-gradient-to-br from-amber-300 to-amber-500 text-amber-950 ring-amber-400";
+  if (rank === 2)
+    return dark
+      ? "bg-gradient-to-br from-gray-300 to-gray-500 text-black ring-gray-200/60"
+      : "bg-gradient-to-br from-gray-200 to-gray-400 text-gray-900 ring-gray-300";
+  if (rank === 3)
+    return dark
+      ? "bg-gradient-to-br from-orange-500 to-amber-700 text-black ring-orange-300/60"
+      : "bg-gradient-to-br from-orange-300 to-orange-500 text-orange-950 ring-orange-400";
+  return dark
+    ? "bg-gray-800 text-gray-200 ring-gray-700"
+    : "bg-gray-100 text-gray-700 ring-gray-300";
+}
+
+function OptionPill({
+  pick,
+  theme,
+  rank,
+  size = "md",
+}: {
+  pick: NonNullable<AdminPredictionRow["option_picks"]>[number];
+  theme: string;
+  rank?: number;
+  size?: "sm" | "md";
+}) {
+  const dark = theme === "dark";
+  const flagW = size === "sm" ? 22 : 28;
+  const flagH = size === "sm" ? 15 : 19;
+  const padCls = size === "sm" ? "pl-1.5 pr-2.5 py-1" : "pl-2 pr-3 py-1.5";
+  const textCls = size === "sm" ? "text-[12px]" : "text-[13px]";
+
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-xl ${padCls} ${textCls} font-semibold max-w-full ring-1 transition-shadow ${
+        dark
+          ? "bg-gray-900/80 text-gray-50 ring-gray-700/80 shadow-sm shadow-black/20"
+          : "bg-white text-gray-900 ring-gray-200 shadow-sm"
+      }`}
+    >
+      {rank != null && (
+        <span
+          className={`flex-shrink-0 inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-lg text-[11px] font-black tabular-nums ring-1 ${rankColor(rank, dark)}`}
+        >
+          {rank}
+        </span>
+      )}
+      {pick.image_url ? (
+        <Image
+          src={pick.image_url}
+          alt=""
+          width={flagW}
+          height={flagH}
+          style={{ width: flagW, height: flagH }}
+          className={`object-cover rounded-[3px] flex-shrink-0 ring-1 ${
+            dark ? "ring-gray-700" : "ring-gray-300"
+          }`}
+          unoptimized
+        />
+      ) : (
+        <span
+          style={{ width: flagW, height: flagH }}
+          className={`inline-flex items-center justify-center rounded-[3px] flex-shrink-0 text-[9px] font-black ring-1 ${
+            dark
+              ? "bg-gray-800 text-gray-500 ring-gray-700"
+              : "bg-gray-100 text-gray-500 ring-gray-200"
+          }`}
+        >
+          {pick.value?.slice(0, 3).toUpperCase() || "?"}
+        </span>
+      )}
+      <span className="truncate min-w-0 leading-tight">{pick.label}</span>
+    </span>
+  );
+}
+
 function CategoryPredictionCard({
   row,
   theme,
@@ -919,69 +1043,226 @@ function CategoryPredictionCard({
   onSaveScore?: SaveScoreFn;
 }) {
   const { t } = useTranslation("predictor");
-  let answer: string | null = null;
+  const dark = theme === "dark";
+
+  // Promote option_labels → option_picks even when the row was produced by an
+  // older API response that only ships labels — avoids regressions where the
+  // card silently falls back to "No pick" because option_picks is undefined.
+  const picks: NonNullable<AdminPredictionRow["option_picks"]> =
+    row.option_picks && row.option_picks.length > 0
+      ? row.option_picks
+      : (row.option_labels ?? []).map((label, i) => ({
+          id: `legacy-${row.id}-${i}`,
+          label,
+          label_en: null,
+          value: null,
+          image_url: null,
+          group_label: null,
+        }));
+
+  let visualAnswer: React.ReactNode = null;
   if (row.score_home != null && row.score_away != null) {
-    answer = `${row.score_home} : ${row.score_away}`;
-  } else if (row.numeric_value != null) {
-    answer = String(row.numeric_value);
-  } else if (row.text_value) {
-    answer = row.text_value;
-  } else if (row.option_labels?.length) {
-    answer = row.option_labels.join(", ");
-  }
-  return (
-    <div className={`rounded-2xl p-4 ${subCard(theme)}`}>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div
-          className={`text-[10px] uppercase tracking-wider font-bold ${muted(theme)}`}
-        >
-          {row.category_name}
-        </div>
+    visualAnswer = (
+      <span className="inline-flex items-baseline gap-2.5">
         <span
-          className={`flex-shrink-0 inline-flex items-baseline gap-1 px-2 py-0.5 rounded-full whitespace-nowrap ${
-            row.is_scored
-              ? theme === "dark"
-                ? "bg-emerald-950/50 text-emerald-300 border border-emerald-800/60"
-                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-              : theme === "dark"
-                ? "bg-gray-800 text-gray-400 border border-gray-700"
-                : "bg-gray-100 text-gray-600 border border-gray-200"
+          className={`text-3xl font-black tabular-nums leading-none ${
+            dark ? "text-amber-300" : "text-amber-600"
           }`}
         >
-          {row.is_scored ? (
-            <>
-              <span className="text-sm font-black tabular-nums leading-none">
-                {row.points_awarded}
+          {row.score_home}
+        </span>
+        <span
+          className={`text-xl font-bold leading-none ${
+            dark ? "text-gray-600" : "text-gray-400"
+          }`}
+        >
+          :
+        </span>
+        <span
+          className={`text-3xl font-black tabular-nums leading-none ${
+            dark ? "text-amber-300" : "text-amber-600"
+          }`}
+        >
+          {row.score_away}
+        </span>
+      </span>
+    );
+  } else if (row.numeric_value != null) {
+    visualAnswer = (
+      <span
+        className={`text-3xl font-black tabular-nums leading-none ${
+          dark ? "text-amber-300" : "text-amber-600"
+        }`}
+      >
+        {row.numeric_value}
+      </span>
+    );
+  } else if (row.text_value) {
+    visualAnswer = (
+      <p
+        className={`text-[14px] font-bold leading-snug break-words ${heading(theme)}`}
+      >
+        {row.text_value}
+      </p>
+    );
+  } else if (picks.length > 0) {
+    const isRanked = row.category_type === "ranked_top_n";
+    if (isRanked) {
+      visualAnswer = (
+        <ol className="space-y-1.5">
+          {picks.map((p, i) => (
+            <li key={p.id}>
+              <OptionPill pick={p} theme={theme} rank={i + 1} />
+            </li>
+          ))}
+        </ol>
+      );
+    } else {
+      // Group multi-picks by group_label (Pobjednici grupa, Šesnaestina)
+      // so the admin reads them as A / B / C / … blocks instead of a wall.
+      const groups = new Map<string, typeof picks>();
+      for (const p of picks) {
+        const key = p.group_label ?? "";
+        const arr = groups.get(key) ?? [];
+        arr.push(p);
+        groups.set(key, arr);
+      }
+      const grouped = Array.from(groups.entries());
+      const hasGroups = grouped.some(([k]) => k);
+      visualAnswer = hasGroups ? (
+        <div className="space-y-2.5">
+          {grouped.map(([gName, items]) => (
+            <div key={gName || "_"} className="space-y-1.5">
+              {gName && (
+                <div
+                  className={`inline-flex items-center gap-1.5 text-[10px] uppercase font-black tracking-[0.15em] px-2 py-0.5 rounded-md ${
+                    dark
+                      ? "bg-gray-800/60 text-gray-400 ring-1 ring-gray-700/60"
+                      : "bg-gray-100 text-gray-600 ring-1 ring-gray-200"
+                  }`}
+                >
+                  <span
+                    className={`w-1 h-1 rounded-full ${
+                      dark ? "bg-amber-400" : "bg-amber-500"
+                    }`}
+                  />
+                  {gName}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-1.5">
+                {items.map((p) => (
+                  <OptionPill key={p.id} pick={p} theme={theme} size="sm" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {picks.map((p) => (
+            <OptionPill key={p.id} pick={p} theme={theme} />
+          ))}
+        </div>
+      );
+    }
+  }
+
+  return (
+    <div
+      className={`group relative overflow-hidden rounded-2xl ${
+        dark
+          ? "bg-gray-900/70 ring-1 ring-gray-800 hover:ring-gray-700"
+          : "bg-white ring-1 ring-gray-200 hover:ring-gray-300 shadow-sm"
+      } transition-all`}
+    >
+      {/* Subtle ambient glow when scored */}
+      {row.is_scored && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-emerald-500/10 blur-3xl"
+        />
+      )}
+      {/* Accent stripe on the left */}
+      <span
+        aria-hidden
+        className={`absolute left-0 top-0 bottom-0 w-[3px] ${
+          row.is_scored
+            ? "bg-gradient-to-b from-emerald-400 to-emerald-600"
+            : dark
+              ? "bg-gradient-to-b from-amber-400/70 to-amber-600/70"
+              : "bg-gradient-to-b from-amber-300 to-amber-500"
+        }`}
+      />
+
+      <div className="relative p-4 pl-5">
+        {/* Header: category name + status pill */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <h4
+            className={`text-[11px] uppercase tracking-[0.12em] font-black leading-tight ${
+              dark ? "text-gray-400" : "text-gray-600"
+            }`}
+          >
+            {row.category_name}
+          </h4>
+          <span
+            className={`flex-shrink-0 inline-flex items-baseline gap-1 px-2 py-1 rounded-full whitespace-nowrap ${
+              row.is_scored
+                ? dark
+                  ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"
+                  : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                : dark
+                  ? "bg-gray-800 text-gray-500 ring-1 ring-gray-700"
+                  : "bg-gray-50 text-gray-500 ring-1 ring-gray-200"
+            }`}
+          >
+            {row.is_scored ? (
+              <>
+                <span className="text-[15px] font-black tabular-nums leading-none">
+                  {row.points_awarded}
+                </span>
+                <span className="text-[9px] uppercase font-black tracking-wider leading-none">
+                  pts
+                </span>
+              </>
+            ) : (
+              <span className="text-[10px] uppercase font-black tracking-wider leading-none inline-flex items-center gap-1">
+                <Circle className="w-3 h-3" />
+                {t("admin.explorer.notScored")}
               </span>
-              <span className="text-[9px] uppercase font-bold tracking-wider leading-none">
-                pts
-              </span>
-            </>
-          ) : (
-            <span className="text-[10px] uppercase font-bold tracking-wider leading-none inline-flex items-center gap-1">
-              <Circle className="w-3 h-3" />
-              {t("admin.explorer.notScored")}
+            )}
+          </span>
+        </div>
+
+        {/* Answer area */}
+        <div className="min-h-[28px]">
+          {visualAnswer ?? (
+            <span
+              className={`inline-flex items-center gap-1.5 italic text-sm ${subtle(theme)}`}
+            >
+              <Circle className="w-3 h-3 opacity-50" />
+              {t("admin.explorer.noPick")}
             </span>
           )}
-        </span>
-      </div>
-      <div className={`font-semibold ${heading(theme)} break-words mb-2.5`}>
-        {answer || (
-          <span className={subtle(theme)}>{t("admin.explorer.noPick")}</span>
+        </div>
+
+        {/* Footer with Boduj button */}
+        {onSaveScore && (
+          <div
+            className={`flex items-center justify-end mt-3 pt-3 border-t ${
+              dark ? "border-gray-800" : "border-gray-100"
+            }`}
+          >
+            <ScoreEditor
+              kind="category"
+              id={row.id}
+              points={row.points_awarded ?? 0}
+              isScored={!!row.is_scored}
+              theme={theme}
+              onSave={onSaveScore}
+            />
+          </div>
         )}
       </div>
-      {onSaveScore && (
-        <div className="flex items-center justify-end pt-2 border-t border-dashed border-current/20">
-          <ScoreEditor
-            kind="category"
-            id={row.id}
-            points={row.points_awarded ?? 0}
-            isScored={!!row.is_scored}
-            theme={theme}
-            onSave={onSaveScore}
-          />
-        </div>
-      )}
     </div>
   );
 }

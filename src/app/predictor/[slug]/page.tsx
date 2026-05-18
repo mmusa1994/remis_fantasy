@@ -950,39 +950,18 @@ function PredictionsTab({
     { id: string; msg: string }[]
   >([]);
 
-  // Auto-dismiss the validation banner after a short while so it doesn't
-  // linger forever once the user is aware.
-  useEffect(() => {
-    if (validationErrors.length === 0) return;
-    const id = setTimeout(() => setValidationErrors([]), 6000);
-    return () => clearTimeout(id);
-  }, [validationErrors]);
-
   // Wrap submit so that after saving we collapse back to the summary view.
-  // Runs hard client-side validation first — if anything is incomplete we
-  // show a banner instead of calling the server.
+  // Runs soft client-side validation: incomplete categories surface a
+  // sticky warning banner, but we still save whatever IS complete so the
+  // user never loses progress when working in partial passes.
   const handleSubmit = useCallback(() => {
     const issues = collectIncompleteIssues(tournament, draft, lang);
-    if (issues.length > 0) {
-      setValidationErrors(issues);
-      // Scroll to the top so the banner is in view (banner is fixed but
-      // user often spots the rest of the page context better up there).
-      if (typeof window !== "undefined") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        try {
-          navigator.vibrate?.(40);
-        } catch {
-          /* ignore */
-        }
-      }
-      return;
-    }
-    setValidationErrors([]);
+    setValidationErrors(issues);
     submit();
     userTouchedRef.current = false;
-    setEditMode(false);
+    if (issues.length === 0) {
+      setEditMode(false);
+    }
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -1041,8 +1020,8 @@ function PredictionsTab({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold leading-tight">
                     {lang === "en"
-                      ? "Some predictions are incomplete"
-                      : "Neke predikcije su nepotpune"}
+                      ? "Saved — but these picks aren't complete yet"
+                      : "Sačuvano — ali ove predikcije još nisu kompletne"}
                   </p>
                   <ul className="mt-1.5 space-y-1 text-[12px] leading-snug">
                     {validationErrors.slice(0, 6).map((e) => (
