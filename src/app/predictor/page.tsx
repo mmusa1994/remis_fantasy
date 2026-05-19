@@ -95,7 +95,11 @@ export default function PredictorIndexPage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 dark:text-amber-300 text-xs font-bold uppercase tracking-widest mb-6"
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest mb-6 ${
+              theme === "dark"
+                ? "bg-white/5 text-theme-foreground/85 border-white/10"
+                : "bg-black/[0.04] text-theme-foreground/80 border-black/10"
+            }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
             {t("badge", "Remis Predictor")}
@@ -221,7 +225,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center gap-2 mb-4">
-      <Icon className="w-4 h-4 text-amber-500" />
+      <Icon className="w-4 h-4 text-theme-text-secondary opacity-80" />
       <h2 className="text-sm font-bold uppercase tracking-widest text-theme-text-secondary">
         {title}
       </h2>
@@ -398,13 +402,13 @@ function TournamentCard({
           )}
           {tournament.prize_pool_amount != null && (
             <span
-              className={`inline-flex items-baseline gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${
+              className={`inline-flex items-baseline gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
                 theme === "dark"
-                  ? `${ac.bg15} ${ac.textBrighter} border ${ac.border500_40}`
-                  : `${ac.bgPale} ${ac.textDeeper} border ${ac.border300}`
+                  ? "bg-white/5 text-theme-foreground/85 border-white/10"
+                  : "bg-black/[0.04] text-theme-foreground/80 border-black/10"
               }`}
             >
-              <Trophy className="w-3 h-3 self-center" />
+              <Trophy className="w-3 h-3 self-center opacity-70" />
               <span className="text-[13px] font-black tabular-nums leading-none">
                 {tournament.prize_pool_amount}
               </span>

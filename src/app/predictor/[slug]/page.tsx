@@ -357,7 +357,11 @@ export default function TournamentDetailPage() {
           </p>
           <Link
             href="/predictor"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-semibold shadow-sm"
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl font-semibold shadow-sm border ${
+              theme === "dark"
+                ? "bg-gray-800/80 text-gray-100 border-gray-700 hover:bg-gray-700/80"
+                : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"
+            }`}
           >
             ← {t("backToList", "Back to tournaments")}
           </Link>
@@ -498,8 +502,14 @@ export default function TournamentDetailPage() {
               </span>
             )}
             {tournament.prize_pool_amount != null && (
-              <span className={`inline-flex items-center gap-1.5 font-semibold ${ac.text}`}>
-                <Trophy className="w-4 h-4" />
+              <span
+                className={`inline-flex items-center gap-1.5 font-semibold px-2.5 py-1 rounded-full border ${
+                  theme === "dark"
+                    ? "bg-white/5 text-theme-foreground/85 border-white/10"
+                    : "bg-black/[0.03] text-theme-foreground/80 border-black/10"
+                }`}
+              >
+                <Trophy className="w-4 h-4 opacity-70" />
                 {tournament.prize_pool_amount} {tournament.prize_pool_currency}
               </span>
             )}
@@ -555,7 +565,7 @@ export default function TournamentDetailPage() {
                   onClick={() => setTab(it.id as PageTab)}
                   className={`snap-start inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full font-semibold text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 border ${
                     active
-                      ? `${accentBg} ${ac.textOn} border-transparent shadow-md`
+                      ? `${accentBg} ${ac.textOn} ${ac.border500} shadow-md ${ac.shadow500_20}`
                       : theme === "dark"
                         ? `bg-gray-900/60 text-gray-300 border-gray-700 ${ac.hoverBorder500_60} ${ac.hoverTextDark}`
                         : `bg-white/80 text-gray-700 border-gray-200 ${ac.hoverBorder500_60} ${ac.hoverTextLight}`
@@ -567,9 +577,6 @@ export default function TournamentDetailPage() {
               );
             })}
           </div>
-          <div
-            className={`pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-theme-background via-theme-background/70 to-transparent`}
-          />
         </div>
       </section>
 
@@ -1473,8 +1480,8 @@ function CategoryInput({
                             ? `${ac.bgDarkDeep} ${ac.textBrighter} border ${ac.border800}`
                             : `${ac.bgPale} ${ac.textDeeper} border ${ac.border200}`
                           : theme === "dark"
-                            ? "bg-emerald-950/40 text-emerald-300 border border-emerald-800/60"
-                            : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            ? `${ac.bg15} ${ac.textBright} border ${ac.border500_30}`
+                            : `${ac.bgPale} ${ac.textDeep} border ${ac.border200}`
                     }`}
                   >
                     {groupRule === "one"
@@ -1522,7 +1529,7 @@ function CategoryInput({
                           ? "border-gray-700/70 bg-gray-900/50 hover:border-gray-600 hover:bg-gray-900/80"
                           : "border-gray-200 bg-white/90 hover:border-gray-300 hover:shadow-sm"
                     } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${
-                      showCorrect ? "!ring-2 !ring-emerald-500" : ""
+                      showCorrect ? `!ring-2 !${ac.ring500}` : ""
                     }`}
                   >
                     {/* selection halo */}
@@ -1545,7 +1552,7 @@ function CategoryInput({
                       />
                     )}
                     {showCorrect && (
-                      <CheckCircle2 className="absolute top-1 right-1 z-10 w-3.5 h-3.5 text-emerald-500" />
+                      <CheckCircle2 className={`absolute top-1 right-1 z-10 w-3.5 h-3.5 ${ac.textSolid}`} />
                     )}
                     <div className="relative z-10 flex items-center gap-2">
                       {opt.image_url && (
@@ -1649,10 +1656,10 @@ function CategoryInput({
         value={draft.text}
         onChange={(e) => onChange({ text: e.target.value })}
         placeholder="Tvoj odgovor"
-        className={`w-full px-3.5 py-2.5 rounded-xl border outline-none text-[15px] font-semibold ${
+        className={`w-full px-3.5 py-2.5 rounded-xl border outline-none text-[15px] font-semibold transition-colors ${
           theme === "dark"
-            ? `bg-gray-900 border-gray-700 ${ac.focusBorder500} placeholder-gray-600`
-            : `bg-white border-gray-300 ${ac.focusBorder500} placeholder-gray-400`
+            ? `bg-gray-900 border-gray-700 ${ac.hoverBorder500_60} ${ac.focusBorder500} placeholder-gray-600`
+            : `bg-white border-gray-300 ${ac.hoverBorder500_60} ${ac.focusBorder500} placeholder-gray-400`
         } disabled:opacity-60`}
       />
     );
@@ -1685,7 +1692,7 @@ function NumInput({
         onChange(e.target.value === "" ? null : Number(e.target.value))
       }
       placeholder={placeholder}
-      className={`${wide ? "w-full max-w-[10rem] text-center mx-auto block" : "w-20 text-center"} px-3 py-2.5 rounded-xl border outline-none text-lg font-black tabular-nums bg-theme-background border-theme-border ${ac.focusBorder500} disabled:opacity-60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+      className={`${wide ? "w-full max-w-[10rem] text-center mx-auto block" : "w-20 text-center"} px-3 py-2.5 rounded-xl border outline-none text-lg font-black tabular-nums bg-theme-background border-theme-border transition-colors ${ac.hoverBorder500_60} ${ac.focusBorder500} disabled:opacity-60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
     />
   );
 }
@@ -2882,8 +2889,8 @@ function ScoreRow({
                     ? `${ac.bg15} ${ac.border500} ${ac.textBrighter}`
                     : `${ac.bgPale} ${ac.border500} ${ac.textDeeper}`
                   : dark
-                    ? `bg-gray-900 border-gray-700 text-white placeholder-gray-600 ${ac.focusBorder500}`
-                    : `bg-white border-gray-300 text-gray-900 placeholder-gray-300 ${ac.focusBorder500}`
+                    ? `bg-gray-900 border-gray-700 text-white placeholder-gray-600 transition-colors ${ac.hoverBorder500_60} ${ac.focusBorder500}`
+                    : `bg-white border-gray-300 text-gray-900 placeholder-gray-300 transition-colors ${ac.hoverBorder500_60} ${ac.focusBorder500}`
             }`}
           />
           <button
@@ -3046,11 +3053,11 @@ function MatchCard({
 
   const outcomeBadge =
     predOutcome === "correct"
-      ? { text: "Tačan rezultat", cls: "bg-emerald-500 text-black" }
+      ? { text: "Tačan rezultat", cls: `${ac.bgSolid} ${ac.textOn}` }
       : predOutcome === "diff"
-        ? { text: "Tačna razlika", cls: "bg-blue-500 text-white" }
+        ? { text: "Tačna razlika", cls: `${ac.bgPaleStrongPair} ${ac.textPair700_400}` }
         : predOutcome === "winner"
-          ? { text: "Tačan pobjednik", cls: "bg-amber-500 text-black" }
+          ? { text: "Tačan pobjednik", cls: `${ac.bgGhostInk}` }
           : predOutcome === "wrong"
             ? { text: "Pogrešno", cls: "bg-red-500 text-white" }
             : null;
@@ -3104,7 +3111,7 @@ function MatchCard({
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {match.force_unlocked && !isFinished && !liveNow && (
             <span
-              className={`text-[10px] uppercase font-bold inline-flex items-center gap-1 ${dark ? "text-emerald-400" : "text-emerald-600"}`}
+              className={`text-[10px] uppercase font-bold inline-flex items-center gap-1 ${ac.textPair600_400}`}
               title="Admin je produžio rok za predviđanje"
             >
               <Unlock className="w-2.5 h-2.5" /> Produženo
@@ -3258,8 +3265,8 @@ function MatchCard({
                         ? `${ac.bg15} ${ac.border500} ${ac.textBrighter} shadow-lg ${ac.shadow500_10}`
                         : `${ac.bgPale} ${ac.border500} ${ac.textDeeper} shadow-md ${ac.shadow500_20}`
                       : dark
-                        ? `bg-gray-900 border-gray-700 text-white placeholder-gray-600 hover:border-gray-600 ${ac.focusBorder500} focus:shadow-lg focus:${ac.shadow500_10}`
-                        : `bg-white border-gray-300 text-gray-900 placeholder-gray-300 hover:border-gray-400 ${ac.focusBorder500} focus:shadow-md focus:${ac.shadow500_10}`
+                        ? `bg-gray-900 border-gray-700 text-white placeholder-gray-600 ${ac.hoverBorder500_60} ${ac.focusBorder500} focus:shadow-lg focus:${ac.shadow500_10}`
+                        : `bg-white border-gray-300 text-gray-900 placeholder-gray-300 ${ac.hoverBorder500_60} ${ac.focusBorder500} focus:shadow-md focus:${ac.shadow500_10}`
                 }`}
               />
               <span className={`text-3xl font-black ${dark ? "text-gray-600" : "text-gray-400"}`}>
@@ -3285,8 +3292,8 @@ function MatchCard({
                         ? `${ac.bg15} ${ac.border500} ${ac.textBrighter} shadow-lg ${ac.shadow500_10}`
                         : `${ac.bgPale} ${ac.border500} ${ac.textDeeper} shadow-md ${ac.shadow500_20}`
                       : dark
-                        ? `bg-gray-900 border-gray-700 text-white placeholder-gray-600 hover:border-gray-600 ${ac.focusBorder500} focus:shadow-lg focus:${ac.shadow500_10}`
-                        : `bg-white border-gray-300 text-gray-900 placeholder-gray-300 hover:border-gray-400 ${ac.focusBorder500} focus:shadow-md focus:${ac.shadow500_10}`
+                        ? `bg-gray-900 border-gray-700 text-white placeholder-gray-600 ${ac.hoverBorder500_60} ${ac.focusBorder500} focus:shadow-lg focus:${ac.shadow500_10}`
+                        : `bg-white border-gray-300 text-gray-900 placeholder-gray-300 ${ac.hoverBorder500_60} ${ac.focusBorder500} focus:shadow-md focus:${ac.shadow500_10}`
                 }`}
               />
             </>
@@ -3446,17 +3453,15 @@ function PredictionsSummary({
           <div
             className={`flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${
               dark
-                ? "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30"
-                : "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
+                ? `${ac.bg15} ${ac.textBright} ring-1 ${ac.border500_30}`
+                : `${ac.bgPale} ${ac.textDeep} ring-1 ${ac.border200}`
             }`}
           >
             <CheckCircle2 className="w-6 h-6" strokeWidth={2.25} />
           </div>
           <div className="flex-1 min-w-0">
             <p
-              className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
-                dark ? "text-emerald-400" : "text-emerald-600"
-              }`}
+              className={`text-[10px] font-bold uppercase tracking-[0.2em] ${ac.textPair600_400}`}
             >
               {lang === "en" ? "All set" : "Sve spremno"}
             </p>
