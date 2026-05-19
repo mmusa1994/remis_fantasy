@@ -4,13 +4,19 @@ import {
   FPLTeamService,
   FPLBootstrapService,
   FPLFixtureService,
+  FPLBonusService,
+  FPLScoringService,
 } from "@/services/fpl";
+import { DEFAULT_SCORING_OPTIONS } from "@/services/fpl/scoring.service";
+import type { FPLLiveElement, FPLPlayer } from "@/types/fpl";
 
 // Initialize FPL services
 const liveService = FPLLiveService.getInstance();
 const teamService = FPLTeamService.getInstance();
 const bootstrapService = FPLBootstrapService.getInstance();
 const fixtureService = FPLFixtureService.getInstance();
+const bonusService = FPLBonusService.getInstance();
+const scoringService = FPLScoringService.getInstance();
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -278,72 +284,23 @@ export async function POST(request: NextRequest) {
       .map((team) => team.live_stats)
       .filter((stats): stats is NonNullable<typeof stats> => stats !== null);
 
-    let predictedBonuses: any[] = [];
-    let totalPredictedBonus = 0;
-
-    // Simplified bonus prediction without external library
-    if (!bonusAdded && fixtures && fixtures.length > 0) {
-      try {
-        // Basic bonus prediction based on BPS
-        const fixtureGroups = new Map<number, any[]>();
-
-        // Group players by fixture
-        liveStats.forEach((stat) => {
-          const player = playersDataMap.get(stat.player_id);
-          if (player && stat.minutes > 0) {
-            const playerFixtures = fixtures.filter(
-              (f) => f.team_h === player.team || f.team_a === player.team
-            );
-
-            playerFixtures.forEach((fixture) => {
-              if (!fixtureGroups.has(fixture.id)) {
-                fixtureGroups.set(fixture.id, []);
-              }
-              fixtureGroups.get(fixture.id)!.push({
-                player_id: stat.player_id,
-                web_name: player.web_name,
-                bps: stat.bps,
-                minutes: stat.minutes,
-                team: player.team,
-              });
-            });
-          }
-        });
-
-        // Calculate bonus for each fixture
-        for (const [fixtureId, players] of fixtureGroups.entries()) {
-          const sortedPlayers = players
-            .filter((p) => p.minutes >= 60) // Only players with 60+ minutes
-            .sort((a, b) => b.bps - a.bps);
-
-          if (sortedPlayers.length >= 3) {
-            // Award bonus points: 3, 2, 1
-            const bonusPoints = [3, 2, 1];
-            for (let i = 0; i < Math.min(3, sortedPlayers.length); i++) {
-              predictedBonuses.push({
-                fixture_id: fixtureId,
-                player_id: sortedPlayers[i].player_id,
-                web_name: sortedPlayers[i].web_name,
-                bonus: bonusPoints[i],
-                bps: sortedPlayers[i].bps,
-              });
-            }
-          }
-        }
-
-        // Calculate total predicted bonus for this manager's team
-        totalPredictedBonus = managerPicks.picks.reduce((total, pick) => {
-          const playerBonus = predictedBonuses
-            .filter((pb) => pb.player_id === pick.element)
-            .reduce((sum, pb) => sum + pb.bonus, 0);
-          return total + playerBonus * pick.multiplier;
-        }, 0);
-      } catch (error) {
-        console.warn("⚠️ Bonus prediction failed:", error);
-        predictedBonuses = [];
-        totalPredictedBonus = 0;
+    // Use centralized FPLBonusService with tie-break rules
+    const predictedBonusMap = bonusService.predictBonusForGameweek(fixtures);
+    const predictedBonuses = Array.from(predictedBonusMap.entries()).map(
+      ([player_id, bonus]) => {
+        const player = playersDataMap.get(player_id);
+        return {
+          player_id,
+          web_name: player?.web_name,
+          bonus,
+        };
       }
-    }
+    );
+    const totalPredictedBonus = managerPicks.picks.reduce((total, pick) => {
+      if (pick.position > 11) return total;
+      const bonus = predictedBonusMap.get(pick.element) || 0;
+      return total + bonus * pick.multiplier;
+    }, 0);
 
     // Create pick position map for O(1) lookups
     const pickPositionMap = new Map(
@@ -368,6 +325,48 @@ export async function POST(request: NextRequest) {
     const benchStats = liveStats.filter((stat) => {
       const pick = pickPositionMap.get(stat.player_id);
       return pick && pick.position > 11;
+    });
+
+    // Build maps for scoring service
+    const liveElementMap = new Map<number, FPLLiveElement>(
+      (liveData.elements || []).map((el) => [el.id, el as FPLLiveElement])
+    );
+    const playersByIdMap = new Map<number, FPLPlayer>(
+      playersData.map((p: FPLPlayer) => [p.id, p])
+    );
+
+    const scoreWithAutoSubs = scoringService.calculateLiveTeamScore({
+      picks: managerPicks.picks,
+      activeChip: managerPicks.active_chip,
+      liveElements: liveElementMap,
+      playersById: playersByIdMap,
+      fixtures,
+      predictedBonusByElement: predictedBonusMap,
+      bonusAlreadyAdded: bonusAdded,
+      entryHistory: {
+        event_transfers_cost:
+          managerPicks.entry_history.event_transfers_cost || 0,
+        total_points: managerPicks.entry_history.total_points,
+        points: managerPicks.entry_history.points,
+      },
+      options: { ...DEFAULT_SCORING_OPTIONS, applyAutoSubs: true },
+    });
+
+    const scoreWithoutAutoSubs = scoringService.calculateLiveTeamScore({
+      picks: managerPicks.picks,
+      activeChip: managerPicks.active_chip,
+      liveElements: liveElementMap,
+      playersById: playersByIdMap,
+      fixtures,
+      predictedBonusByElement: predictedBonusMap,
+      bonusAlreadyAdded: bonusAdded,
+      entryHistory: {
+        event_transfers_cost:
+          managerPicks.entry_history.event_transfers_cost || 0,
+        total_points: managerPicks.entry_history.total_points,
+        points: managerPicks.entry_history.points,
+      },
+      options: { ...DEFAULT_SCORING_OPTIONS, applyAutoSubs: false },
     });
 
     const teamTotals = {
@@ -419,6 +418,21 @@ export async function POST(request: NextRequest) {
             return sum + stat.bonus * (pick?.multiplier || 1);
           }, 0)
         : 0,
+
+      // New live scoring results from centralized scoring service
+      with_autosubs: {
+        live_points_gross: scoreWithAutoSubs.live_points_gross,
+        live_points_net: scoreWithAutoSubs.live_points_net,
+        live_total: scoreWithAutoSubs.live_total,
+        auto_subs_applied: scoreWithAutoSubs.auto_subs_applied,
+        captain_promoted: scoreWithAutoSubs.captain_promoted,
+      },
+      without_autosubs: {
+        live_points_gross: scoreWithoutAutoSubs.live_points_gross,
+        live_points_net: scoreWithoutAutoSubs.live_points_net,
+        live_total: scoreWithoutAutoSubs.live_total,
+      },
+      chip_effects: scoreWithAutoSubs.chip_effects,
     };
 
     const responseTime = Date.now() - startTime;

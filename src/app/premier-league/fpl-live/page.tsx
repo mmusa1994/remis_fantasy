@@ -26,7 +26,8 @@ import SquadTable from "@/components/fpl/SquadTable";
 import AdvancedStatistics from "@/components/fpl/AdvancedStatistics";
 import MatchResults from "@/components/fpl/MatchResults";
 import TransfersMarket from "@/components/fpl/TransfersMarket";
-import LeagueTables from "@/components/fpl/LeagueTables";
+import { LeagueTable } from "@/components/fpl/league-table";
+import Link from "next/link";
 import CaptainsAnalysis from "@/components/fpl/CaptainsAnalysis";
 import WhatIfSimulator from "@/components/fpl/WhatIfSimulator";
 import RankGains from "@/components/fpl/RankGains";
@@ -560,12 +561,42 @@ export default function FPLLivePage() {
                   </div>
                 </div>
               </div>
-              <LeagueTables
-                currentUserData={data}
+              <LeagueTable
                 managerId={managerId || undefined}
                 gameweek={gameweek}
                 isPolling={isLiveTracking}
               />
+              <div className="bg-theme-card rounded-lg border border-theme-border p-4">
+                <h4 className="text-sm font-bold text-theme-foreground mb-3">
+                  More Live Analytics
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                  <Link
+                    href="/premier-league/fpl-live/bps"
+                    className="flex items-center justify-center px-3 py-2 rounded-md bg-theme-card-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 text-theme-foreground transition-colors"
+                  >
+                    BPS Live
+                  </Link>
+                  <Link
+                    href="/premier-league/fpl-live/effective-ownership"
+                    className="flex items-center justify-center px-3 py-2 rounded-md bg-theme-card-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 text-theme-foreground transition-colors"
+                  >
+                    EO Buckets
+                  </Link>
+                  <Link
+                    href="/premier-league/fpl-live/chips"
+                    className="flex items-center justify-center px-3 py-2 rounded-md bg-theme-card-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 text-theme-foreground transition-colors"
+                  >
+                    Chip Usage
+                  </Link>
+                  <Link
+                    href="/premier-league/fpl-live/predictions"
+                    className="flex items-center justify-center px-3 py-2 rounded-md bg-theme-card-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 text-theme-foreground transition-colors"
+                  >
+                    xPts Predictions
+                  </Link>
+                </div>
+              </div>
             </div>
           )
         );

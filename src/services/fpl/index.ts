@@ -8,6 +8,13 @@ export { FPLLiveService } from './live.service';
 export { FPLStatsService } from './stats.service';
 export { FPLOwnershipService } from './ownership.service';
 
+// Live FPL analytics services
+export { FPLScoringService } from './scoring.service';
+export { FPLBonusService } from './bonus.service';
+export { FPLEffectiveOwnershipService } from './effective-ownership.service';
+export { FPLPredictionsService } from './predictions.service';
+export { FPLChipUsageService } from './chip-usage.service';
+
 // Optimization Services
 export { SharedBootstrapManager } from './shared-bootstrap-manager';
 export { OwnershipAnalyticsCache } from './ownership-analytics-cache';

@@ -787,3 +787,102 @@ export interface FPLServiceConfig {
     static_data_ttl: number;
   };
 }
+
+// ====================================
+// LIVE SCORING / BONUS / EO / CHIPS / PREDICTIONS
+// ====================================
+
+export type FPLActiveChip = "3xc" | "bboost" | "freehit" | "wildcard" | null;
+
+export interface FPLBonusPrediction {
+  fixture_id: number;
+  element: number;
+  bps: number;
+  predicted_bonus: 0 | 1 | 2 | 3;
+}
+
+export interface FPLAutoSubApplied {
+  outId: number;
+  inId: number;
+  reason: string;
+  orderUsed?: number;
+}
+
+export interface FPLCaptainPromotion {
+  fromId: number;
+  toId: number;
+}
+
+export interface FPLPlayerScoreDetail {
+  element: number;
+  raw_points: number;
+  bonus_predicted: number;
+  effective_points: number;
+  multiplier_final: number;
+  is_captain_final: boolean;
+  is_starter_final: boolean;
+  was_auto_subbed_in: boolean;
+  was_auto_subbed_out: boolean;
+  was_captain_promoted: boolean;
+  fixture_finished: boolean;
+  minutes: number;
+}
+
+export interface FPLChipEffects {
+  bench_boost_applied: boolean;
+  triple_captain_applied: boolean;
+  free_hit_applied: boolean;
+  wildcard_applied: boolean;
+}
+
+export interface FPLLiveTeamScore {
+  live_points_gross: number;
+  live_points_net: number;
+  live_total: number;
+  chip: FPLActiveChip;
+  chip_effects: FPLChipEffects;
+  auto_subs_applied: FPLAutoSubApplied[];
+  captain_promoted: FPLCaptainPromotion | null;
+  player_details: FPLPlayerScoreDetail[];
+}
+
+export type FPLEOBucket = "top10k" | "top100k" | "overall";
+
+export interface FPLEffectiveOwnership {
+  bucket: FPLEOBucket;
+  player_id: number;
+  ownership_percent: number;
+  captain_percent: number;
+  triple_captain_percent: number;
+  transfer_in_percent: number;
+  transfer_out_percent: number;
+  net_transfers_percent: number;
+}
+
+export interface FPLChipUsageStat {
+  chip: FPLActiveChip;
+  count: number;
+  percentage: number;
+  popular_captains: Array<{ player_id: number; percentage: number; web_name?: string }>;
+}
+
+export interface FPLChipUsageResponse {
+  gameweek: number;
+  sample_size: number;
+  total_with_chip: number;
+  by_chip: FPLChipUsageStat[];
+}
+
+export interface FPLXPointsPrediction {
+  player_id: number;
+  web_name?: string;
+  expected_points: number;
+  captaincy_score: number;
+  bonus_probability: number;
+  components: {
+    minutes_expected: number;
+    goal_threat: number;
+    assist_threat: number;
+    cs_probability: number;
+  };
+}

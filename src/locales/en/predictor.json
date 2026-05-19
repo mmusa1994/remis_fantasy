@@ -20,7 +20,24 @@
   },
   "empty": {
     "title": "No active tournaments yet",
-    "subtitle": "Check back soon — new prediction tournaments drop before major events."
+    "subtitle": "Predictor tournaments only drop right before the biggest competitions — the World Cup, the Euros, the Champions League. Check back soon and get ready to climb the leaderboard.",
+    "eyebrow": "Coming soon",
+    "exploreFpl": "Open FPL Live",
+    "notify": "Notify me when live",
+    "preview": {
+      "prizes": {
+        "title": "Real prizes",
+        "desc": "Sponsored tournaments with concrete rewards for winners."
+      },
+      "leaderboard": {
+        "title": "Global leaderboard",
+        "desc": "Points stack across the tournament — climb to the top."
+      },
+      "lock": {
+        "title": "Sharp predictions",
+        "desc": "Submit your picks before kickoff. Fair and transparent."
+      }
+    }
   },
   "tabs": {
     "predictions": "Predictions",

@@ -12,6 +12,7 @@ import {
   Sparkles,
   CheckCircle2,
   Star,
+  BellRing,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
@@ -123,28 +124,30 @@ export default function PredictorIndexPage() {
             )}
           </p>
 
-          {/* Feature pills */}
-          <div className="flex flex-wrap justify-center gap-2 md:gap-2.5 mb-4">
-            {[
-              t("features.tournamentWinner", "Tournament winner"),
-              t("features.topScorer", "Top scorer"),
-              t("features.bestPlayer", "Best player"),
-              t("features.top4", "Top 4 teams"),
-              t("features.groupWinners", "Group winners"),
-              t("features.surprise", "Surprise team"),
-            ].map((f) => (
-              <span
-                key={f}
-                className={`text-xs md:text-sm font-medium px-3.5 py-1.5 rounded-full border transition-colors ${
-                  theme === "dark"
-                    ? "bg-gray-800/60 border-gray-700 text-gray-300"
-                    : "bg-white/80 border-gray-200 text-gray-700 shadow-sm"
-                }`}
-              >
-                {f}
-              </span>
-            ))}
-          </div>
+          {/* Feature pills — only shown when there are tournaments to enter */}
+          {tournaments.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2 md:gap-2.5 mb-4">
+              {[
+                t("features.tournamentWinner", "Tournament winner"),
+                t("features.topScorer", "Top scorer"),
+                t("features.bestPlayer", "Best player"),
+                t("features.top4", "Top 4 teams"),
+                t("features.groupWinners", "Group winners"),
+                t("features.surprise", "Surprise team"),
+              ].map((f) => (
+                <span
+                  key={f}
+                  className={`text-xs md:text-sm font-medium px-3.5 py-1.5 rounded-full border transition-colors ${
+                    theme === "dark"
+                      ? "bg-gray-800/60 border-gray-700 text-gray-300"
+                      : "bg-white/80 border-gray-200 text-gray-700 shadow-sm"
+                  }`}
+                >
+                  {f}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -152,24 +155,7 @@ export default function PredictorIndexPage() {
       <section className="relative z-10 px-4 pb-16">
         <div className="max-w-6xl mx-auto">
           {tournaments.length === 0 ? (
-            <div
-              className={`rounded-3xl border border-dashed p-12 text-center ${
-                theme === "dark"
-                  ? "border-gray-700 text-gray-400"
-                  : "border-gray-300 text-gray-500"
-              }`}
-            >
-              <Trophy className="w-10 h-10 mx-auto mb-3 opacity-50" />
-              <p className="text-base font-semibold mb-1">
-                {t("empty.title", "No active tournaments yet")}
-              </p>
-              <p className="text-sm">
-                {t(
-                  "empty.subtitle",
-                  "Check back soon — new prediction tournaments drop before major events.",
-                )}
-              </p>
-            </div>
+            <PredictorEmptyState theme={theme} t={t} />
           ) : (
             <>
               {featured.length > 0 && (
@@ -213,6 +199,229 @@ export default function PredictorIndexPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function PredictorEmptyState({
+  theme,
+  t,
+}: {
+  theme: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any;
+}) {
+  const isDark = theme === "dark";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className={`relative overflow-hidden rounded-3xl border ${
+        isDark
+          ? "border-white/10 bg-gradient-to-br from-gray-900/80 via-gray-900/50 to-gray-950/80"
+          : "border-gray-200/80 bg-gradient-to-br from-white via-white to-gray-50/80 shadow-sm"
+      }`}
+    >
+      {/* Decorative blurred orbs */}
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full blur-3xl ${
+          isDark ? "bg-purple-500/10" : "bg-purple-400/15"
+        }`}
+      />
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full blur-3xl ${
+          isDark ? "bg-amber-400/10" : "bg-amber-300/15"
+        }`}
+      />
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 opacity-[0.04] ${
+          isDark ? "bg-[radial-gradient(circle_at_30%_20%,#fff_0,transparent_50%)]" : ""
+        }`}
+      />
+
+      <div className="relative px-6 py-14 md:px-12 md:py-20 flex flex-col items-center text-center">
+        {/* Iconic trophy with halo */}
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className="relative mb-6"
+        >
+          <span
+            aria-hidden
+            className={`absolute inset-0 rounded-full blur-2xl ${
+              isDark ? "bg-amber-400/30" : "bg-amber-300/40"
+            }`}
+          />
+          <div
+            className={`relative inline-flex items-center justify-center w-20 h-20 rounded-2xl ${
+              isDark
+                ? "bg-gradient-to-br from-amber-400/15 via-amber-500/10 to-amber-600/5 border border-amber-400/30 shadow-[0_8px_30px_rgb(245,158,11,0.15)]"
+                : "bg-gradient-to-br from-amber-100 via-amber-50 to-white border border-amber-200 shadow-md"
+            }`}
+          >
+            <Trophy
+              className={`w-10 h-10 ${
+                isDark ? "text-amber-300" : "text-amber-500"
+              }`}
+              strokeWidth={1.8}
+            />
+            <motion.span
+              aria-hidden
+              animate={{ opacity: [0.4, 1, 0.4], scale: [0.95, 1.05, 0.95] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className={`absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 rounded-full ${
+                isDark
+                  ? "bg-amber-300 shadow-lg shadow-amber-500/50"
+                  : "bg-amber-400 shadow-md shadow-amber-300/60"
+              }`}
+            >
+              <Sparkles className="w-3 h-3 text-white" />
+            </motion.span>
+          </div>
+        </motion.div>
+
+        {/* Eyebrow */}
+        <motion.span
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+          className={`inline-flex items-center gap-1.5 text-[10px] md:text-[11px] uppercase tracking-[0.18em] font-bold px-3 py-1 rounded-full mb-3 border ${
+            isDark
+              ? "border-white/10 bg-white/5 text-amber-300/90"
+              : "border-amber-200 bg-amber-50 text-amber-700"
+          }`}
+        >
+          <Sparkles className="w-3 h-3" />
+          {t("empty.eyebrow", "Coming soon")}
+        </motion.span>
+
+        <motion.h3
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.45 }}
+          className={`text-2xl md:text-3xl font-black tracking-tight mb-3 ${
+            isDark ? "text-white" : "text-gray-900"
+          }`}
+        >
+          {t("empty.title", "No active tournaments yet")}
+        </motion.h3>
+
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className={`max-w-xl text-sm md:text-base leading-relaxed mb-8 ${
+            isDark ? "text-gray-400" : "text-gray-600"
+          }`}
+        >
+          {t(
+            "empty.subtitle",
+            "Predictor turniri se pojavljuju samo neposredno prije velikih takmičenja — Svjetsko prvenstvo, Euro, Liga prvaka. Vrati se uskoro i pripremi se da napadneš vrh tabele.",
+          )}
+        </motion.p>
+
+        {/* CTA pair */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.5 }}
+          className="flex flex-col sm:flex-row items-center gap-3 mb-10"
+        >
+          <Link
+            href="/premier-league/fpl-live"
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              isDark
+                ? "bg-gradient-to-r from-amber-400 to-amber-500 text-gray-900 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:-translate-y-0.5"
+                : "bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-md shadow-amber-300/40 hover:shadow-amber-400/50 hover:-translate-y-0.5"
+            }`}
+          >
+            <Trophy className="w-4 h-4" />
+            {t("empty.exploreFpl", "Otvori FPL Live")}
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link
+            href="/premier-league/registration"
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm border transition-all ${
+              isDark
+                ? "border-white/15 bg-white/5 text-gray-200 hover:bg-white/10 hover:border-white/20"
+                : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+            }`}
+          >
+            <BellRing className="w-4 h-4" />
+            {t("empty.notify", "Obavijesti me kad krene")}
+          </Link>
+        </motion.div>
+
+        {/* Feature preview cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.55 }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-3xl"
+        >
+          {[
+            {
+              icon: Trophy,
+              title: t("empty.preview.prizes.title", "Prave nagrade"),
+              desc: t(
+                "empty.preview.prizes.desc",
+                "Sponzorisani turniri sa konkretnim nagradama.",
+              ),
+            },
+            {
+              icon: Star,
+              title: t("empty.preview.leaderboard.title", "Globalna tabela"),
+              desc: t(
+                "empty.preview.leaderboard.desc",
+                "Bodovi se zbrajaju kroz cijeli turnir — kapnij vrh.",
+              ),
+            },
+            {
+              icon: CheckCircle2,
+              title: t("empty.preview.lock.title", "Tačno predviđanje"),
+              desc: t(
+                "empty.preview.lock.desc",
+                "Predaj tipove prije starta. Sve fer i transparentno.",
+              ),
+            },
+          ].map(({ icon: Icon, title, desc }) => (
+            <div
+              key={title}
+              className={`p-4 rounded-2xl text-left border transition-colors ${
+                isDark
+                  ? "bg-white/[0.03] border-white/10 hover:bg-white/[0.05]"
+                  : "bg-white/70 border-gray-200/80 hover:bg-white"
+              }`}
+            >
+              <Icon
+                className={`w-4 h-4 mb-2 ${
+                  isDark ? "text-amber-300/80" : "text-amber-500"
+                }`}
+              />
+              <p
+                className={`text-xs font-bold uppercase tracking-wide mb-1 ${
+                  isDark ? "text-gray-200" : "text-gray-800"
+                }`}
+              >
+                {title}
+              </p>
+              <p
+                className={`text-[11px] leading-relaxed ${
+                  isDark ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                {desc}
+              </p>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </motion.div>
   );
 }
 

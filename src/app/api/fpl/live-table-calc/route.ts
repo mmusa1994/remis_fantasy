@@ -1,109 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  FPLBootstrapService,
+  FPLFixtureService,
+  FPLLeagueService,
+  FPLLiveService,
+  FPLTeamService,
+  FPLScoringService,
+  FPLBonusService,
+} from "@/services/fpl";
+import { DEFAULT_SCORING_OPTIONS } from "@/services/fpl/scoring.service";
+import type {
+  FPLActiveChip,
+  FPLClassicLeagueEntry,
+  FPLLiveElement,
+  FPLPlayer,
+  FPLPlayerScoreDetail,
+} from "@/types/fpl";
 
-interface BootstrapElement {
-  id: number;
-  first_name: string;
-  second_name: string;
-  team: number;
-  element_type: number;
-  web_name: string;
-}
-
-interface BootstrapTeam {
-  id: number;
-  name: string;
-  short_name: string;
-}
-
-interface BootstrapEvent {
-  id: number;
-  name: string;
-  is_current: boolean;
-  is_next: boolean;
-  finished: boolean;
-}
-
-interface LiveElement {
-  id: number;
-  stats: {
-    minutes: number;
-    goals_scored: number;
-    assists: number;
-    clean_sheets: number;
-    goals_conceded: number;
-    own_goals: number;
-    penalties_saved: number;
-    penalties_missed: number;
-    yellow_cards: number;
-    red_cards: number;
-    saves: number;
-    bonus: number;
-    bps: number;
-    influence: string;
-    creativity: string;
-    threat: string;
-    ict_index: string;
-    starts: number;
-    expected_goals: string;
-    expected_assists: string;
-    expected_goal_involvements: string;
-    expected_goals_conceded: string;
-    total_points: number;
-    in_dreamteam: boolean;
-  };
-}
-
-interface FixtureStats {
-  identifier: string;
-  a: Array<{ value: number; element: number }>;
-  h: Array<{ value: number; element: number }>;
-}
-
-interface Fixture {
-  id: number;
-  team_h: number;
-  team_a: number;
-  finished: boolean;
-  finished_provisional: boolean;
-  started: boolean;
-  stats: FixtureStats[];
-}
-
-interface LeagueStanding {
-  id: number;
-  event_total: number;
-  player_name: string;
-  rank: number;
-  last_rank: number;
-  rank_sort: number;
-  total: number;
-  entry: number;
-  entry_name: string;
-}
-
-interface ManagerPick {
-  element: number;
-  position: number;
-  multiplier: number;
-  is_captain: boolean;
-  is_vice_captain: boolean;
-}
-
-interface ManagerData {
-  active_chip?: string;
-  picks: ManagerPick[];
-  entry_history: {
-    event: number;
-    points: number;
-    total_points: number;
-    rank: number;
-    overall_rank: number;
-    event_transfers: number;
-    event_transfers_cost: number;
-    bank: number;
-    value: number;
-  };
-}
+const bootstrapService = FPLBootstrapService.getInstance();
+const fixtureService = FPLFixtureService.getInstance();
+const leagueService = FPLLeagueService.getInstance();
+const liveService = FPLLiveService.getInstance();
+const teamService = FPLTeamService.getInstance();
+const scoringService = FPLScoringService.getInstance();
+const bonusService = FPLBonusService.getInstance();
 
 interface ProcessedTeam {
   id: number;
@@ -115,37 +35,52 @@ interface ProcessedTeam {
   event_total: number;
   total: number;
   live_points: number;
+  live_points_gross: number;
+  live_points_net: number;
   live_total: number;
-  captain: {
-    name: string;
-    points: number;
-  };
+  captain: { name: string; points: number };
   players_to_play: number;
-  active_chip?: string;
-  picks: ManagerPick[];
+  active_chip: FPLActiveChip;
+  chip_effects: {
+    bench_boost_applied: boolean;
+    triple_captain_applied: boolean;
+    free_hit_applied: boolean;
+    wildcard_applied: boolean;
+  };
+  auto_subs_applied: Array<{ outId: number; inId: number; reason: string }>;
+  captain_promoted: { fromId: number; toId: number } | null;
+  picks: Array<{
+    element: number;
+    position: number;
+    multiplier: number;
+    is_captain: boolean;
+    is_vice_captain: boolean;
+  }>;
   event_transfers: number;
   event_transfers_cost: number;
   team_value: number;
   bank: number;
-  player_details: Array<{
-    element: number;
-    points: number;
-    live_points: number;
-    multiplier: number;
-    position: number;
-    is_captain: boolean;
-    is_vice_captain: boolean;
-    opponent?: string;
-    is_home?: boolean;
-  }>;
+  player_details: Array<
+    FPLPlayerScoreDetail & {
+      points: number;
+      live_points: number;
+      multiplier: number;
+      position: number;
+      is_captain: boolean;
+      is_vice_captain: boolean;
+      opponent?: string;
+      is_home?: boolean;
+    }
+  >;
 }
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const managerId = searchParams.get("managerId");
-    const gameweek = parseInt(searchParams.get("gameweek") || "1", 10);
+    const gameweekParam = searchParams.get("gameweek");
     const leagueId = searchParams.get("leagueId");
+    const autoSubsParam = searchParams.get("autoSubs");
 
     if (!managerId || !leagueId) {
       return NextResponse.json(
@@ -154,231 +89,191 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch bootstrap static data
-    const bootstrapResponse = await fetch(
-      "https://fantasy.premierleague.com/api/bootstrap-static/"
-    );
-    if (!bootstrapResponse.ok) {
+    const requestedGameweek = parseInt(gameweekParam || "1", 10);
+    const applyAutoSubs = autoSubsParam !== "0";
+
+    const [bootstrapResponse, fixturesResponse, leagueResponse] =
+      await Promise.all([
+        bootstrapService.getBootstrapStatic(),
+        fixtureService.getAllFixtures(),
+        leagueService.getClassicLeagueStandings(parseInt(leagueId, 10), 1),
+      ]);
+
+    if (!bootstrapResponse.success || !bootstrapResponse.data) {
       throw new Error("Failed to fetch bootstrap static data");
     }
-    const bootstrap = await bootstrapResponse.json();
+    if (!leagueResponse.success || !leagueResponse.data) {
+      throw new Error("Failed to fetch league standings");
+    }
 
-    const elements: BootstrapElement[] = bootstrap.elements;
-    const teams: BootstrapTeam[] = bootstrap.teams;
-    const events: BootstrapEvent[] = bootstrap.events;
+    const bootstrap = bootstrapResponse.data;
+    const players = bootstrap.elements;
+    const teams = bootstrap.teams;
+    const events = bootstrap.events;
 
-    // Find current event
     const currentEvent =
-      events.find((e) => e.is_current) || events[gameweek - 1];
+      events.find((e) => e.is_current) ||
+      events.find((e) => e.id === requestedGameweek) ||
+      events[Math.max(0, requestedGameweek - 1)];
     if (!currentEvent) {
       throw new Error("Current event not found");
     }
+    const gameweek = currentEvent.id;
 
-    // Fetch live data for current gameweek
-    const liveResponse = await fetch(
-      `https://fantasy.premierleague.com/api/event/${currentEvent.id}/live/`
-    );
-    if (!liveResponse.ok) {
+    const [liveResponse, eventStatusResponse] = await Promise.all([
+      liveService.getLiveData(gameweek),
+      liveService.getEventStatus(),
+    ]);
+
+    if (!liveResponse.success || !liveResponse.data) {
       throw new Error("Failed to fetch live event data");
     }
-    const liveData = await liveResponse.json();
-    const liveElements: LiveElement[] = liveData.elements;
 
-    // Fetch fixtures for current gameweek
-    const fixturesResponse = await fetch(
-      `https://fantasy.premierleague.com/api/fixtures/?event=${currentEvent.id}`
+    const liveElements: FPLLiveElement[] = liveResponse.data.elements;
+    const allFixtures = fixturesResponse.success
+      ? fixturesResponse.data || []
+      : [];
+    const fixtures = allFixtures.filter((f) => f.event === gameweek);
+
+    const bonusStatus =
+      eventStatusResponse.success && eventStatusResponse.data
+        ? eventStatusResponse.data.status?.find(
+            (s: { event: number; bonus_added: boolean }) =>
+              s.event === gameweek
+          )
+        : null;
+    const bonusAdded = bonusStatus?.bonus_added || false;
+
+    const predictedBonusMap = bonusService.predictBonusForGameweek(fixtures);
+
+    const liveElementMap = new Map<number, FPLLiveElement>(
+      liveElements.map((e) => [e.id, e])
     );
-    if (!fixturesResponse.ok) {
-      throw new Error("Failed to fetch fixtures data");
-    }
-    const fixtures: Fixture[] = await fixturesResponse.json();
-
-    // Fetch league standings
-    const leagueResponse = await fetch(
-      `https://fantasy.premierleague.com/api/leagues-classic/${leagueId}/standings/`
+    const playerByIdMap = new Map<number, FPLPlayer>(
+      players.map((p: FPLPlayer) => [p.id, p])
     );
-    if (!leagueResponse.ok) {
-      throw new Error("Failed to fetch league data");
-    }
-    const leagueData = await leagueResponse.json();
-    const standings: LeagueStanding[] = leagueData.standings.results;
 
-    // Calculate live bonus points from fixtures
-    const liveBonusPoints: { [playerId: number]: number } = {};
+    const standings: FPLClassicLeagueEntry[] =
+      leagueResponse.data.standings.results.slice(0, 50);
 
-    fixtures.forEach((fixture) => {
-      if (fixture.started && !fixture.finished) {
-        // Game is live, calculate provisional bonus
-        const bpsStats = fixture.stats.find((s) => s.identifier === "bps");
-        if (bpsStats) {
-          const allBps = [...bpsStats.a, ...bpsStats.h].sort(
-            (a, b) => b.value - a.value
-          );
-
-          // Create groups by BPS value
-          const bpsGroups: { [value: number]: number[] } = {};
-          allBps.forEach((player) => {
-            if (!bpsGroups[player.value]) {
-              bpsGroups[player.value] = [];
-            }
-            bpsGroups[player.value].push(player.element);
-          });
-
-          // Sort unique BPS values in descending order
-          const uniqueBpsValues = Object.keys(bpsGroups)
-            .map(Number)
-            .sort((a, b) => b - a);
-
-          let rank = 1;
-          let bonusRemaining = [3, 2, 1]; // Available bonus points
-
-          uniqueBpsValues.forEach((bpsValue) => {
-            const playersAtThisBps = bpsGroups[bpsValue];
-            const playersCount = playersAtThisBps.length;
-
-            if (rank <= 3 && bonusRemaining.length > 0) {
-              // Calculate how many bonus points to distribute
-              let bonusToDistribute = 0;
-              for (let i = 0; i < playersCount && rank + i <= 3; i++) {
-                bonusToDistribute += bonusRemaining[rank + i - 1] || 0;
-              }
-
-              // Distribute bonus equally among tied players
-              const bonusPerPlayer = Math.floor(
-                bonusToDistribute / playersCount
-              );
-
-              if (bonusPerPlayer > 0) {
-                playersAtThisBps.forEach((playerId) => {
-                  liveBonusPoints[playerId] = bonusPerPlayer;
-                });
-              }
-
-              // Update rank and remove distributed bonus
-              rank += playersCount;
-              bonusRemaining = bonusRemaining.slice(playersCount);
-            }
-          });
-        }
-      } else if (fixture.finished) {
-        // Game is finished, use official bonus points
-        const bonusStats = fixture.stats.find((s) => s.identifier === "bonus");
-        if (bonusStats) {
-          [...bonusStats.a, ...bonusStats.h].forEach((player) => {
-            liveBonusPoints[player.element] = player.value;
-          });
-        }
-      }
-    });
-
-    // Process each team in the league
     const processedTeams: ProcessedTeam[] = [];
 
-    for (const standing of standings.slice(0, 50)) {
-      // Limit to top 50 for performance
-      try {
-        // Fetch manager's picks for current gameweek
-        const picksResponse = await fetch(
-          `https://fantasy.premierleague.com/api/entry/${standing.entry}/event/${currentEvent.id}/picks/`
-        );
-        if (!picksResponse.ok) continue;
+    const chunkSize = 10;
+    for (let i = 0; i < standings.length; i += chunkSize) {
+      const chunk = standings.slice(i, i + chunkSize);
+      const picksResponses = await Promise.all(
+        chunk.map((entry) =>
+          teamService
+            .getManagerPicks(entry.entry, gameweek)
+            .then((res) => ({ entry, res }))
+            .catch(() => ({ entry, res: null as null }))
+        )
+      );
 
-        const managerData: ManagerData = await picksResponse.json();
+      for (const { entry, res } of picksResponses) {
+        if (!res || !res.success || !res.data) continue;
+        const managerPicks = res.data;
 
-        let livePoints = 0;
+        const scoreResult = scoringService.calculateLiveTeamScore({
+          picks: managerPicks.picks,
+          activeChip: managerPicks.active_chip,
+          liveElements: liveElementMap,
+          playersById: playerByIdMap,
+          fixtures,
+          predictedBonusByElement: predictedBonusMap,
+          bonusAlreadyAdded: bonusAdded,
+          entryHistory: {
+            event_transfers_cost:
+              managerPicks.entry_history.event_transfers_cost || 0,
+            total_points: managerPicks.entry_history.total_points,
+            points: managerPicks.entry_history.points,
+          },
+          options: {
+            ...DEFAULT_SCORING_OPTIONS,
+            applyAutoSubs,
+          },
+        });
+
+        let captainName = "";
+        let captainPoints = 0;
+        const captainPick = managerPicks.picks.find((p) => p.is_captain);
+        if (captainPick) {
+          const captainPlayer = playerByIdMap.get(captainPick.element);
+          captainName = captainPlayer?.web_name || "";
+          const captainDetail = scoreResult.player_details.find(
+            (d) => d.element === captainPick.element
+          );
+          captainPoints =
+            (captainDetail?.effective_points || 0) *
+            (captainDetail?.multiplier_final || captainPick.multiplier);
+        }
+        if (scoreResult.captain_promoted) {
+          const promoted = playerByIdMap.get(scoreResult.captain_promoted.toId);
+          captainName = promoted?.web_name || captainName;
+          const promotedDetail = scoreResult.player_details.find(
+            (d) => d.element === scoreResult.captain_promoted!.toId
+          );
+          captainPoints =
+            (promotedDetail?.effective_points || 0) *
+            (promotedDetail?.multiplier_final || 2);
+        }
+
         let playersToPlay = 0;
-        let captain = { name: "", points: 0 };
-        const playerDetails: Array<{
-          element: number;
-          points: number;
-          live_points: number;
-          minutes: number;
-          multiplier: number;
-          position: number;
-          is_captain: boolean;
-          is_vice_captain: boolean;
-          opponent?: string;
-          is_home?: boolean;
-        }> = [];
-
-        // Calculate live points for each pick
-        managerData.picks.forEach((pick) => {
-          const element = elements.find((e) => e.id === pick.element);
-          const liveElement = liveElements.find((e) => e.id === pick.element);
-
-          if (!element || !liveElement) return;
-
-          const originalPoints = liveElement.stats.total_points;
-          let playerLivePoints = originalPoints;
-
-          // Add provisional bonus ONLY if:
-          // 1. There's a live game (not finished)
-          // 2. Player doesn't already have bonus points (from finished games)
-          const playerHasLiveFixture = fixtures.some(
-            (f) =>
-              (f.team_h === element.team || f.team_a === element.team) &&
-              f.started &&
-              !f.finished
+        const playerDetails: ProcessedTeam["player_details"] = [];
+        for (const pick of managerPicks.picks) {
+          const detail = scoreResult.player_details.find(
+            (d) => d.element === pick.element
           );
+          const liveEl = liveElementMap.get(pick.element);
+          const player = playerByIdMap.get(pick.element);
 
-          const currentBonus = liveElement.stats.bonus || 0;
-
-          if (
-            playerHasLiveFixture &&
-            liveBonusPoints[pick.element] &&
-            currentBonus === 0
-          ) {
-            playerLivePoints += liveBonusPoints[pick.element];
-          }
-
-          // Track captain info BEFORE applying multiplier
-          if (pick.is_captain) {
-            captain = {
-              name: element.web_name,
-              points: playerLivePoints * pick.multiplier,
-            };
-          }
-
-          // Check if player still has games to play and get opponent info
-          const upcomingFixture = fixtures.find(
-            (f) =>
-              (f.team_h === element.team || f.team_a === element.team) &&
-              !f.finished
-          );
-
-          const hasPlayedAll =
-            liveElement.stats.minutes > 0 ||
+          const hasPlayed =
+            (liveEl?.stats.minutes || 0) > 0 ||
             fixtures.some(
               (f) =>
-                (f.team_h === element.team || f.team_a === element.team) &&
+                (f.team_h === player?.team || f.team_a === player?.team) &&
                 f.finished
             );
-
-          if (!hasPlayedAll) {
-            playersToPlay++;
+          if (pick.position <= 11 && !hasPlayed) {
+            playersToPlay += 1;
           }
 
-          let opponent = undefined;
-          let isHome = undefined;
-
-          if (upcomingFixture) {
+          const upcomingFixture = fixtures.find(
+            (f) =>
+              (f.team_h === player?.team || f.team_a === player?.team) &&
+              !f.finished
+          );
+          let opponent: string | undefined;
+          let isHome: boolean | undefined;
+          if (upcomingFixture && player) {
             const opponentTeamId =
-              upcomingFixture.team_h === element.team
+              upcomingFixture.team_h === player.team
                 ? upcomingFixture.team_a
                 : upcomingFixture.team_h;
             const opponentTeam = teams.find((t) => t.id === opponentTeamId);
             if (opponentTeam) {
               opponent = opponentTeam.short_name;
-              isHome = upcomingFixture.team_h === element.team;
+              isHome = upcomingFixture.team_h === player.team;
             }
           }
 
-          // Store player details
           playerDetails.push({
             element: pick.element,
-            points: originalPoints,
-            live_points: playerLivePoints,
-            minutes: liveElement.stats.minutes,
+            raw_points: detail?.raw_points ?? 0,
+            bonus_predicted: detail?.bonus_predicted ?? 0,
+            effective_points: detail?.effective_points ?? 0,
+            multiplier_final:
+              detail?.multiplier_final ?? pick.multiplier,
+            is_captain_final: detail?.is_captain_final ?? pick.is_captain,
+            is_starter_final: detail?.is_starter_final ?? pick.position <= 11,
+            was_auto_subbed_in: detail?.was_auto_subbed_in ?? false,
+            was_auto_subbed_out: detail?.was_auto_subbed_out ?? false,
+            was_captain_promoted: detail?.was_captain_promoted ?? false,
+            fixture_finished: detail?.fixture_finished ?? false,
+            minutes: detail?.minutes ?? liveEl?.stats.minutes ?? 0,
+            // backwards-compat fields kept for legacy clients
+            points: detail?.raw_points ?? 0,
+            live_points: detail?.effective_points ?? 0,
             multiplier: pick.multiplier,
             position: pick.position,
             is_captain: pick.is_captain,
@@ -386,45 +281,48 @@ export async function GET(request: NextRequest) {
             opponent,
             is_home: isHome,
           });
-
-          // Apply captain/vice-captain multiplier for total
-          const multipliedPoints = playerLivePoints * pick.multiplier;
-          livePoints += multipliedPoints;
-        });
-
-        const rankChange = standing.last_rank - standing.rank;
+        }
 
         processedTeams.push({
-          id: standing.entry,
-          player_name: standing.player_name,
-          entry_name: standing.entry_name,
-          rank: standing.rank,
-          last_rank: standing.last_rank,
-          rank_change: rankChange,
-          event_total: standing.event_total,
-          total: standing.total,
-          live_points: livePoints,
-          live_total: standing.total - standing.event_total + livePoints,
-          captain,
+          id: entry.entry,
+          player_name: entry.player_name,
+          entry_name: entry.entry_name,
+          rank: entry.rank,
+          last_rank: entry.last_rank,
+          rank_change: entry.last_rank - entry.rank,
+          event_total: entry.event_total,
+          total: entry.total,
+          live_points: scoreResult.live_points_net,
+          live_points_gross: scoreResult.live_points_gross,
+          live_points_net: scoreResult.live_points_net,
+          live_total: scoreResult.live_total,
+          captain: { name: captainName, points: captainPoints },
           players_to_play: playersToPlay,
-          active_chip: managerData.active_chip,
-          picks: managerData.picks,
-          event_transfers: managerData.entry_history.event_transfers,
-          event_transfers_cost: managerData.entry_history.event_transfers_cost,
-          team_value: managerData.entry_history.value,
-          bank: managerData.entry_history.bank,
+          active_chip: scoreResult.chip,
+          chip_effects: scoreResult.chip_effects,
+          auto_subs_applied: scoreResult.auto_subs_applied.map((sub) => ({
+            outId: sub.outId,
+            inId: sub.inId,
+            reason: sub.reason,
+          })),
+          captain_promoted: scoreResult.captain_promoted,
+          picks: managerPicks.picks.map((pick) => ({
+            element: pick.element,
+            position: pick.position,
+            multiplier: pick.multiplier,
+            is_captain: pick.is_captain,
+            is_vice_captain: pick.is_vice_captain,
+          })),
+          event_transfers: managerPicks.entry_history.event_transfers,
+          event_transfers_cost: managerPicks.entry_history.event_transfers_cost,
+          team_value: managerPicks.entry_history.value,
+          bank: managerPicks.entry_history.bank,
           player_details: playerDetails,
         });
-      } catch (error) {
-        console.error(`Error processing team ${standing.entry}:`, error);
-        continue;
       }
     }
 
-    // Sort by live total points
     processedTeams.sort((a, b) => b.live_total - a.live_total);
-
-    // Update live ranks
     processedTeams.forEach((team, index) => {
       team.rank = index + 1;
     });
@@ -434,17 +332,26 @@ export async function GET(request: NextRequest) {
       data: {
         league: {
           id: leagueId,
-          name: leagueData.league.name,
+          name: leagueResponse.data.league.name,
         },
-        gameweek: currentEvent.id,
+        gameweek,
+        bonus_added: bonusAdded,
+        auto_subs_enabled: applyAutoSubs,
         teams: processedTeams,
-        elements,
+        elements: players.map((p) => ({
+          id: p.id,
+          first_name: p.first_name,
+          second_name: p.second_name,
+          web_name: p.web_name,
+          team: p.team,
+          element_type: p.element_type,
+        })),
         fpl_teams: teams,
         last_updated: new Date().toISOString(),
       },
     });
   } catch (error) {
-    console.error("❌ Live table calculation error:", error);
+    console.error("Live table calculation error:", error);
     return NextResponse.json(
       {
         success: false,

@@ -20,7 +20,24 @@
   },
   "empty": {
     "title": "Trenutno nema aktivnih turnira",
-    "subtitle": "Vrati se uskoro — novi turniri predikcija dolaze prije velikih takmičenja."
+    "subtitle": "Predictor turniri se otvaraju samo neposredno prije velikih takmičenja — Svjetsko prvenstvo, Euro, Liga prvaka. Vrati se uskoro i pripremi se da napadneš vrh tabele.",
+    "eyebrow": "Uskoro",
+    "exploreFpl": "Otvori FPL Live",
+    "notify": "Obavijesti me kad krene",
+    "preview": {
+      "prizes": {
+        "title": "Prave nagrade",
+        "desc": "Sponzorisani turniri sa konkretnim nagradama za pobjednike."
+      },
+      "leaderboard": {
+        "title": "Globalna tabela",
+        "desc": "Bodovi se zbrajaju kroz cijeli turnir — napadni vrh tabele."
+      },
+      "lock": {
+        "title": "Tačno predviđanje",
+        "desc": "Predaj tipove prije starta. Sve fer i transparentno."
+      }
+    }
   },
   "tabs": {
     "predictions": "Predikcije",
