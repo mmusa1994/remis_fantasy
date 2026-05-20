@@ -30,7 +30,9 @@ export class FPLBonusService {
    */
   public predictBonusForGameweek(fixtures: FPLFixture[]): Map<number, number> {
     const totalByElement = new Map<number, number>();
+    if (!Array.isArray(fixtures)) return totalByElement;
     for (const fixture of fixtures) {
+      if (!fixture) continue;
       const predictions = this.predictBonusForFixture(fixture);
       for (const p of predictions) {
         const current = totalByElement.get(p.element) || 0;
@@ -57,10 +59,13 @@ export class FPLBonusService {
   }
 
   private readOfficialBonus(fixture: FPLFixture): FPLBonusPrediction[] {
-    const bonusStat = fixture.stats.find((s) => s.identifier === "bonus");
+    const stats = Array.isArray(fixture.stats) ? fixture.stats : [];
+    const bonusStat = stats.find((s) => s.identifier === "bonus");
     if (!bonusStat) return [];
+    const a = Array.isArray(bonusStat.a) ? bonusStat.a : [];
+    const h = Array.isArray(bonusStat.h) ? bonusStat.h : [];
     const results: FPLBonusPrediction[] = [];
-    for (const item of [...bonusStat.a, ...bonusStat.h]) {
+    for (const item of [...a, ...h]) {
       results.push({
         fixture_id: fixture.id,
         element: item.element,
@@ -72,10 +77,13 @@ export class FPLBonusService {
   }
 
   private predictFromBPS(fixture: FPLFixture): FPLBonusPrediction[] {
-    const bpsStat = fixture.stats.find((s) => s.identifier === "bps");
+    const stats = Array.isArray(fixture.stats) ? fixture.stats : [];
+    const bpsStat = stats.find((s) => s.identifier === "bps");
     if (!bpsStat) return [];
 
-    const all = [...bpsStat.a, ...bpsStat.h]
+    const a = Array.isArray(bpsStat.a) ? bpsStat.a : [];
+    const h = Array.isArray(bpsStat.h) ? bpsStat.h : [];
+    const all = [...a, ...h]
       .filter((p) => p.value > 0)
       .sort((a, b) => b.value - a.value);
 

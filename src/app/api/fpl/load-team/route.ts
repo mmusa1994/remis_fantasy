@@ -51,6 +51,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Clamp gameweek to valid FPL range so downstream services never throw a
+    // validation error (which would surface as a misleading 500).
+    if (gw < 1) gw = 1;
+    if (gw > 38) gw = 38;
+
     // If skeleton mode requested, return minimal manager data quickly
     if (skeleton) {
       try {
@@ -119,56 +124,55 @@ export async function POST(request: NextRequest) {
       managerPicks = picksResponse.data;
       liveData = liveResponse.data;
     } catch (apiError) {
-      if (apiError instanceof Error && apiError.message.includes("404")) {
-        // Apply fallback logic: try previous gameweeks until we find data
+      // Apply fallback logic for any error (404, transient 5xx, network, etc.)
+      // — old behaviour only handled 404s, which let upstream FPL hiccups
+      // surface as a 500 to the planner.
+      const attemptedGameweeks = [gw];
+      fallbackApplied = true;
+      let currentGw = gw;
 
-        const attemptedGameweeks = [gw];
-        fallbackApplied = true;
-        let currentGw = gw;
+      while (currentGw > 1 && attemptedGameweeks.length < 3) {
+        currentGw--;
+        attemptedGameweeks.push(currentGw);
 
-        while (currentGw > 1 && attemptedGameweeks.length < 3) {
-          currentGw--;
-          attemptedGameweeks.push(currentGw);
+        try {
+          const [fallbackPicksResponse, fallbackLiveResponse] =
+            await Promise.all([
+              teamService.getManagerPicks(managerIdNum, currentGw),
+              liveService.getLiveData(currentGw),
+            ]);
 
-          try {
-            const [fallbackPicksResponse, fallbackLiveResponse] =
-              await Promise.all([
-                teamService.getManagerPicks(managerIdNum, currentGw),
-                liveService.getLiveData(currentGw),
-              ]);
-
-            if (
-              fallbackPicksResponse.success &&
-              fallbackLiveResponse.success &&
-              fallbackPicksResponse.data &&
-              fallbackLiveResponse.data
-            ) {
-              managerPicks = fallbackPicksResponse.data;
-              liveData = fallbackLiveResponse.data;
-              gw = currentGw; // Update the working gameweek
-              break;
-            }
-          } catch (fallbackError) {
-            continue;
+          if (
+            fallbackPicksResponse.success &&
+            fallbackLiveResponse.success &&
+            fallbackPicksResponse.data &&
+            fallbackLiveResponse.data
+          ) {
+            managerPicks = fallbackPicksResponse.data;
+            liveData = fallbackLiveResponse.data;
+            gw = currentGw; // Update the working gameweek
+            break;
           }
+        } catch (fallbackError) {
+          continue;
         }
+      }
 
-        // If all fallback attempts failed
-        if (!managerPicks || !liveData) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: `Gameweek ${originalGameweek} data not available yet. Tried fallback to gameweeks: ${attemptedGameweeks.join(
-                ", "
-              )}`,
-              attempted_gameweeks: attemptedGameweeks,
-              original_gameweek: originalGameweek,
-            },
-            { status: 404 }
-          );
-        }
-      } else {
-        throw apiError;
+      // If all fallback attempts failed
+      if (!managerPicks || !liveData) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Gameweek ${originalGameweek} data not available. Tried fallback to gameweeks: ${attemptedGameweeks.join(
+              ", "
+            )}`,
+            attempted_gameweeks: attemptedGameweeks,
+            original_gameweek: originalGameweek,
+            upstream_error:
+              apiError instanceof Error ? apiError.message : "Unknown error",
+          },
+          { status: 404 }
+        );
       }
     }
 
@@ -284,23 +288,38 @@ export async function POST(request: NextRequest) {
       .map((team) => team.live_stats)
       .filter((stats): stats is NonNullable<typeof stats> => stats !== null);
 
-    // Use centralized FPLBonusService with tie-break rules
-    const predictedBonusMap = bonusService.predictBonusForGameweek(fixtures);
-    const predictedBonuses = Array.from(predictedBonusMap.entries()).map(
-      ([player_id, bonus]) => {
-        const player = playersDataMap.get(player_id);
-        return {
-          player_id,
-          web_name: player?.web_name,
-          bonus,
-        };
-      }
-    );
-    const totalPredictedBonus = managerPicks.picks.reduce((total, pick) => {
-      if (pick.position > 11) return total;
-      const bonus = predictedBonusMap.get(pick.element) || 0;
-      return total + bonus * pick.multiplier;
-    }, 0);
+    // Use centralized FPLBonusService with tie-break rules. Wrap in a guard so
+    // an unexpected fixture stats shape from FPL can't take down the response.
+    let predictedBonusMap = new Map<number, number>();
+    let predictedBonuses: Array<{
+      player_id: number;
+      web_name: string | undefined;
+      bonus: number;
+    }> = [];
+    let totalPredictedBonus = 0;
+    try {
+      predictedBonusMap = bonusService.predictBonusForGameweek(fixtures);
+      predictedBonuses = Array.from(predictedBonusMap.entries()).map(
+        ([player_id, bonus]) => {
+          const player = playersDataMap.get(player_id);
+          return {
+            player_id,
+            web_name: player?.web_name,
+            bonus,
+          };
+        }
+      );
+      totalPredictedBonus = managerPicks.picks.reduce((total, pick) => {
+        if (pick.position > 11) return total;
+        const bonus = predictedBonusMap.get(pick.element) || 0;
+        return total + bonus * pick.multiplier;
+      }, 0);
+    } catch (bonusError) {
+      console.warn(
+        "⚠️ Bonus prediction failed (continuing without predicted bonus):",
+        bonusError
+      );
+    }
 
     // Create pick position map for O(1) lookups
     const pickPositionMap = new Map(
@@ -335,39 +354,60 @@ export async function POST(request: NextRequest) {
       playersData.map((p: FPLPlayer) => [p.id, p])
     );
 
-    const scoreWithAutoSubs = scoringService.calculateLiveTeamScore({
-      picks: managerPicks.picks,
-      activeChip: managerPicks.active_chip,
-      liveElements: liveElementMap,
-      playersById: playersByIdMap,
-      fixtures,
-      predictedBonusByElement: predictedBonusMap,
-      bonusAlreadyAdded: bonusAdded,
-      entryHistory: {
-        event_transfers_cost:
-          managerPicks.entry_history.event_transfers_cost || 0,
-        total_points: managerPicks.entry_history.total_points,
-        points: managerPicks.entry_history.points,
-      },
-      options: { ...DEFAULT_SCORING_OPTIONS, applyAutoSubs: true },
-    });
+    // entry_history can be missing for very fresh picks responses — default to
+    // zeros so the scoring service doesn't throw on undefined access.
+    const safeEntryHistory = {
+      event_transfers_cost: managerPicks.entry_history?.event_transfers_cost || 0,
+      total_points: managerPicks.entry_history?.total_points || 0,
+      points: managerPicks.entry_history?.points || 0,
+    };
 
-    const scoreWithoutAutoSubs = scoringService.calculateLiveTeamScore({
-      picks: managerPicks.picks,
-      activeChip: managerPicks.active_chip,
-      liveElements: liveElementMap,
-      playersById: playersByIdMap,
-      fixtures,
-      predictedBonusByElement: predictedBonusMap,
-      bonusAlreadyAdded: bonusAdded,
-      entryHistory: {
-        event_transfers_cost:
-          managerPicks.entry_history.event_transfers_cost || 0,
-        total_points: managerPicks.entry_history.total_points,
-        points: managerPicks.entry_history.points,
+    const emptyScore = {
+      live_points_gross: 0,
+      live_points_net: 0,
+      live_total: 0,
+      auto_subs_applied: [] as any[],
+      captain_promoted: null as any,
+      chip_effects: {
+        bench_boost_applied: false,
+        triple_captain_applied: false,
+        free_hit_applied: false,
+        wildcard_applied: false,
       },
-      options: { ...DEFAULT_SCORING_OPTIONS, applyAutoSubs: false },
-    });
+    };
+
+    let scoreWithAutoSubs: any = emptyScore;
+    let scoreWithoutAutoSubs: any = emptyScore;
+    try {
+      scoreWithAutoSubs = scoringService.calculateLiveTeamScore({
+        picks: managerPicks.picks,
+        activeChip: managerPicks.active_chip,
+        liveElements: liveElementMap,
+        playersById: playersByIdMap,
+        fixtures,
+        predictedBonusByElement: predictedBonusMap,
+        bonusAlreadyAdded: bonusAdded,
+        entryHistory: safeEntryHistory,
+        options: { ...DEFAULT_SCORING_OPTIONS, applyAutoSubs: true },
+      });
+
+      scoreWithoutAutoSubs = scoringService.calculateLiveTeamScore({
+        picks: managerPicks.picks,
+        activeChip: managerPicks.active_chip,
+        liveElements: liveElementMap,
+        playersById: playersByIdMap,
+        fixtures,
+        predictedBonusByElement: predictedBonusMap,
+        bonusAlreadyAdded: bonusAdded,
+        entryHistory: safeEntryHistory,
+        options: { ...DEFAULT_SCORING_OPTIONS, applyAutoSubs: false },
+      });
+    } catch (scoringError) {
+      console.warn(
+        "⚠️ Scoring service failed (continuing with empty score):",
+        scoringError
+      );
+    }
 
     const teamTotals = {
       goals: liveStats.reduce((sum, stat) => sum + stat.goals_scored, 0),
