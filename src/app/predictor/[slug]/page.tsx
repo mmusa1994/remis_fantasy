@@ -952,62 +952,109 @@ function PredictionsTab({
 
   return (
     <div className="space-y-5">
-      {/* Validation banner — slides in from the top of the viewport when
-          user tries to save with incomplete predictions. Fixed position so
-          it floats over the page chrome and is impossible to miss. */}
+      {/* Validation banner — slides in below the navbar when user tries to
+          save with incomplete predictions. Positioned with `top` offset that
+          clears the fixed navbar (~64-72px tall) plus iOS safe-area inset. */}
       <AnimatePresence>
         {validationErrors.length > 0 && (
           <motion.div
             key="validation-banner"
-            initial={{ y: -120, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -120, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 240, damping: 26 }}
-            className="fixed top-3 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full sm:max-w-lg z-[60]"
+            initial={{ y: -24, opacity: 0, scale: 0.96 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -24, opacity: 0, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 280, damping: 28 }}
+            style={{
+              top: "calc(env(safe-area-inset-top, 0px) + 4.75rem)",
+            }}
+            className="fixed left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full sm:max-w-md md:max-w-lg z-[60]"
           >
             <div
               role="alert"
               aria-live="polite"
-              className={`rounded-2xl p-4 shadow-2xl border backdrop-blur-xl ${
+              className={`relative overflow-hidden rounded-2xl shadow-2xl border backdrop-blur-2xl ${
                 theme === "dark"
-                  ? "bg-red-950/90 border-red-800/80 text-red-100"
-                  : "bg-red-50/95 border-red-300 text-red-900"
+                  ? "bg-gray-900/95 border-red-500/30 text-gray-100 shadow-red-950/40"
+                  : "bg-white/95 border-red-200 text-gray-900 shadow-red-200/40"
               }`}
             >
-              <div className="flex items-start gap-3">
+              {/* Soft accent strip on the left — signals "warning" without
+                  drowning the whole card in red. */}
+              <span
+                aria-hidden
+                className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-red-400 via-red-500 to-red-600"
+              />
+              {/* Subtle blurred glow in the corner — adds warmth in dark mode */}
+              <span
+                aria-hidden
+                className={`pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl ${
+                  theme === "dark" ? "bg-red-500/10" : "bg-red-400/15"
+                }`}
+              />
+              <div className="relative flex items-start gap-3 p-3.5 sm:p-4 pl-4 sm:pl-5">
                 <div
-                  className={`flex-shrink-0 mt-0.5 w-7 h-7 rounded-full flex items-center justify-center ${
+                  className={`flex-shrink-0 mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center ring-1 ${
                     theme === "dark"
-                      ? "bg-red-900/60 text-red-200"
-                      : "bg-red-100 text-red-700"
+                      ? "bg-red-500/15 text-red-300 ring-red-500/30"
+                      : "bg-red-50 text-red-600 ring-red-200"
                   }`}
                 >
-                  <AlertCircle className="w-4 h-4" />
+                  <AlertCircle className="w-5 h-5" strokeWidth={2.25} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold leading-tight">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p
+                      className={`text-[10px] font-bold uppercase tracking-[0.18em] ${
+                        theme === "dark" ? "text-red-300" : "text-red-600"
+                      }`}
+                    >
+                      {lang === "en" ? "Incomplete" : "Nepotpuno"}
+                    </p>
+                    <span
+                      className={`text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full ${
+                        theme === "dark"
+                          ? "bg-red-500/15 text-red-200 ring-1 ring-red-500/25"
+                          : "bg-red-50 text-red-700 ring-1 ring-red-200"
+                      }`}
+                    >
+                      {validationErrors.length}
+                    </span>
+                  </div>
+                  <p
+                    className={`text-sm font-bold leading-tight mt-0.5 ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     {lang === "en"
                       ? "Saved — but these picks aren't complete yet"
                       : "Sačuvano — ali ove predikcije još nisu kompletne"}
                   </p>
-                  <ul className="mt-1.5 space-y-1 text-[12px] leading-snug">
-                    {validationErrors.slice(0, 6).map((e) => (
+                  <ul
+                    className={`mt-2 space-y-1 text-[12px] leading-snug ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    {validationErrors.slice(0, 4).map((e) => (
                       <li
                         key={e.id}
-                        className="flex items-start gap-1.5 break-words"
+                        className="flex items-start gap-2 break-words"
                       >
                         <span
                           aria-hidden
-                          className="flex-shrink-0 mt-1 w-1 h-1 rounded-full bg-current opacity-60"
+                          className={`flex-shrink-0 mt-1.5 w-1 h-1 rounded-full ${
+                            theme === "dark" ? "bg-red-400" : "bg-red-500"
+                          }`}
                         />
                         <span>{e.msg}</span>
                       </li>
                     ))}
-                    {validationErrors.length > 6 && (
+                    {validationErrors.length > 4 && (
                       <li
-                        className={`text-[11px] italic ${theme === "dark" ? "text-red-300/70" : "text-red-700/70"}`}
+                        className={`pl-3 text-[11px] italic ${
+                          theme === "dark" ? "text-red-300/70" : "text-red-600/80"
+                        }`}
                       >
-                        +{validationErrors.length - 6} {lang === "en" ? "more" : "još"}
+                        +{validationErrors.length - 4}{" "}
+                        {lang === "en" ? "more to fix" : "još za popraviti"}
                       </li>
                     )}
                   </ul>
@@ -1018,8 +1065,8 @@ function PredictionsTab({
                   aria-label={lang === "en" ? "Dismiss" : "Zatvori"}
                   className={`flex-shrink-0 p-1.5 rounded-xl transition-colors ${
                     theme === "dark"
-                      ? "hover:bg-red-900/60 text-red-300"
-                      : "hover:bg-red-100 text-red-700"
+                      ? "hover:bg-white/5 text-gray-400 hover:text-gray-200"
+                      : "hover:bg-gray-100 text-gray-400 hover:text-gray-700"
                   }`}
                 >
                   <X className="w-4 h-4" />
