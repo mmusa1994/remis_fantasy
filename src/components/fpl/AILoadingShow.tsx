@@ -1,54 +1,66 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaRobot } from "react-icons/fa";
 import { Check, Activity, Target, TrendingUp, Sparkles } from "lucide-react";
 
 interface AILoadingShowProps {
-  lang: string;
+  /** @deprecated language is now read from i18n; kept for backwards compatibility */
+  lang?: string;
 }
 
 interface Step {
   key: string;
-  label: { bs: string; en: string };
+  labelKey: string;
+  labelFallback: string;
   icon: React.ComponentType<{ className?: string }>;
   targetCount: number;
-  unit: { bs: string; en: string };
+  unitKey: string;
+  unitFallback: string;
   color: string;
 }
 
 const STEPS: Step[] = [
   {
     key: "players",
-    label: { bs: "Skeniram igrače", en: "Scanning players" },
+    labelKey: "fplDashboard.aiLoading.scanningPlayers",
+    labelFallback: "Scanning players",
     icon: Activity,
     targetCount: 678,
-    unit: { bs: "igrača", en: "players" },
+    unitKey: "fplDashboard.aiLoading.playersUnit",
+    unitFallback: "players",
     color: "violet",
   },
   {
     key: "form",
-    label: { bs: "Računam formu", en: "Computing form" },
+    labelKey: "fplDashboard.aiLoading.computingForm",
+    labelFallback: "Computing form",
     icon: TrendingUp,
     targetCount: 142,
-    unit: { bs: "ocjena", en: "ratings" },
+    unitKey: "fplDashboard.aiLoading.ratingsUnit",
+    unitFallback: "ratings",
     color: "fuchsia",
   },
   {
     key: "fixtures",
-    label: { bs: "Analiziram fixture-e", en: "Analyzing fixtures" },
+    labelKey: "fplDashboard.aiLoading.analyzingFixtures",
+    labelFallback: "Analyzing fixtures",
     icon: Target,
     targetCount: 95,
-    unit: { bs: "utakmica", en: "fixtures" },
+    unitKey: "fplDashboard.aiLoading.fixturesUnit",
+    unitFallback: "fixtures",
     color: "indigo",
   },
   {
     key: "verdict",
-    label: { bs: "Sastavljam preporuke", en: "Building recommendations" },
+    labelKey: "fplDashboard.aiLoading.buildingRecommendations",
+    labelFallback: "Building recommendations",
     icon: Sparkles,
     targetCount: 5,
-    unit: { bs: "uvida", en: "insights" },
+    unitKey: "fplDashboard.aiLoading.insightsUnit",
+    unitFallback: "insights",
     color: "purple",
   },
 ];
@@ -77,15 +89,13 @@ function StepRow({
   step,
   idx,
   state,
-  lang,
 }: {
   step: Step;
   idx: number;
   state: "pending" | "active" | "done";
-  lang: string;
 }) {
+  const { t } = useTranslation("fpl");
   const Icon = step.icon;
-  const isBs = lang === "bs";
   const count = useAnimatedCount(step.targetCount, 1000, state !== "pending");
   const isActive = state === "active";
   const isDone = state === "done";
@@ -149,7 +159,7 @@ function StepRow({
               : "text-slate-500 dark:text-slate-400"
           }`}
         >
-          {isBs ? step.label.bs : step.label.en}
+          {t(step.labelKey, step.labelFallback)}
         </p>
         <div className="flex items-baseline gap-1 mt-0.5">
           <motion.span
@@ -160,16 +170,16 @@ function StepRow({
           >
             {count.toLocaleString()}
           </motion.span>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400">{isBs ? step.unit.bs : step.unit.en}</span>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">{t(step.unitKey, step.unitFallback)}</span>
         </div>
       </div>
     </motion.div>
   );
 }
 
-export default function AILoadingShow({ lang }: AILoadingShowProps) {
+export default function AILoadingShow(_props: AILoadingShowProps = {}) {
+  const { t } = useTranslation("fpl");
   const [activeIdx, setActiveIdx] = useState(0);
-  const isBs = lang === "bs";
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -212,7 +222,7 @@ export default function AILoadingShow({ lang }: AILoadingShowProps) {
         <motion.p
           className="text-base font-bold bg-gradient-to-r from-violet-700 via-fuchsia-600 to-indigo-700 dark:from-violet-300 dark:via-fuchsia-300 dark:to-indigo-300 bg-clip-text text-transparent"
         >
-          {isBs ? "AI radi magiju…" : "AI is working its magic…"}
+          {t("fplDashboard.aiLoading.aiMagic", "AI is working its magic…")}
         </motion.p>
         <AnimatePresence mode="wait">
           <motion.span
@@ -223,12 +233,8 @@ export default function AILoadingShow({ lang }: AILoadingShowProps) {
             className="block mt-1 text-[11px] text-slate-500 dark:text-slate-400"
           >
             {activeIdx < STEPS.length
-              ? isBs
-                ? STEPS[activeIdx].label.bs + "…"
-                : STEPS[activeIdx].label.en + "…"
-              : isBs
-              ? "Skoro gotovo…"
-              : "Almost done…"}
+              ? t(STEPS[activeIdx].labelKey, STEPS[activeIdx].labelFallback) + "…"
+              : t("fplDashboard.aiLoading.almostDone", "Almost done…")}
           </motion.span>
         </AnimatePresence>
       </div>
@@ -237,7 +243,7 @@ export default function AILoadingShow({ lang }: AILoadingShowProps) {
       <div className="mt-5 max-w-sm mx-auto space-y-2 text-left">
         {STEPS.map((step, i) => {
           const state: "pending" | "active" | "done" = i < activeIdx ? "done" : i === activeIdx ? "active" : "pending";
-          return <StepRow key={step.key} step={step} idx={i} state={state} lang={lang} />;
+          return <StepRow key={step.key} step={step} idx={i} state={state} />;
         })}
       </div>
 
@@ -247,7 +253,7 @@ export default function AILoadingShow({ lang }: AILoadingShowProps) {
         transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}
         className="mt-5 text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500"
       >
-        {isBs ? "🎯 Optimizujem za sljedeće kolo" : "🎯 Optimizing for next gameweek"}
+        {t("fplDashboard.aiLoading.optimizing", "🎯 Optimizing for next gameweek")}
       </motion.p>
     </div>
   );

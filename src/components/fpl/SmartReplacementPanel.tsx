@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaExchangeAlt } from "react-icons/fa";
 import { PiTShirtFill } from "react-icons/pi";
@@ -131,17 +132,17 @@ function getFixtureRun(teamId: number, fixtures: FixtureLite[], teams: TeamLite[
   });
 }
 
-function teamMotivation(pos?: number): Reason | null {
+function teamMotivation(pos: number | undefined, t: (key: string, fallback: string) => string): Reason | null {
   if (!pos) return null;
   if (pos <= 4)
     return {
-      label: "Top-4 borba",
+      label: t("fplDashboard.smartReplace.topFourFight", "Top-4 fight"),
       icon: Swords,
       color: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-violet-200/60 dark:border-violet-800/40",
     };
   if (pos >= 17)
     return {
-      label: "Bori se za opstanak",
+      label: t("fplDashboard.smartReplace.relegationFight", "Relegation fight"),
       icon: AlertTriangle,
       color: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200/60 dark:border-orange-800/40",
     };
@@ -176,13 +177,14 @@ function computeExpectedPoints(
 function buildReasons(
   p: any,
   selected: any,
-  ctx: { fixture: FixtureRun | null; team?: TeamLite; currentGw: number; playChance: number; fixturesInGw?: number }
+  ctx: { fixture: FixtureRun | null; team?: TeamLite; currentGw: number; playChance: number; fixturesInGw?: number },
+  t: (key: string, fallback: string, opts?: any) => string
 ): Reason[] {
   const reasons: Reason[] = [];
   // Double gameweek - highest signal value
   if ((ctx.fixturesInGw ?? 1) > 1) {
     reasons.push({
-      label: `DGW ×${ctx.fixturesInGw}`,
+      label: t("fplDashboard.smartReplace.dgw", "DGW ×{{count}}", { count: ctx.fixturesInGw }),
       icon: Zap,
       color: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300 border-fuchsia-300/70 dark:border-fuchsia-800/40",
     });
@@ -190,7 +192,7 @@ function buildReasons(
   // Penalty taker
   if (typeof p.penalties_order === "number" && p.penalties_order === 1) {
     reasons.push({
-      label: "Penal taker",
+      label: t("fplDashboard.smartReplace.penaltyTaker", "Penalty taker"),
       icon: TargetIcon,
       color: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200/60 dark:border-purple-800/40",
     });
@@ -204,25 +206,25 @@ function buildReasons(
   const expectedMinutes = Math.max(ctx.currentGw, 1) * 90;
   const reliability = minutes / Math.max(expectedMinutes, 1);
 
-  if (form >= 6) reasons.push({ label: "U formi", icon: Flame, color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40" });
+  if (form >= 6) reasons.push({ label: t("fplDashboard.smartReplace.inForm", "In Form"), icon: Flame, color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40" });
   if (ppg > 0 && p.now_cost > 0) {
     const myRatio = ppg / (p.now_cost / 10);
     const selRatio = selected ? num(selected.points_per_game) / Math.max(num(selected.now_cost) / 10, 0.1) : 0;
     if (myRatio > selRatio && myRatio > 0.7)
-      reasons.push({ label: "Value pick", icon: Gem, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40" });
+      reasons.push({ label: t("fplDashboard.smartReplace.valuePick", "Value pick"), icon: Gem, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40" });
   }
-  if (reliability >= 0.85) reasons.push({ label: "Pouzdan", icon: ShieldCheck, color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200/60 dark:border-slate-700/40" });
+  if (reliability >= 0.85) reasons.push({ label: t("fplDashboard.smartReplace.reliableStarter", "Reliable"), icon: ShieldCheck, color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200/60 dark:border-slate-700/40" });
   if (xgi90 >= 0.55 && (p.element_type === 3 || p.element_type === 4))
-    reasons.push({ label: "Underlying", icon: Activity, color: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 border-teal-200/60 dark:border-teal-800/40" });
-  if (priceChange > 0) reasons.push({ label: "Cijena raste", icon: TrendingUp, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40" });
-  if (ctx.fixture && ctx.fixture.difficulty <= 2) reasons.push({ label: "Lagana utakmica", icon: Zap, color: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border-green-200/60 dark:border-green-800/40" });
-  if (ownership > 25) reasons.push({ label: "Popularan", icon: Star, color: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-violet-200/60 dark:border-violet-800/40" });
+    reasons.push({ label: t("fplDashboard.smartReplace.underlying", "Underlying"), icon: Activity, color: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 border-teal-200/60 dark:border-teal-800/40" });
+  if (priceChange > 0) reasons.push({ label: t("fplDashboard.smartReplace.priceRising", "Price rising"), icon: TrendingUp, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40" });
+  if (ctx.fixture && ctx.fixture.difficulty <= 2) reasons.push({ label: t("fplDashboard.smartReplace.easyMatch", "Easy match"), icon: Zap, color: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border-green-200/60 dark:border-green-800/40" });
+  if (ownership > 25) reasons.push({ label: t("fplDashboard.smartReplace.popular", "Popular"), icon: Star, color: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-violet-200/60 dark:border-violet-800/40" });
   else if (ownership > 0 && ownership < 5 && form >= 4)
-    reasons.push({ label: "Differential", icon: Sparkles, color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/40" });
-  const mot = teamMotivation(ctx.team?.position);
+    reasons.push({ label: t("fplDashboard.smartReplace.differential", "Differential"), icon: Sparkles, color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/40" });
+  const mot = teamMotivation(ctx.team?.position, t);
   if (mot) reasons.push(mot);
   if (ctx.playChance > 0 && ctx.playChance < 100)
-    reasons.push({ label: `${ctx.playChance}% šanse`, icon: AlertTriangle, color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-200/60 dark:border-yellow-800/40" });
+    reasons.push({ label: t("fplDashboard.smartReplace.playChance", "{{chance}}% chance", { chance: ctx.playChance }), icon: AlertTriangle, color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-200/60 dark:border-yellow-800/40" });
   return reasons.slice(0, 6);
 }
 
@@ -363,7 +365,10 @@ function FixtureRun3({ fixtures }: { fixtures: FixtureRun[] }) {
   );
 }
 
-function buildVerdict(c: { xPDelta: number; player: any; selected: any; fixture: FixtureRun | null }) {
+function buildVerdict(
+  c: { xPDelta: number; player: any; selected: any; fixture: FixtureRun | null },
+  t: (key: string, fallback: string) => string
+) {
   const { xPDelta, player, selected, fixture } = c;
   const costDiff = (num(player.now_cost) - num(selected.now_cost)) / 10;
   const playChance = player.chance_of_playing_next_round;
@@ -371,24 +376,24 @@ function buildVerdict(c: { xPDelta: number; player: any; selected: any; fixture:
   const fdr = fixture?.difficulty ?? 3;
 
   if (lowChance) {
-    return { label: "Rizik", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-200/60 dark:border-yellow-800/40", icon: AlertTriangle };
+    return { label: t("fplDashboard.smartReplace.risk", "Risk"), color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-200/60 dark:border-yellow-800/40", icon: AlertTriangle };
   }
   if (xPDelta >= 1.5 && costDiff <= 0) {
-    return { label: "💎 Value upgrade", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40", icon: Gem };
+    return { label: t("fplDashboard.smartReplace.valueUpgrade", "Value upgrade"), color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40", icon: Gem };
   }
   if (xPDelta >= 2.5) {
-    return { label: "🚀 Premium upgrade", color: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40", icon: ArrowUpRight };
+    return { label: t("fplDashboard.smartReplace.premiumUpgrade", "Premium upgrade"), color: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40", icon: ArrowUpRight };
   }
   if (xPDelta >= 1.2) {
-    return { label: "✨ Jasno bolji", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/40", icon: ArrowUpRight };
+    return { label: t("fplDashboard.smartReplace.clearlyBetter", "Clearly better"), color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/40", icon: ArrowUpRight };
   }
   if (xPDelta <= -0.5) {
-    return { label: "Downgrade", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/40", icon: ArrowDownRight };
+    return { label: t("fplDashboard.smartReplace.downgrade", "Downgrade"), color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/40", icon: ArrowDownRight };
   }
   if (fdr <= 2 && xPDelta >= 0.4) {
-    return { label: "Fixture pick", color: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200/60 dark:border-green-800/40", icon: Zap };
+    return { label: t("fplDashboard.smartReplace.fixturePick", "Fixture pick"), color: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200/60 dark:border-green-800/40", icon: Zap };
   }
-  return { label: "Sidegrade", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/40", icon: Info };
+  return { label: t("fplDashboard.smartReplace.sidegrade", "Sidegrade"), color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/40", icon: Info };
 }
 
 export default function SmartReplacementPanel({
@@ -407,6 +412,7 @@ export default function SmartReplacementPanel({
   onPickReplacement,
   isTransferMode,
 }: SmartReplacementPanelProps) {
+  const { t } = useTranslation("fpl");
   const [filter, setFilter] = useState<FilterKey>("all");
   const [sort, setSort] = useState<SortKey>("score");
   const [showHelp, setShowHelp] = useState(false);
@@ -480,8 +486,8 @@ export default function SmartReplacementPanel({
         const score = computeScore(p, selectedPlayer, ctx);
         const xP = computeExpectedPoints(p, fixture, playChance, fixturesInGw);
         const xPDelta = xP - selectedXP;
-        const reasons = buildReasons(p, selectedPlayer, ctx);
-        const verdict = buildVerdict({ xPDelta, player: p, selected: selectedPlayer, fixture });
+        const reasons = buildReasons(p, selectedPlayer, ctx, t);
+        const verdict = buildVerdict({ xPDelta, player: p, selected: selectedPlayer, fixture }, t);
 
         const minutes = num(p.minutes);
         const reliability = minutes / Math.max(expectedMinutes, 1);
@@ -502,7 +508,7 @@ export default function SmartReplacementPanel({
         return { player: p, score, xP, xPDelta, verdict, fixtures, reasons, badges };
       })
       .sort((a, b) => b.score - a.score);
-  }, [selectedPlayer, allPlayers, userTeamPlayerIds, availableBudget, upcomingFixtures, allTeams, teamsById, currentGameweek, selectedXP, nextGwNumber]);
+  }, [selectedPlayer, allPlayers, userTeamPlayerIds, availableBudget, upcomingFixtures, allTeams, teamsById, currentGameweek, selectedXP, nextGwNumber, t]);
 
   const filterCounts = useMemo(() => {
     return {
@@ -544,20 +550,20 @@ export default function SmartReplacementPanel({
   const positionAccent = selectedPlayer ? POSITION_ACCENT[selectedPlayer.element_type] || "from-slate-400 to-slate-500" : "from-slate-400 to-slate-500";
 
   const FILTERS: Array<{ key: FilterKey; label: string; icon: React.ComponentType<{ className?: string }> }> = [
-    { key: "all", label: "Sve", icon: Sparkles },
-    { key: "form", label: "U formi", icon: Flame },
-    { key: "value", label: "Value", icon: Gem },
-    { key: "differential", label: "Diferencijal", icon: Sparkles },
-    { key: "reliable", label: "Pouzdani", icon: ShieldCheck },
-    { key: "premium", label: "Premium", icon: Star },
+    { key: "all", label: t("fplDashboard.smartReplace.all", "All"), icon: Sparkles },
+    { key: "form", label: t("fplDashboard.smartReplace.inForm", "In Form"), icon: Flame },
+    { key: "value", label: t("fplDashboard.smartReplace.value", "Value"), icon: Gem },
+    { key: "differential", label: t("fplDashboard.smartReplace.differential", "Differential"), icon: Sparkles },
+    { key: "reliable", label: t("fplDashboard.smartReplace.reliable", "Reliable"), icon: ShieldCheck },
+    { key: "premium", label: t("fplDashboard.smartReplace.premium", "Premium"), icon: Star },
   ];
 
   const SORTS: Array<{ key: SortKey; label: string }> = [
-    { key: "score", label: "Score" },
-    { key: "xp", label: "xP" },
-    { key: "form", label: "Forma" },
-    { key: "price", label: "Cijena" },
-    { key: "fdr", label: "FDR" },
+    { key: "score", label: t("fplDashboard.smartReplace.sortScore", "Score") },
+    { key: "xp", label: t("fplDashboard.smartReplace.sortXp", "xP") },
+    { key: "form", label: t("fplDashboard.smartReplace.sortForm", "Form") },
+    { key: "price", label: t("fplDashboard.smartReplace.sortPrice", "Price") },
+    { key: "fdr", label: t("fplDashboard.smartReplace.sortFdr", "FDR") },
   ];
 
   return (
@@ -594,16 +600,16 @@ export default function SmartReplacementPanel({
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">Pametne preporuke</h3>
+                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{t("fplDashboard.smartReplace.title", "Smart Recommendations")}</h3>
                       <button
                         onClick={() => setShowHelp((v) => !v)}
                         className="text-slate-400 hover:text-indigo-500 transition-colors"
-                        title="Kako se računa"
+                        title={t("fplDashboard.smartReplace.howCalculated", "How it's calculated")}
                       >
                         <HelpCircle className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Za GW{nextGwNumber} · forma, fixture, minute, tim, ICT</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("fplDashboard.smartReplace.forGw", "For GW{{gw}}", { gw: nextGwNumber })} · {t("fplDashboard.smartReplace.subtitleMeta", "form, fixture, minutes, team, ICT")}</p>
                   </div>
                 </div>
                 <button
@@ -625,10 +631,10 @@ export default function SmartReplacementPanel({
                     className="overflow-hidden"
                   >
                     <div className="mt-3 rounded-lg p-3 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 text-[11px] text-slate-700 dark:text-slate-300 space-y-1.5">
-                      <p><b className="text-indigo-700 dark:text-indigo-300">xP</b> = očekivani bodovi za GW{nextGwNumber} (forma + PPG, prilagođeno fixture-u i šansi nastupa).</p>
-                      <p><b className="text-indigo-700 dark:text-indigo-300">FDR</b> = Fixture Difficulty Rating (1 najlakše, 5 najteže). Boja kvadratića pokazuje težinu.</p>
-                      <p><b className="text-indigo-700 dark:text-indigo-300">Verdikt</b>: Premium / Value / Jasno bolji = potez koji se preporučuje; Sidegrade = isti nivo; Rizik = upitne minute.</p>
-                      <p><b className="text-indigo-700 dark:text-indigo-300">Score</b> kombinuje: forma×11 + PPG×6 + xG/xA + minute + FDR + pozicija tima.</p>
+                      <p><b className="text-indigo-700 dark:text-indigo-300">xP</b> = {t("fplDashboard.smartReplace.helpXp", "xP = expected points for GW{{gw}} (form + PPG, adjusted for fixture and play chance).", { gw: nextGwNumber })}</p>
+                      <p><b className="text-indigo-700 dark:text-indigo-300">FDR</b> = {t("fplDashboard.smartReplace.helpFdr", "FDR = Fixture Difficulty Rating (1 easiest, 5 hardest). The square color indicates difficulty.")}</p>
+                      <p><b className="text-indigo-700 dark:text-indigo-300">Verdikt</b>: {t("fplDashboard.smartReplace.helpVerdict", "Verdict: Premium / Value / Clearly better = recommended move; Sidegrade = same level; Risk = uncertain minutes.")}</p>
+                      <p><b className="text-indigo-700 dark:text-indigo-300">Score</b> {t("fplDashboard.smartReplace.helpScore", "Score combines: form×11 + PPG×6 + xG/xA + minutes + FDR + team position.")}</p>
                     </div>
                   </motion.div>
                 )}
@@ -673,7 +679,7 @@ export default function SmartReplacementPanel({
                     </div>
                     <div className="mt-2.5 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/40 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Sljedeće 5</span>
+                        <span className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("fplDashboard.smartReplace.next5", "Next 5")}</span>
                         <FixtureDots fixtures={selectedFixtures} />
                       </div>
                       <div className="text-right">
@@ -688,7 +694,7 @@ export default function SmartReplacementPanel({
               {/* Chip status */}
               <div className="mt-3 flex items-center justify-between gap-2">
                 <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Budžet: <span className="font-semibold text-slate-700 dark:text-slate-200">£{((num(selectedPlayer.now_cost) + availableBudget) / 10).toFixed(1)}m</span>
+                  {t("fplDashboard.smartReplace.budget", "Budget")}: <span className="font-semibold text-slate-700 dark:text-slate-200">£{((num(selectedPlayer.now_cost) + availableBudget) / 10).toFixed(1)}m</span>
                 </span>
                 <div className="flex items-center gap-1">
                   {ALL_CHIPS.map((c) => {
@@ -696,7 +702,7 @@ export default function SmartReplacementPanel({
                     return (
                       <span
                         key={c}
-                        title={`${CHIP_LABEL[c]}: ${used ? "iskorišten" : "dostupan"}`}
+                        title={`${CHIP_LABEL[c]}: ${used ? t("fplDashboard.smartReplace.used", "used") : t("fplDashboard.smartReplace.availableShort", "available")}`}
                         className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border ${
                           used
                             ? "bg-slate-100 text-slate-400 line-through border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700"
@@ -710,7 +716,7 @@ export default function SmartReplacementPanel({
                 </div>
               </div>
               {availableChips.length > 0 && (
-                <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Dostupni: {availableChips.map((c) => CHIP_LABEL[c]).join(" · ")}</p>
+                <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">{t("fplDashboard.smartReplace.available", "Available")}: {availableChips.map((c) => CHIP_LABEL[c]).join(" · ")}</p>
               )}
             </div>
 
@@ -741,7 +747,7 @@ export default function SmartReplacementPanel({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] uppercase tracking-wider font-bold text-amber-700/80 dark:text-amber-300/80">
-                      Glavna prednost za GW{nextGwNumber}
+                      {t("fplDashboard.smartReplace.mainAdvantageForGw", "Main advantage for GW{{gw}}", { gw: nextGwNumber })}
                     </p>
                     <div className="mt-0.5 flex items-baseline gap-2">
                       <p className="text-base font-bold text-slate-800 dark:text-slate-100 truncate">{heroPick.player.web_name}</p>
@@ -762,7 +768,7 @@ export default function SmartReplacementPanel({
                         </p>
                       </div>
                       <div className="rounded-md p-1.5 bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/40 text-center">
-                        <p className="text-[9px] uppercase text-slate-500 dark:text-slate-400">Forma</p>
+                        <p className="text-[9px] uppercase text-slate-500 dark:text-slate-400">{t("fplDashboard.smartReplace.sortForm", "Form")}</p>
                         <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
                           {num(heroPick.player.form).toFixed(1)}
                           <span className="ml-1 text-[10px] text-slate-500">
@@ -787,13 +793,13 @@ export default function SmartReplacementPanel({
                     <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
                       {(() => {
                         const reasons = [];
-                        if (heroPick.xPDelta >= 1.5) reasons.push(`+${heroPick.xPDelta.toFixed(1)} očekivanih bodova`);
+                        if (heroPick.xPDelta >= 1.5) reasons.push(t("fplDashboard.smartReplace.extraExpectedPoints", "+{{value}} expected points", { value: heroPick.xPDelta.toFixed(1) }));
                         if (heroPick.fixtures[0] && selectedNextFixture && heroPick.fixtures[0].difficulty < selectedNextFixture.difficulty)
-                          reasons.push(`lakši fixture (FDR ${heroPick.fixtures[0].difficulty})`);
-                        if (num(heroPick.player.form) > num(selectedPlayer.form) + 1) reasons.push("bolja forma");
-                        if (heroPick.fixtures[0]?.isHome) reasons.push("igra kod kuće");
-                        if (heroPick.badges.value) reasons.push("bolja value");
-                        return reasons.length > 0 ? reasons.join(" · ") : "Solidna alternativa po sveukupnom score-u.";
+                          reasons.push(t("fplDashboard.smartReplace.easierFixture", "easier fixture (FDR {{fdr}})", { fdr: heroPick.fixtures[0].difficulty }));
+                        if (num(heroPick.player.form) > num(selectedPlayer.form) + 1) reasons.push(t("fplDashboard.smartReplace.betterForm", "better form"));
+                        if (heroPick.fixtures[0]?.isHome) reasons.push(t("fplDashboard.smartReplace.playsAtHome", "plays at home"));
+                        if (heroPick.badges.value) reasons.push(t("fplDashboard.smartReplace.betterValue", "better value"));
+                        return reasons.length > 0 ? reasons.join(" · ") : t("fplDashboard.smartReplace.solidAlternative", "Solid alternative by overall score.");
                       })()}
                     </p>
                   </div>
@@ -830,7 +836,7 @@ export default function SmartReplacementPanel({
 
             {/* Sort */}
             <div className="px-3 pt-2 pb-1 flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{candidates.length} preporuka</span>
+              <span className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{t("fplDashboard.smartReplace.recommendations", "{{count}} recommendations", { count: candidates.length })}</span>
               <div className="relative">
                 <select
                   value={sort}
@@ -839,7 +845,7 @@ export default function SmartReplacementPanel({
                 >
                   {SORTS.map((s) => (
                     <option key={s.key} value={s.key}>
-                      Sortiraj: {s.label}
+                      {t("fplDashboard.smartReplace.sortLabel", "Sort: {{label}}", { label: s.label })}
                     </option>
                   ))}
                 </select>
@@ -851,9 +857,9 @@ export default function SmartReplacementPanel({
             <div className="flex-1 overflow-y-auto px-3 pb-3 pt-1 space-y-2.5">
               {candidates.length === 0 && (
                 <div className="text-center py-10">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Nema preporuka u ovom filteru.</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{t("fplDashboard.smartReplace.noRecommendations", "No recommendations in this filter.")}</p>
                   <button onClick={() => setFilter("all")} className="mt-2 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
-                    Pokaži sve
+                    {t("fplDashboard.smartReplace.showAll", "Show all")}
                   </button>
                 </div>
               )}
@@ -928,7 +934,7 @@ export default function SmartReplacementPanel({
                         {/* Next 3 GWs fixture run */}
                         {c.fixtures.length > 0 && (
                           <div className="mt-1.5 flex items-center gap-1.5">
-                            <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">Sljedeća 3:</span>
+                            <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">{t("fplDashboard.smartReplace.nextThree", "Next 3:")}</span>
                             <FixtureRun3 fixtures={c.fixtures} />
                           </div>
                         )}
@@ -963,7 +969,7 @@ export default function SmartReplacementPanel({
                               transition={{ repeat: Infinity, duration: 2.4, ease: "linear" }}
                             />
                             <FaExchangeAlt className="relative w-3 h-3" />
-                            <span className="relative">{isTransferMode ? "Swap" : "Transfer"}</span>
+                            <span className="relative">{isTransferMode ? t("fplDashboard.smartReplace.swap", "Swap") : t("fplDashboard.smartReplace.transfer", "Transfer")}</span>
                           </motion.button>
                           {burstId === p.id && (
                             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
@@ -997,19 +1003,19 @@ export default function SmartReplacementPanel({
             {/* FDR legend */}
             <div className="border-t border-slate-200/70 dark:border-slate-700/60 px-4 py-2 bg-white/60 dark:bg-slate-900/40">
               <div className="flex items-center justify-between gap-2 text-[10px] text-slate-400 dark:text-slate-500">
-                <span>FDR:</span>
+                <span>{t("fplDashboard.smartReplace.fdr", "FDR")}:</span>
                 <div className="flex items-center gap-1.5">
                   <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-emerald-500" /> Lako
+                    <span className="w-3 h-3 rounded-sm bg-emerald-500" /> {t("fplDashboard.smartReplace.fdrEasy", "Easy")}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-slate-400" /> Sr.
+                    <span className="w-3 h-3 rounded-sm bg-slate-400" /> {t("fplDashboard.smartReplace.fdrMid", "Mid")}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-orange-500" /> Teško
+                    <span className="w-3 h-3 rounded-sm bg-orange-500" /> {t("fplDashboard.smartReplace.fdrHard", "Hard")}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-rose-600" /> Vrlo teško
+                    <span className="w-3 h-3 rounded-sm bg-rose-600" /> {t("fplDashboard.smartReplace.fdrVeryHard", "Very hard")}
                   </span>
                 </div>
               </div>

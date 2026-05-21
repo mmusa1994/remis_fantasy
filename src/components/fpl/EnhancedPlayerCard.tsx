@@ -125,16 +125,16 @@ export default function EnhancedPlayerCard({
 
   const cardSize = isOnPitch
     ? compact
-      ? "w-14 h-16"
-      : "w-14 sm:w-16 lg:w-20 h-18 sm:h-18 lg:h-22" // Smaller on mobile
+      ? "w-12 h-14"
+      : "w-11 sm:w-14 lg:w-20 h-14 sm:h-16 lg:h-22" // Tighter on mobile to fit 5-row formations
     : compact
     ? "w-16 h-20" // Bench cards larger
     : "w-14 sm:w-18 lg:w-20 h-18 sm:h-22 lg:h-24"; // Bench cards bigger
 
   const textSize = isOnPitch
     ? compact
-      ? "text-xs"
-      : "text-xs" // Smaller, cleaner text
+      ? "text-[10px]"
+      : "text-[10px] sm:text-xs" // Smaller on mobile for legibility within tighter cards
     : compact
     ? "text-xs"
     : "text-xs";
@@ -414,7 +414,7 @@ export default function EnhancedPlayerCard({
         ref={cardRef}
         whileHover={interactive ? { scale: 1.05 } : {}}
         whileTap={interactive ? { scale: 0.95 } : {}}
-        className={`relative ${cardSize} mx-1 lg:mx-2 mb-2 ${
+        className={`relative ${cardSize} mx-0.5 sm:mx-1 lg:mx-2 mb-1 sm:mb-2 ${
           theme === "dark" ? "bg-black/50" : "bg-white/50"
         } rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 ${
           isSelected
@@ -458,9 +458,9 @@ export default function EnhancedPlayerCard({
                 className={`${
                   isOnPitch
                     ? compact
-                      ? "w-10 h-10 lg:w-16 lg:h-20"
-                      : "w-5 h-5 lg:h-10 lg:w-10" // Match !isOnPitch size - larger jerseys
-                    : "w-5 h-5 lg:h-10 lg:w-10" // Match !isOnPitch size - larger jerseys
+                      ? "w-8 h-8 lg:w-16 lg:h-20"
+                      : "w-4 h-4 sm:w-6 sm:h-6 lg:h-10 lg:w-10" // Tighter on mobile
+                    : "w-5 h-5 lg:h-10 lg:w-10"
                 } transition-colors duration-200`}
                 style={
                   {

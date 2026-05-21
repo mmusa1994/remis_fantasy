@@ -158,18 +158,18 @@ export default function EnhancedPitchView({
       // Better spacing for different player counts - more compact on mobile
       const getSpacing = (playerCount: number) => {
         if (isMobile) {
-          // Tighter spacing on mobile to accommodate larger cards
+          // Tighter, wider-spread spacing on mobile so 4-5 player rows fit cleanly
           switch (playerCount) {
             case 2:
-              return { minX: 22, maxX: 70 };
+              return { minX: 26, maxX: 74 };
             case 3:
-              return { minX: 8, maxX: 71 };
+              return { minX: 12, maxX: 86 };
             case 4:
-              return { minX: 7, maxX: 71 };
+              return { minX: 8, maxX: 90 };
             case 5:
-              return { minX: 8, maxX: 75 };
+              return { minX: 5, maxX: 92 };
             default:
-              return { minX: 8, maxX: 75 };
+              return { minX: 4, maxX: 94 };
           }
         } else {
           // Original desktop spacing

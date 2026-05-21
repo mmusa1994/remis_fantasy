@@ -18,6 +18,8 @@ import { FaChartLine, FaTrophy } from "react-icons/fa";
 import { TbTransfer } from "react-icons/tb";
 
 import { IoFootballOutline } from "react-icons/io5";
+import { Zap, Users, Target, TrendingUp, ChevronDown, Sparkles, ClipboardList, Lightbulb, ArrowRight } from "lucide-react";
+import Image from "next/image";
 
 import ControlsBar from "@/components/fpl/ControlsBar";
 import ManagerSummary from "@/components/fpl/ManagerSummary";
@@ -30,6 +32,11 @@ import { LeagueTable } from "@/components/fpl/league-table";
 import Link from "next/link";
 import CaptainsAnalysis from "@/components/fpl/CaptainsAnalysis";
 import WhatIfSimulator from "@/components/fpl/WhatIfSimulator";
+import BpsLivePanel from "@/components/fpl/analytics/BpsLivePanel";
+import EffectiveOwnershipPanel from "@/components/fpl/analytics/EffectiveOwnershipPanel";
+import ChipUsagePanel from "@/components/fpl/analytics/ChipUsagePanel";
+import XptsPredictionsPanel from "@/components/fpl/analytics/XptsPredictionsPanel";
+import PLAnthemPlayer from "@/components/fpl/PLAnthemPlayer";
 import RankGains from "@/components/fpl/RankGains";
 import ThreatsAnalysis from "@/components/fpl/ThreatsAnalysis";
 import Comparisons from "@/components/fpl/Comparisons";
@@ -199,6 +206,40 @@ export default function FPLLivePage() {
     } catch (error) {
       console.warn("Error loading from localStorage:", error);
     }
+  }, []);
+
+  // Always fall back to detecting the latest live gameweek from FPL when no
+  // saved gameweek exists. Robust to API outages — never throws.
+  useEffect(() => {
+    let cancelled = false;
+    const detectLatestGameweek = async () => {
+      // Skip if user already has a recent saved choice
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("fpl-gameweek");
+        if (saved && !isNaN(parseInt(saved, 10))) return;
+      }
+      try {
+        const res = await fetch("/api/fpl/bootstrap-static");
+        if (!res.ok) return;
+        const data = await res.json();
+        const events: any[] = Array.isArray(data?.data?.events)
+          ? data.data.events
+          : [];
+        if (events.length === 0) return;
+        const resolved =
+          events.find((e: any) => e?.is_current) ||
+          events.find((e: any) => e?.is_next) ||
+          [...events].reverse().find((e: any) => e?.finished) ||
+          events[events.length - 1];
+        if (!cancelled && resolved?.id) setGameweek(resolved.id);
+      } catch (err) {
+        console.warn("Failed to auto-detect current gameweek:", err);
+      }
+    };
+    detectLatestGameweek();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const showError = (message: string) => {
@@ -570,17 +611,21 @@ export default function FPLLivePage() {
                 isPolling={isLiveTracking}
               />
               <div className="bg-theme-card rounded-lg border border-theme-border p-4">
-                <h4 className="text-sm font-bold text-theme-foreground mb-3">
+                <h4 className="text-sm font-bold text-theme-foreground mb-3 flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white shadow-sm">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </span>
                   More Live Analytics
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                   {[
-                    { key: "bps", label: "BPS Live" },
-                    { key: "effective-ownership", label: "EO Buckets" },
-                    { key: "chips", label: "Chip Usage" },
-                    { key: "predictions", label: "xPts Predictions" },
+                    { key: "bps", label: "BPS Live", Icon: Zap },
+                    { key: "effective-ownership", label: "EO Buckets", Icon: Users },
+                    { key: "chips", label: "Chip Usage", Icon: Target },
+                    { key: "predictions", label: "xPts Predictions", Icon: TrendingUp },
                   ].map((a) => {
                     const isActive = activeAnalytics === (a.key as any);
+                    const ItemIcon = a.Icon;
                     return (
                       <button
                         key={a.key}
@@ -588,35 +633,31 @@ export default function FPLLivePage() {
                         onClick={() =>
                           setActiveAnalytics(isActive ? null : (a.key as any))
                         }
-                        className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-md transition-colors ${
+                        className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-md transition-all border ${
                           isActive
-                            ? "bg-purple-500 text-white shadow-sm"
-                            : "bg-theme-card-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 text-theme-foreground"
+                            ? "bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white border-purple-600 shadow-sm"
+                            : "bg-theme-card-secondary border-transparent hover:border-purple-300/60 dark:hover:border-purple-700/60 hover:bg-purple-50/40 dark:hover:bg-purple-900/20 text-theme-foreground"
                         }`}
                       >
-                        <span>{a.label}</span>
-                        <span
-                          className={`transition-transform text-[10px] ${
+                        <span className="flex items-center gap-1.5 font-semibold">
+                          <ItemIcon className="w-3.5 h-3.5" />
+                          {a.label}
+                        </span>
+                        <ChevronDown
+                          className={`w-3.5 h-3.5 transition-transform ${
                             isActive ? "rotate-180" : ""
                           }`}
-                        >
-                          ▼
-                        </span>
+                        />
                       </button>
                     );
                   })}
                 </div>
                 {activeAnalytics && (
-                  <div className="mt-3 rounded-md border border-purple-200/40 dark:border-purple-800/40 overflow-hidden bg-theme-card-secondary">
-                    <iframe
-                      key={activeAnalytics}
-                      src={`/premier-league/fpl-live/${activeAnalytics}?embed=1${
-                        managerId ? `&managerId=${managerId}` : ""
-                      }`}
-                      title={activeAnalytics}
-                      className="w-full"
-                      style={{ height: "min(75vh, 720px)", border: 0 }}
-                    />
+                  <div className="mt-3 rounded-lg border border-purple-200/40 dark:border-purple-800/40 overflow-hidden bg-theme-card animate-in fade-in slide-in-from-top-1 duration-200">
+                    {activeAnalytics === "bps" && <BpsLivePanel />}
+                    {activeAnalytics === "effective-ownership" && <EffectiveOwnershipPanel />}
+                    {activeAnalytics === "chips" && <ChipUsagePanel />}
+                    {activeAnalytics === "predictions" && <XptsPredictionsPanel />}
                   </div>
                 )}
               </div>
@@ -682,6 +723,7 @@ export default function FPLLivePage() {
 
   return (
     <div className="min-h-screen bg-theme-background theme-transition">
+      <PLAnthemPlayer />
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
@@ -708,71 +750,86 @@ export default function FPLLivePage() {
         {/* Mobile-First Setup Interface */}
         {!teamLoaded && (
           <div className="space-y-4 lg:space-y-6">
-            {/* How to Use Guide - Mobile Accordion */}
-            <div className="bg-theme-card border border-theme-border rounded-md overflow-hidden theme-transition">
+            {/* How to Use Guide - Sophisticated accordion */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-white via-purple-50/30 to-fuchsia-50/20 dark:from-slate-900 dark:via-purple-950/20 dark:to-fuchsia-950/10 border border-purple-200/50 dark:border-purple-800/30 rounded-xl shadow-sm theme-transition">
+              {/* Top accent line */}
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-indigo-500" />
+              {/* PL logo, top-right, transparent — adjusted so it's fully visible on all breakpoints */}
+              <Image
+                src="/images/logos/pl-logo.png"
+                alt="Premier League"
+                width={120}
+                height={120}
+                priority={false}
+                className="absolute top-2 right-2 sm:top-3 sm:right-3 w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain opacity-10 dark:opacity-15 pointer-events-none select-none"
+              />
               <details className="group">
-                <summary className="flex items-center gap-3 p-3 sm:p-4 lg:p-5 text-sm sm:text-base font-medium text-theme-foreground cursor-pointer hover:bg-theme-card-secondary transition-colors min-h-[56px] lg:min-h-[60px] touch-manipulation theme-transition">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-500 dark:bg-purple-600 rounded-md flex items-center justify-center flex-shrink-0">
-                    <MdInfo className="text-white w-4 h-4 lg:w-5 lg:h-5" />
+                <summary className="relative z-10 flex items-center gap-3 p-4 sm:p-5 cursor-pointer hover:bg-purple-50/30 dark:hover:bg-purple-900/10 transition-colors theme-transition list-none [&::-webkit-details-marker]:hidden">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-lg flex items-center justify-center shrink-0 shadow-sm">
+                    <Lightbulb className="text-white w-5 h-5" />
                   </div>
-                  <span className="font-semibold flex-1 text-sm lg:text-base">
-                    {t("howToUse")}
-                  </span>
-                  <MdExpandMore className="text-theme-foreground group-open:rotate-180 transition-transform duration-200 w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 theme-transition" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-theme-foreground text-base">
+                      {t("howToUse")}
+                    </h3>
+                    <p className="text-xs text-theme-text-secondary mt-0.5">
+                      Brzo objašnjenje kako pronaći svoj Manager ID
+                    </p>
+                  </div>
+                  <ChevronDown className="text-theme-text-secondary group-open:rotate-180 transition-transform duration-200 w-5 h-5 shrink-0" />
                 </summary>
 
-                <div className="px-3 sm:px-4 lg:px-5 pb-3 sm:pb-4 lg:pb-5 space-y-3 lg:space-y-4 text-sm sm:text-base text-black dark:text-white bg-white dark:bg-black theme-transition">
-                  <div className="p-3 sm:p-4 lg:p-5 bg-theme-card rounded-md border-theme-border theme-transition">
-                    <h4 className="font-semibold text-black dark:text-white mb-3 lg:mb-4 flex items-start gap-2 text-sm sm:text-base lg:text-lg theme-transition">
-                      <span className="text-base sm:text-lg lg:text-xl">
-                        📋
-                      </span>
-                      <span className="leading-tight">
-                        {t("fplLive.howToFindManagerIdDetailed")}
-                      </span>
+                <div className="relative z-10 px-4 sm:px-5 pb-4 sm:pb-5 space-y-4">
+                  <div className="p-4 sm:p-5 bg-white/70 dark:bg-slate-900/50 rounded-lg border border-purple-200/40 dark:border-purple-800/30 backdrop-blur-sm">
+                    <h4 className="font-semibold text-theme-foreground mb-4 flex items-center gap-2 text-sm sm:text-base">
+                      <ClipboardList className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <span>{t("fplLive.howToFindManagerIdDetailed")}</span>
                     </h4>
-                    <div className="space-y-3 lg:space-y-4">
-                      <ol className="list-decimal list-inside space-y-2 lg:space-y-3 text-black dark:text-white leading-relaxed theme-transition text-sm sm:text-base">
-                        <li className="pl-1 sm:pl-2">
-                          {t("fplLive.openWebBrowser")}
-                        </li>
-                        <li className="pl-1 sm:pl-2">
+
+                    <ol className="space-y-2.5 text-sm">
+                      {[
+                        t("fplLive.openWebBrowser"),
+                        <>
                           {t("fplLive.goToFPLWebsite")}{" "}
-                          <strong className="text-black dark:text-white break-all">
+                          <strong className="text-purple-700 dark:text-purple-300 break-all">
                             fantasy.premierleague.com
                           </strong>
-                        </li>
-                        <li className="pl-1 sm:pl-2">
-                          {t("fplLive.loginToAccount")}
-                        </li>
-                        <li className="pl-1 sm:pl-2">
-                          {t("fplLive.clickPointsTab")}
-                        </li>
-                        <li className="pl-1 sm:pl-2">
+                        </>,
+                        t("fplLive.loginToAccount"),
+                        t("fplLive.clickPointsTab"),
+                        <>
                           {t("fplLive.copyNumbersFromURL")}{" "}
-                          <span className="text-xs text-black/70 dark:text-white/70 block sm:inline mt-1 sm:mt-0">
+                          <span className="text-xs text-theme-text-secondary block sm:inline">
                             (e.g. entry/133444/event/1)
                           </span>
-                        </li>
-                      </ol>
-
-                      <div className="mt-4 lg:mt-5 p-3 lg:p-4 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-800 theme-transition">
-                        <div className="flex items-start gap-2 text-sm text-black dark:text-white mb-2 lg:mb-3">
-                          <span className="text-base lg:text-lg">💡</span>
-                          <span className="font-medium">
-                            {t("fplLive.exampleURL")}
+                        </>,
+                      ].map((step, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <span className="shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white text-[11px] font-bold shadow-sm">
+                            {idx + 1}
                           </span>
-                        </div>
-                        <div className="bg-gray-100 dark:bg-gray-800 text-black dark:text-white p-2 lg:p-3 rounded-md font-mono text-xs sm:text-sm break-all overflow-hidden border border-gray-200 dark:border-gray-700 theme-transition">
-                          fantasy.premierleague.com/entry/133444/event/1
-                        </div>
-                        <p className="text-xs sm:text-sm text-black dark:text-white mt-2 lg:mt-3 text-center theme-transition">
-                          {t("fplLive.yourManagerIdIs2")}{" "}
-                          <strong className="text-base sm:text-lg font-bold">
-                            133444
-                          </strong>
-                        </p>
+                          <span className="text-theme-foreground leading-relaxed flex-1 pt-0.5">
+                            {step}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+
+                    <div className="mt-5 p-3.5 rounded-lg bg-gradient-to-br from-purple-50 to-fuchsia-50 dark:from-purple-950/40 dark:to-fuchsia-950/30 border border-purple-200/60 dark:border-purple-800/40">
+                      <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-300 mb-2.5 uppercase tracking-wider">
+                        <Lightbulb className="w-3.5 h-3.5" />
+                        <span>{t("fplLive.exampleURL")}</span>
                       </div>
+                      <div className="bg-white dark:bg-slate-950 text-theme-foreground p-2.5 rounded-md font-mono text-xs sm:text-sm break-all border border-purple-200/40 dark:border-purple-800/40">
+                        fantasy.premierleague.com/entry/<span className="font-bold text-purple-700 dark:text-purple-300">133444</span>/event/1
+                      </div>
+                      <p className="text-xs text-theme-text-secondary mt-2.5 flex items-center gap-1.5 justify-center">
+                        <ArrowRight className="w-3 h-3 text-purple-500" />
+                        {t("fplLive.yourManagerIdIs2")}{" "}
+                        <strong className="text-sm sm:text-base font-bold text-purple-700 dark:text-purple-300">
+                          133444
+                        </strong>
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1006,14 +1063,22 @@ export default function FPLLivePage() {
                       <button
                         key={tab.id}
                         onClick={() => handleTabChange(tab.id)}
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium transition-all border-b-2 min-h-[44px] ${
+                        className={`flex-1 relative flex items-center justify-center gap-2 px-3 py-3.5 text-sm font-semibold transition-all border-b-2 min-h-[52px] ${
                           isActive
-                            ? "border-purple-500 text-purple-600 dark:text-purple-400"
-                            : "border-transparent text-theme-text-secondary hover:text-purple-600 dark:hover:text-purple-400"
+                            ? "border-purple-500 text-purple-700 dark:text-purple-300 bg-purple-50/40 dark:bg-purple-900/15"
+                            : "border-transparent text-theme-text-secondary hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50/20 dark:hover:bg-purple-900/10"
                         } theme-transition`}
                       >
-                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span>{tab.label}</span>
+                        <span
+                          className={`flex items-center justify-center w-6 h-6 rounded-md transition-all ${
+                            isActive
+                              ? "bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white shadow-sm"
+                              : "bg-theme-card-secondary text-theme-text-secondary"
+                          }`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                        </span>
+                        <span className="tracking-tight">{tab.label}</span>
                       </button>
                     );
                   })}

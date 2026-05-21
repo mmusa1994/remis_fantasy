@@ -9,10 +9,13 @@ import {
   MdRemove,
   MdClose,
 } from "react-icons/md";
+import { PiTShirtFill } from "react-icons/pi";
+import { getTeamColors } from "@/lib/team-colors";
 
 interface Player {
   web_name: string;
   element_type: number;
+  team?: number;
 }
 
 interface LiveStats {
@@ -330,6 +333,26 @@ const WhatIfSimulator = React.memo(function WhatIfSimulator({
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
+            {/* Team jersey */}
+            {(() => {
+              const colors = getTeamColors(pick.player.team || 1);
+              return (
+                <div
+                  className="flex items-center justify-center w-7 h-7 rounded-md shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primary}1a 0%, ${colors.primary}0d 100%)`,
+                  }}
+                >
+                  <PiTShirtFill
+                    className="w-4 h-4"
+                    style={{
+                      color: colors.primary,
+                      filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))",
+                    } as React.CSSProperties}
+                  />
+                </div>
+              );
+            })()}
             <span
               className={`text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0 ${
                 isEffectiveCaptain

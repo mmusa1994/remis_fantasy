@@ -395,42 +395,81 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   const fetchBootstrapData = useCallback(async () => {
     try {
       setBootstrapLoading(true);
-      const response = await fetch("/api/fpl/bootstrap-static");
+      let response: Response;
+      try {
+        response = await fetch("/api/fpl/bootstrap-static");
+      } catch (networkErr) {
+        console.error("Network error loading bootstrap:", networkErr);
+        setFplApiError(
+          t("fplDashboard.errors.networkError", "Network error. Check your connection and try again.")
+        );
+        return;
+      }
 
       if (!response.ok) {
         setFplApiError(
-          "FPL API is currently unavailable. Base data could not be loaded."
+          response.status === 503 || response.status === 504
+            ? t("fplDashboard.errors.fplUnavailable", "FPL service is currently unavailable. Try again in a few seconds.")
+            : t("fplDashboard.errors.fplReturnedError", "FPL service returned an error ({{status}}).", { status: response.status })
         );
-        return; // Avoid throwing to keep flow stable
+        return;
       }
 
-      const result = await response.json();
-      if (result.success) {
-        // Process players with enhanced data
+      let result: any;
+      try {
+        result = await response.json();
+      } catch (parseErr) {
+        console.error("Bootstrap JSON parse failed:", parseErr);
+        setFplApiError(t("fplDashboard.errors.invalidResponse", "Invalid response from server."));
+        return;
+      }
+
+      if (!result?.success || !result.data) {
+        setFplApiError(t("fplDashboard.errors.fplDataUnavailable", "FPL data is not available at the moment."));
+        return;
+      }
+
+      // Process players with enhanced data (guarded)
+      try {
         const enhancedPlayers = processEnhancedPlayerData(
           result.data.elements || []
         );
         setAllPlayers(enhancedPlayers);
-        setAllTeams(result.data.teams || []);
-
-        // Set current gameweek from events
-        const currentEvent = result.data.events?.find(
-          (event: any) => event.is_current
-        );
-        if (currentEvent) {
-          setCurrentGameweek(currentEvent.id);
-        }
-        setFplApiError(null);
+      } catch (processErr) {
+        console.error("Failed to process player data:", processErr);
+        setAllPlayers([]);
       }
+      setAllTeams(result.data.teams || []);
+
+      // Robust gameweek detection — falls back through several signals so we
+      // always land on the most relevant GW even mid-deadline / off-season.
+      const events: any[] = Array.isArray(result.data.events)
+        ? result.data.events
+        : [];
+      const resolvedEvent =
+        events.find((e: any) => e?.is_current) ||
+        events.find((e: any) => e?.is_next) ||
+        [...events].reverse().find((e: any) => e?.finished) ||
+        events[events.length - 1] ||
+        null;
+      if (resolvedEvent?.id) {
+        setCurrentGameweek(resolvedEvent.id);
+      } else {
+        console.warn("No FPL events found in bootstrap response.");
+      }
+      setFplApiError(null);
     } catch (error) {
-      console.error("Failed to fetch bootstrap data:", error);
+      // Catch-all: should never reach this if inner blocks are safe, but
+      // keeps the UI stable if something unexpected throws.
+      console.error("Bootstrap fetch failed unexpectedly:", error);
       setFplApiError(
-        "FPL API is currently unavailable. Some data may be missing."
+        t("fplDashboard.errors.unexpectedError", "Unexpected error while loading data. Please refresh the page.")
       );
     } finally {
       setBootstrapLoading(false);
     }
-  }, []); // Remove processEnhancedPlayerData dependency to prevent loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]); // Remove processEnhancedPlayerData dependency to prevent loops
 
   // Team data cache and rate limiting
   const teamDataCacheRef = useRef<{

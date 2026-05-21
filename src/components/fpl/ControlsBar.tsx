@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { MdDownload } from "react-icons/md";
 import { useTranslation } from "react-i18next";
+import Image from "next/image";
 import TeamSearchInput from "./TeamSearchInput";
 
 interface ControlsBarProps {
@@ -132,9 +133,17 @@ export default function ControlsBar({
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-500/90 to-purple-600/90 rounded-lg shadow-lg p-4 md:p-6 border border-blue-300/30 backdrop-blur-sm">
+    <div className="relative overflow-hidden bg-gradient-to-r from-blue-500/90 to-purple-600/90 rounded-lg shadow-lg p-4 md:p-6 border border-blue-300/30 backdrop-blur-sm">
+      {/* PL logo, top-right, transparent — adjusted per breakpoint so it's fully visible */}
+      <Image
+        src="/images/logos/pl-logo.png"
+        alt="Premier League"
+        width={140}
+        height={140}
+        className="absolute top-3 right-2 sm:top-3 sm:right-3 md:top-2 md:right-3 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 object-contain opacity-20 pointer-events-none select-none"
+      />
       {/* Header */}
-      <div className="text-center mb-4">
+      <div className="relative z-10 text-center mb-4">
         <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
           {t("fplLive.enterManagerId")}
         </h2>
