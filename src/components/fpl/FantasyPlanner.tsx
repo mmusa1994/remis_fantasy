@@ -34,6 +34,9 @@ import FplStatusBanner from "@/components/shared/FplStatusBanner";
 // Enhanced Components
 import EnhancedPitchView from "./EnhancedPitchView";
 import AdvancedFilterPanel from "./AdvancedFilterPanel";
+import SmartReplacementPanel from "./SmartReplacementPanel";
+import AILoadingShow from "./AILoadingShow";
+import AIAnalysisReveal from "./AIAnalysisReveal";
 import PriceChangesWidget from "./widgets/PriceChangesWidget";
 import OwnershipChangesWidget from "./widgets/OwnershipChangesWidget";
 import TransferTrendsWidget from "./widgets/TransferTrendsWidget";
@@ -254,7 +257,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
   const [showFilters, setShowFilters] = useState(false);
   const [showTransferPanel, setShowTransferPanel] = useState(false);
-  const [, setSelectedPlayer] = useState<EnhancedPlayerData | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<EnhancedPlayerData | null>(null);
+  const [chipsUsed, setChipsUsed] = useState<Array<{ name: string; event: number }>>([]);
+  const [nextGwFixtures, setNextGwFixtures] = useState<any[]>([]);
+  const [upcomingFixtures, setUpcomingFixtures] = useState<any[]>([]);
   const [bootstrapLoading, setBootstrapLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [formation, setFormation] = useState("3-4-3");
@@ -722,6 +728,67 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     }
   }, [currentGameweek]);
 
+  // Fetch upcoming gameweek fixtures (for Smart Replacement suggestions)
+  // Loads next 5 GWs in parallel for fixture-run visualizations
+  useEffect(() => {
+    if (!currentGameweek) return;
+    const targets = [1, 2, 3, 4, 5].map((d) => currentGameweek + d).filter((gw) => gw <= 38);
+    let cancelled = false;
+    (async () => {
+      try {
+        const results = await Promise.all(
+          targets.map(async (gw) => {
+            try {
+              const res = await fetch(`/api/fpl/fixtures?event=${gw}`);
+              if (!res.ok) return [];
+              const data = await res.json();
+              const fixtures = (data?.success ? data.data : data) || [];
+              return Array.isArray(fixtures)
+                ? fixtures.map((f: any) => ({ ...f, event: f.event ?? gw }))
+                : [];
+            } catch {
+              return [];
+            }
+          })
+        );
+        const all = results.flat();
+        if (!cancelled) {
+          setUpcomingFixtures(all);
+          setNextGwFixtures(all.filter((f: any) => f.event === targets[0]));
+        }
+      } catch {
+        if (!cancelled) {
+          setUpcomingFixtures([]);
+          setNextGwFixtures([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentGameweek]);
+
+  // Fetch chips usage from manager history
+  useEffect(() => {
+    if (!currentManagerId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/fpl/entry/${currentManagerId}/history`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const history = data?.success ? data.data : data;
+        const chips = history?.chips || [];
+        if (!cancelled) setChipsUsed(chips);
+      } catch {
+        if (!cancelled) setChipsUsed([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentManagerId]);
+
   // Check if we need to show manager ID modal or fetch data (no function dependency)
   useEffect(() => {
     // Only fetch data if we have manager ID
@@ -989,6 +1056,29 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     setTransferMode(true);
     setShowTransferPanel(true);
   }, []);
+
+  // Smart replacement pick: swap selected player out, picked candidate in.
+  // Auto-enters transfer mode if needed.
+  const handlePickReplacement = useCallback(
+    (candidate: any) => {
+      if (!selectedPlayer || !candidate) return;
+      if (!transferMode) {
+        setTransferMode(true);
+        setShowTransferPanel(true);
+      }
+      setPendingTransfers((prev) => {
+        const transfersOut = prev.transfersOut.includes(selectedPlayer.id)
+          ? prev.transfersOut
+          : [...prev.transfersOut, selectedPlayer.id];
+        const outIndex = transfersOut.indexOf(selectedPlayer.id);
+        const transfersIn = [...prev.transfersIn];
+        transfersIn[outIndex] = candidate.id;
+        return { ...prev, transfersOut, transfersIn };
+      });
+      setSelectedPlayer(null);
+    },
+    [selectedPlayer, transferMode]
+  );
 
   const canAffordPlayer = useCallback(
     (playerId: number) => {
@@ -1378,8 +1468,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-theme-card rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 shadow-sm border border-theme-border theme-transition"
+            className="relative overflow-hidden bg-gradient-to-br from-indigo-50/60 via-theme-card to-sky-50/40 dark:from-indigo-950/30 dark:via-theme-card dark:to-slate-900/40 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 shadow-sm border border-indigo-100/60 dark:border-indigo-900/40 theme-transition"
           >
+            {/* subtle accent bar */}
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-400/50 via-violet-400/40 to-sky-400/50" />
             <div className="flex flex-col space-y-4 mb-4">
               {/* Mobile-first header layout */}
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -1481,39 +1573,44 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
             {/* Enhanced Team Stats - Mobile optimized */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-center">
-              <div className="bg-theme-card-secondary rounded-lg p-3">
-                <p className="text-xs sm:text-sm text-theme-text-secondary mb-1">
+              <div className="relative overflow-hidden rounded-lg p-3 bg-gradient-to-br from-indigo-50 to-indigo-100/60 dark:from-indigo-950/40 dark:to-indigo-900/20 border border-indigo-200/50 dark:border-indigo-800/40">
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-400/70 dark:bg-indigo-500/70" />
+                <p className="text-xs sm:text-sm text-indigo-700/70 dark:text-indigo-300/70 mb-1">
                   {t("teamPlanner.gameweek")}
                 </p>
-                <p className="font-bold text-base sm:text-lg">{currentGameweek}</p>
+                <p className="font-bold text-base sm:text-lg text-indigo-900 dark:text-indigo-100">{currentGameweek}</p>
               </div>
-              <div className="bg-theme-card-secondary rounded-lg p-3">
-                <p className="text-xs sm:text-sm text-theme-text-secondary mb-1">
+              <div className="relative overflow-hidden rounded-lg p-3 bg-gradient-to-br from-emerald-50 to-emerald-100/60 dark:from-emerald-950/40 dark:to-emerald-900/20 border border-emerald-200/50 dark:border-emerald-800/40">
+                <div className="absolute top-0 left-0 w-1 h-full bg-emerald-400/70 dark:bg-emerald-500/70" />
+                <p className="text-xs sm:text-sm text-emerald-700/70 dark:text-emerald-300/70 mb-1">
                   {t("teamPlanner.gwPoints")}
                 </p>
-                <p className="font-bold text-base sm:text-lg">
+                <p className="font-bold text-base sm:text-lg text-emerald-900 dark:text-emerald-100">
                   {userTeamData.team_totals?.total_points_final || 0}
                 </p>
               </div>
-              <div className="bg-theme-card-secondary rounded-lg p-3 col-span-2 sm:col-span-1">
-                <p className="text-xs sm:text-sm text-theme-text-secondary mb-1">
+              <div className="relative overflow-hidden rounded-lg p-3 col-span-2 sm:col-span-1 bg-gradient-to-br from-violet-50 to-violet-100/60 dark:from-violet-950/40 dark:to-violet-900/20 border border-violet-200/50 dark:border-violet-800/40">
+                <div className="absolute top-0 left-0 w-1 h-full bg-violet-400/70 dark:bg-violet-500/70" />
+                <p className="text-xs sm:text-sm text-violet-700/70 dark:text-violet-300/70 mb-1">
                   {t("teamPlanner.totalPoints")}
                 </p>
-                <p className="font-bold text-base sm:text-lg">
+                <p className="font-bold text-base sm:text-lg text-violet-900 dark:text-violet-100">
                   {userTeamData.manager?.summary_overall_points?.toLocaleString()}
                 </p>
               </div>
-              <div className="bg-theme-card-secondary rounded-lg p-3">
-                <p className="text-xs sm:text-sm text-theme-text-secondary mb-1">
+              <div className="relative overflow-hidden rounded-lg p-3 bg-gradient-to-br from-amber-50 to-amber-100/60 dark:from-amber-950/40 dark:to-amber-900/20 border border-amber-200/50 dark:border-amber-800/40">
+                <div className="absolute top-0 left-0 w-1 h-full bg-amber-400/70 dark:bg-amber-500/70" />
+                <p className="text-xs sm:text-sm text-amber-700/70 dark:text-amber-300/70 mb-1">
                   {t("teamPlanner.teamValue")}
                 </p>
-                <p className="font-bold text-base sm:text-lg">
+                <p className="font-bold text-base sm:text-lg text-amber-900 dark:text-amber-100">
                   £{((userTeamData.entry_history?.value || 1000) / 10).toFixed(1)}m
                 </p>
               </div>
-              <div className="bg-theme-card-secondary rounded-lg p-3">
-                <p className="text-xs sm:text-sm text-theme-text-secondary mb-1">{t("teamPlanner.bank")}</p>
-                <p className="font-bold text-base sm:text-lg">
+              <div className="relative overflow-hidden rounded-lg p-3 bg-gradient-to-br from-rose-50 to-rose-100/60 dark:from-rose-950/40 dark:to-rose-900/20 border border-rose-200/50 dark:border-rose-800/40">
+                <div className="absolute top-0 left-0 w-1 h-full bg-rose-400/70 dark:bg-rose-500/70" />
+                <p className="text-xs sm:text-sm text-rose-700/70 dark:text-rose-300/70 mb-1">{t("teamPlanner.bank")}</p>
+                <p className="font-bold text-base sm:text-lg text-rose-900 dark:text-rose-100">
                   £{((userTeamData.entry_history?.bank || 0) / 10).toFixed(1)}m
                 </p>
               </div>
@@ -1530,13 +1627,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
               transition={{ delay: 0.2 }}
             >
               <div
-                className="bg-theme-card rounded-lg shadow-sm border border-theme-border theme-transition"
+                className="bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/30 dark:from-theme-card dark:via-slate-900/40 dark:to-indigo-950/20 rounded-xl shadow-sm border border-slate-200/70 dark:border-slate-700/60 theme-transition"
               >
                 {/* Enhanced View Controls */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 lg:p-4 border-b border-gray-200 dark:border-gray-700 space-y-3 sm:space-y-0">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 lg:p-4 border-b border-slate-200/70 dark:border-slate-700/60 space-y-3 sm:space-y-0">
                   <div className="flex items-center space-x-2 w-full sm:w-auto">
                     {/* View Toggle */}
-                    <div className="flex bg-theme-card-secondary rounded-lg p-1 w-full sm:w-auto">
+                    <div className="flex bg-slate-100/80 dark:bg-slate-800/60 rounded-lg p-1 w-full sm:w-auto border border-slate-200/60 dark:border-slate-700/50">
                       <button
                         onClick={() => {
                           setCurrentView("pitch");
@@ -1547,8 +1644,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }}
                         className={`flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 rounded-md transition-all duration-200 flex-1 sm:flex-none text-sm ${
                           currentView === "pitch"
-                            ? "bg-theme-foreground/10 text-theme-foreground"
-                            : "text-theme-text-secondary hover:text-theme-foreground"
+                            ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm"
+                            : "text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-300"
                         }`}
                       >
                         <Target className="w-3.5 h-3.5" />
@@ -1566,8 +1663,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }}
                         className={`flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 rounded-md transition-all duration-200 flex-1 sm:flex-none text-sm ${
                           currentView === "list"
-                            ? "bg-theme-foreground/10 text-theme-foreground"
-                            : "text-theme-text-secondary hover:text-theme-foreground"
+                            ? "bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-sm"
+                            : "text-slate-600 dark:text-slate-300 hover:text-indigo-700 dark:hover:text-indigo-300"
                         }`}
                       >
                         <FaListAlt className="w-3.5 h-3.5" />
@@ -1585,8 +1682,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }}
                         className={`flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 rounded-md transition-all duration-200 flex-1 sm:flex-none text-sm ${
                           currentView === "analytics"
-                            ? "bg-theme-foreground/10 text-theme-foreground"
-                            : "text-theme-text-secondary hover:text-theme-foreground"
+                            ? "bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-sm"
+                            : "text-slate-600 dark:text-slate-300 hover:text-violet-700 dark:hover:text-violet-300"
                         }`}
                       >
                         <BarChart3 className="w-3.5 h-3.5" />
@@ -1603,10 +1700,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       onClick={() =>
                         transferMode ? resetTransfers() : enterTransferMode()
                       }
-                      className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium ${
+                      className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-all text-sm font-medium ${
                         transferMode
-                          ? "bg-theme-foreground text-theme-background hover:opacity-90"
-                          : "border border-theme-border text-theme-foreground hover:bg-theme-card-secondary"
+                          ? "bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-sm hover:shadow-md hover:from-rose-600 hover:to-rose-700"
+                          : "border border-sky-200/70 dark:border-sky-800/50 text-sky-700 dark:text-sky-300 bg-sky-50/40 dark:bg-sky-950/20 hover:bg-sky-100/60 dark:hover:bg-sky-900/30"
                       }`}
                     >
                       <FaExchangeAlt className="w-4 h-4" />
@@ -1631,10 +1728,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       <button
                         onClick={() => setShowAIChat(true)}
                         disabled={!canUseAI}
-                        className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium ${
+                        className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-all text-sm font-medium ${
                           canUseAI
-                            ? "border border-theme-border text-theme-foreground hover:bg-theme-card-secondary"
-                            : "bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed"
+                            ? "border border-violet-200/70 dark:border-violet-800/50 text-violet-700 dark:text-violet-300 bg-violet-50/40 dark:bg-violet-950/20 hover:bg-violet-100/60 dark:hover:bg-violet-900/30"
+                            : "bg-slate-200/60 dark:bg-slate-700/40 text-slate-400 dark:text-slate-500 cursor-not-allowed"
                         }`}
                         title={
                           canUseAI
@@ -1660,32 +1757,16 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         teamPlayers={currentTeamForDisplay}
                         allPlayers={allPlayers}
                         onPlayerClick={(player) => {
-                          if (transferMode) {
-                            // In transfer mode, toggle selection for transfer out
-                            if (
-                              pendingTransfers.transfersOut.includes(player.id)
-                            ) {
-                              // Already selected for transfer out, deselect
-                              removePlayerOut(player.id);
-                            } else {
-                              // Not selected, mark for transfer out
-                              addPlayerOut(player.id);
-                            }
-                          } else {
-                            setSelectedPlayer(player);
-                          }
+                          // Always open Smart Replacement panel on click.
+                          // The panel handles transfers via "Swap" action,
+                          // doing out + in atomically and entering transfer mode if needed.
+                          setSelectedPlayer(player);
                         }}
                         onPlayerSelect={(player) => {
-                          if (transferMode) {
-                            // Toggle selection for transfer out
-                            if (
-                              pendingTransfers.transfersOut.includes(player.id)
-                            ) {
-                              removePlayerOut(player.id);
-                            } else {
-                              addPlayerOut(player.id);
-                            }
-                          } else if (uiState.compareMode) {
+                          // In compare mode (explicit), keep compare-pick behavior.
+                          // Otherwise (including transferMode) always re-open the
+                          // Smart Replacement panel so the user can pick another swap.
+                          if (uiState.compareMode && !transferMode) {
                             setUIState((prev) => ({
                               ...prev,
                               comparedPlayers: prev.comparedPlayers.includes(
@@ -1698,6 +1779,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 ? [...prev.comparedPlayers, player.id]
                                 : [prev.comparedPlayers[1], player.id],
                             }));
+                          } else {
+                            setSelectedPlayer(player);
                           }
                         }}
                         selectedPlayers={
@@ -1719,10 +1802,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         <div className="px-4 py-3">
                           <div className="flex items-center justify-center gap-8">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-theme-card-secondary border border-theme-border flex items-center justify-center">
-                                <div className="w-4 h-4 rounded-full bg-theme-foreground/80 flex items-center justify-center text-xs font-bold text-theme-background">
+                              <div className="w-9 h-9 rounded-full bg-yellow-400 border-2 border-white dark:border-gray-900 ring-2 ring-yellow-500/40 shadow-[0_0_8px_rgba(250,204,21,0.7)] flex items-center justify-center">
+                                <span className="text-sm font-extrabold text-black" style={{ textShadow: "0 1px 1px rgba(255,255,255,0.4)" }}>
                                   C
-                                </div>
+                                </span>
                               </div>
                               <div>
                                 <p className="text-xs text-theme-text-secondary">
@@ -1745,10 +1828,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
                             {userTeamData?.vice_captain?.player_id && (
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-theme-card-secondary border border-theme-border flex items-center justify-center">
-                                  <div className="w-4 h-4 rounded-full bg-theme-foreground/50 flex items-center justify-center text-xs font-bold text-theme-background">
+                                <div className="w-9 h-9 rounded-full bg-blue-600 border-2 border-white dark:border-gray-900 ring-2 ring-blue-500/40 shadow-[0_0_8px_rgba(37,99,235,0.7)] flex items-center justify-center">
+                                  <span className="text-sm font-extrabold text-white" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.6)" }}>
                                     V
-                                  </div>
+                                  </span>
                                 </div>
                                 <div>
                                   <p className="text-xs text-theme-text-secondary">
@@ -2232,48 +2315,74 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
                 {/* Transfer Status Panel - Full Width */}
                 {transferMode && (
-                  <div className="mt-4 bg-theme-card-secondary border border-theme-border rounded-lg p-4 lg:p-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="text-center sm:text-left">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="mt-4 relative overflow-hidden rounded-xl p-4 lg:p-6 bg-gradient-to-br from-sky-50/80 via-white to-indigo-50/60 dark:from-sky-950/30 dark:via-theme-card dark:to-indigo-950/30 border border-sky-200/60 dark:border-sky-800/40 shadow-sm">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-400 via-amber-400 to-emerald-400" />
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-sm">
+                        <FaExchangeAlt className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm sm:text-base">
+                          {t("teamPlanner.tabs.transfers")}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {t("teamPlanner.transfers.tip", "Click a player on pitch to sell, then pick a replacement from the market")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1">
+                        <div className="relative rounded-lg p-3 bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-800/40">
+                          <p className="text-[11px] uppercase tracking-wide text-rose-700/80 dark:text-rose-300/80 mb-1 font-medium">
                             {t("teamPlanner.transfers.transfersOut")}
                           </p>
-                          <p className="text-lg font-bold text-theme-foreground">
+                          <p className="text-xl font-bold text-rose-900 dark:text-rose-100">
                             {pendingTransfers.transfersOut.length}
                           </p>
                         </div>
-                        <div className="text-center sm:text-left">
-                          <p className="text-sm text-theme-text-secondary">
+                        <div className="relative rounded-lg p-3 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40">
+                          <p className="text-[11px] uppercase tracking-wide text-emerald-700/80 dark:text-emerald-300/80 mb-1 font-medium">
                             {t("teamPlanner.transfers.transfersIn")}
                           </p>
-                          <p className="text-lg font-bold text-theme-foreground">
+                          <p className="text-xl font-bold text-emerald-900 dark:text-emerald-100">
                             {pendingTransfers.transfersIn.length}
                           </p>
                         </div>
-                        <div className="text-center sm:text-left">
-                          <p className="text-sm text-theme-text-secondary">
+                        <div className="relative rounded-lg p-3 bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40">
+                          <p className="text-[11px] uppercase tracking-wide text-amber-700/80 dark:text-amber-300/80 mb-1 font-medium">
                             {t("teamPlanner.transfers.availableBudget")}
                           </p>
-                          <p className="text-lg font-bold text-theme-foreground">
+                          <p className="text-xl font-bold text-amber-900 dark:text-amber-100">
                             £{(availableBudget / 10).toFixed(1)}m
                           </p>
                         </div>
-                        <div className="text-center sm:text-left">
-                          <p className="text-sm text-theme-text-secondary">
+                        <div className={`relative rounded-lg p-3 border ${
+                          transferCost > 0
+                            ? "bg-rose-50/80 dark:bg-rose-950/30 border-rose-200/60 dark:border-rose-800/40"
+                            : "bg-slate-50/80 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-700/40"
+                        }`}>
+                          <p className={`text-[11px] uppercase tracking-wide mb-1 font-medium ${
+                            transferCost > 0
+                              ? "text-rose-700/80 dark:text-rose-300/80"
+                              : "text-slate-600/80 dark:text-slate-400/80"
+                          }`}>
                             {t("teamPlanner.transfers.transferCost")}
                           </p>
-                          <p className="text-lg font-bold text-theme-foreground">
-                            {transferCost} pts
+                          <p className={`text-xl font-bold ${
+                            transferCost > 0
+                              ? "text-rose-900 dark:text-rose-100"
+                              : "text-slate-700 dark:text-slate-200"
+                          }`}>
+                            −{transferCost} pts
                           </p>
                         </div>
                       </div>
 
                       {pendingTransfers.transfersOut.length > 0 && (
-                        <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="flex flex-col sm:flex-col lg:flex-row gap-2">
                           <button
                             onClick={resetTransfers}
-                            className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
+                            className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium transition-all"
                           >
                             {t("teamPlanner.transfers.reset")}
                           </button>
@@ -2283,10 +2392,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 pendingTransfers.transfersIn.length ||
                               !validateSquad().isValid
                             }
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-colors"
+                            className="px-5 py-2.5 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 disabled:from-slate-300 disabled:to-slate-400 dark:disabled:from-slate-700 dark:disabled:to-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold shadow-sm hover:shadow-md transition-all"
                             onClick={confirmTransfers}
                           >
-                            {t("teamPlanner.transfers.confirmTransfers")}
+                            {t("teamPlanner.transfers.confirmTransfers")} →
                           </button>
                         </div>
                       )}
@@ -2341,10 +2450,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Players Out */}
                         {pendingTransfers.transfersOut.length > 0 && (
-                          <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
-                            <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">
-                              {t("teamPlanner.transfers.playersOut")}
-                            </h4>
+                          <div className="relative overflow-hidden rounded-lg p-3 bg-gradient-to-br from-rose-50 to-rose-100/40 dark:from-rose-950/40 dark:to-rose-900/20 border border-rose-200/60 dark:border-rose-800/40">
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-rose-500 text-white text-xs font-bold shadow-sm">↑</span>
+                              <h4 className="font-semibold text-rose-800 dark:text-rose-200 text-sm uppercase tracking-wide">
+                                {t("teamPlanner.transfers.playersOut")}
+                              </h4>
+                            </div>
                             <div className="space-y-2">
                               {pendingTransfers.transfersOut.map((playerId) => {
                                 const player = getPlayerById(playerId);
@@ -2352,25 +2464,26 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 return player ? (
                                   <div
                                     key={playerId}
-                                    className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2"
+                                    className="flex items-center justify-between bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm rounded-md p-2.5 border border-rose-100/80 dark:border-rose-900/40 hover:border-rose-300 dark:hover:border-rose-700 transition-colors"
                                   >
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium text-sm">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span className="font-medium text-sm text-slate-800 dark:text-slate-100 truncate">
                                         {player.web_name}
                                       </span>
-                                      <span className="text-xs text-gray-500">
-                                        ({team?.short_name})
+                                      <span className="text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                        {team?.short_name}
                                       </span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium">
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <span className="text-sm font-bold text-rose-700 dark:text-rose-300">
                                         £{(player.now_cost / 10).toFixed(1)}m
                                       </span>
                                       <button
                                         onClick={() =>
                                           removePlayerOut(playerId)
                                         }
-                                        className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center justify-center text-xs"
+                                        className="w-6 h-6 bg-rose-500/90 hover:bg-rose-600 text-white rounded-md flex items-center justify-center text-sm font-bold shadow-sm transition-colors"
+                                        title="Remove"
                                       >
                                         ×
                                       </button>
@@ -2384,10 +2497,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
                         {/* Players In */}
                         {pendingTransfers.transfersIn.length > 0 && (
-                          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                            <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">
-                              {t("teamPlanner.transfers.playersIn")}
-                            </h4>
+                          <div className="relative overflow-hidden rounded-lg p-3 bg-gradient-to-br from-emerald-50 to-emerald-100/40 dark:from-emerald-950/40 dark:to-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/40">
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500 text-white text-xs font-bold shadow-sm">↓</span>
+                              <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 text-sm uppercase tracking-wide">
+                                {t("teamPlanner.transfers.playersIn")}
+                              </h4>
+                            </div>
                             <div className="space-y-2">
                               {pendingTransfers.transfersIn.map(
                                 (playerId, index) => {
@@ -2400,38 +2516,39 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   return player ? (
                                     <div
                                       key={`${playerId}-${index}`}
-                                      className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2"
+                                      className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm rounded-md p-2.5 border border-emerald-100/80 dark:border-emerald-900/40 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors"
                                     >
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-medium text-sm">
-                                          {player.web_name}
-                                        </span>
-                                        <span className="text-xs text-gray-500">
-                                          ({team?.short_name})
-                                        </span>
-                                        {outPlayer && (
-                                          <span className="text-xs text-blue-600 dark:text-blue-400">
-                                            →{" "}
-                                            {t(
-                                              "teamPlanner.transfers.replaces"
-                                            )}{" "}
-                                            {outPlayer.web_name}
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          <span className="font-medium text-sm text-slate-800 dark:text-slate-100 truncate">
+                                            {player.web_name}
                                           </span>
-                                        )}
+                                          <span className="text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                            {team?.short_name}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                          <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                                            £{(player.now_cost / 10).toFixed(1)}m
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              removePlayerIn(playerId)
+                                            }
+                                            className="w-6 h-6 bg-rose-500/90 hover:bg-rose-600 text-white rounded-md flex items-center justify-center text-sm font-bold shadow-sm transition-colors"
+                                            title="Remove"
+                                          >
+                                            ×
+                                          </button>
+                                        </div>
                                       </div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-sm font-medium">
-                                          £{(player.now_cost / 10).toFixed(1)}m
-                                        </span>
-                                        <button
-                                          onClick={() =>
-                                            removePlayerIn(playerId)
-                                          }
-                                          className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center justify-center text-xs"
-                                        >
-                                          ×
-                                        </button>
-                                      </div>
+                                      {outPlayer && (
+                                        <div className="mt-1 flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                          <span className="text-emerald-600 dark:text-emerald-400">→</span>
+                                          {t("teamPlanner.transfers.replaces")}{" "}
+                                          <span className="font-medium text-slate-600 dark:text-slate-300">{outPlayer.web_name}</span>
+                                        </div>
+                                      )}
                                     </div>
                                   ) : null;
                                 }
@@ -2445,17 +2562,22 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                 )}
 
                 {/* Player List below pitch */}
-                <div className="mt-2 bg-theme-card border-t border-gray-200 dark:border-gray-700">
+                <div className="mt-2 bg-gradient-to-b from-slate-50/40 to-white dark:from-slate-900/30 dark:to-theme-card border-t border-slate-200/70 dark:border-slate-700/60">
                   <div className="p-4 lg:p-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
-                      <h3 className="text-lg font-semibold">
-                        {transferMode
-                          ? "Select Players to Buy"
-                          : t("teamPlanner.transferMarket.title")}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        {transferMode && (
+                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm text-sm font-bold">+</span>
+                        )}
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                          {transferMode
+                            ? t("teamPlanner.transferMarket.selectToBuy", "Select Players to Buy")
+                            : t("teamPlanner.transferMarket.title")}
+                        </h3>
+                      </div>
                       <div className="flex items-center space-x-2 w-full sm:w-auto">
                         <div className="relative flex-1 sm:flex-none">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                           <input
                             type="text"
                             placeholder={t("teamPlanner.transferMarket.search")}
@@ -2466,15 +2588,15 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 search: e.target.value,
                               }))
                             }
-                            className="w-full sm:w-auto pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full sm:w-auto pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white/80 dark:bg-slate-900/50 text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-300 dark:focus:border-indigo-700 focus:outline-none transition-colors"
                           />
                         </div>
                         <button
                           onClick={() => setShowFilters(!showFilters)}
-                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-colors shrink-0 ${
+                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-all shrink-0 ${
                             showFilters
-                              ? "bg-theme-foreground/10 text-theme-foreground border-theme-border"
-                              : "border-theme-border text-theme-text-secondary hover:bg-theme-card-secondary"
+                              ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800"
+                              : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40"
                           }`}
                         >
                           <Filter className="w-4 h-4" />
@@ -3096,6 +3218,31 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         </div>
       )}
 
+      {/* Smart Replacement Panel - opens when a player is clicked */}
+      {(() => {
+        const teamIds = (userTeamData?.team_with_stats || []).map((tp: any) => tp.player_id);
+        const isOwned = selectedPlayer ? teamIds.includes(selectedPlayer.id) : false;
+        return (
+          <SmartReplacementPanel
+            open={!!selectedPlayer}
+            selectedPlayer={selectedPlayer}
+            allPlayers={allPlayers}
+            allTeams={allTeams as any[]}
+            nextGwFixtures={nextGwFixtures}
+            upcomingFixtures={upcomingFixtures}
+            nextGwNumber={currentGameweek + 1}
+            currentGameweek={currentGameweek}
+            chipsUsed={chipsUsed}
+            userTeamPlayerIds={teamIds}
+            availableBudget={availableBudget}
+            getTeamShortName={(teamId: number) => getTeamById(teamId)?.short_name || ""}
+            onClose={() => setSelectedPlayer(null)}
+            onPickReplacement={isOwned ? handlePickReplacement : undefined}
+            isTransferMode={transferMode}
+          />
+        );
+      })()}
+
       {/* Manager ID Modal */}
       <ManagerIdModal
         isOpen={showManagerIdModal}
@@ -3119,123 +3266,267 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
       {/* AI Team Analysis Modal */}
       {showAIChat && session?.user && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-theme-card rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-violet-950/60 via-slate-900/70 to-indigo-950/60 backdrop-blur-md"
+          onClick={() => setShowAIChat(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", damping: 28, stiffness: 280 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-2xl max-h-[88vh] overflow-hidden rounded-2xl shadow-2xl border border-violet-300/30 dark:border-violet-700/40 bg-gradient-to-br from-white via-violet-50/60 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950/40"
+          >
+            {/* Floating particles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {Array.from({ length: 14 }).map((_, i) => (
+                <motion.span
+                  key={i}
+                  className="absolute rounded-full"
+                  style={{
+                    left: `${(i * 73) % 100}%`,
+                    top: `${(i * 47) % 100}%`,
+                    width: `${4 + (i % 3) * 3}px`,
+                    height: `${4 + (i % 3) * 3}px`,
+                    background:
+                      i % 3 === 0
+                        ? "radial-gradient(circle, rgba(168,85,247,0.6) 0%, transparent 70%)"
+                        : i % 3 === 1
+                        ? "radial-gradient(circle, rgba(217,70,239,0.5) 0%, transparent 70%)"
+                        : "radial-gradient(circle, rgba(99,102,241,0.55) 0%, transparent 70%)",
+                  }}
+                  animate={{
+                    y: [0, -20, 0],
+                    opacity: [0.3, 0.9, 0.3],
+                    scale: [1, 1.4, 1],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 4 + (i % 4),
+                    delay: (i * 0.3) % 3,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+            </div>
+            {/* Decorative orbs */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-violet-400/20 dark:bg-violet-500/15 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-indigo-400/20 dark:bg-indigo-500/15 blur-3xl pointer-events-none" />
+            {/* Top accent line - shimmer */}
+            <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500" />
+              <motion.div
+                className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                animate={{ x: ["-100%", "300%"] }}
+                transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+              />
+            </div>
+
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-theme-border">
-              <div className="flex items-center gap-2">
-                <FaRobot className="w-5 h-5 text-theme-text-secondary" />
-                <h3 className="text-lg font-semibold">
-                  {i18n.language === "bs"
-                    ? "AI Analiza Tima"
-                    : "AI Team Analysis"}
-                  <span className="text-sm font-normal text-gray-500 ml-2">
-                    {i18n.language === "bs" ? "(1x sedmično)" : "(1x weekly)"}
-                  </span>
-                </h3>
+            <div className="relative px-6 pt-6 pb-5 border-b border-violet-200/40 dark:border-violet-800/30">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <motion.div
+                    initial={{ scale: 0.8, rotate: -15 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", damping: 14 }}
+                    className="relative flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-600 text-white shadow-lg shadow-violet-500/30"
+                  >
+                    <FaRobot className="w-5 h-5" />
+                    <span className="absolute -inset-0.5 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-600 opacity-30 blur-md -z-10" />
+                  </motion.div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold bg-gradient-to-r from-violet-700 via-fuchsia-600 to-indigo-700 dark:from-violet-300 dark:via-fuchsia-300 dark:to-indigo-300 bg-clip-text text-transparent">
+                        {i18n.language === "bs" ? "AI Analiza Tima" : "AI Team Analysis"}
+                      </h3>
+                      <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-violet-100 to-fuchsia-100 dark:from-violet-900/50 dark:to-fuchsia-900/50 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40">
+                        Premium
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {i18n.language === "bs"
+                        ? "1x sedmično · Pretvara tvoje podatke u jasan akcioni plan"
+                        : "1x weekly · Turns your data into a clear action plan"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAIChat(false)}
+                  className="shrink-0 w-9 h-9 rounded-lg text-violet-500 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-200 hover:bg-violet-100/60 dark:hover:bg-violet-900/30 transition-colors flex items-center justify-center"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                onClick={() => setShowAIChat(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <FaTimes className="w-4 h-4" />
-              </button>
             </div>
 
             {/* Content */}
-            <div className="p-4 max-h-96 overflow-y-auto">
+            <div className="relative px-5 sm:px-6 py-5 max-h-[60vh] overflow-y-auto">
               {!aiAnalysis && !aiChatLoading && canUseAI && (
-                <div className="text-center py-8">
-                  <div className="bg-theme-card-secondary rounded-lg p-6 mb-4">
-                    <FaRobot className="w-12 h-12 text-theme-text-secondary mx-auto mb-4" />
-                    <h4 className="text-lg font-semibold mb-2">
-                      {i18n.language === "bs"
-                        ? "AI Analiza Tima"
-                        : "AI Team Analysis"}
-                    </h4>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      {i18n.language === "bs"
-                        ? "Dobijte personalizovanu analizu vašeg FPL tima sa preporukama za poboljšanja."
-                        : "Get personalized analysis of your FPL team with improvement recommendations."}
-                    </p>
-                    <button
-                      onClick={requestAIAnalysis}
-                      className="bg-theme-foreground text-theme-background px-6 py-3 rounded-lg hover:opacity-90 transition-all"
+                <div className="text-center py-4">
+                  <div className="relative overflow-hidden rounded-2xl p-6 sm:p-8 bg-white/70 dark:bg-slate-900/60 border border-violet-200/50 dark:border-violet-800/30 shadow-sm backdrop-blur-sm">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-500" />
+                    <motion.div
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                      className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-600 text-white shadow-xl shadow-violet-500/40 mb-5"
                     >
-                      <FaPaperPlane className="w-4 h-4 inline mr-2" />
+                      <FaRobot className="w-7 h-7" />
+                      <span className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-600 opacity-40 blur-xl -z-10" />
+                    </motion.div>
+                    <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+                      {i18n.language === "bs" ? "Spreman za uvid?" : "Ready for insights?"}
+                    </h4>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-5 leading-relaxed">
                       {i18n.language === "bs"
-                        ? "Analiziraj Moj Tim"
-                        : "Analyze My Team"}
-                    </button>
+                        ? "AI analizira tvoju formaciju, transfere, chip-ove i fixture-e — pa daje konkretne preporuke za sljedeće kolo."
+                        : "AI analyzes your formation, transfers, chips and fixtures — then gives concrete recommendations for the next gameweek."}
+                    </p>
+
+                    {/* Feature pills */}
+                    <div className="flex flex-wrap items-center justify-center gap-1.5 mb-6">
+                      {[
+                        { label: i18n.language === "bs" ? "Slabe tačke" : "Weak spots", color: "from-rose-500/10 to-rose-600/10 text-rose-700 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40" },
+                        { label: i18n.language === "bs" ? "Transfer ideje" : "Transfer ideas", color: "from-emerald-500/10 to-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40" },
+                        { label: i18n.language === "bs" ? "Kapiten" : "Captain pick", color: "from-amber-500/10 to-amber-600/10 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40" },
+                        { label: i18n.language === "bs" ? "Chip strategija" : "Chip strategy", color: "from-violet-500/10 to-fuchsia-500/10 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-800/40" },
+                      ].map((p) => (
+                        <span key={p.label} className={`text-[10px] font-semibold px-2 py-1 rounded-full border bg-gradient-to-br ${p.color}`}>
+                          {p.label}
+                        </span>
+                      ))}
+                    </div>
+
+                    <motion.button
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={requestAIAnalysis}
+                      className="group relative inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-br from-violet-600 via-fuchsia-600 to-indigo-600 hover:from-violet-700 hover:via-fuchsia-700 hover:to-indigo-700 shadow-lg shadow-violet-500/40 transition-all overflow-hidden"
+                    >
+                      {/* Pulsing glow */}
+                      <motion.span
+                        className="absolute -inset-1 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-500 -z-10 blur-md"
+                        animate={{ opacity: [0.5, 0.85, 0.5] }}
+                        transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+                      />
+                      {/* Inner shimmer sweep */}
+                      <motion.span
+                        className="absolute inset-y-0 w-1/4 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
+                        animate={{ x: ["-150%", "350%"] }}
+                        transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
+                      />
+                      <FaPaperPlane className="relative w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      <span className="relative">{i18n.language === "bs" ? "Pokreni AI Analizu" : "Run AI Analysis"}</span>
+                    </motion.button>
+                    <p className="mt-3 text-[10px] text-slate-400 dark:text-slate-500">
+                      {i18n.language === "bs" ? "Traje ~10 sekundi · Personalizovano za tvoj tim" : "Takes ~10 seconds · Personalized for your team"}
+                    </p>
                   </div>
                 </div>
               )}
 
-              {aiChatLoading && (
-                <div className="text-center py-12">
-                  <div className="animate-spin w-8 h-8 border-4 border-theme-foreground border-t-transparent rounded-full mx-auto mb-4"></div>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {i18n.language === "bs"
-                      ? "Analiziram vaš tim..."
-                      : "Analyzing your team..."}
-                  </p>
-                </div>
-              )}
+              {aiChatLoading && <AILoadingShow lang={i18n.language} />}
 
               {aiAnalysis && (
-                <div className="space-y-4">
-                  <div className="bg-theme-card-secondary rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <FaRobot className="w-5 h-5 text-theme-text-secondary" />
-                      <h4 className="font-semibold text-theme-foreground">
-                        {i18n.language === "bs"
-                          ? "AI Preporuke"
-                          : "AI Recommendations"}
-                      </h4>
-                    </div>
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <div
-                        className="whitespace-pre-wrap font-sans text-sm leading-relaxed"
-                        dangerouslySetInnerHTML={{
-                          __html: aiAnalysis?.replace(
-                            /\*\*(.*?)\*\*/g,
-                            '<strong class="font-bold text-gray-900 dark:text-white">$1</strong>'
-                          ),
-                        }}
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  <div className="relative overflow-hidden rounded-xl p-5 bg-white/80 dark:bg-slate-900/60 border border-violet-200/50 dark:border-violet-800/30 shadow-sm">
+                    {/* Animated top bar shimmer */}
+                    <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500" />
+                      <motion.div
+                        className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                        animate={{ x: ["-100%", "300%"] }}
+                        transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
                       />
                     </div>
+                    {/* Sparkle burst */}
+                    <div className="absolute -top-1 -right-1 pointer-events-none">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <motion.span
+                          key={i}
+                          className="absolute text-violet-400 dark:text-fuchsia-400"
+                          style={{ fontSize: 10 + (i % 3) * 2 }}
+                          initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                          animate={{
+                            opacity: 0,
+                            x: Math.cos((i / 6) * Math.PI * 2) * 30,
+                            y: Math.sin((i / 6) * Math.PI * 2) * 30,
+                            scale: 0.5,
+                          }}
+                          transition={{ duration: 1.2, delay: 0.2 + i * 0.05 }}
+                        >
+                          ✦
+                        </motion.span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-3">
+                      <motion.div
+                        initial={{ scale: 0.6, rotate: -20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", damping: 14 }}
+                        className="relative inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-sm"
+                      >
+                        <FaRobot className="w-3.5 h-3.5" />
+                        <span className="absolute -inset-0.5 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 opacity-30 blur-md -z-10" />
+                      </motion.div>
+                      <h4 className="font-bold text-slate-800 dark:text-slate-100">
+                        {i18n.language === "bs" ? "AI Preporuke" : "AI Recommendations"}
+                      </h4>
+                      <motion.span
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.3, type: "spring", damping: 14 }}
+                        className="ml-auto text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 shadow-sm"
+                      >
+                        ✓ {i18n.language === "bs" ? "Spremno" : "Ready"}
+                      </motion.span>
+                    </div>
+                    <div className="prose prose-sm dark:prose-invert max-w-none prose-strong:text-violet-700 dark:prose-strong:text-violet-300 prose-headings:text-slate-800 dark:prose-headings:text-slate-100">
+                      <AIAnalysisReveal text={aiAnalysis} />
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               )}
 
               {!canUseAI && lastAIUsage && (
-                <div className="text-center py-8">
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-6">
-                    <div className="text-yellow-600 dark:text-yellow-400 mb-4">
-                      <FaRobot className="w-8 h-8 mx-auto mb-2" />
-                      <h4 className="font-semibold">
-                        {i18n.language === "bs"
-                          ? "Sedmični Limit Dostignut"
-                          : "Weekly Limit Reached"}
-                      </h4>
+                <div className="text-center py-6">
+                  <div className="relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-amber-50 to-rose-50 dark:from-amber-950/30 dark:to-rose-950/30 border border-amber-200/60 dark:border-amber-800/40">
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-rose-400" />
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-rose-500 text-white shadow-md mb-3">
+                      <FaRobot className="w-5 h-5" />
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-2">
+                      {i18n.language === "bs" ? "Sedmični limit dostignut" : "Weekly limit reached"}
+                    </h4>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
                       {i18n.language === "bs"
-                        ? `Koristili ste AI analizu ove sedmice. Sledeca analiza dostupna ${new Date(
-                            new Date(lastAIUsage).getTime() +
-                              7 * 24 * 60 * 60 * 1000
-                          ).toLocaleDateString()}.`
-                        : `You've used AI analysis this week. Next analysis available ${new Date(
-                            new Date(lastAIUsage).getTime() +
-                              7 * 24 * 60 * 60 * 1000
-                          ).toLocaleDateString()}.`}
+                        ? `Već si koristio AI analizu ove sedmice. Sljedeća dostupna `
+                        : `You've used AI analysis this week. Next available `}
+                      <span className="font-bold text-amber-700 dark:text-amber-300">
+                        {new Date(new Date(lastAIUsage).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                      </span>
+                      .
                     </p>
                   </div>
                 </div>
               )}
             </div>
-          </div>
-        </div>
+
+            {/* Footer hint */}
+            {(aiAnalysis || aiChatLoading) && (
+              <div className="relative px-5 py-3 border-t border-violet-200/40 dark:border-violet-800/30 bg-gradient-to-r from-violet-50/40 via-fuchsia-50/30 to-indigo-50/40 dark:from-violet-950/20 dark:via-fuchsia-950/10 dark:to-indigo-950/20">
+                <p className="text-[10px] text-center text-slate-500 dark:text-slate-400">
+                  {i18n.language === "bs"
+                    ? "AI uvidi su preporuke, ne garancije · Donosi odluke pažljivo"
+                    : "AI insights are suggestions, not guarantees · Decide carefully"}
+                </p>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );

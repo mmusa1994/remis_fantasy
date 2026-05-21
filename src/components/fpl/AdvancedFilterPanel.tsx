@@ -12,7 +12,9 @@ import {
   BarChart,
   Calendar,
 } from "lucide-react";
+import { PiTShirtFill } from "react-icons/pi";
 import { useTheme } from "@/contexts/ThemeContext";
+import { getTeamColors } from "@/lib/team-colors";
 import type {
   EnhancedFilterState,
   EnhancedPlayerData,
@@ -72,10 +74,38 @@ export default function AdvancedFilterPanel({
   };
 
   const positions = [
-    { id: 1, name: "GK", label: "Goalkeepers" },
-    { id: 2, name: "DEF", label: "Defenders" },
-    { id: 3, name: "MID", label: "Midfielders" },
-    { id: 4, name: "FWD", label: "Forwards" },
+    {
+      id: 1,
+      name: "GK",
+      label: "Golmani",
+      accent: "from-amber-400 to-yellow-500",
+      ring: "ring-amber-400/40",
+      activeBg: "bg-amber-500",
+    },
+    {
+      id: 2,
+      name: "DEF",
+      label: "Odbrana",
+      accent: "from-sky-400 to-blue-500",
+      ring: "ring-sky-400/40",
+      activeBg: "bg-sky-500",
+    },
+    {
+      id: 3,
+      name: "MID",
+      label: "Vezni",
+      accent: "from-emerald-400 to-teal-500",
+      ring: "ring-emerald-400/40",
+      activeBg: "bg-emerald-500",
+    },
+    {
+      id: 4,
+      name: "FWD",
+      label: "Napadači",
+      accent: "from-rose-400 to-red-500",
+      ring: "ring-rose-400/40",
+      activeBg: "bg-rose-500",
+    },
   ];
 
   const sortOptions = [
@@ -191,211 +221,259 @@ export default function AdvancedFilterPanel({
     return count;
   }, [filters]);
 
-  const renderBasicFilters = () => (
-    <div className="space-y-6">
-      {/* Position Filter */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Position
-          </label>
-          {filters.position.length > 0 && (
-            <button
-              onClick={() => updateFilter("position", [])}
-              className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {positions.map((pos) => (
-            <label
-              key={pos.id}
-              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={filters.position.includes(pos.id)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    updateFilter("position", [...filters.position, pos.id]);
-                  } else {
-                    updateFilter(
-                      "position",
-                      filters.position.filter((p) => p !== pos.id)
-                    );
-                  }
-                }}
-                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2"
-              />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {pos.name}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
+  const renderBasicFilters = () => {
+    const allTeamIds = allTeams.map((t) => t.id);
+    const allSelected = filters.teams.length > 0 && filters.teams.length === allTeamIds.length;
+    const minPrice = filters.priceRange[0];
+    const maxPrice = filters.priceRange[1];
+    const pricePctMin = ((minPrice - 40) / 110) * 100;
+    const pricePctMax = ((maxPrice - 40) / 110) * 100;
 
-      {/* Team Filter */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Teams
-          </label>
-          {filters.teams.length > 0 && (
-            <button
-              onClick={() => updateFilter("teams", [])}
-              className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-        <select
-          multiple
-          value={filters.teams.map(String)}
-          onChange={(e) => {
-            const values = Array.from(e.target.selectedOptions, (option) =>
-              parseInt(option.value)
-            );
-            updateFilter("teams", values);
-          }}
-          className="w-full h-32 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          {allTeams.map((team) => (
-            <option key={team.id} value={team.id} className="p-1">
-              {team.short_name} - {team.name}
-            </option>
-          ))}
-        </select>
-        {filters.teams.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {filters.teams.map((teamId) => {
-              const team = allTeams.find((t) => t.id === teamId);
-              if (!team) return null;
+    return (
+      <div className="space-y-6">
+        {/* Position Filter — visual toggle cards */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <label className="text-sm font-semibold text-slate-800 dark:text-slate-100 block">Pozicija</label>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Klikni na jednu ili više da filtriraš</p>
+            </div>
+            {filters.position.length > 0 && (
+              <button
+                onClick={() => updateFilter("position", [])}
+                className="text-[11px] font-medium text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors flex items-center gap-1"
+              >
+                <X className="w-3 h-3" /> Očisti
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {positions.map((pos) => {
+              const isActive = filters.position.includes(pos.id);
               return (
-                <span
-                  key={teamId}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md text-xs"
+                <button
+                  key={pos.id}
+                  type="button"
+                  onClick={() => {
+                    if (isActive) updateFilter("position", filters.position.filter((p) => p !== pos.id));
+                    else updateFilter("position", [...filters.position, pos.id]);
+                  }}
+                  className={`relative overflow-hidden rounded-xl p-3 text-left transition-all border-2 ${
+                    isActive
+                      ? `bg-gradient-to-br ${pos.accent} text-white border-transparent shadow-lg ${pos.ring} ring-2`
+                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/70"
+                  }`}
                 >
-                  {team.short_name}
-                  <button
-                    onClick={() =>
-                      updateFilter(
-                        "teams",
-                        filters.teams.filter((id) => id !== teamId)
-                      )
-                    }
-                    className="hover:text-red-600"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-white/80" : "text-slate-400 dark:text-slate-500"}`}>
+                      {pos.name}
+                    </span>
+                    {isActive && (
+                      <span className="text-white text-xs">✓</span>
+                    )}
+                  </div>
+                  <p className={`mt-0.5 text-sm font-semibold ${isActive ? "text-white" : "text-slate-800 dark:text-slate-100"}`}>
+                    {pos.label}
+                  </p>
+                </button>
               );
             })}
           </div>
-        )}
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-          Hold Ctrl/Cmd to select multiple
-        </p>
-      </div>
+        </div>
 
-      {/* Price Range */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Price Range: £{(filters.priceRange[0] / 10).toFixed(1)}m - £
-            {(filters.priceRange[1] / 10).toFixed(1)}m
-          </label>
-          {(filters.priceRange[0] > 40 || filters.priceRange[1] < 150) && (
-            <button
-              onClick={() => updateFilter("priceRange", [40, 150])}
-              className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
+        {/* Team Filter — clickable badge grid */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <label className="text-sm font-semibold text-slate-800 dark:text-slate-100 block">Klubovi</label>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {filters.teams.length === 0
+                  ? "Klikni klubove koje želiš"
+                  : `${filters.teams.length} od ${allTeams.length} odabrano`}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (allSelected) updateFilter("teams", []);
+                  else updateFilter("teams", allTeamIds);
+                }}
+                className="text-[11px] font-medium px-2 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors border border-indigo-200/60 dark:border-indigo-800/40"
+              >
+                {allSelected ? "Poništi sve" : "Odaberi sve"}
+              </button>
+              {filters.teams.length > 0 && !allSelected && (
+                <button
+                  onClick={() => updateFilter("teams", [])}
+                  className="text-[11px] font-medium text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" /> Očisti
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+            {allTeams.map((team) => {
+              const isActive = filters.teams.includes(team.id);
+              const colors = getTeamColors(team.id);
+              return (
+                <button
+                  key={team.id}
+                  type="button"
+                  onClick={() => {
+                    if (isActive) updateFilter("teams", filters.teams.filter((id) => id !== team.id));
+                    else updateFilter("teams", [...filters.teams, team.id]);
+                  }}
+                  title={team.name}
+                  className={`relative flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-all border ${
+                    isActive
+                      ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-200 border-indigo-400 dark:border-indigo-600 shadow-sm scale-[0.98]"
+                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-slate-50 dark:hover:bg-slate-800/70"
+                  }`}
+                >
+                  <PiTShirtFill
+                    className="w-4 h-4 shrink-0"
+                    style={{
+                      color: colors.primary,
+                      filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))",
+                    } as React.CSSProperties}
+                  />
+                  <span className="flex-1 text-left">{team.short_name}</span>
+                  {isActive && (
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-emerald-500 text-white text-[8px] shadow-sm">
+                      ✓
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Price Range — dual handle visual */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <label className="text-sm font-semibold text-slate-800 dark:text-slate-100 block">Cijena</label>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                <span className="font-semibold text-indigo-700 dark:text-indigo-300">£{(minPrice / 10).toFixed(1)}m</span>
+                {" — "}
+                <span className="font-semibold text-indigo-700 dark:text-indigo-300">£{(maxPrice / 10).toFixed(1)}m</span>
+              </p>
+            </div>
+            {(minPrice > 40 || maxPrice < 150) && (
+              <button
+                onClick={() => updateFilter("priceRange", [40, 150])}
+                className="text-[11px] font-medium text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors flex items-center gap-1"
+              >
+                <X className="w-3 h-3" /> Reset
+              </button>
+            )}
+          </div>
+          {/* Visual track with active region */}
+          <div className="relative h-7 mb-2">
+            <div className="absolute top-1/2 left-0 right-0 h-1.5 -translate-y-1/2 rounded-full bg-slate-200 dark:bg-slate-700" />
+            <div
+              className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500"
+              style={{ left: `${pricePctMin}%`, right: `${100 - pricePctMax}%` }}
+            />
+            <input
+              type="range"
+              min="40"
+              max="150"
+              step="1"
+              value={minPrice}
+              onChange={(e) => {
+                const v = Math.min(parseInt(e.target.value), maxPrice - 1);
+                updateFilter("priceRange", [v, maxPrice]);
+              }}
+              className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-indigo-500 [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-indigo-500 [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
+            />
+            <input
+              type="range"
+              min="40"
+              max="150"
+              step="1"
+              value={maxPrice}
+              onChange={(e) => {
+                const v = Math.max(parseInt(e.target.value), minPrice + 1);
+                updateFilter("priceRange", [minPrice, v]);
+              }}
+              className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-fuchsia-500 [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-fuchsia-500 [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
+            />
+          </div>
+          {/* Quick-pick price chips */}
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { label: "Budget", range: [40, 60], color: "emerald" },
+              { label: "Mid", range: [55, 85], color: "sky" },
+              { label: "Premium", range: [85, 130], color: "violet" },
+              { label: "Top tier", range: [100, 150], color: "rose" },
+            ].map((p) => {
+              const colorMap: Record<string, string> = {
+                emerald: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40",
+                sky: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border-sky-200 dark:border-sky-800/40 hover:bg-sky-100 dark:hover:bg-sky-900/40",
+                violet: "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border-violet-200 dark:border-violet-800/40 hover:bg-violet-100 dark:hover:bg-violet-900/40",
+                rose: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200 dark:border-rose-800/40 hover:bg-rose-100 dark:hover:bg-rose-900/40",
+              };
+              return (
+                <button
+                  key={p.label}
+                  onClick={() => updateFilter("priceRange", p.range as [number, number])}
+                  className={`text-[11px] font-medium px-2.5 py-1 rounded-full border transition-all ${colorMap[p.color]}`}
+                >
+                  {p.label} <span className="opacity-70 ml-1">£{p.range[0] / 10}–{p.range[1] / 10}m</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sort Options */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Sortiraj po</label>
+            <select
+              value={filters.sortBy}
+              onChange={(e) => updateFilter("sortBy", e.target.value)}
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-sm p-2.5 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-300 dark:focus:border-indigo-700 focus:outline-none transition-colors"
             >
-              Reset
-            </button>
-          )}
-        </div>
-        <div className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-              <span>Min: £{(filters.priceRange[0] / 10).toFixed(1)}m</span>
-              <span>£4.0m - £15.0m</span>
-            </div>
-            <input
-              type="range"
-              min="40"
-              max="150"
-              step="1"
-              value={filters.priceRange[0]}
-              onChange={(e) =>
-                updateFilter("priceRange", [
-                  parseInt(e.target.value),
-                  filters.priceRange[1],
-                ])
-              }
-              className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-            />
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
-            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-              <span>Max: £{(filters.priceRange[1] / 10).toFixed(1)}m</span>
+            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Redoslijed</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                onClick={() => updateFilter("sortOrder", "desc")}
+                className={`px-2.5 py-2 rounded-lg text-xs font-semibold border transition-all ${
+                  filters.sortOrder === "desc"
+                    ? "bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-indigo-600 shadow-sm"
+                    : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300"
+                }`}
+              >
+                ↓ Veće prvo
+              </button>
+              <button
+                onClick={() => updateFilter("sortOrder", "asc")}
+                className={`px-2.5 py-2 rounded-lg text-xs font-semibold border transition-all ${
+                  filters.sortOrder === "asc"
+                    ? "bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-indigo-600 shadow-sm"
+                    : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300"
+                }`}
+              >
+                ↑ Manje prvo
+              </button>
             </div>
-            <input
-              type="range"
-              min="40"
-              max="150"
-              step="1"
-              value={filters.priceRange[1]}
-              onChange={(e) =>
-                updateFilter("priceRange", [
-                  filters.priceRange[0],
-                  parseInt(e.target.value),
-                ])
-              }
-              className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-            />
           </div>
         </div>
       </div>
-
-      {/* Sort Options */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Sort by
-          </label>
-          <select
-            value={filters.sortBy}
-            onChange={(e) => updateFilter("sortBy", e.target.value)}
-            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Order
-          </label>
-          <select
-            value={filters.sortOrder}
-            onChange={(e) =>
-              updateFilter("sortOrder", e.target.value as "asc" | "desc")
-            }
-            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="desc">Highest First</option>
-            <option value="asc">Lowest First</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderPerformanceFilters = () => (
     <div className="space-y-4">

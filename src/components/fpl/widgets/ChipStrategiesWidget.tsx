@@ -389,17 +389,28 @@ export default function ChipStrategiesWidget({
   const activeChipData = data.chips.find((c) => c.type === activeChip);
 
   return (
-    <div className="bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition">
+    <div className="relative overflow-hidden rounded-xl shadow-sm border border-amber-200/40 dark:border-amber-800/30 bg-gradient-to-br from-white via-amber-50/40 to-white dark:from-slate-900 dark:via-amber-950/20 dark:to-slate-900 theme-transition">
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
+      <div className="p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold flex items-center gap-2 text-sm">
-          <Zap className="text-theme-text-secondary w-4 h-4" />
-          {t("teamPlanner.widgets.chipStrategies")}
-        </h3>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-theme-text-secondary">
-            GW {data.currentGW} · {data.remainingGWs} left
+          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-sm">
+            <Zap className="w-3.5 h-3.5" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 leading-none">
+              Strategija čipova
+            </h3>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Kad iskoristiti WC/FH/BB/TC
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+            GW{data.currentGW} · {data.remainingGWs} ostalo
           </span>
-          <button onClick={handleManualRefresh} className="text-theme-text-secondary hover:text-theme-foreground transition-colors">
+          <button onClick={handleManualRefresh} className="p-1 rounded-md text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -410,42 +421,43 @@ export default function ChipStrategiesWidget({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-3 rounded-lg bg-theme-card-secondary border border-theme-border"
+          className="mb-3 relative overflow-hidden rounded-lg p-3 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200/70 dark:border-amber-800/40"
         >
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-orange-500" />
           <div className="flex items-center gap-2 mb-1.5">
-            <Target className="w-3.5 h-3.5 text-theme-text-secondary" />
-            <span className="text-xs font-semibold text-theme-foreground uppercase tracking-wider">
+            <Target className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+            <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
               {t("teamPlanner.widgets.recommendation")}
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            {getChipIcon(data.topRecommendation.chip)}
-            <span className="font-medium">
+            <span className="text-amber-600 dark:text-amber-400">{getChipIcon(data.topRecommendation.chip)}</span>
+            <span className="font-bold text-slate-800 dark:text-slate-100">
               {formatChipName(data.topRecommendation.chip)}
             </span>
-            <span className="text-theme-text-secondary">
+            <span className="text-[11px] text-amber-700 dark:text-amber-300 font-semibold">
               {t("teamPlanner.widgets.inWeek", { week: data.topRecommendation.gw })}
             </span>
           </div>
-          <p className="text-xs text-theme-text-secondary mt-1">
+          <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-snug">
             {data.topRecommendation.reason}
           </p>
         </motion.div>
       )}
 
       {/* Chip Selector */}
-      <div className="grid grid-cols-2 gap-2 mb-4">
+      <div className="grid grid-cols-2 gap-1.5 mb-3">
         {data.chips.map((chip) => (
           <button
             key={chip.type}
             onClick={() => setActiveChip(chip.type)}
-            className={`p-2 rounded-lg text-xs font-medium transition-all ${
+            className={`p-2 rounded-lg text-xs font-bold transition-all border ${
               activeChip === chip.type
-                ? "bg-theme-foreground/10 text-theme-foreground border border-theme-border"
-                : "bg-theme-card-secondary text-theme-text-secondary hover:bg-theme-card-secondary/80"
+                ? "bg-amber-500 text-white border-amber-500 shadow-sm"
+                : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700"
             }`}
           >
-            <div className="flex items-center justify-center gap-1">
+            <div className="flex items-center justify-center gap-1.5">
               {getChipIcon(chip.type)}
               <span>{formatChipName(chip.type)}</span>
             </div>
@@ -523,10 +535,11 @@ export default function ChipStrategiesWidget({
 
       {/* Last Update */}
       {lastUpdate && (
-        <div className="text-xs text-theme-text-secondary text-center pt-3 border-t border-theme-border mt-4">
-          Last updated: {lastUpdate.toLocaleTimeString()}
+        <div className="text-[10px] text-slate-400 dark:text-slate-500 text-center pt-2 border-t border-slate-200/60 dark:border-slate-700/40 mt-3">
+          Ažurirano u {lastUpdate.toLocaleTimeString()}
         </div>
       )}
+      </div>
     </div>
   );
 }

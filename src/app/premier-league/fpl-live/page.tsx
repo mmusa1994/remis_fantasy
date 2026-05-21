@@ -76,6 +76,9 @@ export default function FPLLivePage() {
   // Core state
   const [managerId, setManagerId] = useState<number | null>(null);
   const [gameweek, setGameweek] = useState(1);
+  const [activeAnalytics, setActiveAnalytics] = useState<
+    "bps" | "effective-ownership" | "chips" | "predictions" | null
+  >(null);
   // const [isPolling, setIsPolling] = useState(false);
   const [loading, setLoading] = useState(false);
   const [teamDataLoading, setTeamDataLoading] = useState(false);
@@ -131,13 +134,6 @@ export default function FPLLivePage() {
       color: "purple",
     },
     {
-      id: "live",
-      label: t("fplLive.tabs.matchResults"),
-      icon: IoFootballOutline,
-      description: t("fplLive.tabs.matchResultsDesc"),
-      color: "purple",
-    },
-    {
       id: "whatIf",
       label: t("fplLive.tabs.whatIf", "What-If"),
       icon: MdCompareArrows,
@@ -170,6 +166,13 @@ export default function FPLLivePage() {
       label: t("fplLive.tabs.comparisons", "Compare"),
       icon: MdCompareArrows,
       description: t("fplLive.tabs.comparisonsDesc", "Compare vs benchmarks"),
+      color: "purple",
+    },
+    {
+      id: "live",
+      label: t("fplLive.tabs.matchResults"),
+      icon: IoFootballOutline,
+      description: t("fplLive.tabs.matchResultsDesc"),
       color: "purple",
     },
   ];
@@ -571,31 +574,51 @@ export default function FPLLivePage() {
                   More Live Analytics
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                  <Link
-                    href="/premier-league/fpl-live/bps"
-                    className="flex items-center justify-center px-3 py-2 rounded-md bg-theme-card-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 text-theme-foreground transition-colors"
-                  >
-                    BPS Live
-                  </Link>
-                  <Link
-                    href="/premier-league/fpl-live/effective-ownership"
-                    className="flex items-center justify-center px-3 py-2 rounded-md bg-theme-card-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 text-theme-foreground transition-colors"
-                  >
-                    EO Buckets
-                  </Link>
-                  <Link
-                    href="/premier-league/fpl-live/chips"
-                    className="flex items-center justify-center px-3 py-2 rounded-md bg-theme-card-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 text-theme-foreground transition-colors"
-                  >
-                    Chip Usage
-                  </Link>
-                  <Link
-                    href="/premier-league/fpl-live/predictions"
-                    className="flex items-center justify-center px-3 py-2 rounded-md bg-theme-card-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 text-theme-foreground transition-colors"
-                  >
-                    xPts Predictions
-                  </Link>
+                  {[
+                    { key: "bps", label: "BPS Live" },
+                    { key: "effective-ownership", label: "EO Buckets" },
+                    { key: "chips", label: "Chip Usage" },
+                    { key: "predictions", label: "xPts Predictions" },
+                  ].map((a) => {
+                    const isActive = activeAnalytics === (a.key as any);
+                    return (
+                      <button
+                        key={a.key}
+                        type="button"
+                        onClick={() =>
+                          setActiveAnalytics(isActive ? null : (a.key as any))
+                        }
+                        className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-md transition-colors ${
+                          isActive
+                            ? "bg-purple-500 text-white shadow-sm"
+                            : "bg-theme-card-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 text-theme-foreground"
+                        }`}
+                      >
+                        <span>{a.label}</span>
+                        <span
+                          className={`transition-transform text-[10px] ${
+                            isActive ? "rotate-180" : ""
+                          }`}
+                        >
+                          ▼
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
+                {activeAnalytics && (
+                  <div className="mt-3 rounded-md border border-purple-200/40 dark:border-purple-800/40 overflow-hidden bg-theme-card-secondary">
+                    <iframe
+                      key={activeAnalytics}
+                      src={`/premier-league/fpl-live/${activeAnalytics}?embed=1${
+                        managerId ? `&managerId=${managerId}` : ""
+                      }`}
+                      title={activeAnalytics}
+                      className="w-full"
+                      style={{ height: "min(75vh, 720px)", border: 0 }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )

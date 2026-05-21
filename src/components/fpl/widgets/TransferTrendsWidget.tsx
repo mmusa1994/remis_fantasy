@@ -354,69 +354,54 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
 
     return (
       <div
-        className="bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition"
+        className="relative overflow-hidden rounded-xl shadow-sm border border-violet-200/40 dark:border-violet-800/30 bg-gradient-to-br from-white via-violet-50/40 to-white dark:from-slate-900 dark:via-violet-950/20 dark:to-slate-900 theme-transition"
       >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold flex items-center gap-2">
-            <ArrowRightLeft className="text-theme-text-secondary w-4 h-4" />
-            Transfer Trends
-          </h3>
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400" />
+        <div className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-sm">
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 leading-none">
+                Transfer trendovi
+              </h3>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Šta menadžeri rade ove sedmice
+              </p>
+            </div>
+          </div>
           <button
             onClick={handleManualRefresh}
             disabled={loading}
-            className={`text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50 ${
-              loading ? "cursor-not-allowed" : "cursor-pointer"
-            }`}
-            title="Refresh transfer trends"
+            className="p-1 rounded-md text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+            title="Osvježi"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex bg-theme-card-secondary rounded p-1 mb-4 text-xs">
-          <button
-            onClick={() => setActiveTab("current")}
-            className={`flex-1 px-2 py-1 rounded transition-colors ${
-              activeTab === "current"
-                ? "bg-theme-foreground/10 text-theme-foreground"
-                : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-            }`}
-          >
-            {t("teamPlanner.widgets.swaps")}
-          </button>
-          <button
-            onClick={() => setActiveTab("players_in")}
-            className={`flex-1 px-2 py-1 rounded transition-colors ${
-              activeTab === "players_in"
-                ? "bg-theme-foreground/10 text-theme-foreground"
-                : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-            }`}
-          >
-            {t("teamPlanner.widgets.in")}
-          </button>
-          <button
-            onClick={() => setActiveTab("players_out")}
-            className={`flex-1 px-2 py-1 rounded transition-colors ${
-              activeTab === "players_out"
-                ? "bg-theme-foreground/10 text-theme-foreground"
-                : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-            }`}
-          >
-            {t("teamPlanner.widgets.out")}
-          </button>
-          {showFutureWeeks && (
+        <div className="flex bg-slate-100 dark:bg-slate-800/60 rounded-lg p-0.5 mb-3 border border-slate-200 dark:border-slate-700">
+          {[
+            { id: "current", label: t("teamPlanner.widgets.swaps") },
+            { id: "players_in", label: t("teamPlanner.widgets.in") },
+            { id: "players_out", label: t("teamPlanner.widgets.out") },
+            ...(showFutureWeeks ? [{ id: "future", label: t("teamPlanner.widgets.future") }] : []),
+          ].map((tab) => (
             <button
-              onClick={() => setActiveTab("future")}
-              className={`flex-1 px-2 py-1 rounded transition-colors ${
-                activeTab === "future"
-                  ? "bg-theme-foreground/10 text-theme-foreground"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex-1 px-2 py-1 rounded-md text-[11px] font-bold transition-all ${
+                activeTab === tab.id
+                  ? "bg-violet-500 text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-300"
               }`}
             >
-              {t("teamPlanner.widgets.future")}
+              {tab.label}
             </button>
-          )}
+          ))}
         </div>
 
         <div className="space-y-3">
@@ -599,6 +584,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
               )}
             </div>
           )}
+        </div>
         </div>
       </div>
     );

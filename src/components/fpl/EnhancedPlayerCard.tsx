@@ -92,8 +92,9 @@ export default function EnhancedPlayerCard({
   if (!player) return null;
 
   const teamColors = getTeamColors(player.team);
-  const points = player.total_points || player.event_points || 0;
-  const livePoints = player.live_stats?.total_points || player.points || 0;
+  // Always show last gameweek points (event_points), not season total
+  const points = player.event_points ?? 0;
+  const livePoints = player.live_stats?.total_points ?? player.points ?? 0;
 
   // Enhanced data (might not be available for all players)
   const priceChange = player.price_change_24h || player.cost_change_event || 0;
@@ -196,11 +197,18 @@ export default function EnhancedPlayerCard({
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        className={`absolute -top-0 -right-0 ${
-          isOnPitch ? "w-5 sm:w-5 lg:w-5 h-5 sm:h-5 lg:h-5" : "w-4 h-4"
-        } rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg ${
-          isCaptain ? "bg-yellow-500" : "bg-blue-500"
+        className={`absolute -top-1 -right-1 ${
+          isOnPitch ? "w-6 h-6 sm:w-6 sm:h-6 lg:w-7 lg:h-7" : "w-5 h-5"
+        } rounded-full flex items-center justify-center text-[11px] sm:text-xs font-extrabold border-2 border-white dark:border-gray-900 ring-2 ring-black/30 dark:ring-white/40 z-20 ${
+          isCaptain
+            ? "bg-yellow-400 text-black shadow-[0_0_8px_rgba(250,204,21,0.9)]"
+            : "bg-blue-600 text-white shadow-[0_0_8px_rgba(37,99,235,0.9)]"
         }`}
+        style={{
+          textShadow: isCaptain
+            ? "0 1px 1px rgba(255,255,255,0.4)"
+            : "0 1px 1px rgba(0,0,0,0.6)",
+        }}
       >
         {isCaptain ? "C" : "V"}
       </motion.div>

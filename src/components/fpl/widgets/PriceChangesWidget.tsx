@@ -9,7 +9,10 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronRight,
+  ArrowUpRight,
+  ArrowDownRight,
 } from "lucide-react";
+import { PiTShirtFill } from "react-icons/pi";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { getTeamColors } from "@/lib/team-colors";
@@ -186,201 +189,229 @@ export default function PriceChangesWidget({
 
   if (!data) return null;
 
-  return (
-    <div className="bg-theme-card rounded-lg p-4 shadow-sm border border-theme-border theme-transition">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold flex items-center gap-2 text-sm">
-          <PoundSterling className="text-theme-text-secondary w-4 h-4" />
-          {t("teamPlanner.widgets.priceChanges")}
-        </h3>
-        <div className="flex items-center gap-2">
-          {/* Dropdown: show count */}
-          <div className="relative">
-            <select
-              value={showCount}
-              onChange={(e) => setShowCount(Number(e.target.value))}
-              className="appearance-none pl-2 pr-6 py-1 bg-theme-card-secondary border border-theme-border rounded text-xs text-theme-foreground focus:outline-none cursor-pointer"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>All</option>
-            </select>
-            <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-theme-text-secondary pointer-events-none" />
-          </div>
-          <button
-            onClick={() => fetchPriceChanges()}
-            className="text-theme-text-secondary hover:text-theme-foreground transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
+  const userTeamSet = new Set(userTeamPlayerIds);
 
-      {/* User Team Impact */}
-      {data.user_team_impact && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-3 p-2.5 rounded-lg bg-theme-card-secondary border border-theme-border"
+  const PlayerRow = ({ player, direction, index }: { player: any; direction: "up" | "down"; index: number }) => {
+    const colors = player.team_colors || getTeamColors(1);
+    const isOwned = userTeamSet.has(player.player_id);
+    const isUp = direction === "up";
+    return (
+      <motion.div
+        key={player.player_id}
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: index * 0.03 }}
+        className={`flex items-center gap-2.5 p-2 rounded-lg transition-all border ${
+          isOwned
+            ? "bg-indigo-50/60 dark:bg-indigo-950/30 border-indigo-200/60 dark:border-indigo-800/40"
+            : "bg-slate-50/60 dark:bg-slate-800/40 border-transparent hover:bg-slate-100/60 dark:hover:bg-slate-800/60"
+        }`}
+      >
+        <div
+          className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 relative"
+          style={{
+            background: `linear-gradient(135deg, ${colors.primary}1a 0%, ${colors.primary}0d 100%)`,
+          }}
         >
-          <div className="text-xs font-medium text-theme-foreground">
-            {t("teamPlanner.widgets.yourTeamImpact")}:{" "}
-            <span className={data.user_team_impact.total_value_change >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-              {formatPriceChange(data.user_team_impact.total_value_change)}
+          <PiTShirtFill
+            className="w-5 h-5"
+            style={{
+              color: colors.primary,
+              filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))",
+            } as React.CSSProperties}
+          />
+          {isOwned && (
+            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-3 h-3 rounded-full bg-indigo-500 text-white text-[7px] shadow-sm">
+              ★
             </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate leading-tight">
+            {player.web_name}
+          </p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide truncate">
+            {player.team_name}
+          </p>
+        </div>
+        <div className="text-right shrink-0">
+          <div className="text-[11px] font-medium text-slate-600 dark:text-slate-300 tabular-nums leading-tight flex items-center gap-1 justify-end">
+            <span>{formatPrice(player.old_price)}</span>
+            <span className="text-slate-400">→</span>
+            <span className="font-bold text-slate-800 dark:text-slate-100">{formatPrice(player.new_price)}</span>
           </div>
-          <div className="text-xs text-theme-text-secondary">
-            {data.user_team_impact.affected_players} {t("teamPlanner.widgets.playersAffected")}
+          <div
+            className={`mt-0.5 inline-flex items-center gap-0.5 px-1.5 rounded text-[10px] font-bold tabular-nums ${
+              isUp
+                ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40"
+                : "text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40"
+            }`}
+          >
+            {isUp ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
+            {formatPriceChange(player.change)}m
           </div>
-        </motion.div>
-      )}
+        </div>
+      </motion.div>
+    );
+  };
 
-      <div className="space-y-2">
-        {/* Risers Accordion */}
-        {data.risers.length > 0 && (
-          <div>
+  return (
+    <div className="relative overflow-hidden rounded-xl shadow-sm border border-emerald-200/40 dark:border-emerald-800/30 bg-gradient-to-br from-white via-emerald-50/40 to-white dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 theme-transition">
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-emerald-500 to-rose-400" />
+
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm">
+              <PoundSterling className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 leading-none">
+                {t("teamPlanner.widgets.priceChanges")}
+              </h3>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Cijene igrača — uživo
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="relative">
+              <select
+                value={showCount}
+                onChange={(e) => setShowCount(Number(e.target.value))}
+                className="appearance-none pl-2 pr-5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-[11px] font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>Sve</option>
+              </select>
+              <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+            </div>
             <button
-              onClick={() => setRisersOpen(!risersOpen)}
-              className="w-full flex items-center justify-between py-1.5 text-sm font-semibold text-theme-text-secondary hover:text-theme-foreground transition-colors"
+              onClick={() => fetchPriceChanges()}
+              className="p-1 rounded-md text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Osvježi"
             >
-              <div className="flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5" />
-                {t("teamPlanner.widgets.risers")}
-                <span className="text-xs font-normal">({data.risers.length})</span>
-              </div>
-              {risersOpen ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5" />
-              )}
+              <RefreshCw className="w-3.5 h-3.5" />
             </button>
-            <AnimatePresence initial={false}>
-              {risersOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-1.5 pt-1">
-                    {data.risers.slice(0, showCount).map((player, index) => (
-                      <motion.div
-                        key={player.player_id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        className="flex items-center justify-between p-2 rounded-lg bg-theme-card-secondary hover:bg-theme-card-secondary/80 transition-colors"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div
-                            className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                            style={{ backgroundColor: player.team_colors.primary }}
-                          >
-                            {player.web_name.charAt(0)}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-theme-foreground truncate">
-                              {player.web_name}
-                            </p>
-                            <p className="text-xs text-theme-text-secondary truncate">
-                              {player.team_name}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0 ml-2">
-                          <div className="text-xs font-medium text-theme-foreground tabular-nums">
-                            {formatPrice(player.old_price)} → {formatPrice(player.new_price)}
-                          </div>
-                          <div className="text-xs text-green-600 dark:text-green-400 tabular-nums">
-                            {formatPriceChange(player.change)}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
+        </div>
+
+        {/* User Team Impact - prominent banner */}
+        {data.user_team_impact && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mb-3 p-2.5 rounded-lg border ${
+              data.user_team_impact.total_value_change >= 0
+                ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40"
+                : "bg-rose-50 dark:bg-rose-950/30 border-rose-200/60 dark:border-rose-800/40"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-wide font-bold text-slate-500 dark:text-slate-400">
+                  Tvoj tim
+                </p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                  {data.user_team_impact.affected_players} {t("teamPlanner.widgets.playersAffected")}
+                </p>
+              </div>
+              <div
+                className={`text-base font-bold tabular-nums ${
+                  data.user_team_impact.total_value_change >= 0
+                    ? "text-emerald-700 dark:text-emerald-300"
+                    : "text-rose-700 dark:text-rose-300"
+                }`}
+              >
+                {data.user_team_impact.total_value_change >= 0 ? "+" : ""}£{(data.user_team_impact.total_value_change / 10).toFixed(1)}m
+              </div>
+            </div>
+          </motion.div>
         )}
 
-        {/* Fallers Accordion */}
-        {data.fallers.length > 0 && (
-          <div>
-            <button
-              onClick={() => setFallersOpen(!fallersOpen)}
-              className="w-full flex items-center justify-between py-1.5 text-sm font-semibold text-theme-text-secondary hover:text-theme-foreground transition-colors"
-            >
-              <div className="flex items-center gap-1.5">
-                <TrendingDown className="w-3.5 h-3.5" />
-                {t("teamPlanner.widgets.fallers")}
-                <span className="text-xs font-normal">({data.fallers.length})</span>
-              </div>
-              {fallersOpen ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5" />
-              )}
-            </button>
-            <AnimatePresence initial={false}>
-              {fallersOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-1.5 pt-1">
-                    {data.fallers.slice(0, showCount).map((player, index) => (
-                      <motion.div
-                        key={player.player_id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        className="flex items-center justify-between p-2 rounded-lg bg-theme-card-secondary hover:bg-theme-card-secondary/80 transition-colors"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div
-                            className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                            style={{ backgroundColor: player.team_colors.primary }}
-                          >
-                            {player.web_name.charAt(0)}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-theme-foreground truncate">
-                              {player.web_name}
-                            </p>
-                            <p className="text-xs text-theme-text-secondary truncate">
-                              {player.team_name}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0 ml-2">
-                          <div className="text-xs font-medium text-theme-foreground tabular-nums">
-                            {formatPrice(player.old_price)} → {formatPrice(player.new_price)}
-                          </div>
-                          <div className="text-xs text-red-600 dark:text-red-400 tabular-nums">
-                            {formatPriceChange(player.change)}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
+        <div className="space-y-2">
+          {/* Risers Accordion */}
+          {data.risers.length > 0 && (
+            <div>
+              <button
+                onClick={() => setRisersOpen(!risersOpen)}
+                className="w-full flex items-center justify-between py-1.5 px-1 rounded text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+              >
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span>Rastući</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                    {data.risers.length}
+                  </span>
+                </div>
+                {risersOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+              </button>
+              <AnimatePresence initial={false}>
+                {risersOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-1 pt-1">
+                      {data.risers.slice(0, showCount).map((player, index) => (
+                        <PlayerRow key={player.player_id} player={player} direction="up" index={index} />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
-        {/* Last Update */}
-        {lastUpdate && (
-          <div className="text-xs text-theme-text-secondary text-center pt-2 border-t border-theme-border">
-            {t("teamPlanner.widgets.lastUpdated")}: {lastUpdate.toLocaleTimeString()}
-          </div>
-        )}
+          {/* Fallers Accordion */}
+          {data.fallers.length > 0 && (
+            <div>
+              <button
+                onClick={() => setFallersOpen(!fallersOpen)}
+                className="w-full flex items-center justify-between py-1.5 px-1 rounded text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+              >
+                <div className="flex items-center gap-1.5">
+                  <TrendingDown className="w-3.5 h-3.5" />
+                  <span>Padajući</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300">
+                    {data.fallers.length}
+                  </span>
+                </div>
+                {fallersOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+              </button>
+              <AnimatePresence initial={false}>
+                {fallersOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-1 pt-1">
+                      {data.fallers.slice(0, showCount).map((player, index) => (
+                        <PlayerRow key={player.player_id} player={player} direction="down" index={index} />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Last Update */}
+          {lastUpdate && (
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 text-center pt-2 border-t border-slate-200/60 dark:border-slate-700/40">
+              Ažurirano u {lastUpdate.toLocaleTimeString()}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

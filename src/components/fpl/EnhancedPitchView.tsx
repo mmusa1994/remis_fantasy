@@ -64,7 +64,7 @@ export default function EnhancedPitchView({
         position: teamPlayer.position,
       };
     },
-    [allPlayers, teamPlayers]
+    [allPlayers, teamPlayers],
   );
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
@@ -102,32 +102,47 @@ export default function EnhancedPitchView({
       4: ["4-3-3", "4-4-2", "4-5-1"],
       5: ["5-3-2", "5-4-1"],
     };
-    return byDef[startingCounts.def] || [
-      "3-4-3",
-      "3-5-2",
-      "4-3-3",
-      "4-4-2",
-      "4-5-1",
-      "5-3-2",
-      "5-4-1",
-    ];
+    return (
+      byDef[startingCounts.def] || [
+        "3-4-3",
+        "3-5-2",
+        "4-3-3",
+        "4-4-2",
+        "4-5-1",
+        "5-3-2",
+        "5-4-1",
+      ]
+    );
   }, [startingCounts.def]);
 
   // Auto-adjust formation to exactly match current XI when possible
   useEffect(() => {
     const totalStarters =
-      startingCounts.gk + startingCounts.def + startingCounts.mid + startingCounts.fwd;
+      startingCounts.gk +
+      startingCounts.def +
+      startingCounts.mid +
+      startingCounts.fwd;
     if (totalStarters !== 11) return; // Only auto-adjust when XI is fully known
 
     const exact = `${startingCounts.def}-${startingCounts.mid}-${startingCounts.fwd}`;
-    if (onFormationChange && allowedFormations.includes(exact) && formation !== exact) {
+    if (
+      onFormationChange &&
+      allowedFormations.includes(exact) &&
+      formation !== exact
+    ) {
       onFormationChange(exact);
     } else if (onFormationChange && !allowedFormations.includes(formation)) {
       // Ensure current formation is among allowed ones
       onFormationChange(allowedFormations[0]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startingCounts.def, startingCounts.mid, startingCounts.fwd, startingCounts.gk, allowedFormations]);
+  }, [
+    startingCounts.def,
+    startingCounts.mid,
+    startingCounts.fwd,
+    startingCounts.gk,
+    allowedFormations,
+  ]);
 
   // Calculate formation layout for half-court (our half only)
   // y% grows downward: goalkeeper at top, forwards at bottom (attacking upward)
@@ -135,10 +150,10 @@ export default function EnhancedPitchView({
     // Helper to distribute players evenly across X axis with better spacing
     const distributeX = (
       count: number,
-      y: number
+      y: number,
     ): Array<{ x: number; y: number }> => {
       if (count <= 0) return [];
-      if (count === 1) return [{ x: isMobile ? 40 : 50, y }];
+      if (count === 1) return [{ x: isMobile ? 40 : 44.5, y }];
 
       // Better spacing for different player counts - more compact on mobile
       const getSpacing = (playerCount: number) => {
@@ -297,7 +312,7 @@ export default function EnhancedPitchView({
         onPlayerClick(player);
       }
     },
-    [interactive, compareMode, onPlayerClick, onPlayerSelect]
+    [interactive, compareMode, onPlayerClick, onPlayerSelect],
   );
 
   const handleDragStart = useCallback(() => {
@@ -365,7 +380,9 @@ export default function EnhancedPitchView({
           </label>
           <select
             value={formation}
-            onChange={(e) => onFormationChange && onFormationChange(e.target.value)}
+            onChange={(e) =>
+              onFormationChange && onFormationChange(e.target.value)
+            }
             className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 flex-1 sm:flex-none"
           >
             {allowedFormations.map((f) => (
