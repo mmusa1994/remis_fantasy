@@ -1456,7 +1456,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
   return (
     <div
-      className="min-h-screen p-2 sm:p-4 bg-theme-background text-theme-foreground"
+      className="min-h-screen p-1 sm:p-4 bg-theme-background text-theme-foreground"
     >
       {/* Loading State */}
       {isInitialLoading && (
@@ -1791,7 +1791,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                 {/* Enhanced Pitch View */}
                 {currentView === "pitch" && (
                   <>
-                    <div className="p-4 lg:p-6">
+                    <div className="p-1 sm:p-3 lg:p-6">
                       <EnhancedPitchView
                         teamPlayers={currentTeamForDisplay}
                         allPlayers={allPlayers}

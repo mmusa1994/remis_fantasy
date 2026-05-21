@@ -158,18 +158,20 @@ export default function EnhancedPitchView({
       // Better spacing for different player counts - more compact on mobile
       const getSpacing = (playerCount: number) => {
         if (isMobile) {
-          // Tighter, wider-spread spacing on mobile so 4-5 player rows fit cleanly
+          // Mobile spacing: keep safety margin so cards never overflow pitch
+          // boundary. Cards are translate(-50%) so half their width protrudes
+          // past the X anchor — minX must account for that.
           switch (playerCount) {
             case 2:
-              return { minX: 26, maxX: 74 };
+              return { minX: 28, maxX: 72 };
             case 3:
-              return { minX: 12, maxX: 86 };
+              return { minX: 18, maxX: 82 };
             case 4:
-              return { minX: 8, maxX: 90 };
+              return { minX: 13, maxX: 87 };
             case 5:
-              return { minX: 5, maxX: 92 };
+              return { minX: 11, maxX: 89 };
             default:
-              return { minX: 4, maxX: 94 };
+              return { minX: 10, maxX: 90 };
           }
         } else {
           // Original desktop spacing
@@ -530,7 +532,7 @@ export default function EnhancedPitchView({
 
         {/* Players positioned on pitch */}
         <div
-          className="absolute inset-0 p-2 sm:p-1 lg:p-2"
+          className="absolute inset-0 p-0.5 sm:p-1 lg:p-2"
           style={{ overflow: "visible", zIndex: 10 }}
         >
           <AnimatePresence>

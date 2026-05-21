@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { HelpCircle, Sparkles, X } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import OnboardingModal from "./OnboardingModal";
 
 const OnboardingWidget = () => {
@@ -49,66 +49,31 @@ const OnboardingWidget = () => {
           )}
         </AnimatePresence>
 
-        {/* Main Button */}
+        {/* Main Button — subtle, discreet */}
         <motion.button
           onClick={() => setShowModal(true)}
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
-          className={`relative group w-14 h-14 rounded-md shadow-lg transition-all duration-300 ${
+          className={`relative group w-10 h-10 rounded-full shadow-md transition-all duration-300 border ${
             theme === "dark"
-              ? "bg-gradient-to-br from-red-700 to-red-800 hover:from-red-600 hover:to-red-700 text-white"
-              : "bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white"
-          } hover:scale-110 hover:shadow-xl`}
-          whileHover={{ scale: 1.1 }}
+              ? "bg-slate-800/80 hover:bg-slate-700/90 border-slate-700/60 text-slate-200 backdrop-blur-md"
+              : "bg-white/85 hover:bg-white border-slate-200 text-slate-700 backdrop-blur-md"
+          } hover:scale-105`}
+          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{
             type: "spring",
             stiffness: 200,
-            damping: 15,
+            damping: 18,
             delay: 1,
           }}
+          aria-label="Help"
         >
-          {/* Subtle pulsing background */}
-          <motion.div
-            className="absolute inset-0 rounded-md bg-red-400 opacity-30"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-
-          {/* Icon */}
           <div className="relative flex items-center justify-center w-full h-full">
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <HelpCircle className="w-6 h-6" />
-            </motion.div>
-
-            {/* Sparkle effect */}
-            <motion.div
-              className="absolute -top-1 -right-1"
-              animate={{
-                scale: [0.8, 1.2, 0.8],
-                rotate: [0, 180, 360],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <Sparkles className="w-3 h-3 text-yellow-300" />
-            </motion.div>
+            <HelpCircle className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />
           </div>
-
-          {/* Hover glow effect */}
-          <div className="absolute inset-0 rounded-md bg-gradient-to-br from-red-400/0 via-red-300/0 to-red-500/0 group-hover:from-red-400/20 group-hover:via-red-300/10 group-hover:to-red-500/20 transition-all duration-300" />
         </motion.button>
       </div>
 

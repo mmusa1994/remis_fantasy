@@ -14,24 +14,53 @@ export default function PLAnthemPlayer() {
   const [isMuted, setIsMuted] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  // True when browser blocked unmuted autoplay → show a visible CTA.
+  const [needsUnmuteHint, setNeedsUnmuteHint] = useState(false);
 
-  // Try to autoplay on mount. Modern browsers block autoplay with sound — we
-  // start muted so playback succeeds; user can unmute with one click.
+  // Auto-play on mount. Prefer unmuted; fall back to muted if browser blocks,
+  // then unmute automatically on first user interaction.
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = 0.45;
-    audio.muted = true; // required for autoplay
-    setIsMuted(true);
-    const tryPlay = async () => {
+
+    const armUnmuteOnInteraction = () => {
+      const unmute = () => {
+        if (!audio) return;
+        audio.muted = false;
+        setIsMuted(false);
+        setNeedsUnmuteHint(false);
+        window.removeEventListener("pointerdown", unmute);
+        window.removeEventListener("keydown", unmute);
+        window.removeEventListener("touchstart", unmute);
+      };
+      window.addEventListener("pointerdown", unmute, { once: true });
+      window.addEventListener("keydown", unmute, { once: true });
+      window.addEventListener("touchstart", unmute, { once: true });
+    };
+
+    const tryUnmutedPlay = async () => {
+      audio.muted = false;
       try {
         await audio.play();
         setIsPlaying(true);
+        setIsMuted(false);
+        setNeedsUnmuteHint(false);
       } catch {
-        setIsPlaying(false);
+        audio.muted = true;
+        setIsMuted(true);
+        setNeedsUnmuteHint(true);
+        try {
+          await audio.play();
+          setIsPlaying(true);
+        } catch {
+          setIsPlaying(false);
+        }
+        armUnmuteOnInteraction();
       }
     };
-    tryPlay();
+
+    tryUnmutedPlay();
     return () => {
       audio.pause();
     };
@@ -58,6 +87,7 @@ export default function PLAnthemPlayer() {
     if (!audio) return;
     audio.muted = !audio.muted;
     setIsMuted(audio.muted);
+    setNeedsUnmuteHint(false);
   };
 
   if (dismissed) return null;
@@ -75,7 +105,7 @@ export default function PLAnthemPlayer() {
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: "spring", damping: 22, stiffness: 240, delay: 0.6 }}
-        className="fixed bottom-16 left-3 sm:bottom-6 sm:left-4 z-40 select-none"
+        className="fixed bottom-20 left-3 sm:bottom-6 sm:left-4 z-40 select-none"
       >
         <div
           className={`relative overflow-hidden rounded-xl shadow-2xl border backdrop-blur-md transition-all ${
@@ -197,17 +227,40 @@ export default function PLAnthemPlayer() {
                       <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5" />
                     )}
                   </button>
-                  <button
-                    onClick={toggleMute}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
-                    title={isMuted ? "Unmute" : "Mute"}
-                  >
-                    {isMuted ? (
-                      <VolumeX className="w-3.5 h-3.5" />
-                    ) : (
-                      <Volume2 className="w-3.5 h-3.5" />
+                  <div className="relative">
+                    <button
+                      onClick={toggleMute}
+                      className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors ${
+                        needsUnmuteHint
+                          ? "bg-[#FFD100] text-black hover:bg-[#FFC400] shadow-lg shadow-[#FFD100]/40"
+                          : "bg-white/10 hover:bg-white/20 text-white"
+                      }`}
+                      title={isMuted ? "Tap to enable sound" : "Mute"}
+                    >
+                      {needsUnmuteHint && (
+                        <motion.span
+                          className="absolute inset-0 rounded-full bg-[#FFD100]"
+                          animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
+                          transition={{ repeat: Infinity, duration: 1.6, ease: "easeOut" }}
+                        />
+                      )}
+                      {isMuted ? (
+                        <VolumeX className="relative w-3.5 h-3.5" />
+                      ) : (
+                        <Volume2 className="relative w-3.5 h-3.5" />
+                      )}
+                    </button>
+                    {needsUnmuteHint && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 rounded-md bg-[#FFD100] text-black text-[10px] font-bold shadow-lg pointer-events-none"
+                      >
+                        Tap for sound
+                        <span className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 bg-[#FFD100] rotate-45" />
+                      </motion.div>
                     )}
-                  </button>
+                  </div>
                   <button
                     onClick={() => setDismissed(true)}
                     className="w-6 h-6 sm:w-7 sm:h-7 rounded-full hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-colors"

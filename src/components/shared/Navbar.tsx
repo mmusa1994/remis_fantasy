@@ -24,8 +24,29 @@ import {
   PoundSterling,
   TrendingUp,
   Newspaper,
+  Search,
 } from "lucide-react";
-import { FaUser, FaGoogle, FaMagic, FaFutbol, FaQuestion } from "react-icons/fa";
+import { FaUser, FaGoogle, FaMagic } from "react-icons/fa";
+
+// Predictor icon: small magnifying glass over an analytics bar chart.
+// Used consistently across mobile bottom-nav, desktop top-nav, and the mobile menu.
+function PredictorNavIcon({ theme, size = 18 }: { theme: string; size?: number }) {
+  return (
+    <span
+      className="relative inline-flex items-center justify-center"
+      style={{ width: size, height: size }}
+    >
+      <BarChart3 className="w-[85%] h-[85%]" strokeWidth={2.2} />
+      <Search
+        className="absolute bottom-0 right-0 w-[46%] h-[46%]"
+        strokeWidth={2.6}
+        style={{
+          color: theme === "dark" ? "#fbbf24" : "#d97706",
+        } as React.CSSProperties}
+      />
+    </span>
+  );
+}
 import { TbPresentationAnalytics } from "react-icons/tb";
 import ThemeToggle from "../ThemeToggle";
 import LanguageSelector from "./LanguageSelector";
@@ -767,14 +788,8 @@ const Navbar = React.memo(function Navbar() {
                 whileTap={{ scale: 0.98 }}
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  <span className="relative inline-flex">
-                    <FaFutbol className="w-[18px] h-[18px]" />
-                    <span
-                      className={`absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 flex items-center justify-center shadow-sm ring-2 ${theme === "dark" ? "ring-black" : "ring-white"}`}
-                    >
-                      <FaQuestion className="w-[7px] h-[7px] text-black" />
-                    </span>
-                  </span>
+                  <PredictorNavIcon theme={theme} size={18} />
+
                   {t("predictor", "Predictor")}
                 </span>
                 {pathname?.startsWith("/predictor") && (
@@ -952,14 +967,7 @@ const Navbar = React.memo(function Navbar() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-center justify-center gap-2">
-                    <span className="relative inline-flex">
-                      <FaFutbol className="w-[18px] h-[18px]" />
-                      <span
-                        className={`absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 flex items-center justify-center shadow-sm ring-2 ${theme === "dark" ? "ring-black" : "ring-white"}`}
-                      >
-                        <FaQuestion className="w-[7px] h-[7px] text-black" />
-                      </span>
-                    </span>
+                    <PredictorNavIcon theme={theme} size={18} />
                     <span>{t("predictor", "Predictor")}</span>
                   </div>
                 </motion.div>

@@ -4,11 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { motion } from "framer-motion";
-import { Home, Menu } from "lucide-react";
+import { Home, Menu, Search, BarChart3 } from "lucide-react";
 import { SiPremierleague } from "react-icons/si";
 import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
-import { FaFutbol, FaQuestion } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 interface BottomNavProps {
@@ -20,16 +19,18 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
   const { theme } = useTheme();
   const { t } = useTranslation("navigation");
 
+  // Predictor icon: small magnifying glass over an analytics bar chart.
+  // Sized to match the other nav icons (w-5 h-5 = 20px container).
   const PredictorIcon = ({ className }: { className?: string }) => (
-    <span className={`relative inline-block ${className ?? ""}`}>
-      <FaFutbol className="w-full h-full" />
-      <span
-        className={`absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 flex items-center justify-center shadow-sm ring-2 ${
-          theme === "dark" ? "ring-gray-900" : "ring-white"
-        }`}
-      >
-        <FaQuestion className="w-[6px] h-[6px] text-black" />
-      </span>
+    <span className={`relative inline-flex items-center justify-center ${className ?? ""}`}>
+      <BarChart3 className="w-[85%] h-[85%]" strokeWidth={2.2} />
+      <Search
+        className="absolute bottom-0 right-0 w-[44%] h-[44%]"
+        strokeWidth={2.6}
+        style={{
+          color: theme === "dark" ? "#fbbf24" : "#d97706",
+        } as React.CSSProperties}
+      />
     </span>
   );
 
@@ -53,16 +54,16 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
       id: "champions",
     },
     {
-      name: t("predictor", "Predictor"),
-      href: "/predictor",
-      icon: PredictorIcon,
-      id: "predictor",
-    },
-    {
       name: t("f1Fantasy", "F1"),
       href: "/f1-fantasy/tables",
       icon: GiF1Car,
       id: "f1",
+    },
+    {
+      name: t("predictor", "Predictor"),
+      href: "/predictor",
+      icon: PredictorIcon,
+      id: "predictor",
     },
   ];
 

@@ -124,30 +124,6 @@ export default function PredictorIndexPage() {
             )}
           </p>
 
-          {/* Feature pills — only shown when there are tournaments to enter */}
-          {tournaments.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2 md:gap-2.5 mb-4">
-              {[
-                t("features.tournamentWinner", "Tournament winner"),
-                t("features.topScorer", "Top scorer"),
-                t("features.bestPlayer", "Best player"),
-                t("features.top4", "Top 4 teams"),
-                t("features.groupWinners", "Group winners"),
-                t("features.surprise", "Surprise team"),
-              ].map((f) => (
-                <span
-                  key={f}
-                  className={`text-xs md:text-sm font-medium px-3.5 py-1.5 rounded-full border transition-colors ${
-                    theme === "dark"
-                      ? "bg-gray-800/60 border-gray-700 text-gray-300"
-                      : "bg-white/80 border-gray-200 text-gray-700 shadow-sm"
-                  }`}
-                >
-                  {f}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
@@ -183,12 +159,21 @@ export default function PredictorIndexPage() {
                     icon={Trophy}
                     title={t("sections.all", "All tournaments")}
                   />
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  <div
+                    className={`grid gap-5 md:gap-6 ${
+                      others.length === 1
+                        ? "grid-cols-1 max-w-3xl mx-auto"
+                        : others.length === 2
+                        ? "grid-cols-1 md:grid-cols-2"
+                        : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                    }`}
+                  >
                     {others.map((tr) => (
                       <TournamentCard
                         key={tr.id}
                         tournament={tr}
                         theme={theme}
+                        large={others.length <= 2}
                       />
                     ))}
                   </div>
@@ -467,7 +452,7 @@ function TournamentCard({
       className="block h-full group"
     >
       <div
-        className={`relative flex flex-col h-full ${large ? "p-6 md:p-7" : "p-5 md:p-6"} rounded-3xl border-l-4 ${borderClass} transition-all duration-300 hover:-translate-y-0.5 overflow-hidden ${
+        className={`relative flex flex-col h-full ${large ? "p-7 md:p-9" : "p-5 md:p-6"} rounded-3xl border-l-4 ${borderClass} transition-all duration-300 hover:-translate-y-0.5 overflow-hidden ${
           theme === "dark"
             ? "bg-gradient-to-br from-gray-800/70 via-gray-800/60 to-gray-900/70 border border-gray-700/80 hover:border-gray-600 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"
             : "bg-gradient-to-br from-white via-white to-gray-50/60 border border-gray-200/80 hover:border-gray-300 shadow-sm hover:shadow-xl hover:shadow-gray-900/5"
@@ -497,7 +482,7 @@ function TournamentCard({
               <div
                 className={`flex-shrink-0 inline-flex items-center justify-center rounded-2xl overflow-hidden transition-transform duration-300 group-hover:scale-105 ${
                   large
-                    ? "w-16 h-16 md:w-[72px] md:h-[72px]"
+                    ? "w-20 h-20 md:w-24 md:h-24"
                     : "w-14 h-14 md:w-16 md:h-16"
                 } ${
                   theme === "dark"
@@ -508,11 +493,11 @@ function TournamentCard({
                 <Image
                   src={tournament.logo_url}
                   alt={displayName}
-                  width={large ? 96 : 80}
-                  height={large ? 96 : 80}
+                  width={large ? 128 : 80}
+                  height={large ? 128 : 80}
                   className={`${
                     large
-                      ? "w-[58px] h-[58px] md:w-[64px] md:h-[64px]"
+                      ? "w-[72px] h-[72px] md:w-[88px] md:h-[88px]"
                       : "w-[52px] h-[52px] md:w-[58px] md:h-[58px]"
                   } object-contain`}
                   style={{
@@ -527,7 +512,7 @@ function TournamentCard({
               <div
                 className={`flex-shrink-0 inline-flex items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105 ${
                   large
-                    ? "w-16 h-16 md:w-[72px] md:h-[72px]"
+                    ? "w-20 h-20 md:w-24 md:h-24"
                     : "w-14 h-14 md:w-16 md:h-16"
                 } ${
                   theme === "dark"
@@ -536,12 +521,12 @@ function TournamentCard({
                 }`}
               >
                 <Trophy
-                  className={`${large ? "w-9 h-9" : "w-8 h-8"} ${textClass}`}
+                  className={`${large ? "w-12 h-12" : "w-8 h-8"} ${textClass}`}
                 />
               </div>
             )}
             <h3
-              className={`${large ? "text-xl md:text-2xl" : "text-lg"} font-bold leading-tight tracking-tight ${
+              className={`${large ? "text-2xl md:text-3xl" : "text-lg"} font-bold leading-tight tracking-tight ${
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >

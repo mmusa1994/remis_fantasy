@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaExchangeAlt } from "react-icons/fa";
@@ -132,7 +132,9 @@ function getFixtureRun(teamId: number, fixtures: FixtureLite[], teams: TeamLite[
   });
 }
 
-function teamMotivation(pos: number | undefined, t: (key: string, fallback: string) => string): Reason | null {
+type TFn = (key: string, fallback: string, opts?: any) => any;
+
+function teamMotivation(pos: number | undefined, t: TFn): Reason | null {
   if (!pos) return null;
   if (pos <= 4)
     return {
@@ -178,7 +180,7 @@ function buildReasons(
   p: any,
   selected: any,
   ctx: { fixture: FixtureRun | null; team?: TeamLite; currentGw: number; playChance: number; fixturesInGw?: number },
-  t: (key: string, fallback: string, opts?: any) => string
+  t: TFn
 ): Reason[] {
   const reasons: Reason[] = [];
   // Double gameweek - highest signal value
@@ -367,7 +369,7 @@ function FixtureRun3({ fixtures }: { fixtures: FixtureRun[] }) {
 
 function buildVerdict(
   c: { xPDelta: number; player: any; selected: any; fixture: FixtureRun | null },
-  t: (key: string, fallback: string) => string
+  t: TFn
 ) {
   const { xPDelta, player, selected, fixture } = c;
   const costDiff = (num(player.now_cost) - num(selected.now_cost)) / 10;
@@ -417,6 +419,16 @@ export default function SmartReplacementPanel({
   const [sort, setSort] = useState<SortKey>("score");
   const [showHelp, setShowHelp] = useState(false);
   const [burstId, setBurstId] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile so we can render as bottom-sheet instead of right drawer
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const handlePick = (p: any) => {
     if (!onPickReplacement) return;
@@ -581,15 +593,31 @@ export default function SmartReplacementPanel({
             onClick={onClose}
           />
 
-          {/* Drawer */}
+          {/* Drawer: bottom-sheet on mobile, right-side panel on tablet/desktop */}
           <motion.aside
             key="smart-drawer"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
+            initial={isMobile ? { y: "100%" } : { x: "100%" }}
+            animate={isMobile ? { y: 0 } : { x: 0 }}
+            exit={isMobile ? { y: "100%" } : { x: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 280 }}
-            className="fixed top-16 sm:top-20 right-2 sm:right-4 bottom-2 sm:bottom-4 w-[calc(100%-1rem)] sm:w-[480px] z-50 bg-gradient-to-b from-white via-slate-50/80 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/40 shadow-2xl border border-slate-200/70 dark:border-slate-700/60 rounded-2xl flex flex-col overflow-hidden"
+            drag={isMobile ? "y" : false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.4 }}
+            onDragEnd={(_, info) => {
+              if (isMobile && (info.offset.y > 120 || info.velocity.y > 600)) {
+                onClose();
+              }
+            }}
+            className="fixed z-50 flex flex-col overflow-hidden bg-gradient-to-b from-white via-slate-50/80 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/40 shadow-2xl
+              inset-x-0 bottom-0 top-auto max-h-[88vh] rounded-t-2xl border-t border-x-0 border-b-0 border-slate-200/70 dark:border-slate-700/60
+              sm:inset-x-auto sm:bottom-4 sm:top-20 sm:right-4 sm:left-auto sm:w-[480px] sm:max-h-none sm:rounded-2xl sm:border sm:border-x sm:border-y"
           >
+            {/* Mobile drag handle */}
+            {isMobile && (
+              <div className="sm:hidden flex items-center justify-center pt-2 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
+                <span className="block w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+              </div>
+            )}
             {/* Header */}
             <div className="relative px-5 pt-5 pb-3 border-b border-slate-200/70 dark:border-slate-700/60">
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${positionAccent}`} />
