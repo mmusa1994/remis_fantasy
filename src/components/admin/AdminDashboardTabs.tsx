@@ -658,6 +658,14 @@ export default function AdminDashboardTabs({
                 <Trophy className="w-4 h-4" />
                 <span className="hidden sm:inline">Predictor</span>
               </Link>
+              <Link
+                href="/admin/users"
+                className="text-white/70 hover:text-white hover:bg-white/10 p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 flex-shrink-0 text-sm"
+                title="Korisnici — daj besplatne kredite za kreiranje turnira"
+              >
+                <Users className="w-4 h-4" />
+                <span className="hidden sm:inline">Korisnici</span>
+              </Link>
               <button
                 onClick={toggleTheme}
                 className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-md transition-colors flex-shrink-0"

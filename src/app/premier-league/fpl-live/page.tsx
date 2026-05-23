@@ -473,11 +473,11 @@ export default function FPLLivePage() {
         handleTabChange("leagues");
       }
 
-      showSuccess("Pokrenuto je uživo praćenje za sve komponente");
+      showSuccess(t("fplLive.livePollingStarted"));
     } else {
       setIsLiveTracking(false);
 
-      showSuccess("Zaustavljen je uživo praćenje");
+      showSuccess(t("fplLive.livePollingStopped"));
     }
   }, [isLiveTracking, managerId, teamLoaded, t]);
 
@@ -773,7 +773,7 @@ export default function FPLLivePage() {
                       {t("howToUse")}
                     </h3>
                     <p className="text-xs text-theme-text-secondary mt-0.5">
-                      Brzo objašnjenje kako pronaći svoj Manager ID
+                      {t("fplLive.howToFindManagerIdShort", "Brzo objašnjenje kako pronaći svoj Manager ID")}
                     </p>
                   </div>
                   <ChevronDown className="text-theme-text-secondary group-open:rotate-180 transition-transform duration-200 w-5 h-5 shrink-0" />

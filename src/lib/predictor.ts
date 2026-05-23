@@ -36,6 +36,36 @@ export async function requireUser() {
   return { ok: true as const, session, user };
 }
 
+// Vraća OK ako je trenutni user vlasnik datog turnira (provjera u predictor_tournaments).
+export async function requireTournamentOwner(tournamentId: string) {
+  const u = await requireUser();
+  if (!u.ok) return u;
+  if (!tournamentId) {
+    return {
+      ok: false as const,
+      response: NextResponse.json({ error: "tournament_id required" }, { status: 400 }),
+    };
+  }
+  const { data, error } = await supabaseServer
+    .from("predictor_tournaments")
+    .select("owner_user_id")
+    .eq("id", tournamentId)
+    .maybeSingle();
+  if (error) {
+    return {
+      ok: false as const,
+      response: NextResponse.json({ error: error.message }, { status: 500 }),
+    };
+  }
+  if (!data || data.owner_user_id !== u.user.id) {
+    return {
+      ok: false as const,
+      response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+    };
+  }
+  return { ok: true as const, user: u.user };
+}
+
 // Provjeri da li je korisnik odobren za turnir (samo ako require_approval=true)
 // Vraća { allowed: boolean, reason?: string }
 export async function checkMembership(

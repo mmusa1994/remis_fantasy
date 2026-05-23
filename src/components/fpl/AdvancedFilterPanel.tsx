@@ -13,6 +13,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { PiTShirtFill } from "react-icons/pi";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getTeamColors } from "@/lib/team-colors";
 import type {
@@ -37,39 +38,42 @@ export default function AdvancedFilterPanel({
   onToggle,
 }: AdvancedFilterPanelProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation("fpl");
   const [activeSection, setActiveSection] = useState<string | null>("basic");
 
-  // Filter categories
+  const tf = (key: string, defaultValue?: string, options?: any): string =>
+    t(`fplLive.advancedFilters.${key}`, { defaultValue, ...options }) as string;
+
   const filterSections = {
     basic: {
-      title: "Basic Filters",
+      title: tf("sectionBasic", "Basic Filters"),
       icon: <Filter className="w-4 h-4" />,
-      description: "Position, Team, Price",
+      description: tf("sectionBasicDesc", "Position, Team, Price"),
     },
     performance: {
-      title: "Performance",
+      title: tf("sectionPerformance", "Performance"),
       icon: <BarChart className="w-4 h-4" />,
-      description: "Points, Form, Value",
+      description: tf("sectionPerformanceDesc", "Points, Form, Value"),
     },
     market: {
-      title: "Market Data",
+      title: tf("sectionMarket", "Market Data"),
       icon: <TrendingUp className="w-4 h-4" />,
-      description: "Price Changes, Ownership",
+      description: tf("sectionMarketDesc", "Price Changes, Ownership"),
     },
     availability: {
-      title: "Availability",
+      title: tf("sectionAvailability", "Availability"),
       icon: <AlertTriangle className="w-4 h-4" />,
-      description: "Injury, Rotation Risk",
+      description: tf("sectionAvailabilityDesc", "Injury, Rotation Risk"),
     },
     fixtures: {
-      title: "Fixtures",
+      title: tf("sectionFixtures", "Fixtures"),
       icon: <Calendar className="w-4 h-4" />,
-      description: "Difficulty, Upcoming",
+      description: tf("sectionFixturesDesc", "Difficulty, Upcoming"),
     },
     advanced: {
-      title: "Advanced",
+      title: tf("sectionAdvanced", "Advanced"),
       icon: <Target className="w-4 h-4" />,
-      description: "Differentials, Captain Appeal",
+      description: tf("sectionAdvancedDesc", "Differentials, Captain Appeal"),
     },
   };
 
@@ -77,7 +81,7 @@ export default function AdvancedFilterPanel({
     {
       id: 1,
       name: "GK",
-      label: "Golmani",
+      label: tf("positionGK", "Golmani"),
       accent: "from-amber-400 to-yellow-500",
       ring: "ring-amber-400/40",
       activeBg: "bg-amber-500",
@@ -85,7 +89,7 @@ export default function AdvancedFilterPanel({
     {
       id: 2,
       name: "DEF",
-      label: "Odbrana",
+      label: tf("positionDEF", "Odbrana"),
       accent: "from-sky-400 to-blue-500",
       ring: "ring-sky-400/40",
       activeBg: "bg-sky-500",
@@ -93,7 +97,7 @@ export default function AdvancedFilterPanel({
     {
       id: 3,
       name: "MID",
-      label: "Vezni",
+      label: tf("positionMID", "Vezni"),
       accent: "from-emerald-400 to-teal-500",
       ring: "ring-emerald-400/40",
       activeBg: "bg-emerald-500",
@@ -101,7 +105,7 @@ export default function AdvancedFilterPanel({
     {
       id: 4,
       name: "FWD",
-      label: "Napadači",
+      label: tf("positionFWD", "Napadači"),
       accent: "from-rose-400 to-red-500",
       ring: "ring-rose-400/40",
       activeBg: "bg-rose-500",
@@ -109,19 +113,27 @@ export default function AdvancedFilterPanel({
   ];
 
   const sortOptions = [
-    { value: "total_points", label: "Total Points" },
-    { value: "event_points", label: "GW Points" },
-    { value: "now_cost", label: "Price" },
-    { value: "form", label: "Form" },
-    { value: "selected_by_percent", label: "Ownership %" },
-    { value: "value_season", label: "Value (Season)" },
-    { value: "value_form", label: "Value (Form)" },
-    { value: "transfers_in_event", label: "Transfers In" },
-    { value: "transfers_out_event", label: "Transfers Out" },
-    { value: "ict_index", label: "ICT Index" },
-    { value: "expected_goals", label: "Expected Goals" },
-    { value: "expected_assists", label: "Expected Assists" },
+    { value: "total_points", label: tf("sortTotalPoints", "Total Points") },
+    { value: "event_points", label: tf("sortGwPoints", "GW Points") },
+    { value: "now_cost", label: tf("sortPrice", "Price") },
+    { value: "form", label: tf("sortForm", "Form") },
+    { value: "selected_by_percent", label: tf("sortOwnership", "Ownership %") },
+    { value: "value_season", label: tf("sortValueSeason", "Value (Season)") },
+    { value: "value_form", label: tf("sortValueForm", "Value (Form)") },
+    { value: "transfers_in_event", label: tf("sortTransfersIn", "Transfers In") },
+    { value: "transfers_out_event", label: tf("sortTransfersOut", "Transfers Out") },
+    { value: "ict_index", label: tf("sortIct", "ICT Index") },
+    { value: "expected_goals", label: tf("sortXG", "Expected Goals") },
+    { value: "expected_assists", label: tf("sortXA", "Expected Assists") },
   ];
+
+  const quickFilterLabels: Record<string, string> = {
+    differentials: tf("quickDifferentials", "Differentials"),
+    value_picks: tf("quickValuePicks", "Value Picks"),
+    form_players: tf("quickFormPlayers", "Form Players"),
+    budget_gems: tf("quickBudgetGems", "Budget Gems"),
+    premium_picks: tf("quickPremiumPicks", "Premium Picks"),
+  };
 
   const updateFilter = useCallback(
     <K extends keyof EnhancedFilterState>(
@@ -235,15 +247,15 @@ export default function AdvancedFilterPanel({
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <label className="text-sm font-semibold text-slate-800 dark:text-slate-100 block">Pozicija</label>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Klikni na jednu ili više da filtriraš</p>
+              <label className="text-sm font-semibold text-slate-800 dark:text-slate-100 block">{tf("position", "Pozicija")}</label>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">{tf("positionHint", "Klikni na jednu ili više da filtriraš")}</p>
             </div>
             {filters.position.length > 0 && (
               <button
                 onClick={() => updateFilter("position", [])}
                 className="text-[11px] font-medium text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors flex items-center gap-1"
               >
-                <X className="w-3 h-3" /> Očisti
+                <X className="w-3 h-3" /> {tf("clear", "Očisti")}
               </button>
             )}
           </div>
@@ -285,11 +297,14 @@ export default function AdvancedFilterPanel({
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <label className="text-sm font-semibold text-slate-800 dark:text-slate-100 block">Klubovi</label>
+              <label className="text-sm font-semibold text-slate-800 dark:text-slate-100 block">{tf("clubs", "Klubovi")}</label>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {filters.teams.length === 0
-                  ? "Klikni klubove koje želiš"
-                  : `${filters.teams.length} od ${allTeams.length} odabrano`}
+                  ? tf("clubsHintEmpty", "Klikni klubove koje želiš")
+                  : tf("clubsHintSelected", "{{count}} od {{total}} odabrano", {
+                      count: filters.teams.length,
+                      total: allTeams.length,
+                    })}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -300,14 +315,14 @@ export default function AdvancedFilterPanel({
                 }}
                 className="text-[11px] font-medium px-2 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors border border-indigo-200/60 dark:border-indigo-800/40"
               >
-                {allSelected ? "Poništi sve" : "Odaberi sve"}
+                {allSelected ? tf("deselectAll", "Poništi sve") : tf("selectAll", "Odaberi sve")}
               </button>
               {filters.teams.length > 0 && !allSelected && (
                 <button
                   onClick={() => updateFilter("teams", [])}
                   className="text-[11px] font-medium text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors flex items-center gap-1"
                 >
-                  <X className="w-3 h-3" /> Očisti
+                  <X className="w-3 h-3" /> {tf("clear", "Očisti")}
                 </button>
               )}
             </div>
@@ -354,7 +369,7 @@ export default function AdvancedFilterPanel({
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <label className="text-sm font-semibold text-slate-800 dark:text-slate-100 block">Cijena</label>
+              <label className="text-sm font-semibold text-slate-800 dark:text-slate-100 block">{tf("price", "Cijena")}</label>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 <span className="font-semibold text-indigo-700 dark:text-indigo-300">£{(minPrice / 10).toFixed(1)}m</span>
                 {" — "}
@@ -366,7 +381,7 @@ export default function AdvancedFilterPanel({
                 onClick={() => updateFilter("priceRange", [40, 150])}
                 className="text-[11px] font-medium text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors flex items-center gap-1"
               >
-                <X className="w-3 h-3" /> Reset
+                <X className="w-3 h-3" /> {tf("reset", "Reset")}
               </button>
             )}
           </div>
@@ -432,7 +447,7 @@ export default function AdvancedFilterPanel({
         {/* Sort Options */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Sortiraj po</label>
+            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">{tf("sortBy", "Sortiraj po")}</label>
             <select
               value={filters.sortBy}
               onChange={(e) => updateFilter("sortBy", e.target.value)}
@@ -446,7 +461,7 @@ export default function AdvancedFilterPanel({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Redoslijed</label>
+            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">{tf("sortOrder", "Redoslijed")}</label>
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 onClick={() => updateFilter("sortOrder", "desc")}
@@ -456,7 +471,7 @@ export default function AdvancedFilterPanel({
                     : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300"
                 }`}
               >
-                ↓ Veće prvo
+                {tf("sortDescending", "↓ Veće prvo")}
               </button>
               <button
                 onClick={() => updateFilter("sortOrder", "asc")}
@@ -466,7 +481,7 @@ export default function AdvancedFilterPanel({
                     : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300"
                 }`}
               >
-                ↑ Manje prvo
+                {tf("sortAscending", "↑ Manje prvo")}
               </button>
             </div>
           </div>
@@ -480,7 +495,7 @@ export default function AdvancedFilterPanel({
       {/* Form Rating */}
       <div>
         <label className="block text-sm font-medium mb-2">
-          Minimum Form Rating: {filters.formMin || 0}
+          {tf("minForm", "Minimum Form Rating")}: {filters.formMin || 0}
         </label>
         <input
           type="range"
@@ -496,7 +511,7 @@ export default function AdvancedFilterPanel({
       {/* Value Rating */}
       <div>
         <label className="block text-sm font-medium mb-2">
-          Minimum Value Rating: {filters.valueMin || 0}
+          {tf("minValue", "Minimum Value Rating")}: {filters.valueMin || 0}
         </label>
         <input
           type="range"
@@ -515,11 +530,11 @@ export default function AdvancedFilterPanel({
     <div className="space-y-4">
       {/* Price Changes */}
       <div>
-        <label className="block text-sm font-medium mb-2">Price Changes</label>
+        <label className="block text-sm font-medium mb-2">{tf("priceChanges", "Price Changes")}</label>
         <div className="grid grid-cols-3 gap-2">
           <input
             type="number"
-            placeholder="Min change"
+            placeholder={tf("minChange", "Min change")}
             value={filters.priceChangeMin || ""}
             onChange={(e) =>
               updateFilter(
@@ -531,7 +546,7 @@ export default function AdvancedFilterPanel({
           />
           <input
             type="number"
-            placeholder="Max change"
+            placeholder={tf("maxChange", "Max change")}
             value={filters.priceChangeMax || ""}
             onChange={(e) =>
               updateFilter(
@@ -551,20 +566,20 @@ export default function AdvancedFilterPanel({
             }
             className="border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm p-2"
           >
-            <option value="1h">1 Hour</option>
-            <option value="24h">24 Hours</option>
-            <option value="week">1 Week</option>
+            <option value="1h">{tf("hour", "1 Hour")}</option>
+            <option value="24h">{tf("day", "24 Hours")}</option>
+            <option value="week">{tf("week", "1 Week")}</option>
           </select>
         </div>
       </div>
 
       {/* Ownership */}
       <div>
-        <label className="block text-sm font-medium mb-2">Ownership %</label>
+        <label className="block text-sm font-medium mb-2">{tf("ownershipPct", "Ownership %")}</label>
         <div className="grid grid-cols-2 gap-2">
           <input
             type="number"
-            placeholder="Min %"
+            placeholder={tf("minPct", "Min %")}
             value={filters.ownershipMin || ""}
             onChange={(e) =>
               updateFilter(
@@ -576,7 +591,7 @@ export default function AdvancedFilterPanel({
           />
           <input
             type="number"
-            placeholder="Max %"
+            placeholder={tf("maxPct", "Max %")}
             value={filters.ownershipMax || ""}
             onChange={(e) =>
               updateFilter(
@@ -592,12 +607,12 @@ export default function AdvancedFilterPanel({
       {/* Transfer Activity */}
       <div>
         <label className="block text-sm font-medium mb-2">
-          Transfer Activity
+          {tf("transferActivity", "Transfer Activity")}
         </label>
         <div className="grid grid-cols-2 gap-2">
           <input
             type="number"
-            placeholder="Min transfers in"
+            placeholder={tf("minTransfersIn", "Min transfers in")}
             value={filters.transfersInMin || ""}
             onChange={(e) =>
               updateFilter(
@@ -609,7 +624,7 @@ export default function AdvancedFilterPanel({
           />
           <input
             type="number"
-            placeholder="Min transfers out"
+            placeholder={tf("minTransfersOut", "Min transfers out")}
             value={filters.transfersOutMin || ""}
             onChange={(e) =>
               updateFilter(
@@ -629,7 +644,7 @@ export default function AdvancedFilterPanel({
       {/* Differential Score */}
       <div>
         <label className="block text-sm font-medium mb-2">
-          Minimum Differential Score: {filters.differentialMin || 0}
+          {tf("differentialScore", "Minimum Differential Score")}: {filters.differentialMin || 0}
         </label>
         <input
           type="range"
@@ -643,14 +658,14 @@ export default function AdvancedFilterPanel({
           className="w-full"
         />
         <p className="text-xs text-gray-500 mt-1">
-          Higher scores = better differentials (low ownership + high points)
+          {tf("differentialHint", "Higher scores = better differentials (low ownership + high points)")}
         </p>
       </div>
 
       {/* Captaincy Appeal */}
       <div>
         <label className="block text-sm font-medium mb-2">
-          Minimum Captaincy Appeal: {filters.captaincyAppealMin || 0}
+          {tf("captaincyAppeal", "Minimum Captaincy Appeal")}: {filters.captaincyAppealMin || 0}
         </label>
         <input
           type="range"
@@ -667,7 +682,7 @@ export default function AdvancedFilterPanel({
 
       {/* Search Mode */}
       <div>
-        <label className="block text-sm font-medium mb-2">Search Mode</label>
+        <label className="block text-sm font-medium mb-2">{tf("searchMode", "Search Mode")}</label>
         <div className="flex gap-2">
           <label className="flex items-center">
             <input
@@ -683,7 +698,7 @@ export default function AdvancedFilterPanel({
               }
               className="mr-2"
             />
-            Basic
+            {tf("basic", "Basic")}
           </label>
           <label className="flex items-center">
             <input
@@ -699,14 +714,14 @@ export default function AdvancedFilterPanel({
               }
               className="mr-2"
             />
-            Advanced
+            {tf("advanced", "Advanced")}
           </label>
         </div>
       </div>
 
       {/* Include Options */}
       <div>
-        <label className="block text-sm font-medium mb-2">Include</label>
+        <label className="block text-sm font-medium mb-2">{tf("include", "Include")}</label>
         <div className="space-y-2">
           <label className="flex items-center">
             <input
@@ -715,7 +730,7 @@ export default function AdvancedFilterPanel({
               onChange={(e) => updateFilter("includeInjured", e.target.checked)}
               className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            Injured Players
+            {tf("injuredPlayers", "Injured Players")}
           </label>
           <label className="flex items-center">
             <input
@@ -726,7 +741,7 @@ export default function AdvancedFilterPanel({
               }
               className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            Suspended Players
+            {tf("suspendedPlayers", "Suspended Players")}
           </label>
         </div>
       </div>
@@ -754,11 +769,11 @@ export default function AdvancedFilterPanel({
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                  Filters
+                  {tf("title", "Filters")}
                 </h3>
                 {getActiveFiltersCount > 0 && (
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {getActiveFiltersCount} active
+                    {tf("activeCount", "{{count}} active", { count: getActiveFiltersCount })}
                   </span>
                 )}
               </div>
@@ -768,7 +783,7 @@ export default function AdvancedFilterPanel({
                 onClick={clearAllFilters}
                 className="px-3 py-1.5 text-xs bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors font-medium"
               >
-                Clear All
+                {tf("clearAll", "Clear All")}
               </button>
               <button
                 onClick={onToggle}
@@ -783,7 +798,7 @@ export default function AdvancedFilterPanel({
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                Quick Filters:
+                {tf("quickFilters", "Quick Filters:")}
               </span>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -793,9 +808,8 @@ export default function AdvancedFilterPanel({
                   onClick={action}
                   className="px-2.5 py-1 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors font-medium border border-blue-200 dark:border-blue-800"
                 >
-                  {key
-                    .replace("_", " ")
-                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  {quickFilterLabels[key] ||
+                    key.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                 </button>
               ))}
             </div>
@@ -875,7 +889,7 @@ export default function AdvancedFilterPanel({
                   activeSection === "fixtures") && (
                   <div className="text-center text-gray-500 py-8">
                     <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p>Additional filters coming soon...</p>
+                    <p>{tf("comingSoon", "Additional filters coming soon...")}</p>
                   </div>
                 )}
               </motion.div>

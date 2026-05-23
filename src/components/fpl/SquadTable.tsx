@@ -278,7 +278,7 @@ const SquadTable = React.memo(function SquadTable({
             <div className="text-2xl font-bold text-green-300">
               {startingXITotalPoints} pts
             </div>
-            <div className="text-sm text-white/80">Starting XI Total</div>
+            <div className="text-sm text-white/80">{t("fplLive.startingXITotal", "Starting XI Total")}</div>
           </div>
         </div>
       </div>
@@ -387,15 +387,15 @@ const SquadTable = React.memo(function SquadTable({
 
       <div className="px-4 py-3 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 text-xs text-theme-text-secondary border-t border-theme-border theme-transition">
         <div className="flex justify-between items-center">
-          <div>(C) = Captain • (VC) = Vice Captain • (TC) = Triple Captain</div>
+          <div>{t("fplLive.captainLegend", "(C) = Captain • (VC) = Vice Captain • (TC) = Triple Captain")}</div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-              <span>Starting XI</span>
+              <span>{t("fplLive.startingXI")}</span>
             </div>
             <div className="flex items-center">
               <div className="w-2 h-2 bg-gray-500 rounded-full mr-1"></div>
-              <span>Bench</span>
+              <span>{t("fplLive.bench")}</span>
             </div>
           </div>
         </div>

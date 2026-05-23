@@ -365,10 +365,10 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
             </div>
             <div>
               <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 leading-none">
-                Transfer trendovi
+                {t("teamPlanner.widgets.transferTrends")}
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Šta menadžeri rade ove sedmice
+                {t("teamPlanner.widgets.transferTrendsSubtitle")}
               </p>
             </div>
           </div>
@@ -376,7 +376,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
             onClick={handleManualRefresh}
             disabled={loading}
             className="p-1 rounded-md text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-            title="Osvježi"
+            title={t("teamPlanner.widgets.refresh")}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </button>

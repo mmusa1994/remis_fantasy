@@ -494,10 +494,10 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
               </div>
               <div>
                 <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 leading-none">
-                  Vlasništvo
+                  {t("teamPlanner.widgets.ownershipChanges")}
                 </h3>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Tko je popularan u FPL-u
+                  {t("teamPlanner.widgets.ownershipFromTop10k")}
                 </p>
               </div>
             </div>
@@ -522,7 +522,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
                 onClick={handleManualRefresh}
                 disabled={loading}
                 className="p-1 rounded-md text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-                title="Osvježi"
+                title={t("teamPlanner.widgets.refresh")}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
               </button>
@@ -535,7 +535,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
               <div>
                 <h4 className="flex items-center gap-1.5 px-1 mb-1.5 text-xs font-semibold text-sky-700 dark:text-sky-300">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  <span>Rastući</span>
+                  <span>{t("teamPlanner.widgets.risers")}</span>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300">
                     {data.risers.length}
                   </span>
@@ -555,7 +555,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
               <div>
                 <h4 className="flex items-center gap-1.5 px-1 mb-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
                   <TrendingDown className="w-3.5 h-3.5" />
-                  <span>Padajući</span>
+                  <span>{t("teamPlanner.widgets.fallers")}</span>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
                     {data.fallers.length}
                   </span>
@@ -574,9 +574,11 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
             {lastUpdate && (
               <div className="text-[10px] text-slate-400 dark:text-slate-500 text-center pt-2 border-t border-slate-200/60 dark:border-slate-700/40 flex items-center justify-center gap-1">
                 <Clock className="w-2.5 h-2.5" />
-                <span>Ažurirano u {lastUpdate.toLocaleTimeString()}</span>
+                <span>{t("teamPlanner.widgets.updatedAt", { time: lastUpdate.toLocaleTimeString() })}</span>
                 {cacheRef.current && isCacheValid(cacheRef.current) && (
-                  <span className="text-emerald-500" title="Iz cache-a">(keširano)</span>
+                  <span className="text-emerald-500" title={t("teamPlanner.widgets.fromCache")}>
+                    ({t("teamPlanner.widgets.cached")})
+                  </span>
                 )}
               </div>
             )}

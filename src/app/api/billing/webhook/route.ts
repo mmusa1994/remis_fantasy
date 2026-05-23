@@ -5,6 +5,8 @@ import Stripe from "stripe";
 import * as nodemailer from "nodemailer";
 import { getF1CodesEmailHtml } from "@/app/api/send-f1-email/route";
 import { sendAdminRegistrationNotification } from "@/lib/email";
+import { getTemplate } from "@/data/predictor-templates";
+import { seedTournamentFromTemplate } from "@/lib/predictor-seed";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -184,6 +186,101 @@ export async function POST(req: NextRequest) {
               amount: "15.00€",
               notes: notes || undefined,
             });
+          }
+        }
+
+        if (
+          paymentIntent.metadata?.type === "tournament_creation" ||
+          paymentIntent.metadata?.type === "tournament_creation_2eur"
+        ) {
+          const {
+            user_id,
+            tournament_name,
+            tournament_slug,
+            short_description,
+            accent_color,
+            template_id,
+          } = paymentIntent.metadata;
+          const tmpl = template_id ? getTemplate(template_id) : null;
+
+          if (!user_id || !tournament_name) {
+            console.error("tournament_creation missing metadata", paymentIntent.id);
+          } else {
+            const safeSlug = (tournament_slug || tournament_name)
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[̀-ͯ]/g, "")
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-+|-+$/g, "")
+              .slice(0, 80);
+
+            // Idempotency: skip if a tournament with this PaymentIntent already exists
+            const { data: existing } = await supabaseServer
+              .from("predictor_tournaments")
+              .select("id")
+              .eq("stripe_payment_intent_id", paymentIntent.id)
+              .maybeSingle();
+
+            if (!existing) {
+              // Ensure unique slug by suffixing if taken
+              let finalSlug = safeSlug;
+              const { data: slugTaken } = await supabaseServer
+                .from("predictor_tournaments")
+                .select("id")
+                .eq("slug", finalSlug)
+                .maybeSingle();
+              if (slugTaken) {
+                finalSlug = `${safeSlug}-${paymentIntent.id.slice(-6).toLowerCase()}`;
+              }
+
+              const { data: created, error: createErr } = await supabaseServer
+                .from("predictor_tournaments")
+                .insert({
+                  slug: finalSlug,
+                  name: tournament_name,
+                  short_description: short_description || tmpl?.short_description || null,
+                  long_description: tmpl?.long_description ?? null,
+                  logo_url: tmpl?.logo_url ?? null,
+                  banner_image_url: tmpl?.banner_image_url ?? null,
+                  hero_image_url: tmpl?.hero_image_url ?? null,
+                  rules_md: tmpl?.rules_md ?? null,
+                  point_system_md: tmpl?.point_system_md ?? null,
+                  eligibility_md: tmpl?.eligibility_md ?? null,
+                  prize_pool_amount: tmpl?.prize_pool_amount ?? null,
+                  prize_pool_currency: tmpl?.prize_pool_currency ?? "EUR",
+                  status: "draft",
+                  visibility: "public",
+                  accent_color: accent_color || "amber",
+                  owner_user_id: user_id,
+                  created_via: "user_paid",
+                  stripe_payment_intent_id: paymentIntent.id,
+                  amount_paid: 2.0,
+                })
+                .select("id, slug")
+                .single();
+
+              if (createErr) {
+                console.error("Error creating public tournament:", createErr);
+              } else {
+                if (template_id && created?.id) {
+                  try {
+                    await seedTournamentFromTemplate(created.id, template_id);
+                  } catch (seedErr) {
+                    console.error("Failed to seed template:", seedErr);
+                  }
+                }
+                sendAdminRegistrationNotification({
+                  competition: "Predictor — Korisnički turnir",
+                  first_name: tournament_name,
+                  last_name: `(@${finalSlug})`,
+                  email: paymentIntent.receipt_email || "",
+                  phone: "",
+                  payment_method: "Stripe (kartica)",
+                  amount: "2.00€",
+                  notes: `Tournament ID: ${created?.id} • Owner user_id: ${user_id}`,
+                });
+              }
+            }
           }
         }
 

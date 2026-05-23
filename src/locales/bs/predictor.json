@@ -18,6 +18,545 @@
     "featured": "Istaknuto",
     "all": "Svi turniri"
   },
+  "cta": {
+    "create": "Kreiraj svoj turnir",
+    "createInline": "Kreiraj svoj",
+    "myTournaments": "Moji turniri",
+    "tagline": "Pokreni privatnu ligu za prijatelje ili javni turnir za cijelu zajednicu."
+  },
+  "create": {
+    "loginRequired": {
+      "eyebrow": "Prijava potrebna",
+      "title": "Prijavi se da kreiraš turnir",
+      "subtitle": "Kreiranje turnira zahtijeva nalog. Prijava traje 10 sekundi i tvoj turnir je odmah povezan sa tobom kao vlasnikom.",
+      "loginCta": "Prijavi se",
+      "signupCta": "Nemam nalog — registracija",
+      "perks": {
+        "title": "Šta dobijaš sa nalogom",
+        "items": {
+          "ownership": "Pun vlasnički pristup nad svim svojim turnirima",
+          "tracking": "Pratiš sve turnire i statistike na jednom mjestu",
+          "google": "Google prijava — bez novih lozinki"
+        }
+      },
+      "back": "Predictor"
+    },
+    "templatesExtra": {
+      "matchesIncluded": "{{count}} utakmica uključeno"
+    },
+    "mine": {
+      "eyebrow": "Moji turniri",
+      "title": "Tvoja kolekcija",
+      "subtitle": "Svi turniri koje si kreirao. Klikni bilo koji da otvoriš editor i nastaviš graditi.",
+      "empty": {
+        "title": "Još nemaš ni jedan turnir",
+        "subtitle": "Kreiraj prvi turnir za 2 € i pozovi prijatelje da se takmiče u predikcijama.",
+        "cta": "Kreiraj prvi turnir"
+      },
+      "newButton": "Novi turnir",
+      "back": "Predictor",
+      "credits": {
+        "label": "Imaš besplatne kredite",
+        "amount_one": "{{count}} kredit",
+        "amount_few": "{{count}} kredita",
+        "amount_other": "{{count}} kredita"
+      },
+      "card": {
+        "status": {
+          "draft": "Skica",
+          "published": "Objavljen",
+          "locked": "Zaključan",
+          "finished": "Završen"
+        },
+        "visibility": { "public": "Javan", "private": "Privatan" },
+        "prizePool": "Fond",
+        "freeBadge": "Besplatno"
+      }
+    },
+    "templates": {
+      "title": "Šabloni",
+      "eyebrow": "Brzi start",
+      "subtitle": "Odaberi šablon i osnovni podaci se popunjavaju automatski — uključujući kategorije i bodovanje. Sve možeš urediti kasnije.",
+      "blank": {
+        "name": "Prazan turnir",
+        "short": "Krenem od nule"
+      },
+      "items": {
+        "wc": { "name": "Svjetsko prvenstvo 2026", "short": "FIFA World Cup — prvak, top strijelac, top 4, finalisti" },
+        "pl": { "name": "Premier League 2025/26", "short": "Engleska Premier liga — prvak, top strijelac, top 4" },
+        "cl": { "name": "Liga prvaka 2025/26", "short": "UEFA Champions League — prvak, finalisti, najbolji golman" },
+        "bundes": { "name": "Bundesliga 2025/26", "short": "Njemačka Bundesliga — prvak, top strijelac, top 3" },
+        "laliga": { "name": "La Liga 2025/26", "short": "Španska La Liga — prvak, top strijelac, top 4" },
+        "euroleague": { "name": "EuroLeague Košarka", "short": "EuroLeague basket — Final Four, MVP, prvak" },
+        "f1": { "name": "Formula 1 2026", "short": "F1 sezona — prvak vozač, prvak konstruktor, pole position" }
+      },
+      "pickHint": "Klikni šablon da automatski popuni podatke."
+    },
+    "nav": {
+      "back": "Nazad",
+      "myTournaments": "Moji turniri"
+    },
+    "eyebrow": "Kreiraj turnir",
+    "title": {
+      "line1": "Tvoja liga.",
+      "line2": "Tvoja pravila.",
+      "line3": "Tvoj turnir."
+    },
+    "subtitle": "Pokreni privatni predikcioni turnir za prijatelje, kolege ili kompaniju — ili otvoreni za cijelu zajednicu. Isti alat koji vodi Remis Fantasy zvanične lige, sada u tvojim rukama.",
+    "pricing": {
+      "amount": "2 €",
+      "label": "Jednokratno",
+      "note": "Po turniru. Bez pretplate, bez skrivenih troškova.",
+      "creditTitle": "Imaš besplatne kredite",
+      "creditAmount_one": "{{count}} kredit",
+      "creditAmount_few": "{{count}} kredita",
+      "creditAmount_other": "{{count}} kredita",
+      "creditNote": "Kreiraj turnir bez plaćanja."
+    },
+    "cta": {
+      "primary": "Započni",
+      "primaryFree": "Kreiraj turnir",
+      "signedInAs": "Prijavljen kao"
+    },
+    "included": {
+      "title": "Šta dobijaš",
+      "items": {
+        "ownership": {
+          "title": "Pun vlasnički pristup",
+          "desc": "Ti si jedini administrator. Niko ne dira tvoj turnir osim tebe."
+        },
+        "categories": {
+          "title": "Bogate kategorije predikcija",
+          "desc": "Pobjednik, najbolji strijelac, top 4, tačan rezultat, slobodan tekst — sve dostupno."
+        },
+        "scoring": {
+          "title": "Automatsko i ručno bodovanje",
+          "desc": "Ostavi sistem da računa, ili podesi bodove ručno za rubne slučajeve."
+        },
+        "visibility": {
+          "title": "Javan ili privatan",
+          "desc": "Otvori za sve prijavljene korisnike ili zadrži samo za pozvane."
+        },
+        "branding": {
+          "title": "Vlastiti brand",
+          "desc": "Logo, banner, akcent boja, sponzor. Tvoj turnir izgleda kao gotov proizvod."
+        },
+        "bilingual": {
+          "title": "Bosanski i engleski",
+          "desc": "Svaki tekst može imati BS i EN verziju za međunarodnu publiku."
+        }
+      }
+    },
+    "how": {
+      "title": "Kako funkcioniše",
+      "step1": {
+        "label": "Plati",
+        "desc": "Sigurno Stripe plaćanje karticom. Tvoj turnir je odmah kreiran kao nacrt."
+      },
+      "step2": {
+        "label": "Podesi",
+        "desc": "Kategorije, pravila, nagrade, banner, sponzor. Sve preko admin-grade editora."
+      },
+      "step3": {
+        "label": "Objavi",
+        "desc": "Promijeni status u 'objavljen' i podijeli link. Predikcije počinju."
+      }
+    },
+    "trust": {
+      "stripe": "Sigurno Stripe plaćanje",
+      "owner": "Pun vlasnički pristup",
+      "lifetime": "Doživotno tvoje, bez pretplate"
+    },
+    "footer": {
+      "support": "Pitanja? Piši na",
+      "terms": "Plaćanjem prihvataš da je naplata jednokratna i neopoziva nakon kreiranja turnira."
+    },
+    "form": {
+      "backToInfo": "Nazad na informacije",
+      "step1": "Osnovne informacije",
+      "step2": "Plaćanje karticom",
+      "secure": "Sigurno · Stripe",
+      "fields": {
+        "name": "Naziv turnira",
+        "nameHint": "Naziv koji vide svi koji ulaze u turnir.",
+        "namePlaceholder": "npr. Komšijska Liga 2026",
+        "slug": "URL identifikator",
+        "slugHint": "Linkovi izgledaju ovako:",
+        "slugPlaceholder": "komsijska-liga-2026",
+        "shortDesc": "Kratki opis",
+        "shortDescHint": "Prikazuje se u listi turnira (do 200 znakova).",
+        "shortDescPlaceholder": "Kratko o čemu se radi (opcionalno)",
+        "accent": "Akcent boja",
+        "accentHint": "Možeš promijeniti kasnije u editoru.",
+        "cardholder": "Ime i prezime na kartici",
+        "cardholderHint": "Tačno kako piše na kartici (ime i prezime).",
+        "cardholderPlaceholder": "Npr. Muhamed Musa",
+        "cardNumber": "Broj kartice",
+        "cardExpiry": "Datum isteka",
+        "cardCvc": "CVC"
+      },
+      "colors": {
+        "amber": "Amber",
+        "purple": "Ljubičasta",
+        "blue": "Plava",
+        "red": "Crvena",
+        "green": "Zelena"
+      },
+      "stripeNote": "Tvoji podaci kartice idu direktno na Stripe — nikad ne dolaze do našeg servera.",
+      "submit": {
+        "free": "Kreiraj turnir",
+        "paid": "Plati 2 € i kreiraj turnir",
+        "loadingFree": "Kreiram turnir...",
+        "loadingPaid": "Obrađujem plaćanje..."
+      },
+      "errors": {
+        "nameRequired": "Naziv je obavezan.",
+        "nameMin": "Naziv mora imati najmanje 3 znaka.",
+        "nameMax": "Naziv može imati najviše 80 znakova.",
+        "slugRequired": "URL identifikator je obavezan.",
+        "slugFormat": "Dozvoljena samo mala slova, brojevi i crtice.",
+        "shortDescMax": "Maksimalno 200 znakova.",
+        "cardIncomplete": "Unesi sve podatke kartice.",
+        "cardholderRequired": "Unesi ime i prezime na kartici.",
+        "cardholderFullName": "Unesi i ime i prezime.",
+        "stripeNotReady": "Stripe nije spreman, sačekaj sekundu.",
+        "cardError": "Greška sa formom kartice.",
+        "cardRejected": "Kartica nije prihvaćena.",
+        "paymentStart": "Greška pri pokretanju plaćanja",
+        "paymentRejected": "Plaćanje odbijeno.",
+        "paymentIncomplete": "Plaćanje nije završeno. Pokušaj ponovo.",
+        "tournamentDelay": "Plaćanje uspjelo, ali turnir još nije kreiran. Provjeri 'Moji turniri' za par sekundi.",
+        "generic": "Greška, pokušaj ponovo."
+      }
+    }
+  },
+  "owner": {
+    "nav": {
+      "back": "Moji turniri",
+      "openPublic": "Javna stranica",
+      "supportPrefix": "Pomoć:"
+    },
+    "status": {
+      "draft": "Skica",
+      "published": "Objavljen",
+      "locked": "Zaključan",
+      "finished": "Završen"
+    },
+    "visibility": {
+      "public": "Javan",
+      "private": "Privatan"
+    },
+    "tabs": {
+      "settings": "Postavke",
+      "categories": "Kategorije",
+      "matches": "Utakmice",
+      "rules": "Pravila",
+      "rewards": "Nagrade",
+      "members": "Članovi",
+      "scoring": "Bodovanje"
+    },
+    "common": {
+      "save": "Snimi",
+      "cancel": "Otkaži",
+      "edit": "Uredi",
+      "delete": "Obriši",
+      "add": "Dodaj",
+      "loading": "Učitavanje…",
+      "saving": "Snimam…",
+      "languageBs": "BS",
+      "languageEn": "EN",
+      "optional": "opcionalno",
+      "required": "obavezno",
+      "search": "Pretraži"
+    },
+    "toast": {
+      "saved": "Snimljeno",
+      "deleted": "Obrisano",
+      "updated": "Ažurirano",
+      "removed": "Uklonjeno",
+      "saveError": "Greška",
+      "fetchError": "Greška pri učitavanju"
+    },
+    "statusBanner": {
+      "draft": {
+        "title": "Turnir nije objavljen",
+        "desc": "Bez \"Objavljen\" statusa nijedan korisnik ne može vidjeti ni pridružiti se turniru.",
+        "cta": "Objavi sada"
+      },
+      "published": {
+        "title": "Turnir je javan",
+        "desc": "Prijavljeni korisnici mogu vidjeti turnir i predviđati.",
+        "cta": "Zaključaj predikcije"
+      },
+      "locked": {
+        "title": "Predikcije zaključane",
+        "desc": "Više se ne primaju nove predikcije — boduj rezultate.",
+        "cta": "Označi kao završen"
+      },
+      "finished": {
+        "title": "Turnir završen",
+        "desc": "Turnir je zatvoren. Možeš ga ponovo otvoriti kao skicu.",
+        "cta": "Vrati u skicu"
+      }
+    },
+    "settings": {
+      "basics": {
+        "title": "Osnovni podaci",
+        "desc": "Naziv, URL i kratki opis vide svi korisnici turnira."
+      },
+      "fields": {
+        "name": "Naziv turnira",
+        "nameEn": "Tournament name",
+        "slug": "URL identifikator (slug)",
+        "slugHint": "Linkovi izgledaju: /predictor/{{slug}}",
+        "shortDesc": "Kratki opis",
+        "shortDescEn": "Short description",
+        "longDesc": "Detaljan opis (Markdown)",
+        "longDescEn": "Long description (Markdown)",
+        "englishHint": "Englesku verziju vide korisnici sa EN jezikom."
+      },
+      "visibility": {
+        "title": "Vidljivost i status",
+        "desc": "Kontroliraj ko vidi turnir i da li je živ.",
+        "statusLabel": "Status",
+        "statusHint": "Stavi na \"Objavljen\" kad si spreman da prima predikcije.",
+        "visibilityLabel": "Vidljivost",
+        "visibilityHint": "Privatni turniri se ne pojavljuju u listi — samo preko direktnog linka.",
+        "accentLabel": "Akcent boja",
+        "approvalLabel": "Odobravanje članova",
+        "approvalHint": "Ako uključeno, svaki novi član mora biti odobren od tebe.",
+        "approvalOn": "Članovi moraju biti odobreni",
+        "approvalOff": "Svi prijavljeni mogu odmah ući"
+      },
+      "timestamps": {
+        "title": "Vremenske oznake",
+        "desc": "Sve u UTC, opcionalno.",
+        "startsAt": "Početak",
+        "endsAt": "Kraj",
+        "lockAt": "Rok za predikcije",
+        "lockHint": "Nakon ovog vremena više se ne može predviđati."
+      },
+      "branding": {
+        "title": "Slike i brand",
+        "bannerUrl": "Banner URL",
+        "heroUrl": "Hero URL",
+        "logoUrl": "Logo URL",
+        "uploadCta": "Otpremi sliku",
+        "uploading": "Otpremam…",
+        "orUseUrl": "Ili koristi direktan link ispod",
+        "remove": "Ukloni",
+        "uploadError": "Greška pri otpremanju"
+      },
+      "prize": {
+        "title": "Nagradni fond i sponzor",
+        "amount": "Iznos fonda",
+        "currency": "Valuta",
+        "sponsorName": "Naziv sponzora",
+        "sponsorUrl": "Sponzor link",
+        "sponsorLogoUrl": "Sponzor logo URL"
+      },
+      "rules": {
+        "title": "Pravila i bodovanje (Markdown)",
+        "general": "Opšta pravila",
+        "generalEn": "General rules",
+        "pointSystem": "Sistem bodovanja",
+        "pointSystemEn": "Point system",
+        "eligibility": "Uslovi učešća",
+        "eligibilityEn": "Eligibility"
+      },
+      "saveBtn": "Snimi postavke",
+      "deleteBtn": "Obriši turnir",
+      "deleteConfirm": "Sigurno želiš obrisati ovaj turnir? Ova akcija se ne može poništiti.",
+      "toast": {
+        "saved": "Postavke snimljene",
+        "saveError": "Greška pri snimanju"
+      }
+    },
+    "categoriesTab": {
+      "title": "Kategorije predikcija",
+      "desc": "Svako pitanje koje korisnik odgovara (npr. \"Pobjednik turnira\").",
+      "new": "Nova kategorija",
+      "empty": "Još nema kategorija. Dodaj prvu da bi korisnici mogli predviđati.",
+      "deleteConfirm": "Obriši ovu kategoriju?",
+      "optionCount": "{{count}} opcija",
+      "editor": {
+        "createTitle": "Nova kategorija",
+        "editTitle": "Uredi kategoriju",
+        "name": "Naziv",
+        "nameEn": "Name",
+        "namePlaceholder": "npr. Pobjednik turnira",
+        "nameEnPlaceholder": "e.g. Tournament Winner",
+        "description": "Opis",
+        "descriptionEn": "Description",
+        "categoryType": "Tip kategorije",
+        "maxSelections": "Maks. broj odabira",
+        "sortOrder": "Sortni redoslijed",
+        "pointsCorrect": "Bodovi za pun pogodak",
+        "pointsPartial": "Djelimični bodovi (po pogotku)",
+        "pointsRankedBonus": "Bonus za tačan rang",
+        "isActive": "Aktivna",
+        "isActiveHint": "Prikazuj korisnicima",
+        "options": "Opcije za odabir",
+        "addOption": "Dodaj opciju",
+        "noOptions": "Dodaj barem jednu opciju.",
+        "optionBs": "BS naziv",
+        "optionEn": "EN naziv (opcionalno)",
+        "optionCorrect": "Tačan",
+        "nameRequired": "Naziv obavezan"
+      }
+    },
+    "categoryTypes": {
+      "single_choice": { "label": "Jedan odgovor", "desc": "Korisnik bira jednu opciju" },
+      "multiple_choice": { "label": "Više odgovora", "desc": "Korisnik bira N opcija (bez redoslijeda)" },
+      "ranked_top_n": { "label": "Top-N rang", "desc": "Korisnik rangira N opcija (npr. top 4)" },
+      "exact_score": { "label": "Tačan rezultat", "desc": "Korisnik unosi rezultat (home : away)" },
+      "numeric": { "label": "Brojčana", "desc": "Korisnik upisuje broj" },
+      "free_text": { "label": "Slobodan tekst", "desc": "Korisnik upisuje tekst" }
+    },
+    "matchesTab": {
+      "title": "Utakmice (opcionalno)",
+      "desc": "Match-by-match predikcije s automatskim bodovanjem rezultata.",
+      "new": "Nova utakmica",
+      "empty": "Nema utakmica. Match-predictions su opcionalne — turnir radi i samo sa kategorijama.",
+      "noKickoff": "Bez termina",
+      "deleteConfirm": "Obriši utakmicu?",
+      "editor": {
+        "createTitle": "Nova utakmica",
+        "editTitle": "Uredi utakmicu",
+        "home": "Domaćin",
+        "homeEn": "Home team",
+        "away": "Gost",
+        "awayEn": "Away team",
+        "stageLabel": "Faza/Oznaka",
+        "stageLabelEn": "Stage label",
+        "stageBsPlaceholder": "npr. Polufinale",
+        "stageEnPlaceholder": "e.g. Semi-final",
+        "kickoff": "Termin (kickoff)",
+        "status": "Status",
+        "type": "Tip",
+        "pointsExact": "Bod. tačan rezultat",
+        "pointsDiff": "Bod. tačna razlika",
+        "pointsWinner": "Bod. tačan pobjednik",
+        "finalScore": "Konačan rezultat",
+        "finalScoreHint": "Unesi kad utakmica završi — bodovanje se automatski računa za sve predikcije.",
+        "homeScore": "Domaćin gol",
+        "awayScore": "Gost gol",
+        "statusOptions": {
+          "scheduled": "Zakazano",
+          "live": "Live",
+          "finished": "Završeno",
+          "postponed": "Odgođeno",
+          "cancelled": "Otkazano"
+        },
+        "typeOptions": {
+          "group": "Grupna",
+          "knockout": "Eliminacijska",
+          "friendly": "Prijateljska"
+        },
+        "teamsRequired": "Oba tima su obavezna"
+      }
+    },
+    "rulesTab": {
+      "title": "Pravila / informacije",
+      "desc": "Kartice koje se pokazuju korisnicima na stranici turnira (Markdown).",
+      "new": "Novo pravilo",
+      "empty": "Nema pravila.",
+      "deleteConfirm": "Obrisati ovo pravilo?",
+      "editor": {
+        "createTitle": "Novo pravilo",
+        "editTitle": "Uredi pravilo",
+        "kind": "Tip",
+        "title": "Naslov",
+        "titleEn": "Title",
+        "body": "Tijelo (Markdown)",
+        "bodyEn": "Body (Markdown)",
+        "titleRequired": "Naslov obavezan"
+      },
+      "kinds": {
+        "rule": "Pravilo",
+        "bonus": "Bonus",
+        "info": "Info",
+        "deadline": "Rok",
+        "eligibility": "Uslovi"
+      }
+    },
+    "rewardsTab": {
+      "title": "Nagrade",
+      "desc": "Po rangu (1., 2., 3.) ili posebne nagrade po kategoriji.",
+      "new": "Nova nagrada",
+      "empty": "Nema nagrada.",
+      "deleteConfirm": "Obrisati nagradu?",
+      "editor": {
+        "createTitle": "Nova nagrada",
+        "editTitle": "Uredi nagradu",
+        "rankPosition": "Rang (1, 2, 3...)",
+        "rankHint": "Ostavi prazno za bonus nagradu.",
+        "prizeType": "Tip",
+        "title": "Naslov",
+        "titleEn": "Title",
+        "description": "Opis",
+        "descriptionEn": "Description",
+        "value": "Vrijednost",
+        "currency": "Valuta",
+        "titleRequired": "Naslov obavezan"
+      },
+      "prizeTypes": {
+        "cash": "Cash",
+        "physical": "Fizička nagrada",
+        "voucher": "Voucher",
+        "vip": "VIP",
+        "sponsor": "Sponzor",
+        "fantasy_points": "Fantasy bodovi",
+        "other": "Drugo"
+      }
+    },
+    "membersTab": {
+      "title": "Članovi turnira",
+      "approvalsOn": "Odobravanje je uključeno — moraš odobriti svakog novog člana.",
+      "approvalsOff": "Svi prijavljeni mogu odmah ući. Možeš svejedno banovati.",
+      "empty": "Nema članova.",
+      "noName": "(bez imena)",
+      "joinedOn": "prijavljen",
+      "approve": "Odobri",
+      "reject": "Odbij",
+      "ban": "Banuj",
+      "removeConfirm": "Ukloniti člana?",
+      "filterAll": "Svi statusi",
+      "statuses": {
+        "pending": "Na čekanju",
+        "approved": "Odobren",
+        "rejected": "Odbijen",
+        "banned": "Banovan"
+      },
+      "filters": {
+        "pending": "Na čekanju",
+        "approved": "Odobreni",
+        "rejected": "Odbijeni",
+        "banned": "Banovani"
+      }
+    },
+    "scoringTab": {
+      "leaderboardView": "Tabela",
+      "manualView": "Manualno bodovanje",
+      "rescore": "Auto re-bodovanje",
+      "rescoring": "Re-bodujem…",
+      "rescoreConfirm": "Ponovo izračunati sve bodove iz tačnih odgovora? Ručne promjene mogu biti pregažene.",
+      "rescoredCount": "Pre-bodovano: {{count}} predikcija",
+      "leaderboardEmpty": "Još nema rezultata. Tabela se pojavljuje čim korisnici počnu predviđati i kad postaviš tačne odgovore.",
+      "manualEmpty": "Nema predikcija u ovoj kategoriji.",
+      "rankHeader": "#",
+      "userHeader": "Korisnik",
+      "pointsHeader": "Bodovi",
+      "predictionHeader": "Predikcija",
+      "lockedHeader": "Zaključano",
+      "categoryLabel": "Kategorija",
+      "searchLabel": "Pretraži (email ili ime)",
+      "searchPlaceholder": "filtriraj...",
+      "selectionsCount": "{{count}} odabir(a)",
+      "footerHint": "Promijene bodova se automatski snimaju kad napustiš polje. \"Zaključano\" sprečava budući auto-rescore da ih pregazi.",
+      "pointsSaved": "Bodovi snimljeni"
+    }
+  },
   "empty": {
     "title": "Trenutno nema aktivnih turnira",
     "subtitle": "Predictor turniri se otvaraju samo neposredno prije velikih takmičenja — Svjetsko prvenstvo, Euro, Liga prvaka. Vrati se uskoro i pripremi se da napadneš vrh tabele.",

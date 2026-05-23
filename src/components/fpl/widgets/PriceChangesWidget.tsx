@@ -58,9 +58,7 @@ export default function PriceChangesWidget({
         });
 
         if (!response.ok) {
-          throw new Error(
-            "FPL API appears unavailable. Price changes could not be loaded."
-          );
+          throw new Error(t("teamPlanner.widgets.fplApiUnavailablePrices"));
         }
 
         const result = await response.json();
@@ -103,13 +101,9 @@ export default function PriceChangesWidget({
           if (gameweek > 3) {
             return fetchPriceChanges(gameweek - 1);
           }
-          setError(
-            "FPL API appears unavailable. Price changes could not be loaded."
-          );
+          setError(t("teamPlanner.widgets.fplApiUnavailablePrices"));
         } else if (!(err instanceof Error) || err.name !== "AbortError") {
-          setError(
-            "FPL API appears unavailable. Please try again later."
-          );
+          setError(t("teamPlanner.widgets.fplApiUnavailable"));
         }
       } finally {
         setLoading(false);
@@ -180,7 +174,7 @@ export default function PriceChangesWidget({
             onClick={() => fetchPriceChanges()}
             className="text-theme-text-secondary hover:text-theme-foreground underline mt-2"
           >
-            Retry now
+            {t("teamPlanner.widgets.retryNow")}
           </button>
         </div>
       </div>
@@ -272,7 +266,7 @@ export default function PriceChangesWidget({
                 {t("teamPlanner.widgets.priceChanges")}
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Cijene igrača — uživo
+                {t("teamPlanner.widgets.pricesLive")}
               </p>
             </div>
           </div>
@@ -285,14 +279,14 @@ export default function PriceChangesWidget({
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
-                <option value={20}>Sve</option>
+                <option value={20}>{t("teamPlanner.widgets.showAll")}</option>
               </select>
               <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
             </div>
             <button
               onClick={() => fetchPriceChanges()}
               className="p-1 rounded-md text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Osvježi"
+              title={t("teamPlanner.widgets.refresh")}
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
@@ -313,7 +307,7 @@ export default function PriceChangesWidget({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[10px] uppercase tracking-wide font-bold text-slate-500 dark:text-slate-400">
-                  Tvoj tim
+                  {t("teamPlanner.widgets.yourTeam")}
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                   {data.user_team_impact.affected_players} {t("teamPlanner.widgets.playersAffected")}
@@ -342,7 +336,7 @@ export default function PriceChangesWidget({
               >
                 <div className="flex items-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  <span>Rastući</span>
+                  <span>{t("teamPlanner.widgets.risers")}</span>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
                     {data.risers.length}
                   </span>
@@ -378,7 +372,7 @@ export default function PriceChangesWidget({
               >
                 <div className="flex items-center gap-1.5">
                   <TrendingDown className="w-3.5 h-3.5" />
-                  <span>Padajući</span>
+                  <span>{t("teamPlanner.widgets.fallers")}</span>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300">
                     {data.fallers.length}
                   </span>
@@ -408,7 +402,7 @@ export default function PriceChangesWidget({
           {/* Last Update */}
           {lastUpdate && (
             <div className="text-[10px] text-slate-400 dark:text-slate-500 text-center pt-2 border-t border-slate-200/60 dark:border-slate-700/40">
-              Ažurirano u {lastUpdate.toLocaleTimeString()}
+              {t("teamPlanner.widgets.updatedAt", { time: lastUpdate.toLocaleTimeString() })}
             </div>
           )}
         </div>

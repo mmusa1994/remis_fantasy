@@ -41,9 +41,9 @@ export const metadata: Metadata = {
       "Track your Fantasy Premier League team live! Real-time bonus points, manager rankings, team analysis, and gameweek statistics. The ultimate FPL Live experience.",
     images: [
       {
-        url: "/images/fpl-live-og.jpg",
-        width: 1200,
-        height: 630,
+        url: "/images/logos/fant-pl.jpg",
+        width: 600,
+        height: 450,
         alt: "FPL Live - Real-Time Fantasy Premier League Tracking",
       },
     ],
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     title: "FPL Live - Real-Time Fantasy Premier League Tracking",
     description:
       "Track your Fantasy Premier League team live! Real-time bonus points, manager rankings, team analysis.",
-    images: ["/images/fpl-live-twitter.jpg"],
+    images: ["/images/logos/fant-pl.jpg"],
   },
   robots: {
     index: true,

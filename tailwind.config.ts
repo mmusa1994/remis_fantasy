@@ -58,6 +58,11 @@ const config: Config = {
         'theme-text-muted': 'var(--theme-text-muted)',
         'theme-heading-primary': 'var(--theme-heading-primary)',
         'theme-heading-secondary': 'var(--theme-heading-secondary)',
+        // Predictor / Tournament brand colour. One source of truth in globals.css.
+        'predictor-primary': 'rgb(var(--predictor-primary) / <alpha-value>)',
+        'predictor-primary-hover': 'rgb(var(--predictor-primary-hover) / <alpha-value>)',
+        'predictor-accent-light': 'rgb(var(--predictor-accent-light) / <alpha-value>)',
+        'predictor-accent-dark': 'rgb(var(--predictor-accent-dark) / <alpha-value>)',
       },
       fontFamily: {
         anta: ["var(--font-anta)", "system-ui", "sans-serif"],

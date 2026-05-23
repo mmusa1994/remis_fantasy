@@ -1,0 +1,130 @@
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseServer } from "@/lib/supabase-server";
+import {
+  requireTournamentOwner,
+  jsonError,
+  slugify,
+} from "@/lib/predictor";
+
+async function tournamentForCategory(categoryId: string): Promise<string | null> {
+  const { data } = await supabaseServer
+    .from("predictor_categories")
+    .select("tournament_id")
+    .eq("id", categoryId)
+    .maybeSingle();
+  return (data?.tournament_id as string) || null;
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const tournamentId = searchParams.get("tournament_id");
+  if (!tournamentId) return jsonError("tournament_id is required");
+  const own = await requireTournamentOwner(tournamentId);
+  if (!own.ok) return own.response;
+
+  const { data, error } = await supabaseServer
+    .from("predictor_categories")
+    .select("*, predictor_options(*)")
+    .eq("tournament_id", tournamentId)
+    .order("sort_order", { ascending: true });
+  if (error) return jsonError(error.message, 500);
+  return NextResponse.json(data ?? []);
+}
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  if (!body?.tournament_id || !body?.name)
+    return jsonError("tournament_id and name are required");
+  const own = await requireTournamentOwner(body.tournament_id);
+  if (!own.ok) return own.response;
+
+  const slug = body.slug ? slugify(body.slug) : slugify(body.name);
+  const insert = {
+    tournament_id: body.tournament_id,
+    slug,
+    name: body.name,
+    name_en: body.name_en ?? null,
+    description: body.description ?? null,
+    description_en: body.description_en ?? null,
+    rules_md: body.rules_md ?? null,
+    rules_md_en: body.rules_md_en ?? null,
+    icon: body.icon ?? null,
+    category_type: body.category_type ?? "single_choice",
+    max_selections: body.max_selections ?? 1,
+    points_correct: body.points_correct ?? 10,
+    points_partial: body.points_partial ?? 0,
+    points_ranked_bonus: body.points_ranked_bonus ?? 0,
+    visibility: body.visibility ?? "public",
+    lock_at: body.lock_at ?? null,
+    sort_order: body.sort_order ?? 0,
+    is_active: body.is_active ?? true,
+  };
+
+  const { data, error } = await supabaseServer
+    .from("predictor_categories")
+    .insert(insert)
+    .select()
+    .single();
+  if (error) return jsonError(error.message, 500);
+  return NextResponse.json(data);
+}
+
+export async function PUT(req: NextRequest) {
+  const body = await req.json();
+  if (!body?.id) return jsonError("id is required");
+  const tid = await tournamentForCategory(body.id);
+  if (!tid) return jsonError("Category not found", 404);
+  const own = await requireTournamentOwner(tid);
+  if (!own.ok) return own.response;
+
+  const updates: Record<string, unknown> = {};
+  const allowed = [
+    "slug",
+    "name",
+    "name_en",
+    "description",
+    "description_en",
+    "rules_md",
+    "rules_md_en",
+    "icon",
+    "category_type",
+    "max_selections",
+    "points_correct",
+    "points_partial",
+    "points_ranked_bonus",
+    "visibility",
+    "lock_at",
+    "sort_order",
+    "is_active",
+  ];
+  for (const k of allowed) if (k in body) updates[k] = body[k];
+  if (updates.slug && typeof updates.slug === "string") {
+    updates.slug = slugify(updates.slug);
+  }
+
+  const { data, error } = await supabaseServer
+    .from("predictor_categories")
+    .update(updates)
+    .eq("id", body.id)
+    .select()
+    .single();
+  if (error) return jsonError(error.message, 500);
+  return NextResponse.json(data);
+}
+
+export async function DELETE(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) return jsonError("id is required");
+  const tid = await tournamentForCategory(id);
+  if (!tid) return jsonError("Category not found", 404);
+  const own = await requireTournamentOwner(tid);
+  if (!own.ok) return own.response;
+
+  const { error } = await supabaseServer
+    .from("predictor_categories")
+    .delete()
+    .eq("id", id);
+  if (error) return jsonError(error.message, 500);
+  return NextResponse.json({ ok: true });
+}

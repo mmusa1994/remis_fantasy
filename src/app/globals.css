@@ -12,6 +12,22 @@
 
 /* Anta font is loaded via next/font/google in layout.tsx */
 
+/* ────────────────────────────────────────────────────────────
+   Predictor / Tournament brand color.
+   Change the values here and the whole tournament UI updates.
+   rgb triplet (no `rgb(...)` wrapper) so we can use `/ <alpha>`.
+   ──────────────────────────────────────────────────────────── */
+:root {
+  /* Primary fill — the soft Begin-button yellow (Tailwind amber-200) */
+  --predictor-primary: 253 230 138;
+  /* Slightly lighter hover (Tailwind amber-100) */
+  --predictor-primary-hover: 254 243 199;
+  /* Darker, readable accent for text on LIGHT backgrounds (Tailwind amber-600) */
+  --predictor-accent-light: 217 119 6;
+  /* Lighter, readable accent for text on DARK backgrounds (Tailwind amber-300) */
+  --predictor-accent-dark: 252 211 77;
+}
+
 /* Light Theme Colors */
 :root[data-theme="light"] {
   --theme-background: #fafafa;

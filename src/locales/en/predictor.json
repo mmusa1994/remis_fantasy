@@ -18,6 +18,543 @@
     "featured": "Featured",
     "all": "All tournaments"
   },
+  "cta": {
+    "create": "Create your tournament",
+    "createInline": "Create your own",
+    "myTournaments": "My tournaments",
+    "tagline": "Run a private league for friends, or a public tournament for the whole community."
+  },
+  "create": {
+    "loginRequired": {
+      "eyebrow": "Login required",
+      "title": "Sign in to create a tournament",
+      "subtitle": "Creating a tournament requires an account. Signing in takes 10 seconds and your tournament is instantly linked to you as the owner.",
+      "loginCta": "Sign in",
+      "signupCta": "No account — register",
+      "perks": {
+        "title": "What you get with an account",
+        "items": {
+          "ownership": "Full owner access to every tournament you create",
+          "tracking": "Track all your tournaments and stats in one place",
+          "google": "One-click Google sign-in — no new passwords"
+        }
+      },
+      "back": "Predictor"
+    },
+    "templatesExtra": {
+      "matchesIncluded": "{{count}} matches included"
+    },
+    "mine": {
+      "eyebrow": "My tournaments",
+      "title": "Your collection",
+      "subtitle": "Every tournament you've created. Click any one to open the editor and keep building.",
+      "empty": {
+        "title": "No tournaments yet",
+        "subtitle": "Create your first tournament for €2 and invite friends to compete on predictions.",
+        "cta": "Create your first tournament"
+      },
+      "newButton": "New tournament",
+      "back": "Predictor",
+      "credits": {
+        "label": "You have free credits",
+        "amount_one": "{{count}} credit",
+        "amount_other": "{{count}} credits"
+      },
+      "card": {
+        "status": {
+          "draft": "Draft",
+          "published": "Published",
+          "locked": "Locked",
+          "finished": "Finished"
+        },
+        "visibility": { "public": "Public", "private": "Private" },
+        "prizePool": "Pool",
+        "freeBadge": "Free"
+      }
+    },
+    "templates": {
+      "title": "Templates",
+      "eyebrow": "Quick start",
+      "subtitle": "Pick a template and the basics — including categories and scoring — fill in automatically. Everything is editable afterwards.",
+      "blank": {
+        "name": "Blank tournament",
+        "short": "Start from scratch"
+      },
+      "items": {
+        "wc": { "name": "World Cup 2026", "short": "FIFA World Cup — winner, top scorer, top 4, finalists" },
+        "pl": { "name": "Premier League 2025/26", "short": "English Premier League — winner, top scorer, top 4" },
+        "cl": { "name": "Champions League 2025/26", "short": "UEFA Champions League — winner, finalists, best keeper" },
+        "bundes": { "name": "Bundesliga 2025/26", "short": "German Bundesliga — winner, top scorer, top 3" },
+        "laliga": { "name": "La Liga 2025/26", "short": "Spanish La Liga — winner, top scorer, top 4" },
+        "euroleague": { "name": "EuroLeague Basketball", "short": "EuroLeague — Final Four, MVP, champion" },
+        "f1": { "name": "Formula 1 2026", "short": "F1 season — driver, constructor, pole position" }
+      },
+      "pickHint": "Click a template to auto-fill the form."
+    },
+    "nav": {
+      "back": "Back",
+      "myTournaments": "My tournaments"
+    },
+    "eyebrow": "Create tournament",
+    "title": {
+      "line1": "Your league.",
+      "line2": "Your rules.",
+      "line3": "Your tournament."
+    },
+    "subtitle": "Run a private prediction tournament for friends, colleagues, or your company — or an open one for the whole community. The same engine that powers Remis Fantasy's official competitions, now in your hands.",
+    "pricing": {
+      "amount": "€2",
+      "label": "One-time",
+      "note": "Per tournament. No subscription, no hidden fees.",
+      "creditTitle": "You have free credits",
+      "creditAmount_one": "{{count}} credit",
+      "creditAmount_other": "{{count}} credits",
+      "creditNote": "Create a tournament without paying."
+    },
+    "cta": {
+      "primary": "Begin",
+      "primaryFree": "Create tournament",
+      "signedInAs": "Signed in as"
+    },
+    "included": {
+      "title": "What's included",
+      "items": {
+        "ownership": {
+          "title": "Full owner access",
+          "desc": "You are the sole administrator. No one touches your tournament except you."
+        },
+        "categories": {
+          "title": "Rich prediction categories",
+          "desc": "Winner, top scorer, top 4, exact score, free text — every category type available."
+        },
+        "scoring": {
+          "title": "Automatic and manual scoring",
+          "desc": "Let the system calculate, or override points by hand for edge cases."
+        },
+        "visibility": {
+          "title": "Public or private",
+          "desc": "Open it to every signed-in user, or keep it invite-only."
+        },
+        "branding": {
+          "title": "Your own brand",
+          "desc": "Logo, banner, accent color, sponsor. Your tournament looks like a finished product."
+        },
+        "bilingual": {
+          "title": "Bosnian and English",
+          "desc": "Every text field has a BS and EN counterpart for international audiences."
+        }
+      }
+    },
+    "how": {
+      "title": "How it works",
+      "step1": {
+        "label": "Pay",
+        "desc": "Secure Stripe card payment. Your tournament is created instantly as a draft."
+      },
+      "step2": {
+        "label": "Customise",
+        "desc": "Categories, rules, prizes, banner, sponsor. All via the admin-grade editor."
+      },
+      "step3": {
+        "label": "Publish",
+        "desc": "Switch status to 'published' and share the link. Predictions begin."
+      }
+    },
+    "trust": {
+      "stripe": "Secure Stripe payments",
+      "owner": "Full owner access",
+      "lifetime": "Yours for life, no subscription"
+    },
+    "footer": {
+      "support": "Questions? Email us at",
+      "terms": "By paying you agree the charge is one-time and non-refundable once the tournament is created."
+    },
+    "form": {
+      "backToInfo": "Back to overview",
+      "step1": "Basic information",
+      "step2": "Card payment",
+      "secure": "Secure · Stripe",
+      "fields": {
+        "name": "Tournament name",
+        "nameHint": "The name shown to everyone who enters the tournament.",
+        "namePlaceholder": "e.g. Neighbourhood League 2026",
+        "slug": "URL identifier",
+        "slugHint": "Links will look like this:",
+        "slugPlaceholder": "neighbourhood-league-2026",
+        "shortDesc": "Short description",
+        "shortDescHint": "Shown in the tournament list (up to 200 characters).",
+        "shortDescPlaceholder": "A quick line about what this is (optional)",
+        "accent": "Accent colour",
+        "accentHint": "You can change this later in the editor.",
+        "cardholder": "Name on card",
+        "cardholderHint": "Exactly as it appears on your card (first and last name).",
+        "cardholderPlaceholder": "e.g. Muhamed Musa",
+        "cardNumber": "Card number",
+        "cardExpiry": "Expiry",
+        "cardCvc": "CVC"
+      },
+      "colors": {
+        "amber": "Amber",
+        "purple": "Purple",
+        "blue": "Blue",
+        "red": "Red",
+        "green": "Green"
+      },
+      "stripeNote": "Your card details go straight to Stripe — they never touch our server.",
+      "submit": {
+        "free": "Create tournament",
+        "paid": "Pay €2 and create",
+        "loadingFree": "Creating tournament...",
+        "loadingPaid": "Processing payment..."
+      },
+      "errors": {
+        "nameRequired": "Name is required.",
+        "nameMin": "Name must be at least 3 characters.",
+        "nameMax": "Name can have at most 80 characters.",
+        "slugRequired": "URL identifier is required.",
+        "slugFormat": "Only lowercase letters, numbers and dashes allowed.",
+        "shortDescMax": "Maximum 200 characters.",
+        "cardIncomplete": "Enter all card details.",
+        "cardholderRequired": "Enter the name on the card.",
+        "cardholderFullName": "Enter both first and last name.",
+        "stripeNotReady": "Stripe isn't ready yet — give it a second.",
+        "cardError": "Card form error.",
+        "cardRejected": "Card was not accepted.",
+        "paymentStart": "Failed to start payment",
+        "paymentRejected": "Payment rejected.",
+        "paymentIncomplete": "Payment did not complete. Try again.",
+        "tournamentDelay": "Payment succeeded, but the tournament isn't created yet. Check 'My tournaments' in a few seconds.",
+        "generic": "Something went wrong, try again."
+      }
+    }
+  },
+  "owner": {
+    "nav": {
+      "back": "My tournaments",
+      "openPublic": "Public page",
+      "supportPrefix": "Need help?"
+    },
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "locked": "Locked",
+      "finished": "Finished"
+    },
+    "visibility": {
+      "public": "Public",
+      "private": "Private"
+    },
+    "tabs": {
+      "settings": "Settings",
+      "categories": "Categories",
+      "matches": "Matches",
+      "rules": "Rules",
+      "rewards": "Rewards",
+      "members": "Members",
+      "scoring": "Scoring"
+    },
+    "common": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete",
+      "add": "Add",
+      "loading": "Loading…",
+      "saving": "Saving…",
+      "languageBs": "BS",
+      "languageEn": "EN",
+      "optional": "optional",
+      "required": "required",
+      "search": "Search"
+    },
+    "toast": {
+      "saved": "Saved",
+      "deleted": "Deleted",
+      "updated": "Updated",
+      "removed": "Removed",
+      "saveError": "Save error",
+      "fetchError": "Load error"
+    },
+    "statusBanner": {
+      "draft": {
+        "title": "Tournament not published",
+        "desc": "Without the \"Published\" status, nobody can see or join this tournament.",
+        "cta": "Publish now"
+      },
+      "published": {
+        "title": "Live and visible",
+        "desc": "Signed-in users can see the tournament and place predictions.",
+        "cta": "Lock predictions"
+      },
+      "locked": {
+        "title": "Predictions locked",
+        "desc": "No new predictions accepted — score the results.",
+        "cta": "Mark as finished"
+      },
+      "finished": {
+        "title": "Tournament closed",
+        "desc": "This tournament is closed. You can move it back to draft.",
+        "cta": "Reopen as draft"
+      }
+    },
+    "settings": {
+      "basics": {
+        "title": "Basic information",
+        "desc": "Name, URL and short description shown to everyone."
+      },
+      "fields": {
+        "name": "Tournament name",
+        "nameEn": "Tournament name (EN)",
+        "slug": "URL identifier (slug)",
+        "slugHint": "Links will look like: /predictor/{{slug}}",
+        "shortDesc": "Short description",
+        "shortDescEn": "Short description (EN)",
+        "longDesc": "Long description (Markdown)",
+        "longDescEn": "Long description (Markdown) (EN)",
+        "englishHint": "EN version is shown to users on English language."
+      },
+      "visibility": {
+        "title": "Visibility & status",
+        "desc": "Control who sees the tournament and whether it's live.",
+        "statusLabel": "Status",
+        "statusHint": "Set to \"Published\" when you're ready for predictions.",
+        "visibilityLabel": "Visibility",
+        "visibilityHint": "Private tournaments don't appear in lists — only via direct link.",
+        "accentLabel": "Accent colour",
+        "approvalLabel": "Member approval",
+        "approvalHint": "If on, every new member must be approved by you.",
+        "approvalOn": "Members must be approved",
+        "approvalOff": "All signed-in users can join immediately"
+      },
+      "timestamps": {
+        "title": "Dates & deadlines",
+        "desc": "All UTC, all optional.",
+        "startsAt": "Starts at",
+        "endsAt": "Ends at",
+        "lockAt": "Predictions deadline",
+        "lockHint": "After this point, predictions are locked."
+      },
+      "branding": {
+        "title": "Images & brand",
+        "bannerUrl": "Banner URL",
+        "heroUrl": "Hero URL",
+        "logoUrl": "Logo URL",
+        "uploadCta": "Upload image",
+        "uploading": "Uploading…",
+        "orUseUrl": "Or use a direct link below",
+        "remove": "Remove",
+        "uploadError": "Upload failed"
+      },
+      "prize": {
+        "title": "Prize pool & sponsor",
+        "amount": "Pool amount",
+        "currency": "Currency",
+        "sponsorName": "Sponsor name",
+        "sponsorUrl": "Sponsor link",
+        "sponsorLogoUrl": "Sponsor logo URL"
+      },
+      "rules": {
+        "title": "Rules & scoring (Markdown)",
+        "general": "General rules",
+        "generalEn": "General rules (EN)",
+        "pointSystem": "Point system",
+        "pointSystemEn": "Point system (EN)",
+        "eligibility": "Eligibility",
+        "eligibilityEn": "Eligibility (EN)"
+      },
+      "saveBtn": "Save settings",
+      "deleteBtn": "Delete tournament",
+      "deleteConfirm": "Delete this tournament? This cannot be undone.",
+      "toast": {
+        "saved": "Settings saved",
+        "saveError": "Save failed"
+      }
+    },
+    "categoriesTab": {
+      "title": "Prediction categories",
+      "desc": "Each question users answer (e.g. \"Tournament Winner\").",
+      "new": "New category",
+      "empty": "No categories yet. Add the first one so users can predict.",
+      "deleteConfirm": "Delete this category?",
+      "optionCount": "{{count}} options",
+      "editor": {
+        "createTitle": "New category",
+        "editTitle": "Edit category",
+        "name": "Name",
+        "nameEn": "Name (EN)",
+        "namePlaceholder": "e.g. Tournament Winner",
+        "nameEnPlaceholder": "e.g. Tournament Winner",
+        "description": "Description",
+        "descriptionEn": "Description (EN)",
+        "categoryType": "Category type",
+        "maxSelections": "Max selections",
+        "sortOrder": "Sort order",
+        "pointsCorrect": "Points (full match)",
+        "pointsPartial": "Partial points (per pick)",
+        "pointsRankedBonus": "Bonus for exact rank",
+        "isActive": "Active",
+        "isActiveHint": "Show to users",
+        "options": "Selectable options",
+        "addOption": "Add option",
+        "noOptions": "Add at least one option.",
+        "optionBs": "BS label",
+        "optionEn": "EN label (optional)",
+        "optionCorrect": "Correct",
+        "nameRequired": "Name is required"
+      }
+    },
+    "categoryTypes": {
+      "single_choice": { "label": "Single choice", "desc": "User picks one option" },
+      "multiple_choice": { "label": "Multiple choice", "desc": "User picks N options (unordered)" },
+      "ranked_top_n": { "label": "Top-N ranked", "desc": "User ranks N options (e.g. top 4)" },
+      "exact_score": { "label": "Exact score", "desc": "User enters score (home : away)" },
+      "numeric": { "label": "Numeric", "desc": "User enters a number" },
+      "free_text": { "label": "Free text", "desc": "User enters text" }
+    },
+    "matchesTab": {
+      "title": "Matches (optional)",
+      "desc": "Match-by-match predictions with automatic scoring from results.",
+      "new": "New match",
+      "empty": "No matches yet. Match predictions are optional — the tournament works with categories alone.",
+      "noKickoff": "No kick-off",
+      "deleteConfirm": "Delete match?",
+      "editor": {
+        "createTitle": "New match",
+        "editTitle": "Edit match",
+        "home": "Home team",
+        "homeEn": "Home team (EN)",
+        "away": "Away team",
+        "awayEn": "Away team (EN)",
+        "stageLabel": "Stage label",
+        "stageLabelEn": "Stage label (EN)",
+        "stageBsPlaceholder": "e.g. Semi-final",
+        "stageEnPlaceholder": "e.g. Semi-final",
+        "kickoff": "Kick-off",
+        "status": "Status",
+        "type": "Type",
+        "pointsExact": "Pts. exact score",
+        "pointsDiff": "Pts. exact goal diff",
+        "pointsWinner": "Pts. correct winner",
+        "finalScore": "Final score",
+        "finalScoreHint": "Enter once the match is done — scoring runs automatically across all predictions.",
+        "homeScore": "Home goals",
+        "awayScore": "Away goals",
+        "statusOptions": {
+          "scheduled": "Scheduled",
+          "live": "Live",
+          "finished": "Finished",
+          "postponed": "Postponed",
+          "cancelled": "Cancelled"
+        },
+        "typeOptions": {
+          "group": "Group",
+          "knockout": "Knockout",
+          "friendly": "Friendly"
+        },
+        "teamsRequired": "Both teams are required"
+      }
+    },
+    "rulesTab": {
+      "title": "Rules / info",
+      "desc": "Cards displayed on the tournament's public page (Markdown).",
+      "new": "New rule",
+      "empty": "No rules yet.",
+      "deleteConfirm": "Delete this rule?",
+      "editor": {
+        "createTitle": "New rule",
+        "editTitle": "Edit rule",
+        "kind": "Type",
+        "title": "Title",
+        "titleEn": "Title (EN)",
+        "body": "Body (Markdown)",
+        "bodyEn": "Body (Markdown) (EN)",
+        "titleRequired": "Title is required"
+      },
+      "kinds": {
+        "rule": "Rule",
+        "bonus": "Bonus",
+        "info": "Info",
+        "deadline": "Deadline",
+        "eligibility": "Eligibility"
+      }
+    },
+    "rewardsTab": {
+      "title": "Rewards",
+      "desc": "By rank (1st, 2nd, 3rd) or category-specific bonus prizes.",
+      "new": "New reward",
+      "empty": "No rewards yet.",
+      "deleteConfirm": "Delete reward?",
+      "editor": {
+        "createTitle": "New reward",
+        "editTitle": "Edit reward",
+        "rankPosition": "Rank (1, 2, 3...)",
+        "rankHint": "Leave empty for bonus reward.",
+        "prizeType": "Type",
+        "title": "Title",
+        "titleEn": "Title (EN)",
+        "description": "Description",
+        "descriptionEn": "Description (EN)",
+        "value": "Value",
+        "currency": "Currency",
+        "titleRequired": "Title is required"
+      },
+      "prizeTypes": {
+        "cash": "Cash",
+        "physical": "Physical",
+        "voucher": "Voucher",
+        "vip": "VIP",
+        "sponsor": "Sponsor",
+        "fantasy_points": "Fantasy points",
+        "other": "Other"
+      }
+    },
+    "membersTab": {
+      "title": "Tournament members",
+      "approvalsOn": "Approval mode is on — you must approve every new member.",
+      "approvalsOff": "All signed-in users can join. You can still ban them.",
+      "empty": "No members yet.",
+      "noName": "(no name)",
+      "joinedOn": "joined",
+      "approve": "Approve",
+      "reject": "Reject",
+      "ban": "Ban",
+      "removeConfirm": "Remove this member?",
+      "filterAll": "All statuses",
+      "statuses": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "banned": "Banned"
+      },
+      "filters": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "banned": "Banned"
+      }
+    },
+    "scoringTab": {
+      "leaderboardView": "Leaderboard",
+      "manualView": "Manual scoring",
+      "rescore": "Auto rescore",
+      "rescoring": "Rescoring…",
+      "rescoreConfirm": "Recalculate every prediction's points from the correct answers? Manual edits may be overwritten.",
+      "rescoredCount": "Rescored: {{count}} predictions",
+      "leaderboardEmpty": "No standings yet. The table appears as soon as users predict and correct answers are set.",
+      "manualEmpty": "No predictions in this category.",
+      "rankHeader": "#",
+      "userHeader": "User",
+      "pointsHeader": "Points",
+      "predictionHeader": "Prediction",
+      "lockedHeader": "Locked",
+      "categoryLabel": "Category",
+      "searchLabel": "Search (email or name)",
+      "searchPlaceholder": "filter...",
+      "selectionsCount": "{{count}} pick(s)",
+      "footerHint": "Point edits auto-save when you leave the field. \"Locked\" stops future auto-rescore from overwriting them.",
+      "pointsSaved": "Points saved"
+    }
+  },
   "empty": {
     "title": "No active tournaments yet",
     "subtitle": "Predictor tournaments only drop right before the biggest competitions — the World Cup, the Euros, the Champions League. Check back soon and get ready to climb the leaderboard.",

@@ -26,6 +26,10 @@ export async function POST(req: NextRequest) {
 
   const slug = body.slug ? slugify(body.slug) : slugify(body.name);
 
+  const ownerUserId = typeof body.owner_user_id === "string" && body.owner_user_id.trim()
+    ? body.owner_user_id.trim()
+    : null;
+
   const insert = {
     slug,
     name: body.name,
@@ -57,6 +61,8 @@ export async function POST(req: NextRequest) {
     is_featured: !!body.is_featured,
     sort_order: body.sort_order ?? 0,
     require_approval: !!body.require_approval,
+    owner_user_id: ownerUserId,
+    created_via: ownerUserId ? "admin_for_user" : "admin",
   };
 
   const { data, error } = await supabaseServer

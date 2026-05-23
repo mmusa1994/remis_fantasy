@@ -104,7 +104,7 @@ export default function WCMusicPlayer({
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: "spring", damping: 22, stiffness: 240, delay: 0.6 }}
-        className="fixed bottom-20 left-3 sm:bottom-6 sm:left-4 z-40 select-none"
+        className="fixed top-3 left-3 sm:top-auto sm:bottom-6 sm:left-4 z-40 select-none"
       >
         <div
           className={`relative overflow-hidden rounded-xl shadow-2xl border backdrop-blur-md transition-all ${

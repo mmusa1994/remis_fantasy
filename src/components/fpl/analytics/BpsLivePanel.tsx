@@ -173,19 +173,19 @@ export default function BpsLivePanel() {
                   ? t("bps.fixtureFinished", "Finished")
                   : fixture.started
                     ? `🔴 ${fixture.minutes}'`
-                    : "Upcoming"}
+                    : t("bps.fixtureUpcoming", "Upcoming")}
               </span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs sm:text-sm">
                 <thead className="bg-theme-card-secondary/60 text-theme-text-secondary uppercase">
                   <tr>
-                    <th className="px-2 py-1 text-left">Player</th>
-                    <th className="px-2 py-1 text-center">Pos</th>
-                    <th className="px-2 py-1 text-center">Min</th>
-                    <th className="px-2 py-1 text-center">BPS</th>
-                    <th className="px-2 py-1 text-center">Pred.</th>
-                    <th className="px-2 py-1 text-center">Bonus</th>
+                    <th className="px-2 py-1 text-left">{t("bps.thPlayer", "Player")}</th>
+                    <th className="px-2 py-1 text-center">{t("bps.thPos", "Pos")}</th>
+                    <th className="px-2 py-1 text-center">{t("bps.thMin", "Min")}</th>
+                    <th className="px-2 py-1 text-center">{t("bps.thBps", "BPS")}</th>
+                    <th className="px-2 py-1 text-center">{t("bps.thPred", "Pred.")}</th>
+                    <th className="px-2 py-1 text-center">{t("bps.thBonus", "Bonus")}</th>
                   </tr>
                 </thead>
                 <tbody>

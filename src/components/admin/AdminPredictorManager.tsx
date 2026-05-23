@@ -670,6 +670,36 @@ function TournamentList({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Optional: assign tournament to a specific user (admin-for-user flow)
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const [ownerResults, setOwnerResults] = useState<Array<{ id: string; email: string; name: string | null }>>([]);
+  const [ownerPicked, setOwnerPicked] = useState<{ id: string; email: string; name: string | null } | null>(null);
+  const [ownerSearching, setOwnerSearching] = useState(false);
+
+  useEffect(() => {
+    if (!creating || ownerPicked || ownerSearch.trim().length < 2) {
+      setOwnerResults([]);
+      return;
+    }
+    let cancel = false;
+    setOwnerSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/admin/users?q=${encodeURIComponent(ownerSearch)}&page_size=8`);
+        if (res.ok && !cancel) {
+          const data = await res.json();
+          setOwnerResults(data.users || []);
+        }
+      } finally {
+        if (!cancel) setOwnerSearching(false);
+      }
+    }, 300);
+    return () => {
+      cancel = true;
+      clearTimeout(t);
+    };
+  }, [ownerSearch, ownerPicked, creating]);
+
   const handleCreate = async () => {
     setError(null);
     if (!name.trim()) return setError("Naziv je obavezan");
@@ -685,6 +715,7 @@ function TournamentList({
           short_description_en: shortDescEn || null,
           accent_color: accent,
           status: "draft",
+          owner_user_id: ownerPicked?.id || null,
         }),
       });
       if (!res.ok) {
@@ -696,6 +727,8 @@ function TournamentList({
       setNameEn("");
       setShortDesc("");
       setShortDescEn("");
+      setOwnerSearch("");
+      setOwnerPicked(null);
       setCreating(false);
       onCreated(t);
     } catch (e: any) {
@@ -800,6 +833,83 @@ function TournamentList({
               />
             </Field>
           </div>
+          {/* Optional: assign to a specific user (admin-for-user) */}
+          <div className={`rounded-md p-4 border ${
+            theme === "dark"
+              ? "border-amber-900/40 bg-amber-950/20"
+              : "border-amber-200 bg-amber-50/40"
+          }`}>
+            <Field theme={theme} label="Vlasnik turnira (opcionalno)">
+              {ownerPicked ? (
+                <div className={`flex items-center justify-between rounded-md border px-3 py-2 ${
+                  theme === "dark" ? "border-amber-700/50 bg-amber-950/30" : "border-amber-300 bg-white"
+                }`}>
+                  <div className="text-sm">
+                    <div className={`font-semibold ${headingCls(theme)}`}>
+                      {ownerPicked.name || "(bez imena)"}
+                    </div>
+                    <div className={`text-xs ${mutedTextCls(theme)}`}>{ownerPicked.email}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOwnerPicked(null);
+                      setOwnerSearch("");
+                    }}
+                    className="text-xs text-red-500 hover:underline"
+                  >
+                    Ukloni
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    value={ownerSearch}
+                    onChange={(e) => setOwnerSearch(e.target.value)}
+                    placeholder="Pretraži usera po email-u ili imenu… (ostavi prazno = platforma)"
+                    className={inputCls(theme)}
+                  />
+                  {ownerSearch.length >= 2 && (
+                    <div className={`mt-2 max-h-48 overflow-y-auto rounded-md border ${
+                      theme === "dark" ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-white"
+                    }`}>
+                      {ownerSearching ? (
+                        <div className={`p-3 text-xs ${mutedTextCls(theme)}`}>Tražim…</div>
+                      ) : ownerResults.length === 0 ? (
+                        <div className={`p-3 text-xs ${mutedTextCls(theme)}`}>Nema rezultata</div>
+                      ) : (
+                        ownerResults.map((u) => (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => {
+                              setOwnerPicked(u);
+                              setOwnerResults([]);
+                              setOwnerSearch("");
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                              theme === "dark"
+                                ? "hover:bg-gray-800 text-gray-200"
+                                : "hover:bg-gray-50 text-gray-900"
+                            }`}
+                          >
+                            <div className="font-medium">{u.name || "(bez imena)"}</div>
+                            <div className={`text-xs ${mutedTextCls(theme)}`}>{u.email}</div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                  <p className={`text-[11px] mt-1 ${mutedTextCls(theme)}`}>
+                    Ako odabereš usera, turnir postaje njegov — moći će ga uređivati kroz /predictor/owner.
+                    Ostavi prazno za standardni admin-only turnir.
+                  </p>
+                </>
+              )}
+            </Field>
+          </div>
+
           {error && <p className="text-sm text-red-500">{error}</p>}
           <div className="flex justify-end gap-2">
             <button

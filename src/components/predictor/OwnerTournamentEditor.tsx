@@ -1,0 +1,3352 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
+import {
+  TEMPLATE_PICKER_META,
+  getTemplate,
+} from "@/data/predictor-templates";
+import {
+  normalizeLang,
+  localizedMatchHomeTeam,
+  localizedMatchAwayTeam,
+  localizedMatchStageLabel,
+  localizedCategoryName,
+  localizedCategoryDescription,
+  localizedRuleTitle,
+  localizedRuleBody,
+  localizedRewardTitle,
+  localizedRewardDescription,
+} from "@/utils/predictor-i18n";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types (kept loose to match supabase response shapes — full typing lives in
+// /types/predictor; the editor only consumes the fields it actually renders).
+// ─────────────────────────────────────────────────────────────────────────────
+type Tournament = any;
+type Category = any;
+type Option = any;
+type Match = any;
+type Rule = any;
+type Reward = any;
+type Member = any;
+type Prediction = any;
+
+const ACCENT = [
+  { v: "amber", c: "from-amber-400 to-orange-500" },
+  { v: "purple", c: "from-purple-500 to-fuchsia-600" },
+  { v: "blue", c: "from-blue-500 to-indigo-600" },
+  { v: "red", c: "from-red-500 to-rose-600" },
+  { v: "green", c: "from-emerald-500 to-green-600" },
+];
+
+const STATUS_KEYS = ["draft", "published", "locked", "finished"] as const;
+type StatusKey = (typeof STATUS_KEYS)[number];
+
+const TAB_IDS = [
+  "settings",
+  "categories",
+  "matches",
+  "rules",
+  "rewards",
+  "members",
+  "scoring",
+] as const;
+type TabId = (typeof TAB_IDS)[number];
+
+const CAT_TYPE_KEYS = [
+  "single_choice",
+  "multiple_choice",
+  "ranked_top_n",
+  "exact_score",
+  "numeric",
+  "free_text",
+] as const;
+
+const STAGE_KEYS = ["group", "knockout", "friendly"] as const;
+const MATCH_STATUS_KEYS = [
+  "scheduled",
+  "live",
+  "finished",
+  "postponed",
+  "cancelled",
+] as const;
+const RULE_KINDS = ["rule", "bonus", "info", "deadline", "eligibility"] as const;
+const PRIZE_TYPES = [
+  "cash",
+  "physical",
+  "voucher",
+  "vip",
+  "sponsor",
+  "fantasy_points",
+  "other",
+] as const;
+const MEMBER_FILTERS = [
+  "all",
+  "pending",
+  "approved",
+  "rejected",
+  "banned",
+] as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared theme-aware class helpers. Centralised so every tab + modal pulls
+// the same look, and so flipping a colour means one edit.
+// ─────────────────────────────────────────────────────────────────────────────
+const cls = {
+  card: (dark: boolean) =>
+    dark
+      ? "border-white/10 bg-white/[0.025]"
+      : "border-gray-200 bg-white",
+  cardSubtle: (dark: boolean) =>
+    dark
+      ? "border-white/8 bg-white/[0.015]"
+      : "border-gray-200 bg-white/70",
+  divider: (dark: boolean) => (dark ? "bg-white/10" : "bg-gray-200"),
+  input: (dark: boolean) =>
+    `w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition-colors ${
+      dark
+        ? "border-white/10 bg-black/30 text-white placeholder-gray-600 focus:border-predictor-primary/60 focus:bg-black/40"
+        : "border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:border-predictor-primary focus:bg-white"
+    }`,
+  modalShell: (dark: boolean) =>
+    dark
+      ? "border-white/10 bg-[#0f0f12]"
+      : "border-gray-200 bg-white",
+  primaryBtn:
+    "inline-flex items-center gap-2 rounded-full bg-predictor-primary px-4 py-2 text-xs font-bold text-gray-900 transition-colors hover:bg-predictor-primary-hover disabled:opacity-50",
+  primaryBtnLg:
+    "inline-flex items-center gap-2 rounded-full bg-predictor-primary px-5 py-2.5 text-sm font-bold text-gray-900 transition-colors hover:bg-predictor-primary-hover disabled:opacity-50",
+  secondaryBtn: (dark: boolean) =>
+    `inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+      dark
+        ? "border-white/15 text-gray-300 hover:border-white/35 hover:text-white"
+        : "border-gray-300 text-gray-700 hover:border-gray-500 hover:text-gray-900"
+    }`,
+  dangerBtn: (dark: boolean) =>
+    `inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+      dark
+        ? "border-red-500/30 bg-red-500/10 text-red-200 hover:bg-red-500/20"
+        : "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+    }`,
+  iconBtnGhost: (dark: boolean) =>
+    dark ? "text-gray-500 hover:text-gray-200" : "text-gray-400 hover:text-gray-700",
+  eyebrow: (dark: boolean) =>
+    `text-[10px] font-semibold uppercase tracking-[0.3em] ${
+      dark ? "text-gray-400" : "text-gray-500"
+    }`,
+  accentText: (dark: boolean) =>
+    dark ? "text-predictor-accent-dark" : "text-predictor-accent-light",
+  badgeAccent: (dark: boolean) =>
+    `inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+      dark
+        ? "bg-predictor-primary/15 text-predictor-accent-dark"
+        : "bg-predictor-primary/25 text-predictor-accent-light"
+    }`,
+};
+
+function statusTone(status: string, dark: boolean): string {
+  switch (status) {
+    case "published":
+      return dark
+        ? "bg-emerald-500/15 text-emerald-200"
+        : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
+    case "locked":
+      return dark
+        ? "bg-predictor-primary/15 text-predictor-accent-dark"
+        : "bg-predictor-primary/25 text-predictor-accent-light";
+    case "finished":
+      return dark
+        ? "bg-blue-500/15 text-blue-200"
+        : "bg-blue-50 text-blue-700 ring-1 ring-blue-200";
+    default:
+      return dark
+        ? "bg-zinc-500/15 text-zinc-300"
+        : "bg-gray-100 text-gray-700 ring-1 ring-gray-200";
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Root
+// ─────────────────────────────────────────────────────────────────────────────
+export default function OwnerTournamentEditor({
+  initialTournament,
+}: {
+  initialTournament: Tournament;
+}) {
+  const { t } = useTranslation("predictor");
+  const { theme } = useTheme();
+  const dark = theme === "dark";
+
+  const [tournament, setTournament] = useState<Tournament>(initialTournament);
+  const [tab, setTab] = useState<TabId>("settings");
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const showToast = useCallback((msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3500);
+  }, []);
+
+  // Quick-switch tournament status from the always-visible banner.
+  const setStatus = useCallback(
+    async (next: StatusKey) => {
+      if (updatingStatus) return;
+      setUpdatingStatus(true);
+      try {
+        const res = await fetch("/api/predictor/owner/tournaments", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: tournament.id, status: next }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Status update failed");
+        setTournament(data);
+        showToast(t("owner.toast.saved", "Saved"));
+      } catch (e: any) {
+        showToast(e.message || t("owner.toast.saveError"), false);
+      } finally {
+        setUpdatingStatus(false);
+      }
+    },
+    [tournament.id, updatingStatus, showToast, t],
+  );
+
+  return (
+    <main className="relative min-h-screen w-full bg-theme-background theme-transition">
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-x-0 top-0 h-[420px] ${
+          dark
+            ? "bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(253,230,138,0.05),transparent_70%)]"
+            : "bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(253,230,138,0.10),transparent_70%)]"
+        }`}
+      />
+
+      <div className="relative z-10 mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6 sm:pt-10 lg:px-8">
+        {/* Top nav */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <Link
+            href="/predictor/my-tournaments"
+            className={`inline-flex items-center gap-1.5 text-xs transition-colors ${
+              dark
+                ? "text-gray-500 hover:text-gray-200"
+                : "text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            <span aria-hidden>←</span>
+            {t("owner.nav.back", "My tournaments")}
+          </Link>
+          {tournament.status === "published" && (
+            <Link
+              href={`/predictor/${tournament.slug}`}
+              target="_blank"
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                dark
+                  ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20"
+                  : "border-emerald-500/50 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              }`}
+            >
+              <span aria-hidden>↗</span>
+              {t("owner.nav.openPublic", "Public page")}
+            </Link>
+          )}
+        </div>
+
+        {/* Header — name, slug, badges */}
+        <header className="mb-8">
+          <div className="mb-2 flex flex-wrap items-baseline gap-3">
+            <h1 className="text-2xl font-black tracking-tight text-theme-heading-primary sm:text-3xl">
+              {tournament.name}
+            </h1>
+            <span className="font-mono text-xs text-theme-text-secondary">
+              /{tournament.slug}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusTone(
+                tournament.status,
+                dark,
+              )}`}
+            >
+              {String(t(`owner.status.${tournament.status}`, tournament.status))}
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                tournament.visibility === "private"
+                  ? dark
+                    ? "bg-rose-500/15 text-rose-200"
+                    : "bg-rose-50 text-rose-700 ring-1 ring-rose-200"
+                  : dark
+                    ? "bg-sky-500/15 text-sky-200"
+                    : "bg-sky-50 text-sky-700 ring-1 ring-sky-200"
+              }`}
+            >
+              {t(
+                `owner.visibility.${
+                  tournament.visibility === "private" ? "private" : "public"
+                }`,
+              )}
+            </span>
+          </div>
+        </header>
+
+        {/* Tabs — horizontal scroll on mobile, single row */}
+        <div
+          className={`mb-6 -mx-1 overflow-x-auto rounded-2xl border p-1 ${
+            dark
+              ? "border-white/8 bg-white/[0.02]"
+              : "border-gray-200 bg-white"
+          }`}
+        >
+          <div className="flex min-w-max gap-1">
+            {TAB_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTab(id)}
+                className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold transition-colors sm:flex-1 sm:min-w-[80px] ${
+                  tab === id
+                    ? dark
+                      ? "bg-predictor-primary/15 text-predictor-accent-dark ring-1 ring-predictor-primary/30"
+                      : "bg-predictor-primary/30 text-gray-900 ring-1 ring-predictor-primary/60"
+                    : dark
+                      ? "text-gray-400 hover:text-gray-200"
+                      : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                {t(`owner.tabs.${id}`, id)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Always-visible status banner — quick switch + safety reminder */}
+        <StatusBanner
+          dark={dark}
+          status={(tournament.status || "draft") as StatusKey}
+          busy={updatingStatus}
+          onChange={setStatus}
+        />
+
+        {/* Tab body */}
+        <div
+          className={`rounded-2xl border p-4 sm:p-7 ${cls.card(dark)}`}
+        >
+          {tab === "settings" && (
+            <SettingsTab
+              tournament={tournament}
+              dark={dark}
+              onSaved={(t) => setTournament(t)}
+              showToast={showToast}
+            />
+          )}
+          {tab === "categories" && (
+            <CategoriesTab
+              tournament={tournament}
+              dark={dark}
+              showToast={showToast}
+            />
+          )}
+          {tab === "matches" && (
+            <MatchesTab tournament={tournament} dark={dark} showToast={showToast} />
+          )}
+          {tab === "rules" && (
+            <RulesTab tournament={tournament} dark={dark} showToast={showToast} />
+          )}
+          {tab === "rewards" && (
+            <RewardsTab tournament={tournament} dark={dark} showToast={showToast} />
+          )}
+          {tab === "members" && (
+            <MembersTab tournament={tournament} dark={dark} showToast={showToast} />
+          )}
+          {tab === "scoring" && (
+            <ScoringTab tournament={tournament} dark={dark} showToast={showToast} />
+          )}
+        </div>
+
+        {/* Footer */}
+        <p className={`mt-6 text-center text-[11px] ${dark ? "text-gray-600" : "text-gray-500"}`}>
+          {t("owner.nav.supportPrefix", "Need help?")}{" "}
+          <a
+            className={cls.accentText(dark) + " underline-offset-2 hover:underline"}
+            href="mailto:remis.fantasy@gmail.com"
+          >
+            remis.fantasy@gmail.com
+          </a>
+        </p>
+      </div>
+
+      {toast && (
+        <div
+          role="status"
+          className={`fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-2.5 text-sm font-semibold shadow-2xl ${
+            toast.ok
+              ? dark
+                ? "border border-emerald-400/30 bg-emerald-500/20 text-emerald-100"
+                : "border border-emerald-500/40 bg-emerald-100 text-emerald-900"
+              : dark
+                ? "border border-red-500/30 bg-red-500/20 text-red-100"
+                : "border border-red-300 bg-red-100 text-red-800"
+          }`}
+        >
+          {toast.msg}
+        </div>
+      )}
+    </main>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Status banner — always visible under the tabs. Acts as a safety reminder
+// (a tournament in "draft" is invisible to users) and as a one-click switch.
+// ─────────────────────────────────────────────────────────────────────────────
+function StatusBanner({
+  dark,
+  status,
+  busy,
+  onChange,
+}: {
+  dark: boolean;
+  status: StatusKey;
+  busy: boolean;
+  onChange: (next: StatusKey) => void;
+}) {
+  const { t } = useTranslation("predictor");
+
+  // The next-step CTA depends on current status — guide the user forward.
+  const nextStatus: StatusKey =
+    status === "draft"
+      ? "published"
+      : status === "published"
+        ? "locked"
+        : status === "locked"
+          ? "finished"
+          : "draft"; // finished → reopen as draft
+
+  const isDraft = status === "draft";
+  const isPublished = status === "published";
+  const isLocked = status === "locked";
+
+  // Colour mapping — draft is amber-warning (most attention-grabbing),
+  // published is green (success), locked is amber (info), finished is gray.
+  const tone = isDraft
+    ? dark
+      ? "border-predictor-primary/40 bg-predictor-primary/[0.07]"
+      : "border-predictor-primary bg-predictor-primary/15"
+    : isPublished
+      ? dark
+        ? "border-emerald-400/30 bg-emerald-500/10"
+        : "border-emerald-500/40 bg-emerald-50"
+      : isLocked
+        ? dark
+          ? "border-amber-400/30 bg-amber-500/10"
+          : "border-amber-400/60 bg-amber-50"
+        : dark
+          ? "border-white/10 bg-white/[0.03]"
+          : "border-gray-200 bg-gray-50";
+
+  const dotColor = isDraft
+    ? "bg-predictor-primary"
+    : isPublished
+      ? "bg-emerald-500"
+      : isLocked
+        ? "bg-amber-400"
+        : "bg-gray-400";
+
+  const ctaCls = isDraft
+    ? "inline-flex items-center gap-2 rounded-full bg-predictor-primary px-4 py-2 text-xs font-bold text-gray-900 transition-colors hover:bg-predictor-primary-hover disabled:opacity-50"
+    : `inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-50 ${
+        dark
+          ? "border-white/20 text-gray-200 hover:border-white/40"
+          : "border-gray-300 text-gray-800 hover:border-gray-500"
+      }`;
+
+  return (
+    <div
+      className={`mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 sm:px-5 ${tone}`}
+    >
+      <div className="flex min-w-0 items-start gap-3 sm:items-center">
+        <span
+          aria-hidden
+          className={`mt-1 inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full sm:mt-0 ${dotColor} ${
+            isPublished ? "animate-pulse" : ""
+          }`}
+        />
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`text-[10px] font-semibold uppercase tracking-[0.2em] ${
+                isDraft
+                  ? dark
+                    ? "text-predictor-accent-dark"
+                    : "text-predictor-accent-light"
+                  : isPublished
+                    ? dark
+                      ? "text-emerald-300"
+                      : "text-emerald-700"
+                    : isLocked
+                      ? dark
+                        ? "text-amber-300"
+                        : "text-amber-700"
+                      : dark
+                        ? "text-gray-400"
+                        : "text-gray-600"
+              }`}
+            >
+              {t(`owner.status.${status}`, status)}
+            </span>
+            <span className="text-sm font-bold text-theme-heading-primary">
+              {t(`owner.statusBanner.${status}.title`, status)}
+            </span>
+          </div>
+          <p className="mt-0.5 text-xs leading-snug text-theme-text-secondary">
+            {t(`owner.statusBanner.${status}.desc`, "")}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(nextStatus)}
+        disabled={busy}
+        className={ctaCls}
+      >
+        {busy ? t("owner.common.saving") : t(`owner.statusBanner.${status}.cta`, "")}
+        {!busy && <span aria-hidden>→</span>}
+      </button>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Primitives
+// ─────────────────────────────────────────────────────────────────────────────
+function Section({
+  dark,
+  title,
+  desc,
+  children,
+}: {
+  dark: boolean;
+  title: string;
+  desc?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mb-7">
+      <div className="mb-4">
+        <h2 className={`text-base font-bold ${cls.accentText(dark)}`}>{title}</h2>
+        {desc && (
+          <p className="mt-0.5 text-xs text-theme-text-secondary">{desc}</p>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Field({
+  label,
+  hint,
+  required,
+  children,
+}: {
+  label: React.ReactNode;
+  hint?: React.ReactNode;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-theme-text-secondary">
+        {label}
+        {required && <span className="ml-1 text-red-500">*</span>}
+      </label>
+      {children}
+      {hint && (
+        <p className="mt-1 text-[11px] leading-relaxed text-theme-text-secondary/80">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BilingualPair({
+  dark,
+  bsLabel,
+  enLabel,
+  bsValue,
+  enValue,
+  onBs,
+  onEn,
+  textarea,
+  rows = 3,
+  bsPlaceholder,
+  enPlaceholder,
+  required,
+}: {
+  dark: boolean;
+  bsLabel: string;
+  enLabel: string;
+  bsValue?: string | null;
+  enValue?: string | null;
+  onBs: (v: string) => void;
+  onEn: (v: string) => void;
+  textarea?: boolean;
+  rows?: number;
+  bsPlaceholder?: string;
+  enPlaceholder?: string;
+  required?: boolean;
+}) {
+  const { t } = useTranslation("predictor");
+  return (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <Field
+        label={
+          <span className="inline-flex items-center gap-1.5">
+            <span className={cls.badgeAccent(dark)}>
+              {t("owner.common.languageBs", "BS")}
+            </span>
+            {bsLabel}
+          </span>
+        }
+        required={required}
+      >
+        {textarea ? (
+          <textarea
+            value={bsValue ?? ""}
+            onChange={(e) => onBs(e.target.value)}
+            rows={rows}
+            placeholder={bsPlaceholder}
+            className={cls.input(dark)}
+          />
+        ) : (
+          <input
+            value={bsValue ?? ""}
+            onChange={(e) => onBs(e.target.value)}
+            placeholder={bsPlaceholder}
+            className={cls.input(dark)}
+          />
+        )}
+      </Field>
+      <Field
+        label={
+          <span className="inline-flex items-center gap-1.5">
+            <span className={cls.badgeAccent(dark)}>
+              {t("owner.common.languageEn", "EN")}
+            </span>
+            {enLabel}
+          </span>
+        }
+        hint={t("owner.settings.fields.englishHint")}
+      >
+        {textarea ? (
+          <textarea
+            value={enValue ?? ""}
+            onChange={(e) => onEn(e.target.value)}
+            rows={rows}
+            placeholder={enPlaceholder}
+            className={cls.input(dark)}
+          />
+        ) : (
+          <input
+            value={enValue ?? ""}
+            onChange={(e) => onEn(e.target.value)}
+            placeholder={enPlaceholder}
+            className={cls.input(dark)}
+          />
+        )}
+      </Field>
+    </div>
+  );
+}
+
+function Modal({
+  dark,
+  title,
+  onClose,
+  children,
+  footer,
+}: {
+  dark: boolean;
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 px-3 py-20 backdrop-blur-sm sm:px-6 sm:py-24">
+      <div
+        className={`relative flex max-h-[calc(100vh-10rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border shadow-2xl ${cls.modalShell(
+          dark,
+        )}`}
+      >
+        <div
+          className={`flex items-center justify-between border-b px-5 py-4 ${
+            dark ? "border-white/10" : "border-gray-200"
+          }`}
+        >
+          <h3 className={`text-base font-bold ${cls.accentText(dark)}`}>
+            {title}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`text-xl leading-none ${cls.iconBtnGhost(dark)}`}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-5">{children}</div>
+        <div
+          className={`flex flex-wrap items-center justify-end gap-2 border-t px-5 py-4 ${
+            dark ? "border-white/10" : "border-gray-200"
+          }`}
+        >
+          {footer}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Settings tab (with template-reset cards at top)
+// ─────────────────────────────────────────────────────────────────────────────
+function SettingsTab({
+  tournament,
+  dark,
+  onSaved,
+  showToast,
+}: {
+  tournament: Tournament;
+  dark: boolean;
+  onSaved: (t: Tournament) => void;
+  showToast: (msg: string, ok?: boolean) => void;
+}) {
+  const { t } = useTranslation("predictor");
+  const router = useRouter();
+  const [form, setForm] = useState<Tournament>(tournament);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [applyingTemplate, setApplyingTemplate] = useState<string | null>(null);
+
+  const set = (k: string, v: any) => setForm((p: Tournament) => ({ ...p, [k]: v }));
+
+  async function save() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/predictor/owner/tournaments", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, id: tournament.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Save failed");
+      onSaved(data);
+      showToast(t("owner.settings.toast.saved", "Settings saved"));
+    } catch (e: any) {
+      showToast(e.message || t("owner.settings.toast.saveError"), false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteTournament() {
+    if (!confirm(t("owner.settings.deleteConfirm"))) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(
+        `/api/predictor/owner/tournaments?id=${tournament.id}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d?.error || "Delete failed");
+      }
+      router.push("/predictor/my-tournaments");
+    } catch (e: any) {
+      showToast(e.message, false);
+      setDeleting(false);
+    }
+  }
+
+  async function applyTemplate(
+    templateId: string,
+    mode: "merge" | "reset",
+    applyBranding: boolean,
+  ) {
+    setApplyingTemplate(templateId);
+    try {
+      const res = await fetch("/api/predictor/owner/apply-template", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tournament_id: tournament.id,
+          template_id: templateId,
+          mode,
+          applyBranding,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Apply failed");
+      // Pull the freshly updated tournament so branding (logo, banner, accent)
+      // reflects in the editor immediately — and also re-sync local form state.
+      if (applyBranding) {
+        const fresh = await fetch(
+          `/api/predictor/owner/tournaments?id=${tournament.id}`,
+        );
+        if (fresh.ok) {
+          const updated = await fresh.json();
+          onSaved(updated);
+          setForm(updated);
+        }
+      }
+      showToast(t("owner.toast.saved", "Saved"));
+      router.refresh();
+    } catch (e: any) {
+      showToast(e.message, false);
+    } finally {
+      setApplyingTemplate(null);
+    }
+  }
+
+  return (
+    <>
+      {/* Template reset/merge cards */}
+      <TemplateResetSection
+        dark={dark}
+        applyingId={applyingTemplate}
+        onApply={applyTemplate}
+      />
+
+      <Section
+        dark={dark}
+        title={t("owner.settings.basics.title")}
+        desc={t("owner.settings.basics.desc")}
+      >
+        <div className="space-y-4">
+          <BilingualPair
+            dark={dark}
+            bsLabel={t("owner.settings.fields.name")}
+            enLabel={t("owner.settings.fields.nameEn")}
+            bsValue={form.name}
+            enValue={form.name_en}
+            onBs={(v) => set("name", v)}
+            onEn={(v) => set("name_en", v)}
+            required
+          />
+          <Field
+            label={t("owner.settings.fields.slug")}
+            hint={t("owner.settings.fields.slugHint", { slug: form.slug || "your-slug" })}
+          >
+            <input
+              value={form.slug ?? ""}
+              onChange={(e) =>
+                set(
+                  "slug",
+                  e.target.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9-]/g, "")
+                    .slice(0, 80),
+                )
+              }
+              className={cls.input(dark) + " font-mono text-sm"}
+            />
+          </Field>
+          <BilingualPair
+            dark={dark}
+            bsLabel={t("owner.settings.fields.shortDesc")}
+            enLabel={t("owner.settings.fields.shortDescEn")}
+            bsValue={form.short_description}
+            enValue={form.short_description_en}
+            onBs={(v) => set("short_description", v)}
+            onEn={(v) => set("short_description_en", v)}
+            textarea
+            rows={2}
+          />
+          <BilingualPair
+            dark={dark}
+            bsLabel={t("owner.settings.fields.longDesc")}
+            enLabel={t("owner.settings.fields.longDescEn")}
+            bsValue={form.long_description}
+            enValue={form.long_description_en}
+            onBs={(v) => set("long_description", v)}
+            onEn={(v) => set("long_description_en", v)}
+            textarea
+            rows={5}
+          />
+        </div>
+      </Section>
+
+      <Section
+        dark={dark}
+        title={t("owner.settings.visibility.title")}
+        desc={t("owner.settings.visibility.desc")}
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
+            label={t("owner.settings.visibility.statusLabel")}
+            hint={t("owner.settings.visibility.statusHint")}
+          >
+            <select
+              value={form.status || "draft"}
+              onChange={(e) => set("status", e.target.value)}
+              className={cls.input(dark)}
+            >
+              {STATUS_KEYS.map((s) => (
+                <option key={s} value={s}>
+                  {t(`owner.status.${s}`)}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field
+            label={t("owner.settings.visibility.visibilityLabel")}
+            hint={t("owner.settings.visibility.visibilityHint")}
+          >
+            <div className="grid grid-cols-2 gap-2">
+              {(["public", "private"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => set("visibility", v)}
+                  className={`inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
+                    (form.visibility || "public") === v
+                      ? dark
+                        ? "border-predictor-primary/60 bg-predictor-primary/10 text-predictor-accent-dark"
+                        : "border-predictor-primary bg-predictor-primary/20 text-predictor-accent-light"
+                      : dark
+                        ? "border-white/10 bg-black/20 text-gray-400 hover:border-white/30"
+                        : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+                  }`}
+                >
+                  {t(`owner.visibility.${v}`)}
+                </button>
+              ))}
+            </div>
+          </Field>
+          <Field label={t("owner.settings.visibility.accentLabel")}>
+            <div className="flex flex-wrap gap-2">
+              {ACCENT.map((a) => (
+                <button
+                  key={a.v}
+                  type="button"
+                  onClick={() => set("accent_color", a.v)}
+                  className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-all ${
+                    form.accent_color === a.v
+                      ? dark
+                        ? "border-predictor-primary/60 bg-predictor-primary/10 text-predictor-accent-dark"
+                        : "border-predictor-primary bg-predictor-primary/20 text-predictor-accent-light"
+                      : dark
+                        ? "border-white/10 bg-black/20 text-gray-400 hover:border-white/30"
+                        : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 rounded-full bg-gradient-to-br ${a.c}`}
+                  />
+                  {a.v}
+                </button>
+              ))}
+            </div>
+          </Field>
+          <Field
+            label={t("owner.settings.visibility.approvalLabel")}
+            hint={t("owner.settings.visibility.approvalHint")}
+          >
+            <label
+              className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 ${
+                dark ? "border-white/10 bg-black/20" : "border-gray-300 bg-white"
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-predictor-primary"
+                checked={!!form.require_approval}
+                onChange={(e) => set("require_approval", e.target.checked)}
+              />
+              <span className="text-sm text-theme-heading-primary">
+                {form.require_approval
+                  ? t("owner.settings.visibility.approvalOn")
+                  : t("owner.settings.visibility.approvalOff")}
+              </span>
+            </label>
+          </Field>
+        </div>
+      </Section>
+
+      <Section
+        dark={dark}
+        title={t("owner.settings.timestamps.title")}
+        desc={t("owner.settings.timestamps.desc")}
+      >
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Field label={t("owner.settings.timestamps.startsAt")}>
+            <input
+              type="datetime-local"
+              value={toLocal(form.starts_at)}
+              onChange={(e) => set("starts_at", fromLocal(e.target.value))}
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.settings.timestamps.endsAt")}>
+            <input
+              type="datetime-local"
+              value={toLocal(form.ends_at)}
+              onChange={(e) => set("ends_at", fromLocal(e.target.value))}
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field
+            label={t("owner.settings.timestamps.lockAt")}
+            hint={t("owner.settings.timestamps.lockHint")}
+          >
+            <input
+              type="datetime-local"
+              value={toLocal(form.registration_lock_at)}
+              onChange={(e) => set("registration_lock_at", fromLocal(e.target.value))}
+              className={cls.input(dark)}
+            />
+          </Field>
+        </div>
+      </Section>
+
+      <Section dark={dark} title={t("owner.settings.branding.title")}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <ImageUpload
+            dark={dark}
+            tournamentId={tournament.id}
+            kind="banner"
+            label={t("owner.settings.branding.bannerUrl")}
+            value={form.banner_image_url}
+            onChange={(url) => set("banner_image_url", url || null)}
+            onError={(msg) => showToast(msg, false)}
+          />
+          <ImageUpload
+            dark={dark}
+            tournamentId={tournament.id}
+            kind="hero"
+            label={t("owner.settings.branding.heroUrl")}
+            value={form.hero_image_url}
+            onChange={(url) => set("hero_image_url", url || null)}
+            onError={(msg) => showToast(msg, false)}
+          />
+          <ImageUpload
+            dark={dark}
+            tournamentId={tournament.id}
+            kind="logo"
+            label={t("owner.settings.branding.logoUrl")}
+            value={form.logo_url}
+            onChange={(url) => set("logo_url", url || null)}
+            onError={(msg) => showToast(msg, false)}
+          />
+        </div>
+      </Section>
+
+      <Section dark={dark} title={t("owner.settings.prize.title")}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Field label={t("owner.settings.prize.amount")}>
+            <input
+              type="number"
+              step="0.01"
+              value={form.prize_pool_amount ?? ""}
+              onChange={(e) =>
+                set(
+                  "prize_pool_amount",
+                  e.target.value ? Number(e.target.value) : null,
+                )
+              }
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.settings.prize.currency")}>
+            <input
+              value={form.prize_pool_currency ?? "EUR"}
+              onChange={(e) =>
+                set("prize_pool_currency", e.target.value.toUpperCase())
+              }
+              maxLength={4}
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.settings.prize.sponsorName")}>
+            <input
+              value={form.sponsor_name ?? ""}
+              onChange={(e) => set("sponsor_name", e.target.value)}
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.settings.prize.sponsorUrl")}>
+            <input
+              value={form.sponsor_url ?? ""}
+              onChange={(e) => set("sponsor_url", e.target.value)}
+              placeholder="https://..."
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.settings.prize.sponsorLogoUrl")}>
+            <input
+              value={form.sponsor_logo_url ?? ""}
+              onChange={(e) => set("sponsor_logo_url", e.target.value)}
+              placeholder="https://..."
+              className={cls.input(dark)}
+            />
+          </Field>
+        </div>
+      </Section>
+
+      <Section dark={dark} title={t("owner.settings.rules.title")}>
+        <div className="space-y-4">
+          <BilingualPair
+            dark={dark}
+            bsLabel={t("owner.settings.rules.general")}
+            enLabel={t("owner.settings.rules.generalEn")}
+            bsValue={form.rules_md}
+            enValue={form.rules_md_en}
+            onBs={(v) => set("rules_md", v)}
+            onEn={(v) => set("rules_md_en", v)}
+            textarea
+            rows={5}
+          />
+          <BilingualPair
+            dark={dark}
+            bsLabel={t("owner.settings.rules.pointSystem")}
+            enLabel={t("owner.settings.rules.pointSystemEn")}
+            bsValue={form.point_system_md}
+            enValue={form.point_system_md_en}
+            onBs={(v) => set("point_system_md", v)}
+            onEn={(v) => set("point_system_md_en", v)}
+            textarea
+            rows={4}
+          />
+          <BilingualPair
+            dark={dark}
+            bsLabel={t("owner.settings.rules.eligibility")}
+            enLabel={t("owner.settings.rules.eligibilityEn")}
+            bsValue={form.eligibility_md}
+            enValue={form.eligibility_md_en}
+            onBs={(v) => set("eligibility_md", v)}
+            onEn={(v) => set("eligibility_md_en", v)}
+            textarea
+            rows={3}
+          />
+        </div>
+      </Section>
+
+      <div
+        className={`flex flex-wrap items-center justify-between gap-3 border-t pt-5 ${
+          dark ? "border-white/10" : "border-gray-200"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={deleteTournament}
+          disabled={deleting}
+          className={cls.dangerBtn(dark)}
+        >
+          {deleting ? t("owner.common.loading") : t("owner.settings.deleteBtn")}
+        </button>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving}
+          className={cls.primaryBtnLg}
+        >
+          {saving ? t("owner.common.saving") : t("owner.settings.saveBtn")}
+        </button>
+      </div>
+    </>
+  );
+}
+
+function TemplateResetSection({
+  dark,
+  applyingId,
+  onApply,
+}: {
+  dark: boolean;
+  applyingId: string | null;
+  onApply: (
+    templateId: string,
+    mode: "merge" | "reset",
+    applyBranding: boolean,
+  ) => void;
+}) {
+  const { t } = useTranslation("predictor");
+  const [confirm, setConfirm] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  return (
+    <Section
+      dark={dark}
+      title={t("create.templates.title", "Templates")}
+      desc={t("create.templates.subtitle")}
+    >
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {TEMPLATE_PICKER_META.map((meta) => {
+          const tmpl = getTemplate(meta.id);
+          if (!tmpl) return null;
+          const name = t(
+            `create.templates.items.${meta.i18nKey}.name`,
+            tmpl.name,
+          );
+          return (
+            <button
+              key={meta.id}
+              type="button"
+              disabled={applyingId === meta.id}
+              onClick={() => setConfirm({ id: meta.id, name })}
+              className={`group relative flex flex-col overflow-hidden rounded-2xl border p-3 text-left transition-all ${
+                applyingId === meta.id ? "opacity-60" : ""
+              } ${
+                dark
+                  ? "border-white/8 bg-white/[0.02] hover:border-predictor-primary/40 hover:bg-white/[0.04]"
+                  : "border-gray-200 bg-white hover:border-predictor-primary hover:bg-predictor-primary/10"
+              }`}
+            >
+              <div
+                className="relative mb-2 flex h-16 w-full items-center justify-center overflow-hidden rounded-xl"
+                style={
+                  meta.brandBg
+                    ? { backgroundColor: meta.brandBg }
+                    : undefined
+                }
+              >
+                {meta.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={meta.logo}
+                    alt=""
+                    className="h-12 w-auto max-w-[80%] object-contain"
+                    referrerPolicy="no-referrer"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div
+                    className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${meta.gradient || "from-gray-400 to-gray-600"}`}
+                  >
+                    <span className="text-xl font-black text-white">
+                      {meta.monogram}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <h3 className="line-clamp-1 text-xs font-bold text-theme-heading-primary">
+                {name}
+              </h3>
+              {applyingId === meta.id && (
+                <p className={`mt-1 text-[10px] ${cls.accentText(dark)}`}>
+                  {t("owner.common.loading")}
+                </p>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {confirm && (
+        <Modal
+          dark={dark}
+          title={confirm.name}
+          onClose={() => setConfirm(null)}
+          footer={
+            <>
+              <button
+                type="button"
+                onClick={() => setConfirm(null)}
+                className={cls.secondaryBtn(dark)}
+              >
+                {t("owner.common.cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onApply(confirm.id, "merge", false);
+                  setConfirm(null);
+                }}
+                className={cls.secondaryBtn(dark)}
+              >
+                + {t("owner.common.add")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onApply(confirm.id, "reset", true);
+                  setConfirm(null);
+                }}
+                className={cls.primaryBtn}
+              >
+                ↺ Reset
+              </button>
+            </>
+          }
+        >
+          <p className="text-sm text-theme-text-secondary">
+            <strong className="text-theme-heading-primary">+ Add:</strong>{" "}
+            adds template categories alongside existing ones.
+          </p>
+          <p className="mt-3 text-sm text-theme-text-secondary">
+            <strong className="text-theme-heading-primary">↺ Reset:</strong>{" "}
+            clears all existing categories/options/matches/rules/rewards and applies the
+            template fresh (with branding).
+          </p>
+        </Modal>
+      )}
+    </Section>
+  );
+}
+
+function toLocal(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fromLocal(local: string): string | null {
+  if (!local) return null;
+  return new Date(local).toISOString();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Categories tab
+// ─────────────────────────────────────────────────────────────────────────────
+function CategoriesTab({
+  tournament,
+  dark,
+  showToast,
+}: {
+  tournament: Tournament;
+  dark: boolean;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t, i18n } = useTranslation("predictor");
+  const lang = normalizeLang(i18n.language);
+  const [list, setList] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Category | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(
+      `/api/predictor/owner/categories?tournament_id=${tournament.id}`,
+    );
+    if (res.ok) setList(await res.json());
+    setLoading(false);
+  }, [tournament.id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function remove(id: string) {
+    if (!confirm(t("owner.categoriesTab.deleteConfirm"))) return;
+    const res = await fetch(`/api/predictor/owner/categories?id=${id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      showToast(t("owner.toast.deleted"));
+      load();
+    } else showToast(t("owner.toast.saveError"), false);
+  }
+
+  return (
+    <>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className={`text-base font-bold ${cls.accentText(dark)}`}>
+            {t("owner.categoriesTab.title")}
+          </h2>
+          <p className="mt-0.5 text-xs text-theme-text-secondary">
+            {t("owner.categoriesTab.desc")}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className={cls.primaryBtnLg}
+        >
+          + {t("owner.categoriesTab.new")}
+        </button>
+      </div>
+
+      {loading ? (
+        <p className={`py-10 text-center text-sm ${dark ? "text-gray-500" : "text-gray-500"}`}>
+          {t("owner.common.loading")}
+        </p>
+      ) : list.length === 0 ? (
+        <div
+          className={`rounded-xl border border-dashed p-8 text-center text-sm text-theme-text-secondary ${
+            dark ? "border-white/15 bg-white/[0.02]" : "border-gray-300 bg-gray-50"
+          }`}
+        >
+          {t("owner.categoriesTab.empty")}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {list.map((c) => (
+            <div
+              key={c.id}
+              className={`flex items-center justify-between gap-3 rounded-xl border p-4 ${cls.cardSubtle(dark)}`}
+            >
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-bold text-theme-heading-primary">
+                    {localizedCategoryName(c, lang)}
+                  </span>
+                  {c.name_en && (
+                    <span className={cls.badgeAccent(dark)}>
+                      {t("owner.common.languageEn")}
+                    </span>
+                  )}
+                  <span className={cls.badgeAccent(dark)}>
+                    {String(t(`owner.categoryTypes.${c.category_type}.label`, c.category_type))}
+                  </span>
+                  <span className="text-[10px] text-theme-text-secondary">
+                    {t("owner.categoriesTab.optionCount", {
+                      count: c.predictor_options?.length ?? 0,
+                    })}
+                  </span>
+                </div>
+                {localizedCategoryDescription(c, lang) && (
+                  <p className="mt-1 truncate text-xs text-theme-text-secondary">
+                    {localizedCategoryDescription(c, lang)}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditing(c)}
+                  className={cls.secondaryBtn(dark)}
+                >
+                  {t("owner.common.edit")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(c.id)}
+                  className={cls.dangerBtn(dark)}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {(creating || editing) && (
+        <CategoryEditor
+          tournamentId={tournament.id}
+          category={editing}
+          dark={dark}
+          onClose={() => {
+            setCreating(false);
+            setEditing(null);
+          }}
+          onSaved={() => {
+            setCreating(false);
+            setEditing(null);
+            load();
+            showToast(t("owner.toast.saved"));
+          }}
+          showToast={showToast}
+        />
+      )}
+    </>
+  );
+}
+
+function CategoryEditor({
+  tournamentId,
+  category,
+  dark,
+  onClose,
+  onSaved,
+  showToast,
+}: {
+  tournamentId: string;
+  category: Category | null;
+  dark: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t } = useTranslation("predictor");
+  const isEdit = !!category;
+  const [form, setForm] = useState<any>(
+    category || {
+      name: "",
+      name_en: "",
+      description: "",
+      description_en: "",
+      category_type: "single_choice",
+      max_selections: 1,
+      points_correct: 10,
+      points_partial: 0,
+      points_ranked_bonus: 0,
+      visibility: "public",
+      is_active: true,
+      sort_order: 0,
+      icon: "",
+    },
+  );
+  const [saving, setSaving] = useState(false);
+  const [options, setOptions] = useState<Option[]>(category?.predictor_options || []);
+  const set = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
+  const needsOptions = ["single_choice", "multiple_choice", "ranked_top_n"].includes(
+    form.category_type,
+  );
+
+  async function save() {
+    if (!form.name?.trim()) {
+      showToast(t("owner.categoriesTab.editor.nameRequired"), false);
+      return;
+    }
+    setSaving(true);
+    try {
+      const body = isEdit
+        ? { ...form, id: category!.id }
+        : { ...form, tournament_id: tournamentId };
+      const res = await fetch("/api/predictor/owner/categories", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Save failed");
+      if (needsOptions) {
+        const catId = isEdit ? category!.id : data.id;
+        await fetch("/api/predictor/owner/options", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            category_id: catId,
+            replace: true,
+            options: options.map((o, idx) => ({ ...o, sort_order: idx })),
+          }),
+        });
+      }
+      onSaved();
+    } catch (e: any) {
+      showToast(e.message, false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      dark={dark}
+      title={
+        isEdit
+          ? t("owner.categoriesTab.editor.editTitle")
+          : t("owner.categoriesTab.editor.createTitle")
+      }
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" onClick={onClose} className={cls.secondaryBtn(dark)}>
+            {t("owner.common.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className={cls.primaryBtnLg}
+          >
+            {saving ? t("owner.common.saving") : t("owner.common.save")}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <BilingualPair
+          dark={dark}
+          bsLabel={t("owner.categoriesTab.editor.name")}
+          enLabel={t("owner.categoriesTab.editor.nameEn")}
+          bsValue={form.name}
+          enValue={form.name_en}
+          onBs={(v) => set("name", v)}
+          onEn={(v) => set("name_en", v)}
+          bsPlaceholder={t("owner.categoriesTab.editor.namePlaceholder")}
+          enPlaceholder={t("owner.categoriesTab.editor.nameEnPlaceholder")}
+          required
+        />
+        <BilingualPair
+          dark={dark}
+          bsLabel={t("owner.categoriesTab.editor.description")}
+          enLabel={t("owner.categoriesTab.editor.descriptionEn")}
+          bsValue={form.description}
+          enValue={form.description_en}
+          onBs={(v) => set("description", v)}
+          onEn={(v) => set("description_en", v)}
+          textarea
+          rows={2}
+        />
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Field
+            label={t("owner.categoriesTab.editor.categoryType")}
+            hint={t(`owner.categoryTypes.${form.category_type}.desc`)}
+          >
+            <select
+              value={form.category_type}
+              onChange={(e) => set("category_type", e.target.value)}
+              className={cls.input(dark)}
+            >
+              {CAT_TYPE_KEYS.map((k) => (
+                <option key={k} value={k}>
+                  {t(`owner.categoryTypes.${k}.label`)}
+                </option>
+              ))}
+            </select>
+          </Field>
+          {form.category_type === "ranked_top_n" ||
+          form.category_type === "multiple_choice" ? (
+            <Field label={t("owner.categoriesTab.editor.maxSelections")}>
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={form.max_selections || 1}
+                onChange={(e) => set("max_selections", Number(e.target.value))}
+                className={cls.input(dark)}
+              />
+            </Field>
+          ) : (
+            <Field label={t("owner.categoriesTab.editor.sortOrder")}>
+              <input
+                type="number"
+                value={form.sort_order || 0}
+                onChange={(e) => set("sort_order", Number(e.target.value))}
+                className={cls.input(dark)}
+              />
+            </Field>
+          )}
+          <Field label={t("owner.categoriesTab.editor.pointsCorrect")}>
+            <input
+              type="number"
+              value={form.points_correct ?? 10}
+              onChange={(e) => set("points_correct", Number(e.target.value))}
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.categoriesTab.editor.pointsPartial")}>
+            <input
+              type="number"
+              value={form.points_partial ?? 0}
+              onChange={(e) => set("points_partial", Number(e.target.value))}
+              className={cls.input(dark)}
+            />
+          </Field>
+          {form.category_type === "ranked_top_n" && (
+            <Field label={t("owner.categoriesTab.editor.pointsRankedBonus")}>
+              <input
+                type="number"
+                value={form.points_ranked_bonus ?? 0}
+                onChange={(e) => set("points_ranked_bonus", Number(e.target.value))}
+                className={cls.input(dark)}
+              />
+            </Field>
+          )}
+          <Field label={t("owner.categoriesTab.editor.isActive")}>
+            <label
+              className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 ${
+                dark ? "border-white/10 bg-black/20" : "border-gray-300 bg-white"
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-predictor-primary"
+                checked={form.is_active !== false}
+                onChange={(e) => set("is_active", e.target.checked)}
+              />
+              <span className="text-sm text-theme-heading-primary">
+                {t("owner.categoriesTab.editor.isActiveHint")}
+              </span>
+            </label>
+          </Field>
+        </div>
+
+        {needsOptions && (
+          <div
+            className={`rounded-xl border p-4 ${
+              dark ? "border-white/10 bg-black/20" : "border-gray-300 bg-gray-50"
+            }`}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className={`text-xs font-bold ${cls.accentText(dark)}`}>
+                {t("owner.categoriesTab.editor.options")}
+              </h4>
+              <button
+                type="button"
+                onClick={() =>
+                  setOptions((o) => [...o, { label: "", label_en: "", is_correct: false }])
+                }
+                className={cls.secondaryBtn(dark)}
+              >
+                + {t("owner.categoriesTab.editor.addOption")}
+              </button>
+            </div>
+            {options.length === 0 ? (
+              <p className="text-xs text-theme-text-secondary">
+                {t("owner.categoriesTab.editor.noOptions")}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {options.map((o: any, i: number) => (
+                  <div
+                    key={i}
+                    className={`grid grid-cols-1 items-center gap-2 rounded-lg border p-2 md:grid-cols-[1fr_1fr_auto_auto] ${
+                      dark
+                        ? "border-white/8 bg-white/[0.02]"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    <input
+                      placeholder={t("owner.categoriesTab.editor.optionBs")}
+                      value={o.label}
+                      onChange={(e) =>
+                        setOptions((cur) =>
+                          cur.map((x, j) =>
+                            j === i ? { ...x, label: e.target.value } : x,
+                          ),
+                        )
+                      }
+                      className={cls.input(dark)}
+                    />
+                    <input
+                      placeholder={t("owner.categoriesTab.editor.optionEn")}
+                      value={o.label_en || ""}
+                      onChange={(e) =>
+                        setOptions((cur) =>
+                          cur.map((x, j) =>
+                            j === i ? { ...x, label_en: e.target.value } : x,
+                          ),
+                        )
+                      }
+                      className={cls.input(dark)}
+                    />
+                    <label
+                      className={`inline-flex items-center gap-1 rounded-lg border px-2 py-2 text-[11px] ${
+                        dark
+                          ? "border-white/10 bg-black/20 text-gray-300"
+                          : "border-gray-300 bg-white text-gray-700"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-3.5 w-3.5 accent-emerald-500"
+                        checked={!!o.is_correct}
+                        onChange={(e) =>
+                          setOptions((cur) =>
+                            cur.map((x, j) =>
+                              j === i ? { ...x, is_correct: e.target.checked } : x,
+                            ),
+                          )
+                        }
+                      />
+                      {t("owner.categoriesTab.editor.optionCorrect")}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setOptions((cur) => cur.filter((_, j) => j !== i))}
+                      className={cls.dangerBtn(dark) + " !px-2"}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Matches tab
+// ─────────────────────────────────────────────────────────────────────────────
+function ImageUpload({
+  dark,
+  tournamentId,
+  kind,
+  label,
+  value,
+  onChange,
+  onError,
+}: {
+  dark: boolean;
+  tournamentId: string;
+  kind: "banner" | "hero" | "logo";
+  label: string;
+  value: string | null | undefined;
+  onChange: (url: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const { t } = useTranslation("predictor");
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("tournament_id", tournamentId);
+      fd.append("kind", kind);
+      const res = await fetch("/api/predictor/owner/upload-image", {
+        method: "POST",
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Upload failed");
+      onChange(data.url);
+    } catch (e: any) {
+      onError(
+        e?.message
+          ? `${t("owner.settings.branding.uploadError")} — ${e.message}`
+          : t("owner.settings.branding.uploadError"),
+      );
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <Field label={label}>
+      <div className="space-y-2">
+        {value ? (
+          <div
+            className={`relative flex items-center gap-3 overflow-hidden rounded-lg border p-2 ${
+              dark ? "border-white/10 bg-black/20" : "border-gray-200 bg-gray-50"
+            }`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={value}
+              alt=""
+              className={`h-12 w-12 flex-shrink-0 rounded object-cover ring-1 ${
+                dark ? "ring-white/10" : "ring-gray-200"
+              }`}
+              referrerPolicy="no-referrer"
+              loading="lazy"
+            />
+            <span className="truncate text-[11px] text-theme-text-secondary">
+              {value}
+            </span>
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className={`ml-auto rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
+                dark
+                  ? "text-gray-400 hover:bg-white/5 hover:text-red-300"
+                  : "text-gray-500 hover:bg-red-50 hover:text-red-700"
+              }`}
+            >
+              {t("owner.settings.branding.remove")}
+            </button>
+          </div>
+        ) : null}
+
+        <label
+          className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-3 text-xs font-semibold transition-colors ${
+            uploading
+              ? "opacity-60"
+              : dark
+                ? "border-white/15 bg-white/[0.02] text-gray-300 hover:border-predictor-primary/60 hover:bg-predictor-primary/[0.05]"
+                : "border-gray-300 bg-white text-gray-700 hover:border-predictor-primary hover:bg-predictor-primary/10"
+          }`}
+        >
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+            disabled={uploading}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+              e.target.value = "";
+            }}
+            className="hidden"
+          />
+          <span aria-hidden>↑</span>
+          {uploading
+            ? t("owner.settings.branding.uploading")
+            : t("owner.settings.branding.uploadCta")}
+        </label>
+
+        <input
+          value={value ?? ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="https://..."
+          className={`${cls.input(dark)} text-xs`}
+        />
+        <p className="text-[11px] text-theme-text-secondary/80">
+          {t("owner.settings.branding.orUseUrl")}
+        </p>
+      </div>
+    </Field>
+  );
+}
+
+function TeamChip({
+  logoUrl,
+  name,
+}: {
+  logoUrl?: string | null;
+  name: string;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={logoUrl}
+          alt=""
+          width={16}
+          height={12}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="h-3 w-auto rounded-sm object-cover ring-1 ring-white/10"
+        />
+      ) : null}
+      <span>{name}</span>
+    </span>
+  );
+}
+
+function MatchesTab({
+  tournament,
+  dark,
+  showToast,
+}: {
+  tournament: Tournament;
+  dark: boolean;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t, i18n } = useTranslation("predictor");
+  const lang = normalizeLang(i18n.language);
+  const [list, setList] = useState<Match[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<Match | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(`/api/predictor/owner/matches?tournament_id=${tournament.id}`);
+    if (res.ok) setList(await res.json());
+    setLoading(false);
+  }, [tournament.id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function remove(id: string) {
+    if (!confirm(t("owner.matchesTab.deleteConfirm"))) return;
+    const res = await fetch(`/api/predictor/owner/matches?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      load();
+      showToast(t("owner.toast.deleted"));
+    } else showToast(t("owner.toast.saveError"), false);
+  }
+
+  return (
+    <>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className={`text-base font-bold ${cls.accentText(dark)}`}>
+            {t("owner.matchesTab.title")}
+          </h2>
+          <p className="mt-0.5 text-xs text-theme-text-secondary">
+            {t("owner.matchesTab.desc")}
+          </p>
+        </div>
+        <button type="button" onClick={() => setCreating(true)} className={cls.primaryBtnLg}>
+          + {t("owner.matchesTab.new")}
+        </button>
+      </div>
+
+      {loading ? (
+        <p className="py-10 text-center text-sm text-theme-text-secondary">
+          {t("owner.common.loading")}
+        </p>
+      ) : list.length === 0 ? (
+        <div
+          className={`rounded-xl border border-dashed p-8 text-center text-sm text-theme-text-secondary ${
+            dark ? "border-white/15 bg-white/[0.02]" : "border-gray-300 bg-gray-50"
+          }`}
+        >
+          {t("owner.matchesTab.empty")}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {list.map((m) => {
+            const homeName = localizedMatchHomeTeam(m, lang);
+            const awayName = localizedMatchAwayTeam(m, lang);
+            const stageName = localizedMatchStageLabel(m, lang) || m.stage;
+            return (
+            <div
+              key={m.id}
+              className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 ${cls.cardSubtle(dark)}`}
+            >
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-theme-heading-primary">
+                  <TeamChip logoUrl={m.home_logo_url} name={homeName} />
+                  <span className="text-theme-text-secondary">vs</span>
+                  <TeamChip logoUrl={m.away_logo_url} name={awayName} />
+                  {m.home_score != null && (
+                    <span className={cls.badgeAccent(dark) + " font-bold"}>
+                      {m.home_score} : {m.away_score}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-0.5 text-[11px] text-theme-text-secondary">
+                  {m.kickoff_at
+                    ? new Date(m.kickoff_at).toLocaleString()
+                    : t("owner.matchesTab.noKickoff")}{" "}
+                  · {stageName}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditing(m)}
+                  className={cls.secondaryBtn(dark)}
+                >
+                  {t("owner.common.edit")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(m.id)}
+                  className={cls.dangerBtn(dark)}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            );
+          })}
+        </div>
+      )}
+
+      {(creating || editing) && (
+        <MatchEditor
+          tournamentId={tournament.id}
+          match={editing}
+          dark={dark}
+          onClose={() => {
+            setCreating(false);
+            setEditing(null);
+          }}
+          onSaved={() => {
+            setCreating(false);
+            setEditing(null);
+            load();
+            showToast(t("owner.toast.saved"));
+          }}
+          showToast={showToast}
+        />
+      )}
+    </>
+  );
+}
+
+function MatchEditor({
+  tournamentId,
+  match,
+  dark,
+  onClose,
+  onSaved,
+  showToast,
+}: {
+  tournamentId: string;
+  match: Match | null;
+  dark: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t } = useTranslation("predictor");
+  const isEdit = !!match;
+  const [form, setForm] = useState<any>(
+    match || {
+      stage: "group",
+      stage_label: "",
+      stage_label_en: "",
+      home_team: "",
+      home_team_en: "",
+      away_team: "",
+      away_team_en: "",
+      kickoff_at: null,
+      status: "scheduled",
+      points_exact: 5,
+      points_diff: 3,
+      points_winner: 2,
+      home_score: null,
+      away_score: null,
+    },
+  );
+  const [saving, setSaving] = useState(false);
+  const set = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
+
+  async function save() {
+    if (!form.home_team || !form.away_team) {
+      showToast(t("owner.matchesTab.editor.teamsRequired"), false);
+      return;
+    }
+    setSaving(true);
+    try {
+      const body = isEdit
+        ? { ...form, id: match!.id }
+        : { ...form, tournament_id: tournamentId };
+      const res = await fetch("/api/predictor/owner/matches", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d?.error || "Save failed");
+      }
+      onSaved();
+    } catch (e: any) {
+      showToast(e.message, false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      dark={dark}
+      title={
+        isEdit
+          ? t("owner.matchesTab.editor.editTitle")
+          : t("owner.matchesTab.editor.createTitle")
+      }
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" onClick={onClose} className={cls.secondaryBtn(dark)}>
+            {t("owner.common.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className={cls.primaryBtnLg}
+          >
+            {saving ? t("owner.common.saving") : t("owner.common.save")}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <BilingualPair
+          dark={dark}
+          bsLabel={t("owner.matchesTab.editor.home")}
+          enLabel={t("owner.matchesTab.editor.homeEn")}
+          bsValue={form.home_team}
+          enValue={form.home_team_en}
+          onBs={(v) => set("home_team", v)}
+          onEn={(v) => set("home_team_en", v)}
+          required
+        />
+        <BilingualPair
+          dark={dark}
+          bsLabel={t("owner.matchesTab.editor.away")}
+          enLabel={t("owner.matchesTab.editor.awayEn")}
+          bsValue={form.away_team}
+          enValue={form.away_team_en}
+          onBs={(v) => set("away_team", v)}
+          onEn={(v) => set("away_team_en", v)}
+          required
+        />
+        <BilingualPair
+          dark={dark}
+          bsLabel={t("owner.matchesTab.editor.stageLabel")}
+          enLabel={t("owner.matchesTab.editor.stageLabelEn")}
+          bsValue={form.stage_label}
+          enValue={form.stage_label_en}
+          onBs={(v) => set("stage_label", v)}
+          onEn={(v) => set("stage_label_en", v)}
+          bsPlaceholder={t("owner.matchesTab.editor.stageBsPlaceholder")}
+          enPlaceholder={t("owner.matchesTab.editor.stageEnPlaceholder")}
+        />
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Field label={t("owner.matchesTab.editor.kickoff")}>
+            <input
+              type="datetime-local"
+              value={toLocal(form.kickoff_at)}
+              onChange={(e) => set("kickoff_at", fromLocal(e.target.value))}
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.matchesTab.editor.status")}>
+            <select
+              value={form.status}
+              onChange={(e) => set("status", e.target.value)}
+              className={cls.input(dark)}
+            >
+              {MATCH_STATUS_KEYS.map((s) => (
+                <option key={s} value={s}>
+                  {t(`owner.matchesTab.editor.statusOptions.${s}`)}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label={t("owner.matchesTab.editor.type")}>
+            <select
+              value={form.stage}
+              onChange={(e) => set("stage", e.target.value)}
+              className={cls.input(dark)}
+            >
+              {STAGE_KEYS.map((s) => (
+                <option key={s} value={s}>
+                  {t(`owner.matchesTab.editor.typeOptions.${s}`)}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Field label={t("owner.matchesTab.editor.pointsExact")}>
+            <input
+              type="number"
+              value={form.points_exact ?? 5}
+              onChange={(e) => set("points_exact", Number(e.target.value))}
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.matchesTab.editor.pointsDiff")}>
+            <input
+              type="number"
+              value={form.points_diff ?? 3}
+              onChange={(e) => set("points_diff", Number(e.target.value))}
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.matchesTab.editor.pointsWinner")}>
+            <input
+              type="number"
+              value={form.points_winner ?? 2}
+              onChange={(e) => set("points_winner", Number(e.target.value))}
+              className={cls.input(dark)}
+            />
+          </Field>
+        </div>
+
+        <div
+          className={`rounded-xl border p-4 ${
+            dark
+              ? "border-predictor-primary/30 bg-predictor-primary/[0.05]"
+              : "border-predictor-primary/50 bg-predictor-primary/10"
+          }`}
+        >
+          <h4 className={`mb-2 text-xs font-bold ${cls.accentText(dark)}`}>
+            {t("owner.matchesTab.editor.finalScore")}
+          </h4>
+          <p className="mb-3 text-[11px] text-theme-text-secondary">
+            {t("owner.matchesTab.editor.finalScoreHint")}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t("owner.matchesTab.editor.homeScore")}>
+              <input
+                type="number"
+                min={0}
+                value={form.home_score ?? ""}
+                onChange={(e) =>
+                  set("home_score", e.target.value === "" ? null : Number(e.target.value))
+                }
+                className={cls.input(dark)}
+              />
+            </Field>
+            <Field label={t("owner.matchesTab.editor.awayScore")}>
+              <input
+                type="number"
+                min={0}
+                value={form.away_score ?? ""}
+                onChange={(e) =>
+                  set("away_score", e.target.value === "" ? null : Number(e.target.value))
+                }
+                className={cls.input(dark)}
+              />
+            </Field>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rules tab
+// ─────────────────────────────────────────────────────────────────────────────
+function RulesTab({
+  tournament,
+  dark,
+  showToast,
+}: {
+  tournament: Tournament;
+  dark: boolean;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t, i18n } = useTranslation("predictor");
+  const lang = normalizeLang(i18n.language);
+  const [list, setList] = useState<Rule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Rule | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(`/api/predictor/owner/rules?tournament_id=${tournament.id}`);
+    if (res.ok) setList(await res.json());
+    setLoading(false);
+  }, [tournament.id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function remove(id: string) {
+    if (!confirm(t("owner.rulesTab.deleteConfirm"))) return;
+    const res = await fetch(`/api/predictor/owner/rules?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      load();
+      showToast(t("owner.toast.deleted"));
+    } else showToast(t("owner.toast.saveError"), false);
+  }
+
+  return (
+    <>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className={`text-base font-bold ${cls.accentText(dark)}`}>
+            {t("owner.rulesTab.title")}
+          </h2>
+          <p className="mt-0.5 text-xs text-theme-text-secondary">
+            {t("owner.rulesTab.desc")}
+          </p>
+        </div>
+        <button type="button" onClick={() => setCreating(true)} className={cls.primaryBtnLg}>
+          + {t("owner.rulesTab.new")}
+        </button>
+      </div>
+
+      {loading ? (
+        <p className="py-10 text-center text-sm text-theme-text-secondary">
+          {t("owner.common.loading")}
+        </p>
+      ) : list.length === 0 ? (
+        <div
+          className={`rounded-xl border border-dashed p-8 text-center text-sm text-theme-text-secondary ${
+            dark ? "border-white/15 bg-white/[0.02]" : "border-gray-300 bg-gray-50"
+          }`}
+        >
+          {t("owner.rulesTab.empty")}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {list.map((r) => (
+            <div
+              key={r.id}
+              className={`flex items-start justify-between gap-3 rounded-xl border p-4 ${cls.cardSubtle(dark)}`}
+            >
+              <div className="min-w-0">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className={cls.badgeAccent(dark) + " uppercase"}>
+                    {String(t(`owner.rulesTab.kinds.${r.kind}`, r.kind))}
+                  </span>
+                  <span className="text-sm font-bold text-theme-heading-primary">
+                    {localizedRuleTitle(r, lang)}
+                  </span>
+                </div>
+                {localizedRuleBody(r, lang) && (
+                  <p className="line-clamp-2 text-xs text-theme-text-secondary">
+                    {localizedRuleBody(r, lang)}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditing(r)}
+                  className={cls.secondaryBtn(dark)}
+                >
+                  {t("owner.common.edit")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(r.id)}
+                  className={cls.dangerBtn(dark)}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {(creating || editing) && (
+        <RuleEditor
+          tournamentId={tournament.id}
+          rule={editing}
+          dark={dark}
+          onClose={() => {
+            setCreating(false);
+            setEditing(null);
+          }}
+          onSaved={() => {
+            setCreating(false);
+            setEditing(null);
+            load();
+            showToast(t("owner.toast.saved"));
+          }}
+          showToast={showToast}
+        />
+      )}
+    </>
+  );
+}
+
+function RuleEditor({
+  tournamentId,
+  rule,
+  dark,
+  onClose,
+  onSaved,
+  showToast,
+}: {
+  tournamentId: string;
+  rule: Rule | null;
+  dark: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t } = useTranslation("predictor");
+  const isEdit = !!rule;
+  const [form, setForm] = useState<any>(
+    rule || {
+      kind: "rule",
+      title: "",
+      title_en: "",
+      body_md: "",
+      body_md_en: "",
+      sort_order: 0,
+    },
+  );
+  const [saving, setSaving] = useState(false);
+  const set = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
+
+  async function save() {
+    if (!form.title?.trim()) {
+      showToast(t("owner.rulesTab.editor.titleRequired"), false);
+      return;
+    }
+    setSaving(true);
+    try {
+      const body = isEdit
+        ? { ...form, id: rule!.id }
+        : { ...form, tournament_id: tournamentId };
+      const res = await fetch("/api/predictor/owner/rules", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d?.error || "Save failed");
+      }
+      onSaved();
+    } catch (e: any) {
+      showToast(e.message, false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      dark={dark}
+      title={
+        isEdit
+          ? t("owner.rulesTab.editor.editTitle")
+          : t("owner.rulesTab.editor.createTitle")
+      }
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" onClick={onClose} className={cls.secondaryBtn(dark)}>
+            {t("owner.common.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className={cls.primaryBtnLg}
+          >
+            {saving ? t("owner.common.saving") : t("owner.common.save")}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <Field label={t("owner.rulesTab.editor.kind")}>
+          <select
+            value={form.kind}
+            onChange={(e) => set("kind", e.target.value)}
+            className={cls.input(dark)}
+          >
+            {RULE_KINDS.map((k) => (
+              <option key={k} value={k}>
+                {t(`owner.rulesTab.kinds.${k}`)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <BilingualPair
+          dark={dark}
+          bsLabel={t("owner.rulesTab.editor.title")}
+          enLabel={t("owner.rulesTab.editor.titleEn")}
+          bsValue={form.title}
+          enValue={form.title_en}
+          onBs={(v) => set("title", v)}
+          onEn={(v) => set("title_en", v)}
+          required
+        />
+        <BilingualPair
+          dark={dark}
+          bsLabel={t("owner.rulesTab.editor.body")}
+          enLabel={t("owner.rulesTab.editor.bodyEn")}
+          bsValue={form.body_md}
+          enValue={form.body_md_en}
+          onBs={(v) => set("body_md", v)}
+          onEn={(v) => set("body_md_en", v)}
+          textarea
+          rows={6}
+        />
+      </div>
+    </Modal>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rewards tab
+// ─────────────────────────────────────────────────────────────────────────────
+function RewardsTab({
+  tournament,
+  dark,
+  showToast,
+}: {
+  tournament: Tournament;
+  dark: boolean;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t, i18n } = useTranslation("predictor");
+  const lang = normalizeLang(i18n.language);
+  const [list, setList] = useState<Reward[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Reward | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(`/api/predictor/owner/rewards?tournament_id=${tournament.id}`);
+    if (res.ok) setList(await res.json());
+    setLoading(false);
+  }, [tournament.id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function remove(id: string) {
+    if (!confirm(t("owner.rewardsTab.deleteConfirm"))) return;
+    const res = await fetch(`/api/predictor/owner/rewards?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      load();
+      showToast(t("owner.toast.deleted"));
+    } else showToast(t("owner.toast.saveError"), false);
+  }
+
+  return (
+    <>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className={`text-base font-bold ${cls.accentText(dark)}`}>
+            {t("owner.rewardsTab.title")}
+          </h2>
+          <p className="mt-0.5 text-xs text-theme-text-secondary">
+            {t("owner.rewardsTab.desc")}
+          </p>
+        </div>
+        <button type="button" onClick={() => setCreating(true)} className={cls.primaryBtnLg}>
+          + {t("owner.rewardsTab.new")}
+        </button>
+      </div>
+
+      {loading ? (
+        <p className="py-10 text-center text-sm text-theme-text-secondary">
+          {t("owner.common.loading")}
+        </p>
+      ) : list.length === 0 ? (
+        <div
+          className={`rounded-xl border border-dashed p-8 text-center text-sm text-theme-text-secondary ${
+            dark ? "border-white/15 bg-white/[0.02]" : "border-gray-300 bg-gray-50"
+          }`}
+        >
+          {t("owner.rewardsTab.empty")}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {list.map((r) => (
+            <div
+              key={r.id}
+              className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 ${cls.cardSubtle(dark)}`}
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  {r.rank_position && (
+                    <span className={cls.badgeAccent(dark) + " font-bold"}>
+                      #{r.rank_position}
+                    </span>
+                  )}
+                  <span className="text-sm font-bold text-theme-heading-primary">
+                    {localizedRewardTitle(r, lang)}
+                  </span>
+                  <span className={cls.badgeAccent(dark)}>
+                    {String(t(`owner.rewardsTab.prizeTypes.${r.prize_type}`, r.prize_type))}
+                  </span>
+                  {r.prize_value && (
+                    <span className={`text-xs ${cls.accentText(dark)}`}>
+                      {r.prize_value} {r.prize_currency || "EUR"}
+                    </span>
+                  )}
+                </div>
+                {localizedRewardDescription(r, lang) && (
+                  <p className="mt-1 text-xs text-theme-text-secondary">
+                    {localizedRewardDescription(r, lang)}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditing(r)}
+                  className={cls.secondaryBtn(dark)}
+                >
+                  {t("owner.common.edit")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(r.id)}
+                  className={cls.dangerBtn(dark)}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {(creating || editing) && (
+        <RewardEditor
+          tournamentId={tournament.id}
+          reward={editing}
+          dark={dark}
+          onClose={() => {
+            setCreating(false);
+            setEditing(null);
+          }}
+          onSaved={() => {
+            setCreating(false);
+            setEditing(null);
+            load();
+            showToast(t("owner.toast.saved"));
+          }}
+          showToast={showToast}
+        />
+      )}
+    </>
+  );
+}
+
+function RewardEditor({
+  tournamentId,
+  reward,
+  dark,
+  onClose,
+  onSaved,
+  showToast,
+}: {
+  tournamentId: string;
+  reward: Reward | null;
+  dark: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t } = useTranslation("predictor");
+  const isEdit = !!reward;
+  const [form, setForm] = useState<any>(
+    reward || {
+      rank_position: 1,
+      title: "",
+      title_en: "",
+      description: "",
+      description_en: "",
+      prize_type: "cash",
+      prize_value: null,
+      prize_currency: "EUR",
+    },
+  );
+  const [saving, setSaving] = useState(false);
+  const set = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
+
+  async function save() {
+    if (!form.title?.trim()) {
+      showToast(t("owner.rewardsTab.editor.titleRequired"), false);
+      return;
+    }
+    setSaving(true);
+    try {
+      const body = isEdit
+        ? { ...form, id: reward!.id }
+        : { ...form, tournament_id: tournamentId };
+      const res = await fetch("/api/predictor/owner/rewards", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d?.error || "Save failed");
+      }
+      onSaved();
+    } catch (e: any) {
+      showToast(e.message, false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      dark={dark}
+      title={
+        isEdit
+          ? t("owner.rewardsTab.editor.editTitle")
+          : t("owner.rewardsTab.editor.createTitle")
+      }
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" onClick={onClose} className={cls.secondaryBtn(dark)}>
+            {t("owner.common.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className={cls.primaryBtnLg}
+          >
+            {saving ? t("owner.common.saving") : t("owner.common.save")}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Field
+            label={t("owner.rewardsTab.editor.rankPosition")}
+            hint={t("owner.rewardsTab.editor.rankHint")}
+          >
+            <input
+              type="number"
+              value={form.rank_position ?? ""}
+              onChange={(e) =>
+                set(
+                  "rank_position",
+                  e.target.value === "" ? null : Number(e.target.value),
+                )
+              }
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.rewardsTab.editor.prizeType")}>
+            <select
+              value={form.prize_type}
+              onChange={(e) => set("prize_type", e.target.value)}
+              className={cls.input(dark)}
+            >
+              {PRIZE_TYPES.map((p) => (
+                <option key={p} value={p}>
+                  {t(`owner.rewardsTab.prizeTypes.${p}`)}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        <BilingualPair
+          dark={dark}
+          bsLabel={t("owner.rewardsTab.editor.title")}
+          enLabel={t("owner.rewardsTab.editor.titleEn")}
+          bsValue={form.title}
+          enValue={form.title_en}
+          onBs={(v) => set("title", v)}
+          onEn={(v) => set("title_en", v)}
+          required
+        />
+        <BilingualPair
+          dark={dark}
+          bsLabel={t("owner.rewardsTab.editor.description")}
+          enLabel={t("owner.rewardsTab.editor.descriptionEn")}
+          bsValue={form.description}
+          enValue={form.description_en}
+          onBs={(v) => set("description", v)}
+          onEn={(v) => set("description_en", v)}
+          textarea
+          rows={2}
+        />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Field label={t("owner.rewardsTab.editor.value")}>
+            <input
+              type="number"
+              step="0.01"
+              value={form.prize_value ?? ""}
+              onChange={(e) =>
+                set("prize_value", e.target.value === "" ? null : Number(e.target.value))
+              }
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field label={t("owner.rewardsTab.editor.currency")}>
+            <input
+              value={form.prize_currency ?? "EUR"}
+              onChange={(e) => set("prize_currency", e.target.value.toUpperCase())}
+              className={cls.input(dark)}
+            />
+          </Field>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Members tab
+// ─────────────────────────────────────────────────────────────────────────────
+function MembersTab({
+  tournament,
+  dark,
+  showToast,
+}: {
+  tournament: Tournament;
+  dark: boolean;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t } = useTranslation("predictor");
+  const [list, setList] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<string>("all");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const q = new URLSearchParams({ tournament_id: tournament.id });
+    if (filter !== "all") q.set("status", filter);
+    const res = await fetch(`/api/predictor/owner/members?${q.toString()}`);
+    if (res.ok) setList(await res.json());
+    setLoading(false);
+  }, [tournament.id, filter]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function changeStatus(id: string, status: string) {
+    const res = await fetch("/api/predictor/owner/members", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    if (res.ok) {
+      load();
+      showToast(t("owner.toast.updated"));
+    } else showToast(t("owner.toast.saveError"), false);
+  }
+
+  async function remove(id: string) {
+    if (!confirm(t("owner.membersTab.removeConfirm"))) return;
+    const res = await fetch(`/api/predictor/owner/members?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      load();
+      showToast(t("owner.toast.removed"));
+    } else showToast(t("owner.toast.saveError"), false);
+  }
+
+  return (
+    <>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className={`text-base font-bold ${cls.accentText(dark)}`}>
+            {t("owner.membersTab.title")}
+          </h2>
+          <p className="mt-0.5 text-xs text-theme-text-secondary">
+            {tournament.require_approval
+              ? t("owner.membersTab.approvalsOn")
+              : t("owner.membersTab.approvalsOff")}
+          </p>
+        </div>
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className={cls.input(dark) + " max-w-[200px]"}
+        >
+          {MEMBER_FILTERS.map((f) => (
+            <option key={f} value={f}>
+              {f === "all"
+                ? t("owner.membersTab.filterAll")
+                : t(`owner.membersTab.filters.${f}`)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {loading ? (
+        <p className="py-10 text-center text-sm text-theme-text-secondary">
+          {t("owner.common.loading")}
+        </p>
+      ) : list.length === 0 ? (
+        <div
+          className={`rounded-xl border border-dashed p-8 text-center text-sm text-theme-text-secondary ${
+            dark ? "border-white/15 bg-white/[0.02]" : "border-gray-300 bg-gray-50"
+          }`}
+        >
+          {t("owner.membersTab.empty")}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {list.map((m) => (
+            <div
+              key={m.id}
+              className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 ${cls.cardSubtle(dark)}`}
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-sm text-theme-heading-primary">
+                  <span className="font-medium">
+                    {m.user_display_name || t("owner.membersTab.noName")}
+                  </span>
+                  <span className="text-theme-text-secondary">·</span>
+                  <span className="text-xs text-theme-text-secondary">{m.user_email}</span>
+                </div>
+                <div className="mt-0.5 flex items-center gap-2 text-[11px] text-theme-text-secondary">
+                  <span
+                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusTone(
+                      m.status === "approved" ? "published" : m.status,
+                      dark,
+                    )}`}
+                  >
+                    {String(t(`owner.membersTab.statuses.${m.status}`, m.status))}
+                  </span>
+                  <span>
+                    · {t("owner.membersTab.joinedOn")}{" "}
+                    {new Date(m.requested_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-1">
+                {m.status !== "approved" && (
+                  <button
+                    type="button"
+                    onClick={() => changeStatus(m.id, "approved")}
+                    className={cls.secondaryBtn(dark)}
+                  >
+                    ✓ {t("owner.membersTab.approve")}
+                  </button>
+                )}
+                {m.status !== "rejected" && (
+                  <button
+                    type="button"
+                    onClick={() => changeStatus(m.id, "rejected")}
+                    className={cls.secondaryBtn(dark)}
+                  >
+                    × {t("owner.membersTab.reject")}
+                  </button>
+                )}
+                {m.status !== "banned" && (
+                  <button
+                    type="button"
+                    onClick={() => changeStatus(m.id, "banned")}
+                    className={cls.dangerBtn(dark)}
+                  >
+                    {t("owner.membersTab.ban")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => remove(m.id)}
+                  className={cls.dangerBtn(dark) + " !px-2"}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scoring tab — leaderboard + manual override + auto rescore
+// ─────────────────────────────────────────────────────────────────────────────
+function ScoringTab({
+  tournament,
+  dark,
+  showToast,
+}: {
+  tournament: Tournament;
+  dark: boolean;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t } = useTranslation("predictor");
+  const [view, setView] = useState<"leaderboard" | "manual">("leaderboard");
+  const [standings, setStandings] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCatId, setSelectedCatId] = useState<string>("");
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [rescoring, setRescoring] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const loadStandings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/predictor/tournaments/${tournament.slug}/standings`);
+      if (res.ok) {
+        const d = await res.json();
+        setStandings(Array.isArray(d) ? d : d.standings || []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [tournament.slug]);
+
+  const loadCategories = useCallback(async () => {
+    const res = await fetch(`/api/predictor/owner/categories?tournament_id=${tournament.id}`);
+    if (res.ok) {
+      const data = await res.json();
+      setCategories(data);
+      if (data[0]?.id && !selectedCatId) setSelectedCatId(data[0].id);
+    }
+  }, [tournament.id, selectedCatId]);
+
+  const loadPredictions = useCallback(async () => {
+    if (!selectedCatId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/predictor/owner/scoring?tournament_id=${tournament.id}&category_id=${selectedCatId}`,
+      );
+      if (res.ok) setPredictions(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, [tournament.id, selectedCatId]);
+
+  useEffect(() => {
+    if (view === "leaderboard") loadStandings();
+    else loadCategories();
+  }, [view, loadStandings, loadCategories]);
+
+  useEffect(() => {
+    if (view === "manual" && selectedCatId) loadPredictions();
+  }, [view, selectedCatId, loadPredictions]);
+
+  async function rescore() {
+    if (!confirm(t("owner.scoringTab.rescoreConfirm"))) return;
+    setRescoring(true);
+    try {
+      const res = await fetch("/api/predictor/owner/scoring", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tournament_id: tournament.id, action: "rescore" }),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        showToast(t("owner.scoringTab.rescoredCount", { count: d.updated || 0 }));
+        if (view === "leaderboard") loadStandings();
+        else loadPredictions();
+      } else {
+        showToast(d.error || t("owner.toast.saveError"), false);
+      }
+    } finally {
+      setRescoring(false);
+    }
+  }
+
+  async function setPoints(predictionId: string, points: number) {
+    const res = await fetch("/api/predictor/owner/scoring", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prediction_id: predictionId, points_awarded: points }),
+    });
+    if (res.ok) {
+      showToast(t("owner.scoringTab.pointsSaved"));
+      loadPredictions();
+    } else {
+      showToast(t("owner.toast.saveError"), false);
+    }
+  }
+
+  async function toggleLock(predictionId: string, locked: boolean) {
+    const res = await fetch("/api/predictor/owner/scoring", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prediction_id: predictionId, locked }),
+    });
+    if (res.ok) loadPredictions();
+  }
+
+  const filtered = useMemo<Prediction[]>(() => {
+    if (!search.trim()) return predictions;
+    const s = search.toLowerCase();
+    return predictions.filter(
+      (p: Prediction) =>
+        (p.user_email || "").toLowerCase().includes(s) ||
+        (p.user_display_name || "").toLowerCase().includes(s),
+    );
+  }, [predictions, search]);
+
+  return (
+    <>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div
+          className={`inline-flex rounded-full border p-1 ${
+            dark ? "border-white/10 bg-white/[0.02]" : "border-gray-200 bg-white"
+          }`}
+        >
+          {(["leaderboard", "manual"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setView(v)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                view === v
+                  ? dark
+                    ? "bg-predictor-primary/20 text-predictor-accent-dark"
+                    : "bg-predictor-primary/30 text-gray-900"
+                  : dark
+                    ? "text-gray-400 hover:text-gray-200"
+                    : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              {t(`owner.scoringTab.${v}View`)}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={rescore}
+          disabled={rescoring}
+          className={cls.secondaryBtn(dark)}
+        >
+          ↻ {rescoring ? t("owner.scoringTab.rescoring") : t("owner.scoringTab.rescore")}
+        </button>
+      </div>
+
+      {view === "leaderboard" ? (
+        loading ? (
+          <p className="py-10 text-center text-sm text-theme-text-secondary">
+            {t("owner.common.loading")}
+          </p>
+        ) : standings.length === 0 ? (
+          <div
+            className={`rounded-xl border border-dashed p-8 text-center text-sm text-theme-text-secondary ${
+              dark ? "border-white/15 bg-white/[0.02]" : "border-gray-300 bg-gray-50"
+            }`}
+          >
+            {t("owner.scoringTab.leaderboardEmpty")}
+          </div>
+        ) : (
+          <div
+            className={`overflow-x-auto rounded-xl border ${
+              dark ? "border-white/10" : "border-gray-200"
+            }`}
+          >
+            <table className="w-full min-w-[480px] text-sm">
+              <thead
+                className={`text-[11px] uppercase tracking-wider ${
+                  dark
+                    ? "bg-white/5 text-gray-400"
+                    : "bg-gray-50 text-gray-500"
+                }`}
+              >
+                <tr>
+                  <th className="px-4 py-2 text-left">{t("owner.scoringTab.rankHeader")}</th>
+                  <th className="px-4 py-2 text-left">{t("owner.scoringTab.userHeader")}</th>
+                  <th className="px-4 py-2 text-right">{t("owner.scoringTab.pointsHeader")}</th>
+                </tr>
+              </thead>
+              <tbody className={dark ? "divide-y divide-white/5" : "divide-y divide-gray-100"}>
+                {standings.map((s: any, i: number) => (
+                  <tr key={s.user_id || i} className={dark ? "hover:bg-white/5" : "hover:bg-gray-50"}>
+                    <td className="px-4 py-2 text-theme-text-secondary">{i + 1}</td>
+                    <td className="px-4 py-2">
+                      <div className="font-medium text-theme-heading-primary">
+                        {s.user_display_name || s.display_name || "—"}
+                      </div>
+                      <div className="text-[11px] text-theme-text-secondary">
+                        {s.user_email}
+                      </div>
+                    </td>
+                    <td
+                      className={`px-4 py-2 text-right font-mono font-bold ${cls.accentText(dark)}`}
+                    >
+                      {s.total_points ?? s.points ?? 0}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      ) : (
+        <>
+          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <Field label={t("owner.scoringTab.categoryLabel")}>
+              <select
+                value={selectedCatId}
+                onChange={(e) => setSelectedCatId(e.target.value)}
+                className={cls.input(dark)}
+              >
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label={t("owner.scoringTab.searchLabel")}>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("owner.scoringTab.searchPlaceholder")}
+                className={cls.input(dark)}
+              />
+            </Field>
+          </div>
+
+          {loading ? (
+            <p className="py-10 text-center text-sm text-theme-text-secondary">
+              {t("owner.common.loading")}
+            </p>
+          ) : filtered.length === 0 ? (
+            <div
+              className={`rounded-xl border border-dashed p-8 text-center text-sm text-theme-text-secondary ${
+                dark ? "border-white/15 bg-white/[0.02]" : "border-gray-300 bg-gray-50"
+              }`}
+            >
+              {t("owner.scoringTab.manualEmpty")}
+            </div>
+          ) : (
+            <div
+              className={`overflow-x-auto rounded-xl border ${
+                dark ? "border-white/10" : "border-gray-200"
+              }`}
+            >
+              <table className="w-full min-w-[600px] text-sm">
+                <thead
+                  className={`text-[11px] uppercase tracking-wider ${
+                    dark ? "bg-white/5 text-gray-400" : "bg-gray-50 text-gray-500"
+                  }`}
+                >
+                  <tr>
+                    <th className="px-3 py-2 text-left">{t("owner.scoringTab.userHeader")}</th>
+                    <th className="px-3 py-2 text-left">{t("owner.scoringTab.predictionHeader")}</th>
+                    <th className="px-3 py-2 text-right">{t("owner.scoringTab.pointsHeader")}</th>
+                    <th className="px-3 py-2 text-center">{t("owner.scoringTab.lockedHeader")}</th>
+                  </tr>
+                </thead>
+                <tbody className={dark ? "divide-y divide-white/5" : "divide-y divide-gray-100"}>
+                  {filtered.map((p: any) => (
+                    <tr key={p.id}>
+                      <td className="px-3 py-2">
+                        <div className="font-medium text-theme-heading-primary">
+                          {p.user_display_name || "—"}
+                        </div>
+                        <div className="text-[10px] text-theme-text-secondary">
+                          {p.user_email}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-xs text-theme-text-secondary">
+                        {p.text_value ||
+                          (p.numeric_value != null ? String(p.numeric_value) : null) ||
+                          (p.score_home != null
+                            ? `${p.score_home}:${p.score_away}`
+                            : null) ||
+                          (Array.isArray(p.selected_option_ids) &&
+                          p.selected_option_ids.length > 0
+                            ? t("owner.scoringTab.selectionsCount", {
+                                count: p.selected_option_ids.length,
+                              })
+                            : "—")}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <input
+                          type="number"
+                          defaultValue={p.points_awarded ?? 0}
+                          onBlur={(e) => {
+                            const v = Number(e.target.value);
+                            if (v !== (p.points_awarded ?? 0)) setPoints(p.id, v);
+                          }}
+                          className={`w-20 rounded-md border px-2 py-1 text-right font-mono text-sm outline-none ${
+                            dark
+                              ? "border-white/10 bg-black/30 text-predictor-accent-dark focus:border-predictor-primary/60"
+                              : "border-gray-300 bg-white text-predictor-accent-light focus:border-predictor-primary"
+                          }`}
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-predictor-primary"
+                          checked={!!p.locked}
+                          onChange={(e) => toggleLock(p.id, e.target.checked)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <p className="mt-3 text-[11px] text-theme-text-secondary">
+            ✦ {t("owner.scoringTab.footerHint")}
+          </p>
+        </>
+      )}
+    </>
+  );
+}

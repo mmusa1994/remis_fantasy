@@ -13,7 +13,7 @@ interface UserData {
 
 // Type for universal admin registration notification
 export interface AdminRegistrationData {
-  competition: "F1" | "Champions League" | "Premier League";
+  competition: "F1" | "Champions League" | "Premier League" | "Predictor — Korisnički turnir";
   first_name: string;
   last_name: string;
   email: string;

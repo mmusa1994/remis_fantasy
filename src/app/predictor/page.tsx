@@ -14,6 +14,29 @@ import {
   Star,
   BellRing,
 } from "lucide-react";
+
+/**
+ * Creator monogram — refined editorial mark used on the "Create your tournament" CTA.
+ * Inspired by founder/maker seals. Currentcolor so it inherits button text colour.
+ */
+function CreatorMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+    >
+      <circle cx="8" cy="8" r="6.4" strokeWidth="0.9" opacity="0.55" />
+      <path d="M8 3.4 V12.6" strokeWidth="1.1" />
+      <path d="M3.4 8 H12.6" strokeWidth="1.1" />
+      <path d="M4.7 4.7 L11.3 11.3" strokeWidth="0.7" opacity="0.35" />
+      <path d="M11.3 4.7 L4.7 11.3" strokeWidth="0.7" opacity="0.35" />
+    </svg>
+  );
+}
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import LoadingCard from "@/components/shared/LoadingCard";
@@ -96,14 +119,25 @@ export default function PredictorIndexPage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest mb-6 ${
-              theme === "dark"
-                ? "bg-white/5 text-theme-foreground/85 border-white/10"
-                : "bg-black/[0.04] text-theme-foreground/80 border-black/10"
-            }`}
+            className="mb-6 flex items-center justify-center gap-3"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            {t("badge", "Remis Predictor")}
+            <span
+              className={`h-px w-8 ${
+                theme === "dark" ? "bg-predictor-accent-dark/55" : "bg-predictor-primary/70"
+              }`}
+            />
+            <span
+              className={`text-[10px] font-semibold uppercase tracking-[0.3em] ${
+                theme === "dark" ? "text-predictor-accent-dark/90" : "text-predictor-accent-light/95"
+              }`}
+            >
+              {t("badge", "Remis Predictor")}
+            </span>
+            <span
+              className={`h-px w-8 ${
+                theme === "dark" ? "bg-predictor-accent-dark/55" : "bg-predictor-primary/70"
+              }`}
+            />
           </motion.div>
 
           <h1
@@ -114,7 +148,7 @@ export default function PredictorIndexPage() {
             {t("hero.title", "Predict. Compete. Win.")}
           </h1>
           <p
-            className={`text-sm md:text-base leading-relaxed mb-8 max-w-3xl mx-auto ${
+            className={`text-sm md:text-base leading-relaxed mb-10 max-w-3xl mx-auto ${
               theme === "dark" ? "text-gray-300" : "text-gray-600"
             }`}
           >
@@ -123,6 +157,52 @@ export default function PredictorIndexPage() {
               "Tournament winner, top scorer, best goalkeeper, top 4 teams — call every shot. Climb the leaderboard. Claim the rewards.",
             )}
           </p>
+
+          {/* CTA: refined, no wand/sparkles. Sophisticated split button with monospace price. */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex flex-wrap items-center justify-center gap-3"
+          >
+            <Link
+              href="/create-tournament"
+              className="group relative inline-flex items-stretch overflow-hidden rounded-full bg-predictor-primary text-sm font-semibold text-gray-900 transition-all duration-300 hover:bg-predictor-primary-hover"
+            >
+              <span className="flex items-center gap-2.5 pl-6 pr-4 py-3.5">
+                <CreatorMark className="h-3.5 w-3.5 text-gray-900/85" />
+                {t("cta.create", "Create your tournament")}
+              </span>
+              <span className="flex items-center gap-1.5 border-l border-gray-900/15 pl-4 pr-5 py-3.5 font-mono text-xs tracking-wider text-gray-900/85">
+                €2
+                <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+              </span>
+            </Link>
+            <Link
+              href="/predictor/my-tournaments"
+              className={`inline-flex items-center rounded-full border px-5 py-3.5 text-sm font-semibold transition-colors ${
+                theme === "dark"
+                  ? "border-white/15 text-gray-300 hover:border-amber-300/40 hover:text-amber-200"
+                  : "border-gray-300 text-gray-700 hover:border-predictor-primary/70 hover:text-predictor-accent-light"
+              }`}
+            >
+              {t("cta.myTournaments", "My tournaments")}
+            </Link>
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className={`mt-5 text-[11px] md:text-xs tracking-wide ${
+              theme === "dark" ? "text-gray-500" : "text-gray-500"
+            }`}
+          >
+            {t(
+              "cta.tagline",
+              "Run a private league for friends, or a public tournament for the whole community.",
+            )}
+          </motion.p>
 
         </div>
       </section>
@@ -155,10 +235,29 @@ export default function PredictorIndexPage() {
 
               {others.length > 0 && (
                 <>
-                  <SectionHeader
-                    icon={Trophy}
-                    title={t("sections.all", "All tournaments")}
-                  />
+                  <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+                    <SectionHeader
+                      icon={Trophy}
+                      title={t("sections.all", "All tournaments")}
+                    />
+                    <Link
+                      href="/create-tournament"
+                      className={`group inline-flex items-center gap-2 border-b text-[11px] font-semibold uppercase tracking-[0.18em] pb-0.5 transition-colors ${
+                        theme === "dark"
+                          ? "border-amber-300/30 text-amber-300/85 hover:border-amber-300/70 hover:text-amber-200"
+                          : "border-predictor-primary/50 text-predictor-accent-light/90 hover:border-predictor-primary hover:text-predictor-accent-light"
+                      }`}
+                      title={t("cta.createInline", "Create your own tournament — €2")}
+                    >
+                      {t("cta.createInline", "Create your own")}
+                      <span className="font-mono text-[10px] tracking-wider opacity-70">
+                        €2
+                      </span>
+                      <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
+                        →
+                      </span>
+                    </Link>
+                  </div>
                   <div
                     className={`grid gap-5 md:gap-6 ${
                       others.length === 1
@@ -218,7 +317,7 @@ function PredictorEmptyState({
       <span
         aria-hidden
         className={`pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full blur-3xl ${
-          isDark ? "bg-amber-400/10" : "bg-amber-300/15"
+          isDark ? "bg-predictor-primary/10" : "bg-predictor-primary/20"
         }`}
       />
       <span
@@ -239,19 +338,19 @@ function PredictorEmptyState({
           <span
             aria-hidden
             className={`absolute inset-0 rounded-full blur-2xl ${
-              isDark ? "bg-amber-400/30" : "bg-amber-300/40"
+              isDark ? "bg-predictor-primary/25" : "bg-predictor-primary/40"
             }`}
           />
           <div
             className={`relative inline-flex items-center justify-center w-20 h-20 rounded-2xl ${
               isDark
-                ? "bg-gradient-to-br from-amber-400/15 via-amber-500/10 to-amber-600/5 border border-amber-400/30 shadow-[0_8px_30px_rgb(245,158,11,0.15)]"
-                : "bg-gradient-to-br from-amber-100 via-amber-50 to-white border border-amber-200 shadow-md"
+                ? "bg-predictor-primary/10 border border-predictor-primary/30 shadow-[0_8px_30px_rgba(253,230,138,0.15)]"
+                : "bg-predictor-primary/15 border border-predictor-primary/40 shadow-md"
             }`}
           >
             <Trophy
               className={`w-10 h-10 ${
-                isDark ? "text-amber-300" : "text-amber-500"
+                isDark ? "text-predictor-accent-dark" : "text-predictor-accent-light"
               }`}
               strokeWidth={1.8}
             />
@@ -261,8 +360,8 @@ function PredictorEmptyState({
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               className={`absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 rounded-full ${
                 isDark
-                  ? "bg-amber-300 shadow-lg shadow-amber-500/50"
-                  : "bg-amber-400 shadow-md shadow-amber-300/60"
+                  ? "bg-predictor-primary shadow-lg shadow-predictor-primary/50"
+                  : "bg-predictor-primary shadow-md shadow-predictor-primary/60"
               }`}
             >
               <Sparkles className="w-3 h-3 text-white" />
@@ -278,7 +377,7 @@ function PredictorEmptyState({
           className={`inline-flex items-center gap-1.5 text-[10px] md:text-[11px] uppercase tracking-[0.18em] font-bold px-3 py-1 rounded-full mb-3 border ${
             isDark
               ? "border-white/10 bg-white/5 text-amber-300/90"
-              : "border-amber-200 bg-amber-50 text-amber-700"
+              : "border-predictor-primary/60 bg-predictor-primary/15 text-predictor-accent-light"
           }`}
         >
           <Sparkles className="w-3 h-3" />
@@ -318,16 +417,27 @@ function PredictorEmptyState({
           className="flex flex-col sm:flex-row items-center gap-3 mb-10"
         >
           <Link
+            href="/create-tournament"
+            className="group inline-flex items-stretch overflow-hidden rounded-full bg-predictor-primary text-sm font-semibold text-gray-900 transition-all hover:bg-predictor-primary-hover"
+          >
+            <span className="flex items-center gap-2.5 pl-5 pr-3.5 py-2.5">
+              <CreatorMark className="h-3.5 w-3.5 text-gray-900/85" />
+              {t("cta.create", "Create your tournament")}
+            </span>
+            <span className="flex items-center gap-1.5 border-l border-gray-900/15 pl-3.5 pr-4 py-2.5 font-mono text-xs tracking-wider text-gray-900/85">
+              €2
+              <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
+            </span>
+          </Link>
+          <Link
             href="/premier-league/fpl-live"
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
+            className={`inline-flex items-center rounded-full border px-5 py-2.5 text-sm font-semibold transition-colors ${
               isDark
-                ? "bg-gradient-to-r from-amber-400 to-amber-500 text-gray-900 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:-translate-y-0.5"
-                : "bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-md shadow-amber-300/40 hover:shadow-amber-400/50 hover:-translate-y-0.5"
+                ? "border-white/15 text-gray-300 hover:border-amber-300/40 hover:text-amber-200"
+                : "border-gray-300 text-gray-700 hover:border-predictor-primary/70 hover:text-predictor-accent-light"
             }`}
           >
-            <Trophy className="w-4 h-4" />
             {t("empty.exploreFpl", "Otvori FPL Live")}
-            <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/premier-league/registration"

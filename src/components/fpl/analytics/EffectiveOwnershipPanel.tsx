@@ -180,8 +180,8 @@ export default function EffectiveOwnershipPanel() {
               <thead className="bg-theme-card-secondary text-theme-text-secondary uppercase">
                 <tr>
                   <th className="px-2 py-2 text-left">#</th>
-                  <th className="px-2 py-2 text-left">Player</th>
-                  <th className="px-2 py-2 text-center">Pos</th>
+                  <th className="px-2 py-2 text-left">{t("bps.thPlayer", "Player")}</th>
+                  <th className="px-2 py-2 text-center">{t("bps.thPos", "Pos")}</th>
                   <th className="px-2 py-2 text-right">EO%</th>
                   <th className="px-2 py-2 text-right">
                     {t("effectiveOwnership.capEO", "Cap EO")}%
@@ -189,9 +189,9 @@ export default function EffectiveOwnershipPanel() {
                   <th className="px-2 py-2 text-right">
                     {t("effectiveOwnership.tcEO", "TC EO")}%
                   </th>
-                  <th className="px-2 py-2 text-right">TI</th>
-                  <th className="px-2 py-2 text-right">TO</th>
-                  <th className="px-2 py-2 text-right">Net</th>
+                  <th className="px-2 py-2 text-right">{t("bps.thTi", "TI")}</th>
+                  <th className="px-2 py-2 text-right">{t("bps.thTo", "TO")}</th>
+                  <th className="px-2 py-2 text-right">{t("bps.thNet", "Net")}</th>
                 </tr>
               </thead>
               <tbody>

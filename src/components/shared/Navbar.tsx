@@ -779,8 +779,8 @@ const Navbar = React.memo(function Navbar() {
               <motion.div
                 className={`relative font-semibold transition-all duration-500 text-xs uppercase tracking-widest font-anta theme-transition px-2 lg:px-3 py-1.5 cursor-pointer ${
                   pathname?.startsWith("/predictor")
-                    ? "text-amber-500 dark:text-amber-400"
-                    : "text-theme-text-secondary hover:text-theme-foreground"
+                    ? "text-amber-700 dark:text-amber-300"
+                    : "text-theme-text-secondary hover:text-amber-700 dark:hover:text-amber-300"
                 }`}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -794,7 +794,7 @@ const Navbar = React.memo(function Navbar() {
                 </span>
                 {pathname?.startsWith("/predictor") && (
                   <motion.div
-                    className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent"
+                    className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent dark:via-amber-300"
                     initial={{ scaleX: 0, opacity: 0 }}
                     animate={{ scaleX: 1, opacity: 1 }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
@@ -951,8 +951,8 @@ const Navbar = React.memo(function Navbar() {
                   onClick={handleMobileNavClick}
                   className={`w-full text-center font-semibold py-4 px-4 rounded-lg bg-theme-secondary/50 hover:bg-theme-secondary border transition-all duration-400 text-sm uppercase tracking-wider backdrop-blur-sm font-anta theme-transition cursor-pointer relative ${
                     pathname?.startsWith("/predictor")
-                      ? "text-amber-500 border-amber-500"
-                      : "text-theme-text-secondary hover:text-theme-foreground border-theme-border hover:border-theme-foreground"
+                      ? "text-amber-700 border-amber-400/60 dark:text-amber-300 dark:border-amber-300/40"
+                      : "text-theme-text-secondary hover:text-amber-700 dark:hover:text-amber-300 border-theme-border hover:border-amber-400/40 dark:hover:border-amber-300/30"
                   }`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{

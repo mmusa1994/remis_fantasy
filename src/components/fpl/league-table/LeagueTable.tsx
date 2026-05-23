@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaTrophy } from "react-icons/fa";
-import { MdRefresh } from "react-icons/md";
+import { FaArrowDown, FaArrowUp, FaTrophy } from "react-icons/fa";
+import { MdRefresh, MdRemove } from "react-icons/md";
 import LoadingCard from "@/components/shared/LoadingCard";
 import FplLoadingSkeleton from "@/components/shared/FplLoadingSkeleton";
 import LeagueTableHeader from "./LeagueTableHeader";
@@ -39,7 +39,12 @@ export default function LeagueTable({
   const [error, setError] = useState<string | null>(null);
   const [selectedLeagueId, setSelectedLeagueId] = useState(leagueId || "");
   const [leagues, setLeagues] = useState<
-    Array<{ id: number; name: string; entry_rank: number | null }>
+    Array<{
+      id: number;
+      name: string;
+      entry_rank: number | null;
+      entry_last_rank: number | null;
+    }>
   >([]);
   const [leaguesLoading, setLeaguesLoading] = useState(true);
   const [leaguesInitiallyLoaded, setLeaguesInitiallyLoaded] = useState(false);
@@ -157,6 +162,17 @@ export default function LeagueTable({
     });
     return arr;
   }, [data, sortKey, sortDir]);
+
+  const selectedLeague = useMemo(() => {
+    const id = Number(selectedLeagueId);
+    if (!id) return null;
+    return leagues.find((l) => l.id === id) || null;
+  }, [leagues, selectedLeagueId]);
+
+  const userOutsideTop50 = useMemo(() => {
+    if (!managerId || !data) return false;
+    return !data.teams.some((t) => t.id === managerId);
+  }, [managerId, data]);
 
   const matchingTeamIds = useMemo(() => {
     if (!filter.playerId || !data) return new Set<number>();
@@ -429,6 +445,121 @@ export default function LeagueTable({
               })}
             </div>
           </div>
+        </div>
+      )}
+
+      {data && userOutsideTop50 && selectedLeague && selectedLeague.entry_rank && (
+        <UserPositionCard
+          rank={selectedLeague.entry_rank}
+          lastRank={selectedLeague.entry_last_rank}
+          leagueName={data.league.name}
+          t={t}
+        />
+      )}
+    </div>
+  );
+}
+
+interface UserPositionCardProps {
+  rank: number;
+  lastRank: number | null;
+  leagueName: string;
+  t: (key: string, defaultOrOptions?: any) => string;
+}
+
+function UserPositionCard({
+  rank,
+  lastRank,
+  leagueName,
+  t,
+}: UserPositionCardProps) {
+  const change =
+    lastRank && lastRank > 0 ? lastRank - rank : 0;
+  const arrowIcon =
+    change > 0 ? (
+      <FaArrowUp className="w-4 h-4 text-green-500" />
+    ) : change < 0 ? (
+      <FaArrowDown className="w-4 h-4 text-red-500" />
+    ) : (
+      <MdRemove className="w-4 h-4 text-gray-400" />
+    );
+  const changeLabel =
+    change > 0
+      ? t("leagueTables.yourPositionUp", {
+          count: change,
+          defaultValue: `Up ${change} places`,
+        })
+      : change < 0
+      ? t("leagueTables.yourPositionDown", {
+          count: Math.abs(change),
+          defaultValue: `Down ${Math.abs(change)} places`,
+        })
+      : t("leagueTables.yourPositionNoChange", {
+          defaultValue: "No change",
+        });
+  const changeColor =
+    change > 0
+      ? "text-green-600 dark:text-green-400"
+      : change < 0
+      ? "text-red-600 dark:text-red-400"
+      : "text-theme-text-secondary";
+
+  return (
+    <div className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border border-purple-300 dark:border-purple-700 rounded-lg p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500 text-white shrink-0">
+            {t("leagueTables.you", { defaultValue: "YOU" })}
+          </span>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-theme-foreground">
+              {t("leagueTables.yourPositionTitle", {
+                defaultValue: "Your position in this league",
+              })}
+            </div>
+            <div className="text-xs text-theme-text-secondary truncate">
+              {leagueName} •{" "}
+              {t("leagueTables.yourPositionInfo", {
+                defaultValue: "outside top 50",
+              })}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-wide text-theme-text-secondary">
+              {t("leagueTables.rank", { defaultValue: "Rank" })}
+            </div>
+            <div className="text-2xl font-bold text-theme-foreground leading-tight">
+              #{rank.toLocaleString()}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-wide text-theme-text-secondary">
+              {t("leagueTables.change", { defaultValue: "Change" })}
+            </div>
+            <div
+              className={`flex items-center justify-end gap-1 text-sm font-semibold ${changeColor}`}
+            >
+              {arrowIcon}
+              <span>
+                {change !== 0
+                  ? `${change > 0 ? "+" : ""}${change}`
+                  : "—"}
+              </span>
+            </div>
+            <div className={`text-[11px] mt-0.5 ${changeColor}`}>
+              {changeLabel}
+            </div>
+          </div>
+        </div>
+      </div>
+      {lastRank && lastRank > 0 && (
+        <div className="mt-2 pt-2 border-t border-purple-200 dark:border-purple-800 text-[11px] text-theme-text-secondary">
+          {t("leagueTables.lastWeekRank", {
+            defaultValue: "Last week's rank",
+          })}
+          : <span className="font-semibold">#{lastRank.toLocaleString()}</span>
         </div>
       )}
     </div>

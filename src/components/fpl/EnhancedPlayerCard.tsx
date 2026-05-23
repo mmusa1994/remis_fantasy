@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, TrendingDown, Users, AlertTriangle } from "lucide-react";
 import { PiTShirtFill } from "react-icons/pi";
+import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { getTeamColors } from "@/lib/team-colors";
@@ -42,6 +43,7 @@ export default function EnhancedPlayerCard({
   compact = false,
 }: EnhancedPlayerCardProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation("fpl");
   const [showAdvancedTooltip, setShowAdvancedTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState<
     "left" | "right" | "center"
@@ -290,7 +292,7 @@ export default function EnhancedPlayerCard({
         {/* Key Stats */}
         <div className="grid grid-cols-2 gap-3 mb-2">
           <div>
-            <div className="text-gray-400">Price</div>
+            <div className="text-gray-400">{t("teamPlanner.transferMarket.price", "Price")}</div>
             <div className="font-bold text-green-400">
               £{((player.now_cost || 0) / 10).toFixed(1)}m
               {priceChange !== 0 && (
@@ -306,7 +308,7 @@ export default function EnhancedPlayerCard({
             </div>
           </div>
           <div>
-            <div className="text-gray-400">Ownership</div>
+            <div className="text-gray-400">{t("teamPlanner.transferMarket.ownership", "Ownership")}</div>
             <div className="font-bold text-blue-400">
               {parseFloat(player.selected_by_percent || "0").toFixed(1)}%
               {ownershipChange !== 0 && (
@@ -322,13 +324,13 @@ export default function EnhancedPlayerCard({
             </div>
           </div>
           <div>
-            <div className="text-gray-400">Points</div>
+            <div className="text-gray-400">{t("teamPlanner.transferMarket.points", "Points")}</div>
             <div className="font-bold text-yellow-400">
               {points} ({livePoints} GW)
             </div>
           </div>
           <div>
-            <div className="text-gray-400">Form</div>
+            <div className="text-gray-400">{t("teamPlanner.transferMarket.form", "Form")}</div>
             <div className="font-bold">
               {parseFloat(player.form || "0").toFixed(1)}
             </div>
@@ -340,19 +342,19 @@ export default function EnhancedPlayerCard({
           {priceTrend === "rising" && (
             <div className="flex items-center gap-1 text-green-400">
               <TrendingUp className="w-3 h-3" />
-              <span>Price Rising</span>
+              <span>{t("teamPlanner.widgets.priceChanges", "Price Rising")}</span>
             </div>
           )}
           {priceTrend === "falling" && (
             <div className="flex items-center gap-1 text-red-400">
               <TrendingDown className="w-3 h-3" />
-              <span>Price Falling</span>
+              <span>{t("teamPlanner.transferMarket.falling", "Price Falling")}</span>
             </div>
           )}
           {ownershipTrend === "rising" && (
             <div className="flex items-center gap-1 text-blue-400">
               <Users className="w-3 h-3" />
-              <span>Popular</span>
+              <span>{t("teamPlanner.widgets.popularWeeks", "Popular")}</span>
             </div>
           )}
         </div>

@@ -164,8 +164,8 @@ export default function XptsPredictionsPanel() {
               <thead className="bg-theme-card-secondary text-theme-text-secondary uppercase">
                 <tr>
                   <th className="px-2 py-2 text-left">#</th>
-                  <th className="px-2 py-2 text-left">Player</th>
-                  <th className="px-2 py-2 text-center">Pos</th>
+                  <th className="px-2 py-2 text-left">{t("bps.thPlayer", "Player")}</th>
+                  <th className="px-2 py-2 text-center">{t("bps.thPos", "Pos")}</th>
                   <th className="px-2 py-2 text-right">xPts</th>
                   <th className="px-2 py-2 text-right">
                     {t("predictions.captaincyScore", "Captaincy")}
