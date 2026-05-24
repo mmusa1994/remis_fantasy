@@ -1,5 +1,5 @@
 // =============================================================
-// Predictor Templates — predefinisani turniri koje admin uvozi
+// Predictor Templates. predefinisani turniri koje admin uvozi
 // jednim klikom (sve ekipe, kategorije, pravila, nagrade ubacene).
 // =============================================================
 
@@ -99,7 +99,7 @@ export interface PredictorTemplate {
 const flag = (cc: string) => `https://flagcdn.com/w80/${cc}.png`;
 
 // -------------------------------------------------------------
-// 1) FIFA Svjetsko prvenstvo 2026 — 48 KVALIFIKOVANIH EKIPA
+// 1) FIFA Svjetsko prvenstvo 2026. 48 KVALIFIKOVANIH EKIPA
 // Grupe nakon ždrijeba decembra 2025 (zvanični raspored FIFA)
 // -------------------------------------------------------------
 const T = (
@@ -179,7 +179,7 @@ const WC_2026_TEAMS: TemplateOption[] = [
   T("Panama", "pa", "Grupa L"),
 ];
 
-// Group advancement categories — user predicts which teams advance from each group.
+// Group advancement categories. user predicts which teams advance from each group.
 // FIFA WC 2026 format: 48 teams, 12 groups of 4 → 32 advance.
 // Groups A–H: top 3 advance (8 × 3 = 24)
 // Groups I–L: top 2 advance (4 × 2 = 8)
@@ -195,8 +195,8 @@ const wc2026GroupCategories: TemplateCategory[] = WC_2026_GROUP_LETTERS.map(
     const teams = WC_2026_TEAMS.filter((t) => t.group_label === groupLabel);
     const advanceCount = WC_2026_GROUPS_3.includes(letter) ? 3 : 2;
     return {
-      name: `Ko prolazi — ${groupLabel}`,
-      name_en: `Who advances — ${groupLabelEn}`,
+      name: `Ko prolazi. ${groupLabel}`,
+      name_en: `Who advances. ${groupLabelEn}`,
       slug: `grupa-${letter.toLowerCase()}-prolaz`,
       description:
         advanceCount === 3
@@ -225,9 +225,9 @@ const worldCup2026: PredictorTemplate = {
   id: "world-cup-2026",
   name: "Svjetsko prvenstvo 2026",
   short_description:
-    "FIFA Svjetsko prvenstvo 2026 — predikcije za pobjednika, top strijelca, najboljeg igrača i još mnogo toga.",
+    "FIFA Svjetsko prvenstvo 2026. predikcije za pobjednika, top strijelca, najboljeg igrača i još mnogo toga.",
   long_description:
-    "Najveći fudbalski događaj na svijetu se vraća — prvi put sa 48 reprezentacija na 3 kontinenta. Predvidi sve i bori se za nagrade.",
+    "Najveći fudbalski događaj na svijetu se vraća. prvi put sa 48 reprezentacija na 3 kontinenta. Predvidi sve i bori se za nagrade.",
   accent_color: "gold",
   logo_url: "/images/logos/wc-logo.png",
   banner_image_url: "/images/logos/wc-logo.png",
@@ -244,7 +244,7 @@ const worldCup2026: PredictorTemplate = {
   rules_md:
     "Predikcije se zaključavaju prije utakmice otvaranja Svjetskog prvenstva. Svaka kategorija se boduje nezavisno. Konačni rezultati se objavljuju nakon finala.",
   point_system_md:
-    "Pobjednik turnira — 100 poena\nFinalisti (oba) — 60 poena\nTop 4 ekipe (tačan redoslijed) — 80 poena, parcijalni 10 po pogotku, 5 bonus za tačan rang\nZlatna kopačka — 50 poena\nNajbolji igrač — 50 poena\nNajbolji golman — 40 poena\nIznenađenje / razočarenje — 30 poena\nUkupno golova — 30 poena",
+    "Pobjednik turnira. 100 poena\nFinalisti (oba). 60 poena\nTop 4 ekipe (tačan redoslijed). 80 poena, parcijalni 10 po pogotku, 5 bonus za tačan rang\nZlatna kopačka. 50 poena\nNajbolji igrač. 50 poena\nNajbolji golman. 40 poena\nIznenađenje / razočarenje. 30 poena\nUkupno golova. 30 poena",
   eligibility_md:
     "Otvoreno za sve registrovane korisnike Remis Fantasy platforme.",
   categories: [
@@ -332,8 +332,8 @@ const worldCup2026: PredictorTemplate = {
       rank_position: 1,
       title: "1. mjesto",
       title_en: "1st place",
-      description: "Glavna nagrada — pobjednik Predictor turnira.",
-      description_en: "Main prize — Predictor tournament winner.",
+      description: "Glavna nagrada. pobjednik Predictor turnira.",
+      description_en: "Main prize. Predictor tournament winner.",
       prize_type: "cash",
       prize_value: 500,
       prize_currency: "EUR",
@@ -365,7 +365,7 @@ const worldCup2026: PredictorTemplate = {
 };
 
 // -------------------------------------------------------------
-// 2) UEFA Liga prvaka 2025/26 — skeleton sa najjačim klubovima
+// 2) UEFA Liga prvaka 2025/26. skeleton sa najjačim klubovima
 // -------------------------------------------------------------
 const CL_2526_TEAMS: TemplateOption[] = [
   { label: "Real Madrid", group_label: "La Liga" },
@@ -410,9 +410,9 @@ const championsLeague2526: PredictorTemplate = {
   id: "champions-league-25-26",
   name: "Liga prvaka 2025/26",
   short_description:
-    "UEFA Liga prvaka 2025/26 — predikcije za pobjednika, finalu i najboljeg strijelca.",
+    "UEFA Liga prvaka 2025/26. predikcije za pobjednika, finalu i najboljeg strijelca.",
   long_description:
-    "Najjača klupska liga svijeta — predvidi ko će dignuti trofej.",
+    "Najjača klupska liga svijeta. predvidi ko će dignuti trofej.",
   accent_color: "blue",
   logo_url: "/images/logos/cl-logo.png",
   banner_image_url: "/images/logos/cl-logo.png",
@@ -421,7 +421,7 @@ const championsLeague2526: PredictorTemplate = {
   rules_md:
     "Predikcije se zaključavaju prije prve utakmice nokaut faze (osmina finala).",
   point_system_md:
-    "Pobjednik LP — 80 poena\nFinalisti — 50 poena\nPolufinalisti (4 ekipe) — 40 poena, 10 po pogotku\nNajbolji strijelac — 40 poena",
+    "Pobjednik LP. 80 poena\nFinalisti. 50 poena\nPolufinalisti (4 ekipe). 40 poena, 10 po pogotku\nNajbolji strijelac. 40 poena",
   categories: [
     {
       name: "Pobjednik Lige prvaka",
@@ -526,7 +526,7 @@ const championsLeague2526: PredictorTemplate = {
 };
 
 // -------------------------------------------------------------
-// 3) Premier League 2025/26 — sezonske predikcije
+// 3) Premier League 2025/26. sezonske predikcije
 // -------------------------------------------------------------
 const PL_2526_TEAMS: TemplateOption[] = [
   { label: "Liverpool" },
@@ -555,7 +555,7 @@ const premierLeague2526: PredictorTemplate = {
   id: "premier-league-25-26",
   name: "Premier League 2025/26",
   short_description:
-    "Sezonske predikcije za Premier League — prvak, top 4, ispadanja, najbolji strijelac.",
+    "Sezonske predikcije za Premier League. prvak, top 4, ispadanja, najbolji strijelac.",
   accent_color: "purple",
   logo_url: "/images/logos/pl-logo.png",
   banner_image_url: "/images/logos/pl-logo.png",
@@ -672,13 +672,13 @@ const premierLeague2526: PredictorTemplate = {
 };
 
 // -------------------------------------------------------------
-// 4) Bundesliga 2025/26 — lightweight (no teams seeded, user fills)
+// 4) Bundesliga 2025/26. lightweight (no teams seeded, user fills)
 // -------------------------------------------------------------
 const bundesliga2526: PredictorTemplate = {
   id: "bundesliga-25-26",
   name: "Bundesliga 2025/26",
   short_description:
-    "Sezonske predikcije za Bundesligu — prvak, top 3, ispadanja, najbolji strijelac.",
+    "Sezonske predikcije za Bundesligu. prvak, top 3, ispadanja, najbolji strijelac.",
   accent_color: "red",
   logo_url: "/logos/bundes.png",
   banner_image_url: "/logos/bundes.png",
@@ -723,13 +723,13 @@ const bundesliga2526: PredictorTemplate = {
 };
 
 // -------------------------------------------------------------
-// 5) La Liga 2025/26 — lightweight
+// 5) La Liga 2025/26. lightweight
 // -------------------------------------------------------------
 const laLiga2526: PredictorTemplate = {
   id: "la-liga-25-26",
   name: "La Liga 2025/26",
   short_description:
-    "Sezonske predikcije za La Ligu — prvak, top 4, najbolji strijelac, Zamora trofej.",
+    "Sezonske predikcije za La Ligu. prvak, top 4, najbolji strijelac, Zamora trofej.",
   accent_color: "red",
   logo_url: "/logos/la-liga-logo.png",
   banner_image_url: "/logos/la-liga-logo.png",
@@ -753,16 +753,16 @@ const laLiga2526: PredictorTemplate = {
       sort_order: 2,
     },
     {
-      name: "Pichichi — najbolji strijelac",
-      name_en: "Pichichi — top scorer",
+      name: "Pichichi. najbolji strijelac",
+      name_en: "Pichichi. top scorer",
       slug: "pichichi",
       category_type: "free_text",
       points_correct: 30,
       sort_order: 3,
     },
     {
-      name: "Zamora — najbolji golman",
-      name_en: "Zamora — best goalkeeper",
+      name: "Zamora. najbolji golman",
+      name_en: "Zamora. best goalkeeper",
       slug: "zamora",
       category_type: "free_text",
       points_correct: 25,
@@ -772,13 +772,13 @@ const laLiga2526: PredictorTemplate = {
 };
 
 // -------------------------------------------------------------
-// 6) EuroLeague Basketball — lightweight
+// 6) EuroLeague Basketball. lightweight
 // -------------------------------------------------------------
 const euroleagueBasket: PredictorTemplate = {
   id: "euroleague-basket",
   name: "EuroLeague Košarka",
   short_description:
-    "EuroLeague predikcije — Final Four, prvak, MVP, najbolji strijelac.",
+    "EuroLeague predikcije. Final Four, prvak, MVP, najbolji strijelac.",
   accent_color: "amber",
   logo_url: "/logos/eurliga.png",
   banner_image_url: "/logos/eurliga.png",
@@ -823,13 +823,13 @@ const euroleagueBasket: PredictorTemplate = {
 };
 
 // -------------------------------------------------------------
-// 7) Formula 1 2026 — lightweight
+// 7) Formula 1 2026. lightweight
 // -------------------------------------------------------------
 const formula1_2026: PredictorTemplate = {
   id: "formula-1-2026",
   name: "Formula 1 2026",
   short_description:
-    "F1 sezona — prvak vozač, prvak konstruktor, najviše pobjeda, prva pole position.",
+    "F1 sezona. prvak vozač, prvak konstruktor, najviše pobjeda, prva pole position.",
   accent_color: "red",
   logo_url: "/images/logos/f1.png",
   prize_pool_currency: "EUR",

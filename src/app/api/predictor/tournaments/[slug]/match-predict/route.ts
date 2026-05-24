@@ -23,7 +23,7 @@ export async function POST(
 
   const { data: tournament } = await supabaseServer
     .from("predictor_tournaments")
-    .select("id, status, require_approval")
+    .select("id, status, require_approval, prediction_lock_mode")
     .eq("slug", slug)
     .is("deleted_at", null)
     .maybeSingle();
@@ -48,7 +48,7 @@ export async function POST(
       {
         error: "locked",
         message:
-          "Turnir je zaključan ili završen — predikcije se više ne mogu mijenjati.",
+          "Turnir je zaključan ili završen. predikcije se više ne mogu mijenjati.",
       },
       { status: 409 },
     );
@@ -85,9 +85,12 @@ export async function POST(
     .eq("tournament_id", tournament.id);
 
   if (!matches) return jsonError("greška pri učitavanju utakmica", 500);
+  const typedMatches = matches as Match[];
   const matchMap = new Map<string, Match>(
-    (matches as Match[]).map((m) => [m.id, m]),
+    typedMatches.map((m) => [m.id, m]),
   );
+
+  const lockMode = tournament.prediction_lock_mode || "per_match";
 
   const userId = guard.user.id;
   const userEmail = guard.user.email ?? null;
@@ -103,7 +106,13 @@ export async function POST(
       skipped.push({ match_id: item.match_id, reason: "not_found" });
       continue;
     }
-    if (isMatchLocked(m)) {
+    if (
+      isMatchLocked(m, {
+        lockMode,
+        allMatches: typedMatches,
+        matchday: m.matchday,
+      })
+    ) {
       skipped.push({ match_id: item.match_id, reason: "locked" });
       continue;
     }

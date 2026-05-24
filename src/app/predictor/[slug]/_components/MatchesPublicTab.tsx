@@ -64,12 +64,28 @@ const STAGE_ORDER_PUB = [
 ];
 
 export function isMatchLockedClient(
-  m: Pick<Match, "kickoff_at" | "status" | "force_unlocked">,
+  m: Pick<Match, "kickoff_at" | "status" | "force_unlocked" | "matchday">,
+  opts?: {
+    lockMode?: "per_match" | "per_round";
+    allMatches?: Pick<Match, "kickoff_at" | "matchday">[];
+  },
 ): boolean {
   if (m.force_unlocked) return false;
   if (m.status !== "scheduled") return true;
   if (!m.kickoff_at) return false;
-  return Date.now() >= Date.parse(m.kickoff_at);
+  const now = Date.now();
+  if (opts?.lockMode === "per_round" && m.matchday != null && opts.allMatches) {
+    const roundMatches = opts.allMatches.filter(
+      (rm) => rm.matchday === m.matchday && rm.kickoff_at,
+    );
+    if (roundMatches.length > 0) {
+      const earliest = Math.min(
+        ...roundMatches.map((rm) => Date.parse(rm.kickoff_at!)),
+      );
+      return now >= earliest;
+    }
+  }
+  return now >= Date.parse(m.kickoff_at);
 }
 
 export default function MatchesPublicTab({
@@ -534,7 +550,7 @@ function ScoreRow({
         onPointerCancel={cancelHold}
         onContextMenu={(e) => e.preventDefault()}
         disabled={disabled || showFinal}
-        aria-label={`${team} — tap za +1 gol, drži za reset`}
+        aria-label={`${team}. tap za +1 gol, drži za reset`}
         className={`flex-1 min-w-0 flex items-center gap-2 rounded-xl px-1.5 py-1 transition-all active:scale-[0.99] ${
           disabled || showFinal
             ? "cursor-default"
@@ -854,7 +870,7 @@ function MatchCard({
         </div>
       )}
 
-      {/* MOBILE LAYOUT — stack vertically (<sm) */}
+      {/* MOBILE LAYOUT. stack vertically (<sm) */}
       <div className="sm:hidden">
         <ScoreRow
           team={homeName}
@@ -900,7 +916,7 @@ function MatchCard({
         )}
       </div>
 
-      {/* TABLET+ LAYOUT — side by side (sm+) */}
+      {/* TABLET+ LAYOUT. side by side (sm+) */}
       <div className="hidden sm:grid grid-cols-[1fr_auto_1fr] items-center gap-4">
         <button
           type="button"
@@ -910,7 +926,7 @@ function MatchCard({
           onPointerCancel={() => cancelHold("home")}
           onContextMenu={(e) => e.preventDefault()}
           disabled={disabled || isFinished}
-          aria-label={`${homeName} — tap za +1 gol, drži za reset`}
+          aria-label={`${homeName}. tap za +1 gol, drži za reset`}
           className={`flex items-center gap-3 justify-end min-w-0 rounded-2xl px-3 py-2 transition-all active:scale-[0.98] ${
             disabled || isFinished
               ? "cursor-default"
@@ -1017,7 +1033,7 @@ function MatchCard({
           onPointerCancel={() => cancelHold("away")}
           onContextMenu={(e) => e.preventDefault()}
           disabled={disabled || isFinished}
-          aria-label={`${awayName} — tap za +1 gol, drži za reset`}
+          aria-label={`${awayName}. tap za +1 gol, drži za reset`}
           className={`flex items-center gap-3 min-w-0 rounded-2xl px-3 py-2 transition-all active:scale-[0.98] ${
             disabled || isFinished
               ? "cursor-default"
@@ -1046,7 +1062,7 @@ function MatchCard({
         </button>
       </div>
 
-      {/* Quick score chips (tablet+ only — mobile renders them inside the stacked layout) */}
+      {/* Quick score chips (tablet+ only. mobile renders them inside the stacked layout) */}
       {!isFinished && (
         <div className="hidden sm:block">
           <QuickScoreChips

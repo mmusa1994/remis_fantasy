@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export type SaveToastState = {
   kind: "success" | "error";
@@ -28,6 +29,7 @@ export default function SaveToast({
   duration = 3200,
   anchor = "top",
 }: Props) {
+  const { t: tr } = useTranslation("predictor");
   useEffect(() => {
     if (!toast || duration <= 0) return;
     const t = setTimeout(onDismiss, duration);
@@ -121,7 +123,7 @@ export default function SaveToast({
                   isSuccess ? "text-emerald-300" : "text-red-300"
                 }`}
               >
-                {isSuccess ? "Uspjeh" : "Greška"}
+                {isSuccess ? tr("toast.successLabel", "Success") : tr("toast.errorLabel", "Error")}
               </span>
               <span className="text-[15px] font-bold leading-tight text-white pr-2 sm:whitespace-nowrap">
                 {toast.text}

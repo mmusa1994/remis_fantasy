@@ -198,7 +198,7 @@ export default function Home() {
             {t("hero.subtitle")}
           </p>
 
-          {/* League Selection Cards — with official logos */}
+          {/* League Selection Cards. with official logos */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto">
             {typedLeagues.map((league: LeagueCard) => {
               const accent = getLeagueAccent(league.id);
@@ -315,7 +315,7 @@ export default function Home() {
                   >
                     {t(
                       "hero:promo.predictor.desc",
-                      "Tournament winner, top scorer, group standings — predict it all. Compete on the leaderboard and win real prizes.",
+                      "Tournament winner, top scorer, group standings. predict it all. Compete on the leaderboard and win real prizes.",
                     )}
                   </p>
                   <span
@@ -384,7 +384,7 @@ export default function Home() {
                   >
                     {t(
                       "hero:promo.create.desc",
-                      "Build your own prediction tournament — World Cup, Champions League, or custom. Invite friends, set the rules, and compete.",
+                      "Build your own prediction tournament. World Cup, Champions League, or custom. Invite friends, set the rules, and compete.",
                     )}
                   </p>
                   <span

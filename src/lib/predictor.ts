@@ -249,12 +249,35 @@ export function computePoints(
 
 export function isMatchLocked(
   match: Pick<Match, "kickoff_at" | "status" | "force_unlocked">,
+  opts?: {
+    lockMode?: "per_match" | "per_round";
+    allMatches?: Pick<Match, "kickoff_at" | "matchday">[];
+    matchday?: number | null;
+  },
 ): boolean {
-  // Manual override iz admina — predikcije ostaju otvorene
   if (match.force_unlocked) return false;
-  if (match.status !== "scheduled") return true; // live/finished/postponed/cancelled
+  if (match.status !== "scheduled") return true;
   if (!match.kickoff_at) return false;
-  return Date.now() >= Date.parse(match.kickoff_at);
+
+  const now = Date.now();
+
+  if (
+    opts?.lockMode === "per_round" &&
+    opts.matchday != null &&
+    opts.allMatches
+  ) {
+    const roundMatches = opts.allMatches.filter(
+      (m) => m.matchday === opts.matchday && m.kickoff_at,
+    );
+    if (roundMatches.length > 0) {
+      const earliestKickoff = Math.min(
+        ...roundMatches.map((m) => Date.parse(m.kickoff_at!)),
+      );
+      return now >= earliestKickoff;
+    }
+  }
+
+  return now >= Date.parse(match.kickoff_at);
 }
 
 export function computeMatchPoints(

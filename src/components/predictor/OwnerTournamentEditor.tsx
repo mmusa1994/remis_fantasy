@@ -1047,6 +1047,88 @@ function SettingsTab({
         </div>
       </Section>
 
+      {/* Prediction lock mode */}
+      <Section
+        dark={dark}
+        title={t("owner.settings.lockMode.title", "Prediction locking")}
+        desc={t("owner.settings.lockMode.desc", "How predictions lock as matches approach.")}
+      >
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {(["per_match", "per_round"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => set("prediction_lock_mode", mode)}
+              className={`flex flex-col gap-1 rounded-lg border px-4 py-3 text-left transition-all ${
+                (form.prediction_lock_mode || "per_match") === mode
+                  ? dark
+                    ? "border-predictor-primary/60 bg-predictor-primary/10 text-predictor-accent-dark"
+                    : "border-predictor-primary bg-predictor-primary/20 text-predictor-accent-light"
+                  : dark
+                    ? "border-white/10 bg-black/20 text-gray-400 hover:border-white/30"
+                    : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+              }`}
+            >
+              <span className="text-sm font-bold">
+                {t(`owner.settings.lockMode.${mode}.label`,
+                  mode === "per_match" ? "Per match" : "Per round"
+                )}
+              </span>
+              <span className={`text-[11px] leading-snug ${dark ? "text-gray-500" : "text-gray-500"}`}>
+                {t(`owner.settings.lockMode.${mode}.desc`,
+                  mode === "per_match"
+                    ? "Each match locks at its own kickoff time"
+                    : "All matches in a round lock when the first match of that round starts"
+                )}
+              </span>
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      {/* Theme: music + background */}
+      <Section
+        dark={dark}
+        title={t("owner.settings.theme.title", "Theme")}
+        desc={t("owner.settings.theme.desc", "Background image and music for the tournament page.")}
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
+            label={t("owner.settings.theme.music", "Music player")}
+            hint={t("owner.settings.theme.musicHint", "Anthem player on the public tournament page.")}
+          >
+            <label
+              className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 ${
+                dark ? "border-white/10 bg-black/20" : "border-gray-300 bg-white"
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-predictor-primary"
+                checked={!!form.theme_music_enabled}
+                onChange={(e) => set("theme_music_enabled", e.target.checked)}
+              />
+              <span className="text-sm text-theme-heading-primary">
+                {form.theme_music_enabled
+                  ? t("owner.settings.theme.musicOn", "Music enabled")
+                  : t("owner.settings.theme.musicOff", "Music disabled")}
+              </span>
+            </label>
+          </Field>
+          <Field
+            label={t("owner.settings.theme.background", "Background image")}
+            hint={t("owner.settings.theme.backgroundHint", "Path to a background image (e.g. /wc2026/wc-bg-2.webp).")}
+          >
+            <input
+              value={form.theme_background_image ?? ""}
+              onChange={(e) => set("theme_background_image", e.target.value || null)}
+              placeholder="/wc2026/wc-bg-2.webp"
+              className={cls.input(dark)}
+            />
+          </Field>
+        </div>
+      </Section>
+
       <Section dark={dark} title={t("owner.settings.prize.title")}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label={t("owner.settings.prize.amount")}>
@@ -1814,7 +1896,7 @@ function ImageUpload({
     } catch (e: any) {
       onError(
         e?.message
-          ? `${t("owner.settings.branding.uploadError")} — ${e.message}`
+          ? `${t("owner.settings.branding.uploadError")}: ${e.message}`
           : t("owner.settings.branding.uploadError"),
       );
     } finally {
@@ -2094,6 +2176,7 @@ function MatchEditor({
       points_winner: 2,
       home_score: null,
       away_score: null,
+      matchday: null,
     },
   );
   const [saving, setSaving] = useState(false);
@@ -2221,8 +2304,8 @@ function MatchEditor({
           </Field>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Field label={t("owner.matchesTab.editor.pointsExact")}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <Field label={t("owner.matchesTab.editor.pointsExact", "Exact score pts")}>
             <input
               type="number"
               value={form.points_exact ?? 5}
@@ -2230,7 +2313,7 @@ function MatchEditor({
               className={cls.input(dark)}
             />
           </Field>
-          <Field label={t("owner.matchesTab.editor.pointsDiff")}>
+          <Field label={t("owner.matchesTab.editor.pointsDiff", "Goal diff pts")}>
             <input
               type="number"
               value={form.points_diff ?? 3}
@@ -2238,11 +2321,26 @@ function MatchEditor({
               className={cls.input(dark)}
             />
           </Field>
-          <Field label={t("owner.matchesTab.editor.pointsWinner")}>
+          <Field label={t("owner.matchesTab.editor.pointsWinner", "Winner pts")}>
             <input
               type="number"
               value={form.points_winner ?? 2}
               onChange={(e) => set("points_winner", Number(e.target.value))}
+              className={cls.input(dark)}
+            />
+          </Field>
+          <Field
+            label={t("owner.matchesTab.editor.matchday", "Matchday / Round")}
+            hint={t("owner.matchesTab.editor.matchdayHint", "Used for per-round locking")}
+          >
+            <input
+              type="number"
+              min={1}
+              value={form.matchday ?? ""}
+              onChange={(e) =>
+                set("matchday", e.target.value ? Number(e.target.value) : null)
+              }
+              placeholder="1, 2, 3..."
               className={cls.input(dark)}
             />
           </Field>
@@ -3211,7 +3309,7 @@ function ScoringTab({
                     <td className="px-4 py-2 text-theme-text-secondary">{i + 1}</td>
                     <td className="px-4 py-2">
                       <div className="font-medium text-theme-heading-primary">
-                        {s.user_display_name || s.display_name || "—"}
+                        {s.user_display_name || s.display_name || "-"}
                       </div>
                       <div className="text-[11px] text-theme-text-secondary">
                         {s.user_email}
@@ -3290,7 +3388,7 @@ function ScoringTab({
                     <tr key={p.id}>
                       <td className="px-3 py-2">
                         <div className="font-medium text-theme-heading-primary">
-                          {p.user_display_name || "—"}
+                          {p.user_display_name || "-"}
                         </div>
                         <div className="text-[10px] text-theme-text-secondary">
                           {p.user_email}
@@ -3307,7 +3405,7 @@ function ScoringTab({
                             ? t("owner.scoringTab.selectionsCount", {
                                 count: p.selected_option_ids.length,
                               })
-                            : "—")}
+                            : "-")}
                       </td>
                       <td className="px-3 py-2 text-right">
                         <input

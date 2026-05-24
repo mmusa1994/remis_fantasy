@@ -74,7 +74,7 @@ export function getF1CodesEmailHtml(firstName: string): string {
           <p style="margin: 0 0 6px; font-size: 13px; color: #888888 !important;">Za pitanja ili pomoc:</p>
           <p style="margin: 0 0 4px; font-size: 13px; color: #aaaaaa !important;">remis.fantasy.platform@gmail.com</p>
           <p style="margin: 0 0 16px; font-size: 13px; color: #aaaaaa !important;">Instagram: @remis_fantasy</p>
-          <p style="margin: 0; font-size: 11px; color: #555555 !important;">REMIS Fantasy — F1 Fantasy League 2026</p>
+          <p style="margin: 0; font-size: 11px; color: #555555 !important;">REMIS Fantasy. F1 Fantasy League 2026</p>
         </div>
       </div>
     </div>

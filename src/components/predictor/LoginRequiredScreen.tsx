@@ -86,7 +86,7 @@ export default function LoginRequiredScreen() {
                 : "border-gray-300 text-gray-700 hover:border-predictor-primary hover:text-predictor-accent-light"
             }`}
           >
-            {t("create.loginRequired.signupCta", "No account — register")}
+            {t("create.loginRequired.signupCta", "No account. register")}
           </Link>
         </div>
 

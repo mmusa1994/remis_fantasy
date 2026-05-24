@@ -284,7 +284,7 @@ export default function TournamentDetailPage() {
 
       if (items.length === 0 && delete_category_ids.length === 0) {
         setError(
-          t("noPredictionsToSave", "Nothing to save — make a pick first."),
+          t("noPredictionsToSave", "Nothing to save. Make a pick first."),
         );
         setSaving(false);
         return;
@@ -706,7 +706,7 @@ function collectIncompleteIssues(
         if (sel.length === 0) {
           issues.push({
             id: cat.id,
-            msg: t(`„${name}" — odaberi ekipu`, `"${name}" — pick a team`),
+            msg: t(`„${name}": odaberi ekipu`, `"${name}": pick a team`),
           });
         }
         break;
@@ -716,8 +716,8 @@ function collectIncompleteIssues(
           issues.push({
             id: cat.id,
             msg: t(
-              `„${name}" — izabrao si ${sel.length}, treba ${need}`,
-              `"${name}" — you picked ${sel.length}, need ${need}`,
+              `„${name}" - izabrao si ${sel.length}, treba ${need}`,
+              `"${name}" - you picked ${sel.length}, need ${need}`,
             ),
           });
         } else if (need === 0 && sel.length === 0) {
@@ -752,8 +752,8 @@ function collectIncompleteIssues(
               issues.push({
                 id: `${cat.id}-${g}`,
                 msg: t(
-                  `„${name}" — iz ${g} treba bar 2 ekipe (imaš ${cnt})`,
-                  `"${name}" — group ${g} needs at least 2 picks (you have ${cnt})`,
+                  `„${name}" - iz ${g} treba bar 2 ekipe (imaš ${cnt})`,
+                  `"${name}" - group ${g} needs at least 2 picks (you have ${cnt})`,
                 ),
               });
             }
@@ -779,8 +779,8 @@ function collectIncompleteIssues(
               issues.push({
                 id: `${cat.id}-${g}`,
                 msg: t(
-                  `„${name}" — ${g} treba tačno 1 pobjednika (imaš ${cnt})`,
-                  `"${name}" — ${g} needs exactly 1 winner (you have ${cnt})`,
+                  `„${name}" - ${g} treba tačno 1 pobjednika (imaš ${cnt})`,
+                  `"${name}" - ${g} needs exactly 1 winner (you have ${cnt})`,
                 ),
               });
             }
@@ -794,8 +794,8 @@ function collectIncompleteIssues(
           issues.push({
             id: cat.id,
             msg: t(
-              `„${name}" — rangiraj svih ${need} (imaš ${sel.length})`,
-              `"${name}" — rank all ${need} (you have ${sel.length})`,
+              `„${name}" - rangiraj svih ${need} (imaš ${sel.length})`,
+              `"${name}" - rank all ${need} (you have ${sel.length})`,
             ),
           });
         }
@@ -806,8 +806,8 @@ function collectIncompleteIssues(
           issues.push({
             id: cat.id,
             msg: t(
-              `„${name}" — unesi oba rezultata`,
-              `"${name}" — enter both scores`,
+              `„${name}" - unesi oba rezultata`,
+              `"${name}" - enter both scores`,
             ),
           });
         }
@@ -816,7 +816,7 @@ function collectIncompleteIssues(
         if (d?.numeric == null || Number.isNaN(d.numeric)) {
           issues.push({
             id: cat.id,
-            msg: t(`„${name}" — unesi broj`, `"${name}" — enter a number`),
+            msg: t(`„${name}", unesi broj`, `"${name}", enter a number`),
           });
         }
         break;
@@ -824,7 +824,7 @@ function collectIncompleteIssues(
         if (!d?.text?.trim()) {
           issues.push({
             id: cat.id,
-            msg: t(`„${name}" — unesi odgovor`, `"${name}" — enter an answer`),
+            msg: t(`„${name}", unesi odgovor`, `"${name}", enter an answer`),
           });
         }
         break;
@@ -1011,9 +1011,7 @@ function PredictionsTab({
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
-                    {lang === "en"
-                      ? "Saved — but these picks aren't complete yet"
-                      : "Sačuvano — ali ove predikcije još nisu kompletne"}
+                    {t("validation.savedIncomplete", "Saved, but these picks aren't complete yet")}
                   </p>
                   <ul
                     className={`mt-2 space-y-1 text-[12px] leading-snug ${
@@ -1360,7 +1358,7 @@ function CategoryInput({
       if (hadPrior) {
         flashBlock(
           t("limits.groupOneHit", {
-            defaultValue: "Iz svake grupe ide samo 1 — zamijenjeno",
+            defaultValue: "Iz svake grupe ide samo 1, zamijenjeno",
           }) as string,
         );
       }
@@ -1389,7 +1387,7 @@ function CategoryInput({
           flashBlock(
             t("limits.rankedSwap", {
               max: category.max_selections,
-              defaultValue: `Top ${category.max_selections} popunjen — prvi izbor zamijenjen`,
+              defaultValue: `Top ${category.max_selections} popunjen, prvi izbor zamijenjen`,
             }) as string,
           );
         }
@@ -1994,7 +1992,7 @@ function StandingsTab({
           theme={theme}
           ac={ac}
           label="Tvoj plasman"
-          value={me ? `#${me.rank}` : "—"}
+          value={me ? `#${me.rank}` : "-"}
           icon={Award}
           highlight={!!me}
         />
@@ -2002,7 +2000,7 @@ function StandingsTab({
           theme={theme}
           ac={ac}
           label="Tvoji poeni"
-          value={me ? me.total_points : "—"}
+          value={me ? me.total_points : "-"}
           icon={Star}
           highlight={!!me}
         />
@@ -2744,7 +2742,7 @@ function MembershipWall({
     kicker = "Na čekanju";
     title = "Zahtjev poslan";
     subtitle =
-      "Admin će pregledati tvoj zahtjev. Otključat ćemo predikcije čim odobri — nema potrebe da osvježavaš.";
+      "Admin će pregledati tvoj zahtjev. Otključat ćemo predikcije čim odobri. Nema potrebe da osvježavaš.";
     Icon = Hourglass;
     cta = null;
   } else if (status === "rejected" || status === "banned") {

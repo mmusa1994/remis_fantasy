@@ -115,7 +115,7 @@ export async function seedTournamentFromTemplate(
         });
 
       // Try with _en columns first; fall back without if DB columns don't exist
-      let { error: oErr } = await supabaseServer
+      const { error: oErr } = await supabaseServer
         .from("predictor_options")
         .insert(buildRows(true));
       if (oErr) {

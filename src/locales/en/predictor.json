@@ -2,9 +2,13 @@
   "loading": "Loading…",
   "loadingDesc": "Fetching tournaments",
   "badge": "Remis Predictor",
+  "toast": {
+    "successLabel": "Success",
+    "errorLabel": "Error"
+  },
   "hero": {
     "title": "Predict. Compete. Win.",
-    "subtitle": "The official Remis Predictor — call group standings, finalists, top scorers and the champion of the world's biggest tournaments. One bracket. One leaderboard. Real rewards."
+    "subtitle": "The official Remis Predictor. call group standings, finalists, top scorers and the champion of the world's biggest tournaments. One bracket. One leaderboard. Real rewards."
   },
   "features": {
     "tournamentWinner": "Tournament winner",
@@ -13,6 +17,15 @@
     "top4": "Top 4 teams",
     "groupWinners": "Group winners",
     "surprise": "Surprise team"
+  },
+  "card": {
+    "closed": "Closed",
+    "sponsor": "Sponsor",
+    "requestAccess": "View and request access",
+    "openPredictor": "Open predictor"
+  },
+  "validation": {
+    "savedIncomplete": "Saved, but these picks aren't complete yet"
   },
   "sections": {
     "featured": "Featured",
@@ -30,13 +43,13 @@
       "title": "Sign in to create a tournament",
       "subtitle": "Creating a tournament requires an account. Signing in takes 10 seconds and your tournament is instantly linked to you as the owner.",
       "loginCta": "Sign in",
-      "signupCta": "No account — register",
+      "signupCta": "No account. register",
       "perks": {
         "title": "What you get with an account",
         "items": {
           "ownership": "Full owner access to every tournament you create",
           "tracking": "Track all your tournaments and stats in one place",
-          "google": "One-click Google sign-in — no new passwords"
+          "google": "One-click Google sign-in. no new passwords"
         }
       },
       "back": "Predictor"
@@ -75,19 +88,19 @@
     "templates": {
       "title": "Templates",
       "eyebrow": "Quick start",
-      "subtitle": "Pick a template and the basics — including categories and scoring — fill in automatically. Everything is editable afterwards.",
+      "subtitle": "Pick a template and the basics. including categories and scoring. fill in automatically. Everything is editable afterwards.",
       "blank": {
         "name": "Blank tournament",
         "short": "Start from scratch"
       },
       "items": {
-        "wc": { "name": "World Cup 2026", "short": "FIFA World Cup — winner, top scorer, top 4, finalists" },
-        "pl": { "name": "Premier League 2025/26", "short": "English Premier League — winner, top scorer, top 4" },
-        "cl": { "name": "Champions League 2025/26", "short": "UEFA Champions League — winner, finalists, best keeper" },
-        "bundes": { "name": "Bundesliga 2025/26", "short": "German Bundesliga — winner, top scorer, top 3" },
-        "laliga": { "name": "La Liga 2025/26", "short": "Spanish La Liga — winner, top scorer, top 4" },
-        "euroleague": { "name": "EuroLeague Basketball", "short": "EuroLeague — Final Four, MVP, champion" },
-        "f1": { "name": "Formula 1 2026", "short": "F1 season — driver, constructor, pole position" }
+        "wc": { "name": "World Cup 2026", "short": "FIFA World Cup. winner, top scorer, top 4, finalists" },
+        "pl": { "name": "Premier League 2025/26", "short": "English Premier League. winner, top scorer, top 4" },
+        "cl": { "name": "Champions League 2025/26", "short": "UEFA Champions League. winner, finalists, best keeper" },
+        "bundes": { "name": "Bundesliga 2025/26", "short": "German Bundesliga. winner, top scorer, top 3" },
+        "laliga": { "name": "La Liga 2025/26", "short": "Spanish La Liga. winner, top scorer, top 4" },
+        "euroleague": { "name": "EuroLeague Basketball", "short": "EuroLeague. Final Four, MVP, champion" },
+        "f1": { "name": "Formula 1 2026", "short": "F1 season. driver, constructor, pole position" }
       },
       "pickHint": "Click a template to auto-fill the form."
     },
@@ -101,7 +114,7 @@
       "line2": "Your rules.",
       "line3": "Your tournament."
     },
-    "subtitle": "Run a private prediction tournament for friends, colleagues, or your company — or an open one for the whole community. The same engine that powers Remis Fantasy's official competitions, now in your hands.",
+    "subtitle": "Run a private prediction tournament for friends, colleagues, or your company. or an open one for the whole community. The same engine that powers Remis Fantasy's official competitions, now in your hands.",
     "pricing": {
       "amount": "€2",
       "label": "One-time",
@@ -125,7 +138,7 @@
         },
         "categories": {
           "title": "Rich prediction categories",
-          "desc": "Winner, top scorer, top 4, exact score, free text — every category type available."
+          "desc": "Winner, top scorer, top 4, exact score, free text. every category type available."
         },
         "scoring": {
           "title": "Automatic and manual scoring",
@@ -200,7 +213,7 @@
         "red": "Red",
         "green": "Green"
       },
-      "stripeNote": "Your card details go straight to Stripe — they never touch our server.",
+      "stripeNote": "Your card details go straight to Stripe. they never touch our server.",
       "submit": {
         "free": "Create tournament",
         "paid": "Pay €2 and create",
@@ -217,7 +230,7 @@
         "cardIncomplete": "Enter all card details.",
         "cardholderRequired": "Enter the name on the card.",
         "cardholderFullName": "Enter both first and last name.",
-        "stripeNotReady": "Stripe isn't ready yet — give it a second.",
+        "stripeNotReady": "Stripe isn't ready yet. give it a second.",
         "cardError": "Card form error.",
         "cardRejected": "Card was not accepted.",
         "paymentStart": "Failed to start payment",
@@ -286,9 +299,9 @@
       "rewardDeleted": "Reward deleted",
       "memberUpdated": "Member status updated",
       "memberRemoved": "Member removed",
-      "templateApplied": "Template applied — categories, rules and rewards seeded",
-      "tournamentPublished": "Tournament published — now visible to all users",
-      "tournamentLocked": "Predictions locked — no more changes allowed",
+      "templateApplied": "Template applied. categories, rules and rewards seeded",
+      "tournamentPublished": "Tournament published. now visible to all users",
+      "tournamentLocked": "Predictions locked. no more changes allowed",
       "tournamentFinished": "Tournament marked as finished",
       "tournamentDeleted": "Tournament deleted",
       "predictionsSaved": "Predictions saved successfully",
@@ -296,7 +309,7 @@
       "tournamentCreated": "Tournament created successfully",
       "scoringUpdated": "Scoring updated",
       "imageUploaded": "Image uploaded",
-      "genericError": "Something went wrong — please try again"
+      "genericError": "Something went wrong. please try again"
     },
     "statusBanner": {
       "draft": {
@@ -311,7 +324,7 @@
       },
       "locked": {
         "title": "Predictions locked",
-        "desc": "No new predictions accepted — score the results.",
+        "desc": "No new predictions accepted. score the results.",
         "cta": "Mark as finished"
       },
       "finished": {
@@ -336,13 +349,25 @@
         "longDescEn": "Long description (Markdown) (EN)",
         "englishHint": "EN version is shown to users on English language."
       },
+      "lockMode": {
+        "title": "Prediction locking",
+        "desc": "How predictions lock as matches approach.",
+        "per_match": {
+          "label": "Per match",
+          "desc": "Each match locks at its own kickoff time"
+        },
+        "per_round": {
+          "label": "Per round",
+          "desc": "All matches in a round lock when the first match of that round starts"
+        }
+      },
       "visibility": {
         "title": "Visibility & status",
         "desc": "Control who sees the tournament and whether it's live.",
         "statusLabel": "Status",
         "statusHint": "Set to \"Published\" when you're ready for predictions.",
         "visibilityLabel": "Visibility",
-        "visibilityHint": "Private tournaments don't appear in lists — only via direct link.",
+        "visibilityHint": "Private tournaments don't appear in lists. only via direct link.",
         "accentLabel": "Accent colour",
         "approvalLabel": "Member approval",
         "approvalHint": "If on, every new member must be approved by you.",
@@ -438,7 +463,7 @@
       "title": "Matches (optional)",
       "desc": "Match-by-match predictions with automatic scoring from results.",
       "new": "New match",
-      "empty": "No matches yet. Match predictions are optional — the tournament works with categories alone.",
+      "empty": "No matches yet. Match predictions are optional. the tournament works with categories alone.",
       "noKickoff": "No kick-off",
       "deleteConfirm": "Delete match?",
       "editor": {
@@ -459,7 +484,7 @@
         "pointsDiff": "Pts. exact goal diff",
         "pointsWinner": "Pts. correct winner",
         "finalScore": "Final score",
-        "finalScoreHint": "Enter once the match is done — scoring runs automatically across all predictions.",
+        "finalScoreHint": "Enter once the match is done. scoring runs automatically across all predictions.",
         "homeScore": "Home goals",
         "awayScore": "Away goals",
         "statusOptions": {
@@ -533,7 +558,7 @@
     },
     "membersTab": {
       "title": "Tournament members",
-      "approvalsOn": "Approval mode is on — you must approve every new member.",
+      "approvalsOn": "Approval mode is on. you must approve every new member.",
       "approvalsOff": "All signed-in users can join. You can still ban them.",
       "empty": "No members yet.",
       "noName": "(no name)",
@@ -580,7 +605,7 @@
   },
   "empty": {
     "title": "No active tournaments yet",
-    "subtitle": "Predictor tournaments only drop right before the biggest competitions — the World Cup, the Euros, the Champions League. Check back soon and get ready to climb the leaderboard.",
+    "subtitle": "Predictor tournaments only drop right before the biggest competitions. the World Cup, the Euros, the Champions League. Check back soon and get ready to climb the leaderboard.",
     "eyebrow": "Coming soon",
     "exploreFpl": "Open FPL Live",
     "notify": "Notify me when live",
@@ -591,7 +616,7 @@
       },
       "leaderboard": {
         "title": "Global leaderboard",
-        "desc": "Points stack across the tournament — climb to the top."
+        "desc": "Points stack across the tournament. climb to the top."
       },
       "lock": {
         "title": "Sharp predictions",
@@ -610,7 +635,7 @@
   "locksAt": "Locks",
   "sponsor": "Sponsor",
   "progress": "Predictions completed",
-  "noPredictionsToSave": "Nothing to save — make a pick first.",
+  "noPredictionsToSave": "Nothing to save. make a pick first.",
   "saveFailed": "Save failed",
   "open": "Open predictor",
   "savePredictions": "Save predictions",
@@ -631,13 +656,13 @@
     "title": "Not saved",
     "close": "Close",
     "mustSignIn": "You must be signed in to save predictions. Click Sign in above.",
-    "nothingToSave": "Nothing to save — enter scores first (use + and − buttons).",
+    "nothingToSave": "Nothing to save. enter scores first (use + and − buttons).",
     "sessionExpired": "Session expired. Please sign in again.",
     "notAllowed": "You don't have permission for this tournament. Request to join if needed.",
     "tournamentNotFound": "Tournament not found.",
     "tournamentNotAcceptingPredictions": "This tournament isn't accepting predictions right now.",
     "draftMessage": "Tournament hasn't been published yet. Admin must publish it before predictions can be saved.",
-    "lockedMessage": "Tournament is locked or finished — predictions can no longer be changed.",
+    "lockedMessage": "Tournament is locked or finished. predictions can no longer be changed.",
     "genericHttp": "Save failed (HTTP {{status}}).",
     "unknown": "Unknown error while saving.",
     "matchSkipped": "Predictions weren't saved. Reasons: {{reasons}}. Check that matches aren't locked."
@@ -707,15 +732,15 @@
   "limits": {
     "groupCapHit": "Group {{group}}: maximum {{max}} can advance",
     "totalCapHit": "Maximum {{max}} total",
-    "groupOneHit": "Only 1 winner per group — tap replaces the previous pick",
-    "rankedSwap": "Top {{max}} is full — your earliest pick was replaced",
+    "groupOneHit": "Only 1 winner per group. tap replaces the previous pick",
+    "rankedSwap": "Top {{max}} is full. your earliest pick was replaced",
     "tooManyForGroup": "You can't pick {{count}} from one group",
     "groupBelowMin": "Group {{group}} needs at least {{min}} picks"
   },
   "admin": {
     "explorer": {
       "title": "Predictions overview",
-      "subtitle": "Every prediction from every user — by day, by match, and by tournament category.",
+      "subtitle": "Every prediction from every user. by day, by match, and by tournament category.",
       "tabs": {
         "leaderboard": "Leaderboard",
         "matches": "Matches by day",
@@ -779,9 +804,9 @@
         "bgLabel": "Background image",
         "noBg": "No background",
         "musicLabel": "Auto-play the WC 2026 anthem",
-        "musicHint": "When on, the tournament page shows a toggle for the FIFA WC 2026 anthem. State is remembered per user — autoplay-block keeps it from playing without consent.",
-        "musicOn": "Yes — show anthem button",
-        "musicOff": "No — no anthem",
+        "musicHint": "When on, the tournament page shows a toggle for the FIFA WC 2026 anthem. State is remembered per user. autoplay-block keeps it from playing without consent.",
+        "musicOn": "Yes. show anthem button",
+        "musicOff": "No. no anthem",
         "bg": {
           "bgFull": "FIFA 26 logo (dark, bold)",
           "bg1": "Hero #1",

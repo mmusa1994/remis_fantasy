@@ -83,6 +83,7 @@ export interface Tournament {
   theme_background_image: string | null;
   /** If true, the WC theme music auto-mounts on this tournament's pages. */
   theme_music_enabled: boolean;
+  prediction_lock_mode: "per_match" | "per_round";
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -280,6 +281,7 @@ export interface Match {
   points_winner: number;
   sort_order: number;
   force_unlocked: boolean;
+  matchday: number | null;
   created_at: string;
   updated_at: string;
 }

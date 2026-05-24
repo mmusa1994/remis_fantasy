@@ -1031,7 +1031,7 @@ export default function AdminTablesCleanPage() {
             {/* Race Info Updater */}
             <div className={`px-6 py-4 border-t ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
               <h4 className={`text-md font-semibold ${isDark ? "text-white" : "text-gray-800"} mb-3`}>
-                Info o trkama (Sljedeća i Prethodna) — Sezona {f1Season === "25" ? "2025" : "2026"}
+                Info o trkama (Sljedeća i Prethodna). Sezona {f1Season === "25" ? "2025" : "2026"}
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

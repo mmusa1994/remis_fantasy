@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 /**
- * Creator monogram — refined editorial mark used on the "Create your tournament" CTA.
+ * Creator monogram. refined editorial mark used on the "Create your tournament" CTA.
  * Inspired by founder/maker seals. Currentcolor so it inherits button text colour.
  */
 function CreatorMark({ className }: { className?: string }) {
@@ -95,7 +95,7 @@ export default function PredictorIndexPage() {
 
   const featured = tournaments.filter((x) => x.is_featured);
   const others = tournaments.filter((x) => !x.is_featured);
-  // List page stays clean — bg + theme music only appear on the specific
+  // List page stays clean. bg + theme music only appear on the specific
   // tournament page that admin opted into via the settings picker.
   const featuredThemeBg =
     featured.find((t) => t.theme_background_image)?.theme_background_image ??
@@ -154,7 +154,7 @@ export default function PredictorIndexPage() {
           >
             {t(
               "hero.subtitle",
-              "Tournament winner, top scorer, best goalkeeper, top 4 teams — call every shot. Climb the leaderboard. Claim the rewards.",
+              "Tournament winner, top scorer, best goalkeeper, top 4 teams. call every shot. Climb the leaderboard. Claim the rewards.",
             )}
           </p>
 
@@ -247,7 +247,7 @@ export default function PredictorIndexPage() {
                           ? "border-amber-300/30 text-amber-300/85 hover:border-amber-300/70 hover:text-amber-200"
                           : "border-predictor-primary/50 text-predictor-accent-light/90 hover:border-predictor-primary hover:text-predictor-accent-light"
                       }`}
-                      title={t("cta.createInline", "Create your own tournament — €2")}
+                      title={t("cta.createInline", "Create your own tournament. €2")}
                     >
                       {t("cta.createInline", "Create your own")}
                       <span className="font-mono text-[10px] tracking-wider opacity-70">
@@ -405,7 +405,7 @@ function PredictorEmptyState({
         >
           {t(
             "empty.subtitle",
-            "Predictor turniri se pojavljuju samo neposredno prije velikih takmičenja — Svjetsko prvenstvo, Euro, Liga prvaka. Vrati se uskoro i pripremi se da napadneš vrh tabele.",
+            "Predictor turniri se pojavljuju samo neposredno prije velikih takmičenja. Svjetsko prvenstvo, Euro, Liga prvaka. Vrati se uskoro i pripremi se da napadneš vrh tabele.",
           )}
         </motion.p>
 
@@ -473,7 +473,7 @@ function PredictorEmptyState({
               title: t("empty.preview.leaderboard.title", "Globalna tabela"),
               desc: t(
                 "empty.preview.leaderboard.desc",
-                "Bodovi se zbrajaju kroz cijeli turnir — kapnij vrh.",
+                "Bodovi se zbrajaju kroz cijeli turnir. kapnij vrh.",
               ),
             },
             {
@@ -547,7 +547,7 @@ function TournamentCard({
   theme: string;
   large?: boolean;
 }) {
-  const { i18n } = useTranslation("predictor");
+  const { t, i18n } = useTranslation("predictor");
   const lang = normalizeLang(i18n.language);
   const ac = getAccentClasses(tournament.accent_color);
   const borderClass = ac.border;
@@ -568,7 +568,7 @@ function TournamentCard({
             : "bg-gradient-to-br from-white via-white to-gray-50/60 border border-gray-200/80 hover:border-gray-300 shadow-sm hover:shadow-xl hover:shadow-gray-900/5"
         }`}
       >
-        {/* Soft accent halo in the corner — purely decorative */}
+        {/* Soft accent halo in the corner. purely decorative */}
         <span
           aria-hidden
           className={`pointer-events-none absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl opacity-40 ${textClass.split(" ")[0]}`}
@@ -653,7 +653,7 @@ function TournamentCard({
                 }`}
               >
                 <Lock className="w-3 h-3" />
-                Zatvoren
+                {t("card.closed", "Closed")}
               </span>
             )}
             <span
@@ -727,7 +727,7 @@ function TournamentCard({
           <p
             className={`relative z-10 text-[10px] uppercase tracking-wider mb-3 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}
           >
-            <span className="opacity-70">Sponzor · </span>
+            <span className="opacity-70">{t("card.sponsor", "Sponsor")} · </span>
             <span className="font-bold">{tournament.sponsor_name}</span>
           </p>
         )}
@@ -738,12 +738,12 @@ function TournamentCard({
           {tournament.require_approval ? (
             <>
               <Lock className="w-4 h-4" />
-              Pogledaj i zatraži učešće
+              {t("card.requestAccess", "View and request access")}
             </>
           ) : (
             <>
               <CheckCircle2 className="w-4 h-4" />
-              Otvori predictor
+              {t("card.openPredictor", "Open predictor")}
             </>
           )}
           <ArrowRight className="w-4 h-4" />

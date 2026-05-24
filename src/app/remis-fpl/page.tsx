@@ -61,7 +61,7 @@ export default function RemisFplLanding() {
           <p className="text-sm md:text-base mt-2 opacity-80">
             REMIS FPL is the central hub for Fantasy Premier League players in the region:
             live tracking, mini leagues and tables, AI team analysis, differentials, team news
-            and advanced stats — all in one place.
+            and advanced stats. all in one place.
           </p>
         </div>
 

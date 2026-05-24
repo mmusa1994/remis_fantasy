@@ -330,7 +330,7 @@ function PaymentInner({
                 dark ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              01 — {t("create.form.step1")}
+              01. {t("create.form.step1")}
             </h2>
 
             <div className="space-y-5">
@@ -444,7 +444,7 @@ function PaymentInner({
                     dark ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  02 — {t("create.form.step2")}
+                  02. {t("create.form.step2")}
                 </h2>
                 <span
                   className={`inline-flex items-center gap-1.5 text-[10px] font-medium ${

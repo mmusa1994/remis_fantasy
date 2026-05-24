@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
       stripe_product_id: price.productId || "",
       stripe_price_id: price.priceId || "",
     },
-    description: `Remis Predictor — kreiranje turnira "${tournament_name}"`,
+    description: `Remis Predictor. kreiranje turnira "${tournament_name}"`,
   });
 
   return NextResponse.json({

@@ -43,6 +43,19 @@ export async function POST(req: NextRequest) {
   const path = `${tournamentId}/${kind}-${Date.now().toString(36)}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
+  // Auto-create the bucket if it doesn't exist
+  const { data: buckets } = await supabaseServer.storage.listBuckets();
+  if (!buckets?.some((b) => b.name === BUCKET)) {
+    const { error: createErr } = await supabaseServer.storage.createBucket(
+      BUCKET,
+      { public: true, fileSizeLimit: MAX_SIZE },
+    );
+    if (createErr && !/already exists/i.test(createErr.message)) {
+      console.error("[predictor upload-image] bucket create failed:", createErr.message);
+      return jsonError(`Could not create storage bucket: ${createErr.message}`, 500);
+    }
+  }
+
   const { data, error } = await supabaseServer.storage
     .from(BUCKET)
     .upload(path, buffer, {
@@ -53,13 +66,6 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error("[predictor upload-image]", error.message);
-    // Most common cause: the bucket doesn't exist yet. Surface a useful message.
-    if (/Bucket not found|does not exist/i.test(error.message)) {
-      return jsonError(
-        `Storage bucket "${BUCKET}" not found. Create it in Supabase Dashboard → Storage (public).`,
-        500,
-      );
-    }
     return jsonError(error.message, 500);
   }
 
