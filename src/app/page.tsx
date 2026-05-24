@@ -21,7 +21,7 @@ import {
   FaGlobeAmericas,
 } from "react-icons/fa";
 import { MdLiveTv } from "react-icons/md";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Trophy, Target } from "lucide-react";
 import HowItWorks from "@/components/shared/HowItWorks";
 
 // TypeScript types for league and stat data
@@ -265,6 +265,140 @@ export default function Home() {
             })}
           </div>
 
+        </div>
+      </section>
+
+      {/* Predictor & Tournament Promo */}
+      <section className="py-12 md:py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Predictor Card */}
+            <Link href="/predictor" className="block group">
+              <div
+                className={`relative overflow-hidden rounded-2xl border p-6 md:p-8 h-full transition-all duration-300 hover:-translate-y-1 ${
+                  theme === "dark"
+                    ? "bg-gradient-to-br from-gray-800/80 via-gray-900/60 to-gray-950/80 border-gray-700/60 hover:border-amber-500/40 shadow-lg hover:shadow-amber-500/10"
+                    : "bg-gradient-to-br from-white via-gray-50 to-amber-50/30 border-gray-200 hover:border-amber-400/60 shadow-sm hover:shadow-lg"
+                }`}
+              >
+                <span
+                  aria-hidden
+                  className={`pointer-events-none absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl ${
+                    theme === "dark" ? "bg-amber-500/8" : "bg-amber-400/15"
+                  }`}
+                />
+                <div className="relative z-10">
+                  <div
+                    className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 ${
+                      theme === "dark"
+                        ? "bg-amber-500/10 border border-amber-500/20"
+                        : "bg-amber-100 border border-amber-200"
+                    }`}
+                  >
+                    <Target
+                      className={`w-6 h-6 ${
+                        theme === "dark" ? "text-amber-300" : "text-amber-600"
+                      }`}
+                    />
+                  </div>
+                  <h3
+                    className={`text-lg md:text-xl font-black mb-2 ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {t("hero:promo.predictor.title", "Predictions")}
+                  </h3>
+                  <p
+                    className={`text-sm leading-relaxed mb-4 ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {t(
+                      "hero:promo.predictor.desc",
+                      "Tournament winner, top scorer, group standings — predict it all. Compete on the leaderboard and win real prizes.",
+                    )}
+                  </p>
+                  <span
+                    className={`inline-flex items-center gap-1.5 text-sm font-bold group-hover:gap-2.5 transition-all duration-300 ${
+                      theme === "dark" ? "text-amber-300" : "text-amber-600"
+                    }`}
+                  >
+                    {t("hero:promo.predictor.cta", "Browse tournaments")}
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            {/* Create Tournament Card */}
+            <Link href="/create-tournament" className="block group">
+              <div
+                className={`relative overflow-hidden rounded-2xl border p-6 md:p-8 h-full transition-all duration-300 hover:-translate-y-1 ${
+                  theme === "dark"
+                    ? "bg-gradient-to-br from-gray-800/80 via-gray-900/60 to-gray-950/80 border-gray-700/60 hover:border-white/30 shadow-lg hover:shadow-white/5"
+                    : "bg-gradient-to-br from-white via-gray-50 to-gray-100/50 border-gray-200 hover:border-gray-400 shadow-sm hover:shadow-lg"
+                }`}
+              >
+                <span
+                  aria-hidden
+                  className={`pointer-events-none absolute -bottom-16 -left-16 w-48 h-48 rounded-full blur-3xl ${
+                    theme === "dark" ? "bg-white/5" : "bg-gray-400/10"
+                  }`}
+                />
+                <div className="relative z-10">
+                  <div
+                    className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 ${
+                      theme === "dark"
+                        ? "bg-white/5 border border-white/10"
+                        : "bg-gray-100 border border-gray-200"
+                    }`}
+                  >
+                    <Trophy
+                      className={`w-6 h-6 ${
+                        theme === "dark" ? "text-white" : "text-gray-800"
+                      }`}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3
+                      className={`text-lg md:text-xl font-black ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {t("hero:promo.create.title", "Create Tournament")}
+                    </h3>
+                    <span
+                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                        theme === "dark"
+                          ? "bg-white/10 text-gray-300"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      €2
+                    </span>
+                  </div>
+                  <p
+                    className={`text-sm leading-relaxed mb-4 ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {t(
+                      "hero:promo.create.desc",
+                      "Build your own prediction tournament — World Cup, Champions League, or custom. Invite friends, set the rules, and compete.",
+                    )}
+                  </p>
+                  <span
+                    className={`inline-flex items-center gap-1.5 text-sm font-bold group-hover:gap-2.5 transition-all duration-300 ${
+                      theme === "dark" ? "text-white" : "text-gray-800"
+                    }`}
+                  >
+                    {t("hero:promo.create.cta", "Start building")}
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </div>
         </div>
       </section>
 

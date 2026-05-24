@@ -31,7 +31,7 @@ export default function CreateTournamentLanding({
   const { theme } = useTheme();
   const dark = theme === "dark";
   const [step, setStep] = useState<"landing" | "form">("landing");
-  const [templateId, setTemplateId] = useState<string | null>(null);
+  const [templateId, setTemplateId] = useState<string | null>("world-cup-2026");
 
   if (step === "form") {
     return (

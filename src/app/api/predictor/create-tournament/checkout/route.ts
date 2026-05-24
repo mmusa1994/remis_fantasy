@@ -95,7 +95,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (template_id) {
-      await seedTournamentFromTemplate(created.id, template_id);
+      const seedResult = await seedTournamentFromTemplate(created.id, template_id);
+      if (!seedResult.ok) {
+        console.error("[checkout] template seed failed:", seedResult.error);
+      }
     }
 
     return NextResponse.json({

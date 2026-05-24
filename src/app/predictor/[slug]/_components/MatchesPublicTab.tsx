@@ -22,7 +22,7 @@ import {
 import ConfettiBurst from "@/components/shared/ConfettiBurst";
 import QuickScoreChips from "@/components/shared/QuickScoreChips";
 import StreakBadge from "@/components/shared/StreakBadge";
-import type { SaveToastState } from "@/components/shared/SaveToast";
+import { useToast } from "@/contexts/ToastContext";
 import { localizeTeamName } from "@/utils/country-names";
 import type { Match, MatchPrediction } from "@/types/predictor";
 import type { AccentClasses } from "@/utils/predictor-accent";
@@ -80,7 +80,6 @@ export default function MatchesPublicTab({
   theme,
   ac,
   onSaved,
-  notify,
   isWC: _isWC = false,
   themeBgSrc: _themeBgSrc = null,
 }: {
@@ -91,10 +90,10 @@ export default function MatchesPublicTab({
   theme: string;
   ac: AccentClasses;
   onSaved: () => void;
-  notify?: (t: SaveToastState) => void;
   isWC?: boolean;
   themeBgSrc?: string | null;
 }) {
+  const { showToast: notify } = useToast();
   const accentBg = ac.bg;
   const { t, i18n } = useTranslation("predictor");
   const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as
@@ -212,21 +211,12 @@ export default function MatchesPublicTab({
       setSavedAt(new Date());
       setDirty(false);
       setConfettiTrigger((n) => n + 1);
-      notify?.({
-        kind: "success",
-        text:
-          lang === "en"
-            ? `${saved} match prediction${saved === 1 ? "" : "s"} saved`
-            : `Sačuvano ${saved} predikcij${saved === 1 ? "a" : saved < 5 ? "e" : "a"}`,
-      });
+      notify(t("owner.toast.matchPredictionsSaved", "Match predictions saved"));
       onSaved();
-      if (typeof window !== "undefined") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
     } catch (e) {
       const msg = (e as Error)?.message || t("errors.unknown");
       setError(msg);
-      notify?.({ kind: "error", text: msg });
+      notify(msg, "error");
     } finally {
       setSaving(false);
     }

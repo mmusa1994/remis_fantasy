@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
 
 const stripePromise: Promise<StripeClient | null> = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
@@ -73,6 +74,7 @@ function PaymentInner({
 }: Props) {
   const { t } = useTranslation("predictor");
   const { theme } = useTheme();
+  const { showToast } = useToast();
   const dark = theme === "dark";
   const stripe = useStripe();
   const elements = useElements();
@@ -153,6 +155,7 @@ function PaymentInner({
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || t("create.form.errors.generic"));
+        showToast(t("owner.toast.tournamentCreated"));
         router.push(data.redirect_to);
         return;
       }
@@ -204,13 +207,16 @@ function PaymentInner({
         );
         const fjson = await f.json();
         if (f.ok && fjson.ready && fjson.redirect_to) {
+          showToast(t("owner.toast.tournamentCreated"));
           router.push(fjson.redirect_to);
           return;
         }
       }
       throw new Error(t("create.form.errors.tournamentDelay"));
     } catch (err: any) {
-      setGlobalError(err?.message || t("create.form.errors.generic"));
+      const msg = err?.message || t("create.form.errors.generic");
+      setGlobalError(msg);
+      showToast(msg, "error");
     } finally {
       setSubmitting(false);
     }

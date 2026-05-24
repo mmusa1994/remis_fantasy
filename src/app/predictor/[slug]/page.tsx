@@ -14,9 +14,7 @@ import WCMusicPlayer from "@/components/shared/WCMusicPlayer";
 import ConfettiBurst from "@/components/shared/ConfettiBurst";
 import QuickScoreChips from "@/components/shared/QuickScoreChips";
 import StreakBadge from "@/components/shared/StreakBadge";
-import SaveToast, {
-  type SaveToastState,
-} from "@/components/shared/SaveToast";
+import { useToast } from "@/contexts/ToastContext";
 import { isWorldCupTheme } from "@/utils/wc-theme";
 import { localizeTeamName } from "@/utils/country-names";
 import {
@@ -123,7 +121,7 @@ export default function TournamentDetailPage() {
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<SaveToastState>(null);
+  const { showToast } = useToast();
   const [categoryConfetti, setCategoryConfetti] = useState(0);
   // matches state
   const [matches, setMatches] = useState<Match[]>([]);
@@ -305,19 +303,14 @@ export default function TournamentDetailPage() {
       }
       setSavedAt(new Date());
       setCategoryConfetti((n) => n + 1);
-      setToast({
-        kind: "success",
-        text: lang === "en" ? "Predictions saved" : "Predikcije sačuvane",
-      });
+      showToast(t("owner.toast.predictionsSaved", "Predictions saved"));
       await loadMyPredictions();
     } catch (e: any) {
       setError(e.message);
-      setToast({
-        kind: "error",
-        text:
-          e?.message ||
-          (lang === "en" ? "Save failed" : "Greška pri čuvanju"),
-      });
+      showToast(
+        e?.message || t("owner.toast.genericError", "Something went wrong"),
+        "error",
+      );
     } finally {
       setSaving(false);
     }
@@ -384,11 +377,6 @@ export default function TournamentDetailPage() {
 
   return (
     <main className="relative w-full min-h-screen overflow-x-hidden bg-theme-background">
-      <SaveToast
-        toast={toast}
-        onDismiss={() => setToast(null)}
-        anchor="bottom"
-      />
       <ConfettiBurst trigger={categoryConfetti} />
       {themeBg && (
         <WCBackground
@@ -626,7 +614,6 @@ export default function TournamentDetailPage() {
                 theme={theme}
                 ac={ac}
                 onSaved={loadMyMatchPredictions}
-                notify={setToast}
                 isWC={isWC}
                 themeBgSrc={themeBg}
               />

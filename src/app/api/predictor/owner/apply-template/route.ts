@@ -91,7 +91,15 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await seedTournamentFromTemplate(tournament_id, template_id);
-  if (!result.ok) return jsonError(result.error || "Seed failed", 500);
+  if (!result.ok) {
+    console.error("[apply-template] seed failed:", result.error, result.errors);
+    return jsonError(result.error || "Seed failed", 500);
+  }
 
-  return NextResponse.json({ ok: true, mode, template_id });
+  return NextResponse.json({
+    ok: true,
+    mode,
+    template_id,
+    categories: result.categories,
+  });
 }

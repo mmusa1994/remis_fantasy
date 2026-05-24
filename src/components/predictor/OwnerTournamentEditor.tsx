@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
 import {
   TEMPLATE_PICKER_META,
   getTemplate,
@@ -183,13 +184,12 @@ export default function OwnerTournamentEditor({
 
   const [tournament, setTournament] = useState<Tournament>(initialTournament);
   const [tab, setTab] = useState<TabId>("settings");
-  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const { showToast: globalToast } = useToast();
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const showToast = useCallback((msg: string, ok = true) => {
-    setToast({ msg, ok });
-    setTimeout(() => setToast(null), 3500);
-  }, []);
+    globalToast(msg, ok ? "success" : "error");
+  }, [globalToast]);
 
   // Quick-switch tournament status from the always-visible banner.
   const setStatus = useCallback(
@@ -205,9 +205,17 @@ export default function OwnerTournamentEditor({
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "Status update failed");
         setTournament(data);
-        showToast(t("owner.toast.saved", "Saved"));
+        const statusMsg =
+          next === "published"
+            ? t("owner.toast.tournamentPublished")
+            : next === "locked"
+              ? t("owner.toast.tournamentLocked")
+              : next === "finished"
+                ? t("owner.toast.tournamentFinished")
+                : t("owner.toast.statusChanged");
+        showToast(statusMsg);
       } catch (e: any) {
-        showToast(e.message || t("owner.toast.saveError"), false);
+        showToast(e.message || t("owner.toast.genericError"), false);
       } finally {
         setUpdatingStatus(false);
       }
@@ -343,6 +351,7 @@ export default function OwnerTournamentEditor({
               dark={dark}
               onSaved={(t) => setTournament(t)}
               showToast={showToast}
+              onTabSwitch={setTab}
             />
           )}
           {tab === "categories" && (
@@ -381,22 +390,6 @@ export default function OwnerTournamentEditor({
         </p>
       </div>
 
-      {toast && (
-        <div
-          role="status"
-          className={`fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-2.5 text-sm font-semibold shadow-2xl ${
-            toast.ok
-              ? dark
-                ? "border border-emerald-400/30 bg-emerald-500/20 text-emerald-100"
-                : "border border-emerald-500/40 bg-emerald-100 text-emerald-900"
-              : dark
-                ? "border border-red-500/30 bg-red-500/20 text-red-100"
-                : "border border-red-300 bg-red-100 text-red-800"
-          }`}
-        >
-          {toast.msg}
-        </div>
-      )}
     </main>
   );
 }
@@ -724,11 +717,13 @@ function SettingsTab({
   dark,
   onSaved,
   showToast,
+  onTabSwitch,
 }: {
   tournament: Tournament;
   dark: boolean;
   onSaved: (t: Tournament) => void;
   showToast: (msg: string, ok?: boolean) => void;
+  onTabSwitch: (tab: TabId) => void;
 }) {
   const { t } = useTranslation("predictor");
   const router = useRouter();
@@ -750,9 +745,9 @@ function SettingsTab({
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Save failed");
       onSaved(data);
-      showToast(t("owner.settings.toast.saved", "Settings saved"));
+      showToast(t("owner.toast.settingsSaved"));
     } catch (e: any) {
-      showToast(e.message || t("owner.settings.toast.saveError"), false);
+      showToast(e.message || t("owner.toast.genericError"), false);
     } finally {
       setSaving(false);
     }
@@ -770,9 +765,10 @@ function SettingsTab({
         const d = await res.json();
         throw new Error(d?.error || "Delete failed");
       }
+      showToast(t("owner.toast.tournamentDeleted"));
       router.push("/predictor/my-tournaments");
     } catch (e: any) {
-      showToast(e.message, false);
+      showToast(e.message || t("owner.toast.genericError"), false);
       setDeleting(false);
     }
   }
@@ -808,10 +804,11 @@ function SettingsTab({
           setForm(updated);
         }
       }
-      showToast(t("owner.toast.saved", "Saved"));
+      showToast(t("owner.toast.templateApplied"));
       router.refresh();
+      onTabSwitch("categories");
     } catch (e: any) {
-      showToast(e.message, false);
+      showToast(e.message || t("owner.toast.genericError"), false);
     } finally {
       setApplyingTemplate(null);
     }
@@ -1355,9 +1352,9 @@ function CategoriesTab({
       method: "DELETE",
     });
     if (res.ok) {
-      showToast(t("owner.toast.deleted"));
+      showToast(t("owner.toast.categoryDeleted"));
       load();
-    } else showToast(t("owner.toast.saveError"), false);
+    } else showToast(t("owner.toast.genericError"), false);
   }
 
   return (
@@ -1458,7 +1455,7 @@ function CategoriesTab({
             setCreating(false);
             setEditing(null);
             load();
-            showToast(t("owner.toast.saved"));
+            showToast(t("owner.toast.categorySaved"));
           }}
           showToast={showToast}
         />
@@ -1959,8 +1956,8 @@ function MatchesTab({
     const res = await fetch(`/api/predictor/owner/matches?id=${id}`, { method: "DELETE" });
     if (res.ok) {
       load();
-      showToast(t("owner.toast.deleted"));
-    } else showToast(t("owner.toast.saveError"), false);
+      showToast(t("owner.toast.matchDeleted"));
+    } else showToast(t("owner.toast.genericError"), false);
   }
 
   return (
@@ -2055,7 +2052,7 @@ function MatchesTab({
             setCreating(false);
             setEditing(null);
             load();
-            showToast(t("owner.toast.saved"));
+            showToast(t("owner.toast.matchSaved"));
           }}
           showToast={showToast}
         />
@@ -2329,8 +2326,8 @@ function RulesTab({
     const res = await fetch(`/api/predictor/owner/rules?id=${id}`, { method: "DELETE" });
     if (res.ok) {
       load();
-      showToast(t("owner.toast.deleted"));
-    } else showToast(t("owner.toast.saveError"), false);
+      showToast(t("owner.toast.ruleDeleted"));
+    } else showToast(t("owner.toast.genericError"), false);
   }
 
   return (
@@ -2417,7 +2414,7 @@ function RulesTab({
             setCreating(false);
             setEditing(null);
             load();
-            showToast(t("owner.toast.saved"));
+            showToast(t("owner.toast.ruleSaved"));
           }}
           showToast={showToast}
         />
@@ -2583,8 +2580,8 @@ function RewardsTab({
     const res = await fetch(`/api/predictor/owner/rewards?id=${id}`, { method: "DELETE" });
     if (res.ok) {
       load();
-      showToast(t("owner.toast.deleted"));
-    } else showToast(t("owner.toast.saveError"), false);
+      showToast(t("owner.toast.rewardDeleted"));
+    } else showToast(t("owner.toast.genericError"), false);
   }
 
   return (
@@ -2681,7 +2678,7 @@ function RewardsTab({
             setCreating(false);
             setEditing(null);
             load();
-            showToast(t("owner.toast.saved"));
+            showToast(t("owner.toast.rewardSaved"));
           }}
           showToast={showToast}
         />
@@ -2890,8 +2887,8 @@ function MembersTab({
     });
     if (res.ok) {
       load();
-      showToast(t("owner.toast.updated"));
-    } else showToast(t("owner.toast.saveError"), false);
+      showToast(t("owner.toast.memberUpdated"));
+    } else showToast(t("owner.toast.genericError"), false);
   }
 
   async function remove(id: string) {
@@ -2899,8 +2896,8 @@ function MembersTab({
     const res = await fetch(`/api/predictor/owner/members?id=${id}`, { method: "DELETE" });
     if (res.ok) {
       load();
-      showToast(t("owner.toast.removed"));
-    } else showToast(t("owner.toast.saveError"), false);
+      showToast(t("owner.toast.memberRemoved"));
+    } else showToast(t("owner.toast.genericError"), false);
   }
 
   return (
@@ -3098,7 +3095,7 @@ function ScoringTab({
         if (view === "leaderboard") loadStandings();
         else loadPredictions();
       } else {
-        showToast(d.error || t("owner.toast.saveError"), false);
+        showToast(d.error || t("owner.toast.genericError"), false);
       }
     } finally {
       setRescoring(false);
@@ -3112,10 +3109,10 @@ function ScoringTab({
       body: JSON.stringify({ prediction_id: predictionId, points_awarded: points }),
     });
     if (res.ok) {
-      showToast(t("owner.scoringTab.pointsSaved"));
+      showToast(t("owner.toast.scoringUpdated"));
       loadPredictions();
     } else {
-      showToast(t("owner.toast.saveError"), false);
+      showToast(t("owner.toast.genericError"), false);
     }
   }
 

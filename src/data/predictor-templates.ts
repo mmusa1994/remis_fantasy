@@ -83,6 +83,16 @@ export interface PredictorTemplate {
    * click for the end user.
    */
   defaultMatchTemplateId?: string;
+  /** Default scoring values applied to every match in the template */
+  defaultMatchScoring?: {
+    points_exact: number;
+    points_diff: number;
+    points_winner: number;
+  };
+  /** Auto-enable music player on tournament page */
+  theme_music_enabled?: boolean;
+  /** Auto-set background image */
+  theme_background_image?: string;
 }
 
 // helper to attach a country flag image (flagcdn.com is free, no key)
@@ -92,114 +102,120 @@ const flag = (cc: string) => `https://flagcdn.com/w80/${cc}.png`;
 // 1) FIFA Svjetsko prvenstvo 2026 — 48 KVALIFIKOVANIH EKIPA
 // Grupe nakon ždrijeba decembra 2025 (zvanični raspored FIFA)
 // -------------------------------------------------------------
-const T = (label: string, code: string, group: string): TemplateOption => ({
+const T = (
+  label: string,
+  code: string,
+  group: string,
+  label_en?: string,
+): TemplateOption => ({
   label,
+  label_en: label_en ?? label,
   group_label: group,
+  group_label_en: group.replace("Grupa", "Group"),
   value: code,
   image_url: flag(code),
 });
 
 const WC_2026_TEAMS: TemplateOption[] = [
   // Grupa A
-  T("Meksiko", "mx", "Grupa A"),
-  T("Južna Afrika", "za", "Grupa A"),
-  T("Južna Koreja", "kr", "Grupa A"),
-  T("Češka", "cz", "Grupa A"),
+  T("Meksiko", "mx", "Grupa A", "Mexico"),
+  T("Južna Afrika", "za", "Grupa A", "South Africa"),
+  T("Južna Koreja", "kr", "Grupa A", "South Korea"),
+  T("Češka", "cz", "Grupa A", "Czech Republic"),
   // Grupa B
-  T("Kanada", "ca", "Grupa B"),
-  T("Bosna i Hercegovina", "ba", "Grupa B"),
-  T("Katar", "qa", "Grupa B"),
-  T("Švicarska", "ch", "Grupa B"),
+  T("Kanada", "ca", "Grupa B", "Canada"),
+  T("Bosna i Hercegovina", "ba", "Grupa B", "Bosnia and Herzegovina"),
+  T("Katar", "qa", "Grupa B", "Qatar"),
+  T("Švicarska", "ch", "Grupa B", "Switzerland"),
   // Grupa C
   T("Brazil", "br", "Grupa C"),
-  T("Maroko", "ma", "Grupa C"),
+  T("Maroko", "ma", "Grupa C", "Morocco"),
   T("Haiti", "ht", "Grupa C"),
-  T("Škotska", "gb-sct", "Grupa C"),
+  T("Škotska", "gb-sct", "Grupa C", "Scotland"),
   // Grupa D
-  T("SAD", "us", "Grupa D"),
-  T("Paragvaj", "py", "Grupa D"),
-  T("Australija", "au", "Grupa D"),
-  T("Turska", "tr", "Grupa D"),
+  T("SAD", "us", "Grupa D", "USA"),
+  T("Paragvaj", "py", "Grupa D", "Paraguay"),
+  T("Australija", "au", "Grupa D", "Australia"),
+  T("Turska", "tr", "Grupa D", "Turkey"),
   // Grupa E
-  T("Njemačka", "de", "Grupa E"),
-  T("Kurasao", "cw", "Grupa E"),
-  T("Obala Slonovače", "ci", "Grupa E"),
-  T("Ekvador", "ec", "Grupa E"),
+  T("Njemačka", "de", "Grupa E", "Germany"),
+  T("Kurasao", "cw", "Grupa E", "Curaçao"),
+  T("Obala Slonovače", "ci", "Grupa E", "Ivory Coast"),
+  T("Ekvador", "ec", "Grupa E", "Ecuador"),
   // Grupa F
-  T("Holandija", "nl", "Grupa F"),
+  T("Holandija", "nl", "Grupa F", "Netherlands"),
   T("Japan", "jp", "Grupa F"),
-  T("Švedska", "se", "Grupa F"),
-  T("Tunis", "tn", "Grupa F"),
+  T("Švedska", "se", "Grupa F", "Sweden"),
+  T("Tunis", "tn", "Grupa F", "Tunisia"),
   // Grupa G
-  T("Belgija", "be", "Grupa G"),
-  T("Egipat", "eg", "Grupa G"),
+  T("Belgija", "be", "Grupa G", "Belgium"),
+  T("Egipat", "eg", "Grupa G", "Egypt"),
   T("Iran", "ir", "Grupa G"),
-  T("Novi Zeland", "nz", "Grupa G"),
+  T("Novi Zeland", "nz", "Grupa G", "New Zealand"),
   // Grupa H
-  T("Španija", "es", "Grupa H"),
-  T("Zelenortska", "cv", "Grupa H"),
-  T("Saudijska Arabija", "sa", "Grupa H"),
-  T("Urugvaj", "uy", "Grupa H"),
+  T("Španija", "es", "Grupa H", "Spain"),
+  T("Zelenortska", "cv", "Grupa H", "Cape Verde"),
+  T("Saudijska Arabija", "sa", "Grupa H", "Saudi Arabia"),
+  T("Urugvaj", "uy", "Grupa H", "Uruguay"),
   // Grupa I
-  T("Francuska", "fr", "Grupa I"),
+  T("Francuska", "fr", "Grupa I", "France"),
   T("Senegal", "sn", "Grupa I"),
-  T("Irak", "iq", "Grupa I"),
-  T("Norveška", "no", "Grupa I"),
+  T("Irak", "iq", "Grupa I", "Iraq"),
+  T("Norveška", "no", "Grupa I", "Norway"),
   // Grupa J
   T("Argentina", "ar", "Grupa J"),
-  T("Alžir", "dz", "Grupa J"),
-  T("Austrija", "at", "Grupa J"),
+  T("Alžir", "dz", "Grupa J", "Algeria"),
+  T("Austrija", "at", "Grupa J", "Austria"),
   T("Jordan", "jo", "Grupa J"),
   // Grupa K
   T("Portugal", "pt", "Grupa K"),
-  T("DR Kongo", "cd", "Grupa K"),
+  T("DR Kongo", "cd", "Grupa K", "DR Congo"),
   T("Uzbekistan", "uz", "Grupa K"),
-  T("Kolumbija", "co", "Grupa K"),
+  T("Kolumbija", "co", "Grupa K", "Colombia"),
   // Grupa L
-  T("Engleska", "gb-eng", "Grupa L"),
-  T("Hrvatska", "hr", "Grupa L"),
-  T("Gana", "gh", "Grupa L"),
+  T("Engleska", "gb-eng", "Grupa L", "England"),
+  T("Hrvatska", "hr", "Grupa L", "Croatia"),
+  T("Gana", "gh", "Grupa L", "Ghana"),
   T("Panama", "pa", "Grupa L"),
 ];
 
-// Group standings categories — admin gets one ranked_top_n category per group
-// so users predict the full 1-4 finish AND see who advances to round of 16.
-const WC_2026_GROUP_LETTERS = [
-  "A",
-  "B",
-  "C",
-  "D",
-  "E",
-  "F",
-  "G",
-  "H",
-  "I",
-  "J",
-  "K",
-  "L",
-];
+// Group advancement categories — user predicts which teams advance from each group.
+// FIFA WC 2026 format: 48 teams, 12 groups of 4 → 32 advance.
+// Groups A–H: top 3 advance (8 × 3 = 24)
+// Groups I–L: top 2 advance (4 × 2 = 8)
+// Total: 24 + 8 = 32
+const WC_2026_GROUPS_3 = ["A", "B", "C", "D", "E", "F", "G", "H"];
+const WC_2026_GROUPS_2 = ["I", "J", "K", "L"];
+const WC_2026_GROUP_LETTERS = [...WC_2026_GROUPS_3, ...WC_2026_GROUPS_2];
 
 const wc2026GroupCategories: TemplateCategory[] = WC_2026_GROUP_LETTERS.map(
   (letter, idx) => {
     const groupLabel = `Grupa ${letter}`;
     const groupLabelEn = `Group ${letter}`;
     const teams = WC_2026_TEAMS.filter((t) => t.group_label === groupLabel);
+    const advanceCount = WC_2026_GROUPS_3.includes(letter) ? 3 : 2;
     return {
-      name: `Poredak ${groupLabel}`,
-      name_en: `${groupLabelEn} standings`,
-      slug: `grupa-${letter.toLowerCase()}-poredak`,
-      description: `Predvidi konačan poredak ${groupLabel.toLowerCase()} (1. — 4. mjesto). Prva dva tima prolaze u nokaut fazu.`,
-      description_en: `Predict the final standings of ${groupLabelEn.toLowerCase()} (1st — 4th). Top two teams advance to the knockout stage.`,
+      name: `Ko prolazi — ${groupLabel}`,
+      name_en: `Who advances — ${groupLabelEn}`,
+      slug: `grupa-${letter.toLowerCase()}-prolaz`,
+      description:
+        advanceCount === 3
+          ? `Predvidi ${advanceCount} ekipe koje prolaze iz ${groupLabel.toLowerCase()} (1., 2. i 3. mjesto).`
+          : `Predvidi ${advanceCount} ekipe koje prolaze iz ${groupLabel.toLowerCase()} (1. i 2. mjesto).`,
+      description_en:
+        advanceCount === 3
+          ? `Predict the ${advanceCount} teams advancing from ${groupLabelEn.toLowerCase()} (1st, 2nd and 3rd place).`
+          : `Predict the ${advanceCount} teams advancing from ${groupLabelEn.toLowerCase()} (1st and 2nd place).`,
       category_type: "ranked_top_n" as CategoryType,
-      points_correct: 20,
+      points_correct: advanceCount === 3 ? 15 : 10,
       points_partial: 3,
       points_ranked_bonus: 2,
-      max_selections: 4,
+      max_selections: advanceCount,
       sort_order: 20 + idx,
       rules_md:
-        "Bodovi: 3 po tačnoj ekipi (bez obzira na poziciju), +2 za tačnu poziciju, ukupno 20 za savršen poredak grupe.",
+        `Bodovi: 3 po tačnoj ekipi (bez obzira na poziciju), +2 za tačan plasman. Odaberi ${advanceCount} ekipe.`,
       rules_md_en:
-        "Scoring: 3 per correct team (regardless of position), +2 for exact position, 20 total for a perfect group standings prediction.",
+        `Scoring: 3 per correct team (regardless of position), +2 for exact placement. Select ${advanceCount} teams.`,
       options: teams,
     };
   },
@@ -215,8 +231,14 @@ const worldCup2026: PredictorTemplate = {
   accent_color: "gold",
   logo_url: "/images/logos/wc-logo.png",
   banner_image_url: "/images/logos/wc-logo.png",
-  // Auto-import all 104 official matches on creation
   defaultMatchTemplateId: "wc-2026-full",
+  defaultMatchScoring: {
+    points_exact: 3,
+    points_diff: 0,
+    points_winner: 1,
+  },
+  theme_music_enabled: true,
+  theme_background_image: "/wc2026/wc-bg-2.webp",
   prize_pool_amount: 1000,
   prize_pool_currency: "EUR",
   rules_md:
@@ -240,22 +262,6 @@ const worldCup2026: PredictorTemplate = {
       options: WC_2026_TEAMS,
     },
     {
-      name: "Top 4 ekipe (po redoslijedu)",
-      name_en: "Top 4 teams (ordered)",
-      slug: "top-4",
-      description:
-        "Predvidi prva 4 mjesta — 1. mjesto, 2. mjesto, polufinalisti.",
-      description_en:
-        "Predict the top 4 — 1st, 2nd, and the two semi-finalists.",
-      category_type: "ranked_top_n",
-      points_correct: 80,
-      points_partial: 10,
-      points_ranked_bonus: 5,
-      max_selections: 4,
-      sort_order: 2,
-      options: WC_2026_TEAMS,
-    },
-    {
       name: "Zlatna kopačka (najbolji strijelac)",
       name_en: "Golden Boot (top scorer)",
       slug: "zlatna-kopacka",
@@ -264,29 +270,7 @@ const worldCup2026: PredictorTemplate = {
       category_type: "free_text",
       points_correct: 50,
       points_partial: 0,
-      sort_order: 3,
-    },
-    {
-      name: "Najbolji igrač turnira (Zlatna lopta)",
-      name_en: "Player of the tournament (Golden Ball)",
-      slug: "najbolji-igrac",
-      description: "Ko će biti proglašen najboljim igračem turnira?",
-      description_en: "Who will be named player of the tournament?",
-      category_type: "free_text",
-      points_correct: 50,
-      points_partial: 0,
-      sort_order: 4,
-    },
-    {
-      name: "Najbolji golman (Zlatna rukavica)",
-      name_en: "Best goalkeeper (Golden Glove)",
-      slug: "najbolji-golman",
-      description: "Ko će biti najbolji golman turnira?",
-      description_en: "Who will be the tournament's best goalkeeper?",
-      category_type: "free_text",
-      points_correct: 40,
-      points_partial: 0,
-      sort_order: 5,
+      sort_order: 2,
     },
     {
       name: "Najbolji asistent",
@@ -297,95 +281,7 @@ const worldCup2026: PredictorTemplate = {
       category_type: "free_text",
       points_correct: 40,
       points_partial: 0,
-      sort_order: 6,
-    },
-    {
-      name: "Iznenađenje turnira",
-      name_en: "Surprise team",
-      slug: "iznenadjenje",
-      description:
-        "Ekipa koja prevaziđe sva očekivanja (npr. doseže polufinale kao autsajder).",
-      description_en:
-        "The team that exceeds all expectations (e.g. reaches the semi-finals as an underdog).",
-      category_type: "team_selection",
-      points_correct: 30,
-      max_selections: 1,
-      sort_order: 7,
-      options: WC_2026_TEAMS,
-    },
-    {
-      name: "Najveće razočarenje turnira",
-      name_en: "Biggest disappointment",
-      slug: "razocarenje",
-      description:
-        "Favorit koji ispada u ranoj fazi i podbacuje sva očekivanja.",
-      description_en:
-        "A favourite that crashes out early and fails to live up to expectations.",
-      category_type: "team_selection",
-      points_correct: 30,
-      max_selections: 1,
-      sort_order: 8,
-      options: WC_2026_TEAMS,
-    },
-    {
-      name: "Ukupan broj golova na turniru",
-      name_en: "Total goals in the tournament",
-      slug: "ukupno-golova",
-      description: "Pogodi tačan broj golova postignutih u svim utakmicama.",
-      description_en: "Guess the exact total of goals scored across all matches.",
-      category_type: "numeric",
-      points_correct: 30,
-      points_partial: 10,
-      sort_order: 9,
-    },
-    {
-      name: "Tačan rezultat finala",
-      name_en: "Exact final score",
-      slug: "rezultat-finala",
-      description: "Predvidi tačan rezultat finala (regularno vrijeme).",
-      description_en: "Predict the exact final score (regular time).",
-      category_type: "exact_score",
-      points_correct: 75,
-      points_partial: 15,
-      sort_order: 10,
-    },
-    {
-      name: "Pobjednici grupa (12 ekipa)",
-      name_en: "Group winners (12 teams)",
-      slug: "pobjednici-grupa",
-      description:
-        "Predvidi po jednu ekipu koja osvaja svaku od 12 grupa (1. mjesto).",
-      description_en:
-        "Pick the team that wins each of the 12 groups (1st place).",
-      category_type: "multiple_choice",
-      points_correct: 60,
-      points_partial: 5,
-      max_selections: 12,
-      sort_order: 11,
-      rules_md:
-        "Tačno predviđen pobjednik grupe: 5 poena. Bonus 60 ako su svi tačni.",
-      rules_md_en:
-        "Each correct group winner: 5 points. Bonus 60 if all are correct.",
-      options: WC_2026_TEAMS,
-    },
-    {
-      name: "Šesnaestina finala — 32 ekipa koje prolaze",
-      name_en: "Round of 32 — 32 teams advancing",
-      slug: "sesnaestina-finala-32",
-      description:
-        "Predvidi 32 ekipe koje prolaze u nokaut fazu (Round of 32). Minimalno 2 po grupi prolaze automatski (1. i 2. mjesto), dodatnih 8 najboljih 3. plasiranih popunjava do 32.",
-      description_en:
-        "Predict the 32 teams advancing to the knockout stage (Round of 32). Two per group qualify automatically (1st & 2nd); the best 8 third-placed teams round it out to 32.",
-      category_type: "multiple_choice",
-      points_correct: 80,
-      points_partial: 3,
-      max_selections: 32,
-      sort_order: 12,
-      rules_md:
-        "Pravilo: prva 2 iz svake grupe prolaze automatski (24 ekipe). Dodatnih 8 najboljih 3. plasiranih popunjava broj na 32. Tip: nemoj ostaviti grupe bez minimum 2 ekipe.",
-      rules_md_en:
-        "Rule: top 2 from each group auto-qualify (24 teams). The best 8 third-placed teams round it out to 32. Tip: never leave a group with less than 2 teams.",
-      options: WC_2026_TEAMS,
+      sort_order: 3,
     },
     ...wc2026GroupCategories,
   ],
@@ -412,12 +308,12 @@ const worldCup2026: PredictorTemplate = {
     },
     {
       kind: "rule",
-      title: "Bodovanje rezultata",
-      title_en: "Result scoring",
+      title: "Bodovanje utakmica",
+      title_en: "Match scoring",
       body_md:
-        "Tačan rezultat finala = 75 poena. Tačan pobjednik finala (bez pogađanja golova) = 15 poena.",
+        "Tačan rezultat = 3 boda. Pogođen pobjednik ili neriješeno = 1 bod. Promašen ishod = 0 bodova.",
       body_md_en:
-        "Exact final score = 75 points. Correct final winner only (no goal match) = 15 points.",
+        "Exact score = 3 points. Correct outcome (winner or draw) = 1 point. Wrong prediction = 0 points.",
       sort_order: 3,
     },
     {
