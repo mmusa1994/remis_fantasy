@@ -6,6 +6,11 @@
     "successLabel": "Success",
     "errorLabel": "Error"
   },
+  "locked": "Locked",
+  "locksAt": "Locks at",
+  "limits": {
+    "maxGroupsWith3": "You already have 8 groups with 3 teams. This group must stay at 2."
+  },
   "hero": {
     "title": "Predict. Compete. Win.",
     "subtitle": "The official Remis Predictor. call group standings, finalists, top scorers and the champion of the world's biggest tournaments. One bracket. One leaderboard. Real rewards."

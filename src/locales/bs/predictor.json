@@ -6,6 +6,11 @@
     "successLabel": "Uspješno",
     "errorLabel": "Greška"
   },
+  "locked": "Zaključano",
+  "locksAt": "Zaključava se",
+  "limits": {
+    "maxGroupsWith3": "Već imaš 8 grupa sa 3 ekipe. Ova grupa mora ostati na 2."
+  },
   "hero": {
     "title": "Predvidi. Takmiči se. Pobijedi.",
     "subtitle": "Zvanični Remis Predictor. pogodi poredak u grupama, finaliste, najbolje strijelce i prvaka najvećih svjetskih turnira. Jedan tip. Jedna tabela. Prave nagrade."

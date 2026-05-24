@@ -188,34 +188,32 @@ const WC_2026_GROUPS_3 = ["A", "B", "C", "D", "E", "F", "G", "H"];
 const WC_2026_GROUPS_2 = ["I", "J", "K", "L"];
 const WC_2026_GROUP_LETTERS = [...WC_2026_GROUPS_3, ...WC_2026_GROUPS_2];
 
+// All 12 groups allow 2 or 3 selections. The cross-category constraint
+// (max 8 groups with 3 picks, rest must have 2, total = 32) is enforced
+// on the public prediction page via the "grupa-prolaz" slug pattern.
 const wc2026GroupCategories: TemplateCategory[] = WC_2026_GROUP_LETTERS.map(
   (letter, idx) => {
     const groupLabel = `Grupa ${letter}`;
     const groupLabelEn = `Group ${letter}`;
     const teams = WC_2026_TEAMS.filter((t) => t.group_label === groupLabel);
-    const advanceCount = WC_2026_GROUPS_3.includes(letter) ? 3 : 2;
     return {
-      name: `Ko prolazi. ${groupLabel}`,
-      name_en: `Who advances. ${groupLabelEn}`,
+      name: `Ko prolazi - ${groupLabel}`,
+      name_en: `Who advances - ${groupLabelEn}`,
       slug: `grupa-${letter.toLowerCase()}-prolaz`,
       description:
-        advanceCount === 3
-          ? `Predvidi ${advanceCount} ekipe koje prolaze iz ${groupLabel.toLowerCase()} (1., 2. i 3. mjesto).`
-          : `Predvidi ${advanceCount} ekipe koje prolaze iz ${groupLabel.toLowerCase()} (1. i 2. mjesto).`,
+        `Odaberi 2 ili 3 ekipe koje prolaze iz ${groupLabel.toLowerCase()}. Ukupno 32 ekipe moraju proći (max 8 grupa sa po 3).`,
       description_en:
-        advanceCount === 3
-          ? `Predict the ${advanceCount} teams advancing from ${groupLabelEn.toLowerCase()} (1st, 2nd and 3rd place).`
-          : `Predict the ${advanceCount} teams advancing from ${groupLabelEn.toLowerCase()} (1st and 2nd place).`,
+        `Pick 2 or 3 teams advancing from ${groupLabelEn.toLowerCase()}. Total 32 teams must advance (max 8 groups with 3).`,
       category_type: "ranked_top_n" as CategoryType,
-      points_correct: advanceCount === 3 ? 15 : 10,
+      points_correct: 15,
       points_partial: 3,
       points_ranked_bonus: 2,
-      max_selections: advanceCount,
+      max_selections: 3,
       sort_order: 20 + idx,
       rules_md:
-        `Bodovi: 3 po tačnoj ekipi (bez obzira na poziciju), +2 za tačan plasman. Odaberi ${advanceCount} ekipe.`,
+        "Odaberi 2 ili 3 ekipe po grupi. Max 8 grupa smije imati 3 odabrane ekipe (ukupno 32 prolaze).",
       rules_md_en:
-        `Scoring: 3 per correct team (regardless of position), +2 for exact placement. Select ${advanceCount} teams.`,
+        "Pick 2 or 3 teams per group. Max 8 groups can have 3 picks (32 total advance).",
       options: teams,
     };
   },

@@ -830,6 +830,28 @@ function collectIncompleteIssues(
         break;
     }
   }
+
+  // Cross-category constraint: "grupa-*-prolaz" categories
+  // Max 8 groups can have 3 picks, rest must have 2. Total must be 32.
+  const groupCats = tournament.categories.filter((c) =>
+    c.slug.match(/^grupa-[a-l]-prolaz$/),
+  );
+  if (groupCats.length === 12) {
+    const groupsWith3 = groupCats.filter((c) => {
+      const d = draft[c.id];
+      return (d?.selected ?? []).length === 3;
+    }).length;
+    if (groupsWith3 > 8) {
+      issues.push({
+        id: groupCats[0].id,
+        msg: t(
+          `Max 8 grupa smije imati 3 odabrane ekipe (trenutno ${groupsWith3})`,
+          `Max 8 groups can have 3 picks (currently ${groupsWith3})`,
+        ),
+      });
+    }
+  }
+
   return issues;
 }
 
@@ -1138,7 +1160,14 @@ function PredictionsTab({
         </div>
       )}
 
-      {tournament.categories.map((cat) => {
+      {(() => {
+        const groupCatIds = tournament.categories
+          .filter((c) => /^grupa-[a-l]-prolaz$/.test(c.slug))
+          .map((c) => c.id);
+        const gw3 = groupCatIds.filter(
+          (id) => (draft[id]?.selected ?? []).length >= 3,
+        ).length;
+        return tournament.categories.map((cat) => {
         const d = draft[cat.id] ?? emptyDraft();
         const locked = isLockedClient(tournament, cat);
         const disabled = locked || authStatus !== "authenticated";
@@ -1177,7 +1206,7 @@ function PredictionsTab({
               {locked && (
                 <span className={`flex-shrink-0 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${ac.bgGhostInk} inline-flex items-center gap-1 whitespace-nowrap`}>
                   <Lock className="w-3 h-3" />
-                  Locked
+                  {t("locked", "Locked")}
                 </span>
               )}
             </div>
@@ -1190,17 +1219,18 @@ function PredictionsTab({
               showResults={isFinished}
               theme={theme}
               ac={ac}
+              groupsWith3Count={/^grupa-[a-l]-prolaz$/.test(cat.slug) ? gw3 : undefined}
             />
 
             {cat.lock_at && !locked && (
               <p className="mt-3 text-xs text-theme-text-secondary inline-flex items-center gap-1">
                 <Lock className="w-3 h-3" />
-                Locks at {new Date(cat.lock_at).toLocaleString()}
+                {t("locksAt", "Locks at")} {new Date(cat.lock_at).toLocaleString()}
               </p>
             )}
           </div>
         );
-      })}
+      }); })()}
 
       {error && (
         <div className="rounded-2xl border border-red-500/30 bg-red-500/10 text-red-400 text-sm p-4 flex items-start gap-2">
@@ -1272,6 +1302,7 @@ function CategoryInput({
   showResults,
   theme,
   ac,
+  groupsWith3Count,
 }: {
   category: CategoryWithOptions;
   draft: DraftEntry;
@@ -1280,6 +1311,7 @@ function CategoryInput({
   showResults: boolean;
   theme: string;
   ac: AccentClasses;
+  groupsWith3Count?: number;
 }) {
   const accentBg = ac.bg;
   const accentText = ac.text;
@@ -1379,6 +1411,22 @@ function CategoryInput({
         return;
       }
     }
+    // Cross-group constraint: max 8 groups can have 3 picks
+    const isGroupCat = /^grupa-[a-l]-prolaz$/.test(category.slug);
+    if (
+      isGroupCat &&
+      cur.length === 2 &&
+      groupsWith3Count != null &&
+      groupsWith3Count >= 8
+    ) {
+      flashBlock(
+        t("limits.maxGroupsWith3", {
+          defaultValue: "Vec imas 8 grupa sa 3 ekipe. Ova grupa mora ostati na 2.",
+        }) as string,
+      );
+      return;
+    }
+
     if (cur.length >= (category.max_selections || 1)) {
       if (category.category_type === "ranked_top_n") {
         cur.push(id);

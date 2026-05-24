@@ -3284,46 +3284,55 @@ function ScoringTab({
             {t("owner.scoringTab.leaderboardEmpty")}
           </div>
         ) : (
-          <div
-            className={`overflow-x-auto rounded-xl border ${
-              dark ? "border-white/10" : "border-gray-200"
-            }`}
-          >
-            <table className="w-full min-w-[480px] text-sm">
-              <thead
-                className={`text-[11px] uppercase tracking-wider ${
-                  dark
-                    ? "bg-white/5 text-gray-400"
-                    : "bg-gray-50 text-gray-500"
-                }`}
-              >
-                <tr>
-                  <th className="px-4 py-2 text-left">{t("owner.scoringTab.rankHeader")}</th>
-                  <th className="px-4 py-2 text-left">{t("owner.scoringTab.userHeader")}</th>
-                  <th className="px-4 py-2 text-right">{t("owner.scoringTab.pointsHeader")}</th>
-                </tr>
-              </thead>
-              <tbody className={dark ? "divide-y divide-white/5" : "divide-y divide-gray-100"}>
-                {standings.map((s: any, i: number) => (
-                  <tr key={s.user_id || i} className={dark ? "hover:bg-white/5" : "hover:bg-gray-50"}>
-                    <td className="px-4 py-2 text-theme-text-secondary">{i + 1}</td>
-                    <td className="px-4 py-2">
-                      <div className="font-medium text-theme-heading-primary">
-                        {s.user_display_name || s.display_name || "-"}
-                      </div>
-                      <div className="text-[11px] text-theme-text-secondary">
-                        {s.user_email}
-                      </div>
-                    </td>
-                    <td
-                      className={`px-4 py-2 text-right font-mono font-bold ${cls.accentText(dark)}`}
-                    >
-                      {s.total_points ?? s.points ?? 0}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-1.5">
+            {standings.map((s: any, i: number) => {
+              const rank = i + 1;
+              const isTop3 = rank <= 3;
+              const medalColors = [
+                "from-amber-400 to-amber-500",
+                "from-gray-300 to-gray-400",
+                "from-amber-600 to-amber-700",
+              ];
+              return (
+                <div
+                  key={s.user_id || i}
+                  className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors ${
+                    dark
+                      ? "border-white/8 bg-white/[0.02] hover:bg-white/[0.05]"
+                      : "border-gray-200/80 bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  <div
+                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-xs font-black ${
+                      isTop3
+                        ? `bg-gradient-to-br ${medalColors[rank - 1]} text-white shadow-sm`
+                        : dark
+                          ? "bg-white/5 text-gray-500"
+                          : "bg-gray-100 text-gray-400"
+                    }`}
+                  >
+                    {rank}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-theme-heading-primary">
+                      {s.user_display_name || s.display_name || "-"}
+                    </p>
+                    <p className="truncate text-[11px] text-theme-text-secondary">
+                      {s.user_email}
+                    </p>
+                  </div>
+                  <div
+                    className={`flex-shrink-0 rounded-lg px-2.5 py-1 text-right font-mono text-sm font-black ${
+                      dark
+                        ? "bg-predictor-primary/10 text-predictor-accent-dark"
+                        : "bg-predictor-primary/15 text-predictor-accent-light"
+                    }`}
+                  >
+                    {s.total_points ?? s.points ?? 0}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )
       ) : (
@@ -3365,75 +3374,66 @@ function ScoringTab({
               {t("owner.scoringTab.manualEmpty")}
             </div>
           ) : (
-            <div
-              className={`overflow-x-auto rounded-xl border ${
-                dark ? "border-white/10" : "border-gray-200"
-              }`}
-            >
-              <table className="w-full min-w-[600px] text-sm">
-                <thead
-                  className={`text-[11px] uppercase tracking-wider ${
-                    dark ? "bg-white/5 text-gray-400" : "bg-gray-50 text-gray-500"
-                  }`}
-                >
-                  <tr>
-                    <th className="px-3 py-2 text-left">{t("owner.scoringTab.userHeader")}</th>
-                    <th className="px-3 py-2 text-left">{t("owner.scoringTab.predictionHeader")}</th>
-                    <th className="px-3 py-2 text-right">{t("owner.scoringTab.pointsHeader")}</th>
-                    <th className="px-3 py-2 text-center">{t("owner.scoringTab.lockedHeader")}</th>
-                  </tr>
-                </thead>
-                <tbody className={dark ? "divide-y divide-white/5" : "divide-y divide-gray-100"}>
-                  {filtered.map((p: any) => (
-                    <tr key={p.id}>
-                      <td className="px-3 py-2">
-                        <div className="font-medium text-theme-heading-primary">
+            <div className="space-y-1.5">
+              {filtered.map((p: any) => {
+                const predValue =
+                  p.text_value ||
+                  (p.numeric_value != null ? String(p.numeric_value) : null) ||
+                  (p.score_home != null ? `${p.score_home}:${p.score_away}` : null) ||
+                  (Array.isArray(p.selected_option_ids) && p.selected_option_ids.length > 0
+                    ? t("owner.scoringTab.selectionsCount", { count: p.selected_option_ids.length })
+                    : "-");
+                return (
+                  <div
+                    key={p.id}
+                    className={`rounded-xl border px-3 py-2.5 ${
+                      dark
+                        ? "border-white/8 bg-white/[0.02]"
+                        : "border-gray-200/80 bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-theme-heading-primary">
                           {p.user_display_name || "-"}
-                        </div>
-                        <div className="text-[10px] text-theme-text-secondary">
+                        </p>
+                        <p className="truncate text-[11px] text-theme-text-secondary">
                           {p.user_email}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-xs text-theme-text-secondary">
-                        {p.text_value ||
-                          (p.numeric_value != null ? String(p.numeric_value) : null) ||
-                          (p.score_home != null
-                            ? `${p.score_home}:${p.score_away}`
-                            : null) ||
-                          (Array.isArray(p.selected_option_ids) &&
-                          p.selected_option_ids.length > 0
-                            ? t("owner.scoringTab.selectionsCount", {
-                                count: p.selected_option_ids.length,
-                              })
-                            : "-")}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <input
-                          type="number"
-                          defaultValue={p.points_awarded ?? 0}
-                          onBlur={(e) => {
-                            const v = Number(e.target.value);
-                            if (v !== (p.points_awarded ?? 0)) setPoints(p.id, v);
-                          }}
-                          className={`w-20 rounded-md border px-2 py-1 text-right font-mono text-sm outline-none ${
-                            dark
-                              ? "border-white/10 bg-black/30 text-predictor-accent-dark focus:border-predictor-primary/60"
-                              : "border-gray-300 bg-white text-predictor-accent-light focus:border-predictor-primary"
-                          }`}
-                        />
-                      </td>
-                      <td className="px-3 py-2 text-center">
+                        </p>
+                      </div>
+                      <label className="flex flex-shrink-0 items-center gap-1.5">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 accent-predictor-primary"
+                          className="h-3.5 w-3.5 accent-predictor-primary"
                           checked={!!p.locked}
                           onChange={(e) => toggleLock(p.id, e.target.checked)}
                         />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <span className={`text-[10px] ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                          {t("owner.scoringTab.lockedHeader", "Locked")}
+                        </span>
+                      </label>
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between gap-2">
+                      <p className={`text-xs ${dark ? "text-gray-400" : "text-gray-500"}`}>
+                        {predValue}
+                      </p>
+                      <input
+                        type="number"
+                        defaultValue={p.points_awarded ?? 0}
+                        onBlur={(e) => {
+                          const v = Number(e.target.value);
+                          if (v !== (p.points_awarded ?? 0)) setPoints(p.id, v);
+                        }}
+                        className={`w-16 rounded-lg border px-2 py-1 text-right font-mono text-sm font-bold outline-none ${
+                          dark
+                            ? "border-white/10 bg-black/30 text-predictor-accent-dark focus:border-predictor-primary/60"
+                            : "border-gray-300 bg-white text-predictor-accent-light focus:border-predictor-primary"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
