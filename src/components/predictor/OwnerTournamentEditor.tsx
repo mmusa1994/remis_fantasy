@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -2037,6 +2038,7 @@ function MatchesTab({
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Match | null>(null);
+  const [lockingRound, setLockingRound] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2058,6 +2060,51 @@ function MatchesTab({
     } else showToast(t("owner.toast.genericError"), false);
   }
 
+  async function lockRound(matchday: number) {
+    const matchesInRound = list.filter((m) => m.matchday === matchday && m.status === "scheduled");
+    if (matchesInRound.length === 0) {
+      showToast(lang === "bs" ? "Nema otvorenih utakmica u tom kolu" : "No open matches in that round", false);
+      return;
+    }
+    if (!confirm(
+      lang === "bs"
+        ? `Zaključati ${matchesInRound.length} utakmica u ${matchday}. kolu?`
+        : `Lock ${matchesInRound.length} matches in matchday ${matchday}?`
+    )) return;
+    setLockingRound(true);
+    try {
+      for (const m of matchesInRound) {
+        await fetch("/api/predictor/owner/matches", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: m.id, status: "live" }),
+        });
+      }
+      showToast(
+        lang === "bs"
+          ? `${matchday}. kolo zaključano (${matchesInRound.length} utakmica)`
+          : `Matchday ${matchday} locked (${matchesInRound.length} matches)`,
+      );
+      load();
+    } catch {
+      showToast(t("owner.toast.genericError"), false);
+    } finally {
+      setLockingRound(false);
+    }
+  }
+
+  const matchdays = useMemo(() => {
+    const mds = new Map<number, { total: number; open: number }>();
+    for (const m of list) {
+      if (m.matchday == null) continue;
+      const cur = mds.get(m.matchday) ?? { total: 0, open: 0 };
+      cur.total++;
+      if (m.status === "scheduled") cur.open++;
+      mds.set(m.matchday, cur);
+    }
+    return Array.from(mds.entries()).sort((a, b) => a[0] - b[0]);
+  }, [list]);
+
   return (
     <>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -2073,6 +2120,40 @@ function MatchesTab({
           + {t("owner.matchesTab.new")}
         </button>
       </div>
+
+      {/* Lock round controls */}
+      {matchdays.length > 0 && (
+        <div className={`mb-4 flex flex-wrap items-center gap-2 rounded-xl border p-3 ${
+          dark ? "border-white/8 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"
+        }`}>
+          <span className={`text-[11px] font-bold uppercase tracking-wider ${dark ? "text-gray-400" : "text-gray-500"}`}>
+            {lang === "bs" ? "Zaključaj kolo" : "Lock round"}:
+          </span>
+          {matchdays.map(([md, info]) => (
+            <button
+              key={md}
+              type="button"
+              disabled={lockingRound || info.open === 0}
+              onClick={() => lockRound(md)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all ${
+                info.open === 0
+                  ? dark
+                    ? "border-white/5 bg-white/[0.02] text-gray-600 cursor-default"
+                    : "border-gray-200 bg-gray-100 text-gray-400 cursor-default"
+                  : dark
+                    ? "border-predictor-primary/40 bg-predictor-primary/10 text-predictor-accent-dark hover:bg-predictor-primary/20"
+                    : "border-predictor-primary/60 bg-predictor-primary/15 text-predictor-accent-light hover:bg-predictor-primary/25"
+              }`}
+            >
+              <Lock className="w-3 h-3" />
+              {lang === "bs" ? `${md}. kolo` : `MD${md}`}
+              <span className={`text-[10px] ${info.open === 0 ? "opacity-50" : ""}`}>
+                ({info.open}/{info.total})
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <p className="py-10 text-center text-sm text-theme-text-secondary">

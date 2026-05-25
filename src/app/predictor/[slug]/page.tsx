@@ -632,6 +632,7 @@ export default function TournamentDetailPage() {
               currentUserId={currentUserId}
               isWC={isWC}
               themeBgSrc={themeBg}
+              slug={String(slug)}
             />
           )}
         </div>
@@ -1986,6 +1987,7 @@ function StandingsTab({
   currentUserId,
   isWC = false,
   themeBgSrc = null,
+  slug,
 }: {
   standings: StandingsRow[];
   theme: string;
@@ -1993,10 +1995,30 @@ function StandingsTab({
   currentUserId?: string;
   isWC?: boolean;
   themeBgSrc?: string | null;
+  slug: string;
 }) {
+  const { t, i18n } = useTranslation("predictor");
+  const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
   const accentText = ac.text;
   const accentBg = ac.bg;
   const dark = theme === "dark";
+  const [modalUser, setModalUser] = useState<{ id: string; name: string } | null>(null);
+  const [modalData, setModalData] = useState<any>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+
+  const openModal = async (userId: string, name: string) => {
+    setModalUser({ id: userId, name });
+    setModalLoading(true);
+    setModalData(null);
+    try {
+      const res = await fetch(
+        `/api/predictor/tournaments/${slug}/user-predictions?user_id=${userId}`,
+      );
+      if (res.ok) setModalData(await res.json());
+    } finally {
+      setModalLoading(false);
+    }
+  };
 
   if (standings.length === 0) {
     return (
@@ -2008,9 +2030,11 @@ function StandingsTab({
         }`}
       >
         <Trophy className="w-12 h-12 mx-auto mb-3 opacity-40" />
-        <p className="text-base font-semibold mb-1">Tabela još prazna</p>
+        <p className="text-base font-semibold mb-1">
+          {t("standings.empty", "Standings empty")}
+        </p>
         <p className="text-sm">
-          Pojavit će se čim prvi učesnici podnesu predikcije.
+          {t("standings.emptyDesc", "Will appear once participants submit predictions.")}
         </p>
       </div>
     );
@@ -2069,8 +2093,8 @@ function StandingsTab({
             ac={ac}
             currentUserId={currentUserId}
             heightClass="h-32 md:h-40"
+            onClick={() => openModal(top3[1].user_id, top3[1].user_display_name || "?")}
           />
-          {/* 1st place — center, taller */}
           <PodiumCard
             row={top3[0]}
             place={1}
@@ -2078,8 +2102,8 @@ function StandingsTab({
             ac={ac}
             currentUserId={currentUserId}
             heightClass="h-40 md:h-52"
+            onClick={() => openModal(top3[0].user_id, top3[0].user_display_name || "?")}
           />
-          {/* 3rd place — right */}
           <PodiumCard
             row={top3[2]}
             place={3}
@@ -2087,6 +2111,7 @@ function StandingsTab({
             ac={ac}
             currentUserId={currentUserId}
             heightClass="h-28 md:h-36"
+            onClick={() => openModal(top3[2].user_id, top3[2].user_display_name || "?")}
           />
         </div>
       )}
@@ -2128,7 +2153,13 @@ function StandingsTab({
             return (
               <li
                 key={s.user_id}
-                className={`relative flex items-center gap-3 px-3.5 py-2.5 transition-colors ${
+                onClick={() =>
+                  openModal(
+                    s.user_id,
+                    s.user_display_name || s.user_email?.split("@")[0] || "?",
+                  )
+                }
+                className={`relative flex items-center gap-3 px-3.5 py-2.5 transition-colors cursor-pointer ${
                   isMe
                     ? dark
                       ? `bg-gradient-to-r ${ac.gradRowDark}`
@@ -2231,6 +2262,173 @@ function StandingsTab({
           })}
         </ul>
       </div>
+
+      {/* Player predictions modal */}
+      <AnimatePresence>
+        {modalUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4"
+            onClick={() => setModalUser(null)}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl ${
+                dark
+                  ? "bg-gray-900 border border-gray-700"
+                  : "bg-white border border-gray-200 shadow-2xl"
+              }`}
+            >
+              {/* Header */}
+              <div
+                className={`sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b ${
+                  dark ? "bg-gray-900/95 border-gray-700 backdrop-blur-xl" : "bg-white/95 border-gray-200 backdrop-blur-xl"
+                }`}
+              >
+                <div className="min-w-0">
+                  <h3 className={`text-base font-black truncate ${dark ? "text-white" : "text-gray-900"}`}>
+                    {modalUser.name}
+                  </h3>
+                  <p className={`text-[11px] ${dark ? "text-gray-500" : "text-gray-500"}`}>
+                    {t("standings.modalSubtitle", "Predictions (locked only)")}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setModalUser(null)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    dark ? "hover:bg-white/10 text-gray-400" : "hover:bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-4 space-y-3">
+                {modalLoading ? (
+                  <div className="py-12 text-center">
+                    <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-2 opacity-40" />
+                    <p className={`text-sm ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                      {t("loading", "Loading...")}
+                    </p>
+                  </div>
+                ) : !modalData ? (
+                  <p className={`text-sm text-center py-8 ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                    {t("standings.modalError", "Could not load predictions.")}
+                  </p>
+                ) : (
+                  <>
+                    {/* Category predictions */}
+                    {modalData.categories
+                      ?.filter((c: any) => c.prediction)
+                      .map((c: any) => {
+                        const pred = c.prediction;
+                        const catName = lang === "en" && c.name_en ? c.name_en : c.name;
+                        let display = "";
+                        if (pred.text_value) display = pred.text_value;
+                        else if (pred.numeric_value != null) display = String(pred.numeric_value);
+                        else if (pred.score_home != null) display = `${pred.score_home} : ${pred.score_away}`;
+                        else if (pred.selected_options?.length > 0)
+                          display = pred.selected_options
+                            .map((o: any) => (lang === "en" && o.label_en ? o.label_en : o.label))
+                            .join(", ");
+                        return (
+                          <div
+                            key={c.id}
+                            className={`rounded-xl border px-3 py-2.5 ${
+                              dark ? "border-white/8 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <p className={`text-xs font-bold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>
+                                {catName}
+                              </p>
+                              {pred.is_scored && (
+                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${accentText} ${dark ? ac.bg15 : ac.bgPale}`}>
+                                  {pred.points_awarded} pts
+                                </span>
+                              )}
+                            </div>
+                            <p className={`mt-1 text-sm ${dark ? "text-white" : "text-gray-900"}`}>
+                              {display || "-"}
+                            </p>
+                            {!c.locked && (
+                              <p className={`mt-1 text-[10px] italic ${dark ? "text-gray-600" : "text-gray-400"}`}>
+                                {t("standings.notYetLocked", "Not yet locked")}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                    {/* Match predictions */}
+                    {modalData.matchPredictions?.length > 0 && (
+                      <>
+                        <div className={`mt-2 pt-2 border-t ${dark ? "border-gray-700/50" : "border-gray-200"}`}>
+                          <p className={`text-[10px] uppercase tracking-wider font-bold mb-2 ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                            {t("standings.matchPredictions", "Match predictions")}
+                          </p>
+                        </div>
+                        {modalData.matchPredictions.map((p: any) => {
+                          const m = p.match;
+                          if (!m) return null;
+                          const home = lang === "en" && m.home_team_en ? m.home_team_en : m.home_team;
+                          const away = lang === "en" && m.away_team_en ? m.away_team_en : m.away_team;
+                          const hasResult = m.home_score != null;
+                          return (
+                            <div
+                              key={p.id}
+                              className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
+                                dark ? "border-white/8 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"
+                              }`}
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-xs font-semibold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>
+                                  {home} vs {away}
+                                </p>
+                                {hasResult && (
+                                  <p className={`text-[10px] ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                                    {t("standings.finalScore", "Result")}: {m.home_score}:{m.away_score}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className={`text-sm font-black tabular-nums ${dark ? "text-white" : "text-gray-900"}`}>
+                                  {p.home_score}:{p.away_score}
+                                </span>
+                                {p.is_scored && (
+                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${accentText} ${dark ? ac.bg15 : ac.bgPale}`}>
+                                    {p.points_awarded}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* Empty state */}
+                    {modalData.categories?.filter((c: any) => c.prediction).length === 0 &&
+                     modalData.matchPredictions?.length === 0 && (
+                      <p className={`text-sm text-center py-8 ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                        {t("standings.noPredictions", "No locked predictions yet.")}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -2307,6 +2505,7 @@ function PodiumCard({
   ac,
   currentUserId,
   heightClass,
+  onClick,
 }: {
   row: StandingsRow;
   place: 1 | 2 | 3;
@@ -2314,6 +2513,7 @@ function PodiumCard({
   ac: AccentClasses;
   currentUserId?: string;
   heightClass: string;
+  onClick?: () => void;
 }) {
   const dark = theme === "dark";
   const isMe = currentUserId === row.user_id;
@@ -2335,7 +2535,8 @@ function PodiumCard({
 
   return (
     <div
-      className={`relative rounded-3xl border-2 p-3 md:p-4 ${colors} ${heightClass} flex flex-col justify-end ${
+      onClick={onClick}
+      className={`relative rounded-3xl border-2 p-3 md:p-4 ${colors} ${heightClass} flex flex-col justify-end cursor-pointer transition-transform hover:scale-[1.02] ${
         isMe ? `ring-2 ${ac.ring500_60}` : ""
       }`}
     >

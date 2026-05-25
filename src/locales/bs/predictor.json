@@ -29,6 +29,16 @@
     "requestAccess": "Pogledaj i zatraži učešće",
     "openPredictor": "Otvori predictor"
   },
+  "standings": {
+    "empty": "Tabela jos prazna",
+    "emptyDesc": "Pojavit ce se cim prvi ucesnici podnesu predikcije.",
+    "modalSubtitle": "Predikcije (samo zakljucane)",
+    "modalError": "Greska pri ucitavanju predikcija.",
+    "matchPredictions": "Predikcije utakmica",
+    "finalScore": "Rezultat",
+    "notYetLocked": "Jos nije zakljucano",
+    "noPredictions": "Nema zakljucanih predikcija."
+  },
   "validation": {
     "savedIncomplete": "Sačuvano, ali ove predikcije još nisu kompletne"
   },

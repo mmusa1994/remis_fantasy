@@ -29,6 +29,16 @@
     "requestAccess": "View and request access",
     "openPredictor": "Open predictor"
   },
+  "standings": {
+    "empty": "Standings empty",
+    "emptyDesc": "Will appear once participants submit predictions.",
+    "modalSubtitle": "Predictions (locked only)",
+    "modalError": "Could not load predictions.",
+    "matchPredictions": "Match predictions",
+    "finalScore": "Result",
+    "notYetLocked": "Not yet locked",
+    "noPredictions": "No locked predictions yet."
+  },
   "validation": {
     "savedIncomplete": "Saved, but these picks aren't complete yet"
   },
