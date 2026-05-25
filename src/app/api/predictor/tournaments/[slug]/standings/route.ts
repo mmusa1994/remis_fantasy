@@ -107,6 +107,62 @@ export async function GET(
     return correctB - correctA;
   });
 
+  // Fetch key predictions (winner + top scorer) for inline display
+  const { data: winnerCat } = await supabaseServer
+    .from("predictor_categories")
+    .select("id")
+    .eq("tournament_id", tournament.id)
+    .eq("slug", "pobjednik")
+    .maybeSingle();
+
+  const { data: scorerCat } = await supabaseServer
+    .from("predictor_categories")
+    .select("id")
+    .eq("tournament_id", tournament.id)
+    .in("slug", ["zlatna-kopacka", "top-scorer", "najbolji-strijelac"])
+    .maybeSingle();
+
+  type KeyPick = { winner_flag?: string; winner_name?: string; top_scorer?: string };
+  const keyPicks = new Map<string, KeyPick>();
+
+  if (winnerCat) {
+    const { data: winnerPreds } = await supabaseServer
+      .from("predictor_predictions")
+      .select("user_id, selected_option_ids")
+      .eq("category_id", winnerCat.id);
+    if (winnerPreds?.length) {
+      const optIds = winnerPreds.flatMap((p: any) => p.selected_option_ids ?? []);
+      const { data: opts } = await supabaseServer
+        .from("predictor_options")
+        .select("id, label, image_url")
+        .in("id", optIds);
+      const optMap = new Map((opts ?? []).map((o: any) => [o.id, o]));
+      for (const p of winnerPreds) {
+        const firstOpt = optMap.get((p.selected_option_ids ?? [])[0]);
+        if (firstOpt) {
+          const kp = keyPicks.get(p.user_id) ?? {};
+          kp.winner_name = firstOpt.label;
+          kp.winner_flag = firstOpt.image_url ?? undefined;
+          keyPicks.set(p.user_id, kp);
+        }
+      }
+    }
+  }
+
+  if (scorerCat) {
+    const { data: scorerPreds } = await supabaseServer
+      .from("predictor_predictions")
+      .select("user_id, text_value")
+      .eq("category_id", scorerCat.id);
+    for (const p of scorerPreds ?? []) {
+      if (p.text_value) {
+        const kp = keyPicks.get(p.user_id) ?? {};
+        kp.top_scorer = p.text_value;
+        keyPicks.set(p.user_id, kp);
+      }
+    }
+  }
+
   const standings: StandingsRow[] = sorted.map((b, idx) => ({
     user_id: b.user_id,
     user_display_name: b.user_display_name,
@@ -119,6 +175,7 @@ export async function GET(
     match_predictions_count: b.match_predictions_count,
     match_correct_count: b.match_correct_count,
     rank: idx + 1,
+    ...(keyPicks.get(b.user_id) ?? {}),
   }));
 
   return NextResponse.json(standings);

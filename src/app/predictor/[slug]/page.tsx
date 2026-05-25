@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -46,6 +47,7 @@ import {
   Ban,
   Send,
   Edit3,
+  ChevronDown,
 } from "lucide-react";
 import type {
   PredictionCategory,
@@ -2005,6 +2007,8 @@ function StandingsTab({
   const [modalUser, setModalUser] = useState<{ id: string; name: string } | null>(null);
   const [modalData, setModalData] = useState<any>(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [modalCatsOpen, setModalCatsOpen] = useState(true);
+  const [modalMatchesOpen, setModalMatchesOpen] = useState(false);
 
   const openModal = async (userId: string, name: string) => {
     setModalUser({ id: userId, name });
@@ -2159,7 +2163,7 @@ function StandingsTab({
                     s.user_display_name || s.user_email?.split("@")[0] || "?",
                   )
                 }
-                className={`relative flex items-center gap-3 px-3.5 py-2.5 transition-colors cursor-pointer ${
+                className={`relative flex items-center gap-2.5 px-3 py-2 transition-colors cursor-pointer ${
                   isMe
                     ? dark
                       ? `bg-gradient-to-r ${ac.gradRowDark}`
@@ -2170,92 +2174,67 @@ function StandingsTab({
                 }`}
               >
                 {isMe && (
-                  <span
-                    aria-hidden
-                    className={`absolute left-0 top-0 bottom-0 w-1 ${ac.bgSolid}`}
-                  />
+                  <span aria-hidden className={`absolute left-0 top-0 bottom-0 w-0.5 ${ac.bgSolid}`} />
                 )}
-                {/* Rank + avatar combined */}
-                <div className="flex items-center gap-2.5 flex-shrink-0">
-                  <span
-                    className={`w-7 text-center text-[15px] font-black tabular-nums leading-none ${
-                      isTop3
-                        ? ""
-                        : dark
-                          ? "text-gray-500"
-                          : "text-gray-400"
-                    }`}
-                  >
-                    {medal ?? s.rank}
-                  </span>
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0 ${
-                      isMe
-                        ? `bg-gradient-to-br ${ac.gradAvatarMe} ${ac.textOn} shadow-md ${ac.shadow500_30}`
-                        : isTop3
-                          ? dark
-                            ? `${ac.bg15} ${ac.textBrighter} border ${ac.border500_30}`
-                            : `${ac.bgPale} ${ac.textDeeper} border ${ac.border200}`
-                          : dark
-                            ? "bg-gray-800 text-gray-300 border border-gray-700"
-                            : "bg-gray-100 text-gray-700 border border-gray-200"
-                    }`}
-                  >
-                    {initial}
-                  </div>
+                {/* Rank */}
+                <span
+                  className={`w-6 text-center text-[13px] font-black tabular-nums leading-none flex-shrink-0 ${
+                    isTop3 ? "" : dark ? "text-gray-600" : "text-gray-400"
+                  }`}
+                >
+                  {medal ?? s.rank}
+                </span>
+                {/* Avatar */}
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${
+                    isMe
+                      ? `bg-gradient-to-br ${ac.gradAvatarMe} ${ac.textOn} shadow-sm`
+                      : dark
+                        ? "bg-gray-800 text-gray-400 border border-gray-700/60"
+                        : "bg-gray-100 text-gray-500 border border-gray-200"
+                  }`}
+                >
+                  {initial}
                 </div>
-                {/* Name + sub-stats */}
+                {/* Name + picks */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span
-                      className={`text-sm font-bold break-words leading-tight ${
-                        dark ? "text-white" : "text-gray-900"
-                      }`}
-                    >
-                      {s.user_display_name ||
-                        s.user_email?.split("@")[0] ||
-                        "Igrač"}
+                  <div className="flex items-center gap-1 leading-none">
+                    <span className={`text-[13px] font-bold truncate ${dark ? "text-white" : "text-gray-900"}`}>
+                      {s.user_display_name || s.user_email?.split("@")[0] || "?"}
                     </span>
                     {isMe && (
-                      <span
-                        className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                          dark ? ac.bgGhostDark : ac.bgGhostLight
-                        }`}
-                      >
-                        ti
+                      <span className={`text-[8px] font-black uppercase px-1 py-px rounded ${dark ? ac.bgGhostDark : ac.bgGhostLight}`}>
+                        {t("standings.you", "you")}
                       </span>
                     )}
                   </div>
-                  <div
-                    className={`mt-0.5 text-[11px] flex items-center gap-2 ${dark ? "text-gray-500" : "text-gray-500"}`}
-                  >
-                    <span className="inline-flex items-baseline gap-1">
-                      <span className="opacity-60">kategorije</span>
-                      <span className={`font-bold tabular-nums ${dark ? "text-gray-300" : "text-gray-700"}`}>
-                        {s.category_points}
-                      </span>
-                    </span>
-                    <span className="opacity-30">·</span>
-                    <span className="inline-flex items-baseline gap-1">
-                      <span className="opacity-60">utakmice</span>
-                      <span className={`font-bold tabular-nums ${dark ? "text-gray-300" : "text-gray-700"}`}>
-                        {s.match_points}
-                      </span>
-                    </span>
-                  </div>
+                  {(s.winner_flag || s.top_scorer) && (
+                    <div className="mt-0.5 flex items-center gap-1">
+                      {s.winner_flag && (
+                        <span className={`inline-flex items-center gap-0.5 text-[9px] font-medium ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={s.winner_flag} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px]" />
+                          {(s.winner_name ?? "").length > 12
+                            ? (s.winner_name ?? "").replace(/^Bosna i Hercegovina$/, "BIH").replace(/^Bosnia and Herzegovina$/, "BIH").replace(/^Južna Afrika$/, "J. Afrika").replace(/^South Africa$/, "S. Africa").replace(/^Južna Koreja$/, "J. Koreja").replace(/^South Korea$/, "S. Korea").replace(/^Saudijska Arabija$/, "S. Arabija").replace(/^Saudi Arabia$/, "S. Arabia").replace(/^Obala Slonovače$/, "O. Slonovače").replace(/^Ivory Coast$/, "Ivory C.").replace(/^Novi Zeland$/, "N. Zeland").replace(/^New Zealand$/, "N. Zealand").slice(0, 14)
+                            : s.winner_name}
+                        </span>
+                      )}
+                      {s.winner_flag && s.top_scorer && (
+                        <span className={`text-[8px] ${dark ? "text-gray-700" : "text-gray-300"}`}>|</span>
+                      )}
+                      {s.top_scorer && (
+                        <span className={`text-[9px] font-medium truncate max-w-[70px] ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                          {s.top_scorer}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {/* Total points */}
-                <div className="flex-shrink-0 text-right">
-                  <div
-                    className={`inline-flex items-baseline gap-1 ${accentText}`}
-                  >
-                    <span className="text-xl font-black tabular-nums leading-none">
-                      {s.total_points}
-                    </span>
-                    <span className="text-[9px] uppercase font-bold tracking-wider leading-none">
-                      pts
-                    </span>
-                  </div>
+                {/* Points */}
+                <div className={`flex-shrink-0 text-right ${accentText}`}>
+                  <span className="text-[17px] font-black tabular-nums leading-none">
+                    {s.total_points}
+                  </span>
                 </div>
               </li>
             );
@@ -2263,46 +2242,47 @@ function StandingsTab({
         </ul>
       </div>
 
-      {/* Player predictions modal */}
+      {/* Player predictions modal (Portal to escape stacking contexts) */}
+      {typeof document !== "undefined" && createPortal(
       <AnimatePresence>
         {modalUser && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
             onClick={() => setModalUser(null)}
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <motion.div
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 40, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              initial={{ y: 30, scale: 0.97, opacity: 0 }}
+              animate={{ y: 0, scale: 1, opacity: 1 }}
+              exit={{ y: 20, scale: 0.97, opacity: 0 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
               onClick={(e) => e.stopPropagation()}
-              className={`relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl ${
+              className={`relative w-full max-w-md max-h-[80vh] flex flex-col rounded-2xl overflow-hidden ${
                 dark
-                  ? "bg-gray-900 border border-gray-700"
+                  ? "bg-gray-900 border border-gray-700/80 shadow-2xl shadow-black/40"
                   : "bg-white border border-gray-200 shadow-2xl"
               }`}
             >
               {/* Header */}
               <div
-                className={`sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b ${
-                  dark ? "bg-gray-900/95 border-gray-700 backdrop-blur-xl" : "bg-white/95 border-gray-200 backdrop-blur-xl"
+                className={`flex items-center justify-between gap-3 px-5 py-4 border-b flex-shrink-0 ${
+                  dark ? "border-gray-800" : "border-gray-100"
                 }`}
               >
                 <div className="min-w-0">
-                  <h3 className={`text-base font-black truncate ${dark ? "text-white" : "text-gray-900"}`}>
+                  <h3 className={`text-lg font-black truncate ${dark ? "text-white" : "text-gray-900"}`}>
                     {modalUser.name}
                   </h3>
-                  <p className={`text-[11px] ${dark ? "text-gray-500" : "text-gray-500"}`}>
+                  <p className={`text-[11px] mt-0.5 ${dark ? "text-gray-500" : "text-gray-400"}`}>
                     {t("standings.modalSubtitle", "Predictions (locked only)")}
                   </p>
                 </div>
                 <button
                   onClick={() => setModalUser(null)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
                     dark ? "hover:bg-white/10 text-gray-400" : "hover:bg-gray-100 text-gray-500"
                   }`}
                 >
@@ -2310,115 +2290,154 @@ function StandingsTab({
                 </button>
               </div>
 
-              {/* Body */}
-              <div className="p-4 space-y-3">
+              {/* Scrollable body */}
+              <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-2">
                 {modalLoading ? (
-                  <div className="py-12 text-center">
+                  <div className="py-16 text-center">
                     <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-2 opacity-40" />
                     <p className={`text-sm ${dark ? "text-gray-500" : "text-gray-400"}`}>
                       {t("loading", "Loading...")}
                     </p>
                   </div>
                 ) : !modalData ? (
-                  <p className={`text-sm text-center py-8 ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                  <p className={`text-sm text-center py-12 ${dark ? "text-gray-500" : "text-gray-400"}`}>
                     {t("standings.modalError", "Could not load predictions.")}
                   </p>
                 ) : (
                   <>
-                    {/* Category predictions */}
-                    {modalData.categories
-                      ?.filter((c: any) => c.prediction)
-                      .map((c: any) => {
-                        const pred = c.prediction;
-                        const catName = lang === "en" && c.name_en ? c.name_en : c.name;
-                        let display = "";
-                        if (pred.text_value) display = pred.text_value;
-                        else if (pred.numeric_value != null) display = String(pred.numeric_value);
-                        else if (pred.score_home != null) display = `${pred.score_home} : ${pred.score_away}`;
-                        else if (pred.selected_options?.length > 0)
-                          display = pred.selected_options
-                            .map((o: any) => (lang === "en" && o.label_en ? o.label_en : o.label))
-                            .join(", ");
-                        return (
-                          <div
-                            key={c.id}
-                            className={`rounded-xl border px-3 py-2.5 ${
-                              dark ? "border-white/8 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"
+                    {/* Collapsible: Category predictions */}
+                    {(() => {
+                      const catPreds = modalData.categories?.filter((c: any) => c.prediction) ?? [];
+                      if (catPreds.length === 0) return null;
+                      return (
+                        <div className={`rounded-xl border overflow-hidden ${dark ? "border-white/8" : "border-gray-200"}`}>
+                          <button
+                            type="button"
+                            onClick={() => setModalCatsOpen((v) => !v)}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 transition-colors ${
+                              dark ? "bg-white/[0.04] hover:bg-white/[0.07]" : "bg-gray-50 hover:bg-gray-100"
                             }`}
                           >
-                            <div className="flex items-center justify-between gap-2">
-                              <p className={`text-xs font-bold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>
-                                {catName}
-                              </p>
-                              {pred.is_scored && (
-                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${accentText} ${dark ? ac.bg15 : ac.bgPale}`}>
-                                  {pred.points_awarded} pts
-                                </span>
-                              )}
+                            <span className={`text-[11px] font-bold uppercase tracking-wider ${dark ? "text-gray-400" : "text-gray-500"}`}>
+                              {t("standings.categoryPredictions", "Category predictions")}
+                              <span className={`ml-1.5 text-[10px] font-medium normal-case tracking-normal ${dark ? "text-gray-600" : "text-gray-400"}`}>
+                                ({catPreds.length})
+                              </span>
+                            </span>
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${modalCatsOpen ? "rotate-180" : ""} ${dark ? "text-gray-500" : "text-gray-400"}`} />
+                          </button>
+                          {modalCatsOpen && (
+                            <div className="p-2 space-y-1.5">
+                              {catPreds.map((c: any) => {
+                                const pred = c.prediction;
+                                const catName = lang === "en" && c.name_en ? c.name_en : c.name;
+                                const hasOptions = pred.selected_options?.length > 0;
+                                return (
+                                  <div key={c.id} className={`rounded-lg px-3 py-2 ${dark ? "bg-white/[0.03]" : "bg-white"}`}>
+                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                      <p className={`text-[10px] font-bold uppercase tracking-wider ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                                        {catName}
+                                      </p>
+                                      {pred.is_scored && (
+                                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${accentText} ${dark ? ac.bg15 : ac.bgPale}`}>
+                                          {pred.points_awarded} pts
+                                        </span>
+                                      )}
+                                    </div>
+                                    {hasOptions ? (
+                                      <div className="flex flex-wrap gap-1">
+                                        {pred.selected_options.map((o: any, i: number) => (
+                                          <span key={i} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                            dark ? "bg-white/8 text-white" : "bg-gray-100 text-gray-800"
+                                          }`}>
+                                            {o.image_url && (
+                                              /* eslint-disable-next-line @next/next/no-img-element */
+                                              <img src={o.image_url} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px]" />
+                                            )}
+                                            {lang === "en" && o.label_en ? o.label_en : o.label}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className={`text-[13px] font-semibold ${dark ? "text-white" : "text-gray-900"}`}>
+                                        {pred.text_value || (pred.numeric_value != null ? String(pred.numeric_value) : null) || (pred.score_home != null ? `${pred.score_home} : ${pred.score_away}` : "-")}
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
-                            <p className={`mt-1 text-sm ${dark ? "text-white" : "text-gray-900"}`}>
-                              {display || "-"}
-                            </p>
-                            {!c.locked && (
-                              <p className={`mt-1 text-[10px] italic ${dark ? "text-gray-600" : "text-gray-400"}`}>
-                                {t("standings.notYetLocked", "Not yet locked")}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-
-                    {/* Match predictions */}
-                    {modalData.matchPredictions?.length > 0 && (
-                      <>
-                        <div className={`mt-2 pt-2 border-t ${dark ? "border-gray-700/50" : "border-gray-200"}`}>
-                          <p className={`text-[10px] uppercase tracking-wider font-bold mb-2 ${dark ? "text-gray-500" : "text-gray-400"}`}>
-                            {t("standings.matchPredictions", "Match predictions")}
-                          </p>
+                          )}
                         </div>
-                        {modalData.matchPredictions.map((p: any) => {
-                          const m = p.match;
-                          if (!m) return null;
-                          const home = lang === "en" && m.home_team_en ? m.home_team_en : m.home_team;
-                          const away = lang === "en" && m.away_team_en ? m.away_team_en : m.away_team;
-                          const hasResult = m.home_score != null;
-                          return (
-                            <div
-                              key={p.id}
-                              className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
-                                dark ? "border-white/8 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"
-                              }`}
-                            >
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-xs font-semibold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>
-                                  {home} vs {away}
-                                </p>
-                                {hasResult && (
-                                  <p className={`text-[10px] ${dark ? "text-gray-500" : "text-gray-400"}`}>
-                                    {t("standings.finalScore", "Result")}: {m.home_score}:{m.away_score}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className={`text-sm font-black tabular-nums ${dark ? "text-white" : "text-gray-900"}`}>
-                                  {p.home_score}:{p.away_score}
-                                </span>
-                                {p.is_scored && (
-                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${accentText} ${dark ? ac.bg15 : ac.bgPale}`}>
-                                    {p.points_awarded}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </>
-                    )}
+                      );
+                    })()}
 
-                    {/* Empty state */}
+                    {/* Collapsible: Match predictions */}
+                    {(() => {
+                      const mps = modalData.matchPredictions ?? [];
+                      if (mps.length === 0) return null;
+                      return (
+                        <div className={`rounded-xl border overflow-hidden ${dark ? "border-white/8" : "border-gray-200"}`}>
+                          <button
+                            type="button"
+                            onClick={() => setModalMatchesOpen((v) => !v)}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 transition-colors ${
+                              dark ? "bg-white/[0.04] hover:bg-white/[0.07]" : "bg-gray-50 hover:bg-gray-100"
+                            }`}
+                          >
+                            <span className={`text-[11px] font-bold uppercase tracking-wider ${dark ? "text-gray-400" : "text-gray-500"}`}>
+                              {t("standings.matchPredictions", "Match predictions")}
+                              <span className={`ml-1.5 text-[10px] font-medium normal-case tracking-normal ${dark ? "text-gray-600" : "text-gray-400"}`}>
+                                ({mps.length})
+                              </span>
+                            </span>
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${modalMatchesOpen ? "rotate-180" : ""} ${dark ? "text-gray-500" : "text-gray-400"}`} />
+                          </button>
+                          {modalMatchesOpen && (
+                            <div className="p-2 space-y-1">
+                              {mps.map((p: any) => {
+                                const m = p.match;
+                                if (!m) return null;
+                                const home = lang === "en" && m.home_team_en ? m.home_team_en : m.home_team;
+                                const away = lang === "en" && m.away_team_en ? m.away_team_en : m.away_team;
+                                const flg = (code: string) => code ? `https://flagcdn.com/w40/${code}.png` : null;
+                                return (
+                                  <div key={p.id} className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 ${dark ? "bg-white/[0.03]" : "bg-white"}`}>
+                                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                                      {flg(m.home_team_code) && (
+                                        /* eslint-disable-next-line @next/next/no-img-element */
+                                        <img src={flg(m.home_team_code)!} alt="" className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0" />
+                                      )}
+                                      <span className={`text-[11px] font-semibold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>{home}</span>
+                                      <span className={`text-[9px] flex-shrink-0 ${dark ? "text-gray-600" : "text-gray-400"}`}>v</span>
+                                      <span className={`text-[11px] font-semibold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>{away}</span>
+                                      {flg(m.away_team_code) && (
+                                        /* eslint-disable-next-line @next/next/no-img-element */
+                                        <img src={flg(m.away_team_code)!} alt="" className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0" />
+                                      )}
+                                    </div>
+                                    <span className={`text-[13px] font-black tabular-nums px-1.5 py-0.5 rounded-md flex-shrink-0 ${
+                                      dark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-900"
+                                    }`}>
+                                      {p.home_score}:{p.away_score}
+                                    </span>
+                                    {p.is_scored && (
+                                      <span className={`text-[9px] font-black px-1 py-0.5 rounded-full flex-shrink-0 ${accentText} ${dark ? ac.bg15 : ac.bgPale}`}>
+                                        +{p.points_awarded}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     {modalData.categories?.filter((c: any) => c.prediction).length === 0 &&
                      modalData.matchPredictions?.length === 0 && (
-                      <p className={`text-sm text-center py-8 ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                      <p className={`text-sm text-center py-12 ${dark ? "text-gray-500" : "text-gray-400"}`}>
                         {t("standings.noPredictions", "No locked predictions yet.")}
                       </p>
                     )}
@@ -2428,7 +2447,8 @@ function StandingsTab({
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body)}
     </div>
   );
 }

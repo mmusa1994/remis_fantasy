@@ -23,13 +23,16 @@ export async function GET(
     );
   }
 
-  const { data: tournament } = await supabaseServer
+  const { data: tournament, error: tErr } = await supabaseServer
     .from("predictor_tournaments")
-    .select("id, status, registration_lock_at, prediction_lock_mode")
+    .select("*")
     .eq("slug", slug)
     .is("deleted_at", null)
     .maybeSingle();
 
+  if (tErr) {
+    return NextResponse.json({ error: tErr.message }, { status: 500 });
+  }
   if (!tournament) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
@@ -44,12 +47,14 @@ export async function GET(
   const skipLockCheck = isSelf || tournamentLocked;
 
   // Category predictions
-  const { data: categories } = await supabaseServer
+  const tid = tournament.id;
+  const { data: categories, error: cErr } = await supabaseServer
     .from("predictor_categories")
-    .select("id, slug, name, name_en, category_type, lock_at, points_correct")
-    .eq("tournament_id", tournament.id)
-    .eq("is_active", true)
-    .order("sort_order");
+    .select("*")
+    .eq("tournament_id", tid)
+    .order("sort_order", { ascending: true });
+  if (cErr) console.error("[user-predictions] categories error:", cErr.message);
+  const activeCategories = (categories ?? []).filter((c: any) => c.is_active !== false);
 
   const { data: catPredictions } = await supabaseServer
     .from("predictor_predictions")
@@ -63,7 +68,7 @@ export async function GET(
   const now = new Date();
   const lockedCatPreds = (catPredictions ?? []).filter((p) => {
     if (skipLockCheck) return true;
-    const cat = (categories ?? []).find((c: any) => c.id === p.category_id);
+    const cat = (activeCategories).find((c: any) => c.id === p.category_id);
     if (!cat) return false;
     if (cat.lock_at && new Date(cat.lock_at) <= now) return true;
     if (tournament.registration_lock_at && new Date(tournament.registration_lock_at) <= now) return true;
@@ -78,7 +83,7 @@ export async function GET(
   if (allOptionIds.length > 0) {
     const { data: options } = await supabaseServer
       .from("predictor_options")
-      .select("id, label, label_en, image_url")
+      .select("*")
       .in("id", allOptionIds);
     for (const o of options ?? []) {
       optionMap[o.id] = { label: o.label, label_en: o.label_en, image_url: o.image_url };
@@ -88,7 +93,7 @@ export async function GET(
   // Match predictions
   const { data: allMatches } = await supabaseServer
     .from("predictor_matches")
-    .select("id, kickoff_at, status, force_unlocked, matchday, home_team, home_team_en, away_team, away_team_en, home_team_code, away_team_code, home_score, away_score, stage, stage_label")
+    .select("*")
     .eq("tournament_id", tournament.id)
     .order("kickoff_at", { ascending: true });
 
@@ -131,7 +136,7 @@ export async function GET(
   }
 
   return NextResponse.json({
-    categories: (categories ?? []).map((c: any) => {
+    categories: (activeCategories).map((c: any) => {
       const pred = lockedCatPreds.find((p) => p.category_id === c.id);
       const isLocked = skipLockCheck || tournamentLocked ||
         (c.lock_at && new Date(c.lock_at) <= now) ||

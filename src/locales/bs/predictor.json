@@ -34,10 +34,13 @@
     "emptyDesc": "Pojavit ce se cim prvi ucesnici podnesu predikcije.",
     "modalSubtitle": "Predikcije (samo zakljucane)",
     "modalError": "Greska pri ucitavanju predikcija.",
+    "categoryPredictions": "Predikcije kategorija",
     "matchPredictions": "Predikcije utakmica",
     "finalScore": "Rezultat",
     "notYetLocked": "Jos nije zakljucano",
-    "noPredictions": "Nema zakljucanih predikcija."
+    "noPredictions": "Nema zakljucanih predikcija.",
+    "viewPicks": "klikni za detalje",
+    "you": "ti"
   },
   "validation": {
     "savedIncomplete": "Sačuvano, ali ove predikcije još nisu kompletne"

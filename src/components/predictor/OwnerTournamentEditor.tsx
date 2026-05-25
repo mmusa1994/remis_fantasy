@@ -2039,6 +2039,7 @@ function MatchesTab({
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Match | null>(null);
   const [lockingRound, setLockingRound] = useState(false);
+  const [roundConfirm, setRoundConfirm] = useState<{ md: number; action: "lock" | "unlock" } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2060,30 +2061,31 @@ function MatchesTab({
     } else showToast(t("owner.toast.genericError"), false);
   }
 
-  async function lockRound(matchday: number) {
-    const matchesInRound = list.filter((m) => m.matchday === matchday && m.status === "scheduled");
-    if (matchesInRound.length === 0) {
-      showToast(lang === "bs" ? "Nema otvorenih utakmica u tom kolu" : "No open matches in that round", false);
-      return;
-    }
-    if (!confirm(
-      lang === "bs"
-        ? `Zaključati ${matchesInRound.length} utakmica u ${matchday}. kolu?`
-        : `Lock ${matchesInRound.length} matches in matchday ${matchday}?`
-    )) return;
+  async function toggleRound(matchday: number, action: "lock" | "unlock") {
+    const targets = list.filter((m) =>
+      m.matchday === matchday &&
+      (action === "lock" ? m.status === "scheduled" : m.status === "live"),
+    );
+    if (targets.length === 0) return;
     setLockingRound(true);
+    setRoundConfirm(null);
     try {
-      for (const m of matchesInRound) {
+      const newStatus = action === "lock" ? "live" : "scheduled";
+      for (const m of targets) {
         await fetch("/api/predictor/owner/matches", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: m.id, status: "live" }),
+          body: JSON.stringify({ id: m.id, status: newStatus }),
         });
       }
       showToast(
-        lang === "bs"
-          ? `${matchday}. kolo zaključano (${matchesInRound.length} utakmica)`
-          : `Matchday ${matchday} locked (${matchesInRound.length} matches)`,
+        action === "lock"
+          ? (lang === "bs"
+              ? `${matchday}. kolo zakljucano (${targets.length})`
+              : `Matchday ${matchday} locked (${targets.length})`)
+          : (lang === "bs"
+              ? `${matchday}. kolo otkljucano (${targets.length})`
+              : `Matchday ${matchday} unlocked (${targets.length})`),
       );
       load();
     } catch {
@@ -2094,12 +2096,13 @@ function MatchesTab({
   }
 
   const matchdays = useMemo(() => {
-    const mds = new Map<number, { total: number; open: number }>();
+    const mds = new Map<number, { total: number; open: number; locked: number }>();
     for (const m of list) {
       if (m.matchday == null) continue;
-      const cur = mds.get(m.matchday) ?? { total: 0, open: 0 };
+      const cur = mds.get(m.matchday) ?? { total: 0, open: 0, locked: 0 };
       cur.total++;
       if (m.status === "scheduled") cur.open++;
+      if (m.status === "live") cur.locked++;
       mds.set(m.matchday, cur);
     }
     return Array.from(mds.entries()).sort((a, b) => a[0] - b[0]);
@@ -2121,37 +2124,100 @@ function MatchesTab({
         </button>
       </div>
 
-      {/* Lock round controls */}
+      {/* Lock/unlock round controls */}
       {matchdays.length > 0 && (
-        <div className={`mb-4 flex flex-wrap items-center gap-2 rounded-xl border p-3 ${
+        <div className={`mb-4 rounded-xl border p-3 ${
           dark ? "border-white/8 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"
         }`}>
-          <span className={`text-[11px] font-bold uppercase tracking-wider ${dark ? "text-gray-400" : "text-gray-500"}`}>
-            {lang === "bs" ? "Zaključaj kolo" : "Lock round"}:
-          </span>
-          {matchdays.map(([md, info]) => (
-            <button
-              key={md}
-              type="button"
-              disabled={lockingRound || info.open === 0}
-              onClick={() => lockRound(md)}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all ${
-                info.open === 0
-                  ? dark
-                    ? "border-white/5 bg-white/[0.02] text-gray-600 cursor-default"
-                    : "border-gray-200 bg-gray-100 text-gray-400 cursor-default"
-                  : dark
-                    ? "border-predictor-primary/40 bg-predictor-primary/10 text-predictor-accent-dark hover:bg-predictor-primary/20"
-                    : "border-predictor-primary/60 bg-predictor-primary/15 text-predictor-accent-light hover:bg-predictor-primary/25"
-              }`}
-            >
-              <Lock className="w-3 h-3" />
-              {lang === "bs" ? `${md}. kolo` : `MD${md}`}
-              <span className={`text-[10px] ${info.open === 0 ? "opacity-50" : ""}`}>
-                ({info.open}/{info.total})
-              </span>
-            </button>
-          ))}
+          <div className="flex flex-wrap items-center gap-2">
+            {matchdays.map(([md, info]) => {
+              const allLocked = info.open === 0 && info.locked > 0;
+              const allOpen = info.locked === 0;
+              return (
+                <button
+                  key={md}
+                  type="button"
+                  disabled={lockingRound}
+                  onClick={() =>
+                    setRoundConfirm({
+                      md,
+                      action: allLocked ? "unlock" : "lock",
+                    })
+                  }
+                  className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all ${
+                    allLocked
+                      ? dark
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                        : "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                      : allOpen
+                        ? dark
+                          ? "border-predictor-primary/40 bg-predictor-primary/10 text-predictor-accent-dark hover:bg-predictor-primary/20"
+                          : "border-predictor-primary/60 bg-predictor-primary/15 text-predictor-accent-light hover:bg-predictor-primary/25"
+                        : dark
+                          ? "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+                          : "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                  }`}
+                >
+                  <Lock className="w-3 h-3" />
+                  {lang === "bs" ? `${md}. kolo` : `MD${md}`}
+                  <span className="text-[10px] opacity-70">
+                    {allLocked
+                      ? (lang === "bs" ? "zaključano" : "locked")
+                      : `${info.open}/${info.total}`}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Round lock/unlock confirmation modal */}
+      {roundConfirm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => setRoundConfirm(null)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`relative w-full max-w-sm rounded-2xl p-5 ${
+              dark ? "bg-gray-900 border border-gray-700" : "bg-white border border-gray-200 shadow-2xl"
+            }`}
+          >
+            <h3 className={`text-base font-black mb-2 ${dark ? "text-white" : "text-gray-900"}`}>
+              {roundConfirm.action === "lock"
+                ? (lang === "bs" ? `Zaključaj ${roundConfirm.md}. kolo?` : `Lock matchday ${roundConfirm.md}?`)
+                : (lang === "bs" ? `Otključaj ${roundConfirm.md}. kolo?` : `Unlock matchday ${roundConfirm.md}?`)}
+            </h3>
+            <p className={`text-sm mb-4 ${dark ? "text-gray-400" : "text-gray-600"}`}>
+              {roundConfirm.action === "lock"
+                ? (lang === "bs"
+                    ? "Korisnici vise nece moci mijenjati predikcije za ovo kolo."
+                    : "Users will no longer be able to change predictions for this round.")
+                : (lang === "bs"
+                    ? "Korisnici ce ponovo moci mijenjati predikcije za ovo kolo."
+                    : "Users will be able to change predictions for this round again.")}
+            </p>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRoundConfirm(null)}
+                className={cls.secondaryBtn(dark)}
+              >
+                {t("owner.common.cancel", "Cancel")}
+              </button>
+              <button
+                type="button"
+                disabled={lockingRound}
+                onClick={() => toggleRound(roundConfirm.md, roundConfirm.action)}
+                className={roundConfirm.action === "lock" ? cls.primaryBtn : cls.dangerBtn(dark)}
+              >
+                {lockingRound
+                  ? "..."
+                  : roundConfirm.action === "lock"
+                    ? (lang === "bs" ? "Zaključaj" : "Lock")
+                    : (lang === "bs" ? "Otključaj" : "Unlock")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

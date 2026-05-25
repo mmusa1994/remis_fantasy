@@ -217,6 +217,9 @@ export interface StandingsRow {
   match_predictions_count: number;
   match_correct_count: number;
   rank: number;
+  winner_flag?: string;
+  winner_name?: string;
+  top_scorer?: string;
 }
 
 // =============================================================
