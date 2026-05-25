@@ -796,10 +796,10 @@ function TournamentCard({
           style={{ background: "currentColor", opacity: 0.04 }}
         />
 
-        {tournament.logo_url && large && (
-          <div className="absolute inset-0 rounded-3xl overflow-hidden opacity-[0.06] pointer-events-none">
+        {tournament.banner_image_url && (
+          <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none opacity-20">
             <Image
-              src={tournament.logo_url}
+              src={tournament.banner_image_url}
               alt=""
               fill
               className="object-cover"

@@ -570,6 +570,53 @@ function Field({
   );
 }
 
+function OptionEnToggle({
+  dark,
+  value,
+  onChange,
+  placeholder,
+}: {
+  dark: boolean;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const { i18n } = useTranslation("predictor");
+  const isEn = i18n.language?.startsWith("en");
+  const hasValue = !!(value && value.trim());
+  const [open, setOpen] = useState(isEn || hasValue);
+
+  return (
+    <div className="mt-1">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+          dark
+            ? "text-gray-500 hover:text-gray-300"
+            : "text-gray-400 hover:text-gray-700"
+        }`}
+      >
+        <span className={`inline-block transition-transform duration-200 ${open ? "rotate-90" : ""}`}>›</span>
+        EN
+        {hasValue && (
+          <span className={`inline-block h-1.5 w-1.5 rounded-full ${
+            dark ? "bg-emerald-400/70" : "bg-emerald-500/70"
+          }`} />
+        )}
+      </button>
+      {open && (
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`mt-1 ${cls.input(dark)}`}
+        />
+      )}
+    </div>
+  );
+}
+
 function BilingualPair({
   dark,
   bsLabel,
@@ -597,65 +644,87 @@ function BilingualPair({
   enPlaceholder?: string;
   required?: boolean;
 }) {
-  const { t } = useTranslation("predictor");
+  const { t, i18n } = useTranslation("predictor");
+  const isEnLang = i18n.language?.startsWith("en");
+
+  const primaryLabel = isEnLang ? enLabel : bsLabel;
+  const primaryValue = isEnLang ? (enValue ?? "") : (bsValue ?? "");
+  const onPrimary = isEnLang ? onEn : onBs;
+  const primaryPlaceholder = isEnLang ? enPlaceholder : bsPlaceholder;
+
+  const secondaryTag = isEnLang ? "BS" : "EN";
+  const secondaryLabel = isEnLang ? bsLabel : enLabel;
+  const secondaryValue = isEnLang ? (bsValue ?? "") : (enValue ?? "");
+  const onSecondary = isEnLang ? onBs : onEn;
+  const secondaryPlaceholder = isEnLang ? bsPlaceholder : enPlaceholder;
+  const hasSecondary = !!secondaryValue.trim();
+  const [secOpen, setSecOpen] = useState(hasSecondary);
+
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-      <Field
-        label={
-          <span className="inline-flex items-center gap-1.5">
-            <span className={cls.badgeAccent(dark)}>
-              {t("owner.common.languageBs", "BS")}
-            </span>
-            {bsLabel}
-          </span>
-        }
-        required={required}
-      >
+    <div className="space-y-2">
+      <Field label={primaryLabel} required={required}>
         {textarea ? (
           <textarea
-            value={bsValue ?? ""}
-            onChange={(e) => onBs(e.target.value)}
+            value={primaryValue}
+            onChange={(e) => onPrimary(e.target.value)}
             rows={rows}
-            placeholder={bsPlaceholder}
+            placeholder={primaryPlaceholder}
             className={cls.input(dark)}
           />
         ) : (
           <input
-            value={bsValue ?? ""}
-            onChange={(e) => onBs(e.target.value)}
-            placeholder={bsPlaceholder}
+            value={primaryValue}
+            onChange={(e) => onPrimary(e.target.value)}
+            placeholder={primaryPlaceholder}
             className={cls.input(dark)}
           />
         )}
       </Field>
-      <Field
-        label={
-          <span className="inline-flex items-center gap-1.5">
-            <span className={cls.badgeAccent(dark)}>
-              {t("owner.common.languageEn", "EN")}
-            </span>
-            {enLabel}
+      <div>
+        <button
+          type="button"
+          onClick={() => setSecOpen((o) => !o)}
+          className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] transition-colors ${
+            dark
+              ? "text-gray-500 hover:text-gray-300"
+              : "text-gray-400 hover:text-gray-700"
+          }`}
+        >
+          <span
+            className={`inline-block transition-transform duration-200 ${
+              secOpen ? "rotate-90" : ""
+            }`}
+          >
+            ›
           </span>
-        }
-        hint={t("owner.settings.fields.englishHint")}
-      >
-        {textarea ? (
-          <textarea
-            value={enValue ?? ""}
-            onChange={(e) => onEn(e.target.value)}
-            rows={rows}
-            placeholder={enPlaceholder}
-            className={cls.input(dark)}
-          />
-        ) : (
-          <input
-            value={enValue ?? ""}
-            onChange={(e) => onEn(e.target.value)}
-            placeholder={enPlaceholder}
-            className={cls.input(dark)}
-          />
+          {secondaryTag} {secondaryLabel}
+          {hasSecondary && (
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${
+              dark ? "bg-emerald-400/70" : "bg-emerald-500/70"
+            }`} />
+          )}
+        </button>
+        {secOpen && (
+          <div className="mt-1.5">
+            {textarea ? (
+              <textarea
+                value={secondaryValue}
+                onChange={(e) => onSecondary(e.target.value)}
+                rows={rows}
+                placeholder={secondaryPlaceholder}
+                className={cls.input(dark)}
+              />
+            ) : (
+              <input
+                value={secondaryValue}
+                onChange={(e) => onSecondary(e.target.value)}
+                placeholder={secondaryPlaceholder}
+                className={cls.input(dark)}
+              />
+            )}
+          </div>
         )}
-      </Field>
+      </div>
     </div>
   );
 }
@@ -1031,6 +1100,17 @@ function SettingsTab({
             label={t("owner.settings.branding.logoUrl", "Logo")}
             value={form.logo_url}
             onChange={(url) => set("logo_url", url || null)}
+            onError={(msg) => showToast(msg, false)}
+          />
+
+          {/* Banner */}
+          <ImageUpload
+            dark={dark}
+            tournamentId={tournament.id}
+            kind="banner"
+            label={t("owner.settings.branding.bannerUrl", "Banner")}
+            value={form.banner_image_url}
+            onChange={(url) => set("banner_image_url", url || null)}
             onError={(msg) => showToast(msg, false)}
           />
 
@@ -1804,64 +1884,66 @@ function CategoryEditor({
                 {options.map((o: any, i: number) => (
                   <div
                     key={i}
-                    className={`grid grid-cols-1 items-center gap-2 rounded-lg border p-2 md:grid-cols-[1fr_1fr_auto_auto] ${
+                    className={`rounded-lg border p-2 ${
                       dark
                         ? "border-white/8 bg-white/[0.02]"
                         : "border-gray-200 bg-white"
                     }`}
                   >
-                    <input
-                      placeholder={t("owner.categoriesTab.editor.optionBs")}
-                      value={o.label}
-                      onChange={(e) =>
-                        setOptions((cur) =>
-                          cur.map((x, j) =>
-                            j === i ? { ...x, label: e.target.value } : x,
-                          ),
-                        )
-                      }
-                      className={cls.input(dark)}
-                    />
-                    <input
-                      placeholder={t("owner.categoriesTab.editor.optionEn")}
-                      value={o.label_en || ""}
-                      onChange={(e) =>
-                        setOptions((cur) =>
-                          cur.map((x, j) =>
-                            j === i ? { ...x, label_en: e.target.value } : x,
-                          ),
-                        )
-                      }
-                      className={cls.input(dark)}
-                    />
-                    <label
-                      className={`inline-flex items-center gap-1 rounded-lg border px-2 py-2 text-[11px] ${
-                        dark
-                          ? "border-white/10 bg-black/20 text-gray-300"
-                          : "border-gray-300 bg-white text-gray-700"
-                      }`}
-                    >
+                    <div className="flex items-center gap-2">
                       <input
-                        type="checkbox"
-                        className="h-3.5 w-3.5 accent-emerald-500"
-                        checked={!!o.is_correct}
+                        placeholder={t("owner.categoriesTab.editor.optionBs")}
+                        value={o.label}
                         onChange={(e) =>
                           setOptions((cur) =>
                             cur.map((x, j) =>
-                              j === i ? { ...x, is_correct: e.target.checked } : x,
+                              j === i ? { ...x, label: e.target.value } : x,
                             ),
                           )
                         }
+                        className={`flex-1 ${cls.input(dark)}`}
                       />
-                      {t("owner.categoriesTab.editor.optionCorrect")}
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setOptions((cur) => cur.filter((_, j) => j !== i))}
-                      className={cls.dangerBtn(dark) + " !px-2"}
-                    >
-                      ×
-                    </button>
+                      <label
+                        className={`inline-flex items-center gap-1 flex-shrink-0 rounded-lg border px-2 py-2 text-[11px] ${
+                          dark
+                            ? "border-white/10 bg-black/20 text-gray-300"
+                            : "border-gray-300 bg-white text-gray-700"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="h-3.5 w-3.5 accent-emerald-500"
+                          checked={!!o.is_correct}
+                          onChange={(e) =>
+                            setOptions((cur) =>
+                              cur.map((x, j) =>
+                                j === i ? { ...x, is_correct: e.target.checked } : x,
+                              ),
+                            )
+                          }
+                        />
+                        {t("owner.categoriesTab.editor.optionCorrect")}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setOptions((cur) => cur.filter((_, j) => j !== i))}
+                        className={cls.dangerBtn(dark) + " !px-2"}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <OptionEnToggle
+                      dark={dark}
+                      value={o.label_en || ""}
+                      onChange={(v) =>
+                        setOptions((cur) =>
+                          cur.map((x, j) =>
+                            j === i ? { ...x, label_en: v } : x,
+                          ),
+                        )
+                      }
+                      placeholder={t("owner.categoriesTab.editor.optionEn")}
+                    />
                   </div>
                 ))}
               </div>
@@ -2040,6 +2122,7 @@ function MatchesTab({
   const [editing, setEditing] = useState<Match | null>(null);
   const [lockingRound, setLockingRound] = useState(false);
   const [roundConfirm, setRoundConfirm] = useState<{ md: number; action: "lock" | "unlock" } | null>(null);
+  const [rescoring, setRescoring] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2095,6 +2178,31 @@ function MatchesTab({
     }
   }
 
+  async function rescoreAll() {
+    setRescoring(true);
+    try {
+      const res = await fetch("/api/predictor/owner/scoring", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tournament_id: tournament.id, action: "rescore" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        showToast(
+          lang === "bs"
+            ? `Bodovanje ažurirano (${data.scored ?? 0} predikcija)`
+            : `Scoring updated (${data.scored ?? 0} predictions)`,
+        );
+      } else {
+        showToast(t("owner.toast.genericError"), false);
+      }
+    } catch {
+      showToast(t("owner.toast.genericError"), false);
+    } finally {
+      setRescoring(false);
+    }
+  }
+
   const matchdays = useMemo(() => {
     const mds = new Map<number, { total: number; open: number; locked: number }>();
     for (const m of list) {
@@ -2119,9 +2227,25 @@ function MatchesTab({
             {t("owner.matchesTab.desc")}
           </p>
         </div>
-        <button type="button" onClick={() => setCreating(true)} className={cls.primaryBtnLg}>
-          + {t("owner.matchesTab.new")}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={rescoreAll}
+            disabled={rescoring}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-xs font-semibold transition-colors ${
+              dark
+                ? "border-white/12 text-gray-400 hover:border-white/25 hover:text-gray-200 disabled:opacity-50"
+                : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-800 disabled:opacity-50"
+            }`}
+          >
+            {rescoring
+              ? (lang === "bs" ? "Ažuriram…" : "Updating…")
+              : (lang === "bs" ? "Ažuriraj bodovanje" : "Update scores")}
+          </button>
+          <button type="button" onClick={() => setCreating(true)} className={cls.primaryBtnLg}>
+            + {t("owner.matchesTab.new")}
+          </button>
+        </div>
       </div>
 
       {/* Lock/unlock round controls */}
@@ -2247,13 +2371,22 @@ function MatchesTab({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-theme-heading-primary">
                   <TeamChip logoUrl={m.home_logo_url} name={homeName} />
-                  <span className="text-theme-text-secondary">vs</span>
-                  <TeamChip logoUrl={m.away_logo_url} name={awayName} />
-                  {m.home_score != null && (
-                    <span className={cls.badgeAccent(dark) + " font-bold"}>
-                      {m.home_score} : {m.away_score}
+                  {m.home_score != null ? (
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs font-black tabular-nums ${
+                        dark
+                          ? "bg-white/8 text-white"
+                          : "bg-gray-100 text-gray-900"
+                      }`}
+                    >
+                      {m.home_score}
+                      <span className={dark ? "text-gray-500" : "text-gray-400"}>:</span>
+                      {m.away_score}
                     </span>
+                  ) : (
+                    <span className="text-theme-text-secondary text-xs">vs</span>
                   )}
+                  <TeamChip logoUrl={m.away_logo_url} name={awayName} />
                 </div>
                 <div className="mt-0.5 text-[11px] text-theme-text-secondary">
                   {m.kickoff_at

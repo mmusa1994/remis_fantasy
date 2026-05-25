@@ -72,6 +72,7 @@ export async function PUT(req: NextRequest) {
     "sponsor_logo_url",
     "sponsor_url",
     "require_approval",
+    "banner_image_url",
     "theme_background_image",
     "theme_music_enabled",
     "prediction_lock_mode",

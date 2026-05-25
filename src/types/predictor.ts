@@ -77,6 +77,7 @@ export interface Tournament {
   is_featured: boolean;
   sort_order: number;
   require_approval: boolean;
+  banner_image_url: string | null;
   /** Root-relative path to a WC theme background image (admin-picked). */
   theme_background_image: string | null;
   /** If true, the WC theme music auto-mounts on this tournament's pages. */
