@@ -616,6 +616,7 @@ export default function TournamentDetailPage() {
                 onSaved={loadMyMatchPredictions}
                 isWC={isWC}
                 themeBgSrc={themeBg}
+                lockMode={tournament.prediction_lock_mode || "per_match"}
               />
             ))}
 

@@ -201,9 +201,35 @@ export const WC_2026_KNOCKOUT: MatchTemplateItem[] = [
 ];
 
 // =============================================================
-// Kompletan raspored (grupna + nokaut) — 104 utakmice
+// Assign matchday to every fixture for per-round locking
+// Group: MD1 (0-23), MD2 (24-47), MD3 (48-71)
+// Knockout: R32=4, R16=5, QF=6, SF=7, 3rd=8, Final=9
 // =============================================================
-export const WC_2026_FULL_SCHEDULE: MatchTemplateItem[] = [
-  ...WC_2026_GROUP_STAGE,
-  ...WC_2026_KNOCKOUT,
-];
+const KNOCKOUT_MATCHDAY: Record<string, number> = {
+  round_of_32: 4,
+  round_of_16: 5,
+  quarter_final: 6,
+  semi_final: 7,
+  third_place: 8,
+  final: 9,
+};
+
+function assignMatchdays(
+  group: MatchTemplateItem[],
+  knockout: MatchTemplateItem[],
+): MatchTemplateItem[] {
+  const g = group.map((m, i) => ({
+    ...m,
+    matchday: i < 24 ? 1 : i < 48 ? 2 : 3,
+  }));
+  const k = knockout.map((m) => ({
+    ...m,
+    matchday: KNOCKOUT_MATCHDAY[m.stage] ?? 10,
+  }));
+  return [...g, ...k];
+}
+
+export const WC_2026_FULL_SCHEDULE: MatchTemplateItem[] = assignMatchdays(
+  WC_2026_GROUP_STAGE,
+  WC_2026_KNOCKOUT,
+);

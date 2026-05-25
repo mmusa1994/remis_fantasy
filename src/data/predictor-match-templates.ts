@@ -16,6 +16,7 @@ export interface MatchTemplateItem {
   away_team_code?: string;
   kickoff_at?: string; // ISO 8601
   venue?: string;
+  matchday?: number;
 }
 
 export interface MatchSetTemplate {
@@ -181,5 +182,6 @@ export function expandMatchTemplate(
     kickoff_at: m.kickoff_at ?? null,
     venue: m.venue ?? null,
     sort_order: idx,
+    matchday: m.matchday ?? null,
   }));
 }

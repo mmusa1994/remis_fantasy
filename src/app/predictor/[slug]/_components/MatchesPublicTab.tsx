@@ -98,6 +98,7 @@ export default function MatchesPublicTab({
   onSaved,
   isWC: _isWC = false,
   themeBgSrc: _themeBgSrc = null,
+  lockMode = "per_match",
 }: {
   matches: Match[];
   myMatchPredictions: MatchPrediction[];
@@ -108,6 +109,7 @@ export default function MatchesPublicTab({
   onSaved: () => void;
   isWC?: boolean;
   themeBgSrc?: string | null;
+  lockMode?: "per_match" | "per_round";
 }) {
   const { showToast: notify } = useToast();
   const accentBg = ac.bg;
@@ -137,7 +139,32 @@ export default function MatchesPublicTab({
     return () => clearInterval(id);
   }, []);
 
+  const MATCHDAY_LABELS: Record<number, { bs: string; en: string }> = {
+    1: { bs: "1. kolo", en: "Matchday 1" },
+    2: { bs: "2. kolo", en: "Matchday 2" },
+    3: { bs: "3. kolo", en: "Matchday 3" },
+    4: { bs: "Sesnaestina finala", en: "Round of 32" },
+    5: { bs: "Osmina finala", en: "Round of 16" },
+    6: { bs: "Cetvrtfinale", en: "Quarter-finals" },
+    7: { bs: "Polufinale", en: "Semi-finals" },
+    8: { bs: "Za 3. mjesto", en: "Third place" },
+    9: { bs: "Finale", en: "Final" },
+  };
+
   const byStage = useMemo(() => {
+    const hasMatchdays = lockMode === "per_round" && matches.some((m) => m.matchday != null);
+    if (hasMatchdays) {
+      const m = new Map<string, Match[]>();
+      for (const match of matches) {
+        const key = String(match.matchday ?? 0);
+        const arr = m.get(key) ?? [];
+        arr.push(match);
+        m.set(key, arr);
+      }
+      return Array.from(m.entries()).sort(
+        (a, b) => Number(a[0]) - Number(b[0]),
+      );
+    }
     const m = new Map<string, Match[]>();
     for (const match of matches) {
       const arr = m.get(match.stage) ?? [];
@@ -147,7 +174,7 @@ export default function MatchesPublicTab({
     return Array.from(m.entries()).sort(
       (a, b) => STAGE_ORDER_PUB.indexOf(a[0]) - STAGE_ORDER_PUB.indexOf(b[0]),
     );
-  }, [matches]);
+  }, [matches, lockMode]);
 
   const update = (mid: string, patch: Partial<Draft>) => {
     setDirty(true);
@@ -345,7 +372,11 @@ export default function MatchesPublicTab({
             <h3
               className={`text-sm font-black uppercase tracking-wider ${theme === "dark" ? "text-white" : "text-gray-900"}`}
             >
-              {t(`stage.${stage}`, STAGE_LABELS_PUB[stage] ?? stage)}
+              {MATCHDAY_LABELS[Number(stage)]
+                ? (lang === "en"
+                    ? MATCHDAY_LABELS[Number(stage)].en
+                    : MATCHDAY_LABELS[Number(stage)].bs)
+                : t(`stage.${stage}`, STAGE_LABELS_PUB[stage] ?? stage)}
             </h3>
             <span
               className={`text-[11px] font-medium ${

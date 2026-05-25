@@ -76,6 +76,7 @@ export async function PUT(req: NextRequest) {
     "require_approval",
     "theme_background_image",
     "theme_music_enabled",
+    "prediction_lock_mode",
   ];
 
   const updates: Record<string, unknown> = {};

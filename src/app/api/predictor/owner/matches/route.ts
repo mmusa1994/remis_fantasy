@@ -51,6 +51,7 @@ const baseFields = (tournament_id: string, m: any) => ({
   points_diff: m.points_diff ?? 3,
   points_winner: m.points_winner ?? 2,
   sort_order: m.sort_order ?? 0,
+  matchday: m.matchday ?? null,
 });
 
 export async function POST(req: NextRequest) {
@@ -120,6 +121,7 @@ export async function PUT(req: NextRequest) {
     "points_winner",
     "sort_order",
     "force_unlocked",
+    "matchday",
   ];
   for (const k of allowed) if (k in body) updates[k] = body[k];
 

@@ -102,12 +102,11 @@ export default function LoginPage() {
     );
   }
 
+  useEffect(() => {
+    if (loginSuccess) router.replace("/");
+  }, [loginSuccess, router]);
+
   if (loginSuccess) {
-    // Kick off redirect on render to ensure immediate navigation
-    if (typeof window !== "undefined") {
-      // Use replace to avoid back navigation to login
-      router.replace("/");
-    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center">

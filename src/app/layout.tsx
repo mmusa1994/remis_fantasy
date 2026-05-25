@@ -141,7 +141,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bs" className={anta.variable}>
+    <html lang="bs" className={anta.variable} data-scroll-behavior="smooth">
       <head>
         <JsonLd data={organizationSchema} />
         <JsonLd data={websiteSchema} />
