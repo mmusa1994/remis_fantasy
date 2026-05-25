@@ -11,6 +11,62 @@
   "limits": {
     "maxGroupsWith3": "Već imaš 8 grupa sa 3 ekipe. Ova grupa mora ostati na 2."
   },
+  "guide": {
+    "trigger": "Kako funkcioniše",
+    "eyebrow": "Vodič",
+    "title": "Kako kreirati turnir",
+    "steps": {
+      "1": {
+        "title": "Odaberi šablon",
+        "desc": "Izaberi gotov šablon turnira (npr. FIFA SP 2026) ili kreni od nule. Šabloni dolaze sa grupama, kategorijama i bodovnim pravilima."
+      },
+      "2": {
+        "title": "Imenuj i prilagodi",
+        "desc": "Daj turniru ime, odaberi boju akcenta i napiši kratki opis. URL slug se automatski generiše iz imena."
+      },
+      "3": {
+        "title": "Plati ili koristi kredit",
+        "desc": "Kreiranje turnira košta €2 (jednokratno). Ako imaš besplatne kredite, proces je trenutačan. Plaćanje je sigurno preko Stripea."
+      },
+      "4": {
+        "title": "Konfiguriši u editoru",
+        "desc": "Nakon kreiranja otvara se puni editor. Postavi kategorije predikcija, utakmice, pravila, nagrade, branding i vidljivost. Sve je dvojezično (BS/EN)."
+      },
+      "5": {
+        "title": "Objavi i podijeli",
+        "desc": "Promijeni status na 'Objavljeno' i podijeli link. Prijatelji ga otvore, prijave se i pošalju predikcije prije zaključavanja."
+      }
+    },
+    "featuresTitle": "Šta dobijaš",
+    "features": {
+      "templates": {
+        "title": "Šabloni",
+        "desc": "SP 2026 šablon sa svih 48 ekipa, 12 grupa, nokaut runde i bodovanje unaprijed konfigurisano."
+      },
+      "categories": {
+        "title": "Tipovi predikcija",
+        "desc": "Pobjednik, najbolji strijelac, pobjednici grupa, tačan rezultat, rangiranje, slobodan tekst i još."
+      },
+      "matches": {
+        "title": "Predikcije utakmica",
+        "desc": "Dodaj pojedinačne utakmice sa bodovanjem po utakmici. Zaključavaj po utakmici ili po rundi."
+      },
+      "bilingual": {
+        "title": "Dvojezično",
+        "desc": "Svaki natpis, pravilo i nagrada mogu biti na bosanskom i engleskom. Korisnici vide svoj preferirani jezik."
+      },
+      "privacy": {
+        "title": "Javno ili privatno",
+        "desc": "Otvoreno za sve, ili zahtijevaj odobrenje admina za svakog člana. Ti kontrolišeš ko igra."
+      },
+      "scoring": {
+        "title": "Automatsko bodovanje",
+        "desc": "Postavi tačne odgovore u editoru. Bodovi se računaju automatski i tabela se ažurira u realnom vremenu."
+      }
+    },
+    "footerHint": "Spreman? Treba manje od 2 minute.",
+    "footerCta": "Kreiraj sada"
+  },
   "hero": {
     "title": "Predvidi. Takmiči se. Pobijedi.",
     "subtitle": "Zvanični Remis Predictor. pogodi poredak u grupama, finaliste, najbolje strijelce i prvaka najvećih svjetskih turnira. Jedan tip. Jedna tabela. Prave nagrade."
@@ -665,8 +721,12 @@
   "saving": "Čuvanje…",
   "signIn": "Prijavi se",
   "notFound": {
+    "eyebrow": "Predictor",
     "title": "Turnir nije pronađen",
-    "subtitle": "Ovaj turnir ne postoji ili još nije javno objavljen."
+    "subtitle": "Ovaj turnir ne postoji ili ga admin još nije objavio.",
+    "hint": "Turniri postaju vidljivi tek kada ih organizator postavi na 'Objavljeno'. Provjeri ponovo uskoro ili pregledaj aktivne turnire.",
+    "browseCta": "Pregledaj turnire",
+    "createCta": "Ili kreiraj svoj"
   },
   "matchPredictions": "Tvoje predikcije utakmica",
   "incDec": {
@@ -838,6 +898,15 @@
           "bg4": "Stadion blur"
         }
       }
+    },
+    "share": {
+      "title": "Turnir je kreiran",
+      "subtitle": "Podijeli link s prijateljima i pokreni takmičenje.",
+      "linkLabel": "Link turnira",
+      "copy": "Kopiraj link",
+      "copied": "Kopirano",
+      "goToEditor": "Idi na editor",
+      "hint": "Svako ko otvori ovaj link može se prijaviti i početi predviđati."
     },
     "approvals": {
       "title": "Odobrenja korisnika",

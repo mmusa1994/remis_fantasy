@@ -11,6 +11,62 @@
   "limits": {
     "maxGroupsWith3": "You already have 8 groups with 3 teams. This group must stay at 2."
   },
+  "guide": {
+    "trigger": "How it works",
+    "eyebrow": "Guide",
+    "title": "How to create a tournament",
+    "steps": {
+      "1": {
+        "title": "Choose a template",
+        "desc": "Pick a ready-made tournament template (e.g. FIFA World Cup 2026) or start from scratch. Templates come pre-loaded with groups, categories, and scoring rules."
+      },
+      "2": {
+        "title": "Name and customize",
+        "desc": "Give your tournament a name, pick an accent color, and write a short description. The URL slug is auto-generated from the name."
+      },
+      "3": {
+        "title": "Pay or use a credit",
+        "desc": "Creating a tournament costs €2 (one-time). If you have free credits, it's instant. Payment is secure via Stripe."
+      },
+      "4": {
+        "title": "Configure in the editor",
+        "desc": "After creation, the full editor opens. Set up prediction categories, matches, rules, rewards, branding, and visibility. Everything is bilingual (BS/EN)."
+      },
+      "5": {
+        "title": "Publish and share",
+        "desc": "Switch the status to 'Published' and share the link. Friends open it, sign in, and submit their predictions before the lock date."
+      }
+    },
+    "featuresTitle": "What's included",
+    "features": {
+      "templates": {
+        "title": "Templates",
+        "desc": "World Cup 2026 template with all 48 teams, 12 groups, knockout rounds, and scoring pre-configured."
+      },
+      "categories": {
+        "title": "Prediction types",
+        "desc": "Winner, top scorer, group winners, exact scores, ranked picks, free text, and more."
+      },
+      "matches": {
+        "title": "Match predictions",
+        "desc": "Add individual matches with per-match scoring. Lock by match or by round."
+      },
+      "bilingual": {
+        "title": "Bilingual",
+        "desc": "Every label, rule, and reward can be written in both Bosnian and English. Users see their preferred language."
+      },
+      "privacy": {
+        "title": "Public or private",
+        "desc": "Open to everyone, or require admin approval for each member. You control who plays."
+      },
+      "scoring": {
+        "title": "Auto-scoring",
+        "desc": "Set correct answers in the editor. Points are calculated automatically and the leaderboard updates in real time."
+      }
+    },
+    "footerHint": "Ready? It takes under 2 minutes.",
+    "footerCta": "Create now"
+  },
   "hero": {
     "title": "Predict. Compete. Win.",
     "subtitle": "The official Remis Predictor. call group standings, finalists, top scorers and the champion of the world's biggest tournaments. One bracket. One leaderboard. Real rewards."
@@ -663,8 +719,12 @@
   "saving": "Saving…",
   "signIn": "Sign in",
   "notFound": {
+    "eyebrow": "Predictor",
     "title": "Tournament not found",
-    "subtitle": "This tournament does not exist or is not yet public."
+    "subtitle": "This tournament doesn't exist or hasn't been published by the admin yet.",
+    "hint": "Tournaments become visible once the organizer sets them to 'Published'. Check back soon or browse active tournaments.",
+    "browseCta": "Browse tournaments",
+    "createCta": "Or create your own"
   },
   "matchPredictions": "Your match predictions",
   "incDec": {
@@ -836,6 +896,15 @@
           "bg4": "Stadium blur"
         }
       }
+    },
+    "share": {
+      "title": "Tournament created",
+      "subtitle": "Share the link with friends and start competing.",
+      "linkLabel": "Tournament link",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "goToEditor": "Go to editor",
+      "hint": "Anyone who opens this link can sign up and start predicting."
     },
     "approvals": {
       "title": "Membership approvals",

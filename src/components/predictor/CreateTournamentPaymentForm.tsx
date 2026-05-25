@@ -101,6 +101,12 @@ function PaymentInner({
   >(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
+  const [created, setCreated] = useState<{
+    slug: string;
+    editorUrl: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
     if (!slugTouched) setSlug(slugFrom(name));
   }, [name, slugTouched]);
@@ -156,7 +162,7 @@ function PaymentInner({
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || t("create.form.errors.generic"));
         showToast(t("owner.toast.tournamentCreated"));
-        router.push(data.redirect_to);
+        setCreated({ slug: slug.trim(), editorUrl: data.redirect_to });
         return;
       }
 
@@ -208,7 +214,7 @@ function PaymentInner({
         const fjson = await f.json();
         if (f.ok && fjson.ready && fjson.redirect_to) {
           showToast(t("owner.toast.tournamentCreated"));
-          router.push(fjson.redirect_to);
+          setCreated({ slug: fjson.slug || slug.trim(), editorUrl: fjson.redirect_to });
           return;
         }
       }
@@ -236,6 +242,148 @@ function PaymentInner({
     }),
     [dark],
   );
+
+  const shareUrl =
+    created && typeof window !== "undefined"
+      ? `${window.location.origin}/predictor/${created.slug}`
+      : "";
+
+  const handleCopy = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      showToast(t("owner.share.copied", "Copied!"));
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      const input = document.createElement("input");
+      input.value = shareUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    }
+  };
+
+  if (created) {
+    return (
+      <main className="relative min-h-screen w-full bg-theme-background theme-transition">
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-x-0 top-0 h-[520px] ${
+            dark
+              ? "bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(245,158,11,0.06),transparent_70%)]"
+              : "bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(245,158,11,0.10),transparent_70%)]"
+          }`}
+        />
+        <div className="relative z-10 mx-auto max-w-2xl px-5 pb-24 pt-8 sm:px-6 sm:pt-16">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            {/* Eyebrow */}
+            <div className="mb-8 flex items-center gap-3">
+              <span
+                className={`h-px w-10 flex-shrink-0 ${
+                  dark ? "bg-predictor-accent-dark/55" : "bg-predictor-accent-light/60"
+                }`}
+              />
+              <span
+                className={`text-[10px] font-semibold uppercase tracking-[0.3em] ${
+                  dark ? "text-predictor-accent-dark/90" : "text-predictor-accent-light/95"
+                }`}
+              >
+                {t("owner.share.title", "Tournament created")}
+              </span>
+            </div>
+
+            <h1 className="mb-4 text-3xl font-black leading-tight tracking-tight text-theme-heading-primary sm:text-4xl md:text-5xl">
+              {name.trim()}
+            </h1>
+            <p className="mb-10 max-w-xl text-base leading-relaxed text-theme-text-secondary">
+              {t("owner.share.subtitle", "Share the link with friends and start competing.")}
+            </p>
+
+            {/* Share link card */}
+            <div
+              className={`mb-8 rounded-2xl border px-6 py-7 sm:px-8 ${
+                dark
+                  ? "border-white/8 bg-white/[0.02]"
+                  : "border-gray-200 bg-white/60"
+              }`}
+            >
+              <div className="mb-5 flex items-center gap-3">
+                <span
+                  className={`text-[10px] font-semibold uppercase tracking-[0.3em] ${
+                    dark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  {t("owner.share.linkLabel", "Tournament link")}
+                </span>
+                <span
+                  className={`h-px flex-1 ${dark ? "bg-white/10" : "bg-gray-200"}`}
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex-1 min-w-0 rounded-lg border px-4 py-3 font-mono text-sm truncate select-all ${
+                    dark
+                      ? "border-white/10 bg-black/30 text-gray-200"
+                      : "border-gray-200 bg-gray-50 text-gray-700"
+                  }`}
+                >
+                  {shareUrl}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className={`flex-shrink-0 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-bold transition-all duration-200 ${
+                    copied
+                      ? dark
+                        ? "bg-emerald-500/15 text-emerald-300 border border-emerald-400/30"
+                        : "bg-emerald-50 text-emerald-700 border border-emerald-300"
+                      : "bg-predictor-primary text-gray-900 hover:bg-predictor-primary-hover"
+                  }`}
+                >
+                  {copied
+                    ? t("owner.share.copied", "Copied")
+                    : t("owner.share.copy", "Copy link")}
+                </button>
+              </div>
+
+              <p
+                className={`mt-4 text-[11px] leading-relaxed ${
+                  dark ? "text-gray-500" : "text-gray-500"
+                }`}
+              >
+                {t("owner.share.hint", "Anyone who opens this link can sign up and start predicting.")}
+              </p>
+            </div>
+
+            {/* Go to editor */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.push(created.editorUrl)}
+                className={`group inline-flex items-center gap-2 rounded-full border px-6 py-3 text-sm font-bold transition-colors ${
+                  dark
+                    ? "border-white/15 text-gray-200 hover:border-predictor-primary/50 hover:text-predictor-accent-dark"
+                    : "border-gray-300 text-gray-800 hover:border-predictor-primary hover:text-predictor-accent-light"
+                }`}
+              >
+                {t("owner.share.goToEditor", "Go to editor")}
+                <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen w-full bg-theme-background theme-transition">

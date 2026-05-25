@@ -333,29 +333,106 @@ export default function TournamentDetailPage() {
   }
 
   if (!tournament) {
+    const isDark = theme === "dark";
     return (
-      <main className="w-full min-h-screen bg-theme-background">
-        <div className="max-w-3xl mx-auto px-4 py-24 text-center">
-          <Trophy className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h1 className="text-2xl font-bold mb-2">
-            {t("notFound.title", "Tournament not found")}
-          </h1>
-          <p className="text-sm text-theme-text-secondary mb-6">
-            {t(
-              "notFound.subtitle",
-              "This tournament does not exist or is not yet public.",
-            )}
-          </p>
-          <Link
-            href="/predictor"
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl font-semibold shadow-sm border ${
-              theme === "dark"
-                ? "bg-gray-800/80 text-gray-100 border-gray-700 hover:bg-gray-700/80"
-                : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"
+      <main className="relative w-full min-h-screen bg-theme-background">
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-x-0 top-0 h-[420px] ${
+            isDark
+              ? "bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(255,255,255,0.02),transparent_70%)]"
+              : "bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(0,0,0,0.02),transparent_70%)]"
+          }`}
+        />
+        <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className={`relative w-full max-w-md overflow-hidden rounded-3xl border text-center ${
+              isDark
+                ? "border-white/8 bg-gray-900/80 shadow-2xl shadow-black/30"
+                : "border-gray-200 bg-white shadow-xl shadow-gray-200/50"
             }`}
           >
-            ← {t("backToList", "Back to tournaments")}
-          </Link>
+            <div
+              aria-hidden
+              className={`pointer-events-none absolute inset-0 ${
+                isDark
+                  ? "bg-[linear-gradient(135deg,rgba(255,255,255,0.015)_0%,transparent_50%,rgba(255,255,255,0.01)_100%)]"
+                  : "bg-[linear-gradient(135deg,rgba(0,0,0,0.01)_0%,transparent_50%,rgba(0,0,0,0.008)_100%)]"
+              }`}
+            />
+            <div className="relative px-8 py-12 sm:px-10 sm:py-14">
+              <div className="mb-6 flex items-center justify-center gap-3">
+                <span
+                  className={`h-px w-8 ${
+                    isDark ? "bg-white/10" : "bg-gray-300"
+                  }`}
+                />
+                <span
+                  className={`text-[10px] font-semibold uppercase tracking-[0.3em] ${
+                    isDark ? "text-gray-500" : "text-gray-400"
+                  }`}
+                >
+                  {t("notFound.eyebrow", "Predictor")}
+                </span>
+                <span
+                  className={`h-px w-8 ${
+                    isDark ? "bg-white/10" : "bg-gray-300"
+                  }`}
+                />
+              </div>
+
+              <h1
+                className={`mb-3 text-2xl font-black tracking-tight sm:text-3xl ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {t("notFound.title", "Tournament not found")}
+              </h1>
+              <p
+                className={`mx-auto mb-4 max-w-sm text-sm leading-relaxed ${
+                  isDark ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                {t(
+                  "notFound.subtitle",
+                  "This tournament doesn't exist or hasn't been published by the admin yet.",
+                )}
+              </p>
+              <p
+                className={`mx-auto mb-8 max-w-sm text-xs leading-relaxed ${
+                  isDark ? "text-gray-500" : "text-gray-500"
+                }`}
+              >
+                {t(
+                  "notFound.hint",
+                  "Tournaments become visible once the organizer sets them to 'Published'. Check back soon or browse active tournaments.",
+                )}
+              </p>
+
+              <div className="flex flex-col items-center gap-3">
+                <Link
+                  href="/predictor"
+                  className="group inline-flex items-center gap-2 rounded-full bg-predictor-primary px-6 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-predictor-primary-hover"
+                >
+                  {t("notFound.browseCta", "Browse tournaments")}
+                  <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
+                </Link>
+                <Link
+                  href="/create-tournament"
+                  className={`inline-flex items-center rounded-full border px-5 py-2.5 text-xs font-semibold transition-colors ${
+                    isDark
+                      ? "border-white/12 text-gray-400 hover:border-white/25 hover:text-gray-200"
+                      : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-800"
+                  }`}
+                >
+                  {t("notFound.createCta", "Or create your own")}
+                </Link>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </main>
     );

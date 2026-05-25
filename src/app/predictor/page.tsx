@@ -1,42 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowRight,
   Trophy,
   Calendar,
   Lock,
-  Sparkles,
-  CheckCircle2,
-  Star,
-  BellRing,
+  X,
 } from "lucide-react";
-
-/**
- * Creator monogram. refined editorial mark used on the "Create your tournament" CTA.
- * Inspired by founder/maker seals. Currentcolor so it inherits button text colour.
- */
-function CreatorMark({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      aria-hidden
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-    >
-      <circle cx="8" cy="8" r="6.4" strokeWidth="0.9" opacity="0.55" />
-      <path d="M8 3.4 V12.6" strokeWidth="1.1" />
-      <path d="M3.4 8 H12.6" strokeWidth="1.1" />
-      <path d="M4.7 4.7 L11.3 11.3" strokeWidth="0.7" opacity="0.35" />
-      <path d="M11.3 4.7 L4.7 11.3" strokeWidth="0.7" opacity="0.35" />
-    </svg>
-  );
-}
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import LoadingCard from "@/components/shared/LoadingCard";
@@ -71,6 +45,7 @@ export default function PredictorIndexPage() {
   const { t, ready } = useTranslation("predictor");
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/predictor/tournaments", { cache: "no-store" })
@@ -167,16 +142,11 @@ export default function PredictorIndexPage() {
           >
             <Link
               href="/create-tournament"
-              className="group relative inline-flex items-stretch overflow-hidden rounded-full bg-predictor-primary text-sm font-semibold text-gray-900 transition-all duration-300 hover:bg-predictor-primary-hover"
+              className="group inline-flex items-center gap-2 rounded-full bg-predictor-primary px-7 py-3.5 text-sm font-bold text-gray-900 transition-all duration-200 hover:bg-predictor-primary-hover"
             >
-              <span className="flex items-center gap-2.5 pl-6 pr-4 py-3.5">
-                <CreatorMark className="h-3.5 w-3.5 text-gray-900/85" />
-                {t("cta.create", "Create your tournament")}
-              </span>
-              <span className="flex items-center gap-1.5 border-l border-gray-900/15 pl-4 pr-5 py-3.5 font-mono text-xs tracking-wider text-gray-900/85">
-                €2
-                <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
-              </span>
+              {t("cta.create", "Create your tournament")}
+              <span className="font-mono text-xs tracking-wider opacity-70">€2</span>
+              <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
             </Link>
             <Link
               href="/predictor/my-tournaments"
@@ -188,6 +158,17 @@ export default function PredictorIndexPage() {
             >
               {t("cta.myTournaments", "My tournaments")}
             </Link>
+            <button
+              type="button"
+              onClick={() => setGuideOpen(true)}
+              className={`inline-flex items-center rounded-full border px-5 py-3.5 text-sm font-semibold transition-colors ${
+                theme === "dark"
+                  ? "border-white/15 text-gray-300 hover:border-amber-300/40 hover:text-amber-200"
+                  : "border-gray-300 text-gray-700 hover:border-predictor-primary/70 hover:text-predictor-accent-light"
+              }`}
+            >
+              {t("guide.trigger", "How it works")}
+            </button>
           </motion.div>
 
           <motion.p
@@ -217,7 +198,7 @@ export default function PredictorIndexPage() {
               {featured.length > 0 && (
                 <>
                   <SectionHeader
-                    icon={Star}
+                    icon={undefined}
                     title={t("sections.featured", "Featured")}
                   />
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-10">
@@ -237,7 +218,7 @@ export default function PredictorIndexPage() {
                 <>
                   <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
                     <SectionHeader
-                      icon={Trophy}
+                      icon={undefined}
                       title={t("sections.all", "All tournaments")}
                     />
                     <Link
@@ -282,7 +263,322 @@ export default function PredictorIndexPage() {
           )}
         </div>
       </section>
+
+      <GuideModal open={guideOpen} onClose={() => setGuideOpen(false)} theme={theme} />
     </main>
+  );
+}
+
+function GuideModal({
+  open,
+  onClose,
+  theme,
+}: {
+  open: boolean;
+  onClose: () => void;
+  theme: string;
+}) {
+  const { t } = useTranslation("predictor");
+  const dark = theme === "dark";
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose]);
+
+  const steps = [
+    {
+      num: "01",
+      title: t("guide.steps.1.title", "Choose a template"),
+      desc: t(
+        "guide.steps.1.desc",
+        "Pick a ready-made tournament template (e.g. FIFA World Cup 2026) or start from scratch. Templates come pre-loaded with groups, categories, and scoring rules.",
+      ),
+    },
+    {
+      num: "02",
+      title: t("guide.steps.2.title", "Name and customize"),
+      desc: t(
+        "guide.steps.2.desc",
+        "Give your tournament a name, pick an accent color, and write a short description. The URL slug is auto-generated from the name.",
+      ),
+    },
+    {
+      num: "03",
+      title: t("guide.steps.3.title", "Pay or use a credit"),
+      desc: t(
+        "guide.steps.3.desc",
+        "Creating a tournament costs €2 (one-time). If you have free credits, it's instant. Payment is secure via Stripe.",
+      ),
+    },
+    {
+      num: "04",
+      title: t("guide.steps.4.title", "Configure in the editor"),
+      desc: t(
+        "guide.steps.4.desc",
+        "After creation, the full editor opens. Set up prediction categories, matches, rules, rewards, branding, and visibility. Everything is bilingual (BS/EN).",
+      ),
+    },
+    {
+      num: "05",
+      title: t("guide.steps.5.title", "Publish and share"),
+      desc: t(
+        "guide.steps.5.desc",
+        "Switch the status to 'Published' and share the link. Friends open it, sign in, and submit their predictions before the lock date.",
+      ),
+    },
+  ];
+
+  const features = [
+    {
+      title: t("guide.features.templates.title", "Templates"),
+      desc: t(
+        "guide.features.templates.desc",
+        "World Cup 2026 template with all 48 teams, 12 groups, knockout rounds, and scoring pre-configured.",
+      ),
+    },
+    {
+      title: t("guide.features.categories.title", "Prediction types"),
+      desc: t(
+        "guide.features.categories.desc",
+        "Winner, top scorer, group winners, exact scores, ranked picks, free text, and more.",
+      ),
+    },
+    {
+      title: t("guide.features.matches.title", "Match predictions"),
+      desc: t(
+        "guide.features.matches.desc",
+        "Add individual matches with per-match scoring. Lock by match or by round.",
+      ),
+    },
+    {
+      title: t("guide.features.bilingual.title", "Bilingual"),
+      desc: t(
+        "guide.features.bilingual.desc",
+        "Every label, rule, and reward can be written in both Bosnian and English. Users see their preferred language.",
+      ),
+    },
+    {
+      title: t("guide.features.privacy.title", "Public or private"),
+      desc: t(
+        "guide.features.privacy.desc",
+        "Open to everyone, or require admin approval for each member. You control who plays.",
+      ),
+    },
+    {
+      title: t("guide.features.scoring.title", "Auto-scoring"),
+      desc: t(
+        "guide.features.scoring.desc",
+        "Set correct answers in the editor. Points are calculated automatically and the leaderboard updates in real time.",
+      ),
+    },
+  ];
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            key="guide-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className={`fixed inset-0 z-[9998] ${
+              dark ? "bg-black/70" : "bg-black/40"
+            } backdrop-blur-sm`}
+            onClick={onClose}
+          />
+          <motion.div
+            key="guide-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto pointer-events-none"
+          >
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.97 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className={`pointer-events-auto relative mx-4 my-8 w-full max-w-2xl rounded-3xl border shadow-2xl sm:my-12 ${
+              dark
+                ? "border-white/10 bg-gray-900 shadow-black/40"
+                : "border-gray-200 bg-white shadow-gray-300/40"
+            }`}
+          >
+            {/* Header */}
+            <div
+              className={`flex items-center justify-between border-b px-6 py-5 sm:px-8 ${
+                dark ? "border-white/8" : "border-gray-200"
+              }`}
+            >
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <span
+                    className={`h-px w-6 ${
+                      dark ? "bg-predictor-accent-dark/55" : "bg-predictor-accent-light/60"
+                    }`}
+                  />
+                  <span
+                    className={`text-[10px] font-semibold uppercase tracking-[0.3em] ${
+                      dark ? "text-predictor-accent-dark/90" : "text-predictor-accent-light/95"
+                    }`}
+                  >
+                    {t("guide.eyebrow", "Guide")}
+                  </span>
+                </div>
+                <h2
+                  className={`text-xl font-black tracking-tight ${
+                    dark ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {t("guide.title", "How to create a tournament")}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className={`flex-shrink-0 rounded-xl p-2 transition-colors ${
+                  dark
+                    ? "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                    : "text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Steps */}
+            <div className="px-6 py-7 sm:px-8">
+              <ol className="space-y-6">
+                {steps.map((step) => (
+                  <li key={step.num} className="flex gap-5">
+                    <span
+                      className={`flex-shrink-0 select-none font-mono text-sm font-semibold tracking-wider pt-0.5 ${
+                        dark ? "text-predictor-accent-dark/80" : "text-predictor-accent-light/80"
+                      }`}
+                      style={{ width: "2rem" }}
+                    >
+                      {step.num}
+                    </span>
+                    <div
+                      className="flex-1 border-l pl-5 pb-1"
+                      style={{
+                        borderColor: dark
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(17,24,39,0.08)",
+                      }}
+                    >
+                      <h3
+                        className={`mb-1 text-sm font-bold ${
+                          dark ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {step.title}
+                      </h3>
+                      <p
+                        className={`text-[13px] leading-relaxed ${
+                          dark ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
+                        {step.desc}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            {/* Features grid */}
+            <div
+              className={`border-t px-6 py-7 sm:px-8 ${
+                dark ? "border-white/8" : "border-gray-200"
+              }`}
+            >
+              <div className="mb-5 flex items-center gap-3">
+                <span
+                  className={`text-[10px] font-semibold uppercase tracking-[0.3em] ${
+                    dark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  {t("guide.featuresTitle", "What's included")}
+                </span>
+                <span
+                  className={`h-px flex-1 ${dark ? "bg-white/8" : "bg-gray-200"}`}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {features.map((f) => (
+                  <div key={f.title}>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span
+                        className={`mt-0.5 inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full ${
+                          dark ? "bg-predictor-accent-dark/70" : "bg-predictor-accent-light/70"
+                        }`}
+                      />
+                      <p
+                        className={`text-xs font-bold ${
+                          dark ? "text-gray-200" : "text-gray-800"
+                        }`}
+                      >
+                        {f.title}
+                      </p>
+                    </div>
+                    <p
+                      className={`pl-4 text-[12px] leading-relaxed ${
+                        dark ? "text-gray-500" : "text-gray-500"
+                      }`}
+                    >
+                      {f.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer CTA */}
+            <div
+              className={`flex items-center justify-between gap-3 border-t px-6 py-5 sm:px-8 ${
+                dark ? "border-white/8" : "border-gray-200"
+              }`}
+            >
+              <p
+                className={`text-[11px] ${
+                  dark ? "text-gray-500" : "text-gray-500"
+                }`}
+              >
+                {t("guide.footerHint", "Ready? It takes under 2 minutes.")}
+              </p>
+              <Link
+                href="/create-tournament"
+                onClick={onClose}
+                className="group inline-flex items-center gap-2 rounded-full bg-predictor-primary px-5 py-2.5 text-sm font-bold text-gray-900 transition-all hover:bg-predictor-primary-hover"
+              >
+                {t("guide.footerCta", "Create now")}
+                <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
+              </Link>
+            </div>
+          </motion.div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>,
+    document.body,
   );
 }
 
@@ -328,62 +624,6 @@ function PredictorEmptyState({
       />
 
       <div className="relative px-6 py-14 md:px-12 md:py-20 flex flex-col items-center text-center">
-        {/* Iconic trophy with halo */}
-        <motion.div
-          initial={{ scale: 0.85, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
-          className="relative mb-6"
-        >
-          <span
-            aria-hidden
-            className={`absolute inset-0 rounded-full blur-2xl ${
-              isDark ? "bg-predictor-primary/25" : "bg-predictor-primary/40"
-            }`}
-          />
-          <div
-            className={`relative inline-flex items-center justify-center w-20 h-20 rounded-2xl ${
-              isDark
-                ? "bg-predictor-primary/10 border border-predictor-primary/30 shadow-[0_8px_30px_rgba(253,230,138,0.15)]"
-                : "bg-predictor-primary/15 border border-predictor-primary/40 shadow-md"
-            }`}
-          >
-            <Trophy
-              className={`w-10 h-10 ${
-                isDark ? "text-predictor-accent-dark" : "text-predictor-accent-light"
-              }`}
-              strokeWidth={1.8}
-            />
-            <motion.span
-              aria-hidden
-              animate={{ opacity: [0.4, 1, 0.4], scale: [0.95, 1.05, 0.95] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className={`absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 rounded-full ${
-                isDark
-                  ? "bg-predictor-primary shadow-lg shadow-predictor-primary/50"
-                  : "bg-predictor-primary shadow-md shadow-predictor-primary/60"
-              }`}
-            >
-              <Sparkles className="w-3 h-3 text-white" />
-            </motion.span>
-          </div>
-        </motion.div>
-
-        {/* Eyebrow */}
-        <motion.span
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-          className={`inline-flex items-center gap-1.5 text-[10px] md:text-[11px] uppercase tracking-[0.18em] font-bold px-3 py-1 rounded-full mb-3 border ${
-            isDark
-              ? "border-white/10 bg-white/5 text-amber-300/90"
-              : "border-predictor-primary/60 bg-predictor-primary/15 text-predictor-accent-light"
-          }`}
-        >
-          <Sparkles className="w-3 h-3" />
-          {t("empty.eyebrow", "Coming soon")}
-        </motion.span>
-
         <motion.h3
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -418,36 +658,20 @@ function PredictorEmptyState({
         >
           <Link
             href="/create-tournament"
-            className="group inline-flex items-stretch overflow-hidden rounded-full bg-predictor-primary text-sm font-semibold text-gray-900 transition-all hover:bg-predictor-primary-hover"
+            className="group inline-flex items-center gap-2 rounded-full bg-predictor-primary px-6 py-2.5 text-sm font-bold text-gray-900 transition-all hover:bg-predictor-primary-hover"
           >
-            <span className="flex items-center gap-2.5 pl-5 pr-3.5 py-2.5">
-              <CreatorMark className="h-3.5 w-3.5 text-gray-900/85" />
-              {t("cta.create", "Create your tournament")}
-            </span>
-            <span className="flex items-center gap-1.5 border-l border-gray-900/15 pl-3.5 pr-4 py-2.5 font-mono text-xs tracking-wider text-gray-900/85">
-              €2
-              <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
-            </span>
+            {t("cta.create", "Create your tournament")}
+            <span className="font-mono text-xs tracking-wider opacity-70">€2</span>
+            <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
           </Link>
           <Link
-            href="/premier-league/fpl-live"
+            href="/premier-league/registration"
             className={`inline-flex items-center rounded-full border px-5 py-2.5 text-sm font-semibold transition-colors ${
               isDark
                 ? "border-white/15 text-gray-300 hover:border-amber-300/40 hover:text-amber-200"
                 : "border-gray-300 text-gray-700 hover:border-predictor-primary/70 hover:text-predictor-accent-light"
             }`}
           >
-            {t("empty.exploreFpl", "Otvori FPL Live")}
-          </Link>
-          <Link
-            href="/premier-league/registration"
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm border transition-all ${
-              isDark
-                ? "border-white/15 bg-white/5 text-gray-200 hover:bg-white/10 hover:border-white/20"
-                : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-            }`}
-          >
-            <BellRing className="w-4 h-4" />
             {t("empty.notify", "Obavijesti me kad krene")}
           </Link>
         </motion.div>
@@ -461,7 +685,6 @@ function PredictorEmptyState({
         >
           {[
             {
-              icon: Trophy,
               title: t("empty.preview.prizes.title", "Prave nagrade"),
               desc: t(
                 "empty.preview.prizes.desc",
@@ -469,7 +692,6 @@ function PredictorEmptyState({
               ),
             },
             {
-              icon: Star,
               title: t("empty.preview.leaderboard.title", "Globalna tabela"),
               desc: t(
                 "empty.preview.leaderboard.desc",
@@ -477,14 +699,13 @@ function PredictorEmptyState({
               ),
             },
             {
-              icon: CheckCircle2,
               title: t("empty.preview.lock.title", "Tačno predviđanje"),
               desc: t(
                 "empty.preview.lock.desc",
                 "Predaj tipove prije starta. Sve fer i transparentno.",
               ),
             },
-          ].map(({ icon: Icon, title, desc }) => (
+          ].map(({ title, desc }) => (
             <div
               key={title}
               className={`p-4 rounded-2xl text-left border transition-colors ${
@@ -493,20 +714,22 @@ function PredictorEmptyState({
                   : "bg-white/70 border-gray-200/80 hover:bg-white"
               }`}
             >
-              <Icon
-                className={`w-4 h-4 mb-2 ${
-                  isDark ? "text-amber-300/80" : "text-amber-500"
-                }`}
-              />
+              <div className="flex items-baseline gap-2.5 mb-1.5">
+                <span
+                  className={`mt-0.5 inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full ${
+                    isDark ? "bg-predictor-accent-dark/80" : "bg-predictor-accent-light/80"
+                  }`}
+                />
+                <p
+                  className={`text-xs font-bold uppercase tracking-wide ${
+                    isDark ? "text-gray-200" : "text-gray-800"
+                  }`}
+                >
+                  {title}
+                </p>
+              </div>
               <p
-                className={`text-xs font-bold uppercase tracking-wide mb-1 ${
-                  isDark ? "text-gray-200" : "text-gray-800"
-                }`}
-              >
-                {title}
-              </p>
-              <p
-                className={`text-[11px] leading-relaxed ${
+                className={`pl-4 text-[11px] leading-relaxed ${
                   isDark ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -521,16 +744,14 @@ function PredictorEmptyState({
 }
 
 function SectionHeader({
-  icon: Icon,
   title,
 }: {
-  icon: any;
+  icon?: any;
   title: string;
 }) {
   return (
-    <div className="flex items-center gap-2 mb-4">
-      <Icon className="w-4 h-4 text-theme-text-secondary opacity-80" />
-      <h2 className="text-sm font-bold uppercase tracking-widest text-theme-text-secondary">
+    <div className="flex items-center gap-3 mb-4">
+      <h2 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-theme-text-secondary">
         {title}
       </h2>
       <div className="flex-1 h-px bg-theme-border" />
@@ -646,13 +867,12 @@ function TournamentCard({
           <div className="flex items-center gap-1.5 flex-wrap justify-end flex-shrink-0">
             {tournament.require_approval && (
               <span
-                className={`inline-flex items-center gap-1 text-[10px] uppercase font-black px-2.5 py-1 rounded-full ${
+                className={`inline-flex items-center text-[10px] uppercase font-black px-2.5 py-1 rounded-full ${
                   theme === "dark"
                     ? `${ac.bg15} ${ac.textBrighter} border ${ac.border500_40}`
                     : `${ac.bgPale} ${ac.textDeeper} border ${ac.border300}`
                 }`}
               >
-                <Lock className="w-3 h-3" />
                 {t("card.closed", "Closed")}
               </span>
             )}
@@ -731,20 +951,12 @@ function TournamentCard({
         )}
 
         <span
-          className={`relative z-10 inline-flex items-center gap-1.5 text-sm font-bold ${textClass} group-hover:gap-2.5 transition-all duration-300 mt-auto`}
+          className={`relative z-10 inline-flex items-center gap-1.5 text-sm font-bold ${textClass} group-hover:gap-2 transition-all duration-300 mt-auto`}
         >
-          {tournament.require_approval ? (
-            <>
-              <Lock className="w-4 h-4" />
-              {t("card.requestAccess", "View and request access")}
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="w-4 h-4" />
-              {t("card.openPredictor", "Open predictor")}
-            </>
-          )}
-          <ArrowRight className="w-4 h-4" />
+          {tournament.require_approval
+            ? t("card.requestAccess", "View and request access")
+            : t("card.openPredictor", "Open predictor")}
+          <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
         </span>
       </div>
     </Link>

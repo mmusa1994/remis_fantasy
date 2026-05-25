@@ -125,7 +125,7 @@ export default function SaveToast({
               >
                 {isSuccess ? tr("toast.successLabel", "Success") : tr("toast.errorLabel", "Error")}
               </span>
-              <span className="text-[15px] font-bold leading-tight text-white pr-2 sm:whitespace-nowrap">
+              <span className="text-[13px] font-bold leading-snug text-white pr-2">
                 {toast.text}
               </span>
             </div>
