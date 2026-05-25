@@ -40,7 +40,10 @@
     "notYetLocked": "Not yet locked",
     "noPredictions": "No locked predictions yet.",
     "viewPicks": "tap to view",
-    "you": "you"
+    "you": "you",
+    "byPoints": "By points",
+    "byMatches": "By matches",
+    "noLockedMatches": "No locked matches yet."
   },
   "validation": {
     "savedIncomplete": "Saved, but these picks aren't complete yet"

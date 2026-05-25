@@ -97,7 +97,7 @@ export interface PredictorTemplate {
 }
 
 // helper to attach a country flag image (flagcdn.com is free, no key)
-const flag = (cc: string) => `https://flagcdn.com/w80/${cc}.png`;
+const flag = (cc: string) => `https://flagcdn.com/w40/${cc}.png`;
 
 // -------------------------------------------------------------
 // 1) FIFA Svjetsko prvenstvo 2026. 48 KVALIFIKOVANIH EKIPA

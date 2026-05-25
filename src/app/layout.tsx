@@ -143,6 +143,8 @@ export default function RootLayout({
   return (
     <html lang="bs" className={anta.variable} data-scroll-behavior="smooth">
       <head>
+        <link rel="dns-prefetch" href="https://flagcdn.com" />
+        <link rel="preconnect" href="https://flagcdn.com" crossOrigin="anonymous" />
         <JsonLd data={organizationSchema} />
         <JsonLd data={websiteSchema} />
         <JsonLd data={sportsEventSchema} />

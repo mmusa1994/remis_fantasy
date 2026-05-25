@@ -2009,6 +2009,20 @@ function StandingsTab({
   const [modalLoading, setModalLoading] = useState(false);
   const [modalCatsOpen, setModalCatsOpen] = useState(true);
   const [modalMatchesOpen, setModalMatchesOpen] = useState(false);
+  const [standingsView, setStandingsView] = useState<"points" | "matches">("points");
+  const [matchStandings, setMatchStandings] = useState<any[]>([]);
+  const [matchStandingsLoading, setMatchStandingsLoading] = useState(false);
+  const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
+
+  const loadMatchStandings = useCallback(async () => {
+    setMatchStandingsLoading(true);
+    try {
+      const res = await fetch(`/api/predictor/tournaments/${slug}/match-standings`);
+      if (res.ok) setMatchStandings(await res.json());
+    } finally {
+      setMatchStandingsLoading(false);
+    }
+  }, [slug]);
 
   const openModal = async (userId: string, name: string) => {
     setModalUser({ id: userId, name });
@@ -2086,6 +2100,37 @@ function StandingsTab({
         />
       </div>
 
+      {/* Sub-tab toggle */}
+      <div className={`relative z-10 inline-flex rounded-full border p-0.5 ${
+        dark ? "border-white/10 bg-white/[0.03]" : "border-gray-200 bg-gray-100/60"
+      }`}>
+        {(["points", "matches"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => {
+              setStandingsView(v);
+              if (v === "matches" && matchStandings.length === 0) loadMatchStandings();
+            }}
+            className={`rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
+              standingsView === v
+                ? dark
+                  ? `${ac.bg15} ${ac.textBrighter}`
+                  : `${ac.bgPale} ${ac.textDeeper}`
+                : dark
+                  ? "text-gray-500 hover:text-gray-300"
+                  : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {v === "points"
+              ? t("standings.byPoints", "By points")
+              : t("standings.byMatches", "By matches")}
+          </button>
+        ))}
+      </div>
+
+      {standingsView === "points" && (
+      <>
       {/* Top 3 podium */}
       {top3.length >= 3 && (
         <div className="relative z-10 grid grid-cols-3 gap-2 md:gap-4">
@@ -2213,7 +2258,7 @@ function StandingsTab({
                       {s.winner_flag && (
                         <span className={`inline-flex items-center gap-0.5 text-[9px] font-medium ${dark ? "text-gray-500" : "text-gray-400"}`}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={s.winner_flag} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px]" />
+                          <img loading="lazy" decoding="async" src={s.winner_flag} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px]" />
                           {(s.winner_name ?? "").length > 12
                             ? (s.winner_name ?? "").replace(/^Bosna i Hercegovina$/, "BIH").replace(/^Bosnia and Herzegovina$/, "BIH").replace(/^Južna Afrika$/, "J. Afrika").replace(/^South Africa$/, "S. Africa").replace(/^Južna Koreja$/, "J. Koreja").replace(/^South Korea$/, "S. Korea").replace(/^Saudijska Arabija$/, "S. Arabija").replace(/^Saudi Arabia$/, "S. Arabia").replace(/^Obala Slonovače$/, "O. Slonovače").replace(/^Ivory Coast$/, "Ivory C.").replace(/^Novi Zeland$/, "N. Zeland").replace(/^New Zealand$/, "N. Zealand").slice(0, 14)
                             : s.winner_name}
@@ -2241,6 +2286,103 @@ function StandingsTab({
           })}
         </ul>
       </div>
+      </>
+      )}
+
+      {/* By matches view */}
+      {standingsView === "matches" && (
+        <div className="relative z-10 space-y-2">
+          {matchStandingsLoading ? (
+            <div className="py-12 text-center">
+              <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-2 opacity-40" />
+            </div>
+          ) : matchStandings.length === 0 ? (
+            <div className={`rounded-xl border border-dashed p-8 text-center text-sm ${
+              dark ? "border-gray-700 text-gray-500" : "border-gray-300 text-gray-400"
+            }`}>
+              {t("standings.noLockedMatches", "No locked matches yet.")}
+            </div>
+          ) : (
+            matchStandings.map((m: any) => {
+              const home = lang === "en" && m.home_team_en ? m.home_team_en : m.home_team;
+              const away = lang === "en" && m.away_team_en ? m.away_team_en : m.away_team;
+              const flg = (code: string) => code ? `https://flagcdn.com/w20/${code}.png` : null;
+              const isOpen = expandedMatch === m.id;
+              const hasResult = m.home_score != null;
+              return (
+                <div key={m.id} className={`rounded-xl border overflow-hidden ${dark ? "border-white/8" : "border-gray-200"}`}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedMatch(isOpen ? null : m.id)}
+                    className={`w-full flex items-center gap-2 px-3 py-2.5 transition-colors ${
+                      dark ? "bg-white/[0.04] hover:bg-white/[0.07]" : "bg-gray-50 hover:bg-gray-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                      {flg(m.home_team_code) && (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img loading="lazy" decoding="async" src={flg(m.home_team_code)!} alt="" className="w-5 h-3.5 object-cover rounded-[2px] flex-shrink-0" />
+                      )}
+                      <span className={`text-xs font-bold truncate ${dark ? "text-white" : "text-gray-900"}`}>{home}</span>
+                      {hasResult ? (
+                        <span className={`text-xs font-black tabular-nums px-1.5 py-0.5 rounded-md ${
+                          dark ? "bg-white/10 text-white" : "bg-gray-200 text-gray-900"
+                        }`}>{m.home_score}:{m.away_score}</span>
+                      ) : (
+                        <span className={`text-[10px] ${dark ? "text-gray-600" : "text-gray-400"}`}>vs</span>
+                      )}
+                      <span className={`text-xs font-bold truncate ${dark ? "text-white" : "text-gray-900"}`}>{away}</span>
+                      {flg(m.away_team_code) && (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img loading="lazy" decoding="async" src={flg(m.away_team_code)!} alt="" className="w-5 h-3.5 object-cover rounded-[2px] flex-shrink-0" />
+                      )}
+                    </div>
+                    <span className={`text-[10px] font-medium flex-shrink-0 ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                      {m.predictions.length} {lang === "bs" ? "tip." : "pred."}
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""} ${dark ? "text-gray-500" : "text-gray-400"}`} />
+                  </button>
+                  {isOpen && m.predictions.length > 0 && (
+                    <div className={`border-t ${dark ? "border-white/5" : "border-gray-100"}`}>
+                      {m.predictions.map((p: any, i: number) => {
+                        const isExact = hasResult && p.home_score === m.home_score && p.away_score === m.away_score;
+                        const predictedWinner = p.home_score > p.away_score ? "home" : p.home_score < p.away_score ? "away" : "draw";
+                        const actualWinner = hasResult ? (m.home_score > m.away_score ? "home" : m.home_score < m.away_score ? "away" : "draw") : null;
+                        const gotWinner = actualWinner && predictedWinner === actualWinner;
+                        return (
+                          <div key={i} className={`flex items-center gap-2 px-3 py-1.5 ${
+                            i > 0 ? (dark ? "border-t border-white/5" : "border-t border-gray-50") : ""
+                          } ${isExact ? (dark ? "bg-emerald-500/10" : "bg-emerald-50") : ""}`}>
+                            <span className={`text-[11px] font-medium truncate flex-1 min-w-0 ${dark ? "text-gray-300" : "text-gray-700"}`}>
+                              {p.user_display_name || "?"}
+                            </span>
+                            <span className={`text-[13px] font-black tabular-nums flex-shrink-0 ${
+                              isExact
+                                ? "text-emerald-500"
+                                : gotWinner
+                                  ? dark ? "text-amber-300" : "text-amber-600"
+                                  : dark ? "text-gray-400" : "text-gray-600"
+                            }`}>
+                              {p.home_score}:{p.away_score}
+                            </span>
+                            {p.is_scored && (
+                              <span className={`text-[9px] font-black tabular-nums w-6 text-right flex-shrink-0 ${
+                                (p.points_awarded ?? 0) > 0 ? (dark ? "text-emerald-400" : "text-emerald-600") : (dark ? "text-gray-600" : "text-gray-400")
+                              }`}>
+                                +{p.points_awarded ?? 0}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
 
       {/* Player predictions modal (Portal to escape stacking contexts) */}
       {typeof document !== "undefined" && createPortal(
@@ -2352,7 +2494,7 @@ function StandingsTab({
                                           }`}>
                                             {o.image_url && (
                                               /* eslint-disable-next-line @next/next/no-img-element */
-                                              <img src={o.image_url} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px]" />
+                                              <img loading="lazy" decoding="async" src={o.image_url} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px]" />
                                             )}
                                             {lang === "en" && o.label_en ? o.label_en : o.label}
                                           </span>
@@ -2400,20 +2542,20 @@ function StandingsTab({
                                 if (!m) return null;
                                 const home = lang === "en" && m.home_team_en ? m.home_team_en : m.home_team;
                                 const away = lang === "en" && m.away_team_en ? m.away_team_en : m.away_team;
-                                const flg = (code: string) => code ? `https://flagcdn.com/w40/${code}.png` : null;
+                                const flg = (code: string) => code ? `https://flagcdn.com/w20/${code}.png` : null;
                                 return (
                                   <div key={p.id} className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 ${dark ? "bg-white/[0.03]" : "bg-white"}`}>
                                     <div className="flex items-center gap-1 flex-1 min-w-0">
                                       {flg(m.home_team_code) && (
                                         /* eslint-disable-next-line @next/next/no-img-element */
-                                        <img src={flg(m.home_team_code)!} alt="" className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0" />
+                                        <img loading="lazy" decoding="async" src={flg(m.home_team_code)!} alt="" className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0" />
                                       )}
                                       <span className={`text-[11px] font-semibold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>{home}</span>
                                       <span className={`text-[9px] flex-shrink-0 ${dark ? "text-gray-600" : "text-gray-400"}`}>v</span>
                                       <span className={`text-[11px] font-semibold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>{away}</span>
                                       {flg(m.away_team_code) && (
                                         /* eslint-disable-next-line @next/next/no-img-element */
-                                        <img src={flg(m.away_team_code)!} alt="" className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0" />
+                                        <img loading="lazy" decoding="async" src={flg(m.away_team_code)!} alt="" className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0" />
                                       )}
                                     </div>
                                     <span className={`text-[13px] font-black tabular-nums px-1.5 py-0.5 rounded-md flex-shrink-0 ${

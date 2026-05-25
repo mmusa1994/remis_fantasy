@@ -28,7 +28,7 @@ export interface MatchSetTemplate {
   matches: MatchTemplateItem[];
 }
 
-const flag = (cc: string) => `https://flagcdn.com/w80/${cc}.png`;
+const flag = (cc: string) => `https://flagcdn.com/w40/${cc}.png`;
 
 // -------------------------------------------------------------
 // SP 2026. KOMPLETAN RASPORED (104 utakmice, real podaci sa FIFA)

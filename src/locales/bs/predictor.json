@@ -40,7 +40,10 @@
     "notYetLocked": "Jos nije zakljucano",
     "noPredictions": "Nema zakljucanih predikcija.",
     "viewPicks": "klikni za detalje",
-    "you": "ti"
+    "you": "ti",
+    "byPoints": "Po poenima",
+    "byMatches": "Po utakmicama",
+    "noLockedMatches": "Nema zakljucanih utakmica."
   },
   "validation": {
     "savedIncomplete": "Sačuvano, ali ove predikcije još nisu kompletne"
