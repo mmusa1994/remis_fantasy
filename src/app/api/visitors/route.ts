@@ -36,14 +36,30 @@ export async function POST(request: NextRequest) {
       }, { status: 200 });
     }
 
+    // Resolve geolocation server-side (no CORS issues)
+    let country: string | null = null;
+    let city: string | null = null;
+    if (ipAddress !== "unknown") {
+      try {
+        const geoRes = await fetch(`https://ipapi.co/${ipAddress.split(",")[0].trim()}/json/`);
+        if (geoRes.ok) {
+          const geo = await geoRes.json();
+          country = geo.country_name ?? null;
+          city = geo.city ?? null;
+        }
+      } catch {
+        // geolocation is optional
+      }
+    }
+
     // If IP doesn't exist, insert new visitor data
     const visitorData = {
       ip_address: ipAddress,
       user_agent: request.headers.get("user-agent") || "unknown",
       referrer: data.referrer || "direct",
       page_url: data.pageUrl || "/",
-      country: data.country || null,
-      city: data.city || null,
+      country,
+      city,
       device_type: data.deviceType || "unknown",
       browser: data.browser || "unknown",
       os: data.os || "unknown",
