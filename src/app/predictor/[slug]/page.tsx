@@ -789,14 +789,20 @@ function collectIncompleteIssues(
         break;
       }
       case "ranked_top_n": {
-        const need = cat.max_selections || 0;
-        if (need > 0 && sel.length < need) {
+        const isGroupCat = /^grupa-[a-l]-prolaz$/.test(cat.slug);
+        const minNeeded = isGroupCat ? 2 : (cat.max_selections || 0);
+        if (minNeeded > 0 && sel.length < minNeeded) {
           issues.push({
             id: cat.id,
-            msg: t(
-              `„${name}" - rangiraj svih ${need} (imaš ${sel.length})`,
-              `"${name}" - rank all ${need} (you have ${sel.length})`,
-            ),
+            msg: isGroupCat
+              ? t(
+                  `„${name}" - odaberi bar 2 ekipe (imaš ${sel.length})`,
+                  `"${name}" - pick at least 2 teams (you have ${sel.length})`,
+                )
+              : t(
+                  `„${name}" - rangiraj svih ${minNeeded} (imaš ${sel.length})`,
+                  `"${name}" - rank all ${minNeeded} (you have ${sel.length})`,
+                ),
           });
         }
         break;
