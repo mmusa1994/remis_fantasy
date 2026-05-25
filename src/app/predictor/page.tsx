@@ -575,10 +575,10 @@ function TournamentCard({
           style={{ background: "currentColor", opacity: 0.04 }}
         />
 
-        {tournament.banner_image_url && large && (
-          <div className="absolute inset-0 rounded-3xl overflow-hidden opacity-10 pointer-events-none">
+        {tournament.logo_url && large && (
+          <div className="absolute inset-0 rounded-3xl overflow-hidden opacity-[0.06] pointer-events-none">
             <Image
-              src={tournament.banner_image_url}
+              src={tournament.logo_url}
               alt=""
               fill
               className="object-cover"
@@ -684,7 +684,7 @@ function TournamentCard({
               }`}
             >
               <Calendar className="w-3 h-3 opacity-70" />
-              {new Date(tournament.starts_at).toLocaleDateString()}
+              {new Date(tournament.starts_at).toLocaleDateString(lang === "bs" ? "sr-Latn" : "en-GB")}
             </span>
           )}
           {tournament.registration_lock_at && (
@@ -696,12 +696,10 @@ function TournamentCard({
               }`}
             >
               <Lock className="w-3 h-3 opacity-70" />
-              {new Date(tournament.registration_lock_at).toLocaleString([], {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {new Date(tournament.registration_lock_at).toLocaleString(
+                lang === "bs" ? "sr-Latn" : "en-GB",
+                { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" },
+              )}
             </span>
           )}
           {tournament.prize_pool_amount != null && (

@@ -29,8 +29,6 @@ export async function POST(req: NextRequest) {
       name: desiredName,
       short_description: tmpl.short_description,
       long_description: tmpl.long_description ?? null,
-      banner_image_url: tmpl.banner_image_url ?? null,
-      hero_image_url: tmpl.hero_image_url ?? null,
       logo_url: tmpl.logo_url ?? null,
       accent_color: body.accent_color_override || tmpl.accent_color,
       status: "draft",

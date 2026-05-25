@@ -3767,20 +3767,6 @@ function SettingsTab({
             />
           </div>
         </Field>
-        <Field theme={theme} label="URL banera">
-          <Input
-            theme={theme}
-            value={form.banner_image_url ?? ""}
-            onChange={(v) => update({ banner_image_url: v || null })}
-          />
-        </Field>
-        <Field theme={theme} label="URL hero slike">
-          <Input
-            theme={theme}
-            value={form.hero_image_url ?? ""}
-            onChange={(v) => update({ hero_image_url: v || null })}
-          />
-        </Field>
         <Field theme={theme} label="Naziv sponzora">
           <Input
             theme={theme}

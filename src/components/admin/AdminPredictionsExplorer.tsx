@@ -2045,7 +2045,7 @@ function DayBlock({
   const lang = normalizeLang(i18n.language);
   const date = day === "tbd" ? null : new Date(`${day}T00:00:00`);
   const formatted = date
-    ? date.toLocaleDateString(lang === "en" ? "en-GB" : "bs-BA", {
+    ? date.toLocaleDateString(lang === "en" ? "en-GB" : "hr", {
         weekday: "long",
         day: "numeric",
         month: "long",

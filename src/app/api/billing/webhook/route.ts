@@ -241,8 +241,6 @@ export async function POST(req: NextRequest) {
                   short_description: short_description || tmpl?.short_description || null,
                   long_description: tmpl?.long_description ?? null,
                   logo_url: tmpl?.logo_url ?? null,
-                  banner_image_url: tmpl?.banner_image_url ?? null,
-                  hero_image_url: tmpl?.hero_image_url ?? null,
                   rules_md: tmpl?.rules_md ?? null,
                   point_system_md: tmpl?.point_system_md ?? null,
                   eligibility_md: tmpl?.eligibility_md ?? null,

@@ -75,9 +75,10 @@ export async function POST(req: NextRequest) {
   if (applyBranding) {
     const update: Record<string, unknown> = {};
     if (tmpl.logo_url) update.logo_url = tmpl.logo_url;
-    if (tmpl.banner_image_url) update.banner_image_url = tmpl.banner_image_url;
-    if (tmpl.hero_image_url) update.hero_image_url = tmpl.hero_image_url;
     if (tmpl.accent_color) update.accent_color = tmpl.accent_color;
+    if (tmpl.starts_at) update.starts_at = tmpl.starts_at;
+    if (tmpl.ends_at) update.ends_at = tmpl.ends_at;
+    if (tmpl.registration_lock_at) update.registration_lock_at = tmpl.registration_lock_at;
     if (tmpl.prize_pool_amount != null)
       update.prize_pool_amount = tmpl.prize_pool_amount;
     if (tmpl.prize_pool_currency)

@@ -56,8 +56,6 @@ export interface Tournament {
   short_description_en: string | null;
   long_description: string | null;
   long_description_en: string | null;
-  banner_image_url: string | null;
-  hero_image_url: string | null;
   logo_url: string | null;
   accent_color: AccentColor;
   status: TournamentStatus;

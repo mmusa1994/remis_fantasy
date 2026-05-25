@@ -108,7 +108,7 @@ export default function VisitorsPage() {
   };
 
   const formatDate = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString("bs-BA", {
+    return new Date(timestamp).toLocaleString("hr", {
       year: "numeric",
       month: "short",
       day: "numeric",

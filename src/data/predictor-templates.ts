@@ -65,9 +65,10 @@ export interface PredictorTemplate {
   short_description: string;
   long_description?: string;
   accent_color: AccentColor;
-  banner_image_url?: string;
-  hero_image_url?: string;
   logo_url?: string;
+  starts_at?: string;
+  ends_at?: string;
+  registration_lock_at?: string;
   prize_pool_amount?: number;
   prize_pool_currency?: string;
   rules_md?: string;
@@ -228,7 +229,9 @@ const worldCup2026: PredictorTemplate = {
     "Najveći fudbalski događaj na svijetu se vraća. prvi put sa 48 reprezentacija na 3 kontinenta. Predvidi sve i bori se za nagrade.",
   accent_color: "gold",
   logo_url: "/images/logos/wc-logo.png",
-  banner_image_url: "/images/logos/wc-logo.png",
+  starts_at: "2026-06-11T19:00:00.000Z",
+  ends_at: "2026-07-19T21:00:00.000Z",
+  registration_lock_at: "2026-06-11T18:00:00.000Z",
   defaultMatchTemplateId: "wc-2026-full",
   defaultMatchScoring: {
     points_exact: 3,
@@ -413,7 +416,6 @@ const championsLeague2526: PredictorTemplate = {
     "Najjača klupska liga svijeta. predvidi ko će dignuti trofej.",
   accent_color: "blue",
   logo_url: "/images/logos/cl-logo.png",
-  banner_image_url: "/images/logos/cl-logo.png",
   prize_pool_amount: 500,
   prize_pool_currency: "EUR",
   rules_md:
@@ -556,7 +558,6 @@ const premierLeague2526: PredictorTemplate = {
     "Sezonske predikcije za Premier League. prvak, top 4, ispadanja, najbolji strijelac.",
   accent_color: "purple",
   logo_url: "/images/logos/pl-logo.png",
-  banner_image_url: "/images/logos/pl-logo.png",
   prize_pool_amount: 300,
   prize_pool_currency: "EUR",
   categories: [
@@ -679,7 +680,6 @@ const bundesliga2526: PredictorTemplate = {
     "Sezonske predikcije za Bundesligu. prvak, top 3, ispadanja, najbolji strijelac.",
   accent_color: "red",
   logo_url: "/logos/bundes.png",
-  banner_image_url: "/logos/bundes.png",
   prize_pool_currency: "EUR",
   categories: [
     {
@@ -730,7 +730,6 @@ const laLiga2526: PredictorTemplate = {
     "Sezonske predikcije za La Ligu. prvak, top 4, najbolji strijelac, Zamora trofej.",
   accent_color: "red",
   logo_url: "/logos/la-liga-logo.png",
-  banner_image_url: "/logos/la-liga-logo.png",
   prize_pool_currency: "EUR",
   categories: [
     {
@@ -779,7 +778,6 @@ const euroleagueBasket: PredictorTemplate = {
     "EuroLeague predikcije. Final Four, prvak, MVP, najbolji strijelac.",
   accent_color: "amber",
   logo_url: "/logos/eurliga.png",
-  banner_image_url: "/logos/eurliga.png",
   prize_pool_currency: "EUR",
   categories: [
     {

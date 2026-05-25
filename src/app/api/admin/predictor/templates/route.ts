@@ -13,7 +13,6 @@ export async function GET() {
     short_description: t.short_description,
     accent_color: t.accent_color,
     logo_url: t.logo_url ?? null,
-    banner_image_url: t.banner_image_url ?? null,
     category_count: t.categories.length,
     team_count: t.categories.reduce(
       (acc, c) => Math.max(acc, c.options?.length ?? 0),

@@ -53,8 +53,6 @@ export async function PUT(req: NextRequest) {
     "short_description_en",
     "long_description",
     "long_description_en",
-    "banner_image_url",
-    "hero_image_url",
     "logo_url",
     "accent_color",
     "status",

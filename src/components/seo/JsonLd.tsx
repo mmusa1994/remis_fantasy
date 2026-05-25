@@ -63,7 +63,7 @@ export const websiteSchema = {
     "@type": "Organization",
     name: "REMIS Fantasy",
   },
-  inLanguage: ["en-US", "sr-RS", "bs-BA"],
+  inLanguage: ["en-US", "sr-RS", "hr"],
   copyrightYear: "2025",
   keywords:
     "REMIS Fantasy, FPL analytics, live mini league tables, FPL team news, best differentials, FPL captain picks, FPL transfer suggestions, Fantasy Premier League tools, FPL advanced statistics, gameweek analysis, fixture difficulty FPL, bonus points prediction, FPL AI recommendations, Premier League data, FPL managers, fantasy football analytics",

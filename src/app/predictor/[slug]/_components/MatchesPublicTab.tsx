@@ -464,7 +464,7 @@ export default function MatchesPublicTab({
             {savedAt && (
               <span className="text-xs text-theme-text-secondary flex items-center gap-1 opacity-70">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                {savedAt.toLocaleTimeString()}
+                {savedAt.toLocaleTimeString(lang === "bs" ? "sr-Latn" : "en-GB", { hour: "2-digit", minute: "2-digit" })}
               </span>
             )}
           </div>
@@ -858,13 +858,16 @@ function MatchCard({
               {stageLabel && <span className="opacity-50">·</span>}
               <span className="inline-flex items-center gap-1 font-semibold">
                 <CalendarClock className="w-3 h-3 opacity-70" />
-                {new Date(match.kickoff_at).toLocaleString([], {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {new Date(match.kickoff_at).toLocaleString(
+                  lang === "bs" ? "sr-Latn" : "en-GB",
+                  {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  },
+                )}
               </span>
             </>
           )}

@@ -304,7 +304,7 @@ export default function TournamentDetailPage() {
       setSavedAt(new Date());
       setCategoryConfetti((n) => n + 1);
       showToast(t("owner.toast.predictionsSaved", "Predictions saved"));
-      await loadMyPredictions();
+      await Promise.all([loadMyPredictions(), loadStandings()]);
     } catch (e: any) {
       setError(e.message);
       showToast(
@@ -390,17 +390,6 @@ export default function TournamentDetailPage() {
       {themeMusicEnabled && <WCMusicPlayer />}
       {/* Hero */}
       <section className="relative z-10 overflow-hidden pb-6 sm:pb-8 px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8 md:pt-12">
-        {tournament.hero_image_url && (
-          <div className="absolute inset-0 pointer-events-none opacity-10">
-            <Image
-              src={tournament.hero_image_url}
-              alt=""
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
-        )}
         <div className="relative max-w-5xl mx-auto">
           <div className="flex items-center gap-2 mb-3 text-sm">
             <Link
@@ -468,21 +457,19 @@ export default function TournamentDetailPage() {
             {tournament.starts_at && (
               <span className="inline-flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
-                {new Date(tournament.starts_at).toLocaleDateString()}
+                {new Date(tournament.starts_at).toLocaleDateString(lang === "bs" ? "sr-Latn" : "en-GB")}
                 {tournament.ends_at &&
-                  ` → ${new Date(tournament.ends_at).toLocaleDateString()}`}
+                  ` → ${new Date(tournament.ends_at).toLocaleDateString(lang === "bs" ? "sr-Latn" : "en-GB")}`}
               </span>
             )}
             {tournament.registration_lock_at && (
               <span className="inline-flex items-center gap-1.5">
                 <Lock className="w-4 h-4" />
                 {t("locksAt", "Locks")}{" "}
-                {new Date(tournament.registration_lock_at).toLocaleString([], {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {new Date(tournament.registration_lock_at).toLocaleString(
+                  lang === "bs" ? "sr-Latn" : "en-GB",
+                  { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" },
+                )}
               </span>
             )}
             {tournament.prize_pool_amount != null && (
@@ -546,7 +533,10 @@ export default function TournamentDetailPage() {
               return (
                 <button
                   key={it.id}
-                  onClick={() => setTab(it.id as PageTab)}
+                  onClick={() => {
+                    setTab(it.id as PageTab);
+                    if (it.id === "standings") loadStandings();
+                  }}
                   className={`snap-start inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full font-semibold text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 border ${
                     active
                       ? `${accentBg} ${ac.textOn} ${ac.border500} shadow-md ${ac.shadow500_20}`
@@ -613,7 +603,7 @@ export default function TournamentDetailPage() {
                 authStatus={authStatus}
                 theme={theme}
                 ac={ac}
-                onSaved={loadMyMatchPredictions}
+                onSaved={() => { loadMyMatchPredictions(); loadStandings(); }}
                 isWC={isWC}
                 themeBgSrc={themeBg}
                 lockMode={tournament.prediction_lock_mode || "per_match"}
@@ -1232,7 +1222,7 @@ function PredictionsTab({
             {cat.lock_at && !locked && (
               <p className="mt-3 text-xs text-theme-text-secondary inline-flex items-center gap-1">
                 <Lock className="w-3 h-3" />
-                {t("locksAt", "Locks at")} {new Date(cat.lock_at).toLocaleString()}
+                {t("locksAt", "Locks at")} {new Date(cat.lock_at).toLocaleString(lang === "bs" ? "sr-Latn" : "en-GB", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
               </p>
             )}
           </div>
@@ -1266,7 +1256,7 @@ function PredictionsTab({
             {savedAt && (
               <span className="flex items-center gap-1.5 opacity-70">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                {savedAt.toLocaleTimeString()}
+                {savedAt.toLocaleTimeString(lang === "bs" ? "sr-Latn" : "en-GB", { hour: "2-digit", minute: "2-digit" })}
               </span>
             )}
           </div>

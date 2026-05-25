@@ -1015,88 +1015,26 @@ function SettingsTab({
         </div>
       </Section>
 
-      <Section dark={dark} title={t("owner.settings.branding.title")}>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <ImageUpload
-            dark={dark}
-            tournamentId={tournament.id}
-            kind="banner"
-            label={t("owner.settings.branding.bannerUrl")}
-            value={form.banner_image_url}
-            onChange={(url) => set("banner_image_url", url || null)}
-            onError={(msg) => showToast(msg, false)}
-          />
-          <ImageUpload
-            dark={dark}
-            tournamentId={tournament.id}
-            kind="hero"
-            label={t("owner.settings.branding.heroUrl")}
-            value={form.hero_image_url}
-            onChange={(url) => set("hero_image_url", url || null)}
-            onError={(msg) => showToast(msg, false)}
-          />
+      {/* Branding: logo + background + music + lock mode */}
+      <Section
+        dark={dark}
+        title={t("owner.settings.branding.title", "Branding & theme")}
+        desc={t("owner.settings.theme.desc", "Logo, background and music for the tournament page.")}
+      >
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {/* Logo */}
           <ImageUpload
             dark={dark}
             tournamentId={tournament.id}
             kind="logo"
-            label={t("owner.settings.branding.logoUrl")}
+            label={t("owner.settings.branding.logoUrl", "Logo")}
             value={form.logo_url}
             onChange={(url) => set("logo_url", url || null)}
             onError={(msg) => showToast(msg, false)}
           />
-        </div>
-      </Section>
 
-      {/* Prediction lock mode */}
-      <Section
-        dark={dark}
-        title={t("owner.settings.lockMode.title", "Prediction locking")}
-        desc={t("owner.settings.lockMode.desc", "How predictions lock as matches approach.")}
-      >
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {(["per_match", "per_round"] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => set("prediction_lock_mode", mode)}
-              className={`flex flex-col gap-1 rounded-lg border px-4 py-3 text-left transition-all ${
-                (form.prediction_lock_mode || "per_match") === mode
-                  ? dark
-                    ? "border-predictor-primary/60 bg-predictor-primary/10 text-predictor-accent-dark"
-                    : "border-predictor-primary bg-predictor-primary/20 text-predictor-accent-light"
-                  : dark
-                    ? "border-white/10 bg-black/20 text-gray-400 hover:border-white/30"
-                    : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
-              }`}
-            >
-              <span className="text-sm font-bold">
-                {t(`owner.settings.lockMode.${mode}.label`,
-                  mode === "per_match" ? "Per match" : "Per round"
-                )}
-              </span>
-              <span className={`text-[11px] leading-snug ${dark ? "text-gray-500" : "text-gray-500"}`}>
-                {t(`owner.settings.lockMode.${mode}.desc`,
-                  mode === "per_match"
-                    ? "Each match locks at its own kickoff time"
-                    : "All matches in a round lock when the first match of that round starts"
-                )}
-              </span>
-            </button>
-          ))}
-        </div>
-      </Section>
-
-      {/* Theme: music + background */}
-      <Section
-        dark={dark}
-        title={t("owner.settings.theme.title", "Theme")}
-        desc={t("owner.settings.theme.desc", "Background image and music for the tournament page.")}
-      >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field
-            label={t("owner.settings.theme.music", "Music player")}
-            hint={t("owner.settings.theme.musicHint", "Anthem player on the public tournament page.")}
-          >
+          {/* Music toggle */}
+          <Field label={t("owner.settings.theme.music", "Music player")}>
             <label
               className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 ${
                 dark ? "border-white/10 bg-black/20" : "border-gray-300 bg-white"
@@ -1115,17 +1053,94 @@ function SettingsTab({
               </span>
             </label>
           </Field>
-          <Field
-            label={t("owner.settings.theme.background", "Background image")}
-            hint={t("owner.settings.theme.backgroundHint", "Path to a background image (e.g. /wc2026/wc-bg-2.webp).")}
-          >
-            <input
-              value={form.theme_background_image ?? ""}
-              onChange={(e) => set("theme_background_image", e.target.value || null)}
-              placeholder="/wc2026/wc-bg-2.webp"
-              className={cls.input(dark)}
-            />
-          </Field>
+        </div>
+
+        {/* Background gallery */}
+        <div className="mt-5">
+          <p className={`mb-2 text-[11px] font-semibold uppercase tracking-wider ${dark ? "text-gray-400" : "text-gray-500"}`}>
+            {t("owner.settings.theme.background", "Background image")}
+          </p>
+          <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-8 gap-2">
+            <button
+              type="button"
+              onClick={() => set("theme_background_image", null)}
+              className={`relative flex items-center justify-center h-14 rounded-lg border-2 text-[10px] font-semibold transition-all ${
+                !form.theme_background_image
+                  ? dark
+                    ? "border-predictor-primary/60 bg-predictor-primary/10 text-predictor-accent-dark"
+                    : "border-predictor-primary bg-predictor-primary/20 text-predictor-accent-light"
+                  : dark
+                    ? "border-white/10 bg-white/[0.03] text-gray-500 hover:border-white/25"
+                    : "border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-400"
+              }`}
+            >
+              {t("owner.settings.theme.noBg", "None")}
+            </button>
+            {[
+              "/wc2026/wc-bg-2.webp",
+              "/wc2026/wc-bg-3.webp",
+              "/wc2026/wc-bg.jpg",
+              "/wc2026/wc-bg1.jpg",
+              "/wc2026/bg-full-wc-2026.jpg",
+              "/wc2026/wc-5.webp",
+              "/wc2026/wc-6.jpg",
+            ].map((src) => (
+              <button
+                key={src}
+                type="button"
+                onClick={() => set("theme_background_image", src)}
+                className={`relative h-14 overflow-hidden rounded-lg border-2 transition-all ${
+                  form.theme_background_image === src
+                    ? "border-predictor-primary ring-1 ring-predictor-primary/40"
+                    : dark
+                      ? "border-white/10 hover:border-white/30 opacity-70 hover:opacity-100"
+                      : "border-gray-200 hover:border-gray-400 opacity-75 hover:opacity-100"
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                {form.theme_background_image === src && (
+                  <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-predictor-primary text-gray-900 flex items-center justify-center text-[9px] font-black">✓</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Lock mode */}
+        <div className="mt-5">
+          <p className={`mb-2 text-[11px] font-semibold uppercase tracking-wider ${dark ? "text-gray-400" : "text-gray-500"}`}>
+            {t("owner.settings.lockMode.title", "Prediction locking")}
+          </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {(["per_match", "per_round"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => set("prediction_lock_mode", mode)}
+                className={`flex flex-col gap-1 rounded-lg border px-4 py-3 text-left transition-all ${
+                  (form.prediction_lock_mode || "per_match") === mode
+                    ? dark
+                      ? "border-predictor-primary/60 bg-predictor-primary/10 text-predictor-accent-dark"
+                      : "border-predictor-primary bg-predictor-primary/20 text-predictor-accent-light"
+                    : dark
+                      ? "border-white/10 bg-black/20 text-gray-400 hover:border-white/30"
+                      : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+                }`}
+              >
+                <span className="text-sm font-bold">
+                  {t(`owner.settings.lockMode.${mode}.label`, mode === "per_match" ? "Per match" : "Per round")}
+                </span>
+                <span className={`text-[11px] leading-snug ${dark ? "text-gray-500" : "text-gray-500"}`}>
+                  {t(`owner.settings.lockMode.${mode}.desc`,
+                    mode === "per_match"
+                      ? "Each match locks at its own kickoff time"
+                      : "All matches in a round lock when the first match starts"
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </Section>
 
@@ -1155,14 +1170,14 @@ function SettingsTab({
               className={cls.input(dark)}
             />
           </Field>
-          <Field label={t("owner.settings.prize.sponsorName")}>
+          <Field label={t("owner.settings.prize.sponsorName", "Sponsor name")}>
             <input
               value={form.sponsor_name ?? ""}
               onChange={(e) => set("sponsor_name", e.target.value)}
               className={cls.input(dark)}
             />
           </Field>
-          <Field label={t("owner.settings.prize.sponsorUrl")}>
+          <Field label={t("owner.settings.prize.sponsorUrl", "Sponsor link")}>
             <input
               value={form.sponsor_url ?? ""}
               onChange={(e) => set("sponsor_url", e.target.value)}
@@ -1170,14 +1185,15 @@ function SettingsTab({
               className={cls.input(dark)}
             />
           </Field>
-          <Field label={t("owner.settings.prize.sponsorLogoUrl")}>
-            <input
-              value={form.sponsor_logo_url ?? ""}
-              onChange={(e) => set("sponsor_logo_url", e.target.value)}
-              placeholder="https://..."
-              className={cls.input(dark)}
-            />
-          </Field>
+          <ImageUpload
+            dark={dark}
+            tournamentId={tournament.id}
+            kind="logo"
+            label={t("owner.settings.prize.sponsorLogoUrl", "Sponsor logo")}
+            value={form.sponsor_logo_url}
+            onChange={(url) => set("sponsor_logo_url", url || null)}
+            onError={(msg) => showToast(msg, false)}
+          />
         </div>
       </Section>
 
@@ -2094,9 +2110,14 @@ function MatchesTab({
                 </div>
                 <div className="mt-0.5 text-[11px] text-theme-text-secondary">
                   {m.kickoff_at
-                    ? new Date(m.kickoff_at).toLocaleString()
+                    ? new Date(m.kickoff_at).toLocaleString(lang === "bs" ? "sr-Latn" : "en-GB", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                     : t("owner.matchesTab.noKickoff")}{" "}
                   · {stageName}
+                  {m.matchday != null && (
+                    <span className={cls.badgeAccent(dark) + " ml-1"}>
+                      {lang === "bs" ? `${m.matchday}. kolo` : `MD${m.matchday}`}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -2959,7 +2980,8 @@ function MembersTab({
   dark: boolean;
   showToast: (m: string, ok?: boolean) => void;
 }) {
-  const { t } = useTranslation("predictor");
+  const { t, i18n } = useTranslation("predictor");
+  const lang = normalizeLang(i18n.language);
   const [list, setList] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
@@ -3064,7 +3086,7 @@ function MembersTab({
                   </span>
                   <span>
                     · {t("owner.membersTab.joinedOn")}{" "}
-                    {new Date(m.requested_at).toLocaleDateString()}
+                    {new Date(m.requested_at).toLocaleDateString(lang === "bs" ? "sr-Latn" : "en-GB")}
                   </span>
                 </div>
               </div>
