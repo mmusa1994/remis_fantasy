@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
@@ -18,7 +18,23 @@ import {
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+          <AiOutlineLoading3Quarters className="w-8 h-8 animate-spin text-red-800" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const { theme } = useTheme();
   const { t, ready } = useTranslation("auth");
   const [formData, setFormData] = useState({
@@ -33,7 +49,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true);
-    // Check if user is already logged in
     getSession().then((session) => {
       if (session) {
         setLoginSuccess(true);
@@ -94,6 +109,10 @@ export default function LoginPage() {
     }));
   };
 
+  useEffect(() => {
+    if (loginSuccess) router.replace(callbackUrl);
+  }, [loginSuccess, router, callbackUrl]);
+
   if (!ready || !mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
@@ -101,10 +120,6 @@ export default function LoginPage() {
       </div>
     );
   }
-
-  useEffect(() => {
-    if (loginSuccess) router.replace("/");
-  }, [loginSuccess, router]);
 
   if (loginSuccess) {
     return (
