@@ -18,6 +18,8 @@ import {
   LogOut,
   BarChart3,
   Activity,
+  Calendar,
+  Users,
   Trophy,
   UserPlus,
   Camera,
@@ -265,6 +267,24 @@ const Navbar = React.memo(function Navbar() {
           icon: UserPlus,
         },
         { name: t("gallery"), href: "/f1-fantasy/gallery", icon: Camera },
+      ],
+    },
+    {
+      id: "wc2026",
+      name: t("wc2026Fantasy", "WC 2026 Fantasy"),
+      href: "/wc2026",
+      logo: "/images/logos/wc-logo.png",
+      accentColor: "teal",
+      borderClass: "border-t-teal-600",
+      activeTextClass: "text-teal-600 dark:text-teal-400",
+      subPages: [
+        { name: t("tables"), href: "/wc2026/tables", icon: BarChart3 },
+        { name: t("wc2026Matches", "Matches"), href: "/wc2026/matches", icon: Calendar },
+        { name: t("wc2026Groups", "Groups"), href: "/wc2026/groups", icon: Users },
+        { name: t("wc2026Statistics", "Statistics"), href: "/wc2026/statistics", icon: TrendingUp },
+        { name: t("registration"), href: "/wc2026/registration", icon: UserPlus },
+        { name: t("prizes"), href: "/wc2026/prizes", icon: Trophy },
+        { name: t("gallery"), href: "/wc2026/gallery", icon: Camera },
       ],
     },
   ];
@@ -671,7 +691,9 @@ const Navbar = React.memo(function Navbar() {
                                 ? "brightness(0) saturate(100%) invert(18%) sepia(80%) saturate(5000%) hue-rotate(260deg) brightness(100%)"
                                 : league.accentColor === "blue"
                                   ? "brightness(0) saturate(100%) invert(30%) sepia(80%) saturate(3000%) hue-rotate(200deg) brightness(100%)"
-                                  : "brightness(0) saturate(100%) invert(15%) sepia(80%) saturate(5000%) hue-rotate(350deg) brightness(100%)"
+                                  : league.accentColor === "teal"
+                                    ? "brightness(0) saturate(100%) invert(45%) sepia(80%) saturate(2000%) hue-rotate(140deg) brightness(95%)"
+                                    : "brightness(0) saturate(100%) invert(15%) sepia(80%) saturate(5000%) hue-rotate(350deg) brightness(100%)"
                               : theme === "dark"
                                 ? "brightness(0) invert(1)"
                                 : "brightness(0)",
@@ -688,7 +710,9 @@ const Navbar = React.memo(function Navbar() {
                               ? "bg-gradient-to-r from-transparent via-purple-600 to-transparent"
                               : league.accentColor === "blue"
                                 ? "bg-gradient-to-r from-transparent via-blue-600 to-transparent"
-                                : "bg-gradient-to-r from-transparent via-red-600 to-transparent"
+                                : league.accentColor === "teal"
+                                  ? "bg-gradient-to-r from-transparent via-teal-600 to-transparent"
+                                  : "bg-gradient-to-r from-transparent via-red-600 to-transparent"
                           }`}
                           initial={{ scaleX: 0, opacity: 0 }}
                           animate={{ scaleX: 1, opacity: 1 }}
@@ -706,14 +730,18 @@ const Navbar = React.memo(function Navbar() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-lg border-t-2 shadow-xl z-50 ${league.borderClass} ${
+                        className={`absolute top-full mt-2 rounded-lg border-t-2 shadow-xl z-50 ${league.borderClass} ${
+                          index >= leagueNavItems.length - 1
+                            ? "right-0"
+                            : "left-1/2 -translate-x-1/2"
+                        } ${
                           theme === "dark"
                             ? "bg-gray-900 border border-gray-700"
                             : "bg-white border border-gray-200"
                         }`}
                         style={{
                           minWidth:
-                            league.subPages.length > 4 ? "520px" : "260px",
+                            league.subPages.length > 4 ? "480px" : "260px",
                         }}
                         onMouseEnter={handleMouseEnterDropdown}
                         onMouseLeave={handleMouseLeaveDropdown}
@@ -746,12 +774,16 @@ const Navbar = React.memo(function Navbar() {
                                               ? "bg-purple-500/10"
                                               : league.accentColor === "blue"
                                                 ? "bg-blue-500/10"
-                                                : "bg-red-500/10"
+                                                : league.accentColor === "teal"
+                                                  ? "bg-teal-500/10"
+                                                  : "bg-red-500/10"
                                             : league.accentColor === "purple"
                                               ? "bg-purple-50"
                                               : league.accentColor === "blue"
                                                 ? "bg-blue-50"
-                                                : "bg-red-50"
+                                                : league.accentColor === "teal"
+                                                  ? "bg-teal-50"
+                                                  : "bg-red-50"
                                         }`
                                       : theme === "dark"
                                         ? "text-gray-300 hover:bg-gray-800 hover:text-white"

@@ -36,20 +36,73 @@ export async function POST(request: NextRequest) {
       }, { status: 200 });
     }
 
-    // Resolve geolocation server-side (no CORS issues)
+    // Country code to full name mapping
+    const COUNTRY_CODES: Record<string, string> = {
+      BA: "Bosnia and Herzegovina", HR: "Croatia", RS: "Serbia", ME: "Montenegro",
+      SI: "Slovenia", MK: "North Macedonia", AL: "Albania", XK: "Kosovo",
+      AT: "Austria", DE: "Germany", CH: "Switzerland", IT: "Italy",
+      US: "United States", GB: "United Kingdom", FR: "France", ES: "Spain",
+      NL: "Netherlands", BE: "Belgium", SE: "Sweden", NO: "Norway",
+      DK: "Denmark", FI: "Finland", PL: "Poland", CZ: "Czech Republic",
+      HU: "Hungary", RO: "Romania", BG: "Bulgaria", GR: "Greece",
+      TR: "Turkey", PT: "Portugal", IE: "Ireland", CA: "Canada",
+      AU: "Australia", BR: "Brazil", AR: "Argentina", MX: "Mexico",
+      JP: "Japan", KR: "South Korea", CN: "China", IN: "India",
+      RU: "Russia", UA: "Ukraine", EG: "Egypt", ZA: "South Africa",
+      SA: "Saudi Arabia", AE: "United Arab Emirates", NG: "Nigeria",
+    };
+
+    // Resolve geolocation with multi-provider fallback
     let country: string | null = null;
     let city: string | null = null;
-    if (ipAddress !== "unknown") {
+    const cleanIp = ipAddress !== "unknown" ? ipAddress.split(",")[0].trim() : null;
+
+    // 1. Try Vercel's geolocation headers (free, instant, no API call)
+    const vercelCountryCode = request.headers.get("x-vercel-ip-country");
+    const vercelCity = request.headers.get("x-vercel-ip-city");
+    if (vercelCountryCode) {
+      country = COUNTRY_CODES[vercelCountryCode] ?? vercelCountryCode;
+      city = vercelCity ? decodeURIComponent(vercelCity) : null;
+    }
+
+    // 2. Fallback: Try ip-api.com (free, 45 req/min, no key needed)
+    if (!country && cleanIp) {
       try {
-        const geoRes = await fetch(`https://ipapi.co/${ipAddress.split(",")[0].trim()}/json/`);
+        const geoRes = await fetch(`http://ip-api.com/json/${cleanIp}?fields=country,city,status`, {
+          signal: AbortSignal.timeout(3000),
+        });
         if (geoRes.ok) {
           const geo = await geoRes.json();
-          country = geo.country_name ?? null;
-          city = geo.city ?? null;
+          if (geo.status === "success") {
+            country = geo.country ?? null;
+            city = geo.city ?? null;
+          }
         }
       } catch {
-        // geolocation is optional
+        // ip-api.com failed, try next provider
       }
+    }
+
+    // 3. Fallback: Try ipapi.co as last resort (100 req/day free tier)
+    if (!country && cleanIp) {
+      try {
+        const geoRes = await fetch(`https://ipapi.co/${cleanIp}/json/`, {
+          signal: AbortSignal.timeout(3000),
+        });
+        if (geoRes.ok) {
+          const geo = await geoRes.json();
+          if (!geo.error) {
+            country = geo.country_name ?? null;
+            city = geo.city ?? null;
+          }
+        }
+      } catch {
+        // ipapi.co failed
+      }
+    }
+
+    if (!country && cleanIp) {
+      console.warn(`[visitor-tracking] All geolocation providers failed for IP: ${cleanIp}`);
     }
 
     // If IP doesn't exist, insert new visitor data

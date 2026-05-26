@@ -35,6 +35,10 @@
       "f1Fantasy": {
         "title": "F1 Fantasy",
         "description": "Brzina, strategija i adrenalin na stazi"
+      },
+      "wc2026": {
+        "title": "WC 2026 Fantasy",
+        "description": "FIFA Svjetsko Prvenstvo 2026 - 48 timova, 104 utakmice"
       }
     },
     "globalStats": {

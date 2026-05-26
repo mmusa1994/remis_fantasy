@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { motion } from "framer-motion";
-import { Home, Menu, Search, BarChart3 } from "lucide-react";
+import { Menu, Search, BarChart3 } from "lucide-react";
 import { SiPremierleague } from "react-icons/si";
 import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
@@ -14,7 +15,7 @@ interface BottomNavProps {
   onMenuToggle: () => void;
 }
 
-type BrandKey = "neutral" | "premier" | "champions" | "f1" | "predictor";
+type BrandKey = "neutral" | "premier" | "champions" | "f1" | "wc2026" | "predictor";
 
 const BRAND_STYLES: Record<
   BrandKey,
@@ -49,6 +50,12 @@ const BRAND_STYLES: Record<
     indicator: "bg-red-500 dark:bg-red-400",
     iconTint: "text-red-600 dark:text-red-400",
   },
+  wc2026: {
+    activeText: "text-teal-600 dark:text-teal-400",
+    activeBg: "bg-teal-100/80 dark:bg-teal-500/15",
+    indicator: "bg-teal-500 dark:bg-teal-400",
+    iconTint: "",
+  },
   predictor: {
     activeText: "text-amber-600 dark:text-amber-400",
     activeBg: "bg-amber-100/80 dark:bg-amber-500/15",
@@ -79,6 +86,22 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
     </span>
   );
 
+  const WCIcon = ({ isActive }: { isActive: boolean }) => (
+    <Image
+      src="/images/logos/wc-logo.png"
+      alt="WC"
+      width={22}
+      height={22}
+      className={`w-[22px] h-[22px] object-contain transition-all duration-200 ${
+        isActive
+          ? "opacity-100"
+          : theme === "dark"
+            ? "opacity-40 grayscale brightness-150"
+            : "opacity-40 grayscale"
+      }`}
+    />
+  );
+
   const navItems: Array<{
     name: string;
     shortName: string;
@@ -86,15 +109,8 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
     icon: any;
     id: string;
     brand: BrandKey;
+    customIcon?: boolean;
   }> = [
-    {
-      name: t("home", "Početna"),
-      shortName: t("home", "Početna"),
-      href: "/",
-      icon: Home,
-      id: "home",
-      brand: "neutral",
-    },
     {
       name: t("premierLeague", "Premier League"),
       shortName: "PL",
@@ -118,6 +134,15 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
       icon: GiF1Car,
       id: "f1",
       brand: "f1",
+    },
+    {
+      name: "WC 2026",
+      shortName: "WC",
+      href: "/wc2026",
+      icon: null,
+      id: "wc2026",
+      brand: "wc2026" as BrandKey,
+      customIcon: true,
     },
     {
       name: t("predictor", "Predictor"),
@@ -175,9 +200,13 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
                 <motion.div
                   animate={{ scale: isActive ? 1.1 : 1 }}
                   transition={{ duration: 0.2 }}
-                  className={isActive ? brand.iconTint : ""}
+                  className={isActive && !item.customIcon ? brand.iconTint : ""}
                 >
-                  <IconComponent className="w-[22px] h-[22px]" />
+                  {item.customIcon ? (
+                    <WCIcon isActive={isActive} />
+                  ) : (
+                    <IconComponent className="w-[22px] h-[22px]" />
+                  )}
                 </motion.div>
                 <span className="text-[11px] leading-none font-medium truncate max-w-full px-0.5">
                   <span className="hidden xs:inline">{item.name}</span>

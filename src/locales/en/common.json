@@ -35,6 +35,10 @@
       "f1Fantasy": {
         "title": "F1 Fantasy",
         "description": "Speed, strategy and adrenaline on the track"
+      },
+      "wc2026": {
+        "title": "WC 2026 Fantasy",
+        "description": "FIFA World Cup 2026 - 48 teams, 104 matches"
       }
     },
     "globalStats": {
