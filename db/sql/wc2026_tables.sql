@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS wc2026_registrations (
   email TEXT NOT NULL,
   phone TEXT NOT NULL,
   team_name TEXT,
-  payment_method TEXT CHECK (payment_method IN ('bank', 'wise', 'cash', 'paypal')),
+  payment_method TEXT CHECK (payment_method IN ('bank', 'wise', 'cash', 'paypal', 'card', 'stripe')),
   payment_status TEXT DEFAULT 'pending' CHECK (payment_status IN ('paid', 'pending')),
   payment_proof_url TEXT,
   notes TEXT,
