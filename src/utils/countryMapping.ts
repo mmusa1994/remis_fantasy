@@ -342,6 +342,27 @@ Object.entries(COUNTRY_MAP).forEach(([name, info]) => {
   }
 });
 
+// Bosnian country name variations (for WC2026 fixtures)
+const BS_NAMES: Record<string, string> = {
+  "meksiko": "mx", "južna afrika": "za", "južna koreja": "kr", "češka": "cz",
+  "kanada": "ca", "bosna i hercegovina": "ba", "katar": "qa", "švicarska": "ch",
+  "brazil": "br", "maroko": "ma", "haiti": "ht", "škotska": "gb-sct",
+  "sad": "us", "paragvaj": "py", "australija": "au", "turska": "tr",
+  "njemačka": "de", "kurasao": "cw", "curacao": "cw", "curaçao": "cw", "obala slonovače": "ci", "ivory coast": "ci", "ekvador": "ec",
+  "holandija": "nl", "japan": "jp", "švedska": "se", "tunis": "tn", "cape verde": "cv",
+  "belgija": "be", "egipat": "eg", "iran": "ir", "novi zeland": "nz",
+  "španija": "es", "zelenortska": "cv", "saudijska arabija": "sa", "saudi arabia": "sa", "urugvaj": "uy",
+  "francuska": "fr", "senegal": "sn", "irak": "iq", "iraq": "iq", "norveška": "no",
+  "argentina": "ar", "alžir": "dz", "algeria": "dz", "austrija": "at", "jordan": "jo",
+  "portugal": "pt", "dr kongo": "cd", "dr congo": "cd", "uzbekistan": "uz", "kolumbija": "co", "colombia": "co",
+  "engleska": "gb-eng", "england": "gb-eng", "hrvatska": "hr", "gana": "gh", "ghana": "gh", "panama": "pa",
+  "south africa": "za", "south korea": "kr", "czech republic": "cz",
+  "united states": "us", "new zealand": "nz", "bosnia & herzegovina": "ba", "bosnia and herzegovina": "ba",
+};
+Object.entries(BS_NAMES).forEach(([bs, code]) => {
+  COMMON_VARIATIONS[bs] = code;
+});
+
 /**
  * Get flag code for a country by name or ISO code
  * @param countryInput - Country name or ISO code

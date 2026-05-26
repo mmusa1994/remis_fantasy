@@ -103,21 +103,31 @@ const MATCH_STATUSES = [
 // Default group data generator (placeholder 48-team WC2026 draw)
 // ---------------------------------------------------------------------------
 
+const WC2026_TEAMS: Record<string, string[]> = {
+  A: ["Mexico", "South Africa", "South Korea", "Czech Republic"],
+  B: ["Canada", "Bosnia and Herzegovina", "Qatar", "Switzerland"],
+  C: ["Brazil", "Morocco", "Haiti", "Scotland"],
+  D: ["United States", "Paraguay", "Australia", "Turkey"],
+  E: ["Germany", "Curacao", "Ivory Coast", "Ecuador"],
+  F: ["Netherlands", "Japan", "Sweden", "Tunisia"],
+  G: ["Belgium", "Egypt", "Iran", "New Zealand"],
+  H: ["Spain", "Cape Verde", "Saudi Arabia", "Uruguay"],
+  I: ["France", "Senegal", "Iraq", "Norway"],
+  J: ["Argentina", "Algeria", "Austria", "Jordan"],
+  K: ["Portugal", "DR Congo", "Uzbekistan", "Colombia"],
+  L: ["England", "Croatia", "Ghana", "Panama"],
+};
+
 function generateDefaultGroups(): WCGroup[] {
   const groups: WCGroup[] = [];
   for (const g of GROUPS) {
-    for (let i = 1; i <= 4; i++) {
+    const teams = WC2026_TEAMS[g] || [`Team ${g}1`, `Team ${g}2`, `Team ${g}3`, `Team ${g}4`];
+    for (const team of teams) {
       groups.push({
         group_name: g,
-        team_name: `Team ${g}${i}`,
-        played: 0,
-        won: 0,
-        drawn: 0,
-        lost: 0,
-        goals_for: 0,
-        goals_against: 0,
-        goal_difference: 0,
-        points: 0,
+        team_name: team,
+        played: 0, won: 0, drawn: 0, lost: 0,
+        goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
       });
     }
   }
@@ -382,6 +392,42 @@ export default function AdminWC2026Manager() {
     showToast("Default grupe popunjene (48 timova)", "success");
   };
 
+  const handlePrefillMatches = async () => {
+    if (!confirm("Ovo ce obrisati sve postojece utakmice i ucitati kompletne grupne utakmice SP 2026. Nastaviti?")) return;
+    setSubmittingMatch(true);
+    try {
+      const { WC_2026_GROUP_STAGE } = await import("@/data/predictor-wc-2026-fixtures");
+      const stageToGroup: Record<string, string> = {
+        group_a: "A", group_b: "B", group_c: "C", group_d: "D",
+        group_e: "E", group_f: "F", group_g: "G", group_h: "H",
+        group_i: "I", group_j: "J", group_k: "K", group_l: "L",
+      };
+      const matches = WC_2026_GROUP_STAGE.map((fix) => ({
+        home_team: fix.home_team,
+        away_team: fix.away_team,
+        match_date: fix.kickoff_at,
+        phase: "group_stage",
+        group_name: stageToGroup[fix.stage] || null,
+        venue: fix.venue || "",
+        status: "scheduled",
+      }));
+
+      const res = await fetch("/api/wc2026/matches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matches }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      showToast(`Uspjesno ucitano ${matches.length} utakmica SP 2026!`, "success");
+      await fetchMatches();
+    } catch {
+      showToast("Greska pri ucitavanju utakmica", "error");
+    } finally {
+      setSubmittingMatch(false);
+    }
+  };
+
   // ---- standings (fantasy table) ----
 
   const handleParseTable = () => {
@@ -626,11 +672,11 @@ export default function AdminWC2026Manager() {
         </div>
 
         {/* Submit */}
-        <div className="mt-4">
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           <button
             onClick={handleAddMatch}
             disabled={submittingMatch}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-red-900 hover:bg-red-950 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-900 hover:bg-red-950 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
             {submittingMatch ? (
               <>
@@ -643,6 +689,16 @@ export default function AdminWC2026Manager() {
                 Dodaj utakmicu
               </>
             )}
+          </button>
+          <button
+            onClick={handlePrefillMatches}
+            disabled={submittingMatch}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium ${
+              isDark ? "bg-teal-900 hover:bg-teal-800 text-teal-100" : "bg-teal-600 hover:bg-teal-700 text-white"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <Calendar className="w-4 h-4" />
+            Ucitaj SP 2026 raspored (72 utakmice)
           </button>
         </div>
       </div>

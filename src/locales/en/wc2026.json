@@ -204,6 +204,14 @@
     "noPhotos": "Gallery will be available during the tournament.",
     "comingSoon": "Coming Soon"
   },
+  "nav": {
+    "tablesDesc": "Fantasy table & rankings",
+    "matchesDesc": "Schedule & results",
+    "groupsDesc": "12 groups, 48 teams",
+    "registrationDesc": "Join for €5",
+    "statisticsDesc": "Goals, assists, points",
+    "prizesDesc": "Prize pool"
+  },
   "admin": {
     "title": "WC 2026 Management",
     "matches": "Matches",

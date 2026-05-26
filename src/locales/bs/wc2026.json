@@ -204,6 +204,14 @@
     "noPhotos": "Galerija će biti dostupna tokom turnira.",
     "comingSoon": "Uskoro dolazi"
   },
+  "nav": {
+    "tablesDesc": "Fantasy tabela i rangiranje",
+    "matchesDesc": "Raspored i rezultati",
+    "groupsDesc": "12 grupa, 48 timova",
+    "registrationDesc": "Pridruži se za 5€",
+    "statisticsDesc": "Golovi, asistencije, bodovi",
+    "prizesDesc": "Nagradni fond"
+  },
   "admin": {
     "title": "WC 2026 Upravljanje",
     "matches": "Utakmice",

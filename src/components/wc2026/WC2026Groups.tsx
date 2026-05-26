@@ -5,7 +5,24 @@ import { motion } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import LoadingCard from "@/components/shared/LoadingCard";
+import { getCountryFlagCode } from "@/utils/countryMapping";
+import { localizeTeamName } from "@/utils/wc2026-team-names";
 import Image from "next/image";
+
+function TeamFlag({ name }: { name: string }) {
+  const code = getCountryFlagCode(name);
+  if (code === "xx") return null;
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${code}.png`}
+      alt={name}
+      width={18}
+      height={12}
+      className="rounded-sm object-cover inline-block"
+      style={{ width: 18, height: 12 }}
+    />
+  );
+}
 
 interface WC2026GroupTeam {
   id: number;
@@ -26,7 +43,8 @@ export default function WC2026Groups() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { theme } = useTheme();
-  const { t } = useTranslation("wc2026");
+  const { t, i18n } = useTranslation("wc2026");
+  const lang = (i18n.language === "en" ? "en" : "bs") as "en" | "bs";
 
   useEffect(() => {
     fetchGroups();
@@ -223,9 +241,9 @@ export default function WC2026Groups() {
             whileHover={{ scale: 1.01 }}
           >
             {/* Group Header */}
-            <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-4 py-3">
-              <h3 className="text-white font-bold text-sm">
-                {t("groups.group", "Group")} {groupName}
+            <div className={`px-4 py-2.5 border-b ${isDark ? "border-gray-700 bg-gray-800/50" : "border-gray-100 bg-gray-50/80"}`}>
+              <h3 className={`font-bold text-xs uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                <span className="text-teal-600 dark:text-teal-400">{t("groups.group")}</span> {groupName}
               </h3>
             </div>
 
@@ -234,32 +252,32 @@ export default function WC2026Groups() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="bg-theme-card-secondary border-b border-theme-border">
-                    <th className="text-left px-3 py-2 font-bold text-theme-text-secondary">
-                      {t("groups.team", "Team")}
+                    <th className="text-left px-3 py-2 font-bold text-theme-text-secondary text-[10px] uppercase tracking-wider">
+                      {t("groups.team")}
                     </th>
-                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center">
-                      P
+                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center text-[10px]">
+                      {t("groups.played")}
                     </th>
-                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center">
-                      W
+                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center text-[10px]">
+                      {t("groups.won")}
                     </th>
-                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center">
-                      D
+                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center text-[10px]">
+                      {t("groups.drawn")}
                     </th>
-                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center">
-                      L
+                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center text-[10px]">
+                      {t("groups.lost")}
                     </th>
-                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center">
-                      GF
+                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center text-[10px]">
+                      {t("groups.goalsFor")}
                     </th>
-                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center">
-                      GA
+                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center text-[10px]">
+                      {t("groups.goalsAgainst")}
                     </th>
-                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center">
-                      GD
+                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center text-[10px]">
+                      {t("groups.goalDifference")}
                     </th>
-                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center">
-                      Pts
+                    <th className="px-1.5 py-2 font-bold text-theme-text-secondary text-center text-[10px]">
+                      {t("groups.points")}
                     </th>
                   </tr>
                 </thead>
@@ -272,7 +290,10 @@ export default function WC2026Groups() {
                       )}`}
                     >
                       <td className="px-3 py-2 font-semibold text-theme-foreground whitespace-nowrap">
-                        {team.team_name}
+                        <span className="inline-flex items-center gap-2">
+                          <TeamFlag name={team.team_name} />
+                          {localizeTeamName(team.team_name, lang)}
+                        </span>
                       </td>
                       <td className="px-1.5 py-2 text-center text-theme-text-secondary">
                         {team.played}

@@ -55,30 +55,49 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { match } = body;
 
-    if (!match) {
-      return NextResponse.json(
-        { success: false, error: "Invalid match data" },
-        { status: 400 }
-      );
+    // Support bulk insert: { matches: [...] }
+    if (body.matches && Array.isArray(body.matches)) {
+      const rows = body.matches.map((m: Record<string, unknown>) => ({
+        home_team: m.home_team,
+        away_team: m.away_team,
+        match_date: m.match_date,
+        phase: m.phase,
+        group_name: m.group_name || null,
+        venue: m.venue || "",
+        home_score: m.home_score ?? null,
+        away_score: m.away_score ?? null,
+        status: m.status || "scheduled",
+      }));
+
+      // Clear existing then bulk insert
+      await supabase.from("wc2026_matches").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+
+      const { data, error } = await supabase
+        .from("wc2026_matches")
+        .insert(rows)
+        .select();
+
+      if (error) {
+        console.error("Supabase bulk insert error:", error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: data || [],
+        message: `Inserted ${rows.length} matches`,
+        timestamp: new Date().toISOString(),
+      });
     }
 
-    const {
-      home_team,
-      away_team,
-      match_date,
-      phase,
-      group_name,
-      venue,
-      home_score,
-      away_score,
-      status,
-    } = match;
+    // Single insert: accept { match: {...} } or flat fields
+    const m = body.match || body;
+    const { home_team, away_team, match_date, phase, group_name, venue, home_score, away_score, status } = m;
 
-    if (!home_team || !away_team || !match_date || !phase || !venue || !status) {
+    if (!home_team || !away_team || !match_date || !phase) {
       return NextResponse.json(
-        { success: false, error: "Missing required match fields" },
+        { success: false, error: "Missing required fields: home_team, away_team, match_date, phase" },
         { status: 400 }
       );
     }
@@ -91,34 +110,24 @@ export async function POST(request: Request) {
         match_date,
         phase,
         group_name: group_name || null,
-        venue,
+        venue: venue || "",
         home_score: home_score ?? null,
         away_score: away_score ?? null,
-        status,
+        status: status || "scheduled",
       })
       .select()
       .single();
 
     if (error) {
       console.error("Supabase insert error:", error);
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      data,
-      timestamp: new Date().toISOString(),
-    });
+    return NextResponse.json({ success: true, data, timestamp: new Date().toISOString() });
   } catch (error) {
     console.error("WC2026 matches POST API error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
+      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

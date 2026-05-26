@@ -34,8 +34,7 @@ const NAV_ITEMS = [
     href: "/wc2026/tables",
     icon: BarChart3,
     titleKey: "tables.title",
-    descBs: "Fantasy tabela i rangiranje",
-    descEn: "Fantasy table & rankings",
+    descKey: "nav.tablesDesc",
     color: "from-blue-600/20 to-red-600/20",
     iconBg: "bg-blue-500/10",
     iconColor: "text-blue-600 dark:text-blue-400",
@@ -45,8 +44,7 @@ const NAV_ITEMS = [
     href: "/wc2026/matches",
     icon: Calendar,
     titleKey: "matches.title",
-    descBs: "Raspored i rezultati",
-    descEn: "Schedule & results",
+    descKey: "nav.matchesDesc",
     color: "from-red-600/20 to-white/10",
     iconBg: "bg-red-500/10",
     iconColor: "text-red-600 dark:text-red-400",
@@ -56,8 +54,7 @@ const NAV_ITEMS = [
     href: "/wc2026/groups",
     icon: Users,
     titleKey: "groups.title",
-    descBs: "12 grupa, 48 timova",
-    descEn: "12 groups, 48 teams",
+    descKey: "nav.groupsDesc",
     color: "from-green-600/20 to-white/10",
     iconBg: "bg-green-500/10",
     iconColor: "text-green-600 dark:text-green-400",
@@ -67,8 +64,7 @@ const NAV_ITEMS = [
     href: "/wc2026/registration",
     icon: UserPlus,
     titleKey: "registration.subtitle",
-    descBs: "Pridruži se za 5€",
-    descEn: "Join for 5€",
+    descKey: "nav.registrationDesc",
     color: "from-teal-600/20 to-emerald-600/20",
     iconBg: "bg-teal-500/10",
     iconColor: "text-teal-600 dark:text-teal-400",
@@ -78,8 +74,7 @@ const NAV_ITEMS = [
     href: "/wc2026/statistics",
     icon: TrendingUp,
     titleKey: "statistics.title",
-    descBs: "Golovi, asistencije, bodovi",
-    descEn: "Goals, assists, points",
+    descKey: "nav.statisticsDesc",
     color: "from-amber-600/20 to-red-600/20",
     iconBg: "bg-amber-500/10",
     iconColor: "text-amber-600 dark:text-amber-400",
@@ -89,8 +84,7 @@ const NAV_ITEMS = [
     href: "/wc2026/prizes",
     icon: Trophy,
     titleKey: "prizes.title",
-    descBs: "Nagradni fond",
-    descEn: "Prize pool",
+    descKey: "nav.prizesDesc",
     color: "from-yellow-600/20 to-amber-600/20",
     iconBg: "bg-yellow-500/10",
     iconColor: "text-yellow-600 dark:text-yellow-400",
@@ -544,7 +538,7 @@ export default function WC2026LandingPage() {
                         isDark ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
-                      {card.descBs}
+                      {t(card.descKey)}
                     </p>
                   </div>
                 </Link>
