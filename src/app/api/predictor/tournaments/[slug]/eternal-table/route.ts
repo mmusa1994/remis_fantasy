@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 
-// Public Eternal Table read. Returns columns + entries for any visible
-// tournament. Each entry's `total` is computed server-side from `values`.
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await context.params;
+  const isExact = req.nextUrl.searchParams.get("type") === "exact";
 
   const { data: tournament, error: tErr } = await supabaseServer
     .from("predictor_tournaments")
@@ -23,14 +22,21 @@ export async function GET(
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
+  const colTable = isExact
+    ? "predictor_eternal_exact_columns"
+    : "predictor_eternal_columns";
+  const entTable = isExact
+    ? "predictor_eternal_exact_entries"
+    : "predictor_eternal_entries";
+
   const [colsRes, entriesRes] = await Promise.all([
     supabaseServer
-      .from("predictor_eternal_columns")
+      .from(colTable)
       .select("id, label, logo_url, sort_order")
       .eq("tournament_id", tournament.id)
       .order("sort_order", { ascending: true }),
     supabaseServer
-      .from("predictor_eternal_entries")
+      .from(entTable)
       .select("id, player_name, values, sort_order")
       .eq("tournament_id", tournament.id)
       .order("sort_order", { ascending: true }),
@@ -59,7 +65,6 @@ export async function GET(
     };
   });
 
-  // Sort by total desc, then by manual sort_order as tiebreaker
   entries.sort((a, b) => {
     if (b.total !== a.total) return b.total - a.total;
     return (a.sort_order ?? 0) - (b.sort_order ?? 0);

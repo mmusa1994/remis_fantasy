@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 import { requireTournamentOwner, jsonError } from "@/lib/predictor";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Owner-only CRUD for the per-tournament Eternal Table.
-// Single route handles both `columns` and `entries` resources via ?resource=
-// to keep the API surface tight.
-// ─────────────────────────────────────────────────────────────────────────────
-
 type Resource = "columns" | "entries";
 
 function parseResource(value: string | null): Resource | null {
@@ -15,14 +9,27 @@ function parseResource(value: string | null): Resource | null {
   return null;
 }
 
+function tableNames(isExact: boolean) {
+  return {
+    columns: isExact
+      ? "predictor_eternal_exact_columns"
+      : "predictor_eternal_columns",
+    entries: isExact
+      ? "predictor_eternal_exact_entries"
+      : "predictor_eternal_entries",
+  } as const;
+}
+
+function tableName(resource: Resource, isExact: boolean) {
+  return tableNames(isExact)[resource];
+}
+
 async function tournamentForRow(
   resource: Resource,
-  id: string
+  id: string,
+  isExact: boolean
 ): Promise<string | null> {
-  const table =
-    resource === "columns"
-      ? "predictor_eternal_columns"
-      : "predictor_eternal_entries";
+  const table = tableName(resource, isExact);
   const { data } = await supabaseServer
     .from(table)
     .select("tournament_id")
@@ -31,8 +38,7 @@ async function tournamentForRow(
   return (data?.tournament_id as string) || null;
 }
 
-// GET /api/predictor/owner/eternal-table?tournament_id=...
-// Returns both columns and entries for the tournament in one shot.
+// GET /api/predictor/owner/eternal-table?tournament_id=...&table_type=exact
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const tournamentId = searchParams.get("tournament_id");
@@ -40,14 +46,17 @@ export async function GET(req: NextRequest) {
   const own = await requireTournamentOwner(tournamentId);
   if (!own.ok) return own.response;
 
+  const isExact = searchParams.get("table_type") === "exact";
+  const tables = tableNames(isExact);
+
   const [colsRes, entriesRes] = await Promise.all([
     supabaseServer
-      .from("predictor_eternal_columns")
+      .from(tables.columns)
       .select("*")
       .eq("tournament_id", tournamentId)
       .order("sort_order", { ascending: true }),
     supabaseServer
-      .from("predictor_eternal_entries")
+      .from(tables.entries)
       .select("*")
       .eq("tournament_id", tournamentId)
       .order("sort_order", { ascending: true }),
@@ -73,11 +82,14 @@ export async function POST(req: NextRequest) {
   const own = await requireTournamentOwner(body.tournament_id);
   if (!own.ok) return own.response;
 
+  const isExact = body.table_type === "exact";
+  const table = tableName(resource, isExact);
+
   if (resource === "columns") {
     if (!body.label?.toString().trim())
       return jsonError("label is required");
     const { data, error } = await supabaseServer
-      .from("predictor_eternal_columns")
+      .from(table)
       .insert({
         tournament_id: body.tournament_id,
         label: body.label.toString().trim(),
@@ -94,7 +106,7 @@ export async function POST(req: NextRequest) {
   if (!body.player_name?.toString().trim())
     return jsonError("player_name is required");
   const { data, error } = await supabaseServer
-    .from("predictor_eternal_entries")
+    .from(table)
     .insert({
       tournament_id: body.tournament_id,
       player_name: body.player_name.toString().trim(),
@@ -107,15 +119,16 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(data);
 }
 
-// PATCH /api/predictor/owner/eternal-table?resource=columns|entries
+// PATCH /api/predictor/owner/eternal-table?resource=columns|entries&table_type=exact
 export async function PATCH(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const resource = parseResource(searchParams.get("resource"));
   if (!resource)
     return jsonError("resource must be 'columns' or 'entries'");
+  const isExact = searchParams.get("table_type") === "exact";
   const body = await req.json();
   if (!body?.id) return jsonError("id is required");
-  const tid = await tournamentForRow(resource, body.id);
+  const tid = await tournamentForRow(resource, body.id, isExact);
   if (!tid) return jsonError("Row not found", 404);
   const own = await requireTournamentOwner(tid);
   if (!own.ok) return own.response;
@@ -130,10 +143,7 @@ export async function PATCH(req: NextRequest) {
   if (Object.keys(updates).length === 0)
     return jsonError("No fields to update");
 
-  const table =
-    resource === "columns"
-      ? "predictor_eternal_columns"
-      : "predictor_eternal_entries";
+  const table = tableName(resource, isExact);
   const { data, error } = await supabaseServer
     .from(table)
     .update(updates)
@@ -144,23 +154,21 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json(data);
 }
 
-// DELETE /api/predictor/owner/eternal-table?resource=columns|entries&id=...
+// DELETE /api/predictor/owner/eternal-table?resource=columns|entries&id=...&table_type=exact
 export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const resource = parseResource(searchParams.get("resource"));
   if (!resource)
     return jsonError("resource must be 'columns' or 'entries'");
+  const isExact = searchParams.get("table_type") === "exact";
   const id = searchParams.get("id");
   if (!id) return jsonError("id is required");
-  const tid = await tournamentForRow(resource, id);
+  const tid = await tournamentForRow(resource, id, isExact);
   if (!tid) return jsonError("Row not found", 404);
   const own = await requireTournamentOwner(tid);
   if (!own.ok) return own.response;
 
-  const table =
-    resource === "columns"
-      ? "predictor_eternal_columns"
-      : "predictor_eternal_entries";
+  const table = tableName(resource, isExact);
   const { error } = await supabaseServer.from(table).delete().eq("id", id);
   if (error) return jsonError(error.message, 500);
   return NextResponse.json({ success: true });

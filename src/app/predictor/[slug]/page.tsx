@@ -223,14 +223,15 @@ export default function TournamentDetailPage() {
     loadMatches();
     (async () => {
       try {
-        const res = await fetch(
-          `/api/predictor/tournaments/${slug}/eternal-table`
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        setHasEternalTable(
-          (data.columns?.length || 0) > 0 || (data.entries?.length || 0) > 0
-        );
+        const [pointsRes, exactRes] = await Promise.all([
+          fetch(`/api/predictor/tournaments/${slug}/eternal-table?type=points`),
+          fetch(`/api/predictor/tournaments/${slug}/eternal-table?type=exact`),
+        ]);
+        const pData = pointsRes.ok ? await pointsRes.json() : {};
+        const eData = exactRes.ok ? await exactRes.json() : {};
+        const hasPoints = (pData.columns?.length || 0) > 0 || (pData.entries?.length || 0) > 0;
+        const hasExact = (eData.columns?.length || 0) > 0 || (eData.entries?.length || 0) > 0;
+        setHasEternalTable(hasPoints || hasExact);
       } catch {
         /* ignore */
       }

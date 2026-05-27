@@ -10,19 +10,13 @@ import {
   X,
   Upload,
   Trophy,
+  Target,
   ArrowUp,
   ArrowDown,
   Check,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Owner-side admin tab for the per-tournament Eternal Table (Vječna tabela).
-// Lets the owner add/edit/delete columns (e.g. SP 2014, Euro 2020) and
-// player rows with a value per column. Logos can be uploaded via the existing
-// /api/predictor/owner/upload-image endpoint or pasted as URL.
-// ─────────────────────────────────────────────────────────────────────────────
 
 type Tournament = { id: string; name: string };
 type Column = {
@@ -38,10 +32,89 @@ type Entry = {
   sort_order: number;
 };
 
+type TableType = "points" | "exact";
+
 export default function EternalTableOwnerTab({
   tournament,
 }: {
   tournament: Tournament;
+}) {
+  const { theme } = useTheme();
+  const dark = theme === "dark";
+  const [activeType, setActiveType] = useState<TableType>("points");
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+            dark ? "bg-amber-500/15" : "bg-amber-50 ring-1 ring-amber-200"
+          }`}
+        >
+          <Trophy className="h-5 w-5 text-amber-500" />
+        </div>
+        <div>
+          <h2
+            className={`text-base font-bold ${dark ? "text-white" : "text-gray-900"}`}
+          >
+            Vječna tabela
+          </h2>
+          <p className={`text-xs ${dark ? "text-gray-500" : "text-gray-500"}`}>
+            Historijske kolone i rezultati po igraču
+          </p>
+        </div>
+      </div>
+
+      {/* Sub-tabs */}
+      <div
+        className={`flex rounded-xl border overflow-hidden ${
+          dark ? "border-white/10 bg-white/[0.02]" : "border-gray-200 bg-gray-50"
+        }`}
+      >
+        {([
+          { type: "points" as const, label: "Tabela poena", Icon: Trophy },
+          { type: "exact" as const, label: "Tabela tačnih rezultata", Icon: Target },
+        ]).map(({ type, label, Icon }) => (
+          <button
+            key={type}
+            type="button"
+            onClick={() => setActiveType(type)}
+            className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition-all ${
+              activeType === type
+                ? type === "points"
+                  ? dark
+                    ? "bg-amber-500/15 text-amber-300 border-b-2 border-amber-500"
+                    : "bg-amber-50 text-amber-700 border-b-2 border-amber-500"
+                  : dark
+                    ? "bg-emerald-500/15 text-emerald-300 border-b-2 border-emerald-500"
+                    : "bg-emerald-50 text-emerald-700 border-b-2 border-emerald-500"
+                : dark
+                  ? "text-gray-500 hover:text-gray-300 hover:bg-white/[0.03]"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <EternalTablePanel
+        key={activeType}
+        tournament={tournament}
+        tableType={activeType}
+      />
+    </div>
+  );
+}
+
+function EternalTablePanel({
+  tournament,
+  tableType,
+}: {
+  tournament: Tournament;
+  tableType: TableType;
 }) {
   const { theme } = useTheme();
   const dark = theme === "dark";
@@ -56,21 +129,19 @@ export default function EternalTableOwnerTab({
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Add-column row
   const [newColLabel, setNewColLabel] = useState("");
   const [newColLogoUrl, setNewColLogoUrl] = useState("");
   const [creatingCol, setCreatingCol] = useState(false);
 
-  // Add-entry row
   const [newEntryName, setNewEntryName] = useState("");
   const [creatingEntry, setCreatingEntry] = useState(false);
 
-  // Inline editing state for entries
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editingEntryName, setEditingEntryName] = useState("");
-  const [editingValues, setEditingValues] = useState<Record<string, string>>({});
+  const [editingValues, setEditingValues] = useState<Record<string, string>>(
+    {}
+  );
 
-  // Inline editing state for columns
   const [editingColId, setEditingColId] = useState<string | null>(null);
   const [editingColLabel, setEditingColLabel] = useState("");
   const [editingColLogoUrl, setEditingColLogoUrl] = useState("");
@@ -79,11 +150,14 @@ export default function EternalTableOwnerTab({
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
+  const ttParam = tableType === "exact" ? "&table_type=exact" : "";
+  const ttBody = tableType === "exact" ? "exact" : "points";
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `/api/predictor/owner/eternal-table?tournament_id=${tournament.id}`
+        `/api/predictor/owner/eternal-table?tournament_id=${tournament.id}${ttParam}`
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to load");
@@ -94,13 +168,12 @@ export default function EternalTableOwnerTab({
     } finally {
       setLoading(false);
     }
-  }, [tournament.id, showToast]);
+  }, [tournament.id, ttParam, showToast]);
 
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
 
-  // ───── Column actions ───────────────────────────────────────────────────
   const uploadLogo = useCallback(
     async (file: File): Promise<string | null> => {
       try {
@@ -140,6 +213,7 @@ export default function EternalTableOwnerTab({
             label: newColLabel.trim(),
             logo_url: newColLogoUrl.trim() || null,
             sort_order: columns.length,
+            table_type: ttBody,
           }),
         }
       );
@@ -154,23 +228,24 @@ export default function EternalTableOwnerTab({
     } finally {
       setCreatingCol(false);
     }
-  }, [newColLabel, newColLogoUrl, tournament.id, columns.length, showToast]);
+  }, [newColLabel, newColLogoUrl, tournament.id, columns.length, ttBody, showToast]);
 
   const deleteColumn = useCallback(
     async (col: Column) => {
       if (
-        !window.confirm(`Obrisati kolonu "${col.label}"? Sve vrijednosti će biti uklonjene.`)
+        !window.confirm(
+          `Obrisati kolonu "${col.label}"? Sve vrijednosti će biti uklonjene.`
+        )
       )
         return;
       try {
         const res = await fetch(
-          `/api/predictor/owner/eternal-table?resource=columns&id=${col.id}`,
+          `/api/predictor/owner/eternal-table?resource=columns&id=${col.id}${ttParam}`,
           { method: "DELETE" }
         );
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "Failed");
         setColumns((prev) => prev.filter((c) => c.id !== col.id));
-        // Strip the deleted column from each entry's values cache
         setEntries((prev) =>
           prev.map((e) => {
             const { [col.id]: _, ...rest } = e.values;
@@ -182,7 +257,7 @@ export default function EternalTableOwnerTab({
         showToast(e.message, false);
       }
     },
-    [showToast]
+    [ttParam, showToast]
   );
 
   const startEditCol = (col: Column) => {
@@ -199,7 +274,7 @@ export default function EternalTableOwnerTab({
     if (!editingColId) return;
     try {
       const res = await fetch(
-        "/api/predictor/owner/eternal-table?resource=columns",
+        `/api/predictor/owner/eternal-table?resource=columns${ttParam}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -212,7 +287,9 @@ export default function EternalTableOwnerTab({
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed");
-      setColumns((prev) => prev.map((c) => (c.id === editingColId ? data : c)));
+      setColumns((prev) =>
+        prev.map((c) => (c.id === editingColId ? data : c))
+      );
       cancelEditCol();
       showToast("Kolona snimljena");
     } catch (e: any) {
@@ -230,20 +307,21 @@ export default function EternalTableOwnerTab({
     try {
       await Promise.all(
         reordered.map((c, i) =>
-          fetch("/api/predictor/owner/eternal-table?resource=columns", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: c.id, sort_order: i }),
-          })
+          fetch(
+            `/api/predictor/owner/eternal-table?resource=columns${ttParam}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: c.id, sort_order: i }),
+            }
+          )
         )
       );
     } catch {
-      // Silently fallback — re-fetch authoritative order
       fetchAll();
     }
   };
 
-  // ───── Entry actions ────────────────────────────────────────────────────
   const addEntry = useCallback(async () => {
     if (!newEntryName.trim()) return;
     setCreatingEntry(true);
@@ -258,6 +336,7 @@ export default function EternalTableOwnerTab({
             player_name: newEntryName.trim(),
             values: {},
             sort_order: entries.length,
+            table_type: ttBody,
           }),
         }
       );
@@ -271,7 +350,7 @@ export default function EternalTableOwnerTab({
     } finally {
       setCreatingEntry(false);
     }
-  }, [newEntryName, tournament.id, entries.length, showToast]);
+  }, [newEntryName, tournament.id, entries.length, ttBody, showToast]);
 
   const startEditEntry = (entry: Entry) => {
     setEditingEntryId(entry.id);
@@ -304,7 +383,7 @@ export default function EternalTableOwnerTab({
     }
     try {
       const res = await fetch(
-        "/api/predictor/owner/eternal-table?resource=entries",
+        `/api/predictor/owner/eternal-table?resource=entries${ttParam}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -331,7 +410,7 @@ export default function EternalTableOwnerTab({
     if (!window.confirm(`Obrisati igrača "${entry.player_name}"?`)) return;
     try {
       const res = await fetch(
-        `/api/predictor/owner/eternal-table?resource=entries&id=${entry.id}`,
+        `/api/predictor/owner/eternal-table?resource=entries&id=${entry.id}${ttParam}`,
         { method: "DELETE" }
       );
       const data = await res.json();
@@ -353,11 +432,14 @@ export default function EternalTableOwnerTab({
     try {
       await Promise.all(
         reordered.map((e, i) =>
-          fetch("/api/predictor/owner/eternal-table?resource=entries", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: e.id, sort_order: i }),
-          })
+          fetch(
+            `/api/predictor/owner/eternal-table?resource=entries${ttParam}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: e.id, sort_order: i }),
+            }
+          )
         )
       );
     } catch {
@@ -365,9 +447,6 @@ export default function EternalTableOwnerTab({
     }
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Class helpers — match the rest of the owner editor's look-and-feel.
-  // ─────────────────────────────────────────────────────────────────────────
   const inputCls = `w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
     dark
       ? "border-white/10 bg-black/30 text-white placeholder-gray-600 focus:border-predictor-primary/60"
@@ -391,30 +470,8 @@ export default function EternalTableOwnerTab({
       : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
   }`;
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-            dark ? "bg-amber-500/15" : "bg-amber-50 ring-1 ring-amber-200"
-          }`}
-        >
-          <Trophy className="h-5 w-5 text-amber-500" />
-        </div>
-        <div>
-          <h2
-            className={`text-base font-bold ${dark ? "text-white" : "text-gray-900"}`}
-          >
-            Vječna tabela
-          </h2>
-          <p className={`text-xs ${dark ? "text-gray-500" : "text-gray-500"}`}>
-            Konfigurabilne historijske kolone i osvojeni poeni po igraču
-          </p>
-        </div>
-      </div>
-
       {/* Columns section */}
       <section
         className={`rounded-2xl border p-4 sm:p-5 ${
@@ -429,7 +486,6 @@ export default function EternalTableOwnerTab({
           Kolone (takmičenja)
         </h3>
 
-        {/* Existing columns list */}
         <ul className="mb-4 space-y-2">
           {columns.map((c, i) => {
             const isEditing = editingColId === c.id;
@@ -442,7 +498,6 @@ export default function EternalTableOwnerTab({
                     : "border-gray-200 bg-gray-50/60"
                 }`}
               >
-                {/* Logo preview */}
                 <div
                   className={`flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg ${
                     dark ? "bg-black/30" : "bg-white"
@@ -450,7 +505,9 @@ export default function EternalTableOwnerTab({
                 >
                   {(isEditing ? editingColLogoUrl : c.logo_url) ? (
                     <Image
-                      src={(isEditing ? editingColLogoUrl : c.logo_url) as string}
+                      src={
+                        (isEditing ? editingColLogoUrl : c.logo_url) as string
+                      }
                       alt={c.label}
                       width={40}
                       height={40}
@@ -591,7 +648,6 @@ export default function EternalTableOwnerTab({
           ) : null}
         </ul>
 
-        {/* Add-column row */}
         <div className="flex flex-wrap items-center gap-2">
           <input
             value={newColLabel}
@@ -653,7 +709,6 @@ export default function EternalTableOwnerTab({
           Igrači
         </h3>
 
-        {/* Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
@@ -727,7 +782,9 @@ export default function EternalTableOwnerTab({
                       {isEditing ? (
                         <input
                           value={editingEntryName}
-                          onChange={(ev) => setEditingEntryName(ev.target.value)}
+                          onChange={(ev) =>
+                            setEditingEntryName(ev.target.value)
+                          }
                           className={`${inputCls} min-w-[120px]`}
                         />
                       ) : (
@@ -851,7 +908,6 @@ export default function EternalTableOwnerTab({
           ) : null}
         </div>
 
-        {/* Add-entry row */}
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <input
             value={newEntryName}
