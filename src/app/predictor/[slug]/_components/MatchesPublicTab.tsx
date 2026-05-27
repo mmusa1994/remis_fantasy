@@ -941,6 +941,7 @@ function MatchCard({
             disabled={disabled}
             onPick={(h, a) => onChange({ home: h, away: a })}
             theme={theme}
+            ac={ac}
           />
         )}
         {isFinished && userPred && (
@@ -1106,6 +1107,7 @@ function MatchCard({
             disabled={disabled}
             onPick={(h, a) => onChange({ home: h, away: a })}
             theme={theme}
+            ac={ac}
           />
         </div>
       )}

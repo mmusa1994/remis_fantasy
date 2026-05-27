@@ -13,7 +13,6 @@ import LoadingCard from "@/components/shared/LoadingCard";
 import WCBackground from "@/components/shared/WCBackground";
 import WCMusicPlayer from "@/components/shared/WCMusicPlayer";
 import ConfettiBurst from "@/components/shared/ConfettiBurst";
-import QuickScoreChips from "@/components/shared/QuickScoreChips";
 import StreakBadge from "@/components/shared/StreakBadge";
 import { useToast } from "@/contexts/ToastContext";
 import { isWorldCupTheme } from "@/utils/wc-theme";

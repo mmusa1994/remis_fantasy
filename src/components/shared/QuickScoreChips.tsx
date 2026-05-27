@@ -1,10 +1,7 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
-
-// Quick-score preset chips for match predictions. One tap fills both teams'
-// scores instantly — designed for older users and kids who don't want to
-// hammer the +/- buttons.
+import type { AccentClasses } from "@/utils/predictor-accent";
 
 const PRESETS: Array<{ h: number; a: number }> = [
   { h: 1, a: 0 },
@@ -26,6 +23,7 @@ export default function QuickScoreChips({
   disabled,
   onPick,
   theme,
+  ac,
 }: {
   homeName?: string;
   awayName?: string;
@@ -33,6 +31,7 @@ export default function QuickScoreChips({
   disabled?: boolean;
   onPick: (home: number, away: number) => void;
   theme: string;
+  ac: AccentClasses;
 }) {
   const { t } = useTranslation("predictor");
   const dark = theme === "dark";
@@ -64,15 +63,15 @@ export default function QuickScoreChips({
               }
               className={`inline-flex items-center justify-center gap-0.5 px-1.5 py-1 rounded-lg text-xs font-bold tabular-nums transition-all active:scale-95 ${
                 isSelected
-                  ? "bg-amber-500 text-black border border-amber-400 shadow-sm shadow-amber-500/30"
+                  ? `${ac.bgSolid} ${ac.textOn} border ${ac.ring400} shadow-sm ${ac.shadow500_30}`
                   : dark
-                    ? "bg-gray-900/60 text-gray-300 border border-gray-700 hover:border-amber-500/60"
-                    : "bg-gray-50 text-gray-700 border border-gray-200 hover:border-amber-500/60"
+                    ? `bg-gray-900/60 text-gray-300 border border-gray-700 ${ac.hoverBorder500_60}`
+                    : `bg-gray-50 text-gray-700 border border-gray-200 ${ac.hoverBorder500_60}`
               } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
             >
               {p.h}
               <span
-                className={`${isSelected ? "text-black/60" : dark ? "text-gray-600" : "text-gray-400"}`}
+                className={`${isSelected ? `${ac.textOn} opacity-60` : dark ? "text-gray-600" : "text-gray-400"}`}
               >
                 :
               </span>
