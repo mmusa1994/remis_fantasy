@@ -37,6 +37,7 @@ export async function requireUser() {
 }
 
 // Vraća OK ako je trenutni user vlasnik datog turnira (provjera u predictor_tournaments).
+// Site admini imaju bypass — mogu upravljati svim turnirima preko owner ruta.
 export async function requireTournamentOwner(tournamentId: string) {
   const u = await requireUser();
   if (!u.ok) return u;
@@ -57,7 +58,8 @@ export async function requireTournamentOwner(tournamentId: string) {
       response: NextResponse.json({ error: error.message }, { status: 500 }),
     };
   }
-  if (!data || data.owner_user_id !== u.user.id) {
+  const isAdmin = !!(u.user as any).isAdmin;
+  if (!data || (data.owner_user_id !== u.user.id && !isAdmin)) {
     return {
       ok: false as const,
       response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),

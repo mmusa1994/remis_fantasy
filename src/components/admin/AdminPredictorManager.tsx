@@ -9,6 +9,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import SaveToast, {
   type SaveToastState,
 } from "@/components/shared/SaveToast";
+import EternalTableOwnerTab from "@/components/predictor/EternalTableOwnerTab";
 import {
   ArrowLeft,
   Plus,
@@ -84,7 +85,8 @@ type ManagerTab =
   | "rules"
   | "rewards"
   | "members"
-  | "approvals";
+  | "approvals"
+  | "eternal";
 
 const CATEGORY_TYPE_LABEL: Record<CategoryType, string> = {
   single_choice: "Jedan izbor",
@@ -1562,6 +1564,7 @@ function TournamentEditor({
               { id: "members", label: "Predikcije", icon: Users },
               { id: "rules", label: "Pravila", icon: ScrollText },
               { id: "rewards", label: "Nagrade", icon: Gift },
+              { id: "eternal", label: "Vječna tabela", icon: Trophy },
             ] as const
           ).map((it) => {
             const Icon = it.icon;
@@ -1633,6 +1636,9 @@ function TournamentEditor({
           theme={theme}
           onPendingChanged={refreshPendingCount}
         />
+      )}
+      {tab === "eternal" && (
+        <EternalTableOwnerTab tournament={tournament} />
       )}
     </div>
   );

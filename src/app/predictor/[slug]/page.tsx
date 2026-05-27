@@ -81,6 +81,7 @@ import {
   pickLocalizedNullable,
 } from "@/utils/predictor-i18n";
 import MatchesPublicTab from "./_components/MatchesPublicTab";
+import EternalTablePublicTab from "./_components/EternalTablePublicTab";
 
 type CategoryWithOptions = PredictionCategory & { options: PredictionOption[] };
 type TournamentDetail = Tournament & {
@@ -89,7 +90,13 @@ type TournamentDetail = Tournament & {
   rewards: TournamentReward[];
 };
 
-type PageTab = "predictions" | "matches" | "rules" | "rewards" | "standings";
+type PageTab =
+  | "predictions"
+  | "matches"
+  | "rules"
+  | "rewards"
+  | "standings"
+  | "eternal";
 
 // Accent class bundles live in @/utils/predictor-accent so every
 // surface on the page picks up the admin-chosen tournament color.
@@ -207,11 +214,28 @@ export default function TournamentDetailPage() {
     }
   };
 
+  // Probe whether the tournament has an Eternal Table — if not, hide the tab
+  const [hasEternalTable, setHasEternalTable] = useState(false);
+
   useEffect(() => {
     loadTournament();
     loadStandings();
     loadMatches();
-  }, [loadTournament, loadStandings, loadMatches]);
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/predictor/tournaments/${slug}/eternal-table`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        setHasEternalTable(
+          (data.columns?.length || 0) > 0 || (data.entries?.length || 0) > 0
+        );
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, [loadTournament, loadStandings, loadMatches, slug]);
 
   useEffect(() => {
     loadMyPredictions();
@@ -605,6 +629,15 @@ export default function TournamentDetailPage() {
                   label: t("tabs.rewards", "Nagrade"),
                   icon: Gift,
                 },
+                ...(hasEternalTable
+                  ? ([
+                      {
+                        id: "eternal",
+                        label: t("tabs.eternal", "Vječna tabela"),
+                        icon: Trophy,
+                      },
+                    ] as const)
+                  : ([] as const)),
               ] as const
             ).map((it) => {
               const Icon = it.icon;
@@ -712,6 +745,13 @@ export default function TournamentDetailPage() {
               isWC={isWC}
               themeBgSrc={themeBg}
               slug={String(slug)}
+            />
+          )}
+          {tab === "eternal" && (
+            <EternalTablePublicTab
+              slug={String(slug)}
+              theme={theme}
+              ac={ac}
             />
           )}
         </div>

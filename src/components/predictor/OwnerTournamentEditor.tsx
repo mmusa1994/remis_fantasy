@@ -23,6 +23,7 @@ import {
   localizedRewardTitle,
   localizedRewardDescription,
 } from "@/utils/predictor-i18n";
+import EternalTableOwnerTab from "@/components/predictor/EternalTableOwnerTab";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types (kept loose to match supabase response shapes — full typing lives in
@@ -56,6 +57,7 @@ const TAB_IDS = [
   "rewards",
   "members",
   "scoring",
+  "eternal",
 ] as const;
 type TabId = (typeof TAB_IDS)[number];
 
@@ -376,6 +378,9 @@ export default function OwnerTournamentEditor({
           )}
           {tab === "scoring" && (
             <ScoringTab tournament={tournament} dark={dark} showToast={showToast} />
+          )}
+          {tab === "eternal" && (
+            <EternalTableOwnerTab tournament={tournament} />
           )}
         </div>
 

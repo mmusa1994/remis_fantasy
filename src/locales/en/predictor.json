@@ -341,7 +341,8 @@
       "rules": "Rules",
       "rewards": "Rewards",
       "members": "Members",
-      "scoring": "Scoring"
+      "scoring": "Scoring",
+      "eternal": "Eternal Table"
     },
     "common": {
       "save": "Save",
@@ -706,7 +707,8 @@
     "matches": "Matches",
     "rules": "Rules",
     "rewards": "Rewards",
-    "standings": "Standings"
+    "standings": "Standings",
+    "eternal": "Eternal Table"
   },
   "backToList": "All tournaments",
   "locksAt": "Locks",

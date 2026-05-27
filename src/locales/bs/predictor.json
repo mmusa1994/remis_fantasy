@@ -343,7 +343,8 @@
       "rules": "Pravila",
       "rewards": "Nagrade",
       "members": "Članovi",
-      "scoring": "Bodovanje"
+      "scoring": "Bodovanje",
+      "eternal": "Vječna tabela"
     },
     "common": {
       "save": "Snimi",
@@ -708,7 +709,8 @@
     "matches": "Utakmice",
     "rules": "Pravila",
     "rewards": "Nagrade",
-    "standings": "Tabela"
+    "standings": "Tabela",
+    "eternal": "Vječna tabela"
   },
   "backToList": "Svi turniri",
   "locksAt": "Zaključava se",
