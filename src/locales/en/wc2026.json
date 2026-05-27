@@ -167,6 +167,7 @@
     "disclaimer": "Your data is protected and will only be used for the tournament.",
     "successTitle": "Registration Successful!",
     "successMessage": "Welcome to REMIS WC 2026 Fantasy! You will receive a confirmation email shortly.",
+    "spamNotice": "If you don't see the email in your main inbox, please check Spam or Promotions and mark it as \"Not spam\" so it lands directly next time.",
     "feature1Title": "Compete for prizes",
     "feature1Desc": "Win the prize pool",
     "feature2Title": "Live standings",
@@ -179,7 +180,7 @@
       "emailRequired": "Email is required",
       "emailInvalid": "Invalid email address",
       "phoneRequired": "Phone is required",
-      "phoneInvalid": "Invalid phone number",
+      "phoneInvalid": "Invalid phone number (local or international format, e.g. 062 113 444 or +385 91 234 5678)",
       "teamNameRequired": "Team name is required",
       "paymentRequired": "Payment method is required"
     },

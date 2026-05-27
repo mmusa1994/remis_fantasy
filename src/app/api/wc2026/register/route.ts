@@ -1,6 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { stripe } from "@/lib/stripe";
+import {
+  sendWC2026WelcomeEmail,
+  sendAdminRegistrationNotification,
+} from "@/lib/email";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -123,6 +127,37 @@ export async function POST(request: Request) {
         );
       }
 
+      // Fire welcome email + admin notification (best-effort, don't block flow)
+      try {
+        await sendWC2026WelcomeEmail({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          team_name: data.team_name || "",
+          payment_method: "cash",
+        });
+        await supabase
+          .from("wc2026_registrations")
+          .update({
+            codes_email_sent: true,
+            codes_email_sent_at: new Date().toISOString(),
+          })
+          .eq("id", data.id);
+      } catch (emailErr) {
+        console.error("WC2026 welcome email (cash) failed:", emailErr);
+      }
+
+      sendAdminRegistrationNotification({
+        competition: "WC2026",
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        phone: data.phone,
+        payment_method: "Keš",
+        amount: "5.00€",
+        notes: data.notes || undefined,
+      });
+
       return NextResponse.json({
         success: true,
         data,
@@ -168,8 +203,15 @@ export async function POST(request: Request) {
       currency: "eur",
       payment_method: payment_method_id,
       metadata: {
+        type: "wc2026_registration",
         registration_id: regData.id,
         product: "wc2026_fantasy",
+        first_name: first_name.trim(),
+        last_name: last_name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        team_name: team_name.trim(),
+        notes: (notes || "").trim(),
         customer_name: `${first_name.trim()} ${last_name.trim()}`,
         customer_email: email.trim(),
       },
@@ -183,6 +225,44 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("WC2026 registration POST API error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Registration ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const { error } = await supabase
+      .from("wc2026_registrations")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Supabase delete error:", error);
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("WC2026 registration DELETE API error:", error);
     return NextResponse.json(
       {
         success: false,

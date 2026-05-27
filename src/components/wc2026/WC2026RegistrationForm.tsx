@@ -102,10 +102,13 @@ function WC2026FormInner() {
     if (!formData.phone.trim()) {
       newErrors.phone = t("registration.errors.phoneRequired");
     } else {
-      const cleanPhone = formData.phone.replace(/\s/g, "");
+      // Flexible: accept any BiH/HR/RS/ME/international format.
+      // Allow digits, spaces, +, -, (, ), . — require 7–15 actual digits.
+      const digitsOnly = formData.phone.replace(/\D/g, "");
       if (
-        !/^[+]?[\d\s\-()]{8,20}$/.test(formData.phone) ||
-        cleanPhone.length < 8
+        !/^[+]?[\d\s\-().]{6,30}$/.test(formData.phone) ||
+        digitsOnly.length < 7 ||
+        digitsOnly.length > 15
       )
         newErrors.phone = t("registration.errors.phoneInvalid");
     }
@@ -199,6 +202,17 @@ function WC2026FormInner() {
       }
 
       if (paymentIntent?.status === "succeeded") {
+        // Trigger fulfillment (DB update + welcome email) immediately.
+        // The Stripe webhook acts as a redundant safety net.
+        try {
+          await fetch("/api/wc2026/register/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ payment_intent_id: paymentIntent.id }),
+          });
+        } catch (confirmErr) {
+          console.error("WC2026 confirm failed:", confirmErr);
+        }
         router.push("/wc2026/registration/success");
       }
     } catch (error: unknown) {
@@ -542,7 +556,7 @@ function WC2026FormInner() {
                     onFocus={() => setFocusedField("phone")}
                     onBlur={() => setFocusedField(null)}
                     className={inputCls("phone")}
-                    placeholder="+387 6X XXX XXX"
+                    placeholder="062 113 444"
                   />
                   {errors.phone && (
                     <p className="text-red-400 text-xs mt-1 flex items-center gap-1">

@@ -20,6 +20,8 @@ import {
   X,
   Check,
   Upload,
+  Mail,
+  MailCheck,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import Toast from "@/components/shared/Toast";
@@ -75,6 +77,8 @@ interface WCRegistration {
   team_name?: string;
   payment_method?: string;
   payment_status?: string;
+  codes_email_sent?: boolean;
+  codes_email_sent_at?: string | null;
   created_at: string;
 }
 
@@ -256,6 +260,82 @@ export default function AdminWC2026Manager() {
       setLoadingRegistrations(false);
     }
   }, [showToast]);
+
+  const [busyRegId, setBusyRegId] = useState<string | null>(null);
+
+  const handleDeleteRegistration = useCallback(
+    async (reg: WCRegistration) => {
+      const label =
+        reg.name ||
+        `${reg.first_name ?? ""} ${reg.last_name ?? ""}`.trim() ||
+        reg.email;
+      if (
+        !window.confirm(
+          `Obrisati prijavu za "${label}"? Ova akcija je nepovratna.`
+        )
+      ) {
+        return;
+      }
+      setBusyRegId(reg.id);
+      try {
+        const res = await fetch(
+          `/api/wc2026/register?id=${encodeURIComponent(reg.id)}`,
+          { method: "DELETE" }
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) {
+          throw new Error(data.error || "Brisanje neuspjesno");
+        }
+        setRegistrations((prev) => prev.filter((r) => r.id !== reg.id));
+        showToast("Prijava obrisana", "success");
+      } catch (err) {
+        showToast(
+          err instanceof Error ? err.message : "Greska pri brisanju",
+          "error"
+        );
+      } finally {
+        setBusyRegId(null);
+      }
+    },
+    [showToast]
+  );
+
+  const handleResendEmail = useCallback(
+    async (reg: WCRegistration) => {
+      setBusyRegId(reg.id);
+      try {
+        const res = await fetch("/api/wc2026/register/resend-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: reg.id }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) {
+          throw new Error(data.error || "Slanje neuspjesno");
+        }
+        setRegistrations((prev) =>
+          prev.map((r) =>
+            r.id === reg.id
+              ? {
+                  ...r,
+                  codes_email_sent: true,
+                  codes_email_sent_at: new Date().toISOString(),
+                }
+              : r
+          )
+        );
+        showToast(`Email poslan na ${reg.email}`, "success");
+      } catch (err) {
+        showToast(
+          err instanceof Error ? err.message : "Greska pri slanju",
+          "error"
+        );
+      } finally {
+        setBusyRegId(null);
+      }
+    },
+    [showToast]
+  );
 
   // ---- initial load based on active tab ----
   useEffect(() => {
@@ -1456,13 +1536,15 @@ export default function AdminWC2026Manager() {
                     "Tim",
                     "Nacin placanja",
                     "Status placanja",
+                    "Email lige",
                     "Datum",
+                    "Akcije",
                   ].map((h) => (
                     <th
                       key={h}
                       className={`px-3 py-2 text-left text-xs font-medium uppercase tracking-wider ${
                         isDark ? "text-gray-500" : "text-gray-500"
-                      }`}
+                      } ${h === "Akcije" ? "text-right" : ""}`}
                     >
                       {h}
                     </th>
@@ -1531,6 +1613,26 @@ export default function AdminWC2026Manager() {
                         {reg.payment_status ?? "N/A"}
                       </span>
                     </td>
+                    <td className="px-3 py-2">
+                      {reg.codes_email_sent ? (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-green-100 text-green-800"
+                          title={
+                            reg.codes_email_sent_at
+                              ? new Date(reg.codes_email_sent_at).toLocaleString("bs-BA")
+                              : ""
+                          }
+                        >
+                          <MailCheck className="w-3 h-3" />
+                          Poslan
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-gray-100 text-gray-700">
+                          <Mail className="w-3 h-3" />
+                          Nije poslan
+                        </span>
+                      )}
+                    </td>
                     <td
                       className={`px-3 py-2 ${
                         isDark ? "text-gray-400" : "text-gray-600"
@@ -1539,6 +1641,40 @@ export default function AdminWC2026Manager() {
                       {reg.created_at
                         ? new Date(reg.created_at).toLocaleDateString("bs-BA")
                         : "-"}
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleResendEmail(reg)}
+                          disabled={busyRegId === reg.id}
+                          title="Posalji email ponovo"
+                          className={`p-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            isDark
+                              ? "hover:bg-teal-900/40 text-teal-400"
+                              : "hover:bg-teal-50 text-teal-600"
+                          }`}
+                        >
+                          {busyRegId === reg.id ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Mail className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRegistration(reg)}
+                          disabled={busyRegId === reg.id}
+                          title="Obrisi prijavu"
+                          className={`p-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            isDark
+                              ? "hover:bg-red-900/40 text-red-400"
+                              : "hover:bg-red-50 text-red-600"
+                          }`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

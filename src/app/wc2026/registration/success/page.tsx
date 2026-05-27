@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Info } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -57,13 +57,37 @@ export default function WC2026RegistrationSuccessPage() {
         </motion.h2>
 
         <motion.p
-          className={`text-sm md:text-base mb-8 ${isDark ? "text-gray-400" : "text-gray-600"}`}
+          className={`text-sm md:text-base mb-6 ${isDark ? "text-gray-400" : "text-gray-600"}`}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
           {t("registration.successMessage")}
         </motion.p>
+
+        <motion.div
+          className={`flex items-start gap-2.5 text-left rounded-xl border px-4 py-3 mb-8 ${
+            isDark
+              ? "border-teal-500/20 bg-teal-500/[0.06]"
+              : "border-teal-500/30 bg-teal-50/60"
+          }`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+        >
+          <Info
+            className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+              isDark ? "text-teal-400" : "text-teal-600"
+            }`}
+          />
+          <p
+            className={`text-xs md:text-sm leading-relaxed ${
+              isDark ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
+            {t("registration.spamNotice")}
+          </p>
+        </motion.div>
 
         <motion.div
           className="flex flex-col sm:flex-row gap-3 justify-center"

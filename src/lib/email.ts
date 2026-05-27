@@ -13,7 +13,7 @@ interface UserData {
 
 // Type for universal admin registration notification
 export interface AdminRegistrationData {
-  competition: "F1" | "Champions League" | "Premier League" | "Predictor — Korisnički turnir";
+  competition: "F1" | "Champions League" | "Premier League" | "Predictor — Korisnički turnir" | "WC2026";
   first_name: string;
   last_name: string;
   email: string;
@@ -22,6 +22,15 @@ export interface AdminRegistrationData {
   amount: string;
   notes?: string;
   league_tier?: string;
+}
+
+// WC2026 welcome email data
+export interface WC2026WelcomeData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  team_name: string;
+  payment_method: "card" | "cash";
 }
 
 // Validate required email environment variables
@@ -1386,12 +1395,14 @@ const competitionLabels: Record<string, string> = {
   "F1": "Formula 1 Fantasy 2026",
   "Champions League": "Champions League Fantasy 2026/27",
   "Premier League": "Premier League Fantasy 2026/27",
+  "WC2026": "FIFA World Cup 2026 Fantasy",
 };
 
 const competitionColors: Record<string, string> = {
   "F1": "#e10600",
   "Champions League": "#1e3a8a",
   "Premier League": "#37003c",
+  "WC2026": "#0d9488",
 };
 
 const createAdminRegistrationNotificationTemplate = (data: AdminRegistrationData) => {
@@ -1497,6 +1508,177 @@ const createAdminRegistrationNotificationTemplate = (data: AdminRegistrationData
   </table>
 </body>
 </html>`;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WC2026 — Welcome email with league code and join link
+// ─────────────────────────────────────────────────────────────────────────────
+
+const WC2026_LEAGUE_CODE = "T2NOF3SY";
+const WC2026_JOIN_URL = `https://play.fifa.com/fantasy/join-league/${WC2026_LEAGUE_CODE}`;
+
+const createWC2026WelcomeTemplate = (data: WC2026WelcomeData) => {
+  const paymentLine =
+    data.payment_method === "card"
+      ? "Tvoja uplata je uspješno obrađena."
+      : "Tvoja prijava je zaprimljena. Uplata u kešu se očekuje uskoro.";
+
+  return `<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIFA World Cup 2026 Fantasy — Pristup ligi</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(13,148,136,0.08);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 50%,#10b981 100%);padding:44px 32px;text-align:center;">
+              <div style="display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:999px;padding:6px 16px;margin-bottom:18px;">
+                <span style="color:#ffffff;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">FIFA World Cup 2026</span>
+              </div>
+              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.4px;">Dobrodošao u ligu</h1>
+              <p style="margin:10px 0 0;color:rgba(255,255,255,0.85);font-size:15px;font-weight:400;">REMIS Fantasy — World Cup 2026</p>
+            </td>
+          </tr>
+
+          <!-- Greeting -->
+          <tr>
+            <td style="padding:36px 36px 8px;">
+              <p style="margin:0 0 8px;font-size:16px;color:#18181b;font-weight:500;">Pozdrav, ${data.first_name},</p>
+              <p style="margin:0;font-size:14px;line-height:1.7;color:#52525b;">
+                Hvala što si dio REMIS Fantasy lige za FIFA World Cup 2026. ${paymentLine} U nastavku se nalazi tvoj jedinstveni kod i direktan link za pristup ligi na FIFA Fantasy platformi.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Team summary -->
+          <tr>
+            <td style="padding:24px 36px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;">
+                <tr>
+                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;width:130px;">Tim</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${data.team_name}</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 18px;font-size:13px;color:#71717a;">Igrač</td>
+                  <td style="padding:14px 18px;font-size:14px;color:#18181b;font-weight:500;">${data.first_name} ${data.last_name}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- League code block -->
+          <tr>
+            <td style="padding:32px 36px 0;">
+              <p style="margin:0 0 10px;font-size:11px;font-weight:600;color:#71717a;text-transform:uppercase;letter-spacing:1.5px;text-align:center;">Kod lige</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border:1px solid #0d9488;border-radius:12px;padding:24px;">
+                    <div style="font-family:'SF Mono','Monaco','Courier New',monospace;font-size:30px;font-weight:700;letter-spacing:6px;color:#5eead4;text-shadow:0 0 20px rgba(94,234,212,0.25);">${WC2026_LEAGUE_CODE}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Buttons -->
+          <tr>
+            <td style="padding:32px 36px 8px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${WC2026_JOIN_URL}" style="height:50px;v-text-anchor:middle;width:100%;" arcsize="22%" fillcolor="#0d9488" stroke="f">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">Pridruži se ligi</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <a href="${WC2026_JOIN_URL}" target="_blank" rel="noopener"
+                       style="display:block;width:100%;box-sizing:border-box;background:linear-gradient(135deg,#0d9488 0%,#10b981 100%);color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:15px 28px;border-radius:12px;text-align:center;letter-spacing:0.2px;box-shadow:0 4px 14px rgba(13,148,136,0.3);mso-hide:all;">
+                      Pridruži se ligi
+                    </a>
+                  </td>
+                </tr>
+                <tr><td style="height:12px;line-height:12px;font-size:0;">&nbsp;</td></tr>
+                <tr>
+                  <td align="center">
+                    <a href="https://play.fifa.com/fantasy" target="_blank" rel="noopener"
+                       style="display:block;width:100%;box-sizing:border-box;background:#ffffff;color:#0d9488;text-decoration:none;font-size:15px;font-weight:600;padding:14px 28px;border-radius:12px;text-align:center;letter-spacing:0.2px;border:1.5px solid #0d9488;">
+                      Otvori FIFA Fantasy
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Instructions -->
+          <tr>
+            <td style="padding:28px 36px 0;">
+              <p style="margin:0;font-size:13px;line-height:1.7;color:#71717a;text-align:center;">
+                Klikni na <strong style="color:#0d9488;font-weight:600;">Pridruži se ligi</strong> i automatski ćeš biti dodan. Ako biraš ručni unos, otvori FIFA Fantasy i ukucaj kod iznad.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding:32px 36px 0;">
+              <div style="height:1px;background:linear-gradient(90deg,transparent 0%,#e4e4e7 50%,transparent 100%);"></div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 36px 36px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#18181b;letter-spacing:0.3px;">REMIS Fantasy</p>
+              <p style="margin:0;font-size:11px;color:#a1a1aa;">Sretno u takmičenju</p>
+            </td>
+          </tr>
+
+        </table>
+
+        <p style="margin:20px 0 0;font-size:11px;color:#a1a1aa;text-align:center;">
+          Ovaj email je poslan na ${data.email}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+};
+
+export const sendWC2026WelcomeEmail = async (data: WC2026WelcomeData) => {
+  try {
+    const result = await transporter.sendMail({
+      from: `"REMIS Fantasy" <${emailUser}>`,
+      to: data.email,
+      replyTo: emailUser,
+      subject: "FIFA World Cup 2026 Fantasy — Kod za pristup ligi | REMIS Fantasy",
+      html: createWC2026WelcomeTemplate(data),
+    });
+
+    console.info(
+      "WC2026 welcome email sent:",
+      result.messageId,
+      "response:",
+      result.response,
+      "accepted:",
+      result.accepted,
+      "rejected:",
+      result.rejected
+    );
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("Failed to send WC2026 welcome email:", error);
+    throw error;
+  }
 };
 
 // Send admin notification for any competition registration

@@ -167,6 +167,7 @@
     "disclaimer": "Vaši podaci su zaštićeni i koriste se samo za potrebe turnira.",
     "successTitle": "Registracija uspješna!",
     "successMessage": "Dobrodošli u REMIS WC 2026 Fantasy! Uskoro ćete dobiti email potvrdu.",
+    "spamNotice": "Ako email ne vidite u glavnom inboxu, provjerite Spam ili Promotions folder i označite ga kao \"Nije spam\" da ubuduće stiže direktno.",
     "feature1Title": "Takmiči se za nagrade",
     "feature1Desc": "Osvoji nagradni fond",
     "feature2Title": "Tabela uživo",
@@ -179,7 +180,7 @@
       "emailRequired": "Email je obavezan",
       "emailInvalid": "Neispravna email adresa",
       "phoneRequired": "Telefon je obavezan",
-      "phoneInvalid": "Neispravan broj telefona",
+      "phoneInvalid": "Neispravan broj telefona (lokalni ili međunarodni format, npr. 062 113 444 ili +385 91 234 5678)",
       "teamNameRequired": "Naziv tima je obavezan",
       "paymentRequired": "Način plaćanja je obavezan"
     },
