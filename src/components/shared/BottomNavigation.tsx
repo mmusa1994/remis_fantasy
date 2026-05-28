@@ -159,86 +159,91 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
     return pathname.startsWith(href);
   };
 
+  const dark = theme === "dark";
+  const inactiveText = dark ? "text-gray-400" : "text-gray-500";
+
   return (
     <motion.nav
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className={`fixed bottom-0 left-0 right-0 z-50 md:hidden border-t backdrop-blur-lg ${
-        theme === "dark"
-          ? "bg-gray-900/95 border-gray-700"
-          : "bg-white/95 border-gray-200"
-      }`}
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", damping: 28, stiffness: 320 }}
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden transform-gpu"
+      style={{ willChange: "transform", WebkitBackfaceVisibility: "hidden" }}
       aria-label="Glavna mobilna navigacija"
     >
-      <div className="flex items-stretch justify-around px-0.5 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] safe-area-pb">
-        {navItems.map((item) => {
-          const isActive = isActiveLink(item.href);
-          const IconComponent = item.icon;
-          const brand = BRAND_STYLES[item.brand];
+      {/* Bar surface — fully solid (no transparency / blur) for a clean, jank-free dock */}
+      <div
+        className={`relative border-t shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.35)] ${
+          dark
+            ? "bg-gray-950 border-white/10"
+            : "bg-white border-gray-200"
+        }`}
+      >
+        <div className="mx-auto flex max-w-screen-sm items-stretch justify-around gap-0.5 px-1.5 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          {navItems.map((item) => {
+            const isActive = isActiveLink(item.href);
+            const IconComponent = item.icon;
+            const brand = BRAND_STYLES[item.brand];
 
-          const inactiveText =
-            theme === "dark"
-              ? "text-gray-400"
-              : "text-gray-600";
-
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              className="flex-1 min-w-0"
-              aria-label={item.name}
-              aria-current={isActive ? "page" : undefined}
-            >
-              <motion.div
-                className={`relative flex flex-col items-center justify-center gap-1 px-1 rounded-xl transition-all duration-200 min-h-[52px] ${
-                  isActive
-                    ? `${brand.activeText} ${brand.activeBg}`
-                    : `${inactiveText} hover:text-gray-900 dark:hover:text-gray-200 active:bg-gray-100 dark:active:bg-gray-700/40`
-                }`}
-                whileTap={{ scale: 0.94 }}
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="flex-1 min-w-0"
+                aria-label={item.name}
+                aria-current={isActive ? "page" : undefined}
               >
                 <motion.div
-                  animate={{ scale: isActive ? 1.1 : 1 }}
-                  transition={{ duration: 0.2 }}
-                  className={isActive && !item.customIcon ? brand.iconTint : ""}
+                  className={`group relative flex flex-col items-center justify-center gap-1 rounded-2xl px-0.5 py-1.5 min-h-[56px] transition-colors duration-200 ${
+                    isActive ? brand.activeText : inactiveText
+                  }`}
+                  whileTap={{ scale: 0.9 }}
                 >
-                  {item.customIcon ? (
-                    <WCIcon isActive={isActive} />
-                  ) : (
-                    <IconComponent className="w-[22px] h-[22px]" />
+                  {/* Pill highlight behind the active item */}
+                  {isActive && (
+                    <motion.span
+                      layoutId="bottomNavPill"
+                      transition={{ type: "spring", damping: 26, stiffness: 340 }}
+                      className={`absolute inset-x-1 inset-y-0.5 -z-10 rounded-2xl ${brand.activeBg}`}
+                    />
                   )}
-                </motion.div>
-                <span className="text-[11px] leading-none font-medium truncate max-w-full px-0.5">
-                  <span className="hidden xs:inline">{item.name}</span>
-                  <span className="xs:hidden">{item.shortName}</span>
-                </span>
-                {isActive && (
                   <motion.div
-                    layoutId="bottomNavIndicator"
-                    className={`absolute top-0 left-3 right-3 h-[3px] rounded-b-full ${brand.indicator}`}
-                  />
-                )}
-              </motion.div>
-            </Link>
-          );
-        })}
+                    animate={{ scale: isActive ? 1.12 : 1, y: isActive ? -1 : 0 }}
+                    transition={{ type: "spring", damping: 18, stiffness: 320 }}
+                    className={isActive && !item.customIcon ? brand.iconTint : ""}
+                  >
+                    {item.customIcon ? (
+                      <WCIcon isActive={isActive} />
+                    ) : (
+                      <IconComponent className="w-[22px] h-[22px]" />
+                    )}
+                  </motion.div>
+                  <span
+                    className={`text-[10.5px] leading-none tracking-tight truncate max-w-full px-0.5 transition-all ${
+                      isActive ? "font-semibold" : "font-medium"
+                    }`}
+                  >
+                    <span className="hidden xs:inline">{item.name}</span>
+                    <span className="xs:hidden">{item.shortName}</span>
+                  </span>
+                </motion.div>
+              </Link>
+            );
+          })}
 
-        <div className="flex-1 min-w-0">
-          <motion.button
-            onClick={onMenuToggle}
-            className={`relative flex flex-col items-center justify-center gap-1 px-1 rounded-xl w-full min-h-[52px] transition-all duration-200 ${
-              theme === "dark"
-                ? "text-gray-400 hover:text-gray-200 active:bg-gray-700/40"
-                : "text-gray-600 hover:text-gray-900 active:bg-gray-100"
-            }`}
-            whileTap={{ scale: 0.94 }}
-            aria-label={t("menu", "Meni")}
-          >
-            <Menu className="w-[22px] h-[22px]" />
-            <span className="text-[11px] leading-none font-medium truncate max-w-full px-0.5">
-              {t("menu")}
-            </span>
-          </motion.button>
+          <div className="flex-1 min-w-0">
+            <motion.button
+              onClick={onMenuToggle}
+              className={`group relative flex w-full flex-col items-center justify-center gap-1 rounded-2xl px-0.5 py-1.5 min-h-[56px] transition-colors duration-200 ${inactiveText} hover:text-gray-900 dark:hover:text-gray-200`}
+              whileTap={{ scale: 0.9 }}
+              aria-label={t("menu", "Meni")}
+            >
+              <Menu className="w-[22px] h-[22px]" />
+              <span className="text-[10.5px] leading-none font-medium tracking-tight truncate max-w-full px-0.5">
+                {t("menu")}
+              </span>
+            </motion.button>
+          </div>
         </div>
       </div>
     </motion.nav>

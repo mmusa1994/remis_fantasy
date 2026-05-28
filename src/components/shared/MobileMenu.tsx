@@ -106,6 +106,16 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
     { name: t("gallery"), href: "/f1-fantasy/gallery" },
   ];
 
+  const wc2026Items = [
+    { name: t("tables"), href: "/wc2026/tables" },
+    { name: t("wc2026Matches", "Matches"), href: "/wc2026/matches" },
+    { name: t("wc2026Groups", "Groups"), href: "/wc2026/groups" },
+    { name: t("wc2026Statistics", "Statistics"), href: "/wc2026/statistics" },
+    { name: t("registration"), href: "/wc2026/registration" },
+    { name: t("prizes"), href: "/wc2026/prizes" },
+    { name: t("gallery"), href: "/wc2026/gallery" },
+  ];
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -420,6 +430,50 @@ const MobileMenu = ({ isOpen, onClose, currentSection }: MobileMenuProps) => {
                       >
                         <div className="mt-2 space-y-1">
                           {f1FantasyItems.map((item) => (
+                            <Link key={item.href} href={item.href} onClick={onClose}>
+                              <div className={`block w-full text-left p-2 pl-6 rounded-lg text-sm transition-colors ${
+                                theme === "dark"
+                                  ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                              }`}>
+                                {item.name}
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* WC 2026 Section */}
+                <div>
+                  <button
+                    onClick={() => toggleSection("wc2026")}
+                    className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                      theme === "dark"
+                        ? "bg-teal-900/20 hover:bg-teal-800/30 text-teal-300"
+                        : "bg-teal-50 hover:bg-teal-100 text-teal-700"
+                    }`}
+                  >
+                    <span className="font-medium">{t('wc2026Fantasy', 'WC 2026 Fantasy')}</span>
+                    {expandedSection === "wc2026" ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </button>
+                  <AnimatePresence>
+                    {expandedSection === "wc2026" && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-2 space-y-1">
+                          {wc2026Items.map((item) => (
                             <Link key={item.href} href={item.href} onClick={onClose}>
                               <div className={`block w-full text-left p-2 pl-6 rounded-lg text-sm transition-colors ${
                                 theme === "dark"

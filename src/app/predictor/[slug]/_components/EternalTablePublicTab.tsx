@@ -145,7 +145,7 @@ export default function EternalTablePublicTab({
         <div
           className={`flex rounded-xl border overflow-hidden ${
             dark
-              ? "border-white/10 bg-white/[0.02]"
+              ? "border-white/10 bg-gray-950/90 backdrop-blur-xl shadow-lg shadow-black/30"
               : "border-gray-200 bg-gray-50"
           }`}
         >
@@ -186,7 +186,7 @@ export default function EternalTablePublicTab({
       <div
         className={`rounded-2xl border overflow-hidden ${
           dark
-            ? "border-white/10 bg-white/[0.02]"
+            ? "border-white/10 bg-gray-950/90 backdrop-blur-xl shadow-xl shadow-black/40"
             : "border-gray-200 bg-white shadow-sm"
         }`}
       >
