@@ -4,10 +4,7 @@ import { supabaseServer } from "@/lib/supabase-server";
 import Stripe from "stripe";
 import * as nodemailer from "nodemailer";
 import { getF1CodesEmailHtml } from "@/app/api/send-f1-email/route";
-import {
-  sendAdminRegistrationNotification,
-  sendWC2026WelcomeEmail,
-} from "@/lib/email";
+import { sendAdminRegistrationNotification } from "@/lib/email";
 import { getTemplate } from "@/data/predictor-templates";
 import { seedTournamentFromTemplate } from "@/lib/predictor-seed";
 
@@ -286,63 +283,24 @@ export async function POST(req: NextRequest) {
         }
 
         if (paymentIntent.metadata?.type === "wc2026_registration") {
-          const {
-            registration_id,
-            first_name,
-            last_name,
-            email,
-            phone,
-            team_name,
-            notes,
-          } = paymentIntent.metadata;
+          const { registration_id } = paymentIntent.metadata;
 
-          // Mark the existing registration as paid (it was inserted before the PI)
-          const { data: regRow, error: updateErr } = await supabaseServer
+          // Mark the existing registration as paid (safety net — it was
+          // inserted before the PI). Emails (welcome + admin notification)
+          // are sent exclusively by /api/wc2026/register/confirm when the
+          // client completes registration, so we don't send them here to
+          // avoid duplicate emails to the user and admin.
+          const { error: updateErr } = await supabaseServer
             .from("wc2026_registrations")
             .update({
               payment_status: "paid",
               updated_at: new Date().toISOString(),
             })
-            .eq("id", registration_id)
-            .select("id, codes_email_sent")
-            .maybeSingle();
+            .eq("id", registration_id);
 
           if (updateErr) {
             console.error("Error updating WC2026 registration:", updateErr);
           }
-
-          // Send welcome email (idempotent — only if not already sent)
-          if (regRow && !regRow.codes_email_sent) {
-            try {
-              await sendWC2026WelcomeEmail({
-                first_name,
-                last_name,
-                email,
-                team_name: team_name || "",
-                payment_method: "card",
-              });
-              await supabaseServer
-                .from("wc2026_registrations")
-                .update({
-                  codes_email_sent: true,
-                  codes_email_sent_at: new Date().toISOString(),
-                })
-                .eq("id", regRow.id);
-            } catch (emailErr) {
-              console.error("WC2026 welcome email failed:", emailErr);
-            }
-          }
-
-          sendAdminRegistrationNotification({
-            competition: "WC2026",
-            first_name,
-            last_name,
-            email,
-            phone,
-            payment_method: "Stripe (kartica)",
-            amount: "5.00€",
-            notes: notes || undefined,
-          });
         }
 
         if (paymentIntent.metadata?.type === "pl_registration_26_27") {

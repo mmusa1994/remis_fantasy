@@ -14,6 +14,7 @@ import {
   Table2,
   Users,
   Trophy,
+  Target,
   Crown,
   Star,
   AlertCircle,
@@ -655,7 +656,7 @@ export default function AdminDashboardTabs({
                 className="text-white/70 hover:text-white hover:bg-white/10 p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 flex-shrink-0 text-sm"
                 title="Predictor — turniri i predikcije"
               >
-                <Trophy className="w-4 h-4" />
+                <Target className="w-4 h-4" />
                 <span className="hidden sm:inline">Predictor</span>
               </Link>
               <Link

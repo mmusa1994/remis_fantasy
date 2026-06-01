@@ -6,9 +6,7 @@ import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
-import SaveToast, {
-  type SaveToastState,
-} from "@/components/shared/SaveToast";
+import SaveToast, { type SaveToastState } from "@/components/shared/SaveToast";
 import EternalTableOwnerTab from "@/components/predictor/EternalTableOwnerTab";
 import {
   ArrowLeft,
@@ -366,7 +364,9 @@ export default function AdminPredictorManager() {
   }
 
   return (
-    <div className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-gray-50"}`}>
+    <div
+      className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-gray-50"}`}
+    >
       {/* header */}
       <header className="bg-gradient-to-r from-red-950 to-red-900 text-white border-b border-red-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -388,9 +388,8 @@ export default function AdminPredictorManager() {
                 priority
               />
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold truncate tracking-tight flex items-center gap-2">
-                  <Trophy className="w-5 h-5" />
-                  Predictor — Turniri
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold truncate tracking-tight">
+                  Predictor - Turniri
                 </h1>
                 <p className="text-xs sm:text-sm text-white/60 truncate">
                   Predikcije, pravila, nagrade i bodovanje
@@ -560,7 +559,9 @@ function ImportTemplateModal({
                   {tmpl.logo_url ? (
                     <div
                       className={`relative w-16 h-16 rounded-2xl flex-shrink-0 flex items-center justify-center ${
-                        theme === "dark" ? "bg-gray-900 border border-gray-700" : "bg-white border border-gray-200"
+                        theme === "dark"
+                          ? "bg-gray-900 border border-gray-700"
+                          : "bg-white border border-gray-200"
                       }`}
                     >
                       <Image
@@ -570,7 +571,10 @@ function ImportTemplateModal({
                         height={48}
                         className="w-12 h-12 object-contain"
                         style={{
-                          filter: getLogoFilter(tmpl.logo_url, tmpl.accent_color),
+                          filter: getLogoFilter(
+                            tmpl.logo_url,
+                            tmpl.accent_color,
+                          ),
                         }}
                         unoptimized
                       />
@@ -674,8 +678,14 @@ function TournamentList({
 
   // Optional: assign tournament to a specific user (admin-for-user flow)
   const [ownerSearch, setOwnerSearch] = useState("");
-  const [ownerResults, setOwnerResults] = useState<Array<{ id: string; email: string; name: string | null }>>([]);
-  const [ownerPicked, setOwnerPicked] = useState<{ id: string; email: string; name: string | null } | null>(null);
+  const [ownerResults, setOwnerResults] = useState<
+    Array<{ id: string; email: string; name: string | null }>
+  >([]);
+  const [ownerPicked, setOwnerPicked] = useState<{
+    id: string;
+    email: string;
+    name: string | null;
+  } | null>(null);
   const [ownerSearching, setOwnerSearching] = useState(false);
 
   useEffect(() => {
@@ -687,7 +697,9 @@ function TournamentList({
     setOwnerSearching(true);
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/admin/users?q=${encodeURIComponent(ownerSearch)}&page_size=8`);
+        const res = await fetch(
+          `/api/admin/users?q=${encodeURIComponent(ownerSearch)}&page_size=8`,
+        );
         if (res.ok && !cancel) {
           const data = await res.json();
           setOwnerResults(data.users || []);
@@ -748,7 +760,8 @@ function TournamentList({
             Svi turniri
           </h2>
           <p className={`text-sm mt-1 ${mutedTextCls(theme)}`}>
-            Kreiraj prilagođene predikcijske turnire sa kategorijama, pravilima i nagradama.
+            Kreiraj prilagođene predikcijske turnire sa kategorijama, pravilima
+            i nagradama.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -836,21 +849,29 @@ function TournamentList({
             </Field>
           </div>
           {/* Optional: assign to a specific user (admin-for-user) */}
-          <div className={`rounded-md p-4 border ${
-            theme === "dark"
-              ? "border-amber-900/40 bg-amber-950/20"
-              : "border-amber-200 bg-amber-50/40"
-          }`}>
+          <div
+            className={`rounded-md p-4 border ${
+              theme === "dark"
+                ? "border-amber-900/40 bg-amber-950/20"
+                : "border-amber-200 bg-amber-50/40"
+            }`}
+          >
             <Field theme={theme} label="Vlasnik turnira (opcionalno)">
               {ownerPicked ? (
-                <div className={`flex items-center justify-between rounded-md border px-3 py-2 ${
-                  theme === "dark" ? "border-amber-700/50 bg-amber-950/30" : "border-amber-300 bg-white"
-                }`}>
+                <div
+                  className={`flex items-center justify-between rounded-md border px-3 py-2 ${
+                    theme === "dark"
+                      ? "border-amber-700/50 bg-amber-950/30"
+                      : "border-amber-300 bg-white"
+                  }`}
+                >
                   <div className="text-sm">
                     <div className={`font-semibold ${headingCls(theme)}`}>
                       {ownerPicked.name || "(bez imena)"}
                     </div>
-                    <div className={`text-xs ${mutedTextCls(theme)}`}>{ownerPicked.email}</div>
+                    <div className={`text-xs ${mutedTextCls(theme)}`}>
+                      {ownerPicked.email}
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -873,13 +894,21 @@ function TournamentList({
                     className={inputCls(theme)}
                   />
                   {ownerSearch.length >= 2 && (
-                    <div className={`mt-2 max-h-48 overflow-y-auto rounded-md border ${
-                      theme === "dark" ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-white"
-                    }`}>
+                    <div
+                      className={`mt-2 max-h-48 overflow-y-auto rounded-md border ${
+                        theme === "dark"
+                          ? "border-gray-700 bg-gray-900"
+                          : "border-gray-200 bg-white"
+                      }`}
+                    >
                       {ownerSearching ? (
-                        <div className={`p-3 text-xs ${mutedTextCls(theme)}`}>Tražim…</div>
+                        <div className={`p-3 text-xs ${mutedTextCls(theme)}`}>
+                          Tražim…
+                        </div>
                       ) : ownerResults.length === 0 ? (
-                        <div className={`p-3 text-xs ${mutedTextCls(theme)}`}>Nema rezultata</div>
+                        <div className={`p-3 text-xs ${mutedTextCls(theme)}`}>
+                          Nema rezultata
+                        </div>
                       ) : (
                         ownerResults.map((u) => (
                           <button
@@ -896,16 +925,21 @@ function TournamentList({
                                 : "hover:bg-gray-50 text-gray-900"
                             }`}
                           >
-                            <div className="font-medium">{u.name || "(bez imena)"}</div>
-                            <div className={`text-xs ${mutedTextCls(theme)}`}>{u.email}</div>
+                            <div className="font-medium">
+                              {u.name || "(bez imena)"}
+                            </div>
+                            <div className={`text-xs ${mutedTextCls(theme)}`}>
+                              {u.email}
+                            </div>
                           </button>
                         ))
                       )}
                     </div>
                   )}
                   <p className={`text-[11px] mt-1 ${mutedTextCls(theme)}`}>
-                    Ako odabereš usera, turnir postaje njegov — moći će ga uređivati kroz /predictor/owner.
-                    Ostavi prazno za standardni admin-only turnir.
+                    Ako odabereš usera, turnir postaje njegov — moći će ga
+                    uređivati kroz /predictor/owner. Ostavi prazno za standardni
+                    admin-only turnir.
                   </p>
                 </>
               )}
@@ -969,7 +1003,9 @@ function TournamentList({
                     <Trophy
                       className={`w-5 h-5 flex-shrink-0 ${ACCENT_ICON_CLASS[t.accent_color] ?? "text-amber-500"}`}
                     />
-                    <h3 className={`font-semibold truncate ${headingCls(theme)}`}>
+                    <h3
+                      className={`font-semibold truncate ${headingCls(theme)}`}
+                    >
                       {t.name}
                     </h3>
                   </div>
@@ -986,9 +1022,7 @@ function TournamentList({
                     {t.short_description}
                   </p>
                 )}
-                <div
-                  className={`text-xs font-mono ${subtleTextCls(theme)}`}
-                >
+                <div className={`text-xs font-mono ${subtleTextCls(theme)}`}>
                   /{t.slug}
                 </div>
               </button>
@@ -1047,9 +1081,7 @@ function WorkflowBanner({
   return (
     <div className="space-y-3">
       {/* 4-koraka progres */}
-      <div
-        className={`rounded-md p-3 ${cardCls(theme)}`}
-      >
+      <div className={`rounded-md p-3 ${cardCls(theme)}`}>
         <div className="flex items-center justify-between gap-2">
           {steps.map((s, idx) => {
             const Icon = s.icon;
@@ -1160,8 +1192,8 @@ function WorkflowBanner({
                 Turnir je aktivan — korisnici mogu predviđati
               </h4>
               <p className={`text-sm mt-1 ${mutedTextCls(theme)}`}>
-                Podijeli link sa članovima. Kad počne prva utakmica,
-                ručno <b>zaključaj predikcije</b>.
+                Podijeli link sa članovima. Kad počne prva utakmica, ručno{" "}
+                <b>zaključaj predikcije</b>.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <code
@@ -1175,7 +1207,9 @@ function WorkflowBanner({
                 </code>
                 <button
                   onClick={copyLink}
-                  className={ghostBtnCls(theme) + " inline-flex items-center gap-1.5"}
+                  className={
+                    ghostBtnCls(theme) + " inline-flex items-center gap-1.5"
+                  }
                 >
                   <Copy className="w-3.5 h-3.5" />
                   {copied ? "Kopirano!" : "Kopiraj link"}
@@ -1226,7 +1260,9 @@ function WorkflowBanner({
                 </button>
                 <button
                   onClick={onFinish}
-                  className={ghostBtnCls(theme) + " inline-flex items-center gap-1.5"}
+                  className={
+                    ghostBtnCls(theme) + " inline-flex items-center gap-1.5"
+                  }
                 >
                   <Flag className="w-4 h-4" />
                   Označi kao završen
@@ -1335,8 +1371,8 @@ function DeleteTournamentModal({
             </h3>
             <p className={`text-sm mt-1 ${mutedTextCls(theme)}`}>
               Ovo briše turnir <b>{tournament.name}</b> sa svim kategorijama,
-              opcijama, utakmicama, pravilima, nagradama i predikcijama korisnika.
-              Akcija je nepovratna.
+              opcijama, utakmicama, pravilima, nagradama i predikcijama
+              korisnika. Akcija je nepovratna.
             </p>
           </div>
         </div>
@@ -1508,7 +1544,9 @@ function TournamentEditor({
         />
       )}
 
-      <h2 className={`text-2xl font-bold flex items-center gap-3 flex-wrap ${headingCls(theme)}`}>
+      <h2
+        className={`text-2xl font-bold flex items-center gap-3 flex-wrap ${headingCls(theme)}`}
+      >
         {tournament.logo_url ? (
           <Image
             src={tournament.logo_url}
@@ -1524,7 +1562,9 @@ function TournamentEditor({
           />
         )}
         {tournament.name}
-        <span className={`text-sm font-normal font-mono ${subtleTextCls(theme)}`}>
+        <span
+          className={`text-sm font-normal font-mono ${subtleTextCls(theme)}`}
+        >
           /{tournament.slug}
         </span>
       </h2>
@@ -1540,16 +1580,11 @@ function TournamentEditor({
         rescoring={rescoring}
       />
 
-      <SaveToast
-        toast={headerToast}
-        onDismiss={() => setHeaderToast(null)}
-      />
+      <SaveToast toast={headerToast} onDismiss={() => setHeaderToast(null)} />
 
       <div
         className={`relative -mx-1 px-1 ${
-          theme === "dark"
-            ? "[--fade-from:#0a0a0a]"
-            : "[--fade-from:#fafafa]"
+          theme === "dark" ? "[--fade-from:#0a0a0a]" : "[--fade-from:#fafafa]"
         }`}
       >
         <div
@@ -1569,8 +1604,7 @@ function TournamentEditor({
           ).map((it) => {
             const Icon = it.icon;
             const active = tab === it.id;
-            const showPendingBadge =
-              it.id === "approvals" && pendingCount > 0;
+            const showPendingBadge = it.id === "approvals" && pendingCount > 0;
             return (
               <button
                 key={it.id}
@@ -1637,9 +1671,7 @@ function TournamentEditor({
           onPendingChanged={refreshPendingCount}
         />
       )}
-      {tab === "eternal" && (
-        <EternalTableOwnerTab tournament={tournament} />
-      )}
+      {tab === "eternal" && <EternalTableOwnerTab tournament={tournament} />}
     </div>
   );
 }
@@ -1690,7 +1722,8 @@ function ApprovalsTab({
   };
 
   const remove = async (id: string) => {
-    if (!confirm(t("admin.approvals.confirmRemove", "Ukloni ovog člana?"))) return;
+    if (!confirm(t("admin.approvals.confirmRemove", "Ukloni ovog člana?")))
+      return;
     const res = await fetch(`/api/admin/predictor/members?id=${id}`, {
       method: "DELETE",
     });
@@ -1731,7 +1764,7 @@ function ApprovalsTab({
             <p className={`text-sm mt-1 ${mutedTextCls(theme)}`}>
               {t(
                 "admin.approvals.disabledBody",
-                "Svi prijavljeni korisnici mogu odmah predviđati. Da bi koristio sistem odobrenja, idi na Postavke i uključi opciju \"Zahtijevaj odobrenje admina\".",
+                'Svi prijavljeni korisnici mogu odmah predviđati. Da bi koristio sistem odobrenja, idi na Postavke i uključi opciju "Zahtijevaj odobrenje admina".',
               )}
             </p>
           </div>
@@ -1782,11 +1815,36 @@ function ApprovalsTab({
       <div className="flex gap-2 overflow-x-auto pb-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {(
           [
-            { id: "pending", label: STATUS_LABEL.pending, count: counts.pending, icon: UserPlus },
-            { id: "approved", label: STATUS_LABEL.approved, count: counts.approved, icon: UserCheck },
-            { id: "rejected", label: STATUS_LABEL.rejected, count: counts.rejected, icon: UserX },
-            { id: "banned", label: STATUS_LABEL.banned, count: counts.banned, icon: Ban },
-            { id: "all", label: t("admin.approvals.filter.all", "Svi"), count: members.length, icon: Users },
+            {
+              id: "pending",
+              label: STATUS_LABEL.pending,
+              count: counts.pending,
+              icon: UserPlus,
+            },
+            {
+              id: "approved",
+              label: STATUS_LABEL.approved,
+              count: counts.approved,
+              icon: UserCheck,
+            },
+            {
+              id: "rejected",
+              label: STATUS_LABEL.rejected,
+              count: counts.rejected,
+              icon: UserX,
+            },
+            {
+              id: "banned",
+              label: STATUS_LABEL.banned,
+              count: counts.banned,
+              icon: Ban,
+            },
+            {
+              id: "all",
+              label: t("admin.approvals.filter.all", "Svi"),
+              count: members.length,
+              icon: Users,
+            },
           ] as const
         ).map((f) => {
           const Icon = f.icon;
@@ -1836,7 +1894,9 @@ function ApprovalsTab({
               <div className="flex items-start gap-3">
                 <div
                   className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${
-                    theme === "dark" ? "bg-gray-800 text-amber-300" : "bg-amber-50 text-amber-700"
+                    theme === "dark"
+                      ? "bg-gray-800 text-amber-300"
+                      : "bg-amber-50 text-amber-700"
                   }`}
                 >
                   {(m.user_display_name || m.user_email || "U")
@@ -1846,11 +1906,17 @@ function ApprovalsTab({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
-                      <div className={`font-bold ${headingCls(theme)} truncate`}>
-                        {m.user_display_name || m.user_email?.split("@")[0] || "Korisnik"}
+                      <div
+                        className={`font-bold ${headingCls(theme)} truncate`}
+                      >
+                        {m.user_display_name ||
+                          m.user_email?.split("@")[0] ||
+                          "Korisnik"}
                       </div>
                       {m.user_email && (
-                        <div className={`text-xs ${subtleTextCls(theme)} truncate`}>
+                        <div
+                          className={`text-xs ${subtleTextCls(theme)} truncate`}
+                        >
                           {m.user_email}
                         </div>
                       )}
@@ -1936,7 +2002,6 @@ function ApprovalsTab({
 function useApprovalsT() {
   return useTranslation("predictor");
 }
-
 
 // ============================================================
 // Matches tab — admin upravlja utakmicama + unos rezultata
@@ -2036,14 +2101,11 @@ function MatchesTab({
       return;
     setPromoting(true);
     try {
-      const res = await fetch(
-        "/api/admin/predictor/matches/promote-knockout",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tournament_id: tournament.id }),
-        },
-      );
+      const res = await fetch("/api/admin/predictor/matches/promote-knockout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tournament_id: tournament.id }),
+      });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
         setToast({ kind: "error", text: j.error || "Greška pri popunjavanju" });
@@ -2100,10 +2162,26 @@ function MatchesTab({
     }
     return Array.from(m.entries()).sort((a, b) => {
       const order = [
-        "group_a", "group_b", "group_c", "group_d", "group_e", "group_f",
-        "group_g", "group_h", "group_i", "group_j", "group_k", "group_l",
-        "group", "round_of_32", "round_of_16", "quarter_final",
-        "semi_final", "third_place", "final", "other",
+        "group_a",
+        "group_b",
+        "group_c",
+        "group_d",
+        "group_e",
+        "group_f",
+        "group_g",
+        "group_h",
+        "group_i",
+        "group_j",
+        "group_k",
+        "group_l",
+        "group",
+        "round_of_32",
+        "round_of_16",
+        "quarter_final",
+        "semi_final",
+        "third_place",
+        "final",
+        "other",
       ];
       return order.indexOf(a[0]) - order.indexOf(b[0]);
     });
@@ -2120,8 +2198,9 @@ function MatchesTab({
             Predikcije se automatski zaključavaju u trenutku kickoff-a.
             Korisnici dobijaju poene po: <b>tačan rezultat</b> ({" "}
             <span className="text-amber-500">5</span> pts) ·{" "}
-            <b>tačna razlika</b> (<span className="text-amber-500">3</span> pts) ·{" "}
-            <b>tačan pobjednik</b> (<span className="text-amber-500">2</span> pts).
+            <b>tačna razlika</b> (<span className="text-amber-500">3</span> pts)
+            · <b>tačan pobjednik</b> (<span className="text-amber-500">2</span>{" "}
+            pts).
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -2228,7 +2307,9 @@ function MatchesTab({
             <div key={stage}>
               <div className="flex items-center gap-2 mb-2">
                 <Flag className="w-4 h-4 text-amber-500" />
-                <h4 className={`text-sm font-bold uppercase tracking-wide ${headingCls(theme)}`}>
+                <h4
+                  className={`text-sm font-bold uppercase tracking-wide ${headingCls(theme)}`}
+                >
                   {STAGE_LABEL[stage] ?? stage}
                 </h4>
                 <span className={`text-xs ${subtleTextCls(theme)}`}>
@@ -2431,31 +2512,32 @@ function MatchRow({
           theme === "dark" ? "border-gray-800" : "border-gray-200"
         }`}
       >
-        {(autoLocked || match.force_unlocked) && match.status === "scheduled" && (
-          <button
-            onClick={toggleUnlock}
-            className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
-              match.force_unlocked
-                ? theme === "dark"
-                  ? "bg-emerald-950/40 hover:bg-emerald-950/60 text-emerald-300"
-                  : "bg-emerald-100 hover:bg-emerald-200 text-emerald-700"
-                : theme === "dark"
-                  ? "hover:bg-amber-950/40 text-amber-300 border border-gray-700"
-                  : "hover:bg-amber-50 text-amber-700 border border-gray-200"
-            }`}
-            title={
-              match.force_unlocked
-                ? "Vrati na automatsko zaključavanje"
-                : "Ručno otključaj (produži rok)"
-            }
-          >
-            {match.force_unlocked ? (
-              <Unlock className="w-4 h-4" />
-            ) : (
-              <Lock className="w-4 h-4" />
-            )}
-          </button>
-        )}
+        {(autoLocked || match.force_unlocked) &&
+          match.status === "scheduled" && (
+            <button
+              onClick={toggleUnlock}
+              className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
+                match.force_unlocked
+                  ? theme === "dark"
+                    ? "bg-emerald-950/40 hover:bg-emerald-950/60 text-emerald-300"
+                    : "bg-emerald-100 hover:bg-emerald-200 text-emerald-700"
+                  : theme === "dark"
+                    ? "hover:bg-amber-950/40 text-amber-300 border border-gray-700"
+                    : "hover:bg-amber-50 text-amber-700 border border-gray-200"
+              }`}
+              title={
+                match.force_unlocked
+                  ? "Vrati na automatsko zaključavanje"
+                  : "Ručno otključaj (produži rok)"
+              }
+            >
+              {match.force_unlocked ? (
+                <Unlock className="w-4 h-4" />
+              ) : (
+                <Lock className="w-4 h-4" />
+              )}
+            </button>
+          )}
         <button
           onClick={onResult}
           className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
@@ -2684,7 +2766,11 @@ function MatchForm({
         </div>
       </div>
       <div className="grid md:grid-cols-2 gap-3">
-        <Field theme={theme} label="Home team (EN)" hint="opcionalno — engleski naziv ekipe">
+        <Field
+          theme={theme}
+          label="Home team (EN)"
+          hint="opcionalno — engleski naziv ekipe"
+        >
           <Input
             theme={theme}
             value={homeTeamEn}
@@ -2692,7 +2778,11 @@ function MatchForm({
             placeholder="e.g. Brazil"
           />
         </Field>
-        <Field theme={theme} label="Away team (EN)" hint="opcionalno — engleski naziv ekipe">
+        <Field
+          theme={theme}
+          label="Away team (EN)"
+          hint="opcionalno — engleski naziv ekipe"
+        >
           <Input
             theme={theme}
             value={awayTeamEn}
@@ -2881,7 +2971,9 @@ function BulkMatchImport({
 
         <div className="flex items-center gap-2 mb-1 pr-10">
           <ClipboardPaste className="w-5 h-5 text-blue-500 flex-shrink-0" />
-          <h3 className={`text-lg sm:text-xl font-bold truncate ${headingCls(theme)}`}>
+          <h3
+            className={`text-lg sm:text-xl font-bold truncate ${headingCls(theme)}`}
+          >
             Uvezi utakmice
           </h3>
         </div>
@@ -3051,18 +3143,13 @@ function QuickDayImport({
     <div className="space-y-4">
       <p className={`text-sm ${mutedTextCls(theme)}`}>
         Idealno za <b>dnevno dodavanje</b> — biraš dan i fazu jednom, pa
-        ispisuješ red po red. Sistem auto-dodaje zastave preko ISO kodova
-        (npr. <code>br</code>, <code>ar</code>, <code>mx</code>).
+        ispisuješ red po red. Sistem auto-dodaje zastave preko ISO kodova (npr.{" "}
+        <code>br</code>, <code>ar</code>, <code>mx</code>).
       </p>
 
       <div className="grid md:grid-cols-2 gap-3">
         <Field theme={theme} label="Datum (svih utakmica)">
-          <Input
-            theme={theme}
-            type="date"
-            value={date}
-            onChange={setDate}
-          />
+          <Input theme={theme} type="date" value={date} onChange={setDate} />
         </Field>
         <Field theme={theme} label="Faza (svih utakmica)">
           <Select
@@ -3303,7 +3390,9 @@ function QuickDayImport({
           className={primaryBtnCls}
         >
           <Download className="w-4 h-4" />
-          {saving ? "Uvoz…" : `Uvezi ${rows.filter((r) => r.home && r.away).length} utakmica`}
+          {saving
+            ? "Uvoz…"
+            : `Uvezi ${rows.filter((r) => r.home && r.away).length} utakmica`}
         </button>
       </div>
     </div>
@@ -3409,12 +3498,16 @@ round_of_16 | 2026-07-04 21:00 | Brazil (br) | Argentina (ar) | MetLife Stadium`
       </p>
       <Textarea theme={theme} value={text} onChange={setText} rows={12} />
       <details className="text-xs">
-        <summary className={`cursor-pointer font-semibold ${mutedTextCls(theme)}`}>
+        <summary
+          className={`cursor-pointer font-semibold ${mutedTextCls(theme)}`}
+        >
           Format i primjer
         </summary>
         <pre
           className={`mt-2 p-3 rounded-md whitespace-pre-wrap font-mono text-xs ${
-            theme === "dark" ? "bg-gray-800 text-gray-300" : "bg-gray-100 text-gray-700"
+            theme === "dark"
+              ? "bg-gray-800 text-gray-300"
+              : "bg-gray-100 text-gray-700"
           }`}
         >
           {example}
@@ -3422,7 +3515,11 @@ round_of_16 | 2026-07-04 21:00 | Brazil (br) | Argentina (ar) | MetLife Stadium`
       </details>
       <SaveToast toast={toast} onDismiss={() => setToast(null)} />
       <div className="flex justify-end">
-        <button onClick={parseAndImport} disabled={parsing} className={primaryBtnCls}>
+        <button
+          onClick={parseAndImport}
+          disabled={parsing}
+          className={primaryBtnCls}
+        >
           <Download className="w-4 h-4" />
           {parsing ? "Uvoz…" : "Uvezi"}
         </button>
@@ -3465,14 +3562,11 @@ function MatchTemplateImport({
     setImportingId(id);
     setToast(null);
     try {
-      const res = await fetch(
-        "/api/admin/predictor/match-templates/import",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tournament_id: tournamentId, template_id: id }),
-        },
-      );
+      const res = await fetch("/api/admin/predictor/match-templates/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tournament_id: tournamentId, template_id: id }),
+      });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Greška");
       setToast({
@@ -3750,9 +3844,7 @@ function SettingsTab({
             theme={theme}
             type="datetime-local"
             value={dtLocal(form.registration_lock_at)}
-            onChange={(v) =>
-              update({ registration_lock_at: fromDtLocal(v) })
-            }
+            onChange={(v) => update({ registration_lock_at: fromDtLocal(v) })}
           />
         </Field>
         <Field theme={theme} label="Nagradni fond">
@@ -4034,7 +4126,8 @@ function CategoriesTab({
   }, [load]);
 
   const removeCategory = async (id: string) => {
-    if (!confirm("Obriši ovu kategoriju i sve njene opcije/predikcije?")) return;
+    if (!confirm("Obriši ovu kategoriju i sve njene opcije/predikcije?"))
+      return;
     const res = await fetch(`/api/admin/predictor/categories?id=${id}`, {
       method: "DELETE",
     });
@@ -4049,7 +4142,8 @@ function CategoriesTab({
             Kategorije predikcija
           </h3>
           <p className={`text-xs ${subtleTextCls(theme)}`}>
-            Svaka kategorija je jedno pitanje (pobjednik, najbolji strijelac, top 4…).
+            Svaka kategorija je jedno pitanje (pobjednik, najbolji strijelac,
+            top 4…).
           </p>
         </div>
         <button onClick={() => setCreating(true)} className={primaryBtnCls}>
@@ -4450,10 +4544,7 @@ function OptionsManager({
     }
   };
 
-  const updateOption = async (
-    id: string,
-    patch: Partial<PredictionOption>,
-  ) => {
+  const updateOption = async (id: string, patch: Partial<PredictionOption>) => {
     const res = await fetch("/api/admin/predictor/options", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -4925,7 +5016,10 @@ function RuleRow({
             )}
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setEditing(true)} className={editBtnCls(theme)}>
+            <button
+              onClick={() => setEditing(true)}
+              className={editBtnCls(theme)}
+            >
               <Edit3 className="w-4 h-4" />
             </button>
             <button onClick={remove} className={dangerBtnCls(theme)}>
@@ -5016,7 +5110,12 @@ function RuleForm({
           <Textarea theme={theme} value={body} onChange={setBody} rows={3} />
         </Field>
         <Field theme={theme} label="Body — markdown (EN)">
-          <Textarea theme={theme} value={bodyEn} onChange={setBodyEn} rows={3} />
+          <Textarea
+            theme={theme}
+            value={bodyEn}
+            onChange={setBodyEn}
+            rows={3}
+          />
         </Field>
       </div>
       <div className="flex justify-end gap-2">
@@ -5067,7 +5166,8 @@ function RewardsTab({
             Nagrade i sponzori
           </h3>
           <p className={`text-xs ${subtleTextCls(theme)}`}>
-            Dodaj nagrade po plasmanu ili opšte nagrade. Koristi polja sponzora za brendirane nagrade.
+            Dodaj nagrade po plasmanu ili opšte nagrade. Koristi polja sponzora
+            za brendirane nagrade.
           </p>
         </div>
         <button onClick={() => setCreating(true)} className={primaryBtnCls}>
@@ -5104,12 +5204,7 @@ function RewardsTab({
       ) : (
         <div className="grid md:grid-cols-2 gap-3">
           {rewards.map((rw) => (
-            <RewardRow
-              key={rw.id}
-              reward={rw}
-              theme={theme}
-              onChanged={load}
-            />
+            <RewardRow key={rw.id} reward={rw} theme={theme} onChanged={load} />
           ))}
         </div>
       )}
@@ -5189,7 +5284,10 @@ function RewardRow({
             )}
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setEditing(true)} className={editBtnCls(theme)}>
+            <button
+              onClick={() => setEditing(true)}
+              className={editBtnCls(theme)}
+            >
               <Edit3 className="w-4 h-4" />
             </button>
             <button onClick={remove} className={dangerBtnCls(theme)}>
@@ -5263,7 +5361,9 @@ function RewardForm({
   };
 
   return (
-    <div className={`space-y-3 rounded-md p-3 md:col-span-2 ${subCardCls(theme)}`}>
+    <div
+      className={`space-y-3 rounded-md p-3 md:col-span-2 ${subCardCls(theme)}`}
+    >
       <div className="grid md:grid-cols-2 gap-3">
         <Field theme={theme} label="Naziv (BS)">
           <Input theme={theme} value={title} onChange={setTitle} />
@@ -5301,11 +5401,7 @@ function RewardForm({
           />
         </Field>
         <Field theme={theme} label="Valuta">
-          <Input
-            theme={theme}
-            value={currency ?? ""}
-            onChange={setCurrency}
-          />
+          <Input theme={theme} value={currency ?? ""} onChange={setCurrency} />
         </Field>
         <div className="col-span-2 md:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field theme={theme} label="URL slike">
@@ -5353,11 +5449,7 @@ function RewardForm({
           Otkaži
         </button>
         <button onClick={save} disabled={saving} className={primaryBtnCls}>
-          {saving
-            ? "Čuvanje…"
-            : initial
-              ? "Sačuvaj nagradu"
-              : "Dodaj nagradu"}
+          {saving ? "Čuvanje…" : initial ? "Sačuvaj nagradu" : "Dodaj nagradu"}
         </button>
       </div>
     </div>
