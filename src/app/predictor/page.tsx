@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,6 +10,9 @@ import {
   Calendar,
   Lock,
   X,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
@@ -22,6 +25,7 @@ import {
   localizedTournamentName,
   localizedTournamentShort,
   normalizeLang,
+  type PredictorLang,
 } from "@/utils/predictor-i18n";
 
 const STATUS_BADGE: Record<TournamentStatus, { label: string; cls: string }> = {
@@ -40,12 +44,50 @@ const STATUS_BADGE: Record<TournamentStatus, { label: string; cls: string }> = {
   },
 };
 
+/** How many cards to show per page in the "All tournaments" grid (3×3 on desktop). */
+const PAGE_SIZE = 9;
+
+/** Diacritic-insensitive normalize so "visocko" matches "Visočko" and "djordje" → "đorđe". */
+function normalizeText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/đ/g, "d");
+}
+
+/** Concatenated, searchable copy for a tournament in the active language. */
+function tournamentSearchText(tr: Tournament, lang: PredictorLang): string {
+  return [
+    localizedTournamentName(tr, lang),
+    localizedTournamentShort(tr, lang) ?? "",
+    tr.sponsor_name ?? "",
+  ].join(" ");
+}
+
+/** Page numbers to render, collapsing long ranges with ellipses. */
+function pageWindow(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out: (number | "…")[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) out.push("…");
+  for (let p = start; p <= end; p++) out.push(p);
+  if (end < total - 1) out.push("…");
+  out.push(total);
+  return out;
+}
+
 export default function PredictorIndexPage() {
   const { theme } = useTheme();
-  const { t, ready } = useTranslation("predictor");
+  const { t, ready, i18n } = useTranslation("predictor");
+  const lang = normalizeLang(i18n.language);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/predictor/tournaments", { cache: "no-store" })
@@ -70,6 +112,20 @@ export default function PredictorIndexPage() {
 
   const featured = tournaments.filter((x) => x.is_featured);
   const others = tournaments.filter((x) => !x.is_featured);
+
+  // Search filters across the whole catalogue (incl. featured); when idle we
+  // keep the curated featured band on top and paginate just the rest.
+  const q = normalizeText(query.trim());
+  const isSearching = q.length > 0;
+  const pool = isSearching
+    ? tournaments.filter((tr) =>
+        normalizeText(tournamentSearchText(tr, lang)).includes(q),
+      )
+    : others;
+  const totalPages = Math.max(1, Math.ceil(pool.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageItems = pool.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   // List page stays clean. bg + theme music only appear on the specific
   // tournament page that admin opted into via the settings picker.
   const featuredThemeBg =
@@ -195,12 +251,10 @@ export default function PredictorIndexPage() {
             <PredictorEmptyState theme={theme} t={t} />
           ) : (
             <>
-              {featured.length > 0 && (
+              {/* Curated highlights — pinned on top, hidden while searching */}
+              {!isSearching && featured.length > 0 && (
                 <>
-                  <SectionHeader
-                    icon={undefined}
-                    title={t("sections.featured", "Featured")}
-                  />
+                  <SectionHeader title={t("sections.featured", "Featured")} />
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-10">
                     {featured.map((tr) => (
                       <TournamentCard
@@ -214,19 +268,56 @@ export default function PredictorIndexPage() {
                 </>
               )}
 
-              {others.length > 0 && (
-                <>
-                  <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-                    <SectionHeader
-                      icon={undefined}
-                      title={t("sections.all", "All tournaments")}
-                    />
+              {/* Searchable, paginated catalogue with uniform cards */}
+              {(others.length > 0 || isSearching) && (
+                <div ref={listTopRef} className="scroll-mt-6">
+                  <SectionHeader
+                    title={
+                      isSearching
+                        ? t("sections.results", "Rezultati pretrage")
+                        : t("sections.all", "All tournaments")
+                    }
+                  />
+
+                  {/* Controls: search + create-your-own */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+                    <div className="relative flex-1 min-w-0">
+                      <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-secondary" />
+                      <input
+                        type="search"
+                        value={query}
+                        onChange={(e) => {
+                          setQuery(e.target.value);
+                          setPage(1);
+                        }}
+                        placeholder={t("search.placeholder", "Pretraži turnire…")}
+                        aria-label={t("search.placeholder", "Pretraži turnire…")}
+                        className={`w-full rounded-full border pl-11 pr-10 py-3 text-sm transition-colors focus:outline-none focus:ring-2 ${
+                          theme === "dark"
+                            ? "bg-gray-900/50 border-gray-700/70 text-gray-100 placeholder:text-gray-500 focus:border-amber-300/40 focus:ring-amber-300/15"
+                            : "bg-white border-gray-200 text-gray-800 placeholder:text-gray-400 focus:border-predictor-primary/50 focus:ring-predictor-primary/15"
+                        }`}
+                      />
+                      {query && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuery("");
+                            setPage(1);
+                          }}
+                          aria-label={t("search.clear", "Očisti pretragu")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 rounded-full text-theme-text-secondary transition-colors hover:bg-theme-border/60 hover:text-theme-foreground"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                     <Link
                       href="/create-tournament"
-                      className={`group inline-flex items-center gap-2 border-b text-[11px] font-semibold uppercase tracking-[0.18em] pb-0.5 transition-colors ${
+                      className={`group inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-full border px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors ${
                         theme === "dark"
-                          ? "border-amber-300/30 text-amber-300/85 hover:border-amber-300/70 hover:text-amber-200"
-                          : "border-predictor-primary/50 text-predictor-accent-light/90 hover:border-predictor-primary hover:text-predictor-accent-light"
+                          ? "border-amber-300/25 text-amber-300/85 hover:border-amber-300/60 hover:text-amber-200"
+                          : "border-predictor-primary/40 text-predictor-accent-light/90 hover:border-predictor-primary hover:text-predictor-accent-light"
                       }`}
                       title={t("cta.createInline", "Create your own tournament. €2")}
                     >
@@ -239,25 +330,36 @@ export default function PredictorIndexPage() {
                       </span>
                     </Link>
                   </div>
-                  <div
-                    className={`grid gap-5 md:gap-6 ${
-                      others.length === 1
-                        ? "grid-cols-1 max-w-3xl mx-auto"
-                        : others.length === 2
-                        ? "grid-cols-1 md:grid-cols-2"
-                        : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                    }`}
-                  >
-                    {others.map((tr) => (
-                      <TournamentCard
-                        key={tr.id}
-                        tournament={tr}
+
+                  {pageItems.length > 0 ? (
+                    <>
+                      <div className="grid gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                        {pageItems.map((tr) => (
+                          <TournamentCard
+                            key={tr.id}
+                            tournament={tr}
+                            theme={theme}
+                          />
+                        ))}
+                      </div>
+                      <Pagination
+                        page={safePage}
+                        totalPages={totalPages}
+                        onChange={(p) => {
+                          setPage(p);
+                          listTopRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                          });
+                        }}
                         theme={theme}
-                        large={others.length <= 2}
+                        t={t}
                       />
-                    ))}
-                  </div>
-                </>
+                    </>
+                  ) : (
+                    <NoResults theme={theme} query={query.trim()} t={t} />
+                  )}
+                </div>
               )}
             </>
           )}
@@ -743,18 +845,137 @@ function PredictorEmptyState({
   );
 }
 
-function SectionHeader({
-  title,
-}: {
-  icon?: any;
-  title: string;
-}) {
+function SectionHeader({ title }: { title: string }) {
   return (
     <div className="flex items-center gap-3 mb-4">
       <h2 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-theme-text-secondary">
         {title}
       </h2>
       <div className="flex-1 h-px bg-theme-border" />
+    </div>
+  );
+}
+
+function Pagination({
+  page,
+  totalPages,
+  onChange,
+  theme,
+  t,
+}: {
+  page: number;
+  totalPages: number;
+  onChange: (p: number) => void;
+  theme: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any;
+}) {
+  if (totalPages <= 1) return null;
+  const isDark = theme === "dark";
+  const pages = pageWindow(page, totalPages);
+
+  const arrowCls = `inline-flex items-center justify-center w-9 h-9 rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+    isDark
+      ? "border-gray-700/70 text-gray-300 hover:border-gray-500 hover:text-white"
+      : "border-gray-200 text-gray-600 hover:border-gray-400 hover:text-gray-900"
+  }`;
+  const numBase =
+    "inline-flex items-center justify-center min-w-9 h-9 px-3 rounded-full text-sm font-semibold transition-colors";
+  const idleCls = isDark
+    ? "text-gray-400 hover:bg-gray-800/70 hover:text-gray-100"
+    : "text-gray-500 hover:bg-gray-100 hover:text-gray-900";
+  const activeCls = isDark
+    ? "bg-amber-300/15 text-amber-200 ring-1 ring-amber-300/30"
+    : "bg-predictor-primary/15 text-predictor-accent-light ring-1 ring-predictor-primary/30";
+
+  return (
+    <nav
+      className="mt-10 flex items-center justify-center gap-1.5"
+      aria-label={t("pagination.label", "Paginacija")}
+    >
+      <button
+        type="button"
+        onClick={() => onChange(page - 1)}
+        disabled={page <= 1}
+        aria-label={t("pagination.prev", "Prethodna")}
+        className={arrowCls}
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+      {pages.map((p, i) =>
+        p === "…" ? (
+          <span
+            key={`gap-${i}`}
+            className="px-1.5 text-theme-text-secondary select-none"
+            aria-hidden
+          >
+            …
+          </span>
+        ) : (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onChange(p)}
+            aria-current={p === page ? "page" : undefined}
+            className={`${numBase} ${p === page ? activeCls : idleCls}`}
+          >
+            {p}
+          </button>
+        ),
+      )}
+      <button
+        type="button"
+        onClick={() => onChange(page + 1)}
+        disabled={page >= totalPages}
+        aria-label={t("pagination.next", "Sljedeća")}
+        className={arrowCls}
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    </nav>
+  );
+}
+
+function NoResults({
+  theme,
+  query,
+  t,
+}: {
+  theme: string;
+  query: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any;
+}) {
+  const isDark = theme === "dark";
+  return (
+    <div
+      className={`flex flex-col items-center justify-center rounded-3xl border px-6 py-16 text-center ${
+        isDark
+          ? "border-gray-700/60 bg-gray-900/30"
+          : "border-gray-200/80 bg-gray-50/60"
+      }`}
+    >
+      <div
+        className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl ${
+          isDark ? "bg-gray-800/70 text-gray-500" : "bg-white text-gray-400 shadow-sm"
+        }`}
+      >
+        <Search className="h-5 w-5" />
+      </div>
+      <p
+        className={`text-base font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}
+      >
+        {t("search.emptyTitle", "Nema rezultata")}
+      </p>
+      <p
+        className={`mt-1.5 max-w-sm text-sm ${
+          isDark ? "text-gray-400" : "text-gray-500"
+        }`}
+      >
+        {query
+          ? t("search.emptyFor", "Ništa ne odgovara pretrazi") + ` „${query}”.`
+          : t("search.emptyDesc", "Pokušaj s drugim pojmom.")}
+      </p>
     </div>
   );
 }
@@ -857,7 +1078,7 @@ function TournamentCard({
               </div>
             )}
             <h3
-              className={`${large ? "text-2xl md:text-3xl" : "text-lg"} font-bold leading-tight tracking-tight ${
+              className={`${large ? "text-2xl md:text-3xl" : "text-lg"} font-bold leading-tight tracking-tight line-clamp-2 ${
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >
@@ -886,7 +1107,7 @@ function TournamentCard({
 
         {displayShort && (
           <p
-            className={`relative z-10 text-sm leading-relaxed mb-4 flex-grow ${
+            className={`relative z-10 text-sm leading-relaxed mb-4 line-clamp-2 ${
               theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}
           >

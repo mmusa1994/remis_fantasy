@@ -106,7 +106,20 @@
   },
   "sections": {
     "featured": "Featured",
-    "all": "All tournaments"
+    "all": "All tournaments",
+    "results": "Search results"
+  },
+  "search": {
+    "placeholder": "Search tournaments…",
+    "clear": "Clear search",
+    "emptyTitle": "No results",
+    "emptyFor": "Nothing matches",
+    "emptyDesc": "Try a different term."
+  },
+  "pagination": {
+    "label": "Pagination",
+    "prev": "Previous",
+    "next": "Next"
   },
   "cta": {
     "create": "Create your tournament",

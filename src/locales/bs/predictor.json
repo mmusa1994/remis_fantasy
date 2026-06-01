@@ -106,7 +106,20 @@
   },
   "sections": {
     "featured": "Istaknuto",
-    "all": "Svi turniri"
+    "all": "Svi turniri",
+    "results": "Rezultati pretrage"
+  },
+  "search": {
+    "placeholder": "Pretraži turnire…",
+    "clear": "Očisti pretragu",
+    "emptyTitle": "Nema rezultata",
+    "emptyFor": "Ništa ne odgovara pretrazi",
+    "emptyDesc": "Pokušaj s drugim pojmom."
+  },
+  "pagination": {
+    "label": "Paginacija",
+    "prev": "Prethodna",
+    "next": "Sljedeća"
   },
   "cta": {
     "create": "Kreiraj svoj turnir",
