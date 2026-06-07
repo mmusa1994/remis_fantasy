@@ -37,12 +37,17 @@ export async function POST(
   if (tErr || !tournament) return jsonError("tournament not found", 404);
   if (tournament.status === "draft") return jsonError("not published", 404);
 
-  // approval check
-  const membership = await checkMembership(
-    tournament.id,
-    guard.user.id,
-    !!tournament.require_approval,
-  );
+  // approval check — the owner (and admins) bypass their own approval gate
+  const isOwner =
+    tournament.owner_user_id === guard.user.id ||
+    !!(guard.user as any).isAdmin;
+  const membership = isOwner
+    ? { allowed: true as const }
+    : await checkMembership(
+        tournament.id,
+        guard.user.id,
+        !!tournament.require_approval,
+      );
   if (!membership.allowed) {
     return NextResponse.json(
       {

@@ -32,6 +32,9 @@ export async function GET(req: NextRequest) {
     .from("predictor_tournaments")
     .select("*")
     .eq("owner_user_id", guard.user.id)
+    // Personal collection = self-service only. /admin-created tournaments
+    // (created_via "admin" / "admin_for_user") are managed in /admin.
+    .in("created_via", ["user_credit", "user_paid"])
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (error) return jsonError(error.message, 500);

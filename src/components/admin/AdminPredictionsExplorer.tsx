@@ -21,6 +21,7 @@ import {
   Pencil,
   Save as SaveIcon,
   X,
+  Trash2,
 } from "lucide-react";
 import type { Tournament } from "@/types/predictor";
 import { normalizeLang } from "@/utils/predictor-i18n";
@@ -173,6 +174,30 @@ export default function AdminPredictionsExplorer({
   useEffect(() => {
     load();
   }, [load]);
+
+  // Completely purge a player from this tournament — every category + match
+  // prediction and their member row. The owner participants route authorizes
+  // site admins too, so we reuse it here. Irreversible.
+  const purgeUser = useCallback(
+    async (userId: string, name: string) => {
+      if (!confirm(t("admin.explorer.deleteConfirm", { name }))) return;
+      try {
+        const res = await fetch(
+          `/api/predictor/owner/participants?tournament_id=${tournament.id}&user_id=${encodeURIComponent(
+            userId,
+          )}`,
+          { method: "DELETE" },
+        );
+        if (!res.ok) throw new Error();
+        if (focusedUserId === userId) setFocusedUserId(null);
+        await load();
+        setToast({ kind: "ok", msg: t("admin.explorer.deleted", { name }) });
+      } catch {
+        setToast({ kind: "err", msg: t("admin.explorer.deleteError") });
+      }
+    },
+    [tournament.id, t, load, focusedUserId],
+  );
 
   // Saves a manual score override for a single prediction.
   const saveScore = useCallback(
@@ -399,6 +424,12 @@ export default function AdminPredictionsExplorer({
           lang={lang}
           onBack={() => setFocusedUserId(null)}
           onSaveScore={saveScore}
+          onPurge={() =>
+            purgeUser(
+              focusedUser.user_id,
+              focusedUser.user_display_name || focusedUser.user_email || "?",
+            )
+          }
         />
       ) : mode === "leaderboard" ? (
         <LeaderboardView
@@ -406,6 +437,7 @@ export default function AdminPredictionsExplorer({
           tournament={tournament}
           theme={theme}
           onSelect={setFocusedUserId}
+          onPurge={purgeUser}
         />
       ) : mode === "matches" ? (
         <MatchesByDayView
@@ -593,11 +625,13 @@ function LeaderboardView({
   tournament,
   theme,
   onSelect,
+  onPurge,
 }: {
   users: UserSummary[];
   tournament: Tournament;
   theme: string;
   onSelect: (id: string) => void;
+  onPurge: (id: string, name: string) => void;
 }) {
   const { t } = useTranslation("predictor");
   const [query, setQuery] = useState("");
@@ -648,6 +682,12 @@ function LeaderboardView({
             tournament={tournament}
             theme={theme}
             onClick={() => onSelect(u.user_id)}
+            onDelete={() =>
+              onPurge(
+                u.user_id,
+                u.user_display_name || u.user_email || "?",
+              )
+            }
           />
         ))}
       </div>
@@ -660,11 +700,13 @@ function UserCard({
   tournament,
   theme,
   onClick,
+  onDelete,
 }: {
   user: UserSummary;
   tournament: Tournament;
   theme: string;
   onClick: () => void;
+  onDelete: () => void;
 }) {
   const { t } = useTranslation("predictor");
   const isTop3 = user.rank <= 3;
@@ -679,10 +721,17 @@ function UserCard({
     .toUpperCase();
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className={`group text-left rounded-3xl p-4 sm:p-5 transition-all hover:-translate-y-0.5 active:scale-[0.99] ${card(theme)} ${
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className={`group cursor-pointer text-left rounded-3xl p-4 sm:p-5 transition-all hover:-translate-y-0.5 active:scale-[0.99] ${card(theme)} ${
         isTop3 ? "ring-1 ring-amber-500/30" : ""
       }`}
     >
@@ -747,20 +796,39 @@ function UserCard({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-3 flex items-center justify-between gap-2">
         <span
           className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold ${subtle(theme)}`}
         >
           #{user.rank} {t("admin.explorer.rank")}
         </span>
-        <span
-          className={`inline-flex items-center gap-1 text-xs font-semibold ${accentText} group-hover:gap-2 transition-all`}
-        >
-          {t("admin.explorer.openUser")}
-          <ChevronRight className="w-3.5 h-3.5" />
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            title={t("admin.explorer.deletePlayer") as string}
+            aria-label={t("admin.explorer.deletePlayer") as string}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors active:scale-95 ${
+              theme === "dark"
+                ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                : "border-red-300 bg-red-50 text-red-600 hover:bg-red-100"
+            }`}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            {t("admin.explorer.deletePlayer")}
+          </button>
+          <span
+            className={`inline-flex items-center gap-1 text-xs font-semibold ${accentText} group-hover:gap-2 transition-all`}
+          >
+            {t("admin.explorer.openUser")}
+            <ChevronRight className="w-3.5 h-3.5" />
+          </span>
+        </div>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -776,6 +844,7 @@ function UserDetailView({
   lang,
   onBack,
   onSaveScore,
+  onPurge,
 }: {
   user: UserSummary;
   categoryRows: AdminPredictionRow[];
@@ -785,6 +854,7 @@ function UserDetailView({
   lang: "bs" | "en";
   onBack: () => void;
   onSaveScore: SaveScoreFn;
+  onPurge: () => void;
 }) {
   const { t } = useTranslation("predictor");
   const accentText = tournamentAccentText(tournament.accent_color);
@@ -863,12 +933,26 @@ function UserDetailView({
             <ArrowLeft className="w-4 h-4" />
             {t("admin.explorer.back")}
           </button>
-          <div className="text-right">
-            <div className={`text-3xl font-black ${accentText}`}>
-              {user.total_points}
-            </div>
-            <div className={`text-[10px] uppercase tracking-wider ${subtle(theme)}`}>
-              {t("admin.explorer.totalPoints")}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onPurge}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold transition-colors active:scale-95 ${
+                theme === "dark"
+                  ? "border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                  : "border border-red-300 bg-red-50 text-red-600 hover:bg-red-100"
+              }`}
+            >
+              <Trash2 className="w-4 h-4" />
+              {t("admin.explorer.deletePlayer")}
+            </button>
+            <div className="text-right">
+              <div className={`text-3xl font-black ${accentText}`}>
+                {user.total_points}
+              </div>
+              <div className={`text-[10px] uppercase tracking-wider ${subtle(theme)}`}>
+                {t("admin.explorer.totalPoints")}
+              </div>
             </div>
           </div>
         </div>

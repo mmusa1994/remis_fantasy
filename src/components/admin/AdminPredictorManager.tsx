@@ -2622,9 +2622,10 @@ function MatchForm({
   const [kickoff, setKickoff] = useState(dtLocal(initial?.kickoff_at ?? null));
   const [venue, setVenue] = useState(initial?.venue ?? "");
   const [venueEn, setVenueEn] = useState(initial?.venue_en ?? "");
-  const [pExact, setPExact] = useState(initial?.points_exact ?? 5);
-  const [pDiff, setPDiff] = useState(initial?.points_diff ?? 3);
-  const [pWinner, setPWinner] = useState(initial?.points_winner ?? 2);
+  // Default scoring: exact 3 / correct outcome 1 / miss 0.
+  const [pExact, setPExact] = useState(initial?.points_exact ?? 3);
+  const [pDiff, setPDiff] = useState(initial?.points_diff ?? 1);
+  const [pWinner, setPWinner] = useState(initial?.points_winner ?? 1);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -3550,6 +3551,8 @@ function MatchTemplateImport({
   const [loading, setLoading] = useState(true);
   const [importingId, setImportingId] = useState<string | null>(null);
   const [toast, setToast] = useState<SaveToastState>(null);
+  // false = dodaj na postojeće (append); true = zamijeni cijeli raspored.
+  const [replace, setReplace] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/predictor/match-templates")
@@ -3559,19 +3562,33 @@ function MatchTemplateImport({
   }, []);
 
   const importTpl = async (id: string) => {
+    if (
+      replace &&
+      !confirm(
+        "Zamijeniti CIJELI trenutni raspored ovim šablonom?\n\nSve postojeće utakmice turnira i njihove predikcije će biti TRAJNO obrisane, pa uvezene nove. Ovo se ne može poništiti.",
+      )
+    ) {
+      return;
+    }
     setImportingId(id);
     setToast(null);
     try {
       const res = await fetch("/api/admin/predictor/match-templates/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tournament_id: tournamentId, template_id: id }),
+        body: JSON.stringify({
+          tournament_id: tournamentId,
+          template_id: id,
+          replace,
+        }),
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Greška");
       setToast({
         kind: "success",
-        text: `Uvezeno ${j.inserted ?? 0} utakmica`,
+        text: j.replaced
+          ? `Zamijenjeno: obrisano ${j.deleted ?? 0}, uvezeno ${j.inserted ?? 0} utakmica`
+          : `Uvezeno ${j.inserted ?? 0} utakmica`,
       });
       setTimeout(onImported, 800);
     } catch (e: any) {
@@ -3587,6 +3604,65 @@ function MatchTemplateImport({
         Predefinisani rasporedi koje možeš uvesti odmah, pa urediti detalje
         (datume, protivnike). Idealno za <b>SP 2026</b>, nokaut faze i slično.
       </p>
+
+      {/* Dodaj vs Zamijeni — jasno razgraničeno prije uvoza */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => setReplace(false)}
+          className={`text-left rounded-xl border p-3 transition-all ${
+            !replace
+              ? "border-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-400/40"
+              : theme === "dark"
+                ? "border-gray-700 bg-gray-900/40 hover:border-gray-600"
+                : "border-gray-200 bg-white hover:border-gray-300"
+          }`}
+        >
+          <div className={`flex items-center gap-1.5 font-bold ${headingCls(theme)}`}>
+            <Plus className="w-4 h-4 text-emerald-500" />
+            Dodaj na postojeće
+          </div>
+          <p className={`text-xs mt-0.5 ${mutedTextCls(theme)}`}>
+            Zadrži trenutne utakmice i samo dodaj nove iz šablona.
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setReplace(true)}
+          className={`text-left rounded-xl border p-3 transition-all ${
+            replace
+              ? "border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/40"
+              : theme === "dark"
+                ? "border-gray-700 bg-gray-900/40 hover:border-gray-600"
+                : "border-gray-200 bg-white hover:border-gray-300"
+          }`}
+        >
+          <div className={`flex items-center gap-1.5 font-bold ${headingCls(theme)}`}>
+            <RefreshCcw className="w-4 h-4 text-amber-500" />
+            Zamijeni cijeli raspored
+          </div>
+          <p className={`text-xs mt-0.5 ${mutedTextCls(theme)}`}>
+            Obriši sve trenutne utakmice (i predikcije) pa uvezi šablon iznova.
+          </p>
+        </button>
+      </div>
+
+      {replace && (
+        <div
+          className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-xs font-medium ${
+            theme === "dark"
+              ? "border-amber-700/50 bg-amber-950/30 text-amber-200"
+              : "border-amber-300 bg-amber-50 text-amber-800"
+          }`}
+        >
+          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span>
+            Zamjena briše SVE trenutne utakmice ovog turnira i njihove predikcije.
+            Tražit ćemo potvrdu prije uvoza.
+          </span>
+        </div>
+      )}
+
       {loading ? (
         <div className="py-8 flex justify-center">
           <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
@@ -3614,11 +3690,17 @@ function MatchTemplateImport({
               <button
                 onClick={() => importTpl(t.id)}
                 disabled={importingId === t.id}
-                className={`${primaryBtnCls} flex-shrink-0`}
+                className={`${primaryBtnCls} flex-shrink-0 ${
+                  replace ? "!bg-amber-500 hover:!bg-amber-600 !text-black" : ""
+                }`}
               >
                 {importingId === t.id ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" /> Uvoz…
+                  </>
+                ) : replace ? (
+                  <>
+                    <RefreshCcw className="w-4 h-4" /> Zamijeni
                   </>
                 ) : (
                   <>

@@ -2250,7 +2250,7 @@ function StandingsTab({
       <>
       {/* Top 3 podium */}
       {top3.length >= 3 && (
-        <div className="relative z-10 grid grid-cols-3 gap-2 md:gap-4">
+        <div className="relative z-10 grid grid-cols-3 items-end gap-2 md:gap-4">
           {/* 2nd place — left */}
           <PodiumCard
             row={top3[1]}
@@ -2815,27 +2815,36 @@ function PodiumCard({
   return (
     <div
       onClick={onClick}
-      className={`relative rounded-3xl border-2 p-3 md:p-4 ${colors} ${heightClass} flex flex-col justify-end cursor-pointer transition-transform hover:scale-[1.02] ${
+      className={`relative overflow-hidden rounded-2xl md:rounded-3xl border-2 px-2 py-2.5 md:p-4 ${colors} ${heightClass} flex flex-col items-center justify-between gap-1 text-center cursor-pointer transition-transform hover:scale-[1.02] ${
         isMe ? `ring-2 ${ac.ring500_60}` : ""
       }`}
     >
-      <div className="text-3xl md:text-4xl mb-1">{medal}</div>
-      <div
-        className={`font-bold text-[13px] md:text-sm leading-tight break-words ${
-          dark ? "text-white" : "text-gray-900"
-        }`}
-      >
-        {row.user_display_name || row.user_email?.split("@")[0] || "Igrač"}
-        {isMe && <span className={`text-[10px] ml-1.5 ${ac.textSolid}`}>★</span>}
-      </div>
-      <div className={`text-2xl md:text-3xl font-black tabular-nums ${ac.text}`}>
-        {row.total_points}
-        <span className="text-[10px] font-normal ml-1 text-theme-text-secondary">
-          pts
-        </span>
-      </div>
-      <div className={`text-[10px] uppercase tracking-wider mt-1 ${dark ? "text-gray-400" : "text-gray-500"}`}>
-        kat {row.category_points} · utakmice {row.match_points}
+      {/* Medal sits at the top — the taller #1 card lifts it highest, so the
+          three medals form the podium "rise" while the info blocks below
+          share one baseline (grid uses items-end). */}
+      <div className="text-2xl sm:text-3xl md:text-4xl leading-none">{medal}</div>
+
+      {/* Info block — anchored to the bottom edge of every card */}
+      <div className="w-full min-w-0">
+        <div
+          className={`flex items-center justify-center gap-1 font-bold text-[11px] sm:text-[13px] md:text-sm leading-tight ${
+            dark ? "text-white" : "text-gray-900"
+          }`}
+        >
+          <span className="min-w-0 truncate">
+            {row.user_display_name || row.user_email?.split("@")[0] || "Igrač"}
+          </span>
+          {isMe && <span className={`flex-shrink-0 ${ac.textSolid}`}>★</span>}
+        </div>
+        <div className={`mt-0.5 text-xl sm:text-2xl md:text-3xl font-black tabular-nums leading-none ${ac.text}`}>
+          {row.total_points}
+          <span className="text-[9px] font-normal ml-0.5 text-theme-text-secondary">
+            pts
+          </span>
+        </div>
+        <div className={`mt-0.5 truncate text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-wide leading-tight ${dark ? "text-gray-400" : "text-gray-500"}`}>
+          kat {row.category_points} · ut {row.match_points}
+        </div>
       </div>
     </div>
   );

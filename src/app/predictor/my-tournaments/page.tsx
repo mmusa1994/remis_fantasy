@@ -18,6 +18,10 @@ export default async function MyTournaments() {
         "id, slug, name, short_description, status, visibility, accent_color, created_at, prize_pool_amount, prize_pool_currency, logo_url, created_via",
       )
       .eq("owner_user_id", user.id)
+      // Only self-service tournaments belong in a user's personal collection.
+      // Ones created through the /admin panel (created_via "admin" /
+      // "admin_for_user") live in /admin only, even if owner_user_id is set.
+      .in("created_via", ["user_credit", "user_paid"])
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     supabaseServer

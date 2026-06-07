@@ -355,9 +355,15 @@
       "matches": "Utakmice",
       "rules": "Pravila",
       "rewards": "Nagrade",
-      "members": "Članovi",
+      "members": "Odobrenja",
+      "players": "Igrači",
       "scoring": "Bodovanje",
       "eternal": "Vječna tabela"
+    },
+    "pendingCallout": {
+      "title": "Zahtjevi za učešće na čekanju",
+      "desc": "{{count}} korisnik(a) čeka da ih odobriš za ovaj turnir.",
+      "cta": "Pregledaj i odobri"
     },
     "common": {
       "save": "Snimi",
@@ -381,6 +387,8 @@
       "saveError": "Greška",
       "fetchError": "Greška pri učitavanju",
       "settingsSaved": "Postavke turnira snimljene",
+      "tournamentClosed": "Turnir je zatvoren — ti odobravaš učesnike",
+      "tournamentOpened": "Turnir je otvoren za sve prijavljene",
       "statusChanged": "Status uspješno ažuriran",
       "categorySaved": "Kategorija uspješno snimljena",
       "categoryDeleted": "Kategorija obrisana",
@@ -466,6 +474,17 @@
         "approvalHint": "Ako uključeno, svaki novi član mora biti odobren od tebe.",
         "approvalOn": "Članovi moraju biti odobreni",
         "approvalOff": "Svi prijavljeni mogu odmah ući"
+      },
+      "access": {
+        "eyebrow": "Pristup turniru",
+        "titleOpen": "Otvoren turnir — svi prijavljeni mogu predviđati",
+        "titleClosed": "Zatvoren turnir — ti odobravaš učesnike",
+        "descOpen": "Bilo ko prijavljen može odmah unositi predikcije. Bez čekanja, bez odobrenja.",
+        "descClosed": "Korisnici kliknu 'Zatraži učešće' i pojave se u tabu 'Odobrenja'. Tek kad ih odobriš, mogu unositi predikcije.",
+        "open": "Otvoren",
+        "closed": "Zatvoren",
+        "goToApprovals": "Pogledaj odobrenja",
+        "privateNote": "Privatni turniri se automatski zatvaraju — moraš odobriti svakog člana."
       },
       "timestamps": {
         "title": "Vremenske oznake",
@@ -650,15 +669,16 @@
       }
     },
     "membersTab": {
-      "title": "Članovi turnira",
+      "title": "Odobrenja i članovi",
       "approvalsOn": "Odobravanje je uključeno. moraš odobriti svakog novog člana.",
       "approvalsOff": "Svi prijavljeni mogu odmah ući. Možeš svejedno banovati.",
-      "empty": "Nema članova.",
+      "empty": "Još nema članova ni zahtjeva za učešće.",
       "noName": "(bez imena)",
       "joinedOn": "prijavljen",
       "approve": "Odobri",
       "reject": "Odbij",
       "ban": "Banuj",
+      "remove": "Ukloni",
       "removeConfirm": "Ukloniti člana?",
       "filterAll": "Svi statusi",
       "statuses": {
@@ -673,6 +693,19 @@
         "rejected": "Odbijeni",
         "banned": "Banovani"
       }
+    },
+    "playersTab": {
+      "title": "Igrači u turniru",
+      "subtitle": "Svi koji su predviđali ili su članovi. Ako si turnir greškom ostavio otvoren, ovdje možeš ukloniti igrača i SVE njegove predikcije.",
+      "searchPlaceholder": "Pretraži po imenu ili emailu…",
+      "empty": "Još niko nije predviđao u ovom turniru.",
+      "noName": "(bez imena)",
+      "tournamentPreds": "Turnir: {{count}}",
+      "matchPreds": "Utakmice: {{count}}",
+      "points": "{{count}} poena",
+      "delete": "Obriši",
+      "deleteConfirm": "Obrisati igrača \"{{name}}\" i SVE njegove predikcije iz turnira? Ovo se ne može poništiti.",
+      "deleted": "Igrač \"{{name}}\" i sve predikcije obrisani"
     },
     "scoringTab": {
       "leaderboardView": "Tabela",
@@ -873,6 +906,10 @@
       "dayOf": "od",
       "exportCsv": "Izvezi CSV",
       "openUser": "Otvori korisnika",
+      "deletePlayer": "Obriši",
+      "deleteConfirm": "Obrisati igrača \"{{name}}\" i SVE njegove predikcije iz turnira? Ovo se ne može poništiti.",
+      "deleted": "Igrač \"{{name}}\" i sve predikcije obrisani",
+      "deleteError": "Greška pri brisanju igrača",
       "back": "Nazad",
       "matchKickoff": "Početak",
       "matchStage": "Stage",

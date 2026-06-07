@@ -165,6 +165,18 @@ export function getMatchTemplate(id: string): MatchSetTemplate | undefined {
   return MATCH_TEMPLATES.find((t) => t.id === id);
 }
 
+// Default per-match scoring for any imported template:
+//   exact score        → 3 pts
+//   correct outcome     → 1 pt  (winner OR draw; diff also counts as 1)
+//   wrong outcome       → 0 pts
+// These override the table column defaults so every imported schedule starts
+// with the standard 3 / 1 / 0 rule. A template may still override per match.
+const TEMPLATE_DEFAULT_POINTS = {
+  points_exact: 3,
+  points_diff: 1,
+  points_winner: 1,
+} as const;
+
 // Helper za primjenu. dodaje zastave na osnovu kodova
 export function expandMatchTemplate(
   template: MatchSetTemplate,
@@ -183,5 +195,9 @@ export function expandMatchTemplate(
     venue: m.venue ?? null,
     sort_order: idx,
     matchday: m.matchday ?? null,
+    points_exact: (m as any).points_exact ?? TEMPLATE_DEFAULT_POINTS.points_exact,
+    points_diff: (m as any).points_diff ?? TEMPLATE_DEFAULT_POINTS.points_diff,
+    points_winner:
+      (m as any).points_winner ?? TEMPLATE_DEFAULT_POINTS.points_winner,
   }));
 }

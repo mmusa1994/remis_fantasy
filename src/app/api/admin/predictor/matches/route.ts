@@ -49,9 +49,10 @@ export async function POST(req: NextRequest) {
     venue_en: m.venue_en ?? null,
     kickoff_at: m.kickoff_at ?? null,
     status: m.status ?? "scheduled",
-    points_exact: m.points_exact ?? 5,
-    points_diff: m.points_diff ?? 3,
-    points_winner: m.points_winner ?? 2,
+    // Default scoring: exact 3 / correct outcome 1 / miss 0.
+    points_exact: m.points_exact ?? 3,
+    points_diff: m.points_diff ?? 1,
+    points_winner: m.points_winner ?? 1,
     sort_order: m.sort_order ?? 0,
   });
 

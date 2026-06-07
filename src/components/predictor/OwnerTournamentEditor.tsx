@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock } from "lucide-react";
+import { Lock, Unlock, Check, X, Ban, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -56,6 +56,7 @@ const TAB_IDS = [
   "rules",
   "rewards",
   "members",
+  "players",
   "scoring",
   "eternal",
 ] as const;
@@ -189,10 +190,33 @@ export default function OwnerTournamentEditor({
   const [tab, setTab] = useState<TabId>("settings");
   const { showToast: globalToast } = useToast();
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  // How many people are waiting for the owner to approve them. Surfaced as a
+  // badge on the "Članovi" tab + a callout so approvals don't require /admin.
+  const [pendingCount, setPendingCount] = useState(0);
 
   const showToast = useCallback((msg: string, ok = true) => {
     globalToast(msg, ok ? "success" : "error");
   }, [globalToast]);
+
+  const refreshPending = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `/api/predictor/owner/members?tournament_id=${tournament.id}&status=pending`,
+      );
+      if (res.ok) {
+        const rows = await res.json();
+        setPendingCount(Array.isArray(rows) ? rows.length : 0);
+      }
+    } catch {
+      /* non-fatal — badge just won't show */
+    }
+  }, [tournament.id]);
+
+  useEffect(() => {
+    refreshPending();
+    // Re-check on every tab switch so the badge/callout stay current as new
+    // join requests arrive while the owner is working.
+  }, [refreshPending, tab]);
 
   // Quick-switch tournament status from the always-visible banner.
   const setStatus = useCallback(
@@ -320,7 +344,7 @@ export default function OwnerTournamentEditor({
                 key={id}
                 type="button"
                 onClick={() => setTab(id)}
-                className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold transition-colors sm:flex-1 sm:min-w-[80px] ${
+                className={`relative whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold transition-colors sm:flex-1 sm:min-w-[80px] ${
                   tab === id
                     ? dark
                       ? "bg-predictor-primary/15 text-predictor-accent-dark ring-1 ring-predictor-primary/30"
@@ -330,7 +354,17 @@ export default function OwnerTournamentEditor({
                       : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                {t(`owner.tabs.${id}`, id)}
+                <span className="inline-flex items-center gap-1.5">
+                  {t(`owner.tabs.${id}`, id)}
+                  {id === "members" && pendingCount > 0 && (
+                    <span
+                      className="inline-flex min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+                      aria-label={`${pendingCount} na čekanju`}
+                    >
+                      {pendingCount}
+                    </span>
+                  )}
+                </span>
               </button>
             ))}
           </div>
@@ -343,6 +377,16 @@ export default function OwnerTournamentEditor({
           busy={updatingStatus}
           onChange={setStatus}
         />
+
+        {/* Pending join requests — impossible-to-miss callout so the owner can
+            approve members straight from here, without going to /admin. */}
+        {pendingCount > 0 && tab !== "members" && (
+          <PendingApprovalsCallout
+            dark={dark}
+            count={pendingCount}
+            onReview={() => setTab("members")}
+          />
+        )}
 
         {/* Tab body */}
         <div
@@ -374,7 +418,15 @@ export default function OwnerTournamentEditor({
             <RewardsTab tournament={tournament} dark={dark} showToast={showToast} />
           )}
           {tab === "members" && (
-            <MembersTab tournament={tournament} dark={dark} showToast={showToast} />
+            <MembersTab
+              tournament={tournament}
+              dark={dark}
+              showToast={showToast}
+              onChanged={refreshPending}
+            />
+          )}
+          {tab === "players" && (
+            <PlayersTab tournament={tournament} dark={dark} showToast={showToast} />
           )}
           {tab === "scoring" && (
             <ScoringTab tournament={tournament} dark={dark} showToast={showToast} />
@@ -787,6 +839,129 @@ function Modal({
 // ─────────────────────────────────────────────────────────────────────────────
 // Settings tab (with template-reset cards at top)
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Access banner — the owner-facing twin of the admin's "Pristup turniru"
+// control. One prominent toggle for Otvoren (open) vs Zatvoren (closed/approval
+// required). Writes the SAME db prop the admin uses (require_approval).
+// ─────────────────────────────────────────────────────────────────────────────
+function AccessBanner({
+  dark,
+  closed,
+  busy,
+  onChange,
+  onGoToApprovals,
+}: {
+  dark: boolean;
+  closed: boolean;
+  busy: boolean;
+  onChange: (closed: boolean) => void;
+  onGoToApprovals?: () => void;
+}) {
+  const { t } = useTranslation("predictor");
+  return (
+    <div
+      className={`relative overflow-hidden rounded-2xl border p-5 sm:p-6 ${
+        closed
+          ? dark
+            ? "border-amber-700/50 bg-gradient-to-br from-amber-950/50 via-amber-900/20 to-transparent"
+            : "border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50 to-white"
+          : dark
+            ? "border-emerald-800/40 bg-gradient-to-br from-emerald-950/40 via-gray-900/40 to-transparent"
+            : "border-emerald-200 bg-gradient-to-br from-emerald-50 via-green-50 to-white"
+      }`}
+    >
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full blur-3xl ${
+          closed ? "bg-amber-500/20" : "bg-emerald-500/15"
+        }`}
+      />
+      <div className="relative flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+        <div
+          className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl shadow-lg ${
+            closed ? "bg-amber-500 text-black" : "bg-emerald-500 text-white"
+          }`}
+        >
+          {closed ? (
+            <Lock className="h-6 w-6" strokeWidth={2.5} />
+          ) : (
+            <Unlock className="h-6 w-6" strokeWidth={2.5} />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p
+            className={`text-[11px] font-black uppercase tracking-[0.18em] ${
+              closed
+                ? dark
+                  ? "text-amber-300"
+                  : "text-amber-600"
+                : dark
+                  ? "text-emerald-300"
+                  : "text-emerald-600"
+            }`}
+          >
+            {t("owner.settings.access.eyebrow")}
+          </p>
+          <h4 className="mt-0.5 text-base font-black text-theme-heading-primary sm:text-lg">
+            {closed
+              ? t("owner.settings.access.titleClosed")
+              : t("owner.settings.access.titleOpen")}
+          </h4>
+          <p className="mt-1 text-xs text-theme-text-secondary sm:text-sm">
+            {closed
+              ? t("owner.settings.access.descClosed")
+              : t("owner.settings.access.descOpen")}
+          </p>
+          {closed && onGoToApprovals && (
+            <button
+              type="button"
+              onClick={onGoToApprovals}
+              className={`mt-2.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+                dark
+                  ? "bg-amber-400/15 text-amber-200 hover:bg-amber-400/25"
+                  : "bg-amber-500/15 text-amber-700 hover:bg-amber-500/25"
+              }`}
+            >
+              {t("owner.settings.access.goToApprovals")}
+              <span aria-hidden>→</span>
+            </button>
+          )}
+        </div>
+        <div className="flex flex-shrink-0 gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onChange(false)}
+            className={`rounded-xl px-4 py-2 text-sm font-bold transition-all disabled:opacity-60 ${
+              !closed
+                ? "bg-emerald-500 text-white shadow-md ring-2 ring-emerald-400/50"
+                : dark
+                  ? "border border-gray-700 bg-gray-900/60 text-gray-400 hover:border-emerald-500/50"
+                  : "border border-gray-300 bg-white text-gray-600 hover:border-emerald-400"
+            }`}
+          >
+            {t("owner.settings.access.open")}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onChange(true)}
+            className={`rounded-xl px-4 py-2 text-sm font-bold transition-all disabled:opacity-60 ${
+              closed
+                ? "bg-amber-500 text-black shadow-md ring-2 ring-amber-400/50"
+                : dark
+                  ? "border border-gray-700 bg-gray-900/60 text-gray-400 hover:border-amber-500/50"
+                  : "border border-gray-300 bg-white text-gray-600 hover:border-amber-400"
+            }`}
+          >
+            {t("owner.settings.access.closed")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SettingsTab({
   tournament,
   dark,
@@ -804,10 +979,39 @@ function SettingsTab({
   const router = useRouter();
   const [form, setForm] = useState<Tournament>(tournament);
   const [saving, setSaving] = useState(false);
+  const [savingAccess, setSavingAccess] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [applyingTemplate, setApplyingTemplate] = useState<string | null>(null);
 
   const set = (k: string, v: any) => setForm((p: Tournament) => ({ ...p, [k]: v }));
+
+  // Open/Closed toggle persists instantly — no separate "Save" needed — so the
+  // approval gate (and the Members approvals queue) takes effect right away.
+  async function saveAccess(closed: boolean) {
+    set("require_approval", closed);
+    setSavingAccess(true);
+    try {
+      const res = await fetch("/api/predictor/owner/tournaments", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: tournament.id, require_approval: closed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Save failed");
+      onSaved(data);
+      setForm((p: Tournament) => ({ ...p, require_approval: closed }));
+      showToast(
+        closed
+          ? t("owner.toast.tournamentClosed", "Turnir je zatvoren — odobravaš učesnike")
+          : t("owner.toast.tournamentOpened", "Turnir je otvoren za sve"),
+      );
+    } catch (e: any) {
+      showToast(e.message || t("owner.toast.genericError"), false);
+      setForm((p: Tournament) => ({ ...p, require_approval: !closed }));
+    } finally {
+      setSavingAccess(false);
+    }
+  }
 
   async function save() {
     setSaving(true);
@@ -891,6 +1095,18 @@ function SettingsTab({
 
   return (
     <>
+      {/* Tournament access — open vs closed (approval). Mirrors /admin so the
+          owner controls the SAME require_approval prop, right here. */}
+      <div className="mb-6">
+        <AccessBanner
+          dark={dark}
+          closed={!!form.require_approval}
+          busy={savingAccess}
+          onChange={saveAccess}
+          onGoToApprovals={() => onTabSwitch("members")}
+        />
+      </div>
+
       {/* Template reset/merge cards */}
       <TemplateResetSection
         dark={dark}
@@ -988,7 +1204,12 @@ function SettingsTab({
                 <button
                   key={v}
                   type="button"
-                  onClick={() => set("visibility", v)}
+                  onClick={() => {
+                    set("visibility", v);
+                    // Picking "private" implies a closed tournament — you choose
+                    // who gets in — so flip the approval gate on automatically.
+                    if (v === "private" && !form.require_approval) saveAccess(true);
+                  }}
                   className={`inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
                     (form.visibility || "public") === v
                       ? dark
@@ -1003,6 +1224,11 @@ function SettingsTab({
                 </button>
               ))}
             </div>
+            {form.visibility === "private" && (
+              <p className="mt-1.5 text-[11px] text-theme-text-secondary">
+                {t("owner.settings.access.privateNote")}
+              </p>
+            )}
           </Field>
           <Field label={t("owner.settings.visibility.accentLabel")}>
             <div className="flex flex-wrap gap-2">
@@ -1033,23 +1259,28 @@ function SettingsTab({
             label={t("owner.settings.visibility.approvalLabel")}
             hint={t("owner.settings.visibility.approvalHint")}
           >
-            <label
-              className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 ${
-                dark ? "border-white/10 bg-black/20" : "border-gray-300 bg-white"
+            <div
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm ${
+                form.require_approval
+                  ? dark
+                    ? "border-amber-700/40 bg-amber-950/20 text-amber-200"
+                    : "border-amber-300 bg-amber-50 text-amber-800"
+                  : dark
+                    ? "border-emerald-800/40 bg-emerald-950/20 text-emerald-200"
+                    : "border-emerald-200 bg-emerald-50 text-emerald-800"
               }`}
             >
-              <input
-                type="checkbox"
-                className="h-4 w-4 accent-predictor-primary"
-                checked={!!form.require_approval}
-                onChange={(e) => set("require_approval", e.target.checked)}
-              />
-              <span className="text-sm text-theme-heading-primary">
+              {form.require_approval ? (
+                <Lock className="h-4 w-4 flex-shrink-0" />
+              ) : (
+                <Unlock className="h-4 w-4 flex-shrink-0" />
+              )}
+              <span>
                 {form.require_approval
                   ? t("owner.settings.visibility.approvalOn")
                   : t("owner.settings.visibility.approvalOff")}
               </span>
-            </label>
+            </div>
           </Field>
         </div>
       </Section>
@@ -2477,9 +2708,10 @@ function MatchEditor({
       away_team_en: "",
       kickoff_at: null,
       status: "scheduled",
-      points_exact: 5,
-      points_diff: 3,
-      points_winner: 2,
+      // Default scoring: exact 3 / correct outcome 1 / miss 0.
+      points_exact: 3,
+      points_diff: 1,
+      points_winner: 1,
       home_score: null,
       away_score: null,
       matchday: null,
@@ -2614,7 +2846,7 @@ function MatchEditor({
           <Field label={t("owner.matchesTab.editor.pointsExact", "Exact score pts")}>
             <input
               type="number"
-              value={form.points_exact ?? 5}
+              value={form.points_exact ?? 3}
               onChange={(e) => set("points_exact", Number(e.target.value))}
               className={cls.input(dark)}
             />
@@ -2622,7 +2854,7 @@ function MatchEditor({
           <Field label={t("owner.matchesTab.editor.pointsDiff", "Goal diff pts")}>
             <input
               type="number"
-              value={form.points_diff ?? 3}
+              value={form.points_diff ?? 1}
               onChange={(e) => set("points_diff", Number(e.target.value))}
               className={cls.input(dark)}
             />
@@ -2630,7 +2862,7 @@ function MatchEditor({
           <Field label={t("owner.matchesTab.editor.pointsWinner", "Winner pts")}>
             <input
               type="number"
-              value={form.points_winner ?? 2}
+              value={form.points_winner ?? 1}
               onChange={(e) => set("points_winner", Number(e.target.value))}
               className={cls.input(dark)}
             />
@@ -3254,22 +3486,81 @@ function RewardEditor({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Pending approvals callout — shown above the tab body whenever people are
+// waiting to be let into a closed/approval tournament. One tap jumps the owner
+// to the Members tab so they never need the global /admin panel.
+// ─────────────────────────────────────────────────────────────────────────────
+function PendingApprovalsCallout({
+  dark,
+  count,
+  onReview,
+}: {
+  dark: boolean;
+  count: number;
+  onReview: () => void;
+}) {
+  const { t } = useTranslation("predictor");
+  return (
+    <div
+      className={`mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 ${
+        dark ? "border-amber-400/30 bg-amber-500/10" : "border-amber-300 bg-amber-50"
+      }`}
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <span
+          className={`mt-0.5 inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-black ${
+            dark ? "bg-amber-400/20 text-amber-200" : "bg-amber-200/70 text-amber-800"
+          }`}
+        >
+          {count}
+        </span>
+        <div className="min-w-0">
+          <p className={`text-sm font-bold ${dark ? "text-amber-100" : "text-amber-900"}`}>
+            {t("owner.pendingCallout.title")}
+          </p>
+          <p className={`mt-0.5 text-xs ${dark ? "text-amber-200/80" : "text-amber-800/90"}`}>
+            {t("owner.pendingCallout.desc", { count })}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onReview}
+        className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-colors ${
+          dark
+            ? "bg-amber-400 text-gray-900 hover:bg-amber-300"
+            : "bg-amber-500 text-white hover:bg-amber-600"
+        }`}
+      >
+        {t("owner.pendingCallout.cta")}
+        <span aria-hidden>→</span>
+      </button>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Members tab
 // ─────────────────────────────────────────────────────────────────────────────
 function MembersTab({
   tournament,
   dark,
   showToast,
+  onChanged,
 }: {
   tournament: Tournament;
   dark: boolean;
   showToast: (m: string, ok?: boolean) => void;
+  onChanged?: () => void;
 }) {
   const { t, i18n } = useTranslation("predictor");
   const lang = normalizeLang(i18n.language);
   const [list, setList] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>("all");
+  // For closed tournaments, foreground the approval queue by default.
+  const [filter, setFilter] = useState<string>(
+    tournament.require_approval ? "pending" : "all",
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -3292,6 +3583,7 @@ function MembersTab({
     });
     if (res.ok) {
       load();
+      onChanged?.();
       showToast(t("owner.toast.memberUpdated"));
     } else showToast(t("owner.toast.genericError"), false);
   }
@@ -3301,6 +3593,7 @@ function MembersTab({
     const res = await fetch(`/api/predictor/owner/members?id=${id}`, { method: "DELETE" });
     if (res.ok) {
       load();
+      onChanged?.();
       showToast(t("owner.toast.memberRemoved"));
     } else showToast(t("owner.toast.genericError"), false);
   }
@@ -3347,72 +3640,305 @@ function MembersTab({
         </div>
       ) : (
         <div className="space-y-2">
-          {list.map((m) => (
-            <div
-              key={m.id}
-              className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 ${cls.cardSubtle(dark)}`}
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 text-sm text-theme-heading-primary">
-                  <span className="font-medium">
-                    {m.user_display_name || t("owner.membersTab.noName")}
-                  </span>
-                  <span className="text-theme-text-secondary">·</span>
-                  <span className="text-xs text-theme-text-secondary">{m.user_email}</span>
-                </div>
-                <div className="mt-0.5 flex items-center gap-2 text-[11px] text-theme-text-secondary">
-                  <span
-                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusTone(
-                      m.status === "approved" ? "published" : m.status,
-                      dark,
-                    )}`}
+          {list.map((m) => {
+            const initial = (m.user_display_name || m.user_email || "?")
+              .charAt(0)
+              .toUpperCase();
+            const circle =
+              "inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition-colors active:scale-95";
+            return (
+              <div
+                key={m.id}
+                className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3 ${cls.cardSubtle(dark)}`}
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  {/* Circular avatar — keeps the whole row in one round language */}
+                  <div
+                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-black ${
+                      dark
+                        ? "bg-predictor-primary/15 text-predictor-accent-dark ring-1 ring-predictor-primary/25"
+                        : "bg-predictor-primary/20 text-predictor-accent-light ring-1 ring-predictor-primary/40"
+                    }`}
                   >
-                    {String(t(`owner.membersTab.statuses.${m.status}`, m.status))}
-                  </span>
-                  <span>
-                    · {t("owner.membersTab.joinedOn")}{" "}
-                    {new Date(m.requested_at).toLocaleDateString(lang === "bs" ? "sr-Latn" : "en-GB")}
-                  </span>
+                    {initial}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-sm text-theme-heading-primary">
+                      <span className="truncate font-medium">
+                        {m.user_display_name || t("owner.membersTab.noName")}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-theme-text-secondary">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusTone(
+                          m.status === "approved" ? "published" : m.status,
+                          dark,
+                        )}`}
+                      >
+                        {String(t(`owner.membersTab.statuses.${m.status}`, m.status))}
+                      </span>
+                      <span className="truncate">{m.user_email}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-shrink-0 items-center gap-1.5">
+                  {m.status !== "approved" && (
+                    <button
+                      type="button"
+                      title={t("owner.membersTab.approve")}
+                      aria-label={t("owner.membersTab.approve")}
+                      onClick={() => changeStatus(m.id, "approved")}
+                      className={`${circle} border-emerald-500 bg-emerald-500 text-white shadow-sm hover:bg-emerald-600`}
+                    >
+                      <Check className="h-4 w-4" strokeWidth={2.6} />
+                    </button>
+                  )}
+                  {m.status !== "rejected" && (
+                    <button
+                      type="button"
+                      title={t("owner.membersTab.reject")}
+                      aria-label={t("owner.membersTab.reject")}
+                      onClick={() => changeStatus(m.id, "rejected")}
+                      className={`${circle} ${
+                        dark
+                          ? "border-white/15 text-gray-300 hover:border-white/35 hover:text-white"
+                          : "border-gray-300 text-gray-600 hover:border-gray-500 hover:text-gray-900"
+                      }`}
+                    >
+                      <X className="h-4 w-4" strokeWidth={2.6} />
+                    </button>
+                  )}
+                  {m.status !== "banned" && (
+                    <button
+                      type="button"
+                      title={t("owner.membersTab.ban")}
+                      aria-label={t("owner.membersTab.ban")}
+                      onClick={() => changeStatus(m.id, "banned")}
+                      className={`${circle} ${
+                        dark
+                          ? "border-amber-500/40 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20"
+                          : "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                      }`}
+                    >
+                      <Ban className="h-4 w-4" strokeWidth={2.2} />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    title={t("owner.membersTab.remove")}
+                    aria-label={t("owner.membersTab.remove")}
+                    onClick={() => remove(m.id)}
+                    className={`${circle} ${
+                      dark
+                        ? "border-red-500/30 bg-red-500/10 text-red-200 hover:bg-red-500/20"
+                        : "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+                    }`}
+                  >
+                    <Trash2 className="h-4 w-4" strokeWidth={2.2} />
+                  </button>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-1">
-                {m.status !== "approved" && (
-                  <button
-                    type="button"
-                    onClick={() => changeStatus(m.id, "approved")}
-                    className={cls.secondaryBtn(dark)}
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Players tab — everyone who actually participates (made predictions) or holds
+// a member row. Lets the owner fully purge a player — membership + ALL their
+// predictions — e.g. when the tournament was left open and an unwanted user
+// already predicted. Irreversible.
+// ─────────────────────────────────────────────────────────────────────────────
+type Participant = {
+  user_id: string;
+  user_display_name: string | null;
+  user_email: string | null;
+  category_count: number;
+  category_points: number;
+  match_count: number;
+  match_points: number;
+  total_points: number;
+  member_status: string | null;
+};
+
+function PlayersTab({
+  tournament,
+  dark,
+  showToast,
+}: {
+  tournament: Tournament;
+  dark: boolean;
+  showToast: (m: string, ok?: boolean) => void;
+}) {
+  const { t } = useTranslation("predictor");
+  const [list, setList] = useState<Participant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/predictor/owner/participants?tournament_id=${tournament.id}`,
+      );
+      if (res.ok) setList(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, [tournament.id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function purge(p: Participant) {
+    const name =
+      p.user_display_name || p.user_email || t("owner.playersTab.noName");
+    if (!confirm(t("owner.playersTab.deleteConfirm", { name }))) return;
+    setBusyId(p.user_id);
+    try {
+      const res = await fetch(
+        `/api/predictor/owner/participants?tournament_id=${tournament.id}&user_id=${encodeURIComponent(
+          p.user_id,
+        )}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) throw new Error();
+      setList((prev) => prev.filter((x) => x.user_id !== p.user_id));
+      showToast(t("owner.playersTab.deleted", { name }));
+    } catch {
+      showToast(t("owner.toast.genericError"), false);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? list.filter(
+        (p) =>
+          (p.user_display_name || "").toLowerCase().includes(q) ||
+          (p.user_email || "").toLowerCase().includes(q),
+      )
+    : list;
+
+  const badge = (text: string, accent = false) => (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+        accent
+          ? cls.badgeAccent(dark)
+          : dark
+            ? "bg-white/5 text-gray-300"
+            : "bg-gray-100 text-gray-600"
+      }`}
+    >
+      {text}
+    </span>
+  );
+
+  return (
+    <>
+      <div className="mb-5">
+        <h2 className={`text-base font-bold ${cls.accentText(dark)}`}>
+          {t("owner.playersTab.title")}
+        </h2>
+        <p className="mt-0.5 text-xs text-theme-text-secondary">
+          {t("owner.playersTab.subtitle")}
+        </p>
+      </div>
+
+      {list.length > 0 && (
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t("owner.playersTab.searchPlaceholder")}
+          className={cls.input(dark) + " mb-4"}
+        />
+      )}
+
+      {loading ? (
+        <p className="py-10 text-center text-sm text-theme-text-secondary">
+          {t("owner.common.loading")}
+        </p>
+      ) : filtered.length === 0 ? (
+        <div
+          className={`rounded-xl border border-dashed p-8 text-center text-sm text-theme-text-secondary ${
+            dark ? "border-white/15 bg-white/[0.02]" : "border-gray-300 bg-gray-50"
+          }`}
+        >
+          {t("owner.playersTab.empty")}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((p) => {
+            const name = p.user_display_name || t("owner.playersTab.noName");
+            const initial = (p.user_display_name || p.user_email || "?")
+              .charAt(0)
+              .toUpperCase();
+            return (
+              <div
+                key={p.user_id}
+                className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3 ${cls.cardSubtle(dark)}`}
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div
+                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-black ${
+                      dark
+                        ? "bg-predictor-primary/15 text-predictor-accent-dark ring-1 ring-predictor-primary/25"
+                        : "bg-predictor-primary/20 text-predictor-accent-light ring-1 ring-predictor-primary/40"
+                    }`}
                   >
-                    ✓ {t("owner.membersTab.approve")}
-                  </button>
-                )}
-                {m.status !== "rejected" && (
-                  <button
-                    type="button"
-                    onClick={() => changeStatus(m.id, "rejected")}
-                    className={cls.secondaryBtn(dark)}
-                  >
-                    × {t("owner.membersTab.reject")}
-                  </button>
-                )}
-                {m.status !== "banned" && (
-                  <button
-                    type="button"
-                    onClick={() => changeStatus(m.id, "banned")}
-                    className={cls.dangerBtn(dark)}
-                  >
-                    {t("owner.membersTab.ban")}
-                  </button>
-                )}
+                    {initial}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-sm text-theme-heading-primary">
+                      <span className="truncate font-medium">{name}</span>
+                      {p.member_status && (
+                        <span
+                          className={`inline-flex flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusTone(
+                            p.member_status === "approved" ? "published" : p.member_status,
+                            dark,
+                          )}`}
+                        >
+                          {String(
+                            t(`owner.membersTab.statuses.${p.member_status}`, p.member_status),
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    {p.user_email && (
+                      <div className="mt-0.5 truncate text-[11px] text-theme-text-secondary">
+                        {p.user_email}
+                      </div>
+                    )}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      {badge(t("owner.playersTab.tournamentPreds", { count: p.category_count }))}
+                      {badge(t("owner.playersTab.matchPreds", { count: p.match_count }))}
+                      {badge(t("owner.playersTab.points", { count: p.total_points }), true)}
+                    </div>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  onClick={() => remove(m.id)}
-                  className={cls.dangerBtn(dark) + " !px-2"}
+                  disabled={busyId === p.user_id}
+                  onClick={() => purge(p)}
+                  title={t("owner.playersTab.delete")}
+                  className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-bold transition-colors active:scale-95 disabled:opacity-50 ${
+                    dark
+                      ? "border-red-500/30 bg-red-500/10 text-red-200 hover:bg-red-500/20"
+                      : "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+                  }`}
                 >
-                  ×
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={2.2} />
+                  {t("owner.playersTab.delete")}
                 </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </>

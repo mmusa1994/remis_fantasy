@@ -14,7 +14,7 @@ export async function GET(
 
   const { data: tournament } = await supabaseServer
     .from("predictor_tournaments")
-    .select("id, require_approval")
+    .select("id, require_approval, owner_user_id")
     .eq("slug", slug)
     .is("deleted_at", null)
     .maybeSingle();
@@ -29,9 +29,15 @@ export async function GET(
     .eq("user_id", guard.user.id)
     .maybeSingle();
 
+  // The owner (and site admins) are never gated by their own approval queue.
+  const isOwner =
+    tournament.owner_user_id === guard.user.id ||
+    !!(guard.user as any).isAdmin;
+
   return NextResponse.json({
     require_approval: !!tournament.require_approval,
     member: member ?? null,
-    can_predict: !tournament.require_approval || member?.status === "approved",
+    can_predict:
+      isOwner || !tournament.require_approval || member?.status === "approved",
   });
 }

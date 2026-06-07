@@ -353,9 +353,15 @@
       "matches": "Matches",
       "rules": "Rules",
       "rewards": "Rewards",
-      "members": "Members",
+      "members": "Approvals",
+      "players": "Players",
       "scoring": "Scoring",
       "eternal": "Eternal Table"
+    },
+    "pendingCallout": {
+      "title": "Join requests waiting",
+      "desc": "{{count}} user(s) are waiting for you to approve them for this tournament.",
+      "cta": "Review & approve"
     },
     "common": {
       "save": "Save",
@@ -379,6 +385,8 @@
       "saveError": "Save error",
       "fetchError": "Load error",
       "settingsSaved": "Tournament settings saved",
+      "tournamentClosed": "Tournament closed — you approve participants",
+      "tournamentOpened": "Tournament opened to everyone signed in",
       "statusChanged": "Status updated successfully",
       "categorySaved": "Category saved successfully",
       "categoryDeleted": "Category deleted",
@@ -464,6 +472,17 @@
         "approvalHint": "If on, every new member must be approved by you.",
         "approvalOn": "Members must be approved",
         "approvalOff": "All signed-in users can join immediately"
+      },
+      "access": {
+        "eyebrow": "Tournament access",
+        "titleOpen": "Open tournament — anyone signed in can predict",
+        "titleClosed": "Closed tournament — you approve participants",
+        "descOpen": "Anyone signed in can submit predictions right away. No waiting, no approvals.",
+        "descClosed": "Users click 'Request to join' and appear in the 'Approvals' tab. They can only predict once you approve them.",
+        "open": "Open",
+        "closed": "Closed",
+        "goToApprovals": "View approvals",
+        "privateNote": "Private tournaments are automatically closed — you must approve each member."
       },
       "timestamps": {
         "title": "Dates & deadlines",
@@ -648,15 +667,16 @@
       }
     },
     "membersTab": {
-      "title": "Tournament members",
+      "title": "Approvals & members",
       "approvalsOn": "Approval mode is on. you must approve every new member.",
       "approvalsOff": "All signed-in users can join. You can still ban them.",
-      "empty": "No members yet.",
+      "empty": "No members or join requests yet.",
       "noName": "(no name)",
       "joinedOn": "joined",
       "approve": "Approve",
       "reject": "Reject",
       "ban": "Ban",
+      "remove": "Remove",
       "removeConfirm": "Remove this member?",
       "filterAll": "All statuses",
       "statuses": {
@@ -671,6 +691,19 @@
         "rejected": "Rejected",
         "banned": "Banned"
       }
+    },
+    "playersTab": {
+      "title": "Tournament players",
+      "subtitle": "Everyone who has predicted or is a member. If you left the tournament open by mistake, you can remove a player and ALL their predictions here.",
+      "searchPlaceholder": "Search by name or email…",
+      "empty": "No one has predicted in this tournament yet.",
+      "noName": "(no name)",
+      "tournamentPreds": "Tournament: {{count}}",
+      "matchPreds": "Matches: {{count}}",
+      "points": "{{count}} pts",
+      "delete": "Delete",
+      "deleteConfirm": "Delete player \"{{name}}\" and ALL their predictions from the tournament? This cannot be undone.",
+      "deleted": "Player \"{{name}}\" and all predictions deleted"
     },
     "scoringTab": {
       "leaderboardView": "Leaderboard",
@@ -871,6 +904,10 @@
       "dayOf": "of",
       "exportCsv": "Export CSV",
       "openUser": "Open user",
+      "deletePlayer": "Delete",
+      "deleteConfirm": "Delete player \"{{name}}\" and ALL their predictions from the tournament? This cannot be undone.",
+      "deleted": "Player \"{{name}}\" and all predictions deleted",
+      "deleteError": "Failed to delete player",
       "back": "Back",
       "matchKickoff": "Kickoff",
       "matchStage": "Stage",
