@@ -16,7 +16,7 @@ BEGIN
   SELECT id
     INTO v_tournament_id
     FROM predictor_tournaments
-   WHERE slug = 'visocko-trece-poluvrijeme'
+   WHERE slug = 'visocko-svjetsko-26'
      AND deleted_at IS NULL
    LIMIT 1;
 
