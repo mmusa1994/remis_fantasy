@@ -130,7 +130,9 @@ export async function GET(
       away_team_code: m.away_team_code,
       home_score: m.home_score,
       away_score: m.away_score,
+      stage: m.stage,
       stage_label: m.stage_label,
+      matchday: m.matchday,
       kickoff_at: m.kickoff_at,
     };
   }

@@ -27,10 +27,12 @@ import { localizeTeamName } from "@/utils/country-names";
 import type { Match, MatchPrediction } from "@/types/predictor";
 import type { AccentClasses } from "@/utils/predictor-accent";
 import {
+  MATCHDAY_LABELS,
   localizedMatchAwayTeam,
   localizedMatchHomeTeam,
   localizedMatchStageLabel,
   localizedMatchVenue,
+  matchdayLabel,
 } from "@/utils/predictor-i18n";
 
 const STAGE_LABELS_PUB: Record<string, string> = {
@@ -138,18 +140,6 @@ export default function MatchesPublicTab({
     const id = setInterval(() => setTick((t) => t + 1), 30_000);
     return () => clearInterval(id);
   }, []);
-
-  const MATCHDAY_LABELS: Record<number, { bs: string; en: string }> = {
-    1: { bs: "1. kolo", en: "Matchday 1" },
-    2: { bs: "2. kolo", en: "Matchday 2" },
-    3: { bs: "3. kolo", en: "Matchday 3" },
-    4: { bs: "Sesnaestina finala", en: "Round of 32" },
-    5: { bs: "Osmina finala", en: "Round of 16" },
-    6: { bs: "Cetvrtfinale", en: "Quarter-finals" },
-    7: { bs: "Polufinale", en: "Semi-finals" },
-    8: { bs: "Za 3. mjesto", en: "Third place" },
-    9: { bs: "Finale", en: "Final" },
-  };
 
   const byStage = useMemo(() => {
     const hasMatchdays = lockMode === "per_round" && matches.some((m) => m.matchday != null);
@@ -373,9 +363,7 @@ export default function MatchesPublicTab({
               className={`text-sm font-black uppercase tracking-wider ${theme === "dark" ? "text-white" : "text-gray-900"}`}
             >
               {MATCHDAY_LABELS[Number(stage)]
-                ? (lang === "en"
-                    ? MATCHDAY_LABELS[Number(stage)].en
-                    : MATCHDAY_LABELS[Number(stage)].bs)
+                ? matchdayLabel(Number(stage), lang)
                 : t(`stage.${stage}`, STAGE_LABELS_PUB[stage] ?? stage)}
             </h3>
             <span

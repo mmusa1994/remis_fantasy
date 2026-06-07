@@ -78,6 +78,7 @@ import {
   localizedRewardTitle,
   localizedRewardDescription,
   pickLocalizedNullable,
+  matchdayLabel,
 } from "@/utils/predictor-i18n";
 import MatchesPublicTab from "./_components/MatchesPublicTab";
 import EternalTablePublicTab from "./_components/EternalTablePublicTab";
@@ -745,6 +746,7 @@ export default function TournamentDetailPage() {
               isWC={isWC}
               themeBgSrc={themeBg}
               slug={String(slug)}
+              lockMode={tournament.prediction_lock_mode || "per_match"}
             />
           )}
           {tab === "eternal" && (
@@ -2107,6 +2109,7 @@ function StandingsTab({
   isWC = false,
   themeBgSrc = null,
   slug,
+  lockMode = "per_match",
 }: {
   standings: StandingsRow[];
   theme: string;
@@ -2115,6 +2118,7 @@ function StandingsTab({
   isWC?: boolean;
   themeBgSrc?: string | null;
   slug: string;
+  lockMode?: "per_match" | "per_round";
 }) {
   const { t, i18n } = useTranslation("predictor");
   const lang = (i18n.language?.startsWith("en") ? "en" : "bs") as "en" | "bs";
@@ -2126,6 +2130,7 @@ function StandingsTab({
   const [modalLoading, setModalLoading] = useState(false);
   const [modalCatsOpen, setModalCatsOpen] = useState(true);
   const [modalMatchesOpen, setModalMatchesOpen] = useState(false);
+  const [modalRound, setModalRound] = useState<number | null>(null);
   const [standingsView, setStandingsView] = useState<"points" | "matches">("points");
   const [matchStandings, setMatchStandings] = useState<any[]>([]);
   const [matchStandingsLoading, setMatchStandingsLoading] = useState(false);
@@ -2145,11 +2150,20 @@ function StandingsTab({
     setModalUser({ id: userId, name });
     setModalLoading(true);
     setModalData(null);
+    setModalRound(null);
     try {
       const res = await fetch(
         `/api/predictor/tournaments/${slug}/user-predictions?user_id=${userId}`,
       );
-      if (res.ok) setModalData(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setModalData(data);
+        // Match-only tournaments have no category section — open matches so the
+        // round tabs are visible right away instead of behind a collapsed header.
+        const hasCatPreds = (data.categories ?? []).some((c: any) => c.prediction);
+        setModalCatsOpen(hasCatPreds);
+        setModalMatchesOpen(!hasCatPreds);
+      }
     } finally {
       setModalLoading(false);
     }
@@ -2631,10 +2645,69 @@ function StandingsTab({
                       );
                     })()}
 
-                    {/* Collapsible: Match predictions */}
+                    {/* Collapsible: Match predictions — grouped into round tabs when locked per round */}
                     {(() => {
                       const mps = modalData.matchPredictions ?? [];
                       if (mps.length === 0) return null;
+
+                      const flg = (code: string) => code ? `https://flagcdn.com/w20/${code}.png` : null;
+                      const renderRow = (p: any) => {
+                        const m = p.match;
+                        if (!m) return null;
+                        const home = lang === "en" && m.home_team_en ? m.home_team_en : m.home_team;
+                        const away = lang === "en" && m.away_team_en ? m.away_team_en : m.away_team;
+                        return (
+                          <div key={p.id} className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 ${dark ? "bg-white/[0.03]" : "bg-white"}`}>
+                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                              {flg(m.home_team_code) && (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img loading="lazy" decoding="async" src={flg(m.home_team_code)!} alt="" className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0" />
+                              )}
+                              <span className={`text-[11px] font-semibold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>{home}</span>
+                              <span className={`text-[9px] flex-shrink-0 ${dark ? "text-gray-600" : "text-gray-400"}`}>v</span>
+                              <span className={`text-[11px] font-semibold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>{away}</span>
+                              {flg(m.away_team_code) && (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img loading="lazy" decoding="async" src={flg(m.away_team_code)!} alt="" className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0" />
+                              )}
+                            </div>
+                            <span className={`text-[13px] font-black tabular-nums px-1.5 py-0.5 rounded-md flex-shrink-0 ${
+                              dark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-900"
+                            }`}>
+                              {p.home_score}:{p.away_score}
+                            </span>
+                            {p.is_scored && (
+                              <span className={`text-[9px] font-black px-1 py-0.5 rounded-full flex-shrink-0 ${accentText} ${dark ? ac.bg15 : ac.bgPale}`}>
+                                +{p.points_awarded}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      };
+
+                      // When the tournament locks per round, split predictions into "kolo" tabs.
+                      const hasRounds =
+                        lockMode === "per_round" &&
+                        mps.some((p: any) => p.match?.matchday != null);
+                      const rounds: number[] = hasRounds
+                        ? Array.from(
+                            new Set<number>(
+                              mps
+                                .map((p: any) => p.match?.matchday)
+                                .filter((d: any): d is number => d != null),
+                            ),
+                          ).sort((a, b) => a - b)
+                        : [];
+                      const activeRound =
+                        hasRounds
+                          ? modalRound != null && rounds.includes(modalRound)
+                            ? modalRound
+                            : rounds[0]
+                          : null;
+                      const visibleMps = hasRounds
+                        ? mps.filter((p: any) => p.match?.matchday === activeRound)
+                        : mps;
+
                       return (
                         <div className={`rounded-xl border overflow-hidden ${dark ? "border-white/8" : "border-gray-200"}`}>
                           <button
@@ -2653,41 +2726,32 @@ function StandingsTab({
                             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${modalMatchesOpen ? "rotate-180" : ""} ${dark ? "text-gray-500" : "text-gray-400"}`} />
                           </button>
                           {modalMatchesOpen && (
-                            <div className="p-2 space-y-1">
-                              {mps.map((p: any) => {
-                                const m = p.match;
-                                if (!m) return null;
-                                const home = lang === "en" && m.home_team_en ? m.home_team_en : m.home_team;
-                                const away = lang === "en" && m.away_team_en ? m.away_team_en : m.away_team;
-                                const flg = (code: string) => code ? `https://flagcdn.com/w20/${code}.png` : null;
-                                return (
-                                  <div key={p.id} className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 ${dark ? "bg-white/[0.03]" : "bg-white"}`}>
-                                    <div className="flex items-center gap-1 flex-1 min-w-0">
-                                      {flg(m.home_team_code) && (
-                                        /* eslint-disable-next-line @next/next/no-img-element */
-                                        <img loading="lazy" decoding="async" src={flg(m.home_team_code)!} alt="" className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0" />
-                                      )}
-                                      <span className={`text-[11px] font-semibold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>{home}</span>
-                                      <span className={`text-[9px] flex-shrink-0 ${dark ? "text-gray-600" : "text-gray-400"}`}>v</span>
-                                      <span className={`text-[11px] font-semibold truncate ${dark ? "text-gray-300" : "text-gray-700"}`}>{away}</span>
-                                      {flg(m.away_team_code) && (
-                                        /* eslint-disable-next-line @next/next/no-img-element */
-                                        <img loading="lazy" decoding="async" src={flg(m.away_team_code)!} alt="" className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0" />
-                                      )}
-                                    </div>
-                                    <span className={`text-[13px] font-black tabular-nums px-1.5 py-0.5 rounded-md flex-shrink-0 ${
-                                      dark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-900"
-                                    }`}>
-                                      {p.home_score}:{p.away_score}
-                                    </span>
-                                    {p.is_scored && (
-                                      <span className={`text-[9px] font-black px-1 py-0.5 rounded-full flex-shrink-0 ${accentText} ${dark ? ac.bg15 : ac.bgPale}`}>
-                                        +{p.points_awarded}
-                                      </span>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                            <div className="p-2 space-y-2">
+                              {hasRounds && (
+                                <div className="flex gap-1 overflow-x-auto pb-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                  {rounds.map((rd) => (
+                                    <button
+                                      key={rd}
+                                      type="button"
+                                      onClick={() => setModalRound(rd)}
+                                      className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
+                                        rd === activeRound
+                                          ? dark
+                                            ? `${ac.bg15} ${ac.textBrighter}`
+                                            : `${ac.bgPale} ${ac.textDeeper}`
+                                          : dark
+                                            ? "bg-white/[0.03] text-gray-500 hover:text-gray-300"
+                                            : "bg-gray-100 text-gray-500 hover:text-gray-700"
+                                      }`}
+                                    >
+                                      {matchdayLabel(rd, lang)}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="space-y-1">
+                                {visibleMps.map(renderRow)}
+                              </div>
                             </div>
                           )}
                         </div>

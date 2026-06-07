@@ -112,6 +112,33 @@ export function localizedMatchVenue(m: Match, lang: PredictorLang): string | nul
   return pickLocalizedNullable(lang, m.venue, m.venue_en);
 }
 
+/**
+ * Matchday → round label, used when a tournament locks predictions
+ * per round (`prediction_lock_mode === "per_round"`). Shared by the public
+ * Matches tab and the standings player modal so the "kolo" labels stay in sync.
+ */
+export const MATCHDAY_LABELS: Record<number, { bs: string; en: string }> = {
+  1: { bs: "1. kolo", en: "Matchday 1" },
+  2: { bs: "2. kolo", en: "Matchday 2" },
+  3: { bs: "3. kolo", en: "Matchday 3" },
+  4: { bs: "Sesnaestina finala", en: "Round of 32" },
+  5: { bs: "Osmina finala", en: "Round of 16" },
+  6: { bs: "Cetvrtfinale", en: "Quarter-finals" },
+  7: { bs: "Polufinale", en: "Semi-finals" },
+  8: { bs: "Za 3. mjesto", en: "Third place" },
+  9: { bs: "Finale", en: "Final" },
+};
+
+export function matchdayLabel(
+  matchday: number | null | undefined,
+  lang: PredictorLang,
+): string {
+  if (matchday == null) return lang === "en" ? "Other" : "Ostalo";
+  const entry = MATCHDAY_LABELS[matchday];
+  if (entry) return lang === "en" ? entry.en : entry.bs;
+  return lang === "en" ? `Matchday ${matchday}` : `${matchday}. kolo`;
+}
+
 export function localizedMatchHomeTeam(m: Match, lang: PredictorLang): string {
   return pickLocalized(lang, m.home_team, m.home_team_en);
 }
