@@ -2276,7 +2276,7 @@ function StandingsTab({
             theme={theme}
             ac={ac}
             currentUserId={currentUserId}
-            heightClass="h-32 md:h-40"
+            heightClass="min-h-[15rem] md:min-h-[19rem]"
             onClick={() => openModal(top3[1].user_id, top3[1].user_display_name || "?")}
           />
           <PodiumCard
@@ -2285,7 +2285,7 @@ function StandingsTab({
             theme={theme}
             ac={ac}
             currentUserId={currentUserId}
-            heightClass="h-40 md:h-52"
+            heightClass="min-h-[17rem] md:min-h-[22rem]"
             onClick={() => openModal(top3[0].user_id, top3[0].user_display_name || "?")}
           />
           <PodiumCard
@@ -2294,7 +2294,7 @@ function StandingsTab({
             theme={theme}
             ac={ac}
             currentUserId={currentUserId}
-            heightClass="h-28 md:h-36"
+            heightClass="min-h-[14rem] md:min-h-[17rem]"
             onClick={() => openModal(top3[2].user_id, top3[2].user_display_name || "?")}
           />
         </div>
@@ -2394,9 +2394,7 @@ function StandingsTab({
                         <span className={`inline-flex items-center gap-0.5 text-[9px] font-medium ${dark ? "text-gray-500" : "text-gray-400"}`}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img loading="lazy" decoding="async" src={s.winner_flag} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px]" />
-                          {(s.winner_name ?? "").length > 12
-                            ? (s.winner_name ?? "").replace(/^Bosna i Hercegovina$/, "BIH").replace(/^Bosnia and Herzegovina$/, "BIH").replace(/^Južna Afrika$/, "J. Afrika").replace(/^South Africa$/, "S. Africa").replace(/^Južna Koreja$/, "J. Koreja").replace(/^South Korea$/, "S. Korea").replace(/^Saudijska Arabija$/, "S. Arabija").replace(/^Saudi Arabia$/, "S. Arabia").replace(/^Obala Slonovače$/, "O. Slonovače").replace(/^Ivory Coast$/, "Ivory C.").replace(/^Novi Zeland$/, "N. Zeland").replace(/^New Zealand$/, "N. Zealand").slice(0, 14)
-                            : s.winner_name}
+                          {shortenCountry(s.winner_name ?? "")}
                         </span>
                       )}
                       {s.winner_flag && s.top_scorer && (
@@ -2846,6 +2844,23 @@ function StatCard({
   );
 }
 
+// Shortens long country names so they fit in tight standings/podium chips.
+function shortenCountry(name: string): string {
+  return (name ?? "")
+    .replace(/^Bosna i Hercegovina$/, "BIH")
+    .replace(/^Bosnia and Herzegovina$/, "BIH")
+    .replace(/^Južna Afrika$/, "J. Afrika")
+    .replace(/^South Africa$/, "S. Africa")
+    .replace(/^Južna Koreja$/, "J. Koreja")
+    .replace(/^South Korea$/, "S. Korea")
+    .replace(/^Saudijska Arabija$/, "S. Arabija")
+    .replace(/^Saudi Arabia$/, "S. Arabia")
+    .replace(/^Obala Slonovače$/, "O. Slonovače")
+    .replace(/^Ivory Coast$/, "Ivory C.")
+    .replace(/^Novi Zeland$/, "N. Zeland")
+    .replace(/^New Zealand$/, "N. Zealand");
+}
+
 function PodiumCard({
   row,
   place,
@@ -2863,9 +2878,12 @@ function PodiumCard({
   heightClass: string;
   onClick?: () => void;
 }) {
+  const { t } = useTranslation("predictor");
   const dark = theme === "dark";
   const isMe = currentUserId === row.user_id;
   const medal = place === 1 ? "🥇" : place === 2 ? "🥈" : "🥉";
+  const name = row.user_display_name || row.user_email?.split("@")[0] || "Igrač";
+  const initial = name.charAt(0).toUpperCase();
   // 1st place wears the tournament accent — that's the winner's
   // halo and should always echo the admin-picked theme. 2nd/3rd
   // keep their universal silver/bronze gradients.
@@ -2880,29 +2898,49 @@ function PodiumCard({
       ? "bg-gradient-to-b from-orange-600/20 to-orange-600/5 border-orange-700/40"
       : "bg-gradient-to-b from-orange-100 to-orange-50 border-orange-300",
   }[place];
+  // Each place gets its own avatar ring tint so the staircase reads at a glance.
+  const avatarRing = {
+    1: dark ? `${ac.bg15} ${ac.textBright} ring-2 ${ac.border500_60}` : `${ac.bgPaleStrong} ${ac.textDeep} ring-2 ${ac.border300}`,
+    2: dark ? "bg-gray-400/15 text-gray-200 ring-2 ring-gray-400/40" : "bg-gray-200 text-gray-600 ring-2 ring-gray-300",
+    3: dark ? "bg-orange-600/15 text-orange-200 ring-2 ring-orange-700/40" : "bg-orange-100 text-orange-700 ring-2 ring-orange-300",
+  }[place];
+  const hasPicks = !!(row.winner_flag || row.top_scorer);
 
   return (
     <div
       onClick={onClick}
-      className={`relative overflow-hidden rounded-2xl md:rounded-3xl border-2 px-2 py-2.5 md:p-4 ${colors} ${heightClass} flex flex-col items-center justify-between gap-1 text-center cursor-pointer transition-transform hover:scale-[1.02] ${
+      className={`relative overflow-hidden rounded-2xl md:rounded-3xl border-2 px-2.5 pt-3 pb-3 md:px-4 md:pt-5 md:pb-4 ${colors} ${heightClass} flex flex-col items-center justify-start gap-1.5 md:gap-2 text-center cursor-pointer transition-transform hover:scale-[1.02] ${
         isMe ? `ring-2 ${ac.ring500_60}` : ""
       }`}
     >
-      {/* Medal sits at the top — the taller #1 card lifts it highest, so the
-          three medals form the podium "rise" while the info blocks below
-          share one baseline (grid uses items-end). */}
-      <div className="text-2xl sm:text-3xl md:text-4xl leading-none">{medal}</div>
+      {/* Rank badge in the corner keeps the medal honest even when cards wrap. */}
+      <span
+        className={`absolute top-1.5 left-2 text-[9px] md:text-[11px] font-black tabular-nums ${
+          dark ? "text-white/30" : "text-black/25"
+        }`}
+      >
+        #{place}
+      </span>
 
-      {/* Info block — anchored to the bottom edge of every card */}
+      {/* Medal + avatar stack — the taller #1 card lifts it highest so the three
+          form the podium "rise". */}
+      <div className="text-2xl sm:text-3xl md:text-4xl leading-none">{medal}</div>
+      <div
+        className={`flex items-center justify-center rounded-full font-black flex-shrink-0 w-9 h-9 md:w-12 md:h-12 text-sm md:text-lg ${
+          isMe ? `bg-gradient-to-br ${ac.gradAvatarMe} ${ac.textOn} shadow-md` : avatarRing
+        }`}
+      >
+        {initial}
+      </div>
+
+      {/* Name + points */}
       <div className="w-full min-w-0">
         <div
           className={`flex items-center justify-center gap-1 font-bold text-[11px] sm:text-[13px] md:text-sm leading-tight ${
             dark ? "text-white" : "text-gray-900"
           }`}
         >
-          <span className="min-w-0 truncate">
-            {row.user_display_name || row.user_email?.split("@")[0] || "Igrač"}
-          </span>
+          <span className="min-w-0 truncate">{name}</span>
           {isMe && <span className={`flex-shrink-0 ${ac.textSolid}`}>★</span>}
         </div>
         <div className={`mt-0.5 text-xl sm:text-2xl md:text-3xl font-black tabular-nums leading-none ${ac.text}`}>
@@ -2915,6 +2953,38 @@ function PodiumCard({
           kat {row.category_points} · ut {row.match_points}
         </div>
       </div>
+
+      {/* Winner & top-scorer picks — pushed to the bottom edge of the card */}
+      {hasPicks && (
+        <div className="mt-auto w-full min-w-0 space-y-1 pt-1.5">
+          {row.winner_flag && (
+            <div
+              className={`flex items-center justify-center gap-1 rounded-md px-1.5 py-1 ${
+                dark ? "bg-black/20" : "bg-white/50"
+              }`}
+            >
+              <Crown className={`w-2.5 h-2.5 flex-shrink-0 ${ac.text}`} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img loading="lazy" decoding="async" src={row.winner_flag} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px] flex-shrink-0" />
+              <span className={`truncate text-[9px] md:text-[10px] font-semibold ${dark ? "text-gray-200" : "text-gray-700"}`}>
+                {shortenCountry(row.winner_name ?? "")}
+              </span>
+            </div>
+          )}
+          {row.top_scorer && (
+            <div
+              className={`flex items-center justify-center gap-1 rounded-md px-1.5 py-1 ${
+                dark ? "bg-black/20" : "bg-white/50"
+              }`}
+            >
+              <Star className={`w-2.5 h-2.5 flex-shrink-0 ${ac.text}`} />
+              <span className={`truncate text-[9px] md:text-[10px] font-semibold ${dark ? "text-gray-200" : "text-gray-700"}`}>
+                {row.top_scorer}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
