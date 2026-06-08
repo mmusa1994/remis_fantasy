@@ -2158,11 +2158,15 @@ function StandingsTab({
       if (res.ok) {
         const data = await res.json();
         setModalData(data);
-        // Match-only tournaments have no category section — open matches so the
-        // round tabs are visible right away instead of behind a collapsed header.
+        // Open the matches section by default when it carries the predictions
+        // worth seeing — match-only tournaments, or per-round tournaments where
+        // the round tabs would otherwise sit behind a collapsed header.
         const hasCatPreds = (data.categories ?? []).some((c: any) => c.prediction);
+        const hasMatchPreds = (data.matchPredictions ?? []).length > 0;
         setModalCatsOpen(hasCatPreds);
-        setModalMatchesOpen(!hasCatPreds);
+        setModalMatchesOpen(
+          !hasCatPreds || (lockMode === "per_round" && hasMatchPreds),
+        );
       }
     } finally {
       setModalLoading(false);
@@ -2686,17 +2690,18 @@ function StandingsTab({
                       };
 
                       // When the tournament locks per round, split predictions into "kolo" tabs.
+                      // Matches without a matchday fall into a trailing "Ostalo" bucket so
+                      // none are silently dropped (mirrors the public Matches tab).
+                      const NO_ROUND = -1;
+                      const roundOf = (p: any): number => p.match?.matchday ?? NO_ROUND;
                       const hasRounds =
                         lockMode === "per_round" &&
                         mps.some((p: any) => p.match?.matchday != null);
                       const rounds: number[] = hasRounds
-                        ? Array.from(
-                            new Set<number>(
-                              mps
-                                .map((p: any) => p.match?.matchday)
-                                .filter((d: any): d is number => d != null),
-                            ),
-                          ).sort((a, b) => a - b)
+                        ? Array.from(new Set<number>(mps.map(roundOf))).sort(
+                            (a, b) =>
+                              a === NO_ROUND ? 1 : b === NO_ROUND ? -1 : a - b,
+                          )
                         : [];
                       const activeRound =
                         hasRounds
@@ -2705,7 +2710,7 @@ function StandingsTab({
                             : rounds[0]
                           : null;
                       const visibleMps = hasRounds
-                        ? mps.filter((p: any) => p.match?.matchday === activeRound)
+                        ? mps.filter((p: any) => roundOf(p) === activeRound)
                         : mps;
 
                       return (
@@ -2720,21 +2725,21 @@ function StandingsTab({
                             <span className={`text-[11px] font-bold uppercase tracking-wider ${dark ? "text-gray-400" : "text-gray-500"}`}>
                               {t("standings.matchPredictions", "Match predictions")}
                               <span className={`ml-1.5 text-[10px] font-medium normal-case tracking-normal ${dark ? "text-gray-600" : "text-gray-400"}`}>
-                                ({mps.length})
+                                ({hasRounds ? visibleMps.length : mps.length})
                               </span>
                             </span>
                             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${modalMatchesOpen ? "rotate-180" : ""} ${dark ? "text-gray-500" : "text-gray-400"}`} />
                           </button>
                           {modalMatchesOpen && (
                             <div className="p-2 space-y-2">
-                              {hasRounds && (
-                                <div className="flex gap-1 overflow-x-auto pb-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                              {hasRounds && rounds.length > 1 && (
+                                <div className="flex flex-wrap gap-1 pb-1 px-0.5">
                                   {rounds.map((rd) => (
                                     <button
                                       key={rd}
                                       type="button"
                                       onClick={() => setModalRound(rd)}
-                                      className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
+                                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
                                         rd === activeRound
                                           ? dark
                                             ? `${ac.bg15} ${ac.textBrighter}`
@@ -2744,7 +2749,7 @@ function StandingsTab({
                                             : "bg-gray-100 text-gray-500 hover:text-gray-700"
                                       }`}
                                     >
-                                      {matchdayLabel(rd, lang)}
+                                      {matchdayLabel(rd === NO_ROUND ? null : rd, lang)}
                                     </button>
                                   ))}
                                 </div>
