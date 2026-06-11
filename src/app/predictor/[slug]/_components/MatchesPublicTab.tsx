@@ -765,7 +765,12 @@ function MatchCard({
     draft.away > draft.home;
 
   let countdown = "";
-  const liveNow = match.status === "live";
+  // "Uživo" se prikazuje tek kad stvarno dođe vrijeme odigravanja utakmice.
+  // Utakmice koje je admin zaključao (status !== scheduled) prije kick-offa
+  // se NE prikazuju kao uživo — dobijaju suptilni katanac umjesto crvenog stila.
+  const kickoffReached =
+    match.kickoff_at != null && Date.now() >= Date.parse(match.kickoff_at);
+  const liveNow = !isFinished && kickoffReached;
   if (match.kickoff_at && match.status === "scheduled") {
     const ms = Date.parse(match.kickoff_at) - Date.now();
     if (ms > 0) {
@@ -812,9 +817,12 @@ function MatchCard({
             ? { text: "Pogrešno", cls: "bg-red-500 text-white" }
             : null;
 
+  // Suptilni "zaključano" izgled: sivi okvir + blagi sivi sloj preko kartice.
+  const lockedView = locked && !isFinished && !liveNow && !match.force_unlocked;
+
   return (
     <div
-      className={`rounded-2xl p-3 sm:p-4 transition-colors ${
+      className={`relative rounded-2xl p-3 sm:p-4 transition-colors ${
         liveNow
           ? "border-2 border-red-500 ring-1 ring-red-500/40 " +
             (dark ? "bg-red-950/20" : "bg-red-50/40")
@@ -822,11 +830,23 @@ function MatchCard({
             ? dark
               ? "bg-gray-800/40 border border-gray-700"
               : "bg-gray-50 border border-gray-200"
-            : dark
-              ? "bg-gray-800/60 border border-gray-700 hover:border-gray-600 shadow-md shadow-black/10"
-              : "bg-white border border-gray-200 hover:border-gray-300 shadow-sm"
+            : lockedView
+              ? dark
+                ? "bg-gray-800/40 border border-gray-600/70 ring-1 ring-gray-700/50"
+                : "bg-gray-50 border border-gray-300 ring-1 ring-gray-200"
+              : dark
+                ? "bg-gray-800/60 border border-gray-700 hover:border-gray-600 shadow-md shadow-black/10"
+                : "bg-white border border-gray-200 hover:border-gray-300 shadow-sm"
       }`}
     >
+      {lockedView && (
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-0 z-10 rounded-2xl ${
+            dark ? "bg-gray-950/25" : "bg-gray-500/[0.07]"
+          }`}
+        />
+      )}
       <div className="flex items-center justify-between gap-2 mb-2.5 text-[11px]">
         <div className={`flex items-center gap-1.5 flex-wrap min-w-0 ${dark ? "text-gray-400" : "text-gray-500"}`}>
           {liveNow && (
@@ -870,8 +890,14 @@ function MatchCard({
             </span>
           )}
           {locked && !isFinished && !liveNow && !match.force_unlocked && (
-            <span className={`text-[10px] uppercase font-bold inline-flex items-center gap-1 ${ac.textPair600_400}`}>
-              <Lock className="w-2.5 h-2.5" /> Zaključano
+            <span
+              className={`text-[10px] font-medium tracking-wide inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${
+                dark
+                  ? "bg-gray-800/70 text-gray-400 ring-1 ring-gray-700/60"
+                  : "bg-gray-100 text-gray-500 ring-1 ring-gray-200/80"
+              }`}
+            >
+              <Lock className="w-2.5 h-2.5 opacity-80" /> Zaključano
             </span>
           )}
           {countdown && (
