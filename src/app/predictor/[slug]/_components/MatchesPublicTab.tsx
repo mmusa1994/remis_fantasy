@@ -432,14 +432,14 @@ export default function MatchesPublicTab({
       )}
 
       {/* Spacer so content doesn't slide under the floating save bar */}
-      {completion.total > 0 && <div aria-hidden className="h-44 md:h-0" />}
+      {completion.total > 0 && <div aria-hidden className="h-44 md:h-28" />}
 
       {completion.total > 0 && (
         <div
           style={{
             bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)",
           }}
-          className={`fixed md:sticky md:!bottom-4 left-3 right-3 md:left-auto md:right-auto z-40 md:z-20 md:mt-6 rounded-3xl p-3 md:p-4 backdrop-blur-xl shadow-2xl md:shadow-lg ${
+          className={`fixed md:!bottom-4 left-3 right-3 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[calc(100%-2rem)] md:max-w-5xl z-40 rounded-3xl p-3 md:p-4 backdrop-blur-xl shadow-2xl ${
             theme === "dark"
               ? "bg-gray-900/95 border border-gray-700"
               : "bg-white/95 border border-gray-200"
