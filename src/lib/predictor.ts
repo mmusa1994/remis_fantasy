@@ -295,20 +295,20 @@ export function computeMatchPoints(
 ): number {
   if (match.home_score == null || match.away_score == null) return 0;
 
-  // tačan rezultat
+  // tačan rezultat (implies tačna razlika i pobjednik — nikad manje od nižih nivoa)
   if (
     prediction.home_score === match.home_score &&
     prediction.away_score === match.away_score
   ) {
-    return match.points_exact;
+    return Math.max(match.points_exact, match.points_diff, match.points_winner);
   }
 
   const actualDiff = match.home_score - match.away_score;
   const predDiff = prediction.home_score - prediction.away_score;
 
-  // tačna razlika (npr. 2-1 pred, 3-2 actual)
+  // tačna razlika (npr. 2-1 pred, 3-2 actual) — implies tačan pobjednik
   if (actualDiff === predDiff) {
-    return match.points_diff;
+    return Math.max(match.points_diff, match.points_winner);
   }
 
   // samo tačan pobjednik (smjer)
