@@ -102,9 +102,10 @@ type PageTab =
 // surface on the page picks up the admin-chosen tournament color.
 
 function isLockedClient(
-  t: Pick<Tournament, "registration_lock_at" | "status">,
+  t: Pick<Tournament, "registration_lock_at" | "status" | "predictions_locked">,
   cat: Pick<PredictionCategory, "lock_at">,
 ): boolean {
+  if (t.predictions_locked) return true;
   if (t.status === "locked" || t.status === "finished") return true;
   const now = Date.now();
   if (cat.lock_at && now >= Date.parse(cat.lock_at)) return true;
@@ -720,6 +721,7 @@ export default function TournamentDetailPage() {
                 isWC={isWC}
                 themeBgSrc={themeBg}
                 lockMode={tournament.prediction_lock_mode || "per_match"}
+                matchesLocked={!!tournament.matches_locked}
               />
             ))}
 

@@ -112,6 +112,8 @@ export async function PUT(req: NextRequest) {
     "require_approval",
     "theme_background_image",
     "theme_music_enabled",
+    "predictions_locked",
+    "matches_locked",
   ];
   for (const k of allowed) {
     if (k in body) updates[k] = body[k];

@@ -23,7 +23,9 @@ export async function POST(
 
   const { data: tournament } = await supabaseServer
     .from("predictor_tournaments")
-    .select("id, status, require_approval, prediction_lock_mode, owner_user_id")
+    // select * so a not-yet-migrated DB (missing matches_locked) degrades to
+    // "unlocked" instead of erroring the whole request.
+    .select("*")
     .eq("slug", slug)
     .is("deleted_at", null)
     .maybeSingle();
@@ -49,6 +51,18 @@ export async function POST(
         error: "locked",
         message:
           "Turnir je zaključan ili završen. predikcije se više ne mogu mijenjati.",
+      },
+      { status: 409 },
+    );
+  }
+  // Manual master lock for matches — set by the owner, independent of the
+  // category-prediction lock.
+  if (tournament.matches_locked) {
+    return NextResponse.json(
+      {
+        error: "locked",
+        message:
+          "Utakmice su zaključane od strane organizatora. Predikcije se trenutno ne mogu mijenjati.",
       },
       { status: 409 },
     );

@@ -250,6 +250,39 @@ export default function OwnerTournamentEditor({
     [tournament.id, updatingStatus, showToast, t],
   );
 
+  // Independent master locks: predictions (categories) vs matches. These let
+  // the owner freeze the championship-winner / finalist picks while matches
+  // stay predictable on their own kickoff schedule (and vice-versa).
+  const [lockBusy, setLockBusy] = useState<null | "predictions" | "matches">(
+    null,
+  );
+  const setLock = useCallback(
+    async (field: "predictions_locked" | "matches_locked", value: boolean) => {
+      if (lockBusy) return;
+      setLockBusy(field === "predictions_locked" ? "predictions" : "matches");
+      try {
+        const res = await fetch("/api/predictor/owner/tournaments", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: tournament.id, [field]: value }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Lock update failed");
+        setTournament(data);
+        showToast(
+          value
+            ? t("owner.locks.toast.locked", "Locked")
+            : t("owner.locks.toast.unlocked", "Unlocked"),
+        );
+      } catch (e: any) {
+        showToast(e.message || t("owner.toast.genericError"), false);
+      } finally {
+        setLockBusy(null);
+      }
+    },
+    [tournament.id, lockBusy, showToast, t],
+  );
+
   return (
     <main className="relative min-h-screen w-full bg-theme-background theme-transition">
       <div
@@ -370,12 +403,16 @@ export default function OwnerTournamentEditor({
           </div>
         </div>
 
-        {/* Always-visible status banner — quick switch + safety reminder */}
-        <StatusBanner
+        {/* Single owner-control card: lifecycle status + independent locks. */}
+        <OwnerControls
           dark={dark}
           status={(tournament.status || "draft") as StatusKey}
-          busy={updatingStatus}
-          onChange={setStatus}
+          statusBusy={updatingStatus}
+          onChangeStatus={setStatus}
+          predictionsLocked={!!tournament.predictions_locked}
+          matchesLocked={!!tournament.matches_locked}
+          busy={lockBusy}
+          onToggle={setLock}
         />
 
         {/* Pending join requests — impossible-to-miss callout so the owner can
@@ -453,122 +490,204 @@ export default function OwnerTournamentEditor({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Status banner — always visible under the tabs. Acts as a safety reminder
-// (a tournament in "draft" is invisible to users) and as a one-click switch.
+// Owner controls — one card holding everything: the tournament lifecycle
+// status (draft → published → finished) plus two independent master locks so
+// the owner can freeze the category predictions (winner / finalist) separately
+// from the match-by-match predictions. Consolidated into a single card so it
+// no longer looks like several competing banners.
 // ─────────────────────────────────────────────────────────────────────────────
-function StatusBanner({
+function OwnerControls({
   dark,
   status,
+  statusBusy,
+  onChangeStatus,
+  predictionsLocked,
+  matchesLocked,
   busy,
-  onChange,
+  onToggle,
 }: {
   dark: boolean;
   status: StatusKey;
-  busy: boolean;
-  onChange: (next: StatusKey) => void;
+  statusBusy: boolean;
+  onChangeStatus: (next: StatusKey) => void;
+  predictionsLocked: boolean;
+  matchesLocked: boolean;
+  busy: null | "predictions" | "matches";
+  onToggle: (
+    field: "predictions_locked" | "matches_locked",
+    value: boolean,
+  ) => void;
 }) {
   const { t } = useTranslation("predictor");
 
-  // The next-step CTA depends on current status — guide the user forward.
+  // Lifecycle advance: draft → published → finished. Locking is NOT here — it
+  // lives in the two toggles below. (Legacy "locked" status still → finished.)
   const nextStatus: StatusKey =
     status === "draft"
       ? "published"
       : status === "published"
-        ? "locked"
+        ? "finished"
         : status === "locked"
           ? "finished"
-          : "draft"; // finished → reopen as draft
-
+          : "draft";
   const isDraft = status === "draft";
   const isPublished = status === "published";
-  const isLocked = status === "locked";
-
-  // Colour mapping — draft is amber-warning (most attention-grabbing),
-  // published is green (success), locked is amber (info), finished is gray.
-  const tone = isDraft
-    ? dark
-      ? "border-predictor-primary/40 bg-predictor-primary/[0.07]"
-      : "border-predictor-primary bg-predictor-primary/15"
-    : isPublished
-      ? dark
-        ? "border-emerald-400/30 bg-emerald-500/10"
-        : "border-emerald-500/40 bg-emerald-50"
-      : isLocked
-        ? dark
-          ? "border-amber-400/30 bg-amber-500/10"
-          : "border-amber-400/60 bg-amber-50"
-        : dark
-          ? "border-white/10 bg-white/[0.03]"
-          : "border-gray-200 bg-gray-50";
-
+  const isLockedStatus = status === "locked";
   const dotColor = isDraft
     ? "bg-predictor-primary"
     : isPublished
       ? "bg-emerald-500"
-      : isLocked
+      : isLockedStatus
         ? "bg-amber-400"
         : "bg-gray-400";
-
-  const ctaCls = isDraft
-    ? "inline-flex items-center gap-2 rounded-full bg-predictor-primary px-4 py-2 text-xs font-bold text-gray-900 transition-colors hover:bg-predictor-primary-hover disabled:opacity-50"
-    : `inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-50 ${
+  const chipColor = isDraft
+    ? dark
+      ? "text-predictor-accent-dark"
+      : "text-predictor-accent-light"
+    : isPublished
+      ? dark
+        ? "text-emerald-300"
+        : "text-emerald-700"
+      : isLockedStatus
+        ? dark
+          ? "text-amber-300"
+          : "text-amber-700"
+        : dark
+          ? "text-gray-400"
+          : "text-gray-600";
+  const advanceCls = isDraft
+    ? "inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-predictor-primary px-4 py-2 text-xs font-bold text-gray-900 transition-colors hover:bg-predictor-primary-hover disabled:opacity-50"
+    : `inline-flex flex-shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-50 ${
         dark
           ? "border-white/20 text-gray-200 hover:border-white/40"
           : "border-gray-300 text-gray-800 hover:border-gray-500"
       }`;
 
+  const Row = ({
+    kind,
+    field,
+    locked,
+  }: {
+    kind: "predictions" | "matches";
+    field: "predictions_locked" | "matches_locked";
+    locked: boolean;
+  }) => {
+    const isBusy = busy === kind;
+    return (
+      <div
+        className={`flex items-center justify-between gap-3 rounded-xl border px-3.5 py-3 ${
+          locked
+            ? dark
+              ? "border-amber-400/30 bg-amber-500/10"
+              : "border-amber-300/70 bg-amber-50"
+            : dark
+              ? "border-emerald-400/25 bg-emerald-500/[0.07]"
+              : "border-emerald-400/50 bg-emerald-50/70"
+        }`}
+      >
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span
+            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
+              locked
+                ? dark
+                  ? "bg-amber-500/15 text-amber-300"
+                  : "bg-amber-100 text-amber-700"
+                : dark
+                  ? "bg-emerald-500/15 text-emerald-300"
+                  : "bg-emerald-100 text-emerald-700"
+            }`}
+          >
+            {locked ? (
+              <Lock className="h-4 w-4" />
+            ) : (
+              <Unlock className="h-4 w-4" />
+            )}
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-theme-heading-primary">
+              {t(`owner.locks.${kind}.title`, kind)}
+            </p>
+            <p className="mt-0.5 text-xs leading-snug text-theme-text-secondary">
+              {locked
+                ? t(`owner.locks.${kind}.lockedDesc`, "Locked")
+                : t(`owner.locks.${kind}.openDesc`, "Open")}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => onToggle(field, !locked)}
+          disabled={isBusy}
+          className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors disabled:opacity-50 ${
+            dark
+              ? "border-white/20 text-gray-200 hover:border-white/40"
+              : "border-gray-300 text-gray-800 hover:border-gray-500"
+          }`}
+        >
+          {isBusy
+            ? t("owner.common.saving")
+            : locked
+              ? t("owner.locks.unlockCta", "Unlock")
+              : t("owner.locks.lockCta", "Lock")}
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div
-      className={`mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 sm:px-5 ${tone}`}
+      className={`mb-6 rounded-2xl border p-4 ${
+        dark ? "border-white/10 bg-white/[0.03]" : "border-gray-200 bg-gray-50"
+      }`}
     >
-      <div className="flex min-w-0 items-start gap-3 sm:items-center">
-        <span
-          aria-hidden
-          className={`mt-1 inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full sm:mt-0 ${dotColor} ${
-            isPublished ? "animate-pulse" : ""
-          }`}
-        />
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`text-[10px] font-semibold uppercase tracking-[0.2em] ${
-                isDraft
-                  ? dark
-                    ? "text-predictor-accent-dark"
-                    : "text-predictor-accent-light"
-                  : isPublished
-                    ? dark
-                      ? "text-emerald-300"
-                      : "text-emerald-700"
-                    : isLocked
-                      ? dark
-                        ? "text-amber-300"
-                        : "text-amber-700"
-                      : dark
-                        ? "text-gray-400"
-                        : "text-gray-600"
-              }`}
-            >
-              {t(`owner.status.${status}`, status)}
-            </span>
-            <span className="text-sm font-bold text-theme-heading-primary">
-              {t(`owner.statusBanner.${status}.title`, status)}
-            </span>
-          </div>
-          <p className="mt-0.5 text-xs leading-snug text-theme-text-secondary">
-            {t(`owner.statusBanner.${status}.desc`, "")}
-          </p>
+      {/* Lifecycle status — compact single row */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span
+            aria-hidden
+            className={`inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full ${dotColor} ${
+              isPublished ? "animate-pulse" : ""
+            }`}
+          />
+          <span
+            className={`text-[10px] font-semibold uppercase tracking-[0.2em] ${chipColor}`}
+          >
+            {t(`owner.status.${status}`, status)}
+          </span>
+          <span className="truncate text-sm font-bold text-theme-heading-primary">
+            {t(`owner.statusBanner.${status}.title`, status)}
+          </span>
         </div>
+        <button
+          type="button"
+          onClick={() => onChangeStatus(nextStatus)}
+          disabled={statusBusy}
+          className={advanceCls}
+        >
+          {statusBusy
+            ? t("owner.common.saving")
+            : t(`owner.statusBanner.${status}.cta`, "")}
+          {!statusBusy && <span aria-hidden>→</span>}
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={() => onChange(nextStatus)}
-        disabled={busy}
-        className={ctaCls}
-      >
-        {busy ? t("owner.common.saving") : t(`owner.statusBanner.${status}.cta`, "")}
-        {!busy && <span aria-hidden>→</span>}
-      </button>
+
+      {/* Divider */}
+      <div
+        className={`my-4 h-px w-full ${dark ? "bg-white/10" : "bg-gray-200"}`}
+      />
+
+      {/* Independent locks */}
+      <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-text-secondary">
+        {t("owner.locks.heading", "Locks")}
+      </p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <Row
+          kind="predictions"
+          field="predictions_locked"
+          locked={predictionsLocked}
+        />
+        <Row kind="matches" field="matches_locked" locked={matchesLocked} />
+      </div>
     </div>
   );
 }

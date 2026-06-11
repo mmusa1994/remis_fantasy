@@ -101,6 +101,7 @@ export default function MatchesPublicTab({
   isWC: _isWC = false,
   themeBgSrc: _themeBgSrc = null,
   lockMode = "per_match",
+  matchesLocked = false,
 }: {
   matches: Match[];
   myMatchPredictions: MatchPrediction[];
@@ -112,6 +113,8 @@ export default function MatchesPublicTab({
   isWC?: boolean;
   themeBgSrc?: string | null;
   lockMode?: "per_match" | "per_round";
+  /** Owner master lock for all matches — overrides per-match kickoff rules. */
+  matchesLocked?: boolean;
 }) {
   const { showToast: notify } = useToast();
   const accentBg = ac.bg;
@@ -175,10 +178,10 @@ export default function MatchesPublicTab({
   };
 
   const completion = useMemo(() => {
-    const total = matches.filter((m) => !isMatchLockedClient(m)).length;
+    const total = matches.filter((m) => !(matchesLocked || isMatchLockedClient(m))).length;
     let done = 0;
     for (const m of matches) {
-      if (isMatchLockedClient(m)) continue;
+      if ((matchesLocked || isMatchLockedClient(m))) continue;
       const d = drafts[m.id];
       if (d?.home != null && d?.away != null) done += 1;
     }
@@ -196,7 +199,7 @@ export default function MatchesPublicTab({
         return;
       }
       const items = matches
-        .filter((m) => !isMatchLockedClient(m))
+        .filter((m) => !(matchesLocked || isMatchLockedClient(m)))
         .map((m) => {
           const d = drafts[m.id];
           if (!d || d.home == null || d.away == null) return null;
@@ -343,6 +346,24 @@ export default function MatchesPublicTab({
 
       <ConfettiBurst trigger={confettiTrigger} />
 
+      {matchesLocked && (
+        <div
+          role="status"
+          className={`relative z-10 flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold ${
+            theme === "dark"
+              ? "bg-amber-500/10 border border-amber-400/30 text-amber-200"
+              : "bg-amber-50 border border-amber-300/70 text-amber-800"
+          }`}
+        >
+          <Lock className="h-4 w-4 flex-shrink-0" />
+          <span>
+            {t(
+              "matchesLockedNotice",
+              "Utakmice su zaključane od strane organizatora.",
+            )}
+          </span>
+        </div>
+      )}
 
       {byStage.map(([stage, list]) => (
         <div
@@ -377,7 +398,7 @@ export default function MatchesPublicTab({
           <div className="space-y-2.5">
             {list.map((m) => {
               const d = drafts[m.id] ?? { home: null, away: null };
-              const locked = isMatchLockedClient(m);
+              const locked = (matchesLocked || isMatchLockedClient(m));
               const isFinished = m.status === "finished";
               const userPred = myMatchPredictions.find(
                 (p) => p.match_id === m.id,

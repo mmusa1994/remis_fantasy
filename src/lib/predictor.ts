@@ -107,7 +107,11 @@ export function isLocked(
   tournamentRegistrationLockAt: string | null,
   categoryLockAt: string | null,
   tournamentStatus: string,
+  predictionsLocked = false,
 ): boolean {
+  // Manual master lock for category predictions — set by the tournament owner,
+  // independent of `status` and of match locking.
+  if (predictionsLocked) return true;
   if (tournamentStatus === "locked" || tournamentStatus === "finished") {
     return true;
   }

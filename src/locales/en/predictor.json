@@ -7,9 +7,14 @@
     "errorLabel": "Error"
   },
   "locked": "Locked",
-  "locksAt": "Locks at",
+  "locksAt": "Locks",
   "limits": {
-    "maxGroupsWith3": "You already have 8 groups with 3 teams. This group must stay at 2."
+    "groupCapHit": "Group {{group}}: maximum {{max}} can advance",
+    "totalCapHit": "Maximum {{max}} total",
+    "groupOneHit": "Only 1 winner per group. tap replaces the previous pick",
+    "rankedSwap": "Top {{max}} is full. your earliest pick was replaced",
+    "tooManyForGroup": "You can't pick {{count}} from one group",
+    "groupBelowMin": "Group {{group}} needs at least {{min}} picks"
   },
   "guide": {
     "trigger": "How it works",
@@ -170,7 +175,10 @@
           "locked": "Locked",
           "finished": "Finished"
         },
-        "visibility": { "public": "Public", "private": "Private" },
+        "visibility": {
+          "public": "Public",
+          "private": "Private"
+        },
         "prizePool": "Pool",
         "freeBadge": "Free"
       }
@@ -184,13 +192,34 @@
         "short": "Start from scratch"
       },
       "items": {
-        "wc": { "name": "World Cup 2026", "short": "FIFA World Cup. winner, top scorer, top 4, finalists" },
-        "pl": { "name": "Premier League 2025/26", "short": "English Premier League. winner, top scorer, top 4" },
-        "cl": { "name": "Champions League 2025/26", "short": "UEFA Champions League. winner, finalists, best keeper" },
-        "bundes": { "name": "Bundesliga 2025/26", "short": "German Bundesliga. winner, top scorer, top 3" },
-        "laliga": { "name": "La Liga 2025/26", "short": "Spanish La Liga. winner, top scorer, top 4" },
-        "euroleague": { "name": "EuroLeague Basketball", "short": "EuroLeague. Final Four, MVP, champion" },
-        "f1": { "name": "Formula 1 2026", "short": "F1 season. driver, constructor, pole position" }
+        "wc": {
+          "name": "World Cup 2026",
+          "short": "FIFA World Cup. winner, top scorer, top 4, finalists"
+        },
+        "pl": {
+          "name": "Premier League 2025/26",
+          "short": "English Premier League. winner, top scorer, top 4"
+        },
+        "cl": {
+          "name": "Champions League 2025/26",
+          "short": "UEFA Champions League. winner, finalists, best keeper"
+        },
+        "bundes": {
+          "name": "Bundesliga 2025/26",
+          "short": "German Bundesliga. winner, top scorer, top 3"
+        },
+        "laliga": {
+          "name": "La Liga 2025/26",
+          "short": "Spanish La Liga. winner, top scorer, top 4"
+        },
+        "euroleague": {
+          "name": "EuroLeague Basketball",
+          "short": "EuroLeague. Final Four, MVP, champion"
+        },
+        "f1": {
+          "name": "Formula 1 2026",
+          "short": "F1 season. driver, constructor, pole position"
+        }
       },
       "pickHint": "Click a template to auto-fill the form."
     },
@@ -337,6 +366,25 @@
       "openPublic": "Public page",
       "supportPrefix": "Need help?"
     },
+    "locks": {
+      "heading": "Locks",
+      "unlockCta": "Unlock",
+      "lockCta": "Lock",
+      "predictions": {
+        "title": "Predictions (categories)",
+        "openDesc": "Players can still change the winner, finalist and other categories.",
+        "lockedDesc": "Locked — nobody can change the tournament winner or other categories."
+      },
+      "matches": {
+        "title": "Matches",
+        "openDesc": "Players can enter match scores (each match also auto-locks at kickoff).",
+        "lockedDesc": "Locked — match predictions are frozen."
+      },
+      "toast": {
+        "locked": "Locked",
+        "unlocked": "Unlocked"
+      }
+    },
     "status": {
       "draft": "Draft",
       "published": "Published",
@@ -418,8 +466,8 @@
       },
       "published": {
         "title": "Live and visible",
-        "desc": "Signed-in users can see the tournament and place predictions.",
-        "cta": "Lock predictions"
+        "desc": "Signed-in users can see the tournament and place predictions. Locking predictions and matches is separate (panel below).",
+        "cta": "Finish tournament"
       },
       "locked": {
         "title": "Predictions locked",
@@ -562,12 +610,30 @@
       }
     },
     "categoryTypes": {
-      "single_choice": { "label": "Single choice", "desc": "User picks one option" },
-      "multiple_choice": { "label": "Multiple choice", "desc": "User picks N options (unordered)" },
-      "ranked_top_n": { "label": "Top-N ranked", "desc": "User ranks N options (e.g. top 4)" },
-      "exact_score": { "label": "Exact score", "desc": "User enters score (home : away)" },
-      "numeric": { "label": "Numeric", "desc": "User enters a number" },
-      "free_text": { "label": "Free text", "desc": "User enters text" }
+      "single_choice": {
+        "label": "Single choice",
+        "desc": "User picks one option"
+      },
+      "multiple_choice": {
+        "label": "Multiple choice",
+        "desc": "User picks N options (unordered)"
+      },
+      "ranked_top_n": {
+        "label": "Top-N ranked",
+        "desc": "User ranks N options (e.g. top 4)"
+      },
+      "exact_score": {
+        "label": "Exact score",
+        "desc": "User enters score (home : away)"
+      },
+      "numeric": {
+        "label": "Numeric",
+        "desc": "User enters a number"
+      },
+      "free_text": {
+        "label": "Free text",
+        "desc": "User enters text"
+      }
     },
     "matchesTab": {
       "title": "Matches (optional)",
@@ -757,7 +823,7 @@
     "eternal": "Eternal Table"
   },
   "backToList": "All tournaments",
-  "locksAt": "Locks",
+  "matchesLockedNotice": "Matches are locked by the organizer.",
   "sponsor": "Sponsor",
   "progress": "Predictions completed",
   "noPredictionsToSave": "Nothing to save. make a pick first.",
@@ -797,7 +863,6 @@
     "matchSkipped": "Predictions weren't saved. Reasons: {{reasons}}. Check that matches aren't locked."
   },
   "live": "LIVE",
-  "locked": "Locked",
   "unlockedExtended": "Extended",
   "pointsLabels": {
     "exact": "exact",
@@ -858,14 +923,6 @@
   "groupMinHint": "Min 2 per group advance",
   "groupPicksLabel": "{{count}} from group",
   "groupNeedsMore": "Pick more from group {{group}}",
-  "limits": {
-    "groupCapHit": "Group {{group}}: maximum {{max}} can advance",
-    "totalCapHit": "Maximum {{max}} total",
-    "groupOneHit": "Only 1 winner per group. tap replaces the previous pick",
-    "rankedSwap": "Top {{max}} is full. your earliest pick was replaced",
-    "tooManyForGroup": "You can't pick {{count}} from one group",
-    "groupBelowMin": "Group {{group}} needs at least {{min}} picks"
-  },
   "admin": {
     "explorer": {
       "title": "Predictions overview",
