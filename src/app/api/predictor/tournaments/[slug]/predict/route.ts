@@ -96,6 +96,7 @@ export async function POST(
         cat.lock_at,
         tournament.status,
         tournament.predictions_locked,
+        tournament.predictions_force_unlocked,
       )
     ) {
       skipped.push({ category_id: item.category_id, reason: "locked" });
@@ -134,6 +135,7 @@ export async function POST(
         cat.lock_at,
         tournament.status,
         tournament.predictions_locked,
+        tournament.predictions_force_unlocked,
       );
     });
     if (deletableIds.length > 0) {

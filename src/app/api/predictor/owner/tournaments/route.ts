@@ -80,6 +80,7 @@ export async function PUT(req: NextRequest) {
     "theme_music_enabled",
     "prediction_lock_mode",
     "predictions_locked",
+    "predictions_force_unlocked",
     "matches_locked",
   ];
 

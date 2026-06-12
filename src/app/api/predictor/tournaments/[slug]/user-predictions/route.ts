@@ -68,6 +68,9 @@ export async function GET(
   const now = new Date();
   const lockedCatPreds = (catPredictions ?? []).filter((p) => {
     if (skipLockCheck) return true;
+    // Force-unlocked predictions are editable again, so hide other users'
+    // picks (otherwise they could be copied).
+    if (tournament.predictions_force_unlocked) return false;
     const cat = (activeCategories).find((c: any) => c.id === p.category_id);
     if (!cat) return false;
     if (cat.lock_at && new Date(cat.lock_at) <= now) return true;
@@ -141,8 +144,9 @@ export async function GET(
     categories: (activeCategories).map((c: any) => {
       const pred = lockedCatPreds.find((p) => p.category_id === c.id);
       const isLocked = skipLockCheck || tournamentLocked ||
-        (c.lock_at && new Date(c.lock_at) <= now) ||
-        (tournament.registration_lock_at && new Date(tournament.registration_lock_at) <= now);
+        (!tournament.predictions_force_unlocked &&
+          ((c.lock_at && new Date(c.lock_at) <= now) ||
+            (tournament.registration_lock_at && new Date(tournament.registration_lock_at) <= now)));
       return {
         ...c,
         locked: isLocked,
@@ -150,7 +154,9 @@ export async function GET(
           ? {
               ...pred,
               selected_options: (pred.selected_option_ids ?? []).map(
-                (id: string) => optionMap[id] ?? { label: id },
+                // Orphaned option ID (option deleted/recreated) — don't leak
+                // the raw UUID to the UI.
+                (id: string) => optionMap[id] ?? { label: "—" },
               ),
             }
           : null,

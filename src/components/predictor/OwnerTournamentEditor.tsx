@@ -261,10 +261,19 @@ export default function OwnerTournamentEditor({
       if (lockBusy) return;
       setLockBusy(field === "predictions_locked" ? "predictions" : "matches");
       try {
+        const payload: Record<string, unknown> = {
+          id: tournament.id,
+          [field]: value,
+        };
+        // Eksplicitni "Otključaj" za kategorije mora stvarno otvoriti predikcije
+        // i kad su lock_at / registration_lock_at već prošli.
+        if (field === "predictions_locked") {
+          payload.predictions_force_unlocked = !value;
+        }
         const res = await fetch("/api/predictor/owner/tournaments", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: tournament.id, [field]: value }),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "Lock update failed");

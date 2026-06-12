@@ -102,10 +102,19 @@ type PageTab =
 // surface on the page picks up the admin-chosen tournament color.
 
 function isLockedClient(
-  t: Pick<Tournament, "registration_lock_at" | "status" | "predictions_locked">,
+  t: Pick<
+    Tournament,
+    | "registration_lock_at"
+    | "status"
+    | "predictions_locked"
+    | "predictions_force_unlocked"
+  >,
   cat: Pick<PredictionCategory, "lock_at">,
 ): boolean {
   if (t.predictions_locked) return true;
+  // Vlasnikov eksplicitni "Otključaj" nadjačava vremenske brave — igrač koji
+  // je zaboravio unijeti tip može ga naknadno unijeti.
+  if (t.predictions_force_unlocked) return false;
   if (t.status === "locked" || t.status === "finished") return true;
   const now = Date.now();
   if (cat.lock_at && now >= Date.parse(cat.lock_at)) return true;
@@ -2390,16 +2399,18 @@ function StandingsTab({
                       </span>
                     )}
                   </div>
-                  {(s.winner_flag || s.top_scorer) && (
+                  {(s.winner_flag || s.winner_name || s.top_scorer) && (
                     <div className="mt-0.5 flex items-center gap-1">
-                      {s.winner_flag && (
+                      {(s.winner_flag || s.winner_name) && (
                         <span className={`inline-flex items-center gap-0.5 text-[9px] font-medium ${dark ? "text-gray-500" : "text-gray-400"}`}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img loading="lazy" decoding="async" src={s.winner_flag} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px]" />
+                          {s.winner_flag && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img loading="lazy" decoding="async" src={s.winner_flag} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px]" />
+                          )}
                           {shortenCountry(s.winner_name ?? "")}
                         </span>
                       )}
-                      {s.winner_flag && s.top_scorer && (
+                      {(s.winner_flag || s.winner_name) && s.top_scorer && (
                         <span className={`text-[8px] ${dark ? "text-gray-700" : "text-gray-300"}`}>|</span>
                       )}
                       {s.top_scorer && (
@@ -2906,7 +2917,7 @@ function PodiumCard({
     2: dark ? "bg-gray-400/15 text-gray-200 ring-2 ring-gray-400/40" : "bg-gray-200 text-gray-600 ring-2 ring-gray-300",
     3: dark ? "bg-orange-600/15 text-orange-200 ring-2 ring-orange-700/40" : "bg-orange-100 text-orange-700 ring-2 ring-orange-300",
   }[place];
-  const hasPicks = !!(row.winner_flag || row.top_scorer);
+  const hasPicks = !!(row.winner_flag || row.winner_name || row.top_scorer);
 
   return (
     <div
@@ -2959,15 +2970,17 @@ function PodiumCard({
       {/* Winner & top-scorer picks — pushed to the bottom edge of the card */}
       {hasPicks && (
         <div className="mt-auto w-full min-w-0 space-y-1 pt-1.5">
-          {row.winner_flag && (
+          {(row.winner_flag || row.winner_name) && (
             <div
               className={`flex items-center justify-center gap-1 rounded-md px-1.5 py-1 ${
                 dark ? "bg-black/20" : "bg-white/50"
               }`}
             >
               <Crown className={`w-2.5 h-2.5 flex-shrink-0 ${ac.text}`} />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img loading="lazy" decoding="async" src={row.winner_flag} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px] flex-shrink-0" />
+              {row.winner_flag && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img loading="lazy" decoding="async" src={row.winner_flag} alt="" className="w-3.5 h-2.5 object-cover rounded-[2px] flex-shrink-0" />
+              )}
               <span className={`truncate text-[9px] md:text-[10px] font-semibold ${dark ? "text-gray-200" : "text-gray-700"}`}>
                 {shortenCountry(row.winner_name ?? "")}
               </span>

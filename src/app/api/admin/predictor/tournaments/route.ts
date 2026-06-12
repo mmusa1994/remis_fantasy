@@ -113,6 +113,7 @@ export async function PUT(req: NextRequest) {
     "theme_background_image",
     "theme_music_enabled",
     "predictions_locked",
+    "predictions_force_unlocked",
     "matches_locked",
   ];
   for (const k of allowed) {

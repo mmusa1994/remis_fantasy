@@ -66,6 +66,7 @@ export interface Tournament {
   /** Manual master lock for category predictions (winner/finalist/etc.),
    *  independent of `status` and of match locking. */
   predictions_locked: boolean;
+  predictions_force_unlocked: boolean;
   /** Manual master lock for match-by-match predictions, independent of
    *  `status` and of category locking. Matches also auto-lock at kickoff. */
   matches_locked: boolean;

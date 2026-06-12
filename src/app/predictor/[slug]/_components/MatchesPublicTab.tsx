@@ -399,7 +399,11 @@ export default function MatchesPublicTab({
             {list.map((m) => {
               const d = drafts[m.id] ?? { home: null, away: null };
               const locked = (matchesLocked || isMatchLockedClient(m));
-              const isFinished = m.status === "finished";
+              // Rezultat upisan = utakmica završena, čak i ako admin nije
+              // promijenio status (često ostane "scheduled"/"live").
+              const isFinished =
+                m.status === "finished" ||
+                (m.home_score != null && m.away_score != null);
               const userPred = myMatchPredictions.find(
                 (p) => p.match_id === m.id,
               );
@@ -791,7 +795,11 @@ function MatchCard({
   // se NE prikazuju kao uživo — dobijaju suptilni katanac umjesto crvenog stila.
   const kickoffReached =
     match.kickoff_at != null && Date.now() >= Date.parse(match.kickoff_at);
-  const liveNow = !isFinished && kickoffReached;
+  // "Uživo" traje najviše 3 sata od početka utakmice.
+  const withinLiveWindow =
+    match.kickoff_at != null &&
+    Date.now() < Date.parse(match.kickoff_at) + 3 * 3_600_000;
+  const liveNow = !isFinished && kickoffReached && withinLiveWindow;
   if (match.kickoff_at && match.status === "scheduled") {
     const ms = Date.parse(match.kickoff_at) - Date.now();
     if (ms > 0) {
@@ -845,12 +853,21 @@ function MatchCard({
     <div
       className={`relative rounded-2xl p-3 sm:p-4 transition-colors ${
         liveNow
-          ? "border-2 border-red-500 ring-1 ring-red-500/40 " +
-            (dark ? "bg-red-950/20" : "bg-red-50/40")
+          ? "border-2 border-orange-500 ring-1 ring-orange-500/40 " +
+            (dark ? "bg-orange-950/20" : "bg-orange-50/40")
           : isFinished
-            ? dark
-              ? "bg-gray-800/40 border border-gray-700"
-              : "bg-gray-50 border border-gray-200"
+            ? predOutcome === "correct"
+              ? "border-2 border-green-500 ring-1 ring-green-500/40 " +
+                (dark ? "bg-green-950/20" : "bg-green-50/40")
+              : predOutcome === "diff" || predOutcome === "winner"
+                ? "border-2 border-yellow-500 ring-1 ring-yellow-500/40 " +
+                  (dark ? "bg-yellow-950/20" : "bg-yellow-50/40")
+                : predOutcome === "wrong"
+                  ? "border-2 border-red-500 ring-1 ring-red-500/40 " +
+                    (dark ? "bg-red-950/20" : "bg-red-50/40")
+                  : dark
+                    ? "bg-gray-800/40 border border-gray-700"
+                    : "bg-gray-50 border border-gray-200"
             : lockedView
               ? dark
                 ? "bg-gray-800/40 border border-gray-600/70 ring-1 ring-gray-700/50"
@@ -871,8 +888,24 @@ function MatchCard({
       <div className="flex items-center justify-between gap-2 mb-2.5 text-[11px]">
         <div className={`flex items-center gap-1.5 flex-wrap min-w-0 ${dark ? "text-gray-400" : "text-gray-500"}`}>
           {liveNow && (
-            <span className="font-black uppercase px-1.5 py-0.5 rounded-md bg-red-500 text-white animate-pulse inline-flex items-center gap-1 text-[10px] shadow-sm shadow-red-500/30">
+            <span className="font-black uppercase px-1.5 py-0.5 rounded-md bg-orange-500 text-white animate-pulse inline-flex items-center gap-1 text-[10px] shadow-sm shadow-orange-500/30">
               <Flame className="w-2.5 h-2.5" /> UŽIVO
+            </span>
+          )}
+          {isFinished && (
+            <span
+              className={`font-black uppercase px-1.5 py-0.5 rounded-md text-white inline-flex items-center gap-1 text-[10px] shadow-sm ${
+                predOutcome === "correct"
+                  ? "bg-green-500 shadow-green-500/30"
+                  : predOutcome === "diff" || predOutcome === "winner"
+                    ? "bg-yellow-500 shadow-yellow-500/30"
+                    : predOutcome === "wrong"
+                      ? "bg-red-500 shadow-red-500/30"
+                      : "bg-gray-500 shadow-gray-500/30"
+              }`}
+            >
+              <CheckCircle2 className="w-2.5 h-2.5" />{" "}
+              {lang === "en" ? "FINISHED" : "ZAVRŠENO"}
             </span>
           )}
           {stageLabel && (

@@ -108,10 +108,14 @@ export function isLocked(
   categoryLockAt: string | null,
   tournamentStatus: string,
   predictionsLocked = false,
+  predictionsForceUnlocked = false,
 ): boolean {
   // Manual master lock for category predictions — set by the tournament owner,
   // independent of `status` and of match locking.
   if (predictionsLocked) return true;
+  // Owner's explicit unlock overrides the time locks and status, so a player
+  // who forgot a pick can still enter it after the event started.
+  if (predictionsForceUnlocked) return false;
   if (tournamentStatus === "locked" || tournamentStatus === "finished") {
     return true;
   }

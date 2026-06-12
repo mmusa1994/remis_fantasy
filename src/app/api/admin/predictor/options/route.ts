@@ -10,16 +10,18 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   if (!body?.category_id) return jsonError("category_id is required");
 
-  // Bulk replace mode
+  // Bulk save. Postojeći UUID-ovi opcija se MORAJU sačuvati — korisničke
+  // predikcije ih referenciraju preko selected_option_ids (bez FK), pa bi
+  // delete-all + insert tiho "osiročio" svaki ranije sačuvani tip.
   if (Array.isArray(body.options)) {
-    if (body.replace) {
-      await supabaseServer
-        .from("predictor_options")
-        .delete()
-        .eq("category_id", body.category_id);
-    }
+    const { data: existingRows } = await supabaseServer
+      .from("predictor_options")
+      .select("id")
+      .eq("category_id", body.category_id);
+    const existingIds = new Set((existingRows ?? []).map((r: any) => r.id));
 
     const rows = body.options.map((o: any, idx: number) => ({
+      id: existingIds.has(o.id) ? (o.id as string) : undefined,
       category_id: body.category_id,
       label: o.label,
       label_en: o.label_en ?? null,
@@ -33,12 +35,43 @@ export async function POST(req: NextRequest) {
       correct_rank: o.correct_rank ?? null,
     }));
 
-    const { data, error } = await supabaseServer
-      .from("predictor_options")
-      .insert(rows)
-      .select();
-    if (error) return jsonError(error.message, 500);
-    return NextResponse.json(data ?? []);
+    if (body.replace) {
+      const keepIds = rows
+        .map((r: any) => r.id)
+        .filter(Boolean) as string[];
+      const removeIds = [...existingIds].filter((id) => !keepIds.includes(id));
+      if (removeIds.length > 0) {
+        const { error: delErr } = await supabaseServer
+          .from("predictor_options")
+          .delete()
+          .eq("category_id", body.category_id)
+          .in("id", removeIds);
+        if (delErr) return jsonError(delErr.message, 500);
+      }
+    }
+
+    const toUpdate = rows.filter((r: any) => r.id);
+    const toInsert = rows
+      .filter((r: any) => !r.id)
+      .map(({ id: _id, ...rest }: any) => rest);
+    const saved: any[] = [];
+    if (toUpdate.length > 0) {
+      const { data, error } = await supabaseServer
+        .from("predictor_options")
+        .upsert(toUpdate, { onConflict: "id" })
+        .select();
+      if (error) return jsonError(error.message, 500);
+      saved.push(...(data ?? []));
+    }
+    if (toInsert.length > 0) {
+      const { data, error } = await supabaseServer
+        .from("predictor_options")
+        .insert(toInsert)
+        .select();
+      if (error) return jsonError(error.message, 500);
+      saved.push(...(data ?? []));
+    }
+    return NextResponse.json(saved);
   }
 
   // Single insert

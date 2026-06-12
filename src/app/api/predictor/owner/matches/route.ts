@@ -126,13 +126,30 @@ export async function PUT(req: NextRequest) {
   ];
   for (const k of allowed) if (k in body) updates[k] = body[k];
 
-  const { data, error } = await supabaseServer
+  let { data, error } = await supabaseServer
     .from("predictor_matches")
     .update(updates)
     .eq("id", body.id)
     .select()
     .single();
   if (error) return jsonError(error.message, 500);
+
+  // Rezultat upisan → utakmica je završena, čak i ako je vlasnik ostavio
+  // status na "scheduled"/"live".
+  if (
+    data &&
+    data.home_score != null &&
+    data.away_score != null &&
+    data.status !== "finished"
+  ) {
+    const { data: finished } = await supabaseServer
+      .from("predictor_matches")
+      .update({ status: "finished" })
+      .eq("id", body.id)
+      .select()
+      .single();
+    if (finished) data = finished;
+  }
 
   // Auto rescore if final score was set
   if ("home_score" in updates || "away_score" in updates) {
