@@ -177,11 +177,15 @@ export default function MatchesPublicTab({
     }));
   };
 
+  // Utakmica sa upisanim rezultatom se više ne može tipovati, bez obzira na
+  // status/kickoff (npr. službeni rezultat uz pogrešan datum).
+  const hasResult = (m: Match) => m.home_score != null && m.away_score != null;
+
   const completion = useMemo(() => {
-    const total = matches.filter((m) => !(matchesLocked || isMatchLockedClient(m))).length;
+    const total = matches.filter((m) => !(matchesLocked || isMatchLockedClient(m) || hasResult(m))).length;
     let done = 0;
     for (const m of matches) {
-      if ((matchesLocked || isMatchLockedClient(m))) continue;
+      if ((matchesLocked || isMatchLockedClient(m) || hasResult(m))) continue;
       const d = drafts[m.id];
       if (d?.home != null && d?.away != null) done += 1;
     }
@@ -199,7 +203,7 @@ export default function MatchesPublicTab({
         return;
       }
       const items = matches
-        .filter((m) => !(matchesLocked || isMatchLockedClient(m)))
+        .filter((m) => !(matchesLocked || isMatchLockedClient(m) || hasResult(m)))
         .map((m) => {
           const d = drafts[m.id];
           if (!d || d.home == null || d.away == null) return null;
@@ -800,7 +804,7 @@ function MatchCard({
     match.kickoff_at != null &&
     Date.now() < Date.parse(match.kickoff_at) + 3 * 3_600_000;
   const liveNow = !isFinished && kickoffReached && withinLiveWindow;
-  if (match.kickoff_at && match.status === "scheduled") {
+  if (match.kickoff_at && match.status === "scheduled" && !isFinished) {
     const ms = Date.parse(match.kickoff_at) - Date.now();
     if (ms > 0) {
       const minutes = Math.floor(ms / 60_000);

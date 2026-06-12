@@ -113,10 +113,14 @@ export function isLocked(
   // Manual master lock for category predictions — set by the tournament owner,
   // independent of `status` and of match locking.
   if (predictionsLocked) return true;
-  // Owner's explicit unlock overrides the time locks and status, so a player
-  // who forgot a pick can still enter it after the event started.
+  // A finished tournament reveals the correct answers (is_correct on options),
+  // so it must stay read-only even if a force-unlock was left set earlier —
+  // otherwise players could copy the revealed answers and get rescored.
+  if (tournamentStatus === "finished") return true;
+  // Owner's explicit unlock overrides the time locks and the legacy "locked"
+  // status, so a player who forgot a pick can still enter it mid-event.
   if (predictionsForceUnlocked) return false;
-  if (tournamentStatus === "locked" || tournamentStatus === "finished") {
+  if (tournamentStatus === "locked") {
     return true;
   }
   const now = Date.now();

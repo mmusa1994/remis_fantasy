@@ -112,10 +112,13 @@ function isLockedClient(
   cat: Pick<PredictionCategory, "lock_at">,
 ): boolean {
   if (t.predictions_locked) return true;
+  // Završen turnir otkriva tačne odgovore — mora ostati read-only čak i ako
+  // je force-unlock ostao upaljen.
+  if (t.status === "finished") return true;
   // Vlasnikov eksplicitni "Otključaj" nadjačava vremenske brave — igrač koji
   // je zaboravio unijeti tip može ga naknadno unijeti.
   if (t.predictions_force_unlocked) return false;
-  if (t.status === "locked" || t.status === "finished") return true;
+  if (t.status === "locked") return true;
   const now = Date.now();
   if (cat.lock_at && now >= Date.parse(cat.lock_at)) return true;
   if (t.registration_lock_at && now >= Date.parse(t.registration_lock_at))
@@ -1352,7 +1355,7 @@ function PredictionsTab({
               groupsWith3Count={/^grupa-[a-l]-prolaz$/.test(cat.slug) ? gw3 : undefined}
             />
 
-            {cat.lock_at && !locked && (
+            {cat.lock_at && !locked && Date.parse(cat.lock_at) > Date.now() && (
               <p className="mt-3 text-xs text-theme-text-secondary inline-flex items-center gap-1">
                 <Lock className="w-3 h-3" />
                 {t("locksAt", "Locks at")} {new Date(cat.lock_at).toLocaleString(lang === "bs" ? "sr-Latn" : "en-GB", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}

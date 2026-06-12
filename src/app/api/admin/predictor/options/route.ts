@@ -14,10 +14,13 @@ export async function POST(req: NextRequest) {
   // predikcije ih referenciraju preko selected_option_ids (bez FK), pa bi
   // delete-all + insert tiho "osiročio" svaki ranije sačuvani tip.
   if (Array.isArray(body.options)) {
-    const { data: existingRows } = await supabaseServer
+    const { data: existingRows, error: exErr } = await supabaseServer
       .from("predictor_options")
       .select("id")
       .eq("category_id", body.category_id);
+    // Bez ove provjere bi transijentna greška degradirala sve u insert
+    // (novi UUID-ovi) i opet osiročila predikcije.
+    if (exErr) return jsonError(exErr.message, 500);
     const existingIds = new Set((existingRows ?? []).map((r: any) => r.id));
 
     const rows = body.options.map((o: any, idx: number) => ({

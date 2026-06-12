@@ -266,9 +266,17 @@ export default function OwnerTournamentEditor({
           [field]: value,
         };
         // Eksplicitni "Otključaj" za kategorije mora stvarno otvoriti predikcije
-        // i kad su lock_at / registration_lock_at već prošli.
+        // i kad su lock_at / registration_lock_at već prošli (force unlock).
+        // Ali prije početka događaja samo vraća automatsko vremensko
+        // zaključavanje, da rok i dalje odradi svoje kad dođe vrijeme.
         if (field === "predictions_locked") {
-          payload.predictions_force_unlocked = !value;
+          const now = Date.now();
+          const timeLockEngaged =
+            (!!tournament.registration_lock_at &&
+              now >= Date.parse(tournament.registration_lock_at)) ||
+            (!!tournament.starts_at && now >= Date.parse(tournament.starts_at)) ||
+            (!tournament.registration_lock_at && !tournament.starts_at);
+          payload.predictions_force_unlocked = !value && timeLockEngaged;
         }
         const res = await fetch("/api/predictor/owner/tournaments", {
           method: "PUT",
@@ -1144,10 +1152,19 @@ function SettingsTab({
   async function save() {
     setSaving(true);
     try {
+      // Brave se mijenjaju instant-toggleom iznad tabova, a `form` je snapshot
+      // od mounta — slanje tih polja bi tiho pregazilo svježije stanje
+      // (npr. poništilo "Otključaj").
+      const {
+        predictions_locked: _pl,
+        predictions_force_unlocked: _pfu,
+        matches_locked: _ml,
+        ...body
+      } = form as Tournament & Record<string, unknown>;
       const res = await fetch("/api/predictor/owner/tournaments", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, id: tournament.id }),
+        body: JSON.stringify({ ...body, id: tournament.id }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Save failed");

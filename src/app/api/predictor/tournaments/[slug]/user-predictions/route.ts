@@ -38,8 +38,12 @@ export async function GET(
   }
 
   const lockMode = tournament.prediction_lock_mode || "per_match";
+  // Mirror isLocked() precedence: "finished" is always read-only, but the
+  // legacy "locked" status is overridden by an explicit force-unlock — in
+  // that case picks are editable again, so they must NOT be revealed here.
   const tournamentLocked =
-    tournament.status === "locked" || tournament.status === "finished";
+    tournament.status === "finished" ||
+    (tournament.status === "locked" && !tournament.predictions_force_unlocked);
 
   // Check if viewer is looking at their own predictions
   const viewer = await requireUser();
@@ -69,7 +73,8 @@ export async function GET(
   const lockedCatPreds = (catPredictions ?? []).filter((p) => {
     if (skipLockCheck) return true;
     // Force-unlocked predictions are editable again, so hide other users'
-    // picks (otherwise they could be copied).
+    // picks (otherwise they could be copied). "finished" is exempt — it is
+    // read-only regardless (handled via tournamentLocked above).
     if (tournament.predictions_force_unlocked) return false;
     const cat = (activeCategories).find((c: any) => c.id === p.category_id);
     if (!cat) return false;
