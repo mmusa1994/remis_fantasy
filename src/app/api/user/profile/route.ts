@@ -121,6 +121,33 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // Propagate the new name to the denormalized predictor snapshots so
+    // leaderboards, standings and approval lists reflect the rename across the
+    // whole system. Best-effort: read routes also resolve the canonical name,
+    // so a transient failure here never blocks the profile save.
+    if (name) {
+      const newName = name.trim();
+      const uid = session.user.id;
+      const propagation = await Promise.all([
+        supabaseServer
+          .from('predictor_predictions')
+          .update({ user_display_name: newName })
+          .eq('user_id', uid),
+        supabaseServer
+          .from('predictor_match_predictions')
+          .update({ user_display_name: newName })
+          .eq('user_id', uid),
+        supabaseServer
+          .from('predictor_members')
+          .update({ user_display_name: newName })
+          .eq('user_id', uid),
+      ]);
+      const propErr = propagation.find((r) => r.error)?.error;
+      if (propErr) {
+        console.error('Name propagation warning:', propErr.message);
+      }
+    }
+
     // Format the response
     const profile = {
       id: updatedUser.id,

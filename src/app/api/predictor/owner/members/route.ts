@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
-import { requireTournamentOwner, jsonError } from "@/lib/predictor";
+import {
+  requireTournamentOwner,
+  jsonError,
+  resolveDisplayNames,
+} from "@/lib/predictor";
 
 async function tournamentForMember(memberId: string): Promise<string | null> {
   const { data } = await supabaseServer
@@ -27,7 +31,17 @@ export async function GET(req: NextRequest) {
   if (status) q = q.eq("status", status);
   const { data, error } = await q;
   if (error) return jsonError(error.message, 500);
-  return NextResponse.json(data ?? []);
+
+  // Override the denormalized snapshot with the current profile name so a
+  // rename in /profile reflects in the approval list immediately.
+  const nameMap = await resolveDisplayNames(
+    (data ?? []).map((m: any) => m.user_id),
+  );
+  const members = (data ?? []).map((m: any) => ({
+    ...m,
+    user_display_name: nameMap.get(m.user_id) ?? m.user_display_name,
+  }));
+  return NextResponse.json(members);
 }
 
 export async function PUT(req: NextRequest) {

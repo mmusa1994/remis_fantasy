@@ -93,6 +93,31 @@ export function jsonError(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
 
+// Resolve canonical display names from the `users` table for a set of user IDs.
+// Predictor tables store a denormalized `user_display_name` snapshot taken at
+// write time, so a rename in /profile never reaches them. Display routes call
+// this to override that snapshot with the user's current profile name, making a
+// rename reflect everywhere instantly. Returns id -> name only for non-empty
+// names; callers fall back to the stored snapshot when an id isn't present
+// (e.g. deleted accounts). Always batched — one query for the whole set.
+export async function resolveDisplayNames(
+  userIds: Array<string | null | undefined>,
+): Promise<Map<string, string>> {
+  const ids = Array.from(
+    new Set(userIds.filter((id): id is string => typeof id === "string" && !!id)),
+  );
+  const out = new Map<string, string>();
+  if (ids.length === 0) return out;
+  const { data } = await supabaseServer
+    .from("users")
+    .select("id, name")
+    .in("id", ids);
+  for (const u of data ?? []) {
+    if (u.id && u.name) out.set(u.id as string, u.name as string);
+  }
+  return out;
+}
+
 export function slugify(input: string): string {
   return input
     .toLowerCase()

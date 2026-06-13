@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
-import { isMatchLocked } from "@/lib/predictor";
+import { isMatchLocked, resolveDisplayNames } from "@/lib/predictor";
 import type { Match } from "@/types/predictor";
 
 /**
@@ -47,12 +47,18 @@ export async function GET(
     isMatchLocked(m, { lockMode, allMatches: typedMatches, matchday: m.matchday }),
   );
 
+  // Override the denormalized snapshot with the current profile name so a
+  // rename in /profile reflects in the by-matches view immediately.
+  const nameMap = await resolveDisplayNames(
+    (allPreds ?? []).map((p: any) => p.user_id),
+  );
+
   const predsByMatch = new Map<string, any[]>();
   for (const p of allPreds ?? []) {
     const arr = predsByMatch.get(p.match_id) ?? [];
     arr.push({
       user_id: p.user_id,
-      user_display_name: p.user_display_name,
+      user_display_name: nameMap.get(p.user_id) ?? p.user_display_name,
       home_score: p.home_score,
       away_score: p.away_score,
       points_awarded: p.points_awarded,

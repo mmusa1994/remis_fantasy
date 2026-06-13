@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
-import { requireTournamentOwner, jsonError } from "@/lib/predictor";
+import {
+  requireTournamentOwner,
+  jsonError,
+  resolveDisplayNames,
+} from "@/lib/predictor";
 
 // GET ?tournament_id=...  — everyone with a footprint in the tournament:
 // anyone who has submitted category/match predictions OR has a member row.
@@ -77,8 +81,16 @@ export async function GET(req: NextRequest) {
     r.member_status = m.status ?? null;
   }
 
+  // Override the denormalized snapshot with the current profile name so a
+  // rename in /profile reflects in the owner participant list immediately.
+  const nameMap = await resolveDisplayNames([...map.keys()]);
+
   const rows = Array.from(map.values())
-    .map((r) => ({ ...r, total_points: r.category_points + r.match_points }))
+    .map((r) => ({
+      ...r,
+      user_display_name: nameMap.get(r.user_id) ?? r.user_display_name,
+      total_points: r.category_points + r.match_points,
+    }))
     .sort((a, b) => {
       // most predictions first, then highest points
       const predA = a.category_count + a.match_count;

@@ -4,6 +4,7 @@ import {
   requireTournamentOwner,
   jsonError,
   rescoreTournament,
+  resolveDisplayNames,
 } from "@/lib/predictor";
 
 // GET ?tournament_id=...&category_id=... — list all predictions for a tournament/category
@@ -26,7 +27,17 @@ export async function GET(req: NextRequest) {
   if (categoryId) q = q.eq("category_id", categoryId);
   const { data, error } = await q.limit(500);
   if (error) return jsonError(error.message, 500);
-  return NextResponse.json(data ?? []);
+
+  // Override the denormalized snapshot with the current profile name so a
+  // rename in /profile reflects in the manual-scoring UI immediately.
+  const nameMap = await resolveDisplayNames(
+    (data ?? []).map((p: any) => p.user_id),
+  );
+  const rows = (data ?? []).map((p: any) => ({
+    ...p,
+    user_display_name: nameMap.get(p.user_id) ?? p.user_display_name,
+  }));
+  return NextResponse.json(rows);
 }
 
 // PUT — owner overrides points_awarded / is_scored / locked for one prediction.

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
+import { resolveDisplayNames } from "@/lib/predictor";
 import type { StandingsRow } from "@/types/predictor";
 
 // Javna tabela — kombinuje category-level i match-level predikcije.
@@ -163,9 +164,13 @@ export async function GET(
     }
   }
 
+  // Override the denormalized snapshot with the current profile name so a
+  // rename in /profile reflects on the leaderboard immediately.
+  const nameMap = await resolveDisplayNames(sorted.map((b) => b.user_id));
+
   const standings: StandingsRow[] = sorted.map((b, idx) => ({
     user_id: b.user_id,
-    user_display_name: b.user_display_name,
+    user_display_name: nameMap.get(b.user_id) ?? b.user_display_name,
     user_email: b.user_email,
     total_points: b.category_points + b.match_points,
     category_points: b.category_points,

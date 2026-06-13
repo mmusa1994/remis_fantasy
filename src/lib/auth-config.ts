@@ -319,7 +319,7 @@ export const authOptions = {
 
       return true;
     },
-    async jwt({ token, user, account, trigger }: any) {
+    async jwt({ token, user, account, trigger, session }: any) {
       if (user) {
         token.id = user.id;
         token.isAdmin = user.isAdmin || false;
@@ -328,6 +328,9 @@ export const authOptions = {
 
       // Always fetch fresh user data from database when session is updated
       if (trigger === "update" && token.email) {
+        // Apply a name passed to update({ name }) instantly (no DB round-trip).
+        if (session?.name) token.name = session.name;
+
         const { data: dbUser } = await supabase
           .from("users")
           .select(`
@@ -347,6 +350,9 @@ export const authOptions = {
 
         if (dbUser) {
           token.id = dbUser.id;
+          // Refresh the display name from the DB so a profile rename reflects in
+          // the navbar/dropdown without requiring a logout.
+          token.name = dbUser.name ?? token.name;
           token.subscription = dbUser.subscriptions?.[0] || null;
           token.picture = dbUser.avatar_url;
         }
@@ -373,6 +379,9 @@ export const authOptions = {
 
         if (dbUser) {
           token.id = dbUser.id; // Use the database UUID, not Google ID
+          // Use the user's chosen profile name, not the Google display name, so
+          // a rename survives an OAuth re-login.
+          token.name = dbUser.name ?? token.name;
           token.subscription = dbUser.subscriptions?.[0] || null;
           token.picture = dbUser.avatar_url;
         }
@@ -400,6 +409,8 @@ export const authOptions = {
         session.user.isAdmin = token.isAdmin as boolean;
         session.user.subscription = token.subscription;
         session.user.image = token.picture;
+        // Surface the (possibly refreshed) name so the navbar/dropdown updates.
+        if (token.name) session.user.name = token.name as string;
       }
       return session;
     },
