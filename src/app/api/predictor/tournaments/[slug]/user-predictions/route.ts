@@ -126,9 +126,12 @@ export async function GET(
     });
   });
 
-  // Build match info map for display
+  // Build match info map for display + rank by kickoff order.
+  // typedMatches is already ordered by kickoff_at (ascending) from the query.
   const matchInfoMap: Record<string, any> = {};
-  for (const m of typedMatches) {
+  const matchOrder = new Map<string, number>();
+  typedMatches.forEach((m, i) => {
+    matchOrder.set(m.id, i);
     matchInfoMap[m.id] = {
       home_team: m.home_team,
       home_team_en: m.home_team_en,
@@ -143,7 +146,16 @@ export async function GET(
       matchday: m.matchday,
       kickoff_at: m.kickoff_at,
     };
-  }
+  });
+
+  // Predictions are fetched unordered (keyed only by user/match), so sort them
+  // into the same chronological order as the matches before returning — the
+  // detail modal renders this array as-is.
+  const orderedMatchPreds = [...lockedMatchPreds].sort(
+    (a, b) =>
+      (matchOrder.get(a.match_id) ?? Infinity) -
+      (matchOrder.get(b.match_id) ?? Infinity),
+  );
 
   return NextResponse.json({
     categories: (activeCategories).map((c: any) => {
@@ -167,7 +179,7 @@ export async function GET(
           : null,
       };
     }),
-    matchPredictions: lockedMatchPreds.map((p) => ({
+    matchPredictions: orderedMatchPreds.map((p) => ({
       ...p,
       match: matchInfoMap[p.match_id] ?? null,
     })),
