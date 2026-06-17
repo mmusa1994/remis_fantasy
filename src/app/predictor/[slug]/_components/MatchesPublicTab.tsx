@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
   CalendarClock,
   CheckCircle2,
+  ChevronDown,
   Clock,
   Flame,
   Lock,
@@ -168,6 +169,60 @@ export default function MatchesPublicTab({
       (a, b) => STAGE_ORDER_PUB.indexOf(a[0]) - STAGE_ORDER_PUB.indexOf(b[0]),
     );
   }, [matches, lockMode]);
+
+  // --- Round accordion (collapsible kola) --------------------------------
+  // A round is "past" once it has no editable match left — every match either
+  // has a final result or is locked. This uses the EXACT same per-match
+  // predicate the rest of this tab uses (matchesLocked + result + per-match
+  // isMatchLockedClient(m) — the same trio the completion bar, submit() and
+  // each MatchCard.locked use), so a round is never collapsed or marked "done"
+  // while it still holds a match the user can edit and save. A finished match
+  // is already caught by isMatchLockedClient (status !== "scheduled" ⇒ locked),
+  // while an admin-extended (force_unlocked) match reads as not locked and so
+  // keeps its round open. The first round that still has a predictable match is
+  // the "active" round and opens by default; past rounds stay collapsed, so the
+  // user can fold away a finished round (1. kolo) and predict the next (2. kolo).
+  const roundIsPast = (list: Match[]) =>
+    matchesLocked ||
+    list.every(
+      (m) =>
+        (m.home_score != null && m.away_score != null) ||
+        isMatchLockedClient(m),
+    );
+
+  const activeSectionKey = useMemo(() => {
+    for (const [key, list] of byStage) {
+      if (!roundIsPast(list)) return key;
+    }
+    // Nothing left to predict → keep the last round open.
+    return byStage.length ? byStage[byStage.length - 1][0] : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [byStage, tick, matchesLocked]);
+
+  // `null` until the user manually toggles a section. While null, the open set
+  // is DERIVED from the active round, so the correct round is already expanded
+  // on first paint (no async-load flash) and auto-advances as rounds settle —
+  // without ever yanking shut a round the user is still editing (an editable
+  // round is by definition not yet "past", so it stays the active one). Once
+  // the user toggles, their explicit set takes over and we stop auto-managing.
+  const [openOverride, setOpenOverride] = useState<Set<string> | null>(null);
+  const openSections = useMemo(
+    () =>
+      openOverride ??
+      new Set(activeSectionKey != null ? [activeSectionKey] : []),
+    [openOverride, activeSectionKey],
+  );
+
+  const toggleSection = (key: string) => {
+    setOpenOverride((prev) => {
+      const next = new Set(
+        prev ?? (activeSectionKey != null ? [activeSectionKey] : []),
+      );
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const update = (mid: string, patch: Partial<Draft>) => {
     setDirty(true);
@@ -369,67 +424,113 @@ export default function MatchesPublicTab({
         </div>
       )}
 
-      {byStage.map(([stage, list]) => (
-        <div
-          key={stage}
-          className={`relative z-10 rounded-2xl p-3 sm:p-5 backdrop-blur-md ${
-            theme === "dark"
-              ? "bg-gray-900/60 border border-gray-700/50"
-              : "bg-white/75 border border-gray-200/70 shadow-sm"
-          }`}
-        >
+      {byStage.map(([stage, list]) => {
+        const open = openSections.has(stage);
+        const past = roundIsPast(list);
+        const label = MATCHDAY_LABELS[Number(stage)]
+          ? matchdayLabel(Number(stage), lang)
+          : t(`stage.${stage}`, STAGE_LABELS_PUB[stage] ?? stage);
+        return (
           <div
-            className={`flex items-center gap-2 mb-3 pb-2.5 border-b ${
-              theme === "dark" ? "border-gray-700/60" : "border-gray-200/80"
+            key={stage}
+            className={`relative z-10 rounded-2xl backdrop-blur-md overflow-hidden ${
+              theme === "dark"
+                ? "bg-gray-900/60 border border-gray-700/50"
+                : "bg-white/75 border border-gray-200/70 shadow-sm"
             }`}
           >
-            <div className={`w-1 h-5 rounded-full ${accentBg}`} />
-            <h3
-              className={`text-sm font-black uppercase tracking-wider ${theme === "dark" ? "text-white" : "text-gray-900"}`}
-            >
-              {MATCHDAY_LABELS[Number(stage)]
-                ? matchdayLabel(Number(stage), lang)
-                : t(`stage.${stage}`, STAGE_LABELS_PUB[stage] ?? stage)}
-            </h3>
-            <span
-              className={`text-[11px] font-medium ${
-                theme === "dark" ? "text-gray-500" : "text-gray-500"
+            <button
+              type="button"
+              onClick={() => toggleSection(stage)}
+              aria-expanded={open}
+              aria-controls={`round-panel-${stage}`}
+              className={`w-full flex items-center gap-2 p-3 sm:p-5 text-left transition-colors ${
+                theme === "dark" ? "hover:bg-gray-800/40" : "hover:bg-gray-50"
               }`}
             >
-              {t("matchesCount", { count: list.length })}
-            </span>
-          </div>
-          <div className="space-y-2.5">
-            {list.map((m) => {
-              const d = drafts[m.id] ?? { home: null, away: null };
-              const locked = (matchesLocked || isMatchLockedClient(m));
-              // Rezultat upisan = utakmica završena, čak i ako admin nije
-              // promijenio status (često ostane "scheduled"/"live").
-              const isFinished =
-                m.status === "finished" ||
-                (m.home_score != null && m.away_score != null);
-              const userPred = myMatchPredictions.find(
-                (p) => p.match_id === m.id,
-              );
-              return (
-                <MatchCard
-                  key={m.id}
-                  match={m}
-                  draft={d}
-                  onChange={(patch) => update(m.id, patch)}
-                  locked={locked}
-                  disabled={locked || authStatus !== "authenticated"}
-                  isFinished={isFinished}
-                  userPred={userPred}
-                  theme={theme}
-                  ac={ac}
-                  lang={lang}
+              <div
+                className={`w-1 h-5 rounded-full ${
+                  past
+                    ? theme === "dark"
+                      ? "bg-gray-600"
+                      : "bg-gray-300"
+                    : accentBg
+                }`}
+              />
+              <h3
+                className={`text-sm font-black uppercase tracking-wider ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+              >
+                {label}
+              </h3>
+              <span
+                className={`text-[11px] font-medium ${
+                  theme === "dark" ? "text-gray-500" : "text-gray-500"
+                }`}
+              >
+                {t("matchesCount", { count: list.length })}
+              </span>
+              {past && (
+                <CheckCircle2
+                  className={`w-3.5 h-3.5 flex-shrink-0 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}
                 />
-              );
-            })}
+              )}
+              <ChevronDown
+                aria-hidden
+                className={`ml-auto w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
+                  open ? "rotate-180" : ""
+                } ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}
+              />
+            </button>
+            <AnimatePresence initial={false}>
+              {open && (
+                <motion.div
+                  key="panel"
+                  id={`round-panel-${stage}`}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div
+                    className={`space-y-2.5 px-3 sm:px-5 pb-3 sm:pb-5 pt-3 border-t ${
+                      theme === "dark" ? "border-gray-700/60" : "border-gray-200/80"
+                    }`}
+                  >
+                    {list.map((m) => {
+                      const d = drafts[m.id] ?? { home: null, away: null };
+                      const locked = (matchesLocked || isMatchLockedClient(m));
+                      // Rezultat upisan = utakmica završena, čak i ako admin nije
+                      // promijenio status (često ostane "scheduled"/"live").
+                      const isFinished =
+                        m.status === "finished" ||
+                        (m.home_score != null && m.away_score != null);
+                      const userPred = myMatchPredictions.find(
+                        (p) => p.match_id === m.id,
+                      );
+                      return (
+                        <MatchCard
+                          key={m.id}
+                          match={m}
+                          draft={d}
+                          onChange={(patch) => update(m.id, patch)}
+                          locked={locked}
+                          disabled={locked || authStatus !== "authenticated"}
+                          isFinished={isFinished}
+                          userPred={userPred}
+                          theme={theme}
+                          ac={ac}
+                          lang={lang}
+                        />
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {error && (
         <div
