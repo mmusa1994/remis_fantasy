@@ -199,6 +199,22 @@ export default function MatchesPublicTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [byStage, tick, matchesLocked]);
 
+  // Display order: aktuelno kolo na vrh, predstojeća kola ispod, a završena
+  // (past) kola na dno. Numerička/stage osnova ostaje za sortiranje unutar
+  // svake grupe; samo se aktivno kolo izdvaja na vrh i bude odmah dostupno.
+  const orderedSections = useMemo(() => {
+    const active: [string, Match[]][] = [];
+    const upcoming: [string, Match[]][] = [];
+    const past: [string, Match[]][] = [];
+    for (const entry of byStage) {
+      if (entry[0] === activeSectionKey) active.push(entry);
+      else if (roundIsPast(entry[1])) past.push(entry);
+      else upcoming.push(entry);
+    }
+    return [...active, ...upcoming, ...past];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [byStage, activeSectionKey, tick, matchesLocked]);
+
   // `null` until the user manually toggles a section. While null, the open set
   // is DERIVED from the active round, so the correct round is already expanded
   // on first paint (no async-load flash) and auto-advances as rounds settle —
@@ -424,7 +440,7 @@ export default function MatchesPublicTab({
         </div>
       )}
 
-      {byStage.map(([stage, list]) => {
+      {orderedSections.map(([stage, list]) => {
         const open = openSections.has(stage);
         const past = roundIsPast(list);
         const label = MATCHDAY_LABELS[Number(stage)]

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, Unlock, Check, X, Ban, Trash2 } from "lucide-react";
+import { Lock, Unlock, Check, X, Ban, Trash2, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -2597,6 +2597,141 @@ function MatchesTab({
     return Array.from(mds.entries()).sort((a, b) => a[0] - b[0]);
   }, [list]);
 
+  // ── Grouping: split matches into upcoming (no result yet) and finished
+  // (result entered), each grouped by round (kolo). Avoids an endless flat
+  // scroll — upcoming rounds open by default, finished rounds collapsed and
+  // tucked below so they stay one click away.
+  const hasResult = (m: Match) => m.home_score != null && m.away_score != null;
+  const { upcomingGroups, finishedGroups, hasMatchdays } = useMemo(() => {
+    const hasMd = list.some((m) => m.matchday != null);
+    const byKickoff = (a: Match, b: Match) => {
+      const ta = a.kickoff_at ? Date.parse(a.kickoff_at) : Infinity;
+      const tb = b.kickoff_at ? Date.parse(b.kickoff_at) : Infinity;
+      return ta - tb;
+    };
+    const group = (arr: Match[]) => {
+      const m = new Map<string, Match[]>();
+      for (const match of arr) {
+        const key = hasMd ? String(match.matchday ?? 0) : "all";
+        const g = m.get(key) ?? [];
+        g.push(match);
+        m.set(key, g);
+      }
+      for (const g of m.values()) g.sort(byKickoff);
+      return Array.from(m.entries()).sort((a, b) => Number(a[0]) - Number(b[0]));
+    };
+    return {
+      upcomingGroups: group(list.filter((m) => !hasResult(m))),
+      finishedGroups: group(list.filter(hasResult)),
+      hasMatchdays: hasMd,
+    };
+  }, [list]);
+
+  // Open-section state. `null` = use defaults (all upcoming rounds open,
+  // finished collapsed); once the owner toggles anything we honour their set.
+  const [openSections, setOpenSections] = useState<Set<string> | null>(null);
+  const defaultOpen = useMemo(
+    () => new Set(upcomingGroups.map(([k]) => `u:${k}`)),
+    [upcomingGroups],
+  );
+  const openSet = openSections ?? defaultOpen;
+  const toggleSection = (key: string) =>
+    setOpenSections((prev) => {
+      const next = new Set(prev ?? defaultOpen);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const renderRow = (m: Match) => {
+    const homeName = localizedMatchHomeTeam(m, lang);
+    const awayName = localizedMatchAwayTeam(m, lang);
+    const stageName = localizedMatchStageLabel(m, lang) || m.stage;
+    return (
+      <div
+        key={m.id}
+        className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 ${cls.cardSubtle(dark)}`}
+      >
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-theme-heading-primary">
+            <TeamChip logoUrl={m.home_logo_url} name={homeName} />
+            {m.home_score != null ? (
+              <span
+                className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs font-black tabular-nums ${
+                  dark ? "bg-white/8 text-white" : "bg-gray-100 text-gray-900"
+                }`}
+              >
+                {m.home_score}
+                <span className={dark ? "text-gray-500" : "text-gray-400"}>:</span>
+                {m.away_score}
+              </span>
+            ) : (
+              <span className="text-theme-text-secondary text-xs">vs</span>
+            )}
+            <TeamChip logoUrl={m.away_logo_url} name={awayName} />
+          </div>
+          <div className="mt-0.5 text-[11px] text-theme-text-secondary">
+            {m.kickoff_at
+              ? new Date(m.kickoff_at).toLocaleString(lang === "bs" ? "sr-Latn" : "en-GB", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+              : t("owner.matchesTab.noKickoff")}{" "}
+            · {stageName}
+            {m.matchday != null && (
+              <span className={cls.badgeAccent(dark) + " ml-1"}>
+                {lang === "bs" ? `${m.matchday}. kolo` : `MD${m.matchday}`}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setEditing(m)} className={cls.secondaryBtn(dark)}>
+            {t("owner.common.edit")}
+          </button>
+          <button type="button" onClick={() => remove(m.id)} className={cls.dangerBtn(dark)}>
+            ×
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderSection = (
+    prefix: "u" | "f",
+    key: string,
+    label: string,
+    ms: Match[],
+  ) => {
+    const sKey = `${prefix}:${key}`;
+    const isOpen = openSet.has(sKey);
+    return (
+      <div
+        key={sKey}
+        className={`overflow-hidden rounded-xl border ${dark ? "border-white/8" : "border-gray-200"}`}
+      >
+        <button
+          type="button"
+          onClick={() => toggleSection(sKey)}
+          className={`flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left transition-colors ${
+            dark ? "bg-white/[0.02] hover:bg-white/[0.04]" : "bg-gray-50/60 hover:bg-gray-100/70"
+          }`}
+        >
+          <span className="flex items-center gap-2 text-sm font-bold text-theme-heading-primary">
+            {label}
+            <span className="text-[11px] font-medium text-theme-text-secondary">
+              {ms.length}
+            </span>
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 flex-shrink-0 text-theme-text-secondary transition-transform ${isOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        {isOpen && <div className="space-y-2 p-2">{ms.map(renderRow)}</div>}
+      </div>
+    );
+  };
+
+  const roundLabel = (key: string) =>
+    lang === "bs" ? `${key}. kolo` : `MD${key}`;
+
   return (
     <>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -2739,67 +2874,45 @@ function MatchesTab({
           {t("owner.matchesTab.empty")}
         </div>
       ) : (
-        <div className="space-y-2">
-          {list.map((m) => {
-            const homeName = localizedMatchHomeTeam(m, lang);
-            const awayName = localizedMatchAwayTeam(m, lang);
-            const stageName = localizedMatchStageLabel(m, lang) || m.stage;
-            return (
-            <div
-              key={m.id}
-              className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 ${cls.cardSubtle(dark)}`}
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-theme-heading-primary">
-                  <TeamChip logoUrl={m.home_logo_url} name={homeName} />
-                  {m.home_score != null ? (
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs font-black tabular-nums ${
-                        dark
-                          ? "bg-white/8 text-white"
-                          : "bg-gray-100 text-gray-900"
-                      }`}
-                    >
-                      {m.home_score}
-                      <span className={dark ? "text-gray-500" : "text-gray-400"}>:</span>
-                      {m.away_score}
-                    </span>
-                  ) : (
-                    <span className="text-theme-text-secondary text-xs">vs</span>
+        <div className="space-y-6">
+          {/* Predstojeće utakmice — bez upisanog rezultata, po kolima, otvorena */}
+          {upcomingGroups.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="px-1 text-xs font-bold uppercase tracking-wide text-theme-text-secondary">
+                {lang === "bs" ? "Predstojeće utakmice" : "Upcoming matches"}
+              </h3>
+              {hasMatchdays
+                ? upcomingGroups.map(([k, ms]) =>
+                    renderSection("u", k, roundLabel(k), ms),
+                  )
+                : (
+                    <div className="space-y-2">
+                      {upcomingGroups[0]?.[1].map(renderRow)}
+                    </div>
                   )}
-                  <TeamChip logoUrl={m.away_logo_url} name={awayName} />
-                </div>
-                <div className="mt-0.5 text-[11px] text-theme-text-secondary">
-                  {m.kickoff_at
-                    ? new Date(m.kickoff_at).toLocaleString(lang === "bs" ? "sr-Latn" : "en-GB", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-                    : t("owner.matchesTab.noKickoff")}{" "}
-                  · {stageName}
-                  {m.matchday != null && (
-                    <span className={cls.badgeAccent(dark) + " ml-1"}>
-                      {lang === "bs" ? `${m.matchday}. kolo` : `MD${m.matchday}`}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditing(m)}
-                  className={cls.secondaryBtn(dark)}
-                >
-                  {t("owner.common.edit")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => remove(m.id)}
-                  className={cls.dangerBtn(dark)}
-                >
-                  ×
-                </button>
-              </div>
             </div>
-            );
-          })}
+          )}
+
+          {/* Završene utakmice — rezultat upisan, po kolima, sklopljeno (accordion) */}
+          {finishedGroups.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="px-1 text-xs font-bold uppercase tracking-wide text-theme-text-secondary">
+                {lang === "bs" ? "Završene utakmice" : "Finished matches"}
+              </h3>
+              {finishedGroups.map(([k, ms]) =>
+                renderSection(
+                  "f",
+                  k,
+                  hasMatchdays
+                    ? roundLabel(k)
+                    : lang === "bs"
+                      ? "Završene"
+                      : "Finished",
+                  ms,
+                ),
+              )}
+            </div>
+          )}
         </div>
       )}
 

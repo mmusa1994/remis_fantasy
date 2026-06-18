@@ -2149,6 +2149,154 @@ function StandingsTab({
   const [matchStandings, setMatchStandings] = useState<any[]>([]);
   const [matchStandingsLoading, setMatchStandingsLoading] = useState(false);
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
+  const [openRounds, setOpenRounds] = useState<Set<string> | null>(null);
+
+  // "Po utakmicama" grupisano po kolima: aktuelno kolo (najniže koje još nije
+  // odigrano do kraja) ide na vrh, ostala predstojeća ispod, a završena kola
+  // (sve utakmice imaju rezultat) na dno. Ako turnir nema kola → null (flat).
+  const matchRounds = useMemo(() => {
+    const hasMd = matchStandings.some((m: any) => m.matchday != null);
+    if (!hasMd) return null;
+    const byKickoff = (a: any, b: any) => {
+      const ta = a.kickoff_at ? Date.parse(a.kickoff_at) : Infinity;
+      const tb = b.kickoff_at ? Date.parse(b.kickoff_at) : Infinity;
+      return ta - tb;
+    };
+    const map = new Map<string, any[]>();
+    for (const m of matchStandings) {
+      const key = String(m.matchday ?? 0);
+      const arr = map.get(key) ?? [];
+      arr.push(m);
+      map.set(key, arr);
+    }
+    const entries = Array.from(map.entries())
+      .map(([key, ms]) => {
+        ms.sort(byKickoff);
+        return {
+          key,
+          matches: ms,
+          finished: ms.every((m: any) => m.home_score != null),
+          // Otključano kolo = trenutno se pogađa (utakmica ima locked === false).
+          open: ms.some((m: any) => m.locked === false),
+        };
+      })
+      .sort((a, b) => Number(a.key) - Number(b.key));
+    // Aktuelno kolo je otključano kolo ako postoji; inače najniže neodigrano.
+    const activeKey =
+      entries.find((e) => e.open)?.key ??
+      entries.find((e) => !e.finished)?.key ??
+      null;
+    const ordered = [
+      ...entries.filter((e) => e.key === activeKey),
+      ...entries.filter((e) => e.key !== activeKey && !e.finished),
+      ...entries.filter((e) => e.finished),
+    ];
+    return { ordered, activeKey };
+  }, [matchStandings]);
+
+  const openRoundSet =
+    openRounds ?? new Set(matchRounds?.activeKey != null ? [matchRounds.activeKey] : []);
+  const toggleRound = (key: string) =>
+    setOpenRounds((prev) => {
+      const next = new Set(
+        prev ?? (matchRounds?.activeKey != null ? [matchRounds.activeKey] : []),
+      );
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const renderMatchRow = (m: any) => {
+    const home = lang === "en" && m.home_team_en ? m.home_team_en : m.home_team;
+    const away = lang === "en" && m.away_team_en ? m.away_team_en : m.away_team;
+    const flg = (code: string) => (code ? `https://flagcdn.com/w20/${code}.png` : null);
+    const isOpen = expandedMatch === m.id;
+    const hasResult = m.home_score != null;
+    // Otključana utakmica (kolo se još pogađa): zaključan pregled bez tipova.
+    const unlocked = m.locked === false;
+    return (
+      <div key={m.id} className={`rounded-xl border overflow-hidden ${dark ? "border-white/8" : "border-gray-200"}`}>
+        <button
+          type="button"
+          disabled={unlocked}
+          onClick={() => !unlocked && setExpandedMatch(isOpen ? null : m.id)}
+          className={`w-full flex items-center gap-2 px-3 py-2.5 transition-colors ${
+            unlocked
+              ? "cursor-default " + (dark ? "bg-white/[0.02]" : "bg-gray-50/60")
+              : dark ? "bg-white/[0.04] hover:bg-white/[0.07]" : "bg-gray-50 hover:bg-gray-100"
+          }`}
+        >
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            {flg(m.home_team_code) && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img loading="lazy" decoding="async" src={flg(m.home_team_code)!} alt="" className="w-5 h-3.5 object-cover rounded-[2px] flex-shrink-0" />
+            )}
+            <span className={`text-xs font-bold truncate ${dark ? "text-white" : "text-gray-900"}`}>{home}</span>
+            {hasResult ? (
+              <span className={`text-xs font-black tabular-nums px-1.5 py-0.5 rounded-md ${
+                dark ? "bg-white/10 text-white" : "bg-gray-200 text-gray-900"
+              }`}>{m.home_score}:{m.away_score}</span>
+            ) : (
+              <span className={`text-[10px] ${dark ? "text-gray-600" : "text-gray-400"}`}>vs</span>
+            )}
+            <span className={`text-xs font-bold truncate ${dark ? "text-white" : "text-gray-900"}`}>{away}</span>
+            {flg(m.away_team_code) && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img loading="lazy" decoding="async" src={flg(m.away_team_code)!} alt="" className="w-5 h-3.5 object-cover rounded-[2px] flex-shrink-0" />
+            )}
+          </div>
+          {unlocked ? (
+            <span className={`inline-flex items-center gap-1 text-[10px] font-semibold flex-shrink-0 ${dark ? "text-gray-500" : "text-gray-400"}`}>
+              <Lock className="w-3 h-3" />
+              {lang === "bs" ? "otključano" : "open"}
+            </span>
+          ) : (
+            <>
+              <span className={`text-[10px] font-medium flex-shrink-0 ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                {m.predictions.length} {lang === "bs" ? "tip." : "pred."}
+              </span>
+              <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""} ${dark ? "text-gray-500" : "text-gray-400"}`} />
+            </>
+          )}
+        </button>
+        {isOpen && m.predictions.length > 0 && (
+          <div className={`border-t ${dark ? "border-white/5" : "border-gray-100"}`}>
+            {m.predictions.map((p: any, i: number) => {
+              const isExact = hasResult && p.home_score === m.home_score && p.away_score === m.away_score;
+              const predictedWinner = p.home_score > p.away_score ? "home" : p.home_score < p.away_score ? "away" : "draw";
+              const actualWinner = hasResult ? (m.home_score > m.away_score ? "home" : m.home_score < m.away_score ? "away" : "draw") : null;
+              const gotWinner = actualWinner && predictedWinner === actualWinner;
+              return (
+                <div key={i} className={`flex items-center gap-2 px-3 py-1.5 ${
+                  i > 0 ? (dark ? "border-t border-white/5" : "border-t border-gray-50") : ""
+                } ${isExact ? (dark ? "bg-emerald-500/10" : "bg-emerald-50") : ""}`}>
+                  <span className={`text-[11px] font-medium truncate flex-1 min-w-0 ${dark ? "text-gray-300" : "text-gray-700"}`}>
+                    {p.user_display_name || "?"}
+                  </span>
+                  <span className={`text-[13px] font-black tabular-nums flex-shrink-0 ${
+                    isExact
+                      ? "text-emerald-500"
+                      : gotWinner
+                        ? dark ? "text-amber-300" : "text-amber-600"
+                        : dark ? "text-gray-400" : "text-gray-600"
+                  }`}>
+                    {p.home_score}:{p.away_score}
+                  </span>
+                  {p.is_scored && (
+                    <span className={`text-[9px] font-black tabular-nums w-6 text-right flex-shrink-0 ${
+                      (p.points_awarded ?? 0) > 0 ? (dark ? "text-emerald-400" : "text-emerald-600") : (dark ? "text-gray-600" : "text-gray-400")
+                    }`}>
+                      +{p.points_awarded ?? 0}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const loadMatchStandings = useCallback(async () => {
     setMatchStandingsLoading(true);
@@ -2451,84 +2599,57 @@ function StandingsTab({
             }`}>
               {t("standings.noLockedMatches", "No locked matches yet.")}
             </div>
-          ) : (
-            matchStandings.map((m: any) => {
-              const home = lang === "en" && m.home_team_en ? m.home_team_en : m.home_team;
-              const away = lang === "en" && m.away_team_en ? m.away_team_en : m.away_team;
-              const flg = (code: string) => code ? `https://flagcdn.com/w20/${code}.png` : null;
-              const isOpen = expandedMatch === m.id;
-              const hasResult = m.home_score != null;
+          ) : matchRounds ? (
+            matchRounds.ordered.map(({ key, matches, finished, open: roundOpen }) => {
+              const isActive = key === matchRounds.activeKey;
+              const open = openRoundSet.has(key);
+              const label = lang === "bs" ? `${key}. kolo` : `MD${key}`;
               return (
-                <div key={m.id} className={`rounded-xl border overflow-hidden ${dark ? "border-white/8" : "border-gray-200"}`}>
+                <div
+                  key={`round-${key}`}
+                  className={`rounded-2xl border overflow-hidden ${dark ? "border-white/10" : "border-gray-200"}`}
+                >
                   <button
                     type="button"
-                    onClick={() => setExpandedMatch(isOpen ? null : m.id)}
-                    className={`w-full flex items-center gap-2 px-3 py-2.5 transition-colors ${
-                      dark ? "bg-white/[0.04] hover:bg-white/[0.07]" : "bg-gray-50 hover:bg-gray-100"
+                    onClick={() => toggleRound(key)}
+                    className={`w-full flex items-center gap-2 px-3.5 py-3 transition-colors ${
+                      dark ? "bg-white/[0.05] hover:bg-white/[0.08]" : "bg-gray-100/70 hover:bg-gray-200/60"
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                      {flg(m.home_team_code) && (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img loading="lazy" decoding="async" src={flg(m.home_team_code)!} alt="" className="w-5 h-3.5 object-cover rounded-[2px] flex-shrink-0" />
-                      )}
-                      <span className={`text-xs font-bold truncate ${dark ? "text-white" : "text-gray-900"}`}>{home}</span>
-                      {hasResult ? (
-                        <span className={`text-xs font-black tabular-nums px-1.5 py-0.5 rounded-md ${
-                          dark ? "bg-white/10 text-white" : "bg-gray-200 text-gray-900"
-                        }`}>{m.home_score}:{m.away_score}</span>
-                      ) : (
-                        <span className={`text-[10px] ${dark ? "text-gray-600" : "text-gray-400"}`}>vs</span>
-                      )}
-                      <span className={`text-xs font-bold truncate ${dark ? "text-white" : "text-gray-900"}`}>{away}</span>
-                      {flg(m.away_team_code) && (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img loading="lazy" decoding="async" src={flg(m.away_team_code)!} alt="" className="w-5 h-3.5 object-cover rounded-[2px] flex-shrink-0" />
-                      )}
-                    </div>
-                    <span className={`text-[10px] font-medium flex-shrink-0 ${dark ? "text-gray-500" : "text-gray-400"}`}>
-                      {m.predictions.length} {lang === "bs" ? "tip." : "pred."}
+                    <div className={`w-1 h-5 rounded-full ${finished ? (dark ? "bg-gray-600" : "bg-gray-300") : accentBg}`} />
+                    <span className={`text-sm font-black uppercase tracking-wider ${dark ? "text-white" : "text-gray-900"}`}>
+                      {label}
                     </span>
-                    <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""} ${dark ? "text-gray-500" : "text-gray-400"}`} />
+                    {isActive && (
+                      <span className={`text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-full ${accentText} ${dark ? ac.bg15 : ac.bgPale}`}>
+                        {lang === "bs" ? "aktuelno" : "live"}
+                      </span>
+                    )}
+                    <span className={`text-[11px] font-medium ${dark ? "text-gray-500" : "text-gray-500"}`}>
+                      {matches.length}
+                    </span>
+                    {finished && (
+                      <CheckCircle2 className={`w-3.5 h-3.5 flex-shrink-0 ${dark ? "text-gray-500" : "text-gray-400"}`} />
+                    )}
+                    <ChevronDown className={`ml-auto w-4 h-4 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""} ${dark ? "text-gray-400" : "text-gray-500"}`} />
                   </button>
-                  {isOpen && m.predictions.length > 0 && (
-                    <div className={`border-t ${dark ? "border-white/5" : "border-gray-100"}`}>
-                      {m.predictions.map((p: any, i: number) => {
-                        const isExact = hasResult && p.home_score === m.home_score && p.away_score === m.away_score;
-                        const predictedWinner = p.home_score > p.away_score ? "home" : p.home_score < p.away_score ? "away" : "draw";
-                        const actualWinner = hasResult ? (m.home_score > m.away_score ? "home" : m.home_score < m.away_score ? "away" : "draw") : null;
-                        const gotWinner = actualWinner && predictedWinner === actualWinner;
-                        return (
-                          <div key={i} className={`flex items-center gap-2 px-3 py-1.5 ${
-                            i > 0 ? (dark ? "border-t border-white/5" : "border-t border-gray-50") : ""
-                          } ${isExact ? (dark ? "bg-emerald-500/10" : "bg-emerald-50") : ""}`}>
-                            <span className={`text-[11px] font-medium truncate flex-1 min-w-0 ${dark ? "text-gray-300" : "text-gray-700"}`}>
-                              {p.user_display_name || "?"}
-                            </span>
-                            <span className={`text-[13px] font-black tabular-nums flex-shrink-0 ${
-                              isExact
-                                ? "text-emerald-500"
-                                : gotWinner
-                                  ? dark ? "text-amber-300" : "text-amber-600"
-                                  : dark ? "text-gray-400" : "text-gray-600"
-                            }`}>
-                              {p.home_score}:{p.away_score}
-                            </span>
-                            {p.is_scored && (
-                              <span className={`text-[9px] font-black tabular-nums w-6 text-right flex-shrink-0 ${
-                                (p.points_awarded ?? 0) > 0 ? (dark ? "text-emerald-400" : "text-emerald-600") : (dark ? "text-gray-600" : "text-gray-400")
-                              }`}>
-                                +{p.points_awarded ?? 0}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
+                  {open && (
+                    <div className={`space-y-2 p-2.5 border-t ${dark ? "border-white/5" : "border-gray-100"}`}>
+                      {roundOpen && (
+                        <p className={`px-1 pb-0.5 text-[11px] ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                          {lang === "bs"
+                            ? "Kolo je otključano — tipovi se prikazuju nakon zaključavanja. Tipuj u tabu Predikcije."
+                            : "Round is open — predictions show after it locks. Submit yours in the Predictions tab."}
+                        </p>
+                      )}
+                      {matches.map(renderMatchRow)}
                     </div>
                   )}
                 </div>
               );
             })
+          ) : (
+            matchStandings.map(renderMatchRow)
           )}
         </div>
       )}

@@ -47,6 +47,25 @@ export async function GET(
     isMatchLocked(m, { lockMode, allMatches: typedMatches, matchday: m.matchday }),
   );
 
+  // Aktuelno (otključano) kolo: najniže kolo koje još nije zaključano i nema
+  // upisan rezultat. Prikazujemo ga u "po utakmicama" listi da bude jasno koje
+  // se kolo trenutno pogađa — ali BEZ tuđih tipova (procurili bi prije
+  // zaključavanja). Tipuje se na tabu Predikcije; ovdje je samo zaključan
+  // pregled fixtura označen kao aktuelno.
+  const lockedIds = new Set(lockedMatches.map((m) => m.id));
+  const openMatches = typedMatches.filter(
+    (m) => !lockedIds.has(m.id) && m.home_score == null && m.matchday != null,
+  );
+  let activeRound: number | null = null;
+  for (const m of openMatches) {
+    const md = m.matchday as number;
+    if (activeRound == null || md < activeRound) activeRound = md;
+  }
+  const activeRoundMatches =
+    activeRound != null
+      ? openMatches.filter((m) => m.matchday === activeRound)
+      : [];
+
   // Override the denormalized snapshot with the current profile name so a
   // rename in /profile reflects in the by-matches view immediately.
   const nameMap = await resolveDisplayNames(
@@ -67,7 +86,7 @@ export async function GET(
     predsByMatch.set(p.match_id, arr);
   }
 
-  const result = lockedMatches.map((m) => ({
+  const buildRow = (m: Match, locked: boolean) => ({
     id: m.id,
     home_team: m.home_team,
     home_team_en: (m as any).home_team_en ?? null,
@@ -80,10 +99,19 @@ export async function GET(
     kickoff_at: m.kickoff_at,
     stage_label: m.stage_label,
     matchday: m.matchday,
-    predictions: (predsByMatch.get(m.id) ?? []).sort(
-      (a: any, b: any) => (b.points_awarded ?? 0) - (a.points_awarded ?? 0),
-    ),
-  }));
+    locked,
+    // Otključano kolo: nikad ne otkrivamo tipove dok se kolo ne zaključa.
+    predictions: locked
+      ? (predsByMatch.get(m.id) ?? []).sort(
+          (a: any, b: any) => (b.points_awarded ?? 0) - (a.points_awarded ?? 0),
+        )
+      : [],
+  });
+
+  const result = [
+    ...lockedMatches.map((m) => buildRow(m, true)),
+    ...activeRoundMatches.map((m) => buildRow(m, false)),
+  ];
 
   return NextResponse.json(result);
 }
