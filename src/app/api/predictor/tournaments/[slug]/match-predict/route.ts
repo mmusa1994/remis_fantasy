@@ -4,6 +4,7 @@ import {
   requireUser,
   jsonError,
   isMatchLocked,
+  computeMatchPoints,
   checkMembership,
 } from "@/lib/predictor";
 import type { SubmitMatchPredictionItem, Match } from "@/types/predictor";
@@ -56,17 +57,11 @@ export async function POST(
     );
   }
   // Manual master lock for matches — set by the owner, independent of the
-  // category-prediction lock.
-  if (tournament.matches_locked) {
-    return NextResponse.json(
-      {
-        error: "locked",
-        message:
-          "Utakmice su zaključane od strane organizatora. Predikcije se trenutno ne mogu mijenjati.",
-      },
-      { status: 409 },
-    );
-  }
+  // category-prediction lock. A per-match `force_unlocked` flag is the owner's
+  // explicit "let this person enter a late pick" override and beats BOTH the
+  // master lock and the kickoff/result lock, so we no longer reject the whole
+  // request here — each item is checked individually below.
+  const masterLocked = !!tournament.matches_locked;
 
   // approval check — the owner (and admins) bypass their own approval gate
   const isOwner =
@@ -125,13 +120,16 @@ export async function POST(
       skipped.push({ match_id: item.match_id, reason: "not_found" });
       continue;
     }
-    if (
+    // `force_unlocked` short-circuits isMatchLocked → the match stays open even
+    // after kickoff / a final result, and also bypasses the master lock.
+    const locked =
       isMatchLocked(m, {
         lockMode,
         allMatches: typedMatches,
         matchday: m.matchday,
-      })
-    ) {
+      }) ||
+      (masterLocked && !m.force_unlocked);
+    if (locked) {
       skipped.push({ match_id: item.match_id, reason: "locked" });
       continue;
     }
@@ -144,14 +142,26 @@ export async function POST(
       skipped.push({ match_id: item.match_id, reason: "invalid_score" });
       continue;
     }
+    // If the match already has a final result (a late pick on an owner-unlocked
+    // match), score it on the spot so the player doesn't sit at 0 pts waiting
+    // for a manual rebodovanje. Same computeMatchPoints used everywhere: exact
+    // result → points_exact (3), correct outcome → points_winner (1), miss → 0.
+    const matchHasResult = m.home_score != null && m.away_score != null;
+    const predHome = Number(item.home_score);
+    const predAway = Number(item.away_score);
+    const points = matchHasResult
+      ? computeMatchPoints(m, { home_score: predHome, away_score: predAway })
+      : 0;
     rows.push({
       tournament_id: tournament.id,
       match_id: item.match_id,
       user_id: userId,
       user_email: userEmail,
       user_display_name: userName,
-      home_score: Number(item.home_score),
-      away_score: Number(item.away_score),
+      home_score: predHome,
+      away_score: predAway,
+      points_awarded: points,
+      is_scored: matchHasResult,
     });
   }
 

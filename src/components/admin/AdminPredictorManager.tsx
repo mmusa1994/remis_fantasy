@@ -2512,8 +2512,10 @@ function MatchRow({
           theme === "dark" ? "border-gray-800" : "border-gray-200"
         }`}
       >
-        {(autoLocked || match.force_unlocked) &&
-          match.status === "scheduled" && (
+        {/* Otključavanje radi i za odigrane/započete utakmice (autoLocked je
+            true kad status nije "scheduled"), da zakašnjeli učesnik može upisati
+            predikciju i kad je rezultat već unesen. */}
+        {(autoLocked || match.force_unlocked) && (
             <button
               onClick={toggleUnlock}
               className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, Unlock, Check, X, Ban, Trash2, ChevronDown } from "lucide-react";
+import { Lock, Unlock, Check, X, Ban, Trash2, ChevronDown, UserPlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -2504,6 +2504,8 @@ function MatchesTab({
   const [lockingRound, setLockingRound] = useState(false);
   const [roundConfirm, setRoundConfirm] = useState<{ md: number; action: "lock" | "unlock" } | null>(null);
   const [rescoring, setRescoring] = useState(false);
+  // Utakmica za koju owner upisuje tip u ime igrača (propušten/zakašnjeli tip).
+  const [pickFor, setPickFor] = useState<Match | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2627,11 +2629,15 @@ function MatchesTab({
     };
   }, [list]);
 
-  // Open-section state. `null` = use defaults (all upcoming rounds open,
-  // finished collapsed); once the owner toggles anything we honour their set.
+  // Open-section state. `null` = use defaults; once the owner toggles anything
+  // we honour their set.
   const [openSections, setOpenSections] = useState<Set<string> | null>(null);
+  // Default: samo aktuelno (prvo predstojeće) kolo je otvoreno; ostala
+  // predstojeća kola i sva završena su sklopljena — owner upisuje rezultate bez
+  // beskonačnog skrolanja. upcomingGroups su sortirane po kolu rastuće, pa je
+  // [0] najranije kolo koje još ima utakmice bez rezultata = aktuelno kolo.
   const defaultOpen = useMemo(
-    () => new Set(upcomingGroups.map(([k]) => `u:${k}`)),
+    () => new Set(upcomingGroups.length ? [`u:${upcomingGroups[0][0]}`] : []),
     [upcomingGroups],
   );
   const openSet = openSections ?? defaultOpen;
@@ -2683,6 +2689,15 @@ function MatchesTab({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPickFor(m)}
+            title={lang === "bs" ? "Upiši tip u ime igrača" : "Enter a pick for a player"}
+            className={`inline-flex items-center gap-1.5 ${cls.secondaryBtn(dark)}`}
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            {lang === "bs" ? "Tip igrača" : "Player pick"}
+          </button>
           <button type="button" onClick={() => setEditing(m)} className={cls.secondaryBtn(dark)}>
             {t("owner.common.edit")}
           </button>
@@ -2934,7 +2949,220 @@ function MatchesTab({
           showToast={showToast}
         />
       )}
+
+      {pickFor && (
+        <OnBehalfPredictionForm
+          match={pickFor}
+          tournamentId={tournament.id}
+          dark={dark}
+          lang={lang}
+          onClose={() => setPickFor(null)}
+          onSaved={(msg) => {
+            setPickFor(null);
+            load();
+            showToast(msg);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function OnBehalfPredictionForm({
+  match,
+  tournamentId,
+  dark,
+  lang,
+  onClose,
+  onSaved,
+}: {
+  match: Match;
+  tournamentId: string;
+  dark: boolean;
+  lang: "bs" | "en";
+  onClose: () => void;
+  onSaved: (msg: string) => void;
+}) {
+  const [participants, setParticipants] = useState<
+    Array<{ user_id: string; name: string }>
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState("");
+  const [home, setHome] = useState("");
+  const [away, setAway] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/predictor/owner/participants?tournament_id=${tournamentId}`,
+        );
+        if (res.ok && active) {
+          const rows = await res.json();
+          setParticipants(
+            (rows ?? []).map((r: any) => ({
+              user_id: r.user_id,
+              name: r.user_display_name || r.user_email || "Nepoznat igrač",
+            })),
+          );
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [tournamentId]);
+
+  const homeName = localizedMatchHomeTeam(match, lang);
+  const awayName = localizedMatchAwayTeam(match, lang);
+  const hasResult = match.home_score != null && match.away_score != null;
+
+  const save = async () => {
+    setErr(null);
+    if (!userId) {
+      setErr(lang === "bs" ? "Izaberi igrača." : "Pick a player.");
+      return;
+    }
+    if (home === "" || away === "") {
+      setErr(lang === "bs" ? "Unesi rezultat." : "Enter a score.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/predictor/owner/match-predictions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          match_id: match.id,
+          user_id: userId,
+          home_score: Number(home),
+          away_score: Number(away),
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j?.error || "Greška pri upisu");
+      onSaved(
+        j.scored
+          ? lang === "bs"
+            ? `Tip upisan i bodovan (+${j.points})`
+            : `Pick saved and scored (+${j.points})`
+          : lang === "bs"
+            ? "Tip upisan"
+            : "Pick saved",
+      );
+    } catch (e) {
+      setErr((e as Error)?.message || "Greška");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`relative w-full max-w-md rounded-2xl p-5 ${
+          dark
+            ? "bg-gray-900 border border-gray-700"
+            : "bg-white border border-gray-200 shadow-2xl"
+        }`}
+      >
+        <h3 className={`text-base font-black ${dark ? "text-white" : "text-gray-900"}`}>
+          {lang === "bs" ? "Upiši tip u ime igrača" : "Enter a pick for a player"}
+        </h3>
+        <p className="mt-1 mb-4 text-xs text-theme-text-secondary">
+          {homeName} <span className="opacity-60">vs</span> {awayName}
+          {hasResult && (
+            <span className="ml-1">
+              · {lang === "bs" ? "rezultat" : "result"}{" "}
+              <b>
+                {match.home_score}:{match.away_score}
+              </b>
+            </span>
+          )}
+        </p>
+
+        <div className="space-y-3">
+          <Field label={lang === "bs" ? "Igrač" : "Player"}>
+            <select
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              disabled={loading}
+              className={cls.input(dark)}
+            >
+              <option value="">
+                {loading
+                  ? lang === "bs"
+                    ? "Učitavam…"
+                    : "Loading…"
+                  : lang === "bs"
+                    ? "— izaberi igrača —"
+                    : "— pick a player —"}
+              </option>
+              {participants.map((p) => (
+                <option key={p.user_id} value={p.user_id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={homeName}>
+              <input
+                type="number"
+                min={0}
+                value={home}
+                onChange={(e) => setHome(e.target.value)}
+                placeholder="0"
+                className={`${cls.input(dark)} text-center text-lg font-bold`}
+              />
+            </Field>
+            <Field label={awayName}>
+              <input
+                type="number"
+                min={0}
+                value={away}
+                onChange={(e) => setAway(e.target.value)}
+                placeholder="0"
+                className={`${cls.input(dark)} text-center text-lg font-bold`}
+              />
+            </Field>
+          </div>
+
+          {err && <p className="text-xs font-semibold text-red-500">{err}</p>}
+        </div>
+
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button type="button" onClick={onClose} className={cls.secondaryBtn(dark)}>
+            {lang === "bs" ? "Otkaži" : "Cancel"}
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className={cls.primaryBtn}
+          >
+            {saving
+              ? lang === "bs"
+                ? "Upisujem…"
+                : "Saving…"
+              : lang === "bs"
+                ? "Upiši i boduj"
+                : "Save & score"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -170,25 +170,30 @@ export default function MatchesPublicTab({
     );
   }, [matches, lockMode]);
 
+  // Utakmica sa upisanim rezultatom se više ne može tipovati, bez obzira na
+  // status/kickoff (npr. službeni rezultat uz pogrešan datum).
+  const hasResult = (m: Match) => m.home_score != null && m.away_score != null;
+
+  // A match accepts (late) predictions when the owner has force-unlocked it —
+  // even if it already has a result, has kicked off, or is finished. That one
+  // switch is the owner's "let this person enter their pick" override and beats
+  // both the master lock and the per-match kickoff/result lock. Otherwise a
+  // match is editable only while it isn't locked and has no result yet.
+  // Declared here — above roundIsPast and the activeSectionKey/orderedSections
+  // useMemos that call it during render — to avoid a temporal-dead-zone
+  // ReferenceError ("Cannot access 'isEditable' before initialization").
+  const isEditable = (m: Match) =>
+    !!m.force_unlocked ||
+    (!matchesLocked && !isMatchLockedClient(m) && !hasResult(m));
+
   // --- Round accordion (collapsible kola) --------------------------------
-  // A round is "past" once it has no editable match left — every match either
-  // has a final result or is locked. This uses the EXACT same per-match
-  // predicate the rest of this tab uses (matchesLocked + result + per-match
-  // isMatchLockedClient(m) — the same trio the completion bar, submit() and
-  // each MatchCard.locked use), so a round is never collapsed or marked "done"
-  // while it still holds a match the user can edit and save. A finished match
-  // is already caught by isMatchLockedClient (status !== "scheduled" ⇒ locked),
-  // while an admin-extended (force_unlocked) match reads as not locked and so
-  // keeps its round open. The first round that still has a predictable match is
-  // the "active" round and opens by default; past rounds stay collapsed, so the
-  // user can fold away a finished round (1. kolo) and predict the next (2. kolo).
-  const roundIsPast = (list: Match[]) =>
-    matchesLocked ||
-    list.every(
-      (m) =>
-        (m.home_score != null && m.away_score != null) ||
-        isMatchLockedClient(m),
-    );
+  // A round is "past" once no match in it still accepts predictions. A
+  // force-unlocked match keeps its round open (isEditable === true) even with a
+  // final result, so a late pick stays reachable instead of being folded away.
+  // The first round that still has a predictable match is the "active" round and
+  // opens by default; past rounds stay collapsed, so the user can fold away a
+  // finished round (1. kolo) and predict the next (2. kolo).
+  const roundIsPast = (list: Match[]) => list.every((m) => !isEditable(m));
 
   const activeSectionKey = useMemo(() => {
     for (const [key, list] of byStage) {
@@ -248,15 +253,11 @@ export default function MatchesPublicTab({
     }));
   };
 
-  // Utakmica sa upisanim rezultatom se više ne može tipovati, bez obzira na
-  // status/kickoff (npr. službeni rezultat uz pogrešan datum).
-  const hasResult = (m: Match) => m.home_score != null && m.away_score != null;
-
   const completion = useMemo(() => {
-    const total = matches.filter((m) => !(matchesLocked || isMatchLockedClient(m) || hasResult(m))).length;
+    const total = matches.filter((m) => isEditable(m)).length;
     let done = 0;
     for (const m of matches) {
-      if ((matchesLocked || isMatchLockedClient(m) || hasResult(m))) continue;
+      if (!isEditable(m)) continue;
       const d = drafts[m.id];
       if (d?.home != null && d?.away != null) done += 1;
     }
@@ -274,7 +275,7 @@ export default function MatchesPublicTab({
         return;
       }
       const items = matches
-        .filter((m) => !(matchesLocked || isMatchLockedClient(m) || hasResult(m)))
+        .filter((m) => isEditable(m))
         .map((m) => {
           const d = drafts[m.id];
           if (!d || d.home == null || d.away == null) return null;
@@ -515,12 +516,17 @@ export default function MatchesPublicTab({
                   >
                     {list.map((m) => {
                       const d = drafts[m.id] ?? { home: null, away: null };
-                      const locked = (matchesLocked || isMatchLockedClient(m));
+                      const editable = isEditable(m);
+                      const locked = !editable;
                       // Rezultat upisan = utakmica završena, čak i ako admin nije
-                      // promijenio status (često ostane "scheduled"/"live").
+                      // promijenio status (često ostane "scheduled"/"live"). Ali
+                      // ako je vlasnik ručno otključao utakmicu (force_unlocked),
+                      // prikazujemo polja za unos a NE konačan rezultat, da
+                      // zakašnjeli učesnik može upisati svoju predikciju.
                       const isFinished =
-                        m.status === "finished" ||
-                        (m.home_score != null && m.away_score != null);
+                        !editable &&
+                        (m.status === "finished" ||
+                          (m.home_score != null && m.away_score != null));
                       const userPred = myMatchPredictions.find(
                         (p) => p.match_id === m.id,
                       );

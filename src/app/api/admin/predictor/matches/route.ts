@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
-import { requireAdmin, jsonError } from "@/lib/predictor";
+import { requireAdmin, jsonError, rescoreMatch } from "@/lib/predictor";
 
 // GET ?tournament_id=...  — sve utakmice turnira
 export async function GET(req: NextRequest) {
@@ -122,13 +122,41 @@ export async function PUT(req: NextRequest) {
   ];
   for (const k of allowed) if (k in body) updates[k] = body[k];
 
-  const { data, error } = await supabaseServer
+  let { data, error } = await supabaseServer
     .from("predictor_matches")
     .update(updates)
     .eq("id", body.id)
     .select()
     .single();
   if (error) return jsonError(error.message, 500);
+
+  // Rezultat upisan → utakmica je završena, čak i ako je admin ostavio status
+  // na "scheduled"/"live".
+  if (
+    data &&
+    data.home_score != null &&
+    data.away_score != null &&
+    data.status !== "finished"
+  ) {
+    const { data: finished } = await supabaseServer
+      .from("predictor_matches")
+      .update({ status: "finished" })
+      .eq("id", body.id)
+      .select()
+      .single();
+    if (finished) data = finished;
+  }
+
+  // Auto rescore if a final score was set/changed here (mirrors the owner route)
+  // so a result entered via the generic match-edit form still scores every
+  // prediction instead of leaving correct picks at 0.
+  if ("home_score" in updates || "away_score" in updates) {
+    try {
+      await rescoreMatch(body.id);
+    } catch (e) {
+      console.error("rescoreMatch failed", e);
+    }
+  }
   return NextResponse.json(data);
 }
 

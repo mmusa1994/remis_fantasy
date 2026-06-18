@@ -28,9 +28,9 @@ CREATE TABLE IF NOT EXISTS predictor_matches (
     CHECK (status IN ('scheduled','live','finished','postponed','cancelled')),
   home_score INT,                      -- konačni rezultat (admin upisuje)
   away_score INT,
-  points_exact INT NOT NULL DEFAULT 5, -- poeni za tačan rezultat
-  points_diff INT NOT NULL DEFAULT 3,  -- poeni za tačnu razliku (npr. 2-1 i 3-2)
-  points_winner INT NOT NULL DEFAULT 2,-- poeni za tačnog pobjednika (smjer)
+  points_exact INT NOT NULL DEFAULT 3,  -- poeni za tačan rezultat
+  points_diff INT NOT NULL DEFAULT 1,   -- tačna razlika se broji kao tačan ishod
+  points_winner INT NOT NULL DEFAULT 1, -- poeni za tačan ishod (pobjednik / neriješeno)
   sort_order INT DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
