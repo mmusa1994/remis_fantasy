@@ -199,15 +199,15 @@ export default function MatchesPublicTab({
     for (const [key, list] of byStage) {
       if (!roundIsPast(list)) return key;
     }
-    // Nothing left to predict → keep the last round open.
-    return byStage.length ? byStage[byStage.length - 1][0] : null;
+    return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [byStage, tick, matchesLocked]);
 
   // Display order: aktuelno kolo na vrh, predstojeća kola ispod, a završena
-  // (past) kola na dno. Numerička/stage osnova ostaje za sortiranje unutar
-  // svake grupe; samo se aktivno kolo izdvaja na vrh i bude odmah dostupno.
+  // (past) kola na dno. Ako NEMA aktivnog kola (sve zaključano ili gotovo),
+  // prikazujemo prirodan redoslijed po matchdayu — Finale ostaje na dnu.
   const orderedSections = useMemo(() => {
+    if (activeSectionKey == null) return byStage;
     const active: [string, Match[]][] = [];
     const upcoming: [string, Match[]][] = [];
     const past: [string, Match[]][] = [];
@@ -226,19 +226,13 @@ export default function MatchesPublicTab({
   // without ever yanking shut a round the user is still editing (an editable
   // round is by definition not yet "past", so it stays the active one). Once
   // the user toggles, their explicit set takes over and we stop auto-managing.
-  const [openOverride, setOpenOverride] = useState<Set<string> | null>(null);
-  const openSections = useMemo(
-    () =>
-      openOverride ??
-      new Set(activeSectionKey != null ? [activeSectionKey] : []),
-    [openOverride, activeSectionKey],
+  const [openSections, setOpenSections] = useState<Set<string>>(
+    () => new Set(),
   );
 
   const toggleSection = (key: string) => {
-    setOpenOverride((prev) => {
-      const next = new Set(
-        prev ?? (activeSectionKey != null ? [activeSectionKey] : []),
-      );
+    setOpenSections((prev) => {
+      const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
@@ -672,6 +666,7 @@ function ScoreRow({
   dark: boolean;
   ac: AccentClasses;
 }) {
+  const { t } = useTranslation("predictor");
   const showFinal = finalScore != null;
   const value = draft ?? 0;
   const inc = () => onChange(Math.min(99, (draft ?? 0) + 1));
@@ -721,7 +716,7 @@ function ScoreRow({
         onPointerCancel={cancelHold}
         onContextMenu={(e) => e.preventDefault()}
         disabled={disabled || showFinal}
-        aria-label={`${team}. tap za +1 gol, drži za reset`}
+        aria-label={`${team}. ${t("tapTeamHint")}`}
         className={`flex-1 min-w-0 flex items-center gap-2 rounded-xl px-1.5 py-1 transition-all active:scale-[0.99] ${
           disabled || showFinal
             ? "cursor-default"
@@ -762,7 +757,7 @@ function ScoreRow({
             type="button"
             onClick={dec}
             disabled={disabled || value === 0}
-            aria-label="Smanji rezultat"
+            aria-label={t("incDec.dec")}
             className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black select-none transition-all active:scale-95 ${
               disabled || value === 0
                 ? dark
@@ -804,7 +799,7 @@ function ScoreRow({
             type="button"
             onClick={inc}
             disabled={disabled || value >= 99}
-            aria-label="Povećaj rezultat"
+            aria-label={t("incDec.inc")}
             className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black select-none transition-all active:scale-95 ${
               disabled
                 ? dark
@@ -844,6 +839,7 @@ function MatchCard({
   ac: AccentClasses;
   lang: "en" | "bs";
 }) {
+  const { t } = useTranslation("predictor");
   const accentText = ac.text;
   const dark = theme === "dark";
   const homeName =
@@ -908,10 +904,12 @@ function MatchCard({
   };
 
   const homeLead =
+    !isFinished &&
     draft.home != null &&
     draft.away != null &&
     draft.home > draft.away;
   const awayLead =
+    !isFinished &&
     draft.home != null &&
     draft.away != null &&
     draft.away > draft.home;
@@ -936,7 +934,7 @@ function MatchCard({
       if (days > 0) countdown = `${days}d ${hours % 24}h`;
       else if (hours > 0) countdown = `${hours}h ${minutes % 60}m`;
       else if (minutes > 0) countdown = `${minutes}m`;
-      else countdown = "uskoro";
+      else countdown = t("soon", lang === "en" ? "soon" : "uskoro");
     }
   }
 
@@ -964,13 +962,13 @@ function MatchCard({
 
   const outcomeBadge =
     predOutcome === "correct"
-      ? { text: "Tačan rezultat", cls: `${ac.bgSolid} ${ac.textOn}` }
+      ? { text: t("outcome.exact"), cls: `${ac.bgSolid} ${ac.textOn}` }
       : predOutcome === "diff"
-        ? { text: "Tačna razlika", cls: `${ac.bgPaleStrongPair} ${ac.textPair700_400}` }
+        ? { text: t("outcome.diff"), cls: `${ac.bgPaleStrongPair} ${ac.textPair700_400}` }
         : predOutcome === "winner"
-          ? { text: "Tačan pobjednik", cls: `${ac.bgGhostInk}` }
+          ? { text: t("outcome.winner"), cls: `${ac.bgGhostInk}` }
           : predOutcome === "wrong"
-            ? { text: "Pogrešno", cls: "bg-red-500 text-white" }
+            ? { text: t("outcome.wrong"), cls: "bg-red-500 text-white" }
             : null;
 
   // Suptilni "zaključano" izgled: sivi okvir + blagi sivi sloj preko kartice.
@@ -1016,7 +1014,7 @@ function MatchCard({
         <div className={`flex items-center gap-1.5 flex-wrap min-w-0 ${dark ? "text-gray-400" : "text-gray-500"}`}>
           {liveNow && (
             <span className="font-black uppercase px-1.5 py-0.5 rounded-md bg-orange-500 text-white animate-pulse inline-flex items-center gap-1 text-[10px] shadow-sm shadow-orange-500/30">
-              <Flame className="w-2.5 h-2.5" /> UŽIVO
+              <Flame className="w-2.5 h-2.5" /> {t("live")}
             </span>
           )}
           {isFinished && (
@@ -1032,7 +1030,7 @@ function MatchCard({
               }`}
             >
               <CheckCircle2 className="w-2.5 h-2.5" />{" "}
-              {lang === "en" ? "FINISHED" : "ZAVRŠENO"}
+              {t("matchStatusBadge.finished", lang === "en" ? "FINISHED" : "ZAVRŠENO")}
             </span>
           )}
           {stageLabel && (
@@ -1065,9 +1063,9 @@ function MatchCard({
           {match.force_unlocked && !isFinished && !liveNow && (
             <span
               className={`text-[10px] uppercase font-bold inline-flex items-center gap-1 ${ac.textPair600_400}`}
-              title="Admin je produžio rok za predviđanje"
+              title={t("extendedTitle", lang === "en" ? "Admin extended the deadline" : "Admin je produžio rok za predviđanje")}
             >
-              <Unlock className="w-2.5 h-2.5" /> Produženo
+              <Unlock className="w-2.5 h-2.5" /> {t("unlockedExtended")}
             </span>
           )}
           {locked && !isFinished && !liveNow && !match.force_unlocked && (
@@ -1078,7 +1076,7 @@ function MatchCard({
                   : "bg-gray-100 text-gray-500 ring-1 ring-gray-200/80"
               }`}
             >
-              <Lock className="w-2.5 h-2.5 opacity-80" /> Zaključano
+              <Lock className="w-2.5 h-2.5 opacity-80" /> {t("locked")}
             </span>
           )}
           {countdown && (
@@ -1141,7 +1139,7 @@ function MatchCard({
         )}
         {isFinished && userPred && (
           <div className="mt-2 text-[11px] text-theme-text-secondary text-center">
-            tvoja predikcija: {userPred.home_score} − {userPred.away_score}
+            {t("yourPrediction")}: {userPred.home_score} − {userPred.away_score}
           </div>
         )}
       </div>
@@ -1156,7 +1154,7 @@ function MatchCard({
           onPointerCancel={() => cancelHold("home")}
           onContextMenu={(e) => e.preventDefault()}
           disabled={disabled || isFinished}
-          aria-label={`${homeName}. tap za +1 gol, drži za reset`}
+          aria-label={`${homeName}. ${t("tapTeamHint")}`}
           className={`flex items-center gap-3 justify-end min-w-0 rounded-2xl px-3 py-2 transition-all active:scale-[0.98] ${
             disabled || isFinished
               ? "cursor-default"
@@ -1194,7 +1192,7 @@ function MatchCard({
               </div>
               {userPred && (
                 <div className="text-[11px] text-theme-text-secondary mt-1">
-                  tvoja: {userPred.home_score} − {userPred.away_score}
+                  {t("yourPredictionShort", lang === "en" ? "yours" : "tvoja")}: {userPred.home_score} − {userPred.away_score}
                 </div>
               )}
             </div>
@@ -1263,7 +1261,7 @@ function MatchCard({
           onPointerCancel={() => cancelHold("away")}
           onContextMenu={(e) => e.preventDefault()}
           disabled={disabled || isFinished}
-          aria-label={`${awayName}. tap za +1 gol, drži za reset`}
+          aria-label={`${awayName}. ${t("tapTeamHint")}`}
           className={`flex items-center gap-3 min-w-0 rounded-2xl px-3 py-2 transition-all active:scale-[0.98] ${
             disabled || isFinished
               ? "cursor-default"

@@ -863,6 +863,12 @@
     "matchSkipped": "Predictions weren't saved. Reasons: {{reasons}}. Check that matches aren't locked."
   },
   "live": "LIVE",
+  "soon": "soon",
+  "extendedTitle": "Admin extended the deadline",
+  "matchStatusBadge": {
+    "finished": "FINISHED"
+  },
+  "yourPredictionShort": "yours",
   "unlockedExtended": "Extended",
   "pointsLabels": {
     "exact": "exact",

@@ -865,6 +865,12 @@
     "matchSkipped": "Predikcije nisu sačuvane. Razlozi: {{reasons}}. Provjeri da utakmice nisu zaključane."
   },
   "live": "UŽIVO",
+  "soon": "uskoro",
+  "extendedTitle": "Admin je produžio rok za predviđanje",
+  "matchStatusBadge": {
+    "finished": "ZAVRŠENO"
+  },
+  "yourPredictionShort": "tvoja",
   "unlockedExtended": "Produženo",
   "pointsLabels": {
     "exact": "tačno",
