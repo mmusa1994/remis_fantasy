@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
-import { resolveDisplayNames } from "@/lib/predictor";
+import { resolveDisplayNames, selectAllRows } from "@/lib/predictor";
 import type { StandingsRow } from "@/types/predictor";
 
 // Javna tabela — kombinuje category-level i match-level predikcije.
@@ -26,20 +26,31 @@ export async function GET(
   }
 
   // dovuci paralelno oba tipa predikcija
+  // Page through both prediction sets — a plain .select() caps at 1000 rows,
+  // so once a tournament passes ~1000 picks the newest round's points/counts
+  // would silently drop out of the leaderboard.
   const [{ data: catPreds, error: cErr }, { data: matchPreds, error: mErr }] =
     await Promise.all([
-      supabaseServer
-        .from("predictor_predictions")
-        .select(
-          "user_id, user_email, user_display_name, points_awarded, is_scored",
-        )
-        .eq("tournament_id", tournament.id),
-      supabaseServer
-        .from("predictor_match_predictions")
-        .select(
-          "user_id, user_email, user_display_name, points_awarded, is_scored",
-        )
-        .eq("tournament_id", tournament.id),
+      selectAllRows<any>((from, to) =>
+        supabaseServer
+          .from("predictor_predictions")
+          .select(
+            "user_id, user_email, user_display_name, points_awarded, is_scored",
+          )
+          .eq("tournament_id", tournament.id)
+          .order("id", { ascending: true })
+          .range(from, to),
+      ),
+      selectAllRows<any>((from, to) =>
+        supabaseServer
+          .from("predictor_match_predictions")
+          .select(
+            "user_id, user_email, user_display_name, points_awarded, is_scored",
+          )
+          .eq("tournament_id", tournament.id)
+          .order("id", { ascending: true })
+          .range(from, to),
+      ),
     ]);
 
   if (cErr || mErr) {

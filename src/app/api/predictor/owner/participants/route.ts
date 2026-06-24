@@ -4,6 +4,7 @@ import {
   requireTournamentOwner,
   jsonError,
   resolveDisplayNames,
+  selectAllRows,
 } from "@/lib/predictor";
 
 // GET ?tournament_id=...  — everyone with a footprint in the tournament:
@@ -16,15 +17,26 @@ export async function GET(req: NextRequest) {
   const own = await requireTournamentOwner(tournamentId);
   if (!own.ok) return own.response;
 
+  // Page through both prediction sets — a plain .select() caps at 1000 rows,
+  // which would undercount participants/points once a tournament passes ~1000
+  // total picks.
   const [{ data: cat }, { data: match }, { data: members }] = await Promise.all([
-    supabaseServer
-      .from("predictor_predictions")
-      .select("user_id, user_email, user_display_name, points_awarded")
-      .eq("tournament_id", tournamentId),
-    supabaseServer
-      .from("predictor_match_predictions")
-      .select("user_id, user_email, user_display_name, points_awarded")
-      .eq("tournament_id", tournamentId),
+    selectAllRows<any>((from, to) =>
+      supabaseServer
+        .from("predictor_predictions")
+        .select("user_id, user_email, user_display_name, points_awarded")
+        .eq("tournament_id", tournamentId)
+        .order("id", { ascending: true })
+        .range(from, to),
+    ),
+    selectAllRows<any>((from, to) =>
+      supabaseServer
+        .from("predictor_match_predictions")
+        .select("user_id, user_email, user_display_name, points_awarded")
+        .eq("tournament_id", tournamentId)
+        .order("id", { ascending: true })
+        .range(from, to),
+    ),
     supabaseServer
       .from("predictor_members")
       .select("user_id, user_email, user_display_name, status")

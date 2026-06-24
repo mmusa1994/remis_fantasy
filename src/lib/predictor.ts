@@ -11,6 +11,33 @@ import type {
   MatchPrediction,
 } from "@/types/predictor";
 
+// --- pagination ----------------------------------------------------------
+
+// A single Supabase `.select()` returns at most 1000 rows. For tournament-wide
+// reads — every participant's predictions — that ceiling silently truncates the
+// newest rows once a tournament passes ~1000 picks (e.g. the current round's
+// match predictions disappear from the "by matches" view and the leaderboard).
+// This pages through with `.range()` until a short page signals the end. Pass a
+// builder that re-issues the query per page with the given range, ordered by a
+// stable column so pages don't overlap or skip rows.
+export async function selectAllRows<T>(
+  buildPage: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<{ data: T[]; error: { message: string } | null }> {
+  const PAGE = 1000;
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await buildPage(from, from + PAGE - 1);
+    if (error) return { data: rows, error };
+    if (!data || data.length === 0) break;
+    rows.push(...data);
+    if (data.length < PAGE) break;
+  }
+  return { data: rows, error: null };
+}
+
 // --- auth guards ---------------------------------------------------------
 
 export async function requireAdmin() {
@@ -395,10 +422,16 @@ export async function rescoreTournament(tournamentId: string): Promise<{
         .select(
           "id, category_id, label, value, image_url, group_label, metadata, sort_order, is_correct, correct_rank, created_at",
         ),
-      supabaseServer
-        .from("predictor_predictions")
-        .select("*")
-        .eq("tournament_id", tournamentId),
+      // Page through every prediction — a plain .select() caps at 1000 rows,
+      // so a popular tournament would leave the overflow rows un-rescored.
+      selectAllRows<any>((from, to) =>
+        supabaseServer
+          .from("predictor_predictions")
+          .select("*")
+          .eq("tournament_id", tournamentId)
+          .order("id", { ascending: true })
+          .range(from, to),
+      ),
     ]);
 
   if (!categories || !options || !predictions) return { updated: 0 };

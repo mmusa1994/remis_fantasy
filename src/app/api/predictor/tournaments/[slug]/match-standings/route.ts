@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
-import { isMatchLocked, resolveDisplayNames } from "@/lib/predictor";
+import { isMatchLocked, resolveDisplayNames, selectAllRows } from "@/lib/predictor";
 import type { Match } from "@/types/predictor";
 
 /**
@@ -34,10 +34,17 @@ export async function GET(
       .select("*")
       .eq("tournament_id", tournament.id)
       .order("kickoff_at", { ascending: true }),
-    supabaseServer
-      .from("predictor_match_predictions")
-      .select("*")
-      .eq("tournament_id", tournament.id),
+    // Page through every prediction — a plain .select() caps at 1000 rows,
+    // which silently dropped the newest round's picks once the tournament
+    // passed ~1000 total predictions (KOLO 3 showed 2–5 of 19 picks/match).
+    selectAllRows<any>((from, to) =>
+      supabaseServer
+        .from("predictor_match_predictions")
+        .select("*")
+        .eq("tournament_id", tournament.id)
+        .order("id", { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
   const typedMatches = (allMatches ?? []) as Match[];
