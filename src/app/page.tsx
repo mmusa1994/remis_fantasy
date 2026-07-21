@@ -273,7 +273,7 @@ export default function Home() {
       {/* Predictor & Tournament Promo */}
       <section className="py-12 md:py-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="max-w-2xl mx-auto">
             {/* Predictor Card */}
             <Link href="/predictor" className="block group">
               <div
@@ -332,55 +332,6 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* WC 2026 Fantasy Card */}
-            <Link href="/wc2026" className="block group">
-              <div
-                className={`relative overflow-hidden rounded-2xl border p-6 md:p-8 h-full transition-all duration-300 hover:-translate-y-1 ${
-                  theme === "dark"
-                    ? "bg-gradient-to-br from-teal-950/80 via-gray-900/60 to-emerald-950/80 border-teal-700/40 hover:border-teal-500/50 shadow-lg hover:shadow-teal-500/10"
-                    : "bg-gradient-to-br from-teal-50/80 via-white to-emerald-50/50 border-teal-200/60 hover:border-teal-400 shadow-sm hover:shadow-lg"
-                }`}
-              >
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute -bottom-16 -right-16 w-48 h-48 rounded-full blur-3xl bg-teal-500/10"
-                />
-                <div className="relative z-10">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-teal-500/10 border border-teal-500/20">
-                    <Image
-                      src="/images/logos/wc-logo.png"
-                      alt="WC 2026"
-                      width={28}
-                      height={28}
-                      className="w-7 h-7 object-contain"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3
-                      className={`text-lg md:text-xl font-black ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
-                    >
-                      {t("common:home.leagues.wc2026.title", "WC 2026 Fantasy")}
-                    </h3>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-400">
-                      €5
-                    </span>
-                  </div>
-                  <p
-                    className={`text-sm leading-relaxed mb-4 ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    {t("common:home.leagues.wc2026.description", "FIFA World Cup 2026 - 48 teams, 104 matches")}
-                  </p>
-                  <span className="inline-flex items-center gap-1.5 text-sm font-bold group-hover:gap-2.5 transition-all duration-300 text-teal-600 dark:text-teal-400">
-                    {t("common:hero.openLeague", "Open League")}
-                    <ArrowRight className="w-4 h-4" />
-                  </span>
-                </div>
-              </div>
-            </Link>
           </div>
         </div>
       </section>

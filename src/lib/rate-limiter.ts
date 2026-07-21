@@ -46,6 +46,11 @@ class RateLimiter {
 
 export const registrationLimiter = new RateLimiter(15 * 60 * 1000, 5);
 
+// Separate bucket for the PL 26/27 register routes with a higher cap, so a
+// few declined-card retries don't lock a legitimate user out of the cash flow.
+export const plRegistrationLimiter = new RateLimiter(15 * 60 * 1000, 12);
+
 setInterval(() => {
   registrationLimiter.cleanup();
+  plRegistrationLimiter.cleanup();
 }, 5 * 60 * 1000);

@@ -4,7 +4,10 @@ import { supabaseServer } from "@/lib/supabase-server";
 import Stripe from "stripe";
 import * as nodemailer from "nodemailer";
 import { getF1CodesEmailHtml } from "@/app/api/send-f1-email/route";
-import { sendAdminRegistrationNotification } from "@/lib/email";
+import {
+  sendAdminRegistrationNotification,
+  sendPLRegistrationConfirmationEmail,
+} from "@/lib/email";
 import { getTemplate } from "@/data/predictor-templates";
 import { seedTournamentFromTemplate } from "@/lib/predictor-seed";
 
@@ -103,7 +106,7 @@ export async function POST(req: NextRequest) {
           } else {
 
             // Send admin notification
-            sendAdminRegistrationNotification({
+            await sendAdminRegistrationNotification({
               competition: "F1",
               first_name,
               last_name,
@@ -176,7 +179,7 @@ export async function POST(req: NextRequest) {
           if (clError) {
             console.error("Error inserting CL registration:", clError);
           } else {
-            sendAdminRegistrationNotification({
+            await sendAdminRegistrationNotification({
               competition: "Champions League",
               first_name,
               last_name,
@@ -267,7 +270,7 @@ export async function POST(req: NextRequest) {
                     console.error("Failed to seed template:", seedErr);
                   }
                 }
-                sendAdminRegistrationNotification({
+                await sendAdminRegistrationNotification({
                   competition: "Predictor — Korisnički turnir",
                   first_name: tournament_name,
                   last_name: `(@${finalSlug})`,
@@ -282,69 +285,91 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        if (paymentIntent.metadata?.type === "wc2026_registration") {
-          const { registration_id } = paymentIntent.metadata;
-
-          // Mark the existing registration as paid (safety net — it was
-          // inserted before the PI). Emails (welcome + admin notification)
-          // are sent exclusively by /api/wc2026/register/confirm when the
-          // client completes registration, so we don't send them here to
-          // avoid duplicate emails to the user and admin.
-          const { error: updateErr } = await supabaseServer
-            .from("wc2026_registrations")
-            .update({
-              payment_status: "paid",
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", registration_id);
-
-          if (updateErr) {
-            console.error("Error updating WC2026 registration:", updateErr);
-          }
-        }
-
         if (paymentIntent.metadata?.type === "pl_registration_26_27") {
           const { first_name, last_name, email, phone, notes, league_tier } =
             paymentIntent.metadata;
 
-          const tierAmounts: Record<string, number> = {
-            standard: 20.0,
-            premium: 50.0,
-            h2h_only: 15.0,
-            standard_h2h: 35.0,
-            premium_h2h: 65.0,
-          };
-          const amount = tierAmounts[league_tier] || 0;
+          // Charged amount is authoritative — the PI was created server-side
+          // from the tier map in /api/premier-league/register.
+          const amount = paymentIntent.amount / 100;
 
-          const { error: plError } = await supabaseServer
+          // Idempotency: Stripe may deliver the same event more than once.
+          // A failed lookup must NOT fall through to the insert — return 500
+          // instead so Stripe retries the event later.
+          const { data: existingPl, error: plLookupError } = await supabaseServer
             .from("registration_premier_league_26_27")
-            .insert({
-              first_name,
-              last_name,
-              email,
-              phone,
-              notes: notes || null,
-              payment_method: "stripe",
-              payment_status: "paid",
-              league_tier,
-              stripe_payment_intent_id: paymentIntent.id,
-              amount_paid: amount,
-            });
+            .select("id")
+            .eq("stripe_payment_intent_id", paymentIntent.id)
+            .maybeSingle();
 
-          if (plError) {
-            console.error("Error inserting PL registration:", plError);
-          } else {
-            sendAdminRegistrationNotification({
-              competition: "Premier League",
-              first_name,
-              last_name,
-              email,
-              phone,
-              payment_method: "Stripe (kartica)",
-              amount: `${amount.toFixed(2)}€`,
-              league_tier,
-              notes: notes || undefined,
-            });
+          if (plLookupError) {
+            throw new Error(
+              `PL registration idempotency lookup failed: ${plLookupError.message}`
+            );
+          }
+
+          if (!existingPl) {
+            const { error: plError } = await supabaseServer
+              .from("registration_premier_league_26_27")
+              .insert({
+                first_name,
+                last_name,
+                email,
+                phone,
+                notes: notes || null,
+                payment_method: "stripe",
+                payment_status: "paid",
+                league_tier,
+                stripe_payment_intent_id: paymentIntent.id,
+                amount_paid: amount,
+              });
+
+            if (plError?.code === "23505") {
+              // Unique violation on stripe_payment_intent_id: a concurrent
+              // delivery of the same event already inserted the row.
+              console.info(
+                "PL registration already recorded for PI:",
+                paymentIntent.id
+              );
+            } else if (plError) {
+              console.error("Error inserting PL registration:", plError);
+              // The card was charged but the registration was not persisted —
+              // alert the admin, then return 500 so Stripe retries the event.
+              await sendAdminRegistrationNotification({
+                competition: "Premier League",
+                first_name,
+                last_name,
+                email,
+                phone,
+                payment_method: "Stripe (kartica)",
+                amount: `${amount.toFixed(2)}€`,
+                league_tier,
+                notes: `⚠️ GREŠKA: uplata je naplaćena, ali upis u bazu NIJE uspio (${plError.message}). PaymentIntent: ${paymentIntent.id}. Stripe će automatski ponoviti pokušaj — ručno upiši registraciju samo ako se ne pojavi u admin panelu.`,
+              });
+              throw new Error(
+                `PL registration insert failed for PI ${paymentIntent.id}: ${plError.message}`
+              );
+            } else {
+              await sendAdminRegistrationNotification({
+                competition: "Premier League",
+                first_name,
+                last_name,
+                email,
+                phone,
+                payment_method: "Stripe (kartica)",
+                amount: `${amount.toFixed(2)}€`,
+                league_tier,
+                notes: notes || undefined,
+              });
+              await sendPLRegistrationConfirmationEmail({
+                first_name,
+                last_name,
+                email,
+                league_tier,
+                amount,
+                payment_method: "card",
+              });
+            }
           }
         }
 

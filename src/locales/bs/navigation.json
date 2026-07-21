@@ -33,9 +33,5 @@
   "signInWithEmail": "Prijavite se sa Email",
   "signOut": "Odjava",
   "profile": "Profil",
-  "predictor": "Predictor",
-  "wc2026Fantasy": "WC 2026 Fantasy",
-  "wc2026Matches": "Utakmice",
-  "wc2026Groups": "Grupe",
-  "wc2026Statistics": "Statistike"
+  "predictor": "Predictor"
 }

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { sendAdminRegistrationNotification } from "@/lib/email";
+import {
+  sendAdminRegistrationNotification,
+  sendPLRegistrationConfirmationEmail,
+} from "@/lib/email";
+import { verifyRecaptcha } from "@/lib/recaptcha";
+import { plRegistrationLimiter } from "@/lib/rate-limiter";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -9,7 +14,27 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { first_name, last_name, email, phone, notes, cash_delivery_date, league_tier } = await req.json();
+    // x-real-ip is set by the platform; a client-supplied x-forwarded-for
+    // prefix is spoofable, so fall back to the last (platform-appended) hop.
+    const clientIP =
+      req.headers.get("x-real-ip") ||
+      req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() ||
+      "unknown";
+    if (!plRegistrationLimiter.isAllowed(clientIP).allowed) {
+      return NextResponse.json(
+        { error: "Previše pokušaja. Pokušajte ponovo za 15 minuta." },
+        { status: 429 }
+      );
+    }
+
+    const { first_name, last_name, email, phone, notes, cash_delivery_date, league_tier, recaptcha_token } = await req.json();
+
+    if (!(await verifyRecaptcha(recaptcha_token))) {
+      return NextResponse.json(
+        { error: "reCAPTCHA verifikacija neuspješna" },
+        { status: 400 }
+      );
+    }
 
     if (!first_name?.trim() || !last_name?.trim() || !email?.trim() || !phone?.trim()) {
       return NextResponse.json(
@@ -76,7 +101,7 @@ export async function POST(req: NextRequest) {
     };
     const amount = tierAmounts[league_tier] || 0;
 
-    sendAdminRegistrationNotification({
+    await sendAdminRegistrationNotification({
       competition: "Premier League",
       first_name: first_name.trim(),
       last_name: last_name.trim(),
@@ -86,6 +111,16 @@ export async function POST(req: NextRequest) {
       amount: `${amount.toFixed(2)}€`,
       league_tier,
       notes: notes?.trim() || undefined,
+    });
+
+    await sendPLRegistrationConfirmationEmail({
+      first_name: first_name.trim(),
+      last_name: last_name.trim(),
+      email: email.trim(),
+      league_tier,
+      amount,
+      payment_method: "cash",
+      cash_delivery_date,
     });
 
     return NextResponse.json({ success: true });

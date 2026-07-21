@@ -26,8 +26,6 @@ import managerEN from "@/locales/en/manager.json";
 import managerBS from "@/locales/bs/manager.json";
 import predictorEN from "@/locales/en/predictor.json";
 import predictorBS from "@/locales/bs/predictor.json";
-import wc2026EN from "@/locales/en/wc2026.json";
-import wc2026BS from "@/locales/bs/wc2026.json";
 
 const resources = {
   en: {
@@ -43,7 +41,6 @@ const resources = {
     champions: championsEN,
     manager: managerEN,
     predictor: predictorEN,
-    wc2026: wc2026EN,
   },
   bs: {
     common: commonBS,
@@ -58,7 +55,6 @@ const resources = {
     champions: championsBS,
     manager: managerBS,
     predictor: predictorBS,
-    wc2026: wc2026BS,
   },
 };
 
@@ -73,7 +69,7 @@ i18n
       : "bs",
     debug: false,
     defaultNS: "common",
-    ns: ["common", "fpl", "f1", "hero", "navigation", "ai", "auth", "profile", "onboarding", "champions", "manager", "predictor", "wc2026"],
+    ns: ["common", "fpl", "f1", "hero", "navigation", "ai", "auth", "profile", "onboarding", "champions", "manager", "predictor"],
 
     interpolation: {
       escapeValue: false,

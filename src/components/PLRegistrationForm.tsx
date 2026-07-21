@@ -177,6 +177,7 @@ function PLRegistrationFormInner() {
             payment_method: "cash",
             cash_delivery_date: cashDeliveryDate,
             league_tier: getLeagueTier(),
+            recaptcha_token: recaptchaToken,
           }),
         });
         const data = await response.json();
@@ -219,6 +220,7 @@ function PLRegistrationFormInner() {
           notes: formData.notes.trim(),
           payment_method_id: paymentMethod.id,
           league_tier: getLeagueTier(),
+          recaptcha_token: recaptchaToken,
         }),
       });
 
@@ -236,6 +238,17 @@ function PLRegistrationFormInner() {
 
       if (paymentIntent?.status === "succeeded") {
         router.push("/premier-league/registration/success");
+      } else {
+        // e.g. "processing": funds may still settle — the webhook records the
+        // registration automatically once the payment completes.
+        setToast({
+          show: true,
+          message:
+            "Uplata je u obradi. Ako bude naplaćena, registracija će biti automatski evidentirana — pratite email.",
+          type: "success",
+        });
+        setRecaptchaToken(null);
+        recaptchaRef.current?.reset();
       }
     } catch (error: unknown) {
       console.error("PL registration error:", error);

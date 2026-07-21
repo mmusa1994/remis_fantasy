@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle, Trophy } from "lucide-react";
+import { CheckCircle } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 
@@ -20,7 +21,14 @@ export default function PLRegistrationSuccessPage() {
           {/* PL Icon */}
           <div className="flex justify-center mb-6">
             <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-purple-600 to-purple-500 flex items-center justify-center shadow-2xl shadow-purple-500/30">
-              <Trophy className="w-10 h-10 text-white" />
+              <Image
+                src="/images/logos/pl-logo.png"
+                alt="Premier League"
+                width={56}
+                height={56}
+                unoptimized
+                className="w-14 h-14 object-contain"
+              />
             </div>
           </div>
 

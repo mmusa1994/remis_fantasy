@@ -13,7 +13,7 @@ interface UserData {
 
 // Type for universal admin registration notification
 export interface AdminRegistrationData {
-  competition: "F1" | "Champions League" | "Premier League" | "Predictor — Korisnički turnir" | "WC2026";
+  competition: "F1" | "Champions League" | "Premier League" | "Predictor — Korisnički turnir";
   first_name: string;
   last_name: string;
   email: string;
@@ -24,14 +24,6 @@ export interface AdminRegistrationData {
   league_tier?: string;
 }
 
-// WC2026 welcome email data
-export interface WC2026WelcomeData {
-  first_name: string;
-  last_name: string;
-  email: string;
-  team_name: string;
-  payment_method: "card" | "cash";
-}
 
 // Validate required email environment variables
 const emailUser = process.env.SMTP_USER;
@@ -1395,14 +1387,12 @@ const competitionLabels: Record<string, string> = {
   "F1": "Formula 1 Fantasy 2026",
   "Champions League": "Champions League Fantasy 2026/27",
   "Premier League": "Premier League Fantasy 2026/27",
-  "WC2026": "FIFA World Cup 2026 Fantasy",
 };
 
 const competitionColors: Record<string, string> = {
   "F1": "#e10600",
   "Champions League": "#1e3a8a",
   "Premier League": "#37003c",
-  "WC2026": "#0d9488",
 };
 
 const createAdminRegistrationNotificationTemplate = (data: AdminRegistrationData) => {
@@ -1511,39 +1501,57 @@ const createAdminRegistrationNotificationTemplate = (data: AdminRegistrationData
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// WC2026 — Welcome email with league code and join link
+// Premier League 26/27 — registration confirmation for the registrant
 // ─────────────────────────────────────────────────────────────────────────────
 
-const WC2026_LEAGUE_CODE = "T2NOF3SY";
-const WC2026_JOIN_URL = `https://play.fifa.com/fantasy/join-league/${WC2026_LEAGUE_CODE}`;
+export interface PLConfirmationData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  league_tier: string;
+  amount: number;
+  payment_method: "card" | "cash";
+  cash_delivery_date?: string;
+}
 
-const createWC2026WelcomeTemplate = (data: WC2026WelcomeData) => {
+const PL_TIER_LABELS: Record<string, string> = {
+  standard: "Standard liga",
+  premium: "Premium liga",
+  h2h_only: "H2H liga",
+  standard_h2h: "Standard + H2H liga",
+  premium_h2h: "Premium + H2H liga",
+};
+
+const createPLConfirmationTemplate = (data: PLConfirmationData) => {
+  const tierLabel = PL_TIER_LABELS[data.league_tier] || data.league_tier;
   const paymentLine =
     data.payment_method === "card"
-      ? "Tvoja uplata je uspješno obrađena."
-      : "Tvoja prijava je zaprimljena. Uplata u kešu se očekuje uskoro.";
+      ? "Tvoja uplata karticom je uspješno obrađena i registracija je aktivna."
+      : `Tvoja prijava je zaprimljena. Dogovorena dostava uplate u kešu: ${data.cash_delivery_date}. Registracija postaje aktivna nakon evidentirane uplate.`;
+  const paymentMethodLabel =
+    data.payment_method === "card" ? "Kartica (plaćeno)" : "Keš (na dostavi)";
 
   return `<!DOCTYPE html>
 <html lang="bs">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FIFA World Cup 2026 Fantasy — Pristup ligi</title>
+  <title>Premier League Fantasy 2026/27 — Potvrda registracije</title>
 </head>
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(13,148,136,0.08);">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(55,0,60,0.08);">
 
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 50%,#10b981 100%);padding:44px 32px;text-align:center;">
+            <td style="background:linear-gradient(135deg,#37003c 0%,#5b21b6 60%,#7c3aed 100%);padding:44px 32px;text-align:center;">
               <div style="display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:999px;padding:6px 16px;margin-bottom:18px;">
-                <span style="color:#ffffff;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">FIFA World Cup 2026</span>
+                <span style="color:#ffffff;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">Premier League Fantasy 2026/27</span>
               </div>
-              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.4px;">Dobrodošao u ligu</h1>
-              <p style="margin:10px 0 0;color:rgba(255,255,255,0.85);font-size:15px;font-weight:400;">REMIS Fantasy — World Cup 2026</p>
+              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.4px;">Potvrda registracije</h1>
+              <p style="margin:10px 0 0;color:rgba(255,255,255,0.85);font-size:15px;font-weight:400;">REMIS Fantasy</p>
             </td>
           </tr>
 
@@ -1552,84 +1560,47 @@ const createWC2026WelcomeTemplate = (data: WC2026WelcomeData) => {
             <td style="padding:36px 36px 8px;">
               <p style="margin:0 0 8px;font-size:16px;color:#18181b;font-weight:500;">Pozdrav, ${data.first_name},</p>
               <p style="margin:0;font-size:14px;line-height:1.7;color:#52525b;">
-                Hvala što si dio REMIS Fantasy lige za FIFA World Cup 2026. ${paymentLine} U nastavku se nalazi tvoj jedinstveni kod i direktan link za pristup ligi na FIFA Fantasy platformi.
+                Hvala što si dio REMIS Fantasy Premier League 2026/27 takmičenja. ${paymentLine}
               </p>
             </td>
           </tr>
 
-          <!-- Team summary -->
+          <!-- Summary -->
           <tr>
-            <td style="padding:24px 36px 0;">
+            <td style="padding:24px 36px 8px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;">
                 <tr>
-                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;width:130px;">Tim</td>
-                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${data.team_name}</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;width:140px;">Igrač</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${data.first_name} ${data.last_name}</td>
                 </tr>
                 <tr>
-                  <td style="padding:14px 18px;font-size:13px;color:#71717a;">Igrač</td>
-                  <td style="padding:14px 18px;font-size:14px;color:#18181b;font-weight:500;">${data.first_name} ${data.last_name}</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">Liga</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${tierLabel}</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">Iznos</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${data.amount.toFixed(2)}€</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 18px;font-size:13px;color:#71717a;">Način plaćanja</td>
+                  <td style="padding:14px 18px;font-size:14px;color:#18181b;font-weight:500;">${paymentMethodLabel}</td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- League code block -->
+          <!-- Next steps -->
           <tr>
-            <td style="padding:32px 36px 0;">
-              <p style="margin:0 0 10px;font-size:11px;font-weight:600;color:#71717a;text-transform:uppercase;letter-spacing:1.5px;text-align:center;">Kod lige</p>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td align="center" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border:1px solid #0d9488;border-radius:12px;padding:24px;">
-                    <div style="font-family:'SF Mono','Monaco','Courier New',monospace;font-size:30px;font-weight:700;letter-spacing:6px;color:#5eead4;text-shadow:0 0 20px rgba(94,234,212,0.25);">${WC2026_LEAGUE_CODE}</div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Buttons -->
-          <tr>
-            <td style="padding:32px 36px 8px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td align="center">
-                    <!--[if mso]>
-                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${WC2026_JOIN_URL}" style="height:50px;v-text-anchor:middle;width:100%;" arcsize="22%" fillcolor="#0d9488" stroke="f">
-                      <w:anchorlock/>
-                      <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">Pridruži se ligi</center>
-                    </v:roundrect>
-                    <![endif]-->
-                    <a href="${WC2026_JOIN_URL}" target="_blank" rel="noopener"
-                       style="display:block;width:100%;box-sizing:border-box;background:linear-gradient(135deg,#0d9488 0%,#10b981 100%);color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:15px 28px;border-radius:12px;text-align:center;letter-spacing:0.2px;box-shadow:0 4px 14px rgba(13,148,136,0.3);mso-hide:all;">
-                      Pridruži se ligi
-                    </a>
-                  </td>
-                </tr>
-                <tr><td style="height:12px;line-height:12px;font-size:0;">&nbsp;</td></tr>
-                <tr>
-                  <td align="center">
-                    <a href="https://play.fifa.com/fantasy" target="_blank" rel="noopener"
-                       style="display:block;width:100%;box-sizing:border-box;background:#ffffff;color:#0d9488;text-decoration:none;font-size:15px;font-weight:600;padding:14px 28px;border-radius:12px;text-align:center;letter-spacing:0.2px;border:1.5px solid #0d9488;">
-                      Otvori FIFA Fantasy
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Instructions -->
-          <tr>
-            <td style="padding:28px 36px 0;">
+            <td style="padding:20px 36px 0;">
               <p style="margin:0;font-size:13px;line-height:1.7;color:#71717a;text-align:center;">
-                Klikni na <strong style="color:#0d9488;font-weight:600;">Pridruži se ligi</strong> i automatski ćeš biti dodan. Ako biraš ručni unos, otvori FIFA Fantasy i ukucaj kod iznad.
+                Kod za pristup FPL ligi i sve detalje dobijaš uskoro na ovaj email. Tabele i rezultate prati na stranici Premier League lige.
               </p>
             </td>
           </tr>
 
           <!-- Divider -->
           <tr>
-            <td style="padding:32px 36px 0;">
+            <td style="padding:28px 36px 0;">
               <div style="height:1px;background:linear-gradient(90deg,transparent 0%,#e4e4e7 50%,transparent 100%);"></div>
             </td>
           </tr>
@@ -1654,30 +1625,23 @@ const createWC2026WelcomeTemplate = (data: WC2026WelcomeData) => {
 </html>`;
 };
 
-export const sendWC2026WelcomeEmail = async (data: WC2026WelcomeData) => {
+export const sendPLRegistrationConfirmationEmail = async (
+  data: PLConfirmationData
+) => {
   try {
     const result = await transporter.sendMail({
       from: `"REMIS Fantasy" <${emailUser}>`,
       to: data.email,
       replyTo: emailUser,
-      subject: "FIFA World Cup 2026 Fantasy — Kod za pristup ligi | REMIS Fantasy",
-      html: createWC2026WelcomeTemplate(data),
+      subject:
+        "Premier League Fantasy 2026/27 — Potvrda registracije | REMIS Fantasy",
+      html: createPLConfirmationTemplate(data),
     });
-
-    console.info(
-      "WC2026 welcome email sent:",
-      result.messageId,
-      "response:",
-      result.response,
-      "accepted:",
-      result.accepted,
-      "rejected:",
-      result.rejected
-    );
+    console.info("PL confirmation email sent:", result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("Failed to send WC2026 welcome email:", error);
-    throw error;
+    console.error("Failed to send PL confirmation email:", error);
+    // Don't throw — a failed confirmation email must not break the flow
   }
 };
 
