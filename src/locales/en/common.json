@@ -154,7 +154,9 @@
     "standardLeague": "Standard League",
     "h2hLeague": "H2H League",
     "h2h2League": "H2H2 League",
-    "freeLeague": "Free League"
+    "freeLeague": "Free League",
+    "seasonCompleted": "Completed",
+    "newSeasonComingSoon": "The new 2026/27 season starts soon — tables will be available once the league kicks off."
   },
   "premiumLeague": {
     "title": "Premium League",

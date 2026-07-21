@@ -29,8 +29,12 @@ interface LeagueTables {
   freeLeague: LeaguePlayer[];
 }
 
+type Season = "25_26" | "26_27";
+
 export default function LeagueTableTabs() {
   const { t } = useTranslation();
+
+  const [season, setSeason] = useState<Season>("26_27");
 
   const tabs = [
     { id: "premium", label: t("fplLive.premiumLeague"), color: "yellow" },
@@ -81,7 +85,9 @@ export default function LeagueTableTabs() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch("/api/premier-league-tables");
+        const response = await fetch(
+          `/api/premier-league-tables?season=${season}`
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch tables");
         }
@@ -97,7 +103,7 @@ export default function LeagueTableTabs() {
     };
 
     loadTables();
-  }, [t]);
+  }, [t, season]);
 
   const getLeagueData = (leagueType: string) => {
     // Get static league configuration (prizes, fees, etc.) from original data
@@ -234,6 +240,47 @@ export default function LeagueTableTabs() {
 
   return (
     <div className="w-full">
+      {/* Season switcher */}
+      <div className="flex justify-center gap-8 mb-6">
+        {(["25_26", "26_27"] as Season[]).map((s) => {
+          const isActive = season === s;
+          const label = s === "26_27" ? "2026/27" : "2025/26";
+          return (
+            <button
+              key={s}
+              onClick={() => setSeason(s)}
+              className="relative pb-1.5 font-bold text-base md:text-lg transition-colors duration-300"
+              style={{
+                color: isActive
+                  ? theme === "dark"
+                    ? "#a78bfa"
+                    : "#7c3aed"
+                  : theme === "dark"
+                    ? "rgba(255,255,255,0.45)"
+                    : "rgba(0,0,0,0.45)",
+              }}
+            >
+              {label}
+              {s === "25_26" && !isActive && (
+                <span className="ml-1 text-[10px] font-medium opacity-60">
+                  ({t("fplLive.seasonCompleted", "Završena")})
+                </span>
+              )}
+              <span
+                className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full transition-all duration-300"
+                style={{
+                  backgroundColor: isActive
+                    ? theme === "dark"
+                      ? "#a78bfa"
+                      : "#7c3aed"
+                    : "transparent",
+                }}
+              />
+            </button>
+          );
+        })}
+      </div>
+
       {/* Tabs */}
       <div className="flex flex-wrap justify-center gap-2 mb-8">
         {tabs.map((tab) => {
@@ -296,6 +343,28 @@ export default function LeagueTableTabs() {
 
             const leagueData = getLeagueData(activeTab);
             if (!leagueData || leagueData.players.length === 0) {
+              if (season === "26_27") {
+                return (
+                  <div
+                    className={`text-center py-14 px-6 mx-auto max-w-xl rounded-2xl border ${
+                      theme === "dark"
+                        ? "border-purple-500/30 bg-purple-500/5"
+                        : "border-purple-300 bg-purple-50/50"
+                    }`}
+                  >
+                    <p
+                      className={`font-semibold ${
+                        theme === "dark" ? "text-purple-300" : "text-purple-700"
+                      }`}
+                    >
+                      {t(
+                        "fplLive.newSeasonComingSoon",
+                        "Nova sezona 2026/27 uskoro počinje — tabele će biti dostupne kada liga krene."
+                      )}
+                    </p>
+                  </div>
+                );
+              }
               return (
                 <div className="text-center py-12">
                   <p

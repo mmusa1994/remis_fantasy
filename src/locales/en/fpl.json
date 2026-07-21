@@ -208,7 +208,12 @@
       "loadingDesc": "Please wait while we fetch the latest prize information",
       "error": "Error loading data",
       "plTitle": "Premier League Prizes",
-      "plSubtitle": "Win amazing prizes throughout the Premier League season!"
+      "plSubtitle": "Win amazing prizes throughout the Premier League season!",
+      "historySubtitle": "Season 2025/26 — completed",
+      "completedSuffix": "Completed",
+      "tbdTitle": "Prizes for season 2026/27",
+      "tbdMessage": "Prizes will be announced soon.",
+      "tbdNote": "The full prize fund and prizes for the new season are coming soon. Stay tuned!"
     },
     "bestPerformersAndEO": "Best Performers and Effective Ownership",
     "eventDefensiveContribution": "Defensive contribution",

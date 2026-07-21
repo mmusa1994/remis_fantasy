@@ -1,9 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-// SEPARATE TABLES:
-// - premier_league_25_26: Premium, Standard, Free (classic scoring)
-// - h2h_league_25_26: H2H, H2H2 (head-to-head scoring)
+// SEPARATE TABLES PER SEASON:
+// - premier_league_<season>: Premium, Standard, Free (classic scoring)
+// - h2h_league_<season>: H2H, H2H2 (head-to-head scoring)
+const SEASON_TABLES: Record<string, { classic: string; h2h: string }> = {
+  "25_26": { classic: "premier_league_25_26", h2h: "h2h_league_25_26" },
+  "26_27": { classic: "premier_league_26_27", h2h: "h2h_league_26_27" },
+};
 
 // Interface for classic Premier League player
 interface PremierLeaguePlayer {
@@ -57,11 +61,17 @@ interface LeagueTables {
 }
 
 // GET - Public endpoint to fetch premier league tables from SEPARATE tables
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    // Fetch classic leagues from premier_league_25_26
+    const season = req.nextUrl.searchParams.get("season") || "26_27";
+    const seasonTables = SEASON_TABLES[season];
+    if (!seasonTables) {
+      return NextResponse.json({ error: "Invalid season" }, { status: 400 });
+    }
+
+    // Fetch classic leagues
     const { data: classicPlayers, error: classicError } = await supabase
-      .from("premier_league_25_26")
+      .from(seasonTables.classic)
       .select(
         `
         id,
@@ -79,7 +89,9 @@ export async function GET() {
       .is("deleted_at", null)
       .order("points", { ascending: false });
 
-    if (classicError) {
+    // A season whose table doesn't exist yet (42P01) renders as empty
+    // standings instead of an error — the pre-season state of a new season.
+    if (classicError && classicError.code !== "42P01") {
       console.error("Supabase error (classic):", classicError);
       return NextResponse.json(
         { error: "Failed to fetch classic league data" },
@@ -87,9 +99,9 @@ export async function GET() {
       );
     }
 
-    // Fetch H2H leagues from h2h_league_25_26
+    // Fetch H2H leagues
     const { data: h2hPlayers, error: h2hError } = await supabase
-      .from("h2h_league_25_26")
+      .from(seasonTables.h2h)
       .select(
         `
         id,
@@ -109,7 +121,7 @@ export async function GET() {
       .is("deleted_at", null)
       .order("h2h_points", { ascending: false });
 
-    if (h2hError) {
+    if (h2hError && h2hError.code !== "42P01") {
       console.error("Supabase error (h2h):", h2hError);
       return NextResponse.json(
         { error: "Failed to fetch H2H league data" },
@@ -205,6 +217,7 @@ export async function GET() {
     return NextResponse.json({
       tables,
       totalPlayers,
+      season,
       lastUpdated: new Date().toISOString(),
       source: "separate_tables",
     });

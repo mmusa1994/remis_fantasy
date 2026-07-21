@@ -208,7 +208,12 @@
       "loadingDesc": "Molimo sačekajte dok dohvatimo najnovije informacije o nagradama",
       "error": "Greška pri učitavanju podataka",
       "plTitle": "Premier League Nagrade",
-      "plSubtitle": "Osvojite nevjerovatne nagrade tokom cijele Premier League sezone!"
+      "plSubtitle": "Osvojite nevjerovatne nagrade tokom cijele Premier League sezone!",
+      "historySubtitle": "Sezona 2025/26 — završena",
+      "completedSuffix": "Završena",
+      "tbdTitle": "Nagrade za sezonu 2026/27",
+      "tbdMessage": "Nagrade će biti objavljene naknadno.",
+      "tbdNote": "Uskoro objavljujemo kompletan nagradni fond i nagrade za novu sezonu. Pratite nas!"
     },
     "eventDefensiveContribution": "Defensive contribution",
     "liveTrackerLivePolling": "Uživo praćenje aktivno",

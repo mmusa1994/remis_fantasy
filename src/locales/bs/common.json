@@ -154,7 +154,9 @@
     "standardLeague": "Standardna Liga",
     "h2hLeague": "H2H Liga",
     "h2h2League": "H2H2 Liga",
-    "freeLeague": "Besplatna Liga"
+    "freeLeague": "Besplatna Liga",
+    "seasonCompleted": "Završena",
+    "newSeasonComingSoon": "Nova sezona 2026/27 uskoro počinje — tabele će biti dostupne kada liga krene."
   },
   "premiumLeague": {
     "title": "Premium Liga",
