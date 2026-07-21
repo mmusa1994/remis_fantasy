@@ -1,4 +1,9 @@
 import * as nodemailer from "nodemailer";
+import {
+  PL_LEAGUE_CODES,
+  PL_LEAGUE_NAMES,
+  PL_TIER_LEAGUES,
+} from "@/data/pl-league-codes";
 
 // Type definition for user data
 interface UserData {
@@ -1531,6 +1536,45 @@ const createPLConfirmationTemplate = (data: PLConfirmationData) => {
   const paymentMethodLabel =
     data.payment_method === "card" ? "Kartica (plaćeno)" : "Keš (na dostavi)";
 
+  // FPL invite kodovi po ligama — kombinovani tieri dobijaju oba koda.
+  // Dok kod za neku ligu nije unesen u PL_LEAGUE_CODES, šalje se napomena
+  // da kod stiže naknadno.
+  const leagues = PL_TIER_LEAGUES[data.league_tier] || [];
+  const withCodes = leagues.filter((k) => PL_LEAGUE_CODES[k]);
+  const missingCodes = leagues.filter((k) => !PL_LEAGUE_CODES[k]);
+
+  const codesSection = withCodes
+    .map(
+      (k) => `
+          <!-- ${PL_LEAGUE_NAMES[k]} — kod -->
+          <tr>
+            <td style="padding:28px 36px 0;">
+              <p style="margin:0 0 10px;font-size:11px;font-weight:600;color:#71717a;text-transform:uppercase;letter-spacing:1.5px;text-align:center;">${PL_LEAGUE_NAMES[k]} — kod za pristup</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%);border:1px solid #7c3aed;border-radius:12px;padding:22px;">
+                    <div style="font-family:'SF Mono','Monaco','Courier New',monospace;font-size:28px;font-weight:700;letter-spacing:5px;color:#c4b5fd;">${PL_LEAGUE_CODES[k]}</div>
+                  </td>
+                </tr>
+                <tr><td style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
+                <tr>
+                  <td align="center">
+                    <a href="https://fantasy.premierleague.com/leagues/auto-join/${PL_LEAGUE_CODES[k]}" target="_blank" rel="noopener"
+                       style="display:block;width:100%;box-sizing:border-box;background:linear-gradient(135deg,#5b21b6 0%,#7c3aed 100%);color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:13px 28px;border-radius:12px;text-align:center;letter-spacing:0.2px;">
+                      Pridruži se — ${PL_LEAGUE_NAMES[k]}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`
+    )
+    .join("");
+
+  const nextStepsNote = missingCodes.length
+    ? `Kod za pristup ${withCodes.length ? "preostalim ligama dobijaš" : "FPL ligi i sve detalje dobijaš"} uskoro na ovaj email. Tabele i rezultate prati na stranici Premier League lige.`
+    : "Klikni na dugme iznad ili kod unesi ručno na FPL platformi. Tabele i rezultate prati na stranici Premier League lige.";
+
   return `<!DOCTYPE html>
 <html lang="bs">
 <head>
@@ -1589,11 +1633,12 @@ const createPLConfirmationTemplate = (data: PLConfirmationData) => {
             </td>
           </tr>
 
+${codesSection}
           <!-- Next steps -->
           <tr>
             <td style="padding:20px 36px 0;">
               <p style="margin:0;font-size:13px;line-height:1.7;color:#71717a;text-align:center;">
-                Kod za pristup FPL ligi i sve detalje dobijaš uskoro na ovaj email. Tabele i rezultate prati na stranici Premier League lige.
+                ${nextStepsNote}
               </p>
             </td>
           </tr>

@@ -324,13 +324,36 @@ export async function POST(req: NextRequest) {
                 amount_paid: amount,
               });
 
-            if (plError?.code === "23505") {
+            if (
+              plError?.code === "23505" &&
+              plError.message.includes("stripe_pi_uidx")
+            ) {
               // Unique violation on stripe_payment_intent_id: a concurrent
               // delivery of the same event already inserted the row.
               console.info(
                 "PL registration already recorded for PI:",
                 paymentIntent.id
               );
+            } else if (plError?.code === "23505") {
+              // Deterministic conflict (e.g. email already registered via the
+              // cash flow) — the card WAS charged but no row was written, and
+              // a retry can never succeed, so alarm the admin and return 200.
+              console.error(
+                "PL registration conflict for PI:",
+                paymentIntent.id,
+                plError.message
+              );
+              await sendAdminRegistrationNotification({
+                competition: "Premier League",
+                first_name,
+                last_name,
+                email,
+                phone,
+                payment_method: "Stripe (kartica)",
+                amount: `${amount.toFixed(2)}€`,
+                league_tier,
+                notes: `⚠️ KONFLIKT: uplata je naplaćena, ali upis NIJE uspio jer registracija s ovim podacima već postoji (${plError.message}). PaymentIntent: ${paymentIntent.id}. Riješiti ručno — spojiti s postojećom registracijom ili refundirati.`,
+              });
             } else if (plError) {
               console.error("Error inserting PL registration:", plError);
               // The card was charged but the registration was not persisted —
