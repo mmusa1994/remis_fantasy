@@ -36,11 +36,14 @@ export default function LeagueTableTabs() {
 
   const [season, setSeason] = useState<Season>("26_27");
 
+  // H2H2 liga postoji samo u sezoni 25/26 — od 26/27 je samo jedna H2H liga
   const tabs = [
     { id: "premium", label: t("fplLive.premiumLeague"), color: "yellow" },
     { id: "standard", label: t("fplLive.standardLeague"), color: "blue" },
     { id: "h2h", label: t("fplLive.h2hLeague"), color: "red" },
-    { id: "h2h2", label: t("fplLive.h2h2League"), color: "red" },
+    ...(season === "25_26"
+      ? [{ id: "h2h2", label: t("fplLive.h2h2League"), color: "red" }]
+      : []),
     { id: "free", label: t("fplLive.freeLeague"), color: "purple" },
   ];
   const [activeTab, setActiveTab] = useState("premium");
@@ -248,7 +251,12 @@ export default function LeagueTableTabs() {
           return (
             <button
               key={s}
-              onClick={() => setSeason(s)}
+              onClick={() => {
+                setSeason(s);
+                if (s === "26_27" && activeTab === "h2h2") {
+                  setActiveTab("h2h");
+                }
+              }}
               className="relative pb-1.5 font-bold text-base md:text-lg transition-colors duration-300"
               style={{
                 color: isActive

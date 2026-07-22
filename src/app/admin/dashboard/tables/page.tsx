@@ -1130,7 +1130,15 @@ export default function AdminTablesCleanPage() {
                 25/26
               </button>
               <button
-                onClick={() => { setSeason("26_27"); setLoading(true); }}
+                onClick={() => {
+                  setSeason("26_27");
+                  setLoading(true);
+                  // H2H2 liga ne postoji u sezoni 26/27
+                  if (selectedLeague === "h2h2League") {
+                    setSelectedLeague("h2hLeague");
+                    setEditingPlayer(null);
+                  }
+                }}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                   season === "26_27"
                     ? `${getMainTabAccent(mainTab)} text-white shadow-sm`
@@ -1215,7 +1223,12 @@ export default function AdminTablesCleanPage() {
                     Ažuriraj:
                   </span>
                   <div className="flex gap-2 flex-wrap">
-                    {fplLeagues.map((league) => (
+                    {fplLeagues
+                      .filter(
+                        (league) =>
+                          season === "25_26" || league.key !== "h2h2"
+                      )
+                      .map((league) => (
                       <button
                         key={league.key}
                         onClick={() => updateFromFPL(league.key)}
@@ -1251,7 +1264,12 @@ export default function AdminTablesCleanPage() {
                     Full Sync:
                   </span>
                   <div className="flex gap-2 flex-wrap">
-                    {fplLeagues.map((league) => (
+                    {fplLeagues
+                      .filter(
+                        (league) =>
+                          season === "25_26" || league.key !== "h2h2"
+                      )
+                      .map((league) => (
                       <button
                         key={`full-${league.key}`}
                         onClick={() => fullSyncFromFPL(league.key)}
@@ -1289,7 +1307,12 @@ export default function AdminTablesCleanPage() {
                 </h3>
               </div>
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
-                {leagueTypes.map((league) => {
+                {leagueTypes
+                  .filter(
+                    (league) =>
+                      season === "25_26" || league.key !== "h2h2League"
+                  )
+                  .map((league) => {
                   const isSelected = selectedLeague === league.key;
                   const playerCount =
                     tables?.[league.key as keyof LeagueTables]?.length || 0;
