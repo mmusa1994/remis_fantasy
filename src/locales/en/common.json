@@ -232,6 +232,9 @@
   "plSuccess": {
     "title": "Registration Confirmed!",
     "message": "You have successfully registered for the Premier League Fantasy League 2026/27. Payment has been received and your registration is active.",
+    "messageCash": "You have successfully registered for the Premier League Fantasy League 2026/27. Your registration has been received and becomes active once the cash payment is delivered.",
+    "emailNoteTitle": "Check your email (and spam folder!)",
+    "emailNote": "We sent you a confirmation email with your league access codes. If you don't see it in your inbox within a few minutes, be sure to check your spam/junk folder and mark the message as 'Not spam'.",
     "whatsNext": "What's next?",
     "whatsNextDescription": "Follow the tables and results on the Premier League Fantasy league page. Good luck!",
     "viewTables": "View Tables"

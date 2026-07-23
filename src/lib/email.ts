@@ -1400,12 +1400,24 @@ const competitionColors: Record<string, string> = {
   "Premier League": "#37003c",
 };
 
-const createAdminRegistrationNotificationTemplate = (data: AdminRegistrationData) => {
-  const color = competitionColors[data.competition] || "#333";
-  const label = competitionLabels[data.competition] || data.competition;
-  const tierLabel = data.league_tier
-    ? ` (${data.league_tier.replace("_", " + ").replace(/\b\w/g, (c) => c.toUpperCase())})`
+const createAdminRegistrationNotificationTemplate = (rawData: AdminRegistrationData) => {
+  const color = competitionColors[rawData.competition] || "#333";
+  const label = competitionLabels[rawData.competition] || rawData.competition;
+  const tierLabel = rawData.league_tier
+    ? ` (${escapeHtml(rawData.league_tier).replace("_", " + ").replace(/\b\w/g, (c) => c.toUpperCase())})`
     : "";
+  // Sva korisnički kontrolisana polja escapovati — notes/ime s javne forme ne
+  // smiju završiti kao živi HTML u admin inboxu (phishing vektor).
+  const data = {
+    ...rawData,
+    first_name: escapeHtml(rawData.first_name || ""),
+    last_name: escapeHtml(rawData.last_name || ""),
+    email: escapeHtml(rawData.email || ""),
+    phone: escapeHtml(rawData.phone || ""),
+    payment_method: escapeHtml(rawData.payment_method || ""),
+    amount: escapeHtml(rawData.amount || ""),
+    notes: rawData.notes ? escapeHtml(rawData.notes) : rawData.notes,
+  };
 
   return `<!DOCTYPE html>
 <html lang="sr">
@@ -1527,12 +1539,26 @@ const PL_TIER_LABELS: Record<string, string> = {
   premium_h2h: "Premium + H2H liga",
 };
 
-const createPLConfirmationTemplate = (data: PLConfirmationData) => {
+const FPL_AUTO_JOIN_URL = "https://fantasy.premierleague.com/leagues/auto-join/";
+
+// Escape user-supplied strings before interpolating them into email HTML.
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+export const createPLConfirmationTemplate = (data: PLConfirmationData) => {
+  const firstName = escapeHtml(data.first_name);
+  const lastName = escapeHtml(data.last_name);
+  const email = escapeHtml(data.email);
   const tierLabel = PL_TIER_LABELS[data.league_tier] || data.league_tier;
   const paymentLine =
     data.payment_method === "card"
       ? "Tvoja uplata karticom je uspješno obrađena i registracija je aktivna."
-      : `Tvoja prijava je zaprimljena. Dogovorena dostava uplate u kešu: ${data.cash_delivery_date}. Registracija postaje aktivna nakon evidentirane uplate.`;
+      : `Tvoja prijava je zaprimljena. ${data.cash_delivery_date ? `Dogovorena dostava uplate u kešu: ${escapeHtml(data.cash_delivery_date)}. ` : ""}Registracija postaje aktivna nakon evidentirane uplate.`;
   const paymentMethodLabel =
     data.payment_method === "card" ? "Kartica (plaćeno)" : "Keš (na dostavi)";
 
@@ -1543,24 +1569,31 @@ const createPLConfirmationTemplate = (data: PLConfirmationData) => {
   const withCodes = leagues.filter((k) => PL_LEAGUE_CODES[k]);
   const missingCodes = leagues.filter((k) => !PL_LEAGUE_CODES[k]);
 
+  const preheader = withCodes.length
+    ? `Unutra ${withCodes.length > 1 ? "su tvoji kodovi" : "je tvoj kod"} za pristup FPL ${withCodes.length > 1 ? "ligama" : "ligi"} — sačuvaj ovaj email.`
+    : "Potvrda registracije za Premier League Fantasy 2026/27.";
+
+  // Kutija s kodom je namjerno SVIJETLA pozadina + TAMAN tekst sa solid bojama:
+  // Gmail dark mode invertuje solid parove konzistentno pa kontrast ostaje
+  // očuvan u oba moda (tamne kutije s gradijentom zna slomiti).
   const codesSection = withCodes
     .map(
       (k) => `
           <!-- ${PL_LEAGUE_NAMES[k]} — kod -->
           <tr>
             <td style="padding:28px 36px 0;">
-              <p style="margin:0 0 10px;font-size:11px;font-weight:600;color:#71717a;text-transform:uppercase;letter-spacing:1.5px;text-align:center;">${PL_LEAGUE_NAMES[k]} — kod za pristup</p>
+              <p class="text-muted" style="margin:0 0 10px;font-size:11px;font-weight:600;color:#71717a;text-transform:uppercase;letter-spacing:1.5px;text-align:center;">${PL_LEAGUE_NAMES[k]} — kod za pristup</p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td align="center" style="background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%);border:1px solid #7c3aed;border-radius:12px;padding:22px;">
-                    <div style="font-family:'SF Mono','Monaco','Courier New',monospace;font-size:28px;font-weight:700;letter-spacing:5px;color:#c4b5fd;">${PL_LEAGUE_CODES[k]}</div>
+                  <td align="center" bgcolor="#f5f3ff" class="code-box" style="background-color:#f5f3ff;border:2px solid #7c3aed;border-radius:12px;padding:22px;">
+                    <div class="code-text" style="font-family:'Courier New',Courier,monospace;font-size:28px;font-weight:700;letter-spacing:5px;color:#312e81;">${PL_LEAGUE_CODES[k]}</div>
                   </td>
                 </tr>
                 <tr><td style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
                 <tr>
-                  <td align="center">
-                    <a href="https://fantasy.premierleague.com/leagues/auto-join/${PL_LEAGUE_CODES[k]}" target="_blank" rel="noopener"
-                       style="display:block;width:100%;box-sizing:border-box;background:linear-gradient(135deg,#5b21b6 0%,#7c3aed 100%);color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:13px 28px;border-radius:12px;text-align:center;letter-spacing:0.2px;">
+                  <td align="center" bgcolor="#7c3aed" style="background-color:#7c3aed;border-radius:12px;">
+                    <a href="${FPL_AUTO_JOIN_URL}${PL_LEAGUE_CODES[k]}" target="_blank" rel="noopener"
+                       style="display:block;width:100%;box-sizing:border-box;background-color:#7c3aed;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:13px 28px;border-radius:12px;text-align:center;letter-spacing:0.2px;">
                       Pridruži se — ${PL_LEAGUE_NAMES[k]}
                     </a>
                   </td>
@@ -1573,37 +1606,56 @@ const createPLConfirmationTemplate = (data: PLConfirmationData) => {
 
   const nextStepsNote = missingCodes.length
     ? `Kod za pristup ${withCodes.length ? "preostalim ligama dobijaš" : "FPL ligi i sve detalje dobijaš"} uskoro na ovaj email. Tabele i rezultate prati na stranici Premier League lige.`
-    : "Klikni na dugme iznad ili kod unesi ručno na FPL platformi. Tabele i rezultate prati na stranici Premier League lige.";
+    : "Klikni na dugme iznad ili kod unesi ručno na fantasy.premierleague.com (Leagues &amp; Cups → Join a league). Sačuvaj ovaj email — sadrži kodove za pristup. Tabele i rezultate prati na stranici Premier League lige.";
 
   return `<!DOCTYPE html>
 <html lang="bs">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Premier League Fantasy 2026/27 — Potvrda registracije</title>
+  <style>
+    :root { color-scheme: light dark; supported-color-schemes: light dark; }
+    @media (prefers-color-scheme: dark) {
+      .email-bg { background-color: #18181b !important; }
+      .card { background-color: #232326 !important; }
+      .text-strong { color: #fafafa !important; }
+      .text-body { color: #d4d4d8 !important; }
+      .text-muted { color: #a1a1aa !important; }
+      .summary-box { border-color: #3f3f46 !important; }
+      .summary-cell { border-color: #303034 !important; }
+      .code-box { background-color: #2e1065 !important; border-color: #a78bfa !important; }
+      .code-text { color: #e9d5ff !important; }
+      .divider { background-color: #3f3f46 !important; }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 16px;">
+<body class="email-bg" style="margin:0;padding:0;background-color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <!-- Preheader (skriven u sadržaju, vidljiv u inbox preview-u) -->
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background-color:#f5f5f5;padding:40px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(55,0,60,0.08);">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" class="card" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;">
 
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#37003c 0%,#5b21b6 60%,#7c3aed 100%);padding:44px 32px;text-align:center;">
-              <div style="display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:999px;padding:6px 16px;margin-bottom:18px;">
+            <td bgcolor="#37003c" style="background-color:#37003c;background:linear-gradient(135deg,#37003c 0%,#5b21b6 60%,#7c3aed 100%);padding:44px 32px;text-align:center;">
+              <div style="display:inline-block;border:1px solid #a78bfa;border-radius:999px;padding:6px 16px;margin-bottom:18px;">
                 <span style="color:#ffffff;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">Premier League Fantasy 2026/27</span>
               </div>
               <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.4px;">Potvrda registracije</h1>
-              <p style="margin:10px 0 0;color:rgba(255,255,255,0.85);font-size:15px;font-weight:400;">REMIS Fantasy</p>
+              <p style="margin:10px 0 0;color:#e9d5ff;font-size:15px;font-weight:400;">REMIS Fantasy</p>
             </td>
           </tr>
 
           <!-- Greeting -->
           <tr>
             <td style="padding:36px 36px 8px;">
-              <p style="margin:0 0 8px;font-size:16px;color:#18181b;font-weight:500;">Pozdrav, ${data.first_name},</p>
-              <p style="margin:0;font-size:14px;line-height:1.7;color:#52525b;">
+              <p class="text-strong" style="margin:0 0 8px;font-size:16px;color:#18181b;font-weight:500;">Pozdrav, ${firstName},</p>
+              <p class="text-body" style="margin:0;font-size:14px;line-height:1.7;color:#52525b;">
                 Hvala što si dio REMIS Fantasy Premier League 2026/27 takmičenja. ${paymentLine}
               </p>
             </td>
@@ -1612,22 +1664,22 @@ const createPLConfirmationTemplate = (data: PLConfirmationData) => {
           <!-- Summary -->
           <tr>
             <td style="padding:24px 36px 8px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="summary-box" style="border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;">
                 <tr>
-                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;width:140px;">Igrač</td>
-                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${data.first_name} ${data.last_name}</td>
+                  <td class="summary-cell text-muted" style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;width:140px;">Igrač</td>
+                  <td class="summary-cell text-strong" style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${firstName} ${lastName}</td>
                 </tr>
                 <tr>
-                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">Liga</td>
-                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${tierLabel}</td>
+                  <td class="summary-cell text-muted" style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">Liga</td>
+                  <td class="summary-cell text-strong" style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${tierLabel}</td>
                 </tr>
                 <tr>
-                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">Iznos</td>
-                  <td style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${data.amount.toFixed(2)}€</td>
+                  <td class="summary-cell text-muted" style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">Iznos</td>
+                  <td class="summary-cell text-strong" style="padding:14px 18px;border-bottom:1px solid #f4f4f5;font-size:14px;color:#18181b;font-weight:500;">${data.amount.toFixed(2)}€</td>
                 </tr>
                 <tr>
-                  <td style="padding:14px 18px;font-size:13px;color:#71717a;">Način plaćanja</td>
-                  <td style="padding:14px 18px;font-size:14px;color:#18181b;font-weight:500;">${paymentMethodLabel}</td>
+                  <td class="text-muted" style="padding:14px 18px;font-size:13px;color:#71717a;">Način plaćanja</td>
+                  <td class="text-strong" style="padding:14px 18px;font-size:14px;color:#18181b;font-weight:500;">${paymentMethodLabel}</td>
                 </tr>
               </table>
             </td>
@@ -1637,7 +1689,7 @@ ${codesSection}
           <!-- Next steps -->
           <tr>
             <td style="padding:20px 36px 0;">
-              <p style="margin:0;font-size:13px;line-height:1.7;color:#71717a;text-align:center;">
+              <p class="text-muted" style="margin:0;font-size:13px;line-height:1.7;color:#71717a;text-align:center;">
                 ${nextStepsNote}
               </p>
             </td>
@@ -1646,28 +1698,65 @@ ${codesSection}
           <!-- Divider -->
           <tr>
             <td style="padding:28px 36px 0;">
-              <div style="height:1px;background:linear-gradient(90deg,transparent 0%,#e4e4e7 50%,transparent 100%);"></div>
+              <div class="divider" style="height:1px;background-color:#e4e4e7;"></div>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
             <td style="padding:24px 36px 36px;text-align:center;">
-              <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#18181b;letter-spacing:0.3px;">REMIS Fantasy</p>
-              <p style="margin:0;font-size:11px;color:#a1a1aa;">Sretno u takmičenju</p>
+              <p class="text-strong" style="margin:0 0 6px;font-size:13px;font-weight:600;color:#18181b;letter-spacing:0.3px;">REMIS Fantasy</p>
+              <p class="text-muted" style="margin:0;font-size:11px;color:#a1a1aa;">Sretno u takmičenju</p>
             </td>
           </tr>
 
         </table>
 
-        <p style="margin:20px 0 0;font-size:11px;color:#a1a1aa;text-align:center;">
-          Ovaj email je poslan na ${data.email}
+        <p class="text-muted" style="margin:20px 0 0;font-size:11px;color:#a1a1aa;text-align:center;">
+          Ovaj email je poslan na ${email} jer je izvršena registracija na remisfantasy.com.
         </p>
       </td>
     </tr>
   </table>
 </body>
 </html>`;
+};
+
+// Plain-text alternativa — poboljšava dostavljivost (spam score) i čitljivost
+// u klijentima koji ne renderuju HTML.
+export const createPLConfirmationText = (data: PLConfirmationData) => {
+  const tierLabel = PL_TIER_LABELS[data.league_tier] || data.league_tier;
+  const leagues = PL_TIER_LEAGUES[data.league_tier] || [];
+  const withCodes = leagues.filter((k) => PL_LEAGUE_CODES[k]);
+  const missingCodes = leagues.filter((k) => !PL_LEAGUE_CODES[k]);
+
+  const paymentLine =
+    data.payment_method === "card"
+      ? "Tvoja uplata karticom je uspješno obrađena i registracija je aktivna."
+      : `Tvoja prijava je zaprimljena. ${data.cash_delivery_date ? `Dogovorena dostava uplate u kešu: ${data.cash_delivery_date}. ` : ""}Registracija postaje aktivna nakon evidentirane uplate.`;
+
+  const codeLines = withCodes
+    .map(
+      (k) =>
+        `${PL_LEAGUE_NAMES[k]} — kod za pristup: ${PL_LEAGUE_CODES[k]}\nPridruži se: ${FPL_AUTO_JOIN_URL}${PL_LEAGUE_CODES[k]}`
+    )
+    .join("\n\n");
+
+  const missingLine = missingCodes.length
+    ? "Kodove za preostale lige dobijaš uskoro na ovaj email."
+    : "";
+
+  return [
+    `Pozdrav, ${data.first_name},`,
+    `Hvala što si dio REMIS Fantasy Premier League 2026/27 takmičenja. ${paymentLine}`,
+    `Igrač: ${data.first_name} ${data.last_name}\nLiga: ${tierLabel}\nIznos: ${data.amount.toFixed(2)}€\nNačin plaćanja: ${data.payment_method === "card" ? "Kartica (plaćeno)" : "Keš (na dostavi)"}`,
+    codeLines,
+    missingLine,
+    "Sačuvaj ovaj email — sadrži kodove za pristup. Kod možeš unijeti i ručno na fantasy.premierleague.com (Leagues & Cups → Join a league).",
+    "REMIS Fantasy — sretno u takmičenju!",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 };
 
 export const sendPLRegistrationConfirmationEmail = async (
@@ -1681,12 +1770,15 @@ export const sendPLRegistrationConfirmationEmail = async (
       subject:
         "Premier League Fantasy 2026/27 — Potvrda registracije | REMIS Fantasy",
       html: createPLConfirmationTemplate(data),
+      text: createPLConfirmationText(data),
     });
     console.info("PL confirmation email sent:", result.messageId);
-    return { success: true, messageId: result.messageId };
+    return { success: true as const, messageId: result.messageId };
   } catch (error) {
     console.error("Failed to send PL confirmation email:", error);
-    // Don't throw — a failed confirmation email must not break the flow
+    // Ne baca izuzetak — pozivatelj odlučuje šta s neuspjehom (webhook na
+    // osnovu ovoga vraća 500 da Stripe ponovi isporuku i slanje se retry-a).
+    return { success: false as const };
   }
 };
 

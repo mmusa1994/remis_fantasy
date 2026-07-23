@@ -86,6 +86,26 @@ export async function POST(req: NextRequest) {
           const { first_name, last_name, email, phone, notes } =
             paymentIntent.metadata;
 
+          // Idempotency: Stripe isporučuje evente at-least-once — preskoči
+          // ako je ovaj PaymentIntent već upisan.
+          const { data: existingF1, error: f1LookupError } =
+            await supabaseServer
+              .from("f1_registrations_25_26")
+              .select("id")
+              .eq("stripe_payment_intent_id", paymentIntent.id)
+              .maybeSingle();
+
+          if (f1LookupError) {
+            throw new Error(
+              `F1 idempotency lookup failed: ${f1LookupError.message}`
+            );
+          }
+
+          if (existingF1) {
+            console.info("F1 registration already recorded for PI:", paymentIntent.id);
+            break;
+          }
+
           const { data: insertedRow, error: f1Error } = await supabaseServer
             .from("f1_registrations_25_26")
             .insert({
@@ -162,6 +182,25 @@ export async function POST(req: NextRequest) {
           const { first_name, last_name, email, phone, notes } =
             paymentIntent.metadata;
 
+          // Idempotency: preskoči ako je ovaj PaymentIntent već upisan.
+          const { data: existingCl, error: clLookupError } =
+            await supabaseServer
+              .from("registration_champions_league_26_27")
+              .select("id")
+              .eq("stripe_payment_intent_id", paymentIntent.id)
+              .maybeSingle();
+
+          if (clLookupError) {
+            throw new Error(
+              `CL idempotency lookup failed: ${clLookupError.message}`
+            );
+          }
+
+          if (existingCl) {
+            console.info("CL registration already recorded for PI:", paymentIntent.id);
+            break;
+          }
+
           const { error: clError } = await supabaseServer
             .from("registration_champions_league_26_27")
             .insert({
@@ -176,7 +215,52 @@ export async function POST(req: NextRequest) {
               amount_paid: 15.0,
             });
 
-          if (clError) {
+          if (
+            clError?.code === "23505" &&
+            clError.message.includes("stripe_pi_uidx")
+          ) {
+            // Konkurentna isporuka istog eventa već je upisala red.
+            console.info("CL registration already recorded (unique index) for PI:", paymentIntent.id);
+          } else if (clError?.code === "23505") {
+            // Deterministički konflikt (npr. email već registrovan kešom):
+            // kartica JESTE naplaćena, a red ne može biti upisan — trajno
+            // evidentiraj i alarmiraj admina, retry nikad ne može uspjeti.
+            console.error(
+              "CL registration conflict for PI:",
+              paymentIntent.id,
+              clError.message
+            );
+            const { error: clConflictError } = await supabaseServer
+              .from("payment_conflicts")
+              .insert({
+                stripe_payment_intent_id: paymentIntent.id,
+                competition: "Champions League",
+                email,
+                amount: 15.0,
+                details: `Naplaćeno, ali upis nije uspio: ${clError.message}. Ime: ${first_name} ${last_name}, tel: ${phone}.`,
+              });
+            const clConflictRecorded =
+              !clConflictError || clConflictError.code === "23505";
+            if (clConflictError?.code === "42P01") {
+              console.error(
+                "payment_conflicts table missing — run db/sql/pl_26_27_email_reliability.sql"
+              );
+            } else if (clConflictError && clConflictError.code !== "23505") {
+              throw new Error(
+                `Failed to record CL payment conflict for PI ${paymentIntent.id}: ${clConflictError.message}`
+              );
+            }
+            await sendAdminRegistrationNotification({
+              competition: "Champions League",
+              first_name,
+              last_name,
+              email,
+              phone,
+              payment_method: "Stripe (kartica)",
+              amount: "15.00€",
+              notes: `⚠️ KONFLIKT: uplata je naplaćena, ali upis NIJE uspio jer registracija s ovim podacima već postoji (${clError.message}). PaymentIntent: ${paymentIntent.id}. ${clConflictRecorded ? "Evidentirano u payment_conflicts tabeli." : "NIJE evidentirano u payment_conflicts (tabela ne postoji — pokrenuti db/sql/pl_26_27_email_reliability.sql)."} Riješiti ručno — spojiti s postojećom registracijom ili refundirati.`,
+            });
+          } else if (clError) {
             console.error("Error inserting CL registration:", clError);
           } else {
             await sendAdminRegistrationNotification({
@@ -295,21 +379,88 @@ export async function POST(req: NextRequest) {
 
           // Idempotency: Stripe may deliver the same event more than once.
           // A failed lookup must NOT fall through to the insert — return 500
-          // instead so Stripe retries the event later.
-          const { data: existingPl, error: plLookupError } = await supabaseServer
+          // instead so Stripe retries the event later. confirmation_email_sent
+          // se čita da bi redelivery mogao ponoviti neuspjelo slanje emaila;
+          // ako kolona još ne postoji (SQL nije pokrenut), fallback bez nje.
+          let existingPl: {
+            id: string;
+            confirmation_email_sent?: boolean | null;
+          } | null = null;
+          let emailFlagSupported = true;
+
+          const plLookup = await supabaseServer
             .from("registration_premier_league_26_27")
-            .select("id")
+            .select("id, confirmation_email_sent")
             .eq("stripe_payment_intent_id", paymentIntent.id)
             .maybeSingle();
 
-          if (plLookupError) {
-            throw new Error(
-              `PL registration idempotency lookup failed: ${plLookupError.message}`
+          if (plLookup.error?.code === "42703") {
+            emailFlagSupported = false;
+            console.error(
+              "confirmation_email_sent column missing — run db/sql/pl_26_27_email_reliability.sql"
             );
+            const fallback = await supabaseServer
+              .from("registration_premier_league_26_27")
+              .select("id")
+              .eq("stripe_payment_intent_id", paymentIntent.id)
+              .maybeSingle();
+            if (fallback.error) {
+              throw new Error(
+                `PL registration idempotency lookup failed: ${fallback.error.message}`
+              );
+            }
+            existingPl = fallback.data;
+          } else if (plLookup.error) {
+            throw new Error(
+              `PL registration idempotency lookup failed: ${plLookup.error.message}`
+            );
+          } else {
+            existingPl = plLookup.data;
           }
 
-          if (!existingPl) {
-            const { error: plError } = await supabaseServer
+          const markPlEmailSent = async (registrationId: string) => {
+            if (!emailFlagSupported) return;
+            const { error: flagError } = await supabaseServer
+              .from("registration_premier_league_26_27")
+              .update({
+                confirmation_email_sent: true,
+                confirmation_email_sent_at: new Date().toISOString(),
+              })
+              .eq("id", registrationId);
+            if (flagError) {
+              // Flag nije upisan iako je email poslan — redelivery bi poslao
+              // duplikat, zato samo logujemo (email je stigao korisniku).
+              console.error("Failed to mark PL confirmation email sent:", flagError);
+            }
+          };
+
+          if (existingPl) {
+            // Redelivery: red postoji. Ako potvrdni email ranije nije prošao,
+            // pokušaj ga ponovo (admin notifikacija se NE šalje ponovo).
+            if (emailFlagSupported && existingPl.confirmation_email_sent === false) {
+              const emailResult = await sendPLRegistrationConfirmationEmail({
+                first_name,
+                last_name,
+                email,
+                league_tier,
+                amount,
+                payment_method: "card",
+              });
+              if (emailResult?.success) {
+                await markPlEmailSent(existingPl.id);
+              } else {
+                throw new Error(
+                  `PL confirmation email retry failed for PI ${paymentIntent.id}`
+                );
+              }
+            } else {
+              console.info(
+                "PL registration already recorded for PI:",
+                paymentIntent.id
+              );
+            }
+          } else {
+            const { data: insertedPl, error: plError } = await supabaseServer
               .from("registration_premier_league_26_27")
               .insert({
                 first_name,
@@ -322,7 +473,9 @@ export async function POST(req: NextRequest) {
                 league_tier,
                 stripe_payment_intent_id: paymentIntent.id,
                 amount_paid: amount,
-              });
+              })
+              .select("id")
+              .single();
 
             if (
               plError?.code === "23505" &&
@@ -337,12 +490,35 @@ export async function POST(req: NextRequest) {
             } else if (plError?.code === "23505") {
               // Deterministic conflict (e.g. email already registered via the
               // cash flow) — the card WAS charged but no row was written, and
-              // a retry can never succeed, so alarm the admin and return 200.
+              // a retry can never succeed. Prvo TRAJNO evidentiraj konflikt
+              // (admin email može pasti bez traga), pa tek onda alarmiraj.
               console.error(
                 "PL registration conflict for PI:",
                 paymentIntent.id,
                 plError.message
               );
+              const { error: conflictError } = await supabaseServer
+                .from("payment_conflicts")
+                .insert({
+                  stripe_payment_intent_id: paymentIntent.id,
+                  competition: "Premier League",
+                  email,
+                  amount,
+                  details: `Naplaćeno, ali upis nije uspio: ${plError.message}. Tier: ${league_tier}, ime: ${first_name} ${last_name}, tel: ${phone}.`,
+                });
+              const conflictRecorded =
+                !conflictError || conflictError.code === "23505";
+              if (conflictError?.code === "42P01") {
+                console.error(
+                  "payment_conflicts table missing — run db/sql/pl_26_27_email_reliability.sql"
+                );
+              } else if (conflictError && conflictError.code !== "23505") {
+                // Konflikt nije trajno zabilježen — 500 da Stripe ponovi event
+                // dok evidencija ne uspije (23505 = već zabilježen ranije).
+                throw new Error(
+                  `Failed to record payment conflict for PI ${paymentIntent.id}: ${conflictError.message}`
+                );
+              }
               await sendAdminRegistrationNotification({
                 competition: "Premier League",
                 first_name,
@@ -352,27 +528,49 @@ export async function POST(req: NextRequest) {
                 payment_method: "Stripe (kartica)",
                 amount: `${amount.toFixed(2)}€`,
                 league_tier,
-                notes: `⚠️ KONFLIKT: uplata je naplaćena, ali upis NIJE uspio jer registracija s ovim podacima već postoji (${plError.message}). PaymentIntent: ${paymentIntent.id}. Riješiti ručno — spojiti s postojećom registracijom ili refundirati.`,
+                notes: `⚠️ KONFLIKT: uplata je naplaćena, ali upis NIJE uspio jer registracija s ovim podacima već postoji (${plError.message}). PaymentIntent: ${paymentIntent.id}. ${conflictRecorded ? "Evidentirano u payment_conflicts tabeli." : "NIJE evidentirano u payment_conflicts (tabela ne postoji — pokrenuti db/sql/pl_26_27_email_reliability.sql)."} Riješiti ručno — spojiti s postojećom registracijom ili refundirati.`,
               });
             } else if (plError) {
               console.error("Error inserting PL registration:", plError);
               // The card was charged but the registration was not persisted —
-              // alert the admin, then return 500 so Stripe retries the event.
-              await sendAdminRegistrationNotification({
-                competition: "Premier League",
-                first_name,
-                last_name,
-                email,
-                phone,
-                payment_method: "Stripe (kartica)",
-                amount: `${amount.toFixed(2)}€`,
-                league_tier,
-                notes: `⚠️ GREŠKA: uplata je naplaćena, ali upis u bazu NIJE uspio (${plError.message}). PaymentIntent: ${paymentIntent.id}. Stripe će automatski ponoviti pokušaj — ručno upiši registraciju samo ako se ne pojavi u admin panelu.`,
-              });
+              // alert the admin ONCE, then return 500 so Stripe retries the
+              // event. Dedupe alarma preko payment_conflicts (Stripe retry-a
+              // do ~3 dana — bez dedupe-a admin dobija email na svaki retry).
+              const { error: alertDedupeError } = await supabaseServer
+                .from("payment_conflicts")
+                .insert({
+                  stripe_payment_intent_id: paymentIntent.id,
+                  competition: "Premier League",
+                  email,
+                  amount,
+                  details: `GREŠKA (Stripe retry u toku): upis nije uspio — ${plError.message}. Tier: ${league_tier}, ime: ${first_name} ${last_name}, tel: ${phone}.`,
+                });
+              const alreadyAlerted = alertDedupeError?.code === "23505";
+              if (!alreadyAlerted) {
+                await sendAdminRegistrationNotification({
+                  competition: "Premier League",
+                  first_name,
+                  last_name,
+                  email,
+                  phone,
+                  payment_method: "Stripe (kartica)",
+                  amount: `${amount.toFixed(2)}€`,
+                  league_tier,
+                  notes: `⚠️ GREŠKA: uplata je naplaćena, ali upis u bazu NIJE uspio (${plError.message}). PaymentIntent: ${paymentIntent.id}. Stripe će automatski ponoviti pokušaj — ručno upiši registraciju samo ako se ne pojavi u admin panelu.`,
+                });
+              }
               throw new Error(
                 `PL registration insert failed for PI ${paymentIntent.id}: ${plError.message}`
               );
             } else {
+              // Ako je raniji pokušaj upisa pao (retry-alarm u
+              // payment_conflicts), očisti zapis — registracija je sada
+              // uspješno upisana. Greške se ignorišu (best effort).
+              await supabaseServer
+                .from("payment_conflicts")
+                .delete()
+                .eq("stripe_payment_intent_id", paymentIntent.id);
+
               await sendAdminRegistrationNotification({
                 competition: "Premier League",
                 first_name,
@@ -384,7 +582,7 @@ export async function POST(req: NextRequest) {
                 league_tier,
                 notes: notes || undefined,
               });
-              await sendPLRegistrationConfirmationEmail({
+              const emailResult = await sendPLRegistrationConfirmationEmail({
                 first_name,
                 last_name,
                 email,
@@ -392,6 +590,20 @@ export async function POST(req: NextRequest) {
                 amount,
                 payment_method: "card",
               });
+              if (emailResult?.success) {
+                if (insertedPl?.id) await markPlEmailSent(insertedPl.id);
+              } else if (emailFlagSupported) {
+                // Email s kodovima NIJE poslan — 500 da Stripe ponovi event;
+                // redelivery grana iznad će ponoviti samo slanje emaila.
+                throw new Error(
+                  `PL confirmation email failed for PI ${paymentIntent.id} — Stripe will retry`
+                );
+              } else {
+                console.error(
+                  "PL confirmation email failed and retry flag unsupported — resend manually via admin panel. PI:",
+                  paymentIntent.id
+                );
+              }
             }
           }
         }

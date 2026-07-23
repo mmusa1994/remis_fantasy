@@ -96,6 +96,78 @@ function getPLTable(season: string | null): string {
   return PL_TABLE_MAP[season || "26_27"] || PL_TABLE_MAP["26_27"];
 }
 
+// 26/27 tabela nema codes_email_sent kolone — stanje slanja kodova vodi se
+// kroz confirmation_email_sent. Prevedi update payload i vraćeni red da
+// dashboard može koristiti ista polja za obje sezone.
+function translatePLUpdates(
+  tableName: string,
+  updates: Record<string, unknown>
+): Record<string, unknown> {
+  if (tableName !== "registration_premier_league_26_27") return updates;
+  const translated = { ...updates };
+  if ("codes_email_sent" in translated) {
+    translated.confirmation_email_sent = translated.codes_email_sent;
+    delete translated.codes_email_sent;
+  }
+  return translated;
+}
+
+function mapPLRow(
+  tableName: string,
+  row: Record<string, unknown> | null
+): Record<string, unknown> | null {
+  if (!row || tableName !== "registration_premier_league_26_27") return row;
+  return {
+    ...row,
+    codes_email_sent: row.confirmation_email_sent ?? false,
+    codes_email_sent_at: row.confirmation_email_sent_at ?? null,
+  };
+}
+
+// Update s tolerancijom na nepokrenutu migraciju: ako confirmation_* kolone
+// još ne postoje (42703), ponovi update bez njih umjesto da cijeli save 500-a.
+async function runRegistrationUpdate(
+  tableName: string,
+  id: string,
+  updates: Record<string, unknown>
+) {
+  let result = await supabaseServer
+    .from(tableName)
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (
+    result.error?.code === "42703" &&
+    ("confirmation_email_sent" in updates ||
+      "confirmation_email_sent_at" in updates)
+  ) {
+    console.error(
+      "confirmation_email_sent columns missing — run db/sql/pl_26_27_email_reliability.sql"
+    );
+    const rest = { ...updates };
+    delete rest.confirmation_email_sent;
+    delete rest.confirmation_email_sent_at;
+    if (Object.keys(rest).length === 0) {
+      result = await supabaseServer
+        .from(tableName)
+        .select()
+        .eq("id", id)
+        .single();
+    } else {
+      result = await supabaseServer
+        .from(tableName)
+        .update(rest)
+        .eq("id", id)
+        .select()
+        .single();
+    }
+  }
+
+  return result;
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Verify admin session
@@ -121,7 +193,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
-    return NextResponse.json({ registrations: data || [] });
+    // 26/27 tabela vodi slanje kodova kroz confirmation_email_sent — mapiraj
+    // na codes_email_sent koje dashboard već koristi za badge/dugme/statistiku.
+    const registrations =
+      tableName === "registration_premier_league_26_27"
+        ? (data || []).map((row: Record<string, unknown>) => ({
+            ...row,
+            codes_email_sent: row.confirmation_email_sent ?? false,
+            codes_email_sent_at: row.confirmation_email_sent_at ?? null,
+          }))
+        : data || [];
+
+    return NextResponse.json({ registrations });
   } catch (error) {
     console.error("Error in admin registrations API:", error);
     return NextResponse.json(
@@ -201,12 +284,11 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update registration using server-side client
-    const { data, error } = await supabaseServer
-      .from(tableName)
-      .update(filteredUpdates)
-      .eq("id", id)
-      .select()
-      .single();
+    const { data, error } = await runRegistrationUpdate(
+      tableName,
+      id,
+      translatePLUpdates(tableName, filteredUpdates)
+    );
 
     if (error) {
       console.error("Error updating registration:", error);
@@ -218,7 +300,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ registration: data });
+    return NextResponse.json({ registration: mapPLRow(tableName, data) });
   } catch (error) {
     console.error("Error in admin registration update API:", error);
     return NextResponse.json(
@@ -282,12 +364,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update specific field using server-side client
-    const { data, error } = await supabaseServer
-      .from(tableName)
-      .update({ [field]: value })
-      .eq("id", id)
-      .select()
-      .single();
+    const { data, error } = await runRegistrationUpdate(
+      tableName,
+      id,
+      translatePLUpdates(tableName, { [field]: value })
+    );
 
     if (error) {
       console.error("Error updating registration field:", error);
@@ -299,7 +380,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ registration: data });
+    return NextResponse.json({ registration: mapPLRow(tableName, data) });
   } catch (error) {
     console.error("Error in admin registration field update API:", error);
     return NextResponse.json(

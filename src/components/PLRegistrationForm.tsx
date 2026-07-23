@@ -50,6 +50,13 @@ function PLRegistrationFormInner() {
   const elements = useElements();
   const router = useRouter();
   const recaptchaRef = useRef<ReCAPTCHA>(null);
+  // Stabilan token po sesiji forme — server ga koristi za Stripe idempotency
+  // key, pa dvostruki POST istog submita ne može duplo teretiti karticu.
+  const clientTokenRef = useRef<string>(
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`
+  );
 
   const [formData, setFormData] = useState<FormData>({
     first_name: "",
@@ -184,7 +191,7 @@ function PLRegistrationFormInner() {
         if (!response.ok) {
           throw new Error(data.error || t("common:validation.registrationError"));
         }
-        router.push("/premier-league/registration/success");
+        router.push("/premier-league/registration/success?method=cash");
         return;
       }
 
@@ -221,6 +228,7 @@ function PLRegistrationFormInner() {
           payment_method_id: paymentMethod.id,
           league_tier: getLeagueTier(),
           recaptcha_token: recaptchaToken,
+          client_token: clientTokenRef.current,
         }),
       });
 
@@ -237,7 +245,7 @@ function PLRegistrationFormInner() {
       }
 
       if (paymentIntent?.status === "succeeded") {
-        router.push("/premier-league/registration/success");
+        router.push("/premier-league/registration/success?method=card");
       } else {
         // e.g. "processing": funds may still settle — the webhook records the
         // registration automatically once the payment completes.

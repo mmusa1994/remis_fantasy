@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { stripe } from "@/lib/stripe";
+import { supabaseServer } from "@/lib/supabase-server";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { plRegistrationLimiter } from "@/lib/rate-limiter";
 
@@ -27,6 +29,7 @@ export async function POST(req: NextRequest) {
       payment_method_id,
       league_tier,
       recaptcha_token,
+      client_token,
     } = await req.json();
 
     if (!(await verifyRecaptcha(recaptcha_token))) {
@@ -80,23 +83,74 @@ export async function POST(req: NextRequest) {
 
     const amount = tierAmounts[league_tier];
 
+    const cleanFirstName = String(first_name).trim().slice(0, 100);
+    const cleanLastName = String(last_name).trim().slice(0, 100);
+    const cleanEmail = String(email).trim().slice(0, 255);
+    const cleanPhone = String(phone).trim().slice(0, 40);
+    const cleanNotes = String(notes || "").trim().slice(0, 450);
+
+    // Guard prije naplate: ako registracija s ovim emailom već postoji (keš
+    // ili ranija kartična), NE kreiraj novu naplatu — webhook je ionako ne bi
+    // mogao upisati (konflikt "naplaćeno ali neregistrovano").
+    const { data: existingRows, error: dupError } = await supabaseServer
+      .from("registration_premier_league_26_27")
+      .select("id")
+      .eq("email", cleanEmail)
+      .is("deleted_at", null)
+      .limit(1);
+
+    if (dupError) {
+      // Fail closed — bez provjere duplikata ne naplaćujemo karticu.
+      console.error("PL duplicate check failed:", dupError);
+      return NextResponse.json(
+        { error: "Provjera registracije trenutno nije moguća. Pokušajte ponovo za par minuta." },
+        { status: 503 }
+      );
+    }
+
+    if (existingRows && existingRows.length > 0) {
+      return NextResponse.json(
+        { error: "Registracija s ovim emailom već postoji. Ako mislite da je ovo greška, kontaktirajte nas." },
+        { status: 409 }
+      );
+    }
+
+    // Idempotency key: identičan zahtjev (isti client_token + isti podaci +
+    // isti PaymentMethod) vraća isti PaymentIntent umjesto nove naplate —
+    // štiti od duplog terećenja kod dvostrukog POST-a istog submita.
+    // payment_method_id MORA biti u hashu: novi PaymentMethod znači nove
+    // parametre, a isti ključ s drugim parametrima Stripe odbija greškom.
+    const idempotencyOptions: { idempotencyKey?: string } = {};
+    if (typeof client_token === "string" && /^[A-Za-z0-9-]{8,64}$/.test(client_token)) {
+      const payloadHash = createHash("sha256")
+        .update(
+          JSON.stringify([cleanFirstName, cleanLastName, cleanEmail, cleanPhone, cleanNotes, league_tier, payment_method_id])
+        )
+        .digest("hex")
+        .slice(0, 16);
+      idempotencyOptions.idempotencyKey = `pl2627-${client_token}-${payloadHash}`;
+    }
+
     // Create PaymentIntent with the client-created PaymentMethod
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: "eur",
-      payment_method: payment_method_id,
-      metadata: {
-        type: "pl_registration_26_27",
-        league_tier,
-        first_name: first_name.trim(),
-        last_name: last_name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        // Stripe rejects metadata values over 500 chars
-        notes: (notes || "").trim().slice(0, 450),
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount,
+        currency: "eur",
+        payment_method: payment_method_id,
+        metadata: {
+          type: "pl_registration_26_27",
+          league_tier,
+          first_name: cleanFirstName,
+          last_name: cleanLastName,
+          email: cleanEmail,
+          phone: cleanPhone,
+          // Stripe rejects metadata values over 500 chars
+          notes: cleanNotes,
+        },
+        description: `Remis Fantasy Premier League 2026/27 - ${league_tier}`,
       },
-      description: `Remis Fantasy Premier League 2026/27 - ${league_tier}`,
-    });
+      idempotencyOptions
+    );
 
     return NextResponse.json({
       success: true,

@@ -1,12 +1,11 @@
-// FPL invite kodovi za sezonu 26/27. Popuniti kad lige budu kreirane na
-// fantasy.premierleague.com — dok je vrijednost null, potvrdni email šalje
-// napomenu da kod stiže naknadno umjesto koda.
+// FPL invite kodovi za sezonu 26/27. Ako je vrijednost null, potvrdni email
+// šalje napomenu da kod stiže naknadno umjesto koda.
 export type PLLeagueKey = "standard" | "premium" | "h2h";
 
 export const PL_LEAGUE_CODES: Record<PLLeagueKey, string | null> = {
-  standard: null,
-  premium: null,
-  h2h: null,
+  standard: "rsqs7o",
+  premium: "jwe043",
+  h2h: "0b1siz",
 };
 
 // Koje lige pripadaju kojem registracijskom tieru — kombinovani tieri

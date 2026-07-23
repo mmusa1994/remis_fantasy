@@ -283,7 +283,13 @@ export default function AdminDashboardTabs({
     try {
       setSendingEmail(registration.id);
 
-      const emailEndpoint = activeTab === "premier" ? "/api/send-email" : activeTab === "champions" ? "/api/send-champions-email" : "/api/send-f1-email";
+      // Premier 26/27 registracije koriste league_tier model i FPL kodove nove
+      // sezone — legacy /api/send-email bi poslao stare 25/26 kodove.
+      const isPL2627 = activeTab === "premier" && season === "26_27";
+
+      const emailEndpoint = isPL2627
+        ? "/api/admin/send-pl-codes"
+        : activeTab === "premier" ? "/api/send-email" : activeTab === "champions" ? "/api/send-champions-email" : "/api/send-f1-email";
       const emailType = activeTab === "premier" ? "codes" : activeTab === "champions" ? "champions_codes" : "f1_codes";
 
       const response = await fetch(emailEndpoint, {
@@ -291,21 +297,25 @@ export default function AdminDashboardTabs({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          emailType: emailType,
-          registrationId: registration.id,
-          userData: {
-            first_name: registration.first_name,
-            last_name: registration.last_name,
-            email: registration.email,
-            phone: registration.phone,
-            team_name: registration.team_name,
-            league_type: registration.league_type,
-            h2h_league: registration.h2h_league,
-            payment_method: registration.payment_method,
-            cash_status: registration.cash_status,
-          },
-        }),
+        body: JSON.stringify(
+          isPL2627
+            ? { registrationId: registration.id }
+            : {
+                emailType: emailType,
+                registrationId: registration.id,
+                userData: {
+                  first_name: registration.first_name,
+                  last_name: registration.last_name,
+                  email: registration.email,
+                  phone: registration.phone,
+                  team_name: registration.team_name,
+                  league_type: registration.league_type,
+                  h2h_league: registration.h2h_league,
+                  payment_method: registration.payment_method,
+                  cash_status: registration.cash_status,
+                },
+              }
+        ),
       });
 
       const responseData = await response.json();

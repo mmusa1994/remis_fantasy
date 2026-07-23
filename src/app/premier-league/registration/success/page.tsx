@@ -1,12 +1,16 @@
 "use client";
 
-import { CheckCircle } from "lucide-react";
+import { Suspense } from "react";
+import { CheckCircle, MailWarning } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 
-export default function PLRegistrationSuccessPage() {
+function PLRegistrationSuccessContent() {
   const { t } = useTranslation("common");
+  const searchParams = useSearchParams();
+  const isCash = searchParams.get("method") === "cash";
 
   return (
     <section className="relative w-full min-h-[60vh] bg-theme-background theme-transition flex items-center justify-center">
@@ -46,8 +50,21 @@ export default function PLRegistrationSuccessPage() {
           </h1>
 
           <p className="text-theme-text-secondary text-base md:text-lg mb-8 max-w-lg mx-auto">
-            {t("plSuccess.message")}
+            {isCash ? t("plSuccess.messageCash") : t("plSuccess.message")}
           </p>
+
+          {/* Spam check notice */}
+          <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/10 to-amber-500/10 rounded-lg p-5 mb-6 border border-amber-500/40 flex items-start gap-3 text-left">
+            <MailWarning className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-theme-heading-primary font-bold mb-1">
+                {t("plSuccess.emailNoteTitle")}
+              </p>
+              <p className="text-theme-text-secondary text-sm">
+                {t("plSuccess.emailNote")}
+              </p>
+            </div>
+          </div>
 
           <div className="bg-gradient-to-r from-purple-500/10 via-purple-500/10 to-purple-500/10 rounded-lg p-6 mb-8 border border-purple-500/30">
             <p className="text-theme-heading-primary font-bold mb-2">
@@ -67,5 +84,13 @@ export default function PLRegistrationSuccessPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function PLRegistrationSuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <PLRegistrationSuccessContent />
+    </Suspense>
   );
 }

@@ -232,6 +232,9 @@
   "plSuccess": {
     "title": "Registracija Potvrđena!",
     "message": "Uspješno ste se registrovali za Premier League Fantasy ligu 2026/27. Plaćanje je primljeno i vaša registracija je aktivna.",
+    "messageCash": "Uspješno ste se registrovali za Premier League Fantasy ligu 2026/27. Vaša prijava je zaprimljena, a registracija postaje aktivna nakon dostave uplate u kešu.",
+    "emailNoteTitle": "Provjerite email (i spam folder!)",
+    "emailNote": "Poslali smo vam email sa potvrdom i kodovima za pristup ligama. Ako ga ne vidite u inboxu za nekoliko minuta, obavezno provjerite spam/junk folder i označite poruku kao 'Nije spam'.",
     "whatsNext": "Šta dalje?",
     "whatsNextDescription": "Pratite tabele i rezultate na stranici Premier League Fantasy lige. Sretno!",
     "viewTables": "Pogledaj tabele"
