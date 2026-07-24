@@ -124,45 +124,63 @@ function mapPLRow(
   };
 }
 
-// Update s tolerancijom na nepokrenutu migraciju: ako confirmation_* kolone
-// još ne postoje (42703), ponovi update bez njih umjesto da cijeli save 500-a.
+// Nepostojeća kolona u updateu: PostgREST vraća PGRST204 ("Could not find
+// the 'x' column ... in the schema cache"), a Postgres 42703. Izvuci ime
+// kolone iz poruke da se može ukloniti iz payloada.
+function missingColumnFromError(error: {
+  code?: string;
+  message?: string;
+} | null): string | null {
+  if (!error || (error.code !== "PGRST204" && error.code !== "42703")) {
+    return null;
+  }
+  const message = error.message || "";
+  const match =
+    message.match(/'([^']+)' column/) || message.match(/column "([^"]+)"/);
+  return match ? match[1] : null;
+}
+
+// Update s tolerancijom na kolone koje u ovoj tabeli/sezoni ne postoje
+// (npr. confirmation_* prije migracije, ili 25/26-only polja na 26/27
+// tabeli): umjesto da cijeli save 500-a, ukloni prijavljenu kolonu i ponovi.
 async function runRegistrationUpdate(
   tableName: string,
   id: string,
   updates: Record<string, unknown>
 ) {
+  const remaining = { ...updates };
+
   let result = await supabaseServer
     .from(tableName)
-    .update(updates)
+    .update(remaining)
     .eq("id", id)
     .select()
     .single();
 
-  if (
-    result.error?.code === "42703" &&
-    ("confirmation_email_sent" in updates ||
-      "confirmation_email_sent_at" in updates)
-  ) {
-    console.error(
-      "confirmation_email_sent columns missing — run db/sql/pl_26_27_email_reliability.sql"
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const missingColumn = missingColumnFromError(result.error);
+    if (!missingColumn || !(missingColumn in remaining)) break;
+
+    console.warn(
+      `Column "${missingColumn}" missing on ${tableName} — retrying update without it`
     );
-    const rest = { ...updates };
-    delete rest.confirmation_email_sent;
-    delete rest.confirmation_email_sent_at;
-    if (Object.keys(rest).length === 0) {
+    delete remaining[missingColumn];
+
+    if (Object.keys(remaining).length === 0) {
       result = await supabaseServer
         .from(tableName)
         .select()
         .eq("id", id)
         .single();
-    } else {
-      result = await supabaseServer
-        .from(tableName)
-        .update(rest)
-        .eq("id", id)
-        .select()
-        .single();
+      break;
     }
+
+    result = await supabaseServer
+      .from(tableName)
+      .update(remaining)
+      .eq("id", id)
+      .select()
+      .single();
   }
 
   return result;
@@ -227,8 +245,19 @@ export async function PUT(request: NextRequest) {
     const season = searchParams.get("season");
     const tableName = getPLTable(season);
 
-    // Parse and validate request body
-    const parseResult = putRequestSchema.safeParse(await request.json());
+    // Parse and validate request body. Dashboard šalje editFormData polja
+    // verbatim — vrijednosti koje su null (kolone koje za ovu sezonu ne
+    // postoje ili su prazne) tretiraj kao "nije poslano", inače z.string()
+    // .optional() pada na null i cijeli save vraća 400.
+    const rawBody = await request.json();
+    if (rawBody?.updates && typeof rawBody.updates === "object") {
+      for (const key of Object.keys(rawBody.updates)) {
+        if (rawBody.updates[key] === null) {
+          delete rawBody.updates[key];
+        }
+      }
+    }
+    const parseResult = putRequestSchema.safeParse(rawBody);
 
     if (!parseResult.success) {
       return NextResponse.json(
@@ -405,8 +434,12 @@ export async function DELETE(request: NextRequest) {
     const season = searchParams.get("season");
     const tableName = getPLTable(season);
 
-    // Validate search parameters
-    const parseResult = deleteRequestSchema.safeParse({ id, reason });
+    // Validate search parameters — searchParams.get vraća null kad parametra
+    // nema, a z.string().optional() prihvata samo undefined.
+    const parseResult = deleteRequestSchema.safeParse({
+      id,
+      reason: reason ?? undefined,
+    });
 
     if (!parseResult.success) {
       return NextResponse.json(
@@ -425,7 +458,7 @@ export async function DELETE(request: NextRequest) {
     const deletedBy = (session as any)?.user?.email || "unknown";
 
     // Soft delete registration using server-side client
-    const { data, error } = await supabaseServer
+    let { data, error } = await supabaseServer
       .from(tableName)
       .update({
         deleted_at: new Date().toISOString(),
@@ -435,6 +468,21 @@ export async function DELETE(request: NextRequest) {
       .eq("id", validatedId)
       .select()
       .single();
+
+    // Tabela bez deleted_by/deletion_reason kolona (npr. 26/27): soft-delete
+    // samo preko deleted_at umjesto da brisanje padne s 500. (PostgREST za
+    // nepostojeću kolonu u updateu vraća PGRST204, Postgres 42703.)
+    if (error?.code === "42703" || error?.code === "PGRST204") {
+      console.warn(
+        `Soft-delete audit columns missing on ${tableName} — deleting with deleted_at only`
+      );
+      ({ data, error } = await supabaseServer
+        .from(tableName)
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", validatedId)
+        .select()
+        .single());
+    }
 
     if (error) {
       console.error("Error deleting registration:", error);
