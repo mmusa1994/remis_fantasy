@@ -11,10 +11,30 @@ const updateFieldSchema = z.object({
   email: z.string().email().max(255).optional(),
   phone: z.string().max(20).optional(),
   team_name: z.string().max(100).optional(),
+  // Nullable polja: dashboard "N/A"/"NULL" opcije šalju eksplicitni null
+  // koji čisti vrijednost u bazi. league_type NIJE nullable —
+  // registration_25_26.league_type je NOT NULL kolona, null bi save oborio
+  // s 23502; null se zato tretira kao "nije poslano".
   league_type: z.enum(["standard", "premium"]).optional(),
+  league_tier: z
+    .enum(["standard", "premium", "h2h_only", "standard_h2h", "premium_h2h"])
+    .nullable()
+    .optional(),
   h2h_league: z.boolean().optional(),
+  payment_method: z
+    .enum(["stripe", "cash", "bank", "wise", "paypal"])
+    .nullable()
+    .optional(),
+  payment_status: z.enum(["paid", "pending"]).nullable().optional(),
+  cash_status: z.enum(["paid", "pending"]).nullable().optional(),
   admin_notes: z.string().max(1000).optional(),
-  league_entry_status: z.enum(["pending", "approved", "rejected"]).optional(),
+  notes: z.string().max(1000).optional(),
+  // Stvarne vrijednosti u bazi: entered / not_entered / pending (26/27
+  // default). Dashboard šalje entered/not_entered, null čisti status.
+  league_entry_status: z
+    .enum(["entered", "not_entered", "pending"])
+    .nullable()
+    .optional(),
   registration_email_sent: z.boolean().optional(),
   codes_email_sent: z.boolean().optional(),
   email_template_type: z.string().max(50).optional(),
@@ -48,12 +68,39 @@ const ALLOWED_UPDATE_FIELDS = {
     enum: ["standard", "premium"],
     required: false,
   },
+  league_tier: {
+    type: "string",
+    enum: ["standard", "premium", "h2h_only", "standard_h2h", "premium_h2h"],
+    required: false,
+    nullable: true,
+  },
   h2h_league: { type: "boolean", required: false },
+  payment_method: {
+    type: "string",
+    enum: ["stripe", "cash", "bank", "wise", "paypal"],
+    required: false,
+    nullable: true,
+  },
+  payment_status: {
+    type: "string",
+    enum: ["paid", "pending"],
+    required: false,
+    nullable: true,
+  },
+  cash_status: {
+    type: "string",
+    enum: ["paid", "pending"],
+    required: false,
+    nullable: true,
+  },
   admin_notes: { type: "string", maxLength: 1000, required: false },
+  notes: { type: "string", maxLength: 1000, required: false },
   league_entry_status: {
     type: "string",
-    enum: ["pending", "approved", "rejected"],
+    enum: ["entered", "not_entered", "pending"],
     required: false,
+    // Dashboard "Nije postavljeno" šalje null da očisti status.
+    nullable: true,
   },
   registration_email_sent: { type: "boolean", required: false },
   codes_email_sent: { type: "boolean", required: false },
@@ -75,6 +122,9 @@ function validateField(
   value: any,
   fieldConfig: any
 ): boolean {
+  if (value === null) {
+    return fieldConfig.nullable === true;
+  }
   if (fieldConfig.type === "string") {
     if (typeof value !== "string") return false;
     if (fieldConfig.maxLength && value.length > fieldConfig.maxLength)
@@ -246,13 +296,17 @@ export async function PUT(request: NextRequest) {
     const tableName = getPLTable(season);
 
     // Parse and validate request body. Dashboard šalje editFormData polja
-    // verbatim — vrijednosti koje su null (kolone koje za ovu sezonu ne
-    // postoje ili su prazne) tretiraj kao "nije poslano", inače z.string()
-    // .optional() pada na null i cijeli save vraća 400.
+    // verbatim — null na nullable polju je eksplicitno čišćenje vrijednosti
+    // i propušta se dalje; null na ostalim poljima (kolone koje za ovu
+    // sezonu ne postoje ili su prazne) tretiraj kao "nije poslano", inače
+    // z.string().optional() pada na null i cijeli save vraća 400.
     const rawBody = await request.json();
     if (rawBody?.updates && typeof rawBody.updates === "object") {
       for (const key of Object.keys(rawBody.updates)) {
-        if (rawBody.updates[key] === null) {
+        if (rawBody.updates[key] !== null) continue;
+        const fieldConfig =
+          ALLOWED_UPDATE_FIELDS[key as keyof typeof ALLOWED_UPDATE_FIELDS];
+        if (!fieldConfig || !("nullable" in fieldConfig)) {
           delete rawBody.updates[key];
         }
       }

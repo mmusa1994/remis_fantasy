@@ -51,7 +51,9 @@ interface Registration {
   email_template_type?: string;
   registration_email_sent_at?: string;
   codes_email_sent_at?: string | null;
-  league_entry_status?: "entered" | "not_entered" | null;
+  // 26/27 tabela ima DB default "pending" — dashboard ga tretira kao
+  // "nije postavljeno".
+  league_entry_status?: "entered" | "not_entered" | "pending" | null;
   notes?: string;
   created_at: string;
   updated_at?: string;
@@ -59,6 +61,35 @@ interface Registration {
 }
 
 type LeagueTab = "premier" | "champions" | "f1";
+
+// 25/26 model: league_type (standard|premium|h2h) + h2h_league boolean.
+// 26/27 model: sve je kodirano u league_tier
+// (standard | premium | h2h_only | standard_h2h | premium_h2h).
+const H2H_TIERS = ["h2h_only", "standard_h2h", "premium_h2h"];
+
+const isStandardReg = (reg: Registration) =>
+  reg.league_type === "standard" ||
+  reg.league_tier === "standard" ||
+  reg.league_tier === "standard_h2h";
+
+const isPremiumReg = (reg: Registration) =>
+  reg.league_type === "premium" ||
+  reg.league_tier === "premium" ||
+  reg.league_tier === "premium_h2h";
+
+const isH2HReg = (reg: Registration) =>
+  reg.h2h_league === true ||
+  reg.league_type === "h2h" ||
+  (!!reg.league_tier && H2H_TIERS.includes(reg.league_tier));
+
+const LEAGUE_LABELS: Record<string, string> = {
+  standard: "Standard",
+  premium: "Premium",
+  h2h: "H2H",
+  h2h_only: "H2H Only",
+  standard_h2h: "Standard + H2H",
+  premium_h2h: "Premium + H2H",
+};
 
 interface AdminDashboardTabsProps {
   initialTab?: LeagueTab;
@@ -137,15 +168,17 @@ export default function AdminDashboardTabs({
 
     // League type filter (only for Premier League)
     if (activeTab === "premier" && filters.league_type !== "all") {
-      filtered = filtered.filter(
-        (reg) => (reg.league_type || reg.league_tier) === filters.league_type
-      );
+      filtered = filtered.filter((reg) => {
+        const league = reg.league_type || reg.league_tier;
+        if (filters.league_type === "n/a") return !league;
+        return league === filters.league_type;
+      });
     }
 
     // H2H filter (only for Premier League)
     if (activeTab === "premier" && filters.h2h_league !== "all") {
       filtered = filtered.filter(
-        (reg) => reg.h2h_league === (filters.h2h_league === "yes")
+        (reg) => isH2HReg(reg) === (filters.h2h_league === "yes")
       );
     }
 
@@ -203,7 +236,11 @@ export default function AdminDashboardTabs({
         } else if (filters.league_entry_status === "not_entered") {
           return reg.league_entry_status === "not_entered";
         } else if (filters.league_entry_status === "not_set") {
-          return !reg.league_entry_status;
+          // 26/27 tabela ima DB default "pending" — tretiraj ga kao
+          // "nije postavljeno", isto kao NULL.
+          return (
+            !reg.league_entry_status || reg.league_entry_status === "pending"
+          );
         }
         return true;
       });
@@ -385,6 +422,13 @@ export default function AdminDashboardTabs({
   const saveEditedRecord = async () => {
     if (!editingRecord) return;
 
+    // "" (N/A / NULL opcija u modalu) postaje eksplicitni null — API čisti
+    // vrijednost u bazi. undefined (polje ne postoji za ovu sezonu/tab)
+    // ostaje undefined i ispada iz JSON payloada.
+    const orNull = <T extends string>(
+      v: T | "" | null | undefined
+    ): T | null | undefined => (v === undefined ? undefined : v || null);
+
     try {
       const seasonParam = activeTab !== "f1" ? `?season=${season}` : "";
       const apiEndpoint = activeTab === "premier"
@@ -406,11 +450,12 @@ export default function AdminDashboardTabs({
             email: editFormData.email,
             phone: editFormData.phone,
             team_name: editFormData.team_name,
-            league_type: editFormData.league_type,
+            league_type: orNull(editFormData.league_type),
+            league_tier: orNull(editFormData.league_tier),
             h2h_league: editFormData.h2h_league,
-            payment_method: editFormData.payment_method,
-            payment_status: editFormData.payment_status,
-            cash_status: editFormData.cash_status,
+            payment_method: orNull(editFormData.payment_method),
+            payment_status: orNull(editFormData.payment_status),
+            cash_status: orNull(editFormData.cash_status),
             admin_notes: editFormData.admin_notes,
             email_template_type: editFormData.email_template_type,
             codes_email_sent: editFormData.codes_email_sent,
@@ -516,19 +561,19 @@ export default function AdminDashboardTabs({
         },
         {
           label: "Standard Liga",
-          value: registrations.filter((r) => r.league_type === "standard").length,
+          value: registrations.filter(isStandardReg).length,
           icon: "Trophy",
           color: "from-blue-400 to-blue-500",
         },
         {
           label: "Premium Liga",
-          value: registrations.filter((r) => r.league_type === "premium").length,
+          value: registrations.filter(isPremiumReg).length,
           icon: "Star",
           color: "from-yellow-500 to-yellow-600",
         },
         {
           label: "H2H Učesnici",
-          value: registrations.filter((r) => r.h2h_league).length,
+          value: registrations.filter(isH2HReg).length,
           icon: "Crown",
           color: "from-red-800 to-red-900",
         },
@@ -969,6 +1014,7 @@ export default function AdminDashboardTabs({
                     }`}
               >
                 <option value="all">Svi načini</option>
+                <option value="stripe">Stripe (kartica)</option>
                 <option value="bank">Bankovni transfer</option>
                 <option value="wise">Wise</option>
                 <option value="cash">Cash</option>
@@ -1216,16 +1262,22 @@ export default function AdminDashboardTabs({
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-md ${
-                                reg.league_type === "premium"
+                                isPremiumReg(reg)
                                   ? "bg-yellow-100 text-yellow-800"
-                                  : reg.league_type === "h2h"
-                                  ? "bg-red-100 text-red-800"
-                                  : reg.league_type === "standard"
+                                  : isStandardReg(reg)
                                   ? "bg-blue-100 text-blue-800"
+                                  : isH2HReg(reg)
+                                  ? "bg-red-100 text-red-800"
                                   : "bg-gray-100 text-gray-800"
                               }`}
                             >
-                              {reg.league_type || "N/A"}
+                              {(() => {
+                                const league =
+                                  reg.league_type || reg.league_tier;
+                                return league
+                                  ? LEAGUE_LABELS[league] ?? league
+                                  : "N/A";
+                              })()}
                             </span>
                           </td>
                         )}
@@ -1233,12 +1285,12 @@ export default function AdminDashboardTabs({
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-md ${
-                                reg.h2h_league
+                                isH2HReg(reg)
                                   ? "bg-green-100 text-green-800"
                                   : "bg-red-100 text-red-800"
                               }`}
                             >
-                              {reg.h2h_league ? "✓" : "✗"}
+                              {isH2HReg(reg) ? "✓" : "✗"}
                             </span>
                           </td>
                         )}
@@ -1247,6 +1299,8 @@ export default function AdminDashboardTabs({
                             className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-md ${
                               reg.payment_method === "cash"
                                 ? "bg-yellow-100 text-yellow-800"
+                                : reg.payment_method === "stripe"
+                                ? "bg-indigo-100 text-indigo-800"
                                 : reg.payment_method === "wise"
                                 ? "bg-purple-100 text-purple-800"
                                 : reg.payment_method === "paypal"
@@ -1420,10 +1474,12 @@ export default function AdminDashboardTabs({
                                 <button
                                   onClick={async () => {
                                     try {
+                                      const seasonParam =
+                                        activeTab !== "f1" ? `?season=${season}` : "";
                                       const apiEndpoint = activeTab === "premier"
-                                        ? "/api/admin/registrations"
+                                        ? `/api/admin/registrations${seasonParam}`
                                         : activeTab === "champions"
-                                        ? "/api/admin/champions-registrations"
+                                        ? `/api/admin/champions-registrations${seasonParam}`
                                         : "/api/admin/f1-registrations";
 
                                       const response = await fetch(
@@ -1503,14 +1559,21 @@ export default function AdminDashboardTabs({
                           {editingLeagueStatus === reg.id ? (
                             <div className="flex gap-2 items-center">
                               <select
-                                value={reg.league_entry_status || ""}
+                                value={
+                                  reg.league_entry_status === "entered" ||
+                                  reg.league_entry_status === "not_entered"
+                                    ? reg.league_entry_status
+                                    : ""
+                                }
                                 onChange={async (e) => {
                                   const newStatus = e.target.value || null;
                                   try {
+                                    const seasonParam =
+                                      activeTab !== "f1" ? `?season=${season}` : "";
                                     const apiEndpoint = activeTab === "premier"
-                                      ? "/api/admin/registrations"
+                                      ? `/api/admin/registrations${seasonParam}`
                                       : activeTab === "champions"
-                                      ? "/api/admin/champions-registrations"
+                                      ? `/api/admin/champions-registrations${seasonParam}`
                                       : "/api/admin/f1-registrations";
 
                                     const response = await fetch(
@@ -1973,53 +2036,86 @@ export default function AdminDashboardTabs({
                       />
                     </div>
 
-                    <div>
-                      <label
-                        htmlFor="edit-league-type"
-                        className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
-                      >
-                        Tip lige
-                      </label>
-                      <select
-                        id="edit-league-type"
-                        value={editFormData.league_type || ""}
-                        onChange={(e) =>
-                          setEditFormData({
-                            ...editFormData,
-                            league_type: e.target.value,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
-                      >
-                        <option value="">N/A</option>
-                        <option value="standard">Standard</option>
-                        <option value="premium">Premium</option>
-                        <option value="h2h">H2H</option>
-                      </select>
-                    </div>
+                    {season === "26_27" ? (
+                      <div>
+                        <label
+                          htmlFor="edit-league-tier"
+                          className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
+                        >
+                          Nivo lige
+                        </label>
+                        <select
+                          id="edit-league-tier"
+                          value={editFormData.league_tier || ""}
+                          onChange={(e) =>
+                            setEditFormData({
+                              ...editFormData,
+                              league_tier: e.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
+                        >
+                          <option value="">N/A</option>
+                          <option value="standard">Standard</option>
+                          <option value="premium">Premium</option>
+                          <option value="h2h_only">H2H Only</option>
+                          <option value="standard_h2h">Standard + H2H</option>
+                          <option value="premium_h2h">Premium + H2H</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <label
+                            htmlFor="edit-league-type"
+                            className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
+                          >
+                            Tip lige
+                          </label>
+                          <select
+                            id="edit-league-type"
+                            value={editFormData.league_type || ""}
+                            onChange={(e) =>
+                              setEditFormData({
+                                ...editFormData,
+                                league_type: e.target.value,
+                              })
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
+                          >
+                            {/* league_type je NOT NULL u bazi (samo
+                                standard/premium) — N/A je tu samo za prikaz
+                                praznih legacy redova i ne upisuje se. */}
+                            <option value="">N/A</option>
+                            <option value="standard">Standard</option>
+                            <option value="premium">Premium</option>
+                          </select>
+                        </div>
 
-                    <div>
-                      <label
-                        htmlFor="edit-h2h-league"
-                        className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
-                      >
-                        H2H Liga
-                      </label>
-                      <select
-                        id="edit-h2h-league"
-                        value={editFormData.h2h_league ? "true" : "false"}
-                        onChange={(e) =>
-                          setEditFormData({
-                            ...editFormData,
-                            h2h_league: e.target.value === "true",
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
-                      >
-                        <option value="false">Ne</option>
-                        <option value="true">Da</option>
-                      </select>
-                    </div>
+                        <div>
+                          <label
+                            htmlFor="edit-h2h-league"
+                            className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-400" : "text-gray-700"}`}
+                          >
+                            H2H Liga
+                          </label>
+                          <select
+                            id="edit-h2h-league"
+                            value={editFormData.h2h_league ? "true" : "false"}
+                            onChange={(e) =>
+                              setEditFormData({
+                                ...editFormData,
+                                h2h_league: e.target.value === "true",
+                              })
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
+                          >
+                            <option value="false">Ne</option>
+                            <option value="true">Da</option>
+                          </select>
+                        </div>
+                      </>
+                    )}
 
                     <div>
                       <label
@@ -2065,6 +2161,12 @@ export default function AdminDashboardTabs({
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   >
+                    {/* Stripe postoji samo u 26/27 tabelama (PL i CL) —
+                        25/26 tabele imaju CHECK constraint bez 'stripe',
+                        pa bi save pao na DB nivou. */}
+                    {activeTab !== "f1" && season === "26_27" && (
+                      <option value="stripe">Stripe (kartica)</option>
+                    )}
                     <option value="bank">Bankovni transfer</option>
                     <option value="wise">Wise</option>
                     <option value="cash">Gotovina</option>
