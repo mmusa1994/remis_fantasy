@@ -349,7 +349,7 @@ function CLRegistrationFormInner() {
             <div className="flex justify-center -mt-10 sm:-mt-11 mb-7">
               <div className="bg-blue-700 text-white px-5 py-2 rounded-lg shadow-md shadow-blue-700/20 flex items-center gap-2">
                 <span className="text-sm font-medium opacity-90">Kotizacija</span>
-                <span className="text-lg font-black">&euro;15</span>
+                <span className="text-lg font-black">20 KM / &euro;10</span>
               </div>
             </div>
 
@@ -830,7 +830,7 @@ function CLRegistrationFormInner() {
                     <Banknote className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-medium text-theme-heading-primary">Plaćanje gotovinom</p>
-                      <p className="text-xs text-theme-text-secondary mt-1">Izaberite datum do kojeg ćete dostaviti uplatu od &euro;15. Vaša registracija će biti potvrđena nakon primanja uplate.</p>
+                      <p className="text-xs text-theme-text-secondary mt-1">Izaberite datum do kojeg ćete dostaviti uplatu od 20 KM (&euro;10). Vaša registracija će biti potvrđena nakon primanja uplate.</p>
                     </div>
                   </div>
 
@@ -883,7 +883,7 @@ function CLRegistrationFormInner() {
                       </div>
                     </div>
                     <span className="text-sm text-theme-text-secondary leading-relaxed">
-                      Potvrđujem da ću dostaviti uplatu od <strong className="text-theme-heading-primary">&euro;15</strong> do odabranog datuma.
+                      Potvrđujem da ću dostaviti uplatu od <strong className="text-theme-heading-primary">20 KM (&euro;10)</strong> do odabranog datuma.
                     </span>
                   </label>
                   {errors.cashConfirmed && (
@@ -963,7 +963,7 @@ function CLRegistrationFormInner() {
                   {paymentMode === "card" ? (
                     <>
                       <Lock className="w-[18px] h-[18px]" />
-                      Plati &euro;15 i registruj se
+                      Plati &euro;10 i registruj se
                     </>
                   ) : (
                     <>

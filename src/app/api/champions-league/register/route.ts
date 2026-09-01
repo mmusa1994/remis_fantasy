@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     // Create PaymentIntent with the client-created PaymentMethod
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: 1500, // €15.00
+      amount: 1000, // €10.00 (20 KM)
       currency: "eur",
       payment_method: payment_method_id,
       metadata: {

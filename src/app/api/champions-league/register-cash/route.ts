@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       email: email.trim(),
       phone: phone.trim(),
       payment_method: `Cash (dostava: ${cash_delivery_date})`,
-      amount: "15.00€",
+      amount: "10.00€ (20 KM)",
       notes: notes?.trim() || undefined,
     });
 
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
       first_name: first_name.trim(),
       last_name: last_name.trim(),
       email: email.trim(),
-      amount: 15.0,
+      amount: 10.0,
       payment_method: "cash",
       cash_delivery_date,
     });

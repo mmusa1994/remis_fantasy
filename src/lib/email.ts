@@ -1866,7 +1866,7 @@ export const createCLConfirmationTemplate = (data: CLConfirmationData) => {
                 </tr>
                 <tr>
                   <td style="padding:14px 18px;border-bottom:1px solid #232162;font-size:13px;color:#8f92c4;">Iznos</td>
-                  <td style="padding:14px 18px;border-bottom:1px solid #232162;font-size:14px;color:#ffffff;font-weight:500;">${data.amount.toFixed(2)}€</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #232162;font-size:14px;color:#ffffff;font-weight:500;">${Math.round(data.amount * 2)} KM (${data.amount.toFixed(2)}€)</td>
                 </tr>
                 <tr>
                   <td style="padding:14px 18px;font-size:13px;color:#8f92c4;">Način plaćanja</td>
@@ -1949,7 +1949,7 @@ export const createCLConfirmationText = (data: CLConfirmationData) => {
   return [
     `Pozdrav, ${data.first_name},`,
     `Hvala što si dio REMIS Fantasy Champions League 2026/27 takmičenja. ${paymentLine}`,
-    `Igrač: ${data.first_name} ${data.last_name}\nLiga: Remis Fantasy CL\nIznos: ${data.amount.toFixed(2)}€\nNačin plaćanja: ${data.payment_method === "card" ? "Kartica (plaćeno)" : "Keš (na dostavi)"}`,
+    `Igrač: ${data.first_name} ${data.last_name}\nLiga: Remis Fantasy CL\nIznos: ${Math.round(data.amount * 2)} KM (${data.amount.toFixed(2)}€)\nNačin plaćanja: ${data.payment_method === "card" ? "Kartica (plaćeno)" : "Keš (na dostavi)"}`,
     `Kod za pristup ligi: ${CL_LEAGUE_CODE}\nAuto-join link: ${CL_AUTO_JOIN_URL}`,
     "Kod možeš unijeti i ručno u UCL Fantasy aplikaciji ili na gaming.uefa.com (Leagues → Join a league). Sačuvaj ovaj email — sadrži kod za pristup ligi.",
     "REMIS Fantasy — sretno u takmičenju!",

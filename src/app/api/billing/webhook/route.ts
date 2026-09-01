@@ -250,7 +250,7 @@ export async function POST(req: NextRequest) {
                 first_name,
                 last_name,
                 email,
-                amount: 15.0,
+                amount: 10.0,
                 payment_method: "card",
               });
               if (clEmailResult?.success) {
@@ -305,7 +305,7 @@ export async function POST(req: NextRequest) {
                 stripe_payment_intent_id: paymentIntent.id,
                 competition: "Champions League",
                 email,
-                amount: 15.0,
+                amount: 10.0,
                 details: `Naplaćeno, ali upis nije uspio: ${clError.message}. Ime: ${first_name} ${last_name}, tel: ${phone}.`,
               });
             const clConflictRecorded =
@@ -326,7 +326,7 @@ export async function POST(req: NextRequest) {
               email,
               phone,
               payment_method: "Stripe (kartica)",
-              amount: "15.00€",
+              amount: "10.00€ (20 KM)",
               notes: `⚠️ KONFLIKT: uplata je naplaćena, ali upis NIJE uspio jer registracija s ovim podacima već postoji (${clError.message}). PaymentIntent: ${paymentIntent.id}. ${clConflictRecorded ? "Evidentirano u payment_conflicts tabeli." : "NIJE evidentirano u payment_conflicts (tabela ne postoji — pokrenuti db/sql/pl_26_27_email_reliability.sql)."} Riješiti ručno — spojiti s postojećom registracijom ili refundirati.`,
             });
           } else if (clError) {
@@ -344,14 +344,14 @@ export async function POST(req: NextRequest) {
               email,
               phone,
               payment_method: "Stripe (kartica)",
-              amount: "15.00€",
+              amount: "10.00€ (20 KM)",
               notes: notes || undefined,
             });
             const clEmailResult = await sendCLRegistrationConfirmationEmail({
               first_name,
               last_name,
               email,
-              amount: 15.0,
+              amount: 10.0,
               payment_method: "card",
             });
             if (clEmailResult?.success && insertedCl?.id) {
