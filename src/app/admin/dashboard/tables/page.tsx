@@ -157,6 +157,7 @@ export default function AdminTablesCleanPage() {
   const [bulkUpdateData, setBulkUpdateData] = useState<string>("");
   const [showBulkUpdate, setShowBulkUpdate] = useState(false);
   const [f1Season, setF1Season] = useState<"25" | "26">("26");
+  const [clSeason, setClSeason] = useState<"25_26" | "26_27">("26_27");
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [source, setSource] = useState<string>("");
   const [toast, setToast] = useState<{
@@ -796,13 +797,56 @@ export default function AdminTablesCleanPage() {
         {/* Champions League Bulk Updater */}
         {activeSection === "tables" && mainTab === "champions" && (
           <div className={`${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"} rounded-md overflow-hidden border`}>
+            {/* CL Season Switcher */}
+            <div className={`px-6 py-4 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                    Sezona:
+                  </span>
+                  <div className={`inline-flex rounded-lg p-1 ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
+                    <button
+                      onClick={() => setClSeason("25_26")}
+                      className={`px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                        clSeason === "25_26"
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : isDark
+                          ? "text-gray-400 hover:text-gray-200"
+                          : "text-gray-600 hover:text-gray-800"
+                      }`}
+                    >
+                      2025/26
+                      <span className={`ml-1.5 text-xs ${clSeason === "25_26" ? "text-blue-200" : isDark ? "text-gray-500" : "text-gray-400"}`}>
+                        (Završena)
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setClSeason("26_27")}
+                      className={`px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
+                        clSeason === "26_27"
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : isDark
+                          ? "text-gray-400 hover:text-gray-200"
+                          : "text-gray-600 hover:text-gray-800"
+                      }`}
+                    >
+                      2026/27
+                      <span className={`ml-1.5 text-xs ${clSeason === "26_27" ? "text-blue-200" : isDark ? "text-gray-500" : "text-gray-400"}`}>
+                        (Aktivna)
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className={`px-6 py-4 border-b ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"}`}>
               <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>
-                Champions League Ažuriranje (2025/26)
+                Champions League Ažuriranje ({clSeason === "25_26" ? "2025/26" : "2026/27"})
               </h3>
               <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                 Zalijepite UEFA Champions League HTML sadržaj da ažurirate
-                cl_table_25_26 tabelu.
+                cl_table_{clSeason} tabelu.
               </p>
             </div>
             <div className="p-6 space-y-4">
@@ -830,7 +874,7 @@ export default function AdminTablesCleanPage() {
                         {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ htmlContent: bulkUpdateData }),
+                          body: JSON.stringify({ htmlContent: bulkUpdateData, season: clSeason }),
                         }
                       );
                       const json = await res.json();
@@ -838,7 +882,7 @@ export default function AdminTablesCleanPage() {
                         throw new Error(json.error || "Update failed");
                       setToast({
                         show: true,
-                        message: `Uspješno ažurirano ${json.count} Champions League unosa`,
+                        message: `Uspješno ažurirano ${json.count} unosa u cl_table_${clSeason}`,
                         type: "success",
                       });
                       setBulkUpdateData(""); // Clear the textarea after successful update

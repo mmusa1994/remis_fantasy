@@ -8,6 +8,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// SEPARATE TABLES PER SEASON (same principle as premier-league-tables)
+const SEASON_TABLES: Record<string, string> = {
+  "25_26": "cl_table_25_26",
+  "26_27": "cl_table_26_27",
+};
+
 interface ParsedPlayer {
   rank: number;
   team_name: string;
@@ -185,7 +191,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { htmlContent } = body;
+    const { htmlContent, season = "26_27" } = body;
+
+    const tableName = SEASON_TABLES[season];
+    if (!tableName) {
+      return NextResponse.json(
+        { success: false, error: "Invalid season" },
+        { status: 400 }
+      );
+    }
 
     if (!htmlContent || typeof htmlContent !== "string") {
       return NextResponse.json(
@@ -206,7 +220,7 @@ export async function POST(request: NextRequest) {
 
     // Clear existing data and insert new data
     const { error: deleteError } = await supabase
-      .from("cl_table_25_26")
+      .from(tableName)
       .delete()
       .neq("id", 0); // Delete all rows
 
@@ -220,7 +234,7 @@ export async function POST(request: NextRequest) {
 
     // Insert new data
     const { data, error: insertError } = await supabase
-      .from("cl_table_25_26")
+      .from(tableName)
       .insert(parsedPlayers)
       .select();
 
@@ -236,6 +250,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Successfully updated ${parsedPlayers.length} Champions League entries`,
       count: parsedPlayers.length,
+      season,
       data: data,
     });
   } catch (error) {

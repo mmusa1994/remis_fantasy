@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -6,15 +6,31 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET() {
+// SEPARATE TABLES PER SEASON (same principle as premier-league-tables)
+const SEASON_TABLES: Record<string, string> = {
+  "25_26": "cl_table_25_26",
+  "26_27": "cl_table_26_27",
+};
+
+export async function GET(req: NextRequest) {
   try {
+    const season = req.nextUrl.searchParams.get("season") || "26_27";
+    const tableName = SEASON_TABLES[season];
+    if (!tableName) {
+      return NextResponse.json(
+        { success: false, error: "Invalid season" },
+        { status: 400 }
+      );
+    }
 
     const { data, error } = await supabase
-      .from("cl_table_25_26")
+      .from(tableName)
       .select("*")
       .order("rank", { ascending: true });
 
-    if (error) {
+    // A season whose table doesn't exist yet (42P01) renders as an empty
+    // standing instead of an error — the pre-season state of a new season.
+    if (error && error.code !== "42P01") {
       console.error("Supabase error:", error);
       return NextResponse.json(
         { success: false, error: error.message },
@@ -25,6 +41,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: data || [],
+      season,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -39,10 +56,18 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { players } = body;
+    const { players, season = "26_27" } = body;
+
+    const tableName = SEASON_TABLES[season];
+    if (!tableName) {
+      return NextResponse.json(
+        { success: false, error: "Invalid season" },
+        { status: 400 }
+      );
+    }
 
     if (!players || !Array.isArray(players)) {
       return NextResponse.json(
@@ -52,11 +77,11 @@ export async function POST(request: Request) {
     }
 
     // Clear existing data
-    await supabase.from("cl_table_25_26").delete().neq("id", 0);
+    await supabase.from(tableName).delete().neq("id", 0);
 
     // Insert new data
     const { data, error } = await supabase
-      .from("cl_table_25_26")
+      .from(tableName)
       .insert(players)
       .select();
 
@@ -71,6 +96,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       data: data || [],
+      season,
       message: `Successfully updated ${players.length} players`,
       timestamp: new Date().toISOString(),
     });

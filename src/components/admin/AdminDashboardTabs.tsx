@@ -51,6 +51,10 @@ interface Registration {
   email_template_type?: string;
   registration_email_sent_at?: string;
   codes_email_sent_at?: string | null;
+  // CL 26/27: potvrdni email s kodom lige šalje se automatski pri
+  // registraciji i bilježi u ove kolone (nema zasebnog "codes" emaila).
+  confirmation_email_sent?: boolean;
+  confirmation_email_sent_at?: string | null;
   // 26/27 tabela ima DB default "pending" — dashboard ga tretira kao
   // "nije postavljeno".
   league_entry_status?: "entered" | "not_entered" | "pending" | null;
@@ -81,6 +85,17 @@ const isH2HReg = (reg: Registration) =>
   reg.h2h_league === true ||
   reg.league_type === "h2h" ||
   (!!reg.league_tier && H2H_TIERS.includes(reg.league_tier));
+
+// Email s kodom je poslan: starije tabele koriste codes_email_sent (ručno
+// slanje iz admina), CL 26/27 confirmation_email_sent (automatski pri
+// registraciji).
+const isEmailSent = (reg: Registration) =>
+  reg.codes_email_sent === true || reg.confirmation_email_sent === true;
+
+const emailSentAtLabel = (reg: Registration) => {
+  const sentAt = reg.codes_email_sent_at || reg.confirmation_email_sent_at;
+  return sentAt ? new Date(sentAt).toLocaleDateString() : null;
+};
 
 const LEAGUE_LABELS: Record<string, string> = {
   standard: "Standard",
@@ -223,8 +238,8 @@ export default function AdminDashboardTabs({
     if (filters.codes_email_status !== "all") {
       filtered = filtered.filter((reg) =>
         filters.codes_email_status === "sent"
-          ? reg.codes_email_sent === true
-          : reg.codes_email_sent !== true
+          ? isEmailSent(reg)
+          : !isEmailSent(reg)
       );
     }
 
@@ -600,7 +615,7 @@ export default function AdminDashboardTabs({
         },
         {
           label: "Kodovi poslani",
-          value: registrations.filter((r) => r.codes_email_sent).length,
+          value: registrations.filter(isEmailSent).length,
           icon: "Mail",
           color: "from-purple-500 to-purple-600",
         },
@@ -626,8 +641,8 @@ export default function AdminDashboardTabs({
           color: "from-yellow-500 to-orange-500",
         },
         {
-          label: "Kodovi poslani",
-          value: registrations.filter((r) => r.codes_email_sent).length,
+          label: "Email poslan",
+          value: registrations.filter(isEmailSent).length,
           icon: "Mail",
           color: "from-purple-500 to-purple-600",
         },
@@ -1398,10 +1413,12 @@ export default function AdminDashboardTabs({
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-1">
-                              {reg.codes_email_sent ? (
+                              {isEmailSent(reg) ? (
                                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-blue-100 text-blue-800">
                                   <CheckCircle className="w-3 h-3" />
-                                  Kodovi poslani
+                                  {reg.codes_email_sent
+                                    ? "Kodovi poslani"
+                                    : "Email poslan"}
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-yellow-100 text-yellow-800">
@@ -1413,7 +1430,7 @@ export default function AdminDashboardTabs({
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {!reg.codes_email_sent && (
+                          {!isEmailSent(reg) && (
                             <button
                               onClick={() => sendCodesEmail(reg)}
                               disabled={sendingEmail === reg.id}
@@ -1450,13 +1467,9 @@ export default function AdminDashboardTabs({
                               )}
                             </button>
                           )}
-                          {reg.codes_email_sent && (
+                          {isEmailSent(reg) && (
                             <div className="text-xs text-gray-500">
-                              Poslano{" "}
-                              {reg.codes_email_sent_at &&
-                                new Date(
-                                  reg.codes_email_sent_at
-                                ).toLocaleDateString()}
+                              Poslano {emailSentAtLabel(reg)}
                             </div>
                           )}
                         </td>
