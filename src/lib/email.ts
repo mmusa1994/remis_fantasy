@@ -1782,6 +1782,203 @@ export const sendPLRegistrationConfirmationEmail = async (
   }
 };
 
+export interface CLConfirmationData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  amount: number;
+  payment_method: "card" | "cash";
+  cash_delivery_date?: string;
+}
+
+// UCL Fantasy liga — invite kod i auto-join link (iz UEFA "Invite your
+// friends" kartice lige Remis Fantasy CL).
+const CL_LEAGUE_CODE = "PGwwr7";
+const CL_AUTO_JOIN_URL =
+  "https://gaming.uefa.com/en/uclfantasy/leagues/PGwwr7/00520065006D00690073002000460061006E007400610073007900200043004C/Muhamed%20Musa";
+
+export const createCLConfirmationTemplate = (data: CLConfirmationData) => {
+  const firstName = escapeHtml(data.first_name);
+  const lastName = escapeHtml(data.last_name);
+  const email = escapeHtml(data.email);
+  const paymentLine =
+    data.payment_method === "card"
+      ? "Tvoja uplata karticom je uspješno obrađena i registracija je aktivna."
+      : `Tvoja prijava je zaprimljena. ${data.cash_delivery_date ? `Dogovorena dostava uplate u kešu: ${escapeHtml(data.cash_delivery_date)}. ` : ""}Registracija postaje aktivna nakon evidentirane uplate.`;
+  const paymentMethodLabel =
+    data.payment_method === "card" ? "Kartica (plaćeno)" : "Keš (na dostavi)";
+
+  const preheader = `Tvoj kod za Remis Fantasy CL ligu: ${CL_LEAGUE_CODE} — pridruži se jednim klikom.`;
+
+  // Cijeli email je namjerno taman (UCL Fantasy vizual): solid bgcolor
+  // atributi + eksplicitne boje na svakom elementu drže izgled stabilnim i
+  // u Gmail dark modu (tamne pozadine se ne invertuju).
+  return `<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
+  <title>Champions League Fantasy 2026/27 — Potvrda registracije</title>
+  <style>:root { color-scheme: dark; supported-color-schemes: dark; }</style>
+</head>
+<body style="margin:0;padding:0;background-color:#07072e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#ffffff;">
+  <!-- Preheader (skriven u sadržaju, vidljiv u inbox preview-u) -->
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#07072e" style="background-color:#07072e;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#12104d" style="max-width:600px;width:100%;background-color:#12104d;border-radius:16px;overflow:hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td bgcolor="#12104d" style="background-color:#12104d;padding:44px 32px 8px;text-align:center;">
+              <div style="display:inline-block;border:1px solid #4f46e5;border-radius:999px;padding:6px 16px;margin-bottom:18px;">
+                <span style="color:#c7d2fe;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">UEFA Champions League Fantasy 2026/27</span>
+              </div>
+              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.4px;">Potvrda registracije</h1>
+              <p style="margin:10px 0 0;color:#a5b4fc;font-size:15px;font-weight:400;">REMIS Fantasy</p>
+            </td>
+          </tr>
+
+          <!-- Greeting -->
+          <tr>
+            <td style="padding:30px 36px 8px;">
+              <p style="margin:0 0 8px;font-size:16px;color:#ffffff;font-weight:500;">Pozdrav, ${firstName},</p>
+              <p style="margin:0;font-size:14px;line-height:1.7;color:#c7c9e8;">
+                Hvala što si dio REMIS Fantasy Champions League 2026/27 takmičenja. ${paymentLine}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Summary -->
+          <tr>
+            <td style="padding:24px 36px 8px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #2c2a75;border-radius:10px;overflow:hidden;">
+                <tr>
+                  <td style="padding:14px 18px;border-bottom:1px solid #232162;font-size:13px;color:#8f92c4;width:140px;">Igrač</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #232162;font-size:14px;color:#ffffff;font-weight:500;">${firstName} ${lastName}</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 18px;border-bottom:1px solid #232162;font-size:13px;color:#8f92c4;">Liga</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #232162;font-size:14px;color:#ffffff;font-weight:500;">Remis Fantasy CL</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 18px;border-bottom:1px solid #232162;font-size:13px;color:#8f92c4;">Iznos</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #232162;font-size:14px;color:#ffffff;font-weight:500;">${data.amount.toFixed(2)}€</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 18px;font-size:13px;color:#8f92c4;">Način plaćanja</td>
+                  <td style="padding:14px 18px;font-size:14px;color:#ffffff;font-weight:500;">${paymentMethodLabel}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- UCL Fantasy invite kartica (dizajn po UEFA "Invite your friends") -->
+          <tr>
+            <td style="padding:28px 36px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" bgcolor="#2612b8" style="background-color:#2612b8;background:linear-gradient(160deg,#1b0f8f 0%,#2f1bd4 45%,#3d28e8 65%,#1b0f8f 100%);border-radius:16px;padding:34px 24px 30px;">
+                    <div style="color:#ffffff;font-size:24px;font-weight:800;font-style:italic;letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">&#9917; Fantasy</div>
+                    <div style="color:#ffffff;font-size:20px;font-weight:600;margin-bottom:14px;">Remis Fantasy CL</div>
+                    <div style="color:#b9b3f0;font-size:12px;font-weight:500;letter-spacing:0.5px;margin-bottom:6px;">League code</div>
+                    <div style="font-family:'Courier New',Courier,monospace;color:#ffffff;font-size:36px;font-weight:700;letter-spacing:6px;margin-bottom:16px;">${CL_LEAGUE_CODE}</div>
+                    <div style="color:#38d6f5;font-size:15px;font-weight:600;">#UCLfantasy</div>
+                  </td>
+                </tr>
+                <tr><td style="height:12px;line-height:12px;font-size:0;">&nbsp;</td></tr>
+                <tr>
+                  <td align="center" bgcolor="#1e1a68" style="background-color:#1e1a68;border-radius:12px;">
+                    <a href="${CL_AUTO_JOIN_URL}" target="_blank" rel="noopener"
+                       style="display:block;width:100%;box-sizing:border-box;background-color:#1e1a68;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:12px;text-align:center;letter-spacing:0.2px;">
+                      &#128279;&nbsp; Pridruži se ligi — auto-join link
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Next steps -->
+          <tr>
+            <td style="padding:20px 36px 0;">
+              <p style="margin:0;font-size:13px;line-height:1.7;color:#8f92c4;text-align:center;">
+                Klikni na dugme iznad ili kod <strong style="color:#c7d2fe;">${CL_LEAGUE_CODE}</strong> unesi ručno u UCL Fantasy aplikaciji ili na gaming.uefa.com (Leagues &rarr; Join a league). Sačuvaj ovaj email — sadrži kod za pristup ligi.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding:28px 36px 0;">
+              <div style="height:1px;background-color:#2c2a75;"></div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 36px 36px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#ffffff;letter-spacing:0.3px;">REMIS Fantasy</p>
+              <p style="margin:0;font-size:11px;color:#8f92c4;">Sretno u takmičenju</p>
+            </td>
+          </tr>
+
+        </table>
+
+        <p style="margin:20px 0 0;font-size:11px;color:#6b6ea3;text-align:center;">
+          Ovaj email je poslan na ${email} jer je izvršena registracija na remisfantasy.com.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+};
+
+// Plain-text alternativa — poboljšava dostavljivost (spam score) i čitljivost
+// u klijentima koji ne renderuju HTML.
+export const createCLConfirmationText = (data: CLConfirmationData) => {
+  const paymentLine =
+    data.payment_method === "card"
+      ? "Tvoja uplata karticom je uspješno obrađena i registracija je aktivna."
+      : `Tvoja prijava je zaprimljena. ${data.cash_delivery_date ? `Dogovorena dostava uplate u kešu: ${data.cash_delivery_date}. ` : ""}Registracija postaje aktivna nakon evidentirane uplate.`;
+
+  return [
+    `Pozdrav, ${data.first_name},`,
+    `Hvala što si dio REMIS Fantasy Champions League 2026/27 takmičenja. ${paymentLine}`,
+    `Igrač: ${data.first_name} ${data.last_name}\nLiga: Remis Fantasy CL\nIznos: ${data.amount.toFixed(2)}€\nNačin plaćanja: ${data.payment_method === "card" ? "Kartica (plaćeno)" : "Keš (na dostavi)"}`,
+    `Kod za pristup ligi: ${CL_LEAGUE_CODE}\nAuto-join link: ${CL_AUTO_JOIN_URL}`,
+    "Kod možeš unijeti i ručno u UCL Fantasy aplikaciji ili na gaming.uefa.com (Leagues → Join a league). Sačuvaj ovaj email — sadrži kod za pristup ligi.",
+    "REMIS Fantasy — sretno u takmičenju!",
+  ].join("\n\n");
+};
+
+export const sendCLRegistrationConfirmationEmail = async (
+  data: CLConfirmationData
+) => {
+  try {
+    const result = await transporter.sendMail({
+      from: `"REMIS Fantasy" <${emailUser}>`,
+      to: data.email,
+      replyTo: emailUser,
+      subject:
+        "Champions League Fantasy 2026/27 — Potvrda registracije | REMIS Fantasy",
+      html: createCLConfirmationTemplate(data),
+      text: createCLConfirmationText(data),
+    });
+    console.info("CL confirmation email sent:", result.messageId);
+    return { success: true as const, messageId: result.messageId };
+  } catch (error) {
+    console.error("Failed to send CL confirmation email:", error);
+    // Ne baca izuzetak — pozivatelj odlučuje šta s neuspjehom (webhook na
+    // osnovu ovoga vraća 500 da Stripe ponovi isporuku i slanje se retry-a).
+    return { success: false as const };
+  }
+};
+
 // Send admin notification for any competition registration
 export const sendAdminRegistrationNotification = async (data: AdminRegistrationData) => {
   try {

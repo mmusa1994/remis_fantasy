@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { sendAdminRegistrationNotification } from "@/lib/email";
+import {
+  sendAdminRegistrationNotification,
+  sendCLRegistrationConfirmationEmail,
+} from "@/lib/email";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -33,7 +36,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { error } = await supabase
+    const { data: insertedRow, error } = await supabase
       .from("registration_champions_league_26_27")
       .insert({
         first_name: first_name.trim(),
@@ -45,7 +48,9 @@ export async function POST(req: NextRequest) {
         payment_status: "pending",
         cash_delivery_date: cash_delivery_date,
         created_at: new Date().toISOString(),
-      });
+      })
+      .select("id")
+      .single();
 
     if (error) {
       console.error("CL cash registration error:", error);
@@ -58,7 +63,7 @@ export async function POST(req: NextRequest) {
       throw error;
     }
 
-    sendAdminRegistrationNotification({
+    await sendAdminRegistrationNotification({
       competition: "Champions League",
       first_name: first_name.trim(),
       last_name: last_name.trim(),
@@ -68,6 +73,33 @@ export async function POST(req: NextRequest) {
       amount: "15.00€",
       notes: notes?.trim() || undefined,
     });
+
+    const emailResult = await sendCLRegistrationConfirmationEmail({
+      first_name: first_name.trim(),
+      last_name: last_name.trim(),
+      email: email.trim(),
+      amount: 15.0,
+      payment_method: "cash",
+      cash_delivery_date,
+    });
+
+    // Zabilježi da je potvrdni email poslan — flag kolone možda još ne
+    // postoje (sql/cl_26_27_email_reliability.sql), pa je upis best-effort.
+    if (emailResult?.success && insertedRow?.id) {
+      const { error: flagError } = await supabase
+        .from("registration_champions_league_26_27")
+        .update({
+          confirmation_email_sent: true,
+          confirmation_email_sent_at: new Date().toISOString(),
+        })
+        .eq("id", insertedRow.id);
+      if (flagError) {
+        console.error(
+          "CL cash: email sent but flag update failed — run sql/cl_26_27_email_reliability.sql:",
+          flagError
+        );
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {

@@ -6,6 +6,7 @@ import * as nodemailer from "nodemailer";
 import { getF1CodesEmailHtml } from "@/app/api/send-f1-email/route";
 import {
   sendAdminRegistrationNotification,
+  sendCLRegistrationConfirmationEmail,
   sendPLRegistrationConfirmationEmail,
 } from "@/lib/email";
 import { getTemplate } from "@/data/predictor-templates";
@@ -182,26 +183,93 @@ export async function POST(req: NextRequest) {
           const { first_name, last_name, email, phone, notes } =
             paymentIntent.metadata;
 
-          // Idempotency: preskoči ako je ovaj PaymentIntent već upisan.
-          const { data: existingCl, error: clLookupError } =
-            await supabaseServer
+          // Idempotency: Stripe može isporučiti isti event više puta.
+          // confirmation_email_sent se čita da bi redelivery mogao ponoviti
+          // neuspjelo slanje emaila; ako kolona još ne postoji (SQL nije
+          // pokrenut), fallback bez nje.
+          let existingCl: {
+            id: string;
+            confirmation_email_sent?: boolean | null;
+          } | null = null;
+          let clEmailFlagSupported = true;
+
+          const clLookup = await supabaseServer
+            .from("registration_champions_league_26_27")
+            .select("id, confirmation_email_sent")
+            .eq("stripe_payment_intent_id", paymentIntent.id)
+            .maybeSingle();
+
+          if (clLookup.error?.code === "42703") {
+            clEmailFlagSupported = false;
+            console.error(
+              "confirmation_email_sent column missing — run sql/cl_26_27_email_reliability.sql"
+            );
+            const clFallback = await supabaseServer
               .from("registration_champions_league_26_27")
               .select("id")
               .eq("stripe_payment_intent_id", paymentIntent.id)
               .maybeSingle();
-
-          if (clLookupError) {
+            if (clFallback.error) {
+              throw new Error(
+                `CL idempotency lookup failed: ${clFallback.error.message}`
+              );
+            }
+            existingCl = clFallback.data;
+          } else if (clLookup.error) {
             throw new Error(
-              `CL idempotency lookup failed: ${clLookupError.message}`
+              `CL idempotency lookup failed: ${clLookup.error.message}`
             );
+          } else {
+            existingCl = clLookup.data;
           }
 
+          const markClEmailSent = async (registrationId: string) => {
+            if (!clEmailFlagSupported) return;
+            const { error: flagError } = await supabaseServer
+              .from("registration_champions_league_26_27")
+              .update({
+                confirmation_email_sent: true,
+                confirmation_email_sent_at: new Date().toISOString(),
+              })
+              .eq("id", registrationId);
+            if (flagError) {
+              // Flag nije upisan iako je email poslan — redelivery bi poslao
+              // duplikat, zato samo logujemo (email je stigao korisniku).
+              console.error("Failed to mark CL confirmation email sent:", flagError);
+            }
+          };
+
           if (existingCl) {
-            console.info("CL registration already recorded for PI:", paymentIntent.id);
+            // Redelivery: red postoji. Ako potvrdni email ranije nije prošao,
+            // pokušaj ga ponovo (admin notifikacija se NE šalje ponovo).
+            if (
+              clEmailFlagSupported &&
+              existingCl.confirmation_email_sent === false
+            ) {
+              const clEmailResult = await sendCLRegistrationConfirmationEmail({
+                first_name,
+                last_name,
+                email,
+                amount: 15.0,
+                payment_method: "card",
+              });
+              if (clEmailResult?.success) {
+                await markClEmailSent(existingCl.id);
+              } else {
+                throw new Error(
+                  `CL confirmation email retry failed for PI ${paymentIntent.id}`
+                );
+              }
+            } else {
+              console.info("CL registration already recorded for PI:", paymentIntent.id);
+            }
             break;
           }
 
-          const { error: clError } = await supabaseServer
+          // payment_method je "card" — CHECK constraint na tabeli dozvoljava
+          // card/bank/paypal/cash (NE "stripe"); amount_paid kolona ne
+          // postoji u šemi pa se iznos ne upisuje (fiksno 15€).
+          const { data: insertedCl, error: clError } = await supabaseServer
             .from("registration_champions_league_26_27")
             .insert({
               first_name,
@@ -209,11 +277,12 @@ export async function POST(req: NextRequest) {
               email,
               phone,
               notes: notes || null,
-              payment_method: "stripe",
+              payment_method: "card",
               payment_status: "paid",
               stripe_payment_intent_id: paymentIntent.id,
-              amount_paid: 15.0,
-            });
+            })
+            .select("id")
+            .single();
 
           if (
             clError?.code === "23505" &&
@@ -262,6 +331,11 @@ export async function POST(req: NextRequest) {
             });
           } else if (clError) {
             console.error("Error inserting CL registration:", clError);
+            // Kartica je naplaćena, a red nije upisan — 500 da Stripe ponovi
+            // event umjesto tihog gubitka registracije.
+            throw new Error(
+              `CL registration insert failed for PI ${paymentIntent.id}: ${clError.message}`
+            );
           } else {
             await sendAdminRegistrationNotification({
               competition: "Champions League",
@@ -273,6 +347,30 @@ export async function POST(req: NextRequest) {
               amount: "15.00€",
               notes: notes || undefined,
             });
+            const clEmailResult = await sendCLRegistrationConfirmationEmail({
+              first_name,
+              last_name,
+              email,
+              amount: 15.0,
+              payment_method: "card",
+            });
+            if (clEmailResult?.success && insertedCl?.id) {
+              await markClEmailSent(insertedCl.id);
+            } else if (!clEmailResult?.success) {
+              if (clEmailFlagSupported) {
+                // Red je upisan, email nije otišao — 500 tjera Stripe
+                // redelivery koji će slanje ponoviti (flag je false).
+                throw new Error(
+                  `CL confirmation email failed for PI ${paymentIntent.id}`
+                );
+              }
+              // Bez flag kolone redelivery ne zna da email fali — retry bi
+              // stao na "already recorded", pa samo logujemo.
+              console.error(
+                "CL confirmation email failed (no retry — flag column missing) for PI:",
+                paymentIntent.id
+              );
+            }
           }
         }
 

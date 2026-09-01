@@ -494,7 +494,7 @@ export default function Home() {
           </h2>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/premier-league/registration">
+            <Link href="/champions-league/registration">
               <div
                 className={`inline-flex items-center gap-3 px-8 py-4 rounded-md font-bold text-base transition-all duration-300 transform hover:scale-105 ${
                   theme === "dark"
