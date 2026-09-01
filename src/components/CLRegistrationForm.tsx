@@ -155,6 +155,7 @@ function CLRegistrationFormInner() {
             notes: formData.notes.trim(),
             payment_method: "cash",
             cash_delivery_date: cashDeliveryDate,
+            recaptcha_token: recaptchaToken,
           }),
         });
         const data = await response.json();
@@ -196,6 +197,7 @@ function CLRegistrationFormInner() {
           phone: formData.phone.trim(),
           notes: formData.notes.trim(),
           payment_method_id: paymentMethod.id,
+          recaptcha_token: recaptchaToken,
         }),
       });
 

@@ -4,6 +4,8 @@ import {
   sendAdminRegistrationNotification,
   sendCLRegistrationConfirmationEmail,
 } from "@/lib/email";
+import { verifyRecaptcha } from "@/lib/recaptcha";
+import { plRegistrationLimiter } from "@/lib/rate-limiter";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -12,7 +14,27 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { first_name, last_name, email, phone, notes, cash_delivery_date } = await req.json();
+    // x-real-ip is set by the platform; a client-supplied x-forwarded-for
+    // prefix is spoofable, so fall back to the last (platform-appended) hop.
+    const clientIP =
+      req.headers.get("x-real-ip") ||
+      req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() ||
+      "unknown";
+    if (!plRegistrationLimiter.isAllowed(clientIP).allowed) {
+      return NextResponse.json(
+        { error: "Previše pokušaja. Pokušajte ponovo za 15 minuta." },
+        { status: 429 }
+      );
+    }
+
+    const { first_name, last_name, email, phone, notes, cash_delivery_date, recaptcha_token } = await req.json();
+
+    if (!(await verifyRecaptcha(recaptcha_token))) {
+      return NextResponse.json(
+        { error: "reCAPTCHA verifikacija neuspješna" },
+        { status: 400 }
+      );
+    }
 
     if (!first_name?.trim() || !last_name?.trim() || !email?.trim() || !phone?.trim()) {
       return NextResponse.json(

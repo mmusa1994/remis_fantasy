@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import { verifyRecaptcha } from "@/lib/recaptcha";
+import { plRegistrationLimiter } from "@/lib/rate-limiter";
 
 export async function POST(req: NextRequest) {
   try {
+    // x-real-ip is set by the platform; a client-supplied x-forwarded-for
+    // prefix is spoofable, so fall back to the last (platform-appended) hop.
+    const clientIP =
+      req.headers.get("x-real-ip") ||
+      req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() ||
+      "unknown";
+    if (!plRegistrationLimiter.isAllowed(clientIP).allowed) {
+      return NextResponse.json(
+        { error: "Previše pokušaja. Pokušajte ponovo za 15 minuta." },
+        { status: 429 }
+      );
+    }
+
     const {
       first_name,
       last_name,
@@ -10,7 +25,15 @@ export async function POST(req: NextRequest) {
       phone,
       notes,
       payment_method_id,
+      recaptcha_token,
     } = await req.json();
+
+    if (!(await verifyRecaptcha(recaptcha_token))) {
+      return NextResponse.json(
+        { error: "reCAPTCHA verifikacija neuspješna" },
+        { status: 400 }
+      );
+    }
 
     // Validate required fields
     if (!first_name?.trim() || !last_name?.trim() || !email?.trim() || !phone?.trim()) {
