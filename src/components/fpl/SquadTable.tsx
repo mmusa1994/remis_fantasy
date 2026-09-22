@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { PiTShirtLight, PiTShirtFill } from "react-icons/pi";
 import { TbUsers } from "react-icons/tb";
 import { GiSoccerKick } from "react-icons/gi";
 import { getTeamColors } from "@/lib/team-colors";
+import TeamJersey from "./TeamJersey";
 import { useTranslation } from "react-i18next";
 
 interface Player {
@@ -204,14 +204,11 @@ const SquadTable = React.memo(function SquadTable({
         </td>
         <td className="px-2 py-3 text-center">
           <div className="flex items-center justify-center space-x-1.5">
-            <div style={{ color: getTeamColors(pick.player.team).primary }}>
-              {getTeamColors(pick.player.team).primary !==
-              getTeamColors(pick.player.team).secondary ? (
-                <PiTShirtFill size={16} />
-              ) : (
-                <PiTShirtLight size={16} />
-              )}
-            </div>
+            <TeamJersey
+              kit={getTeamColors(pick.player.team)}
+              isGoalkeeper={pick.player.element_type === 1}
+              className="w-4 h-4"
+            />
             <span className="text-xs font-bold text-theme-text-primary theme-transition">
               {getTeamColors(pick.player.team).shortName}
             </span>

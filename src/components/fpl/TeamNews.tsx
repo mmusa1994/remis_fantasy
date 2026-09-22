@@ -16,8 +16,8 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react";
-import { PiTShirtFill } from "react-icons/pi";
-import { getTeamColors } from "@/lib/team-colors";
+import { getTeamColors, type TeamKit } from "@/lib/team-colors";
+import TeamJersey from "./TeamJersey";
 import LoadingCard from "@/components/shared/LoadingCard";
 
 type Severity = "injured" | "doubtful" | "suspended";
@@ -42,6 +42,7 @@ interface TeamRecord {
   suspended: InjuredPlayer[];
   shortName: string;
   primary: string;
+  kit: TeamKit;
 }
 
 type FilterKey = "all" | Severity;
@@ -160,12 +161,10 @@ function TeamCard({ rec, injured, doubtful, suspended, total, defaultExpanded }:
           className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
           style={{ background: `linear-gradient(135deg, ${rec.primary}22 0%, ${rec.primary}11 100%)` }}
         >
-          <PiTShirtFill
-            className="w-5 h-5"
-            style={{
-              color: rec.primary,
-              filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))",
-            } as React.CSSProperties}
+          <TeamJersey
+            kit={rec.kit}
+            title={rec.kit.name}
+            className="w-5 h-5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
           />
         </div>
         <div className="flex-1 min-w-0 text-left">
@@ -359,6 +358,7 @@ export default function TeamNews() {
         suspended: [],
         shortName: tm.short_name || c.shortName,
         primary: c.primary,
+        kit: c,
       };
     });
 
@@ -377,6 +377,7 @@ export default function TeamNews() {
           suspended: [],
           shortName: c.shortName,
           primary: c.primary,
+          kit: c,
         };
       }
       const playerData: InjuredPlayer = {
@@ -593,7 +594,11 @@ export default function TeamNews() {
                     className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 relative"
                     style={{ background: `linear-gradient(135deg, ${colors.primary}1a 0%, ${colors.primary}0d 100%)` }}
                   >
-                    <PiTShirtFill className="w-4 h-4" style={{ color: colors.primary } as React.CSSProperties} />
+                    <TeamJersey
+                      kit={colors}
+                      isGoalkeeper={p.element_type === 1}
+                      className="w-4 h-4"
+                    />
                     <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ring-2 ring-white dark:ring-slate-900 ${badgeColor}`} />
                   </div>
                   <div className="min-w-0">
@@ -685,7 +690,7 @@ export default function TeamNews() {
                     className="flex items-center justify-center w-5 h-5 rounded-full"
                     style={{ background: `${colors.primary}22` }}
                   >
-                    <PiTShirtFill className="w-3 h-3" style={{ color: colors.primary } as React.CSSProperties} />
+                    <TeamJersey kit={colors} className="w-3.5 h-3.5" />
                   </span>
                   <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100">{tm.short_name}</span>
                   <button
@@ -777,12 +782,9 @@ export default function TeamNews() {
                             background: `linear-gradient(135deg, ${colors.primary}22 0%, ${colors.primary}11 100%)`,
                           }}
                         >
-                          <PiTShirtFill
-                            className="w-4 h-4"
-                            style={{
-                              color: colors.primary,
-                              filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))",
-                            } as React.CSSProperties}
+                          <TeamJersey
+                            kit={colors}
+                            className="w-4 h-4 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
                           />
                           {isSelected && (
                             <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500 text-white shadow-sm">

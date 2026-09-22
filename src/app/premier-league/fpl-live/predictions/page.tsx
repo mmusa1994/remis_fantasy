@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { MdArrowBack, MdRefresh } from "react-icons/md";
 import Link from "next/link";
 import LoadingCard from "@/components/shared/LoadingCard";
+import TeamJersey from "@/components/fpl/TeamJersey";
+import { getTeamColors, registerFplTeams } from "@/lib/team-colors";
 import type { FPLXPointsPrediction } from "@/types/fpl";
 
 interface BootstrapElement {
@@ -38,6 +40,8 @@ export default function PredictionsPage() {
     const json = await res.json();
     if (json?.success && json.data) {
       setElements(json.data.elements || []);
+      // FPL renumbers team ids each season — keep kit colours on the right club.
+      registerFplTeams(json.data.teams);
       const events = json.data.events as Array<{
         id: number;
         is_current: boolean;
@@ -196,8 +200,22 @@ export default function PredictionsPage() {
                       className="border-t border-theme-border"
                     >
                       <td className="px-2 py-2 font-bold">{idx + 1}</td>
-                      <td className="px-2 py-2 font-medium text-theme-foreground truncate max-w-[140px]">
-                        {p.web_name || el?.web_name || `#${p.player_id}`}
+                      <td className="px-2 py-2 font-medium text-theme-foreground max-w-[170px]">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div
+                            className="flex items-center justify-center w-6 h-6 rounded-md shrink-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${getTeamColors(el?.team ?? 0).primary}1a 0%, ${getTeamColors(el?.team ?? 0).primary}0d 100%)`,
+                            }}
+                          >
+                            <TeamJersey
+                              kit={getTeamColors(el?.team ?? 0)}
+                              isGoalkeeper={el?.element_type === 1}
+                              className="w-3.5 h-3.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
+                            />
+                          </div>
+                          <span className="truncate">{p.web_name || el?.web_name || `#${p.player_id}`}</span>
+                        </div>
                       </td>
                       <td className="px-2 py-2 text-center text-theme-text-secondary">
                         {POSITION_LABEL[el?.element_type || 3] || ""}

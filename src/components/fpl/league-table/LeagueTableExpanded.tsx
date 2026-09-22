@@ -1,8 +1,8 @@
 "use client";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { FaShirt } from "react-icons/fa6";
 import { getTeamColors } from "@/lib/team-colors";
+import TeamJersey from "../TeamJersey";
 import AutoSubArrow from "./AutoSubArrow";
 import type { LeagueElementSummary, ProcessedTeam } from "./types";
 
@@ -105,9 +105,10 @@ export default function LeagueTableExpanded({
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1 min-w-0">
-                    <FaShirt
-                      className="w-3 h-3 shrink-0"
-                      style={{ color: teamColors.primary }}
+                    <TeamJersey
+                      kit={teamColors}
+                      isGoalkeeper={el?.element_type === 1}
+                      className="w-3.5 h-3.5 shrink-0"
                     />
                     <span
                       className={`font-bold truncate ${
@@ -174,9 +175,10 @@ export default function LeagueTableExpanded({
                 }`}
               >
                 <div className="flex items-center gap-1 min-w-0">
-                  <FaShirt
-                    className="w-3 h-3 shrink-0"
-                    style={{ color: teamColors.primary }}
+                  <TeamJersey
+                    kit={teamColors}
+                    isGoalkeeper={el?.element_type === 1}
+                    className="w-3.5 h-3.5 shrink-0"
                   />
                   <span
                     className={`font-bold truncate ${

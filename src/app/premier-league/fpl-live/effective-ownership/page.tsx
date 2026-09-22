@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { MdArrowBack, MdRefresh } from "react-icons/md";
 import Link from "next/link";
 import LoadingCard from "@/components/shared/LoadingCard";
+import TeamJersey from "@/components/fpl/TeamJersey";
+import { getTeamColors, registerFplTeams } from "@/lib/team-colors";
 import type { FPLEOBucket } from "@/types/fpl";
 
 interface EORow {
@@ -51,6 +53,10 @@ export default function EffectiveOwnershipPage() {
   const detectGameweek = useCallback(async () => {
     const res = await fetch("/api/fpl/bootstrap-static");
     const data = await res.json();
+    if (data?.success && data.data?.teams) {
+      // FPL renumbers team ids each season — keep kit colours on the right club.
+      registerFplTeams(data.data.teams);
+    }
     if (data?.success && data.data?.events) {
       const events = data.data.events as Array<{
         id: number;
@@ -192,8 +198,22 @@ export default function EffectiveOwnershipPage() {
                       className="border-t border-theme-border"
                     >
                       <td className="px-2 py-2 font-bold">{idx + 1}</td>
-                      <td className="px-2 py-2 font-medium text-theme-foreground truncate max-w-[140px]">
-                        {el?.web_name || `#${row.player_id}`}
+                      <td className="px-2 py-2 font-medium text-theme-foreground max-w-[170px]">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div
+                            className="flex items-center justify-center w-6 h-6 rounded-md shrink-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${getTeamColors(el?.team ?? 0).primary}1a 0%, ${getTeamColors(el?.team ?? 0).primary}0d 100%)`,
+                            }}
+                          >
+                            <TeamJersey
+                              kit={getTeamColors(el?.team ?? 0)}
+                              isGoalkeeper={el?.element_type === 1}
+                              className="w-3.5 h-3.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
+                            />
+                          </div>
+                          <span className="truncate">{el?.web_name || `#${row.player_id}`}</span>
+                        </div>
                       </td>
                       <td className="px-2 py-2 text-center text-theme-text-secondary">
                         {POSITION_LABEL[el?.element_type || 3] || ""}

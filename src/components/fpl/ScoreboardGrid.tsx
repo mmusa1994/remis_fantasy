@@ -2,8 +2,8 @@
 
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { PiTShirtLight, PiTShirtFill } from "react-icons/pi";
 import { getTeamColors } from "@/lib/team-colors";
+import TeamJersey from "./TeamJersey";
 
 interface Fixture {
   id: number;
@@ -87,16 +87,11 @@ const ScoreboardGrid = React.memo(function ScoreboardGrid({
 
   const TeamDisplay = ({ teamId }: { teamId: number }) => {
     const teamColors = getTeamColors(teamId);
-    const hasSecondaryColor = teamColors.primary !== teamColors.secondary;
 
     return (
       <div className="flex flex-col items-center space-y-1 min-w-0">
-        <div style={{ color: teamColors.primary }} className="flex-shrink-0">
-          {hasSecondaryColor ? (
-            <PiTShirtFill size={24} />
-          ) : (
-            <PiTShirtLight size={24} />
-          )}
+        <div className="flex-shrink-0">
+          <TeamJersey kit={teamColors} title={teamColors.name} className="w-6 h-6" />
         </div>
         <span className="text-xs font-bold text-theme-primary text-center">
           {teamColors.shortName}

@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MdRefresh } from "react-icons/md";
-import { PiTShirtFill } from "react-icons/pi";
 import LoadingCard from "@/components/shared/LoadingCard";
 import LeagueChipPill from "@/components/fpl/league-table/LeagueChipPill";
 import { getTeamColors } from "@/lib/team-colors";
+import TeamJersey from "../TeamJersey";
 import type { FPLActiveChip, FPLChipUsageResponse } from "@/types/fpl";
 
 interface BootstrapElement {
@@ -173,12 +173,9 @@ export default function ChipUsagePanel() {
                               background: `linear-gradient(135deg, ${colors.primary}1a 0%, ${colors.primary}0d 100%)`,
                             }}
                           >
-                            <PiTShirtFill
-                              className="w-3.5 h-3.5"
-                              style={{
-                                color: colors.primary,
-                                filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))",
-                              } as React.CSSProperties}
+                            <TeamJersey
+                              kit={colors}
+                              className="w-3.5 h-3.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
                             />
                           </div>
                           <span className="text-theme-foreground truncate">

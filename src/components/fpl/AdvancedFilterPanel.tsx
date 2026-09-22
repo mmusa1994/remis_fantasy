@@ -12,10 +12,10 @@ import {
   BarChart,
   Calendar,
 } from "lucide-react";
-import { PiTShirtFill } from "react-icons/pi";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getTeamColors } from "@/lib/team-colors";
+import TeamJersey from "./TeamJersey";
 import type {
   EnhancedFilterState,
   EnhancedPlayerData,
@@ -346,12 +346,9 @@ export default function AdvancedFilterPanel({
                       : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-slate-50 dark:hover:bg-slate-800/70"
                   }`}
                 >
-                  <PiTShirtFill
-                    className="w-4 h-4 shrink-0"
-                    style={{
-                      color: colors.primary,
-                      filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))",
-                    } as React.CSSProperties}
+                  <TeamJersey
+                    kit={colors}
+                    className="w-4 h-4 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
                   />
                   <span className="flex-1 text-left">{team.short_name}</span>
                   {isActive && (

@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { MdTrendingUp } from "react-icons/md";
-import { PiTShirtFill } from "react-icons/pi";
 import { getTeamColors } from "@/lib/team-colors";
+import TeamJersey from "./TeamJersey";
 import LoadingCard from "@/components/shared/LoadingCard";
 
 interface Player {
@@ -199,9 +199,10 @@ export default function BestDifferentials() {
                   >
                     {getPositionName(player.element_type)}
                   </span>
-                  <PiTShirtFill
+                  <TeamJersey
+                    kit={getTeamColors(player.team)}
+                    isGoalkeeper={player.element_type === 1}
                     className="w-5 h-5"
-                    style={{ color: getTeamColors(player.team).primary }}
                   />
                 </div>
                 <span className="text-lg font-bold text-purple-600 dark:text-purple-400">

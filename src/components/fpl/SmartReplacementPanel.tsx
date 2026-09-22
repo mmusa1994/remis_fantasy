@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaExchangeAlt } from "react-icons/fa";
-import { PiTShirtFill } from "react-icons/pi";
 import { getTeamColors } from "@/lib/team-colors";
+import TeamJersey from "./TeamJersey";
 import {
   TrendingUp,
   Sparkles,
@@ -680,12 +680,10 @@ export default function SmartReplacementPanel({
                           background: `linear-gradient(135deg, ${selColors.primary}1a 0%, ${selColors.primary}0d 100%)`,
                         }}
                       >
-                        <PiTShirtFill
-                          className="w-7 h-7"
-                          style={{
-                            color: selColors.primary,
-                            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.2))",
-                          } as React.CSSProperties}
+                        <TeamJersey
+                          kit={selColors}
+                          isGoalkeeper={selectedPlayer.element_type === 1}
+                          className="w-7 h-7 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
                         />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -765,12 +763,10 @@ export default function SmartReplacementPanel({
                       background: `linear-gradient(135deg, ${heroColors.primary}22 0%, ${heroColors.primary}11 100%)`,
                     }}
                   >
-                    <PiTShirtFill
-                      className="w-7 h-7"
-                      style={{
-                        color: heroColors.primary,
-                        filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.25))",
-                      } as React.CSSProperties}
+                    <TeamJersey
+                      kit={heroColors}
+                      isGoalkeeper={heroPick.player.element_type === 1}
+                      className="w-7 h-7 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
                     />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -919,12 +915,10 @@ export default function SmartReplacementPanel({
                           background: `linear-gradient(135deg, ${candColors.primary}1a 0%, ${candColors.primary}0d 100%)`,
                         }}
                       >
-                        <PiTShirtFill
-                          className="w-7 h-7"
-                          style={{
-                            color: candColors.primary,
-                            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.2))",
-                          } as React.CSSProperties}
+                        <TeamJersey
+                          kit={candColors}
+                          isGoalkeeper={p.element_type === 1}
+                          className="w-7 h-7 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
                         />
                         {isTop && (
                           <span className="absolute -top-1 -left-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 text-white text-[8px] font-bold shadow-sm">

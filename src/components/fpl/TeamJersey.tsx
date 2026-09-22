@@ -135,8 +135,16 @@ export default function TeamJersey({
       {/* Neck */}
       <path d={NECK} fill={kit.trim} />
 
-      {/* Outline keeps white kits (Spurs, Leeds, Fulham) visible on light UI */}
-      <g fill="none" stroke="rgba(0,0,0,0.38)" strokeWidth="1.4">
+      {/* Outline keeps white kits (Spurs, Leeds, Fulham) visible on light UI.
+          non-scaling-stroke pins it to ~1 device pixel: a viewBox-relative
+          width would render sub-pixel in the 12-20px chips used across the
+          widgets and tables, and those kits would disappear on light chips. */}
+      <g
+        fill="none"
+        stroke="rgba(0,0,0,0.38)"
+        strokeWidth="1"
+        vectorEffect="non-scaling-stroke"
+      >
         <path d={SLEEVE_L} />
         <path d={SLEEVE_R} />
         <path d={BODY} />

@@ -12,10 +12,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import { PiTShirtFill } from "react-icons/pi";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { getTeamColors } from "@/lib/team-colors";
+import TeamJersey from "../TeamJersey";
 import type { OwnershipChangesWidgetData } from "@/types/fpl-enhanced";
 
 // Widget-level cache interface
@@ -440,12 +440,9 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
               background: `linear-gradient(135deg, ${colors.primary}1a 0%, ${colors.primary}0d 100%)`,
             }}
           >
-            <PiTShirtFill
-              className="w-5 h-5"
-              style={{
-                color: colors.primary,
-                filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))",
-              } as React.CSSProperties}
+            <TeamJersey
+              kit={colors}
+              className="w-5 h-5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
             />
             {isOwned && (
               <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-3 h-3 rounded-full bg-indigo-500 text-white text-[7px] shadow-sm">

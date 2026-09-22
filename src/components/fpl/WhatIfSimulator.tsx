@@ -9,8 +9,8 @@ import {
   MdRemove,
   MdClose,
 } from "react-icons/md";
-import { PiTShirtFill } from "react-icons/pi";
 import { getTeamColors } from "@/lib/team-colors";
+import TeamJersey from "./TeamJersey";
 
 interface Player {
   web_name: string;
@@ -343,12 +343,10 @@ const WhatIfSimulator = React.memo(function WhatIfSimulator({
                     background: `linear-gradient(135deg, ${colors.primary}1a 0%, ${colors.primary}0d 100%)`,
                   }}
                 >
-                  <PiTShirtFill
-                    className="w-4 h-4"
-                    style={{
-                      color: colors.primary,
-                      filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))",
-                    } as React.CSSProperties}
+                  <TeamJersey
+                    kit={colors}
+                    isGoalkeeper={pick.player.element_type === 1}
+                    className="w-4 h-4 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
                   />
                 </div>
               );

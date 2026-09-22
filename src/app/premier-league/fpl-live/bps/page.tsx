@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { MdArrowBack, MdRefresh } from "react-icons/md";
 import Link from "next/link";
 import LoadingCard from "@/components/shared/LoadingCard";
+import TeamJersey from "@/components/fpl/TeamJersey";
+import { getTeamColors, registerFplTeams } from "@/lib/team-colors";
 
 interface BpsPlayer {
   element: number;
@@ -52,6 +54,10 @@ export default function BpsPage() {
     try {
       const res = await fetch("/api/fpl/bootstrap-static");
       const data = await res.json();
+      if (data?.success && data.data?.teams) {
+        // FPL renumbers team ids each season — keep kit colours on the right club.
+        registerFplTeams(data.data.teams);
+      }
       if (data?.success && data.data?.events) {
         const events = data.data.events as Array<{
           id: number;
@@ -157,11 +163,25 @@ export default function BpsPage() {
             className="bg-theme-card border border-theme-border rounded-lg overflow-hidden"
           >
             <div className="px-3 py-2 bg-theme-card-secondary border-b border-theme-border flex items-center justify-between text-sm">
-              <span className="font-semibold text-theme-foreground">
-                {fixture.team_h} vs {fixture.team_a}
+              <span className="flex items-center gap-1.5 font-semibold text-theme-foreground">
+                <TeamJersey
+                  kit={getTeamColors(fixture.team_h_id)}
+                  title={fixture.team_h}
+                  className="w-4 h-4 shrink-0"
+                />
+                {fixture.team_h}
+                <span className="mx-0.5 text-theme-text-secondary font-normal">
+                  vs
+                </span>
+                <TeamJersey
+                  kit={getTeamColors(fixture.team_a_id)}
+                  title={fixture.team_a}
+                  className="w-4 h-4 shrink-0"
+                />
+                {fixture.team_a}
                 {fixture.team_h_score !== null &&
                   fixture.team_a_score !== null && (
-                    <span className="ml-2 text-theme-text-secondary">
+                    <span className="ml-1.5 text-theme-text-secondary">
                       {fixture.team_h_score} - {fixture.team_a_score}
                     </span>
                   )}
@@ -195,13 +215,29 @@ export default function BpsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {fixture.bps_leaderboard.slice(0, 15).map((player) => (
+                  {fixture.bps_leaderboard.slice(0, 15).map((player) => {
+                    const kit = getTeamColors(player.team);
+                    return (
                     <tr
                       key={player.element}
                       className="border-t border-theme-border"
                     >
-                      <td className="px-2 py-1 font-medium text-theme-foreground truncate max-w-[140px]">
-                        {player.web_name}
+                      <td className="px-2 py-1 font-medium text-theme-foreground max-w-[150px]">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div
+                            className="flex items-center justify-center w-6 h-6 rounded-md shrink-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${kit.primary}1a 0%, ${kit.primary}0d 100%)`,
+                            }}
+                          >
+                            <TeamJersey
+                              kit={kit}
+                              isGoalkeeper={player.position === 1}
+                              className="w-3.5 h-3.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
+                            />
+                          </div>
+                          <span className="truncate">{player.web_name}</span>
+                        </div>
                       </td>
                       <td className="px-2 py-1 text-center text-theme-text-secondary">
                         {POSITION_LABEL[player.position] || ""}
@@ -223,7 +259,8 @@ export default function BpsPage() {
                         {player.current_bonus > 0 ? player.current_bonus : "—"}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

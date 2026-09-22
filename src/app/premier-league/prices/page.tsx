@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { getTeamColors, registerFplTeams, teamBadge } from "@/lib/team-colors";
+import { getTeamColors, registerFplTeams } from "@/lib/team-colors";
+import TeamJersey from "@/components/fpl/TeamJersey";
+import TeamSelect from "@/components/fpl/TeamSelect";
 import {
   TrendingUp,
   TrendingDown,
   Search,
   Clock,
-  ChevronDown,
   ArrowUpDown,
 } from "lucide-react";
 
@@ -611,21 +612,13 @@ export default function PricesPage() {
             />
           </div>
           <div className="flex gap-2">
-            <div className="relative">
-              <select
-                value={selectedTeam}
-                onChange={(e) => setSelectedTeam(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-2.5 bg-theme-card border border-theme-border rounded-lg text-sm text-theme-foreground focus:outline-none focus:ring-1 focus:ring-theme-foreground/20 cursor-pointer"
-              >
-                <option value="all">{t("prices.allTeams")}</option>
-                {teams.map((team) => (
-                  <option key={team.id} value={team.short_name}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-theme-text-secondary pointer-events-none" />
-            </div>
+            <TeamSelect
+              teams={teams}
+              value={selectedTeam}
+              onChange={setSelectedTeam}
+              allLabel={t("prices.allTeams")}
+              className="w-full sm:w-[13.5rem]"
+            />
           </div>
         </div>
 
@@ -827,13 +820,17 @@ function PlayerRowDesktop({
       <td className="px-4 py-3">
         <div className="flex items-center gap-2.5">
           <div
-            className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0"
+            className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
             style={{
-              backgroundColor: teamBadge(teamColors.primary).bg,
-              color: teamBadge(teamColors.primary).ink,
+              background: `linear-gradient(135deg, ${teamColors.primary}1a 0%, ${teamColors.primary}0d 100%)`,
             }}
           >
-            {player.web_name.charAt(0)}
+            <TeamJersey
+              kit={teamColors}
+              isGoalkeeper={player.element_type === 1}
+              title={teamColors.name}
+              className="w-[18px] h-[18px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
+            />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
@@ -942,13 +939,17 @@ function PlayerRowMobile({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div
-            className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0"
+            className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
             style={{
-              backgroundColor: teamBadge(teamColors.primary).bg,
-              color: teamBadge(teamColors.primary).ink,
+              background: `linear-gradient(135deg, ${teamColors.primary}1a 0%, ${teamColors.primary}0d 100%)`,
             }}
           >
-            {player.web_name.charAt(0)}
+            <TeamJersey
+              kit={teamColors}
+              isGoalkeeper={player.element_type === 1}
+              title={teamColors.name}
+              className="w-[18px] h-[18px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
+            />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
