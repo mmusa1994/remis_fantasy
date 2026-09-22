@@ -51,9 +51,9 @@
   "whyChoose": {
     "title": "Zašto Izabrati REMIS Fantasy",
     "subtitle": "Najkompletnija fantasy sportska platforma u regionu.",
-    "payment": {
-      "title": "Sigurna Plaćanja",
-      "description": "Sigurna kartična plaćanja putem Stripe-a za bezbrižnu registraciju."
+    "secureRegistration": {
+      "title": "Sigurna Registracija",
+      "description": "Zaštićena prijava i obrada podataka — enkriptovana konekcija i reCAPTCHA zaštita."
     },
     "autoManagement": {
       "title": "Automatsko Upravljanje Ligom",

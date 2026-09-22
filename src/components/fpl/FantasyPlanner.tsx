@@ -27,7 +27,7 @@ import {
 import { motion } from "framer-motion";
 import FplLoadingSkeleton from "@/components/shared/FplLoadingSkeleton";
 import ManagerIdModal from "@/components/modals/ManagerIdModal";
-import { getTeamColors } from "@/lib/team-colors";
+import { getTeamColors, registerFplTeams, teamBadge } from "@/lib/team-colors";
 import { ErrorType, ValidationStatus } from "@/types/validation";
 import FplStatusBanner from "@/components/shared/FplStatusBanner";
 
@@ -439,6 +439,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         console.error("Failed to process player data:", processErr);
         setAllPlayers([]);
       }
+      // FPL renumbers team ids every season — hand the live list to the
+      // colour table so kits never drift onto the wrong club.
+      registerFplTeams(result.data.teams);
       setAllTeams(result.data.teams || []);
 
       // Robust gameweek detection — falls back through several signals so we
@@ -1946,9 +1949,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   {/* Player Avatar with Team Color */}
                                   <div className="relative">
                                     <div
-                                      className="w-12 h-12 rounded-lg flex items-center justify-center text-sm font-bold text-white shadow-sm"
+                                      className="w-12 h-12 rounded-lg flex items-center justify-center text-sm font-bold shadow-sm"
                                       style={{
-                                        backgroundColor: teamColor.primary,
+                                        backgroundColor: teamBadge(teamColor.primary).bg,
+                                        color: teamBadge(teamColor.primary).ink,
                                       }}
                                     >
                                       {player.web_name
@@ -2115,9 +2119,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   {/* Player Avatar with Team Color */}
                                   <div className="relative">
                                     <div
-                                      className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm"
+                                      className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold shadow-sm"
                                       style={{
-                                        backgroundColor: teamColor.primary,
+                                        backgroundColor: teamBadge(teamColor.primary).bg,
+                                        color: teamBadge(teamColor.primary).ink,
                                       }}
                                     >
                                       {player.web_name
@@ -2815,9 +2820,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 {/* Player Info */}
                                 <div className="col-span-3 flex items-center space-x-2">
                                   <div
-                                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white relative"
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold relative"
                                     style={{
-                                      backgroundColor: teamColor.primary,
+                                      backgroundColor: teamBadge(teamColor.primary).bg,
+                                      color: teamBadge(teamColor.primary).ink,
                                     }}
                                   >
                                     {player.web_name.charAt(0)}
@@ -2993,9 +2999,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 {/* Player Info - Left side */}
                                 <div className="flex items-center space-x-2 flex-1 min-w-0">
                                   <div
-                                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white relative flex-shrink-0"
+                                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold relative flex-shrink-0"
                                     style={{
-                                      backgroundColor: teamColor.primary,
+                                      backgroundColor: teamBadge(teamColor.primary).bg,
+                                      color: teamBadge(teamColor.primary).ink,
                                     }}
                                   >
                                     {player.web_name.charAt(0)}

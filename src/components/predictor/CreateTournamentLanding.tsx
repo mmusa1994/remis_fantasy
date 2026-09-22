@@ -7,25 +7,16 @@ import { useTheme } from "@/contexts/ThemeContext";
 import CreateTournamentPaymentForm from "./CreateTournamentPaymentForm";
 import TemplatePicker from "./TemplatePicker";
 
-interface ProductInfo {
-  name?: string | null;
-  image?: string | null;
-  amount?: number;
-  currency?: string;
-}
-
 interface Props {
   userEmail: string;
   userName: string;
   credits: number;
-  product?: ProductInfo;
 }
 
 export default function CreateTournamentLanding({
   userEmail,
   userName,
   credits,
-  product,
 }: Props) {
   const { t } = useTranslation("predictor");
   const { theme } = useTheme();
@@ -40,7 +31,6 @@ export default function CreateTournamentLanding({
         userName={userName}
         credits={credits}
         templateId={templateId}
-        product={product}
         onBack={() => setStep("landing")}
       />
     );
@@ -169,15 +159,10 @@ export default function CreateTournamentLanding({
                       dark ? "text-gray-500" : "text-gray-500"
                     }`}
                   >
-                    {t("create.pricing.label")}
+                    {t("create.pricing.unavailableTitle")}
                   </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-6xl font-black tracking-tight text-theme-heading-primary">
-                      {t("create.pricing.amount")}
-                    </span>
-                  </div>
-                  <p className="mt-2 max-w-xs text-sm text-theme-text-secondary">
-                    {t("create.pricing.note")}
+                  <p className="mt-2 max-w-sm text-sm text-theme-text-secondary">
+                    {t("create.pricing.unavailableNote")}
                   </p>
                 </>
               )}
@@ -186,10 +171,13 @@ export default function CreateTournamentLanding({
             <div className="flex flex-col items-start gap-2 sm:items-end">
               <button
                 type="button"
+                disabled={!hasCredits}
                 onClick={() => setStep("form")}
-                className="group inline-flex items-center gap-2.5 rounded-full bg-predictor-primary px-7 py-3.5 text-sm font-bold text-gray-900 transition-all duration-200 hover:bg-predictor-primary-hover hover:shadow-[0_8px_30px_-6px_rgba(252,211,77,0.35)]"
+                className="group inline-flex items-center gap-2.5 rounded-full bg-predictor-primary px-7 py-3.5 text-sm font-bold text-gray-900 transition-all duration-200 hover:bg-predictor-primary-hover hover:shadow-[0_8px_30px_-6px_rgba(252,211,77,0.35)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-predictor-primary disabled:hover:shadow-none"
               >
-                {hasCredits ? t("create.cta.primaryFree") : t("create.cta.primary")}
+                {hasCredits
+                  ? t("create.cta.primaryFree")
+                  : t("create.cta.unavailable")}
                 <span
                   aria-hidden
                   className="transition-transform duration-200 group-hover:translate-x-0.5"
@@ -273,7 +261,7 @@ export default function CreateTournamentLanding({
               dark ? "border-white/8" : "border-gray-200"
             }`}
           >
-            {(["stripe", "owner", "lifetime"] as const).map((key) => (
+            {(["credit", "owner", "lifetime"] as const).map((key) => (
               <div
                 key={key}
                 className="text-center text-xs font-medium text-theme-text-secondary sm:text-left"
@@ -293,10 +281,13 @@ export default function CreateTournamentLanding({
         <section className="mb-16 text-center">
           <button
             type="button"
+            disabled={!hasCredits}
             onClick={() => setStep("form")}
-            className="group inline-flex items-center gap-2.5 rounded-full bg-predictor-primary px-8 py-4 text-base font-bold text-gray-900 transition-all duration-200 hover:bg-predictor-primary-hover"
+            className="group inline-flex items-center gap-2.5 rounded-full bg-predictor-primary px-8 py-4 text-base font-bold text-gray-900 transition-all duration-200 hover:bg-predictor-primary-hover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-predictor-primary"
           >
-            {hasCredits ? t("create.cta.primaryFree") : t("create.cta.primary")}
+            {hasCredits
+              ? t("create.cta.primaryFree")
+              : t("create.cta.unavailable")}
             <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
               →
             </span>

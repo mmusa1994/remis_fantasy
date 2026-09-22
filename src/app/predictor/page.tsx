@@ -415,10 +415,10 @@ function GuideModal({
     },
     {
       num: "03",
-      title: t("guide.steps.3.title", "Pay or use a credit"),
+      title: t("guide.steps.3.title", "Use a credit"),
       desc: t(
         "guide.steps.3.desc",
-        "Creating a tournament costs €2 (one-time). If you have free credits, it's instant. Payment is secure via Stripe.",
+        "A tournament is created with a credit — it is instant. Payments are temporarily switched off; if you need a credit, email us at remis.fantasy@gmail.com.",
       ),
     },
     {

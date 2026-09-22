@@ -30,8 +30,8 @@
         "desc": "Daj turniru ime, odaberi boju akcenta i napiši kratki opis. URL slug se automatski generiše iz imena."
       },
       "3": {
-        "title": "Plati ili koristi kredit",
-        "desc": "Kreiranje turnira košta €2 (jednokratno). Ako imaš besplatne kredite, proces je trenutačan. Plaćanje je sigurno preko Stripea."
+        "title": "Koristi kredit",
+        "desc": "Turnir se kreira uz kredit — proces je trenutačan. Plaćanje je privremeno isključeno; ako ti treba kredit, piši nam na remis.fantasy@gmail.com."
       },
       "4": {
         "title": "Konfiguriši u editoru",
@@ -236,19 +236,18 @@
     },
     "subtitle": "Pokreni privatni predikcioni turnir za prijatelje, kolege ili kompaniju. ili otvoreni za cijelu zajednicu. Isti alat koji vodi Remis Fantasy zvanične lige, sada u tvojim rukama.",
     "pricing": {
-      "amount": "2 €",
-      "label": "Jednokratno",
-      "note": "Po turniru. Bez pretplate, bez skrivenih troškova.",
       "creditTitle": "Imaš besplatne kredite",
       "creditAmount_one": "{{count}} kredit",
       "creditAmount_few": "{{count}} kredita",
       "creditAmount_other": "{{count}} kredita",
-      "creditNote": "Kreiraj turnir bez plaćanja."
+      "creditNote": "Kreiraj turnir bez plaćanja.",
+      "unavailableTitle": "Trenutno nedostupno",
+      "unavailableNote": "Kreiranje turnira je privremeno isključeno jer plaćanje nije aktivno. Ako ti treba turnir, piši nam na remis.fantasy@gmail.com."
     },
     "cta": {
-      "primary": "Započni",
       "primaryFree": "Kreiraj turnir",
-      "signedInAs": "Prijavljen kao"
+      "signedInAs": "Prijavljen kao",
+      "unavailable": "Kreiranje nedostupno"
     },
     "included": {
       "title": "Šta dobijaš",
@@ -282,8 +281,8 @@
     "how": {
       "title": "Kako funkcioniše",
       "step1": {
-        "label": "Plati",
-        "desc": "Sigurno Stripe plaćanje karticom. Tvoj turnir je odmah kreiran kao nacrt."
+        "label": "Koristi kredit",
+        "desc": "Turnir se kreira uz kredit i odmah je dostupan kao nacrt."
       },
       "step2": {
         "label": "Podesi",
@@ -295,7 +294,7 @@
       }
     },
     "trust": {
-      "stripe": "Sigurno Stripe plaćanje",
+      "credit": "Kreiranje uz kredit, bez plaćanja",
       "owner": "Pun vlasnički pristup",
       "lifetime": "Doživotno tvoje, bez pretplate"
     },
@@ -306,8 +305,6 @@
     "form": {
       "backToInfo": "Nazad na informacije",
       "step1": "Osnovne informacije",
-      "step2": "Plaćanje karticom",
-      "secure": "Sigurno · Stripe",
       "fields": {
         "name": "Naziv turnira",
         "nameHint": "Naziv koji vide svi koji ulaze u turnir.",
@@ -319,13 +316,7 @@
         "shortDescHint": "Prikazuje se u listi turnira (do 200 znakova).",
         "shortDescPlaceholder": "Kratko o čemu se radi (opcionalno)",
         "accent": "Akcent boja",
-        "accentHint": "Možeš promijeniti kasnije u editoru.",
-        "cardholder": "Ime i prezime na kartici",
-        "cardholderHint": "Tačno kako piše na kartici (ime i prezime).",
-        "cardholderPlaceholder": "Npr. Muhamed Musa",
-        "cardNumber": "Broj kartice",
-        "cardExpiry": "Datum isteka",
-        "cardCvc": "CVC"
+        "accentHint": "Možeš promijeniti kasnije u editoru."
       },
       "colors": {
         "amber": "Amber",
@@ -334,12 +325,9 @@
         "red": "Crvena",
         "green": "Zelena"
       },
-      "stripeNote": "Tvoji podaci kartice idu direktno na Stripe. nikad ne dolaze do našeg servera.",
       "submit": {
         "free": "Kreiraj turnir",
-        "paid": "Plati 2 € i kreiraj turnir",
-        "loadingFree": "Kreiram turnir...",
-        "loadingPaid": "Obrađujem plaćanje..."
+        "loadingFree": "Kreiram turnir..."
       },
       "errors": {
         "nameRequired": "Naziv je obavezan.",
@@ -348,16 +336,6 @@
         "slugRequired": "URL identifikator je obavezan.",
         "slugFormat": "Dozvoljena samo mala slova, brojevi i crtice.",
         "shortDescMax": "Maksimalno 200 znakova.",
-        "cardIncomplete": "Unesi sve podatke kartice.",
-        "cardholderRequired": "Unesi ime i prezime na kartici.",
-        "cardholderFullName": "Unesi i ime i prezime.",
-        "stripeNotReady": "Stripe nije spreman, sačekaj sekundu.",
-        "cardError": "Greška sa formom kartice.",
-        "cardRejected": "Kartica nije prihvaćena.",
-        "paymentStart": "Greška pri pokretanju plaćanja",
-        "paymentRejected": "Plaćanje odbijeno.",
-        "paymentIncomplete": "Plaćanje nije završeno. Pokušaj ponovo.",
-        "tournamentDelay": "Plaćanje uspjelo, ali turnir još nije kreiran. Provjeri 'Moji turniri' za par sekundi.",
         "generic": "Greška, pokušaj ponovo."
       }
     }

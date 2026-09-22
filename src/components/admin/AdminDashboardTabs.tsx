@@ -1029,7 +1029,7 @@ export default function AdminDashboardTabs({
                     }`}
               >
                 <option value="all">Svi načini</option>
-                <option value="stripe">Stripe (kartica)</option>
+                <option value="stripe">Kartica (arhiva)</option>
                 <option value="bank">Bankovni transfer</option>
                 <option value="wise">Wise</option>
                 <option value="cash">Cash</option>
@@ -2174,11 +2174,12 @@ export default function AdminDashboardTabs({
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-900 text-gray-900"
                   >
-                    {/* Stripe postoji samo u 26/27 tabelama (PL i CL) —
-                        25/26 tabele imaju CHECK constraint bez 'stripe',
-                        pa bi save pao na DB nivou. */}
+                    {/* Vrijednost 'stripe' je historijska (kartice iz 26/27) i
+                        postoji samo u 26/27 tabelama (PL i CL) — 25/26 tabele
+                        imaju CHECK constraint bez nje, pa bi save pao na DB
+                        nivou. Novi zapisi se ne kreiraju karticom. */}
                     {activeTab !== "f1" && season === "26_27" && (
-                      <option value="stripe">Stripe (kartica)</option>
+                      <option value="stripe">Kartica (arhiva)</option>
                     )}
                     <option value="bank">Bankovni transfer</option>
                     <option value="wise">Wise</option>

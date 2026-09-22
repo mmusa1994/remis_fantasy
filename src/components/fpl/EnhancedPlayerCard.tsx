@@ -3,11 +3,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, TrendingDown, Users, AlertTriangle } from "lucide-react";
-import { PiTShirtFill } from "react-icons/pi";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/contexts/ThemeContext";
-import { getTeamColors } from "@/lib/team-colors";
+import { getPlayerTeamColors } from "@/lib/team-colors";
+import TeamJersey from "./TeamJersey";
 import type { EnhancedPlayerData } from "@/types/fpl-enhanced";
 
 interface EnhancedPlayerCardProps {
@@ -23,11 +23,6 @@ interface EnhancedPlayerCardProps {
   position?: "GK" | "DEF" | "MID" | "FWD";
   compact?: boolean;
 }
-
-// Function to get kit icon - now always returns team jersey
-const getKitIcon = () => {
-  return PiTShirtFill;
-};
 
 export default function EnhancedPlayerCard({
   player,
@@ -93,7 +88,8 @@ export default function EnhancedPlayerCard({
 
   if (!player) return null;
 
-  const teamColors = getTeamColors(player.team);
+  const teamColors = getPlayerTeamColors(player);
+  const isGoalkeeper = player.element_type === 1 || position === "GK";
   // Always show last gameweek points (event_points), not season total
   const points = player.event_points ?? 0;
   const livePoints = player.live_stats?.total_points ?? player.points ?? 0;
@@ -452,29 +448,19 @@ export default function EnhancedPlayerCard({
         <div
           className={`mx-auto mt-1 flex items-center justify-center transition-transform duration-300 group-hover:scale-105 relative`}
         >
-          {/* Kit icon based on position */}
-          {(() => {
-            const IconComponent = getKitIcon();
-            return (
-              <IconComponent
-                className={`${
-                  isOnPitch
-                    ? compact
-                      ? "w-8 h-8 lg:w-16 lg:h-20"
-                      : "w-4 h-4 sm:w-6 sm:h-6 lg:h-10 lg:w-10" // Tighter on mobile
-                    : "w-5 h-5 lg:h-10 lg:w-10"
-                } transition-colors duration-200`}
-                style={
-                  {
-                    color: teamColors.primary,
-                    "--pi-primary": teamColors.primary,
-                    "--pi-secondary": teamColors.secondary || "#FFFFFF",
-                    filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.2))",
-                  } as React.CSSProperties
-                }
-              />
-            );
-          })()}
+          {/* Real club kit — two-tone, with the keeper in his own colours */}
+          <TeamJersey
+            kit={teamColors}
+            isGoalkeeper={isGoalkeeper}
+            title={`${teamColors.name}${isGoalkeeper ? " (GK)" : ""}`}
+            className={`${
+              isOnPitch
+                ? compact
+                  ? "w-8 h-8 lg:w-16 lg:h-20"
+                  : "w-4 h-4 sm:w-6 sm:h-6 lg:h-10 lg:w-10" // Tighter on mobile
+                : "w-5 h-5 lg:h-10 lg:w-10"
+            } drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]`}
+          />
 
           {/* Live indicator for ongoing matches */}
           {player.is_playing && (

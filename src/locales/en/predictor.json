@@ -30,8 +30,8 @@
         "desc": "Give your tournament a name, pick an accent color, and write a short description. The URL slug is auto-generated from the name."
       },
       "3": {
-        "title": "Pay or use a credit",
-        "desc": "Creating a tournament costs €2 (one-time). If you have free credits, it's instant. Payment is secure via Stripe."
+        "title": "Use a credit",
+        "desc": "A tournament is created with a credit — it is instant. Payments are temporarily switched off; if you need a credit, email us at remis.fantasy@gmail.com."
       },
       "4": {
         "title": "Configure in the editor",
@@ -235,18 +235,17 @@
     },
     "subtitle": "Run a private prediction tournament for friends, colleagues, or your company. or an open one for the whole community. The same engine that powers Remis Fantasy's official competitions, now in your hands.",
     "pricing": {
-      "amount": "€2",
-      "label": "One-time",
-      "note": "Per tournament. No subscription, no hidden fees.",
       "creditTitle": "You have free credits",
       "creditAmount_one": "{{count}} credit",
       "creditAmount_other": "{{count}} credits",
-      "creditNote": "Create a tournament without paying."
+      "creditNote": "Create a tournament without paying.",
+      "unavailableTitle": "Currently unavailable",
+      "unavailableNote": "Tournament creation is temporarily switched off because payments are not active. If you need a tournament, email us at remis.fantasy@gmail.com."
     },
     "cta": {
-      "primary": "Begin",
       "primaryFree": "Create tournament",
-      "signedInAs": "Signed in as"
+      "signedInAs": "Signed in as",
+      "unavailable": "Creation unavailable"
     },
     "included": {
       "title": "What's included",
@@ -280,8 +279,8 @@
     "how": {
       "title": "How it works",
       "step1": {
-        "label": "Pay",
-        "desc": "Secure Stripe card payment. Your tournament is created instantly as a draft."
+        "label": "Use a credit",
+        "desc": "A tournament is created with a credit and is instantly available as a draft."
       },
       "step2": {
         "label": "Customise",
@@ -293,7 +292,7 @@
       }
     },
     "trust": {
-      "stripe": "Secure Stripe payments",
+      "credit": "Create with a credit, no payment",
       "owner": "Full owner access",
       "lifetime": "Yours for life, no subscription"
     },
@@ -304,8 +303,6 @@
     "form": {
       "backToInfo": "Back to overview",
       "step1": "Basic information",
-      "step2": "Card payment",
-      "secure": "Secure · Stripe",
       "fields": {
         "name": "Tournament name",
         "nameHint": "The name shown to everyone who enters the tournament.",
@@ -317,13 +314,7 @@
         "shortDescHint": "Shown in the tournament list (up to 200 characters).",
         "shortDescPlaceholder": "A quick line about what this is (optional)",
         "accent": "Accent colour",
-        "accentHint": "You can change this later in the editor.",
-        "cardholder": "Name on card",
-        "cardholderHint": "Exactly as it appears on your card (first and last name).",
-        "cardholderPlaceholder": "e.g. Muhamed Musa",
-        "cardNumber": "Card number",
-        "cardExpiry": "Expiry",
-        "cardCvc": "CVC"
+        "accentHint": "You can change this later in the editor."
       },
       "colors": {
         "amber": "Amber",
@@ -332,12 +323,9 @@
         "red": "Red",
         "green": "Green"
       },
-      "stripeNote": "Your card details go straight to Stripe. they never touch our server.",
       "submit": {
         "free": "Create tournament",
-        "paid": "Pay €2 and create",
-        "loadingFree": "Creating tournament...",
-        "loadingPaid": "Processing payment..."
+        "loadingFree": "Creating tournament..."
       },
       "errors": {
         "nameRequired": "Name is required.",
@@ -346,16 +334,6 @@
         "slugRequired": "URL identifier is required.",
         "slugFormat": "Only lowercase letters, numbers and dashes allowed.",
         "shortDescMax": "Maximum 200 characters.",
-        "cardIncomplete": "Enter all card details.",
-        "cardholderRequired": "Enter the name on the card.",
-        "cardholderFullName": "Enter both first and last name.",
-        "stripeNotReady": "Stripe isn't ready yet. give it a second.",
-        "cardError": "Card form error.",
-        "cardRejected": "Card was not accepted.",
-        "paymentStart": "Failed to start payment",
-        "paymentRejected": "Payment rejected.",
-        "paymentIncomplete": "Payment did not complete. Try again.",
-        "tournamentDelay": "Payment succeeded, but the tournament isn't created yet. Check 'My tournaments' in a few seconds.",
         "generic": "Something went wrong, try again."
       }
     }

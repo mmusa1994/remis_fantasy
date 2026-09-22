@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { getTeamColors } from "@/lib/team-colors";
+import { getTeamColors, registerFplTeams, teamBadge } from "@/lib/team-colors";
 import {
   TrendingUp,
   TrendingDown,
@@ -274,6 +274,10 @@ export default function PricesPage() {
       const elements: any[] = bootstrapData.data.elements || [];
       const teamsList: any[] = bootstrapData.data.teams || [];
       const events: any[] = bootstrapData.data.events || [];
+
+      // Team ids are season-scoped in the FPL API — register the live list so
+      // club colours resolve correctly after every promotion/relegation.
+      registerFplTeams(teamsList);
 
       // Determine GW timing from events
       const now = Date.now();
@@ -823,8 +827,11 @@ function PlayerRowDesktop({
       <td className="px-4 py-3">
         <div className="flex items-center gap-2.5">
           <div
-            className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-            style={{ backgroundColor: teamColors.primary }}
+            className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0"
+            style={{
+              backgroundColor: teamBadge(teamColors.primary).bg,
+              color: teamBadge(teamColors.primary).ink,
+            }}
           >
             {player.web_name.charAt(0)}
           </div>
@@ -935,8 +942,11 @@ function PlayerRowMobile({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div
-            className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-            style={{ backgroundColor: teamColors.primary }}
+            className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0"
+            style={{
+              backgroundColor: teamBadge(teamColors.primary).bg,
+              color: teamBadge(teamColors.primary).ink,
+            }}
           >
             {player.web_name.charAt(0)}
           </div>

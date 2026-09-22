@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe, getTournamentCreationPrice } from "@/lib/stripe";
 import { supabaseServer } from "@/lib/supabase-server";
 import { requireUser, slugify, jsonError } from "@/lib/predictor";
 import { getTemplate } from "@/data/predictor-templates";
@@ -43,7 +42,8 @@ export async function POST(req: NextRequest) {
       409,
     );
 
-  // Branch A: user already has credits → create directly, no Stripe needed
+  // Kreiranje turnira je moguće isključivo uz kredit — plaćeni tok je uklonjen
+  // zajedno sa payment providerom i vratit će se kad se uvede novi.
   const { data: userRow, error: userErr } = await supabaseServer
     .from("users")
     .select("tournament_create_credits, email, name")
@@ -110,41 +110,9 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Branch B: paid flow → require Stripe PaymentMethod, create PaymentIntent
-  const payment_method_id = body?.payment_method_id;
-  if (
-    !payment_method_id ||
-    typeof payment_method_id !== "string" ||
-    !payment_method_id.startsWith("pm_")
-  ) {
-    return jsonError("Validan način plaćanja je obavezan", 400);
-  }
-
-  const price = await getTournamentCreationPrice();
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: price.amount,
-    currency: price.currency,
-    payment_method: payment_method_id,
-    receipt_email: userEmail || undefined,
-    metadata: {
-      type: "tournament_creation",
-      user_id: userId,
-      tournament_name,
-      tournament_slug: slug,
-      short_description: short_description || "",
-      accent_color,
-      template_id: template_id || "",
-      stripe_product_id: price.productId || "",
-      stripe_price_id: price.priceId || "",
-    },
-    description: `Remis Predictor. kreiranje turnira "${tournament_name}"`,
-  });
-
-  return NextResponse.json({
-    ok: true,
-    paid: true,
-    clientSecret: paymentIntent.client_secret,
-    payment_intent_id: paymentIntent.id,
-  });
+  return jsonError(
+    "Kreiranje turnira trenutno nije dostupno — plaćanje je privremeno isključeno. " +
+      "Kontaktiraj nas na remis.fantasy@gmail.com ako ti treba turnir.",
+    403,
+  );
 }

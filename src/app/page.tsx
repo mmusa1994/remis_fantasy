@@ -124,8 +124,8 @@ export default function Home() {
     {
       icon: FaShieldAlt,
       color: "text-green-500",
-      titleKey: "hero:whyChoose.payment.title",
-      descKey: "hero:whyChoose.payment.description",
+      titleKey: "hero:whyChoose.secureRegistration.title",
+      descKey: "hero:whyChoose.secureRegistration.description",
     },
     {
       icon: FaCog,

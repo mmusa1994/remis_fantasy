@@ -1776,8 +1776,8 @@ export const sendPLRegistrationConfirmationEmail = async (
     return { success: true as const, messageId: result.messageId };
   } catch (error) {
     console.error("Failed to send PL confirmation email:", error);
-    // Ne baca izuzetak — pozivatelj odlučuje šta s neuspjehom (webhook na
-    // osnovu ovoga vraća 500 da Stripe ponovi isporuku i slanje se retry-a).
+    // Ne baca izuzetak — pozivatelj odlučuje šta s neuspjehom (npr. admin
+    // dashboard nudi ponovno slanje na osnovu confirmation_email_sent flaga).
     return { success: false as const };
   }
 };
@@ -1973,8 +1973,8 @@ export const sendCLRegistrationConfirmationEmail = async (
     return { success: true as const, messageId: result.messageId };
   } catch (error) {
     console.error("Failed to send CL confirmation email:", error);
-    // Ne baca izuzetak — pozivatelj odlučuje šta s neuspjehom (webhook na
-    // osnovu ovoga vraća 500 da Stripe ponovi isporuku i slanje se retry-a).
+    // Ne baca izuzetak — pozivatelj odlučuje šta s neuspjehom (npr. admin
+    // dashboard nudi ponovno slanje na osnovu confirmation_email_sent flaga).
     return { success: false as const };
   }
 };

@@ -1,11 +1,15 @@
 "use client";
 
 import CLRegistrationFormNew from "@/components/CLRegistrationForm";
+import RegistrationClosed from "@/components/RegistrationClosed";
 
 export default function ChampionsLeagueRegistracijaPage() {
   return (
-    <div className="pb-16 xs:pb-20 pt-6 xs:pt-8 sm:pt-10 px-2 xs:px-4 relative">
+    <RegistrationClosed
+      accent="blue"
+      message="Prijave za Champions League sezonu 2026/27 su zatvorene. Hvala svima koji su se prijavili — sretno u takmičenju!"
+    >
       <CLRegistrationFormNew />
-    </div>
+    </RegistrationClosed>
   );
 }

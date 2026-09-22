@@ -51,9 +51,9 @@
   "whyChoose": {
     "title": "Why Choose REMIS Fantasy",
     "subtitle": "The most complete fantasy sports platform in the region.",
-    "payment": {
-      "title": "Secure Payments",
-      "description": "Safe card payments via Stripe for hassle-free registration."
+    "secureRegistration": {
+      "title": "Secure Registration",
+      "description": "Protected sign-up and data handling — encrypted connection and reCAPTCHA."
     },
     "autoManagement": {
       "title": "Auto League Management",
