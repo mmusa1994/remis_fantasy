@@ -19,6 +19,11 @@ import {
   getTeamHistory,
 } from "@/lib/fplTools";
 import { supabaseServer } from "@/lib/supabase-server";
+import {
+  getSeasonLabel,
+  getGameweekContext,
+  getPastSeasonYears,
+} from "@/lib/fpl-season";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
@@ -63,13 +68,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // SEASON 2025/26 VALIDATION
+    // Guard za pitanja o ranijim sezonama - godine se izvode iz tekuće sezone.
+    const currentSeasonLabel = getSeasonLabel();
     const seasonKeywords = [
-      "2024",
-      "2023",
-      "2022",
-      "2021",
+      ...getPastSeasonYears(),
       "prošla sezona",
+      "prosla sezona",
       "last season",
       "previous season",
       "historical",
@@ -83,8 +87,8 @@ export async function POST(req: NextRequest) {
         message.includes("Croatian") ||
         message.includes("hrvatski") ||
         message.includes("sezona")
-          ? "Izvinjavam se, ja sam stručnjak isključivo za FPL sezonu 2025/26. Molim pitajte o trenutnoj sezoni."
-          : "Sorry, I'm an expert exclusively for the 2025/26 FPL season. Please ask about the current season.";
+          ? `Izvinjavam se, ja sam stručnjak isključivo za FPL sezonu ${currentSeasonLabel}. Molim pitajte o trenutnoj sezoni.`
+          : `Sorry, I'm an expert exclusively for the ${currentSeasonLabel} FPL season. Please ask about the current season.`;
       return NextResponse.json({ response });
     }
 
@@ -312,11 +316,13 @@ Ukupan rank: ${userTeamData.info?.summary_overall_rank || "N/A"}`;
 
     }
 
-    // FPL 2025/26 EXPERT SYSTEM PROMPT - IMPROVED
+    // FPL EXPERT SYSTEM PROMPT - sezona se izvodi iz live podataka
+    const seasonLabel = getSeasonLabel(bootstrapData);
+    const gwContext = getGameweekContext(bootstrapData);
     const aiInput = [
       {
         role: "system" as const,
-        content: `Ti si FPL stručnjak za sezonu 2025/26. Koristi ISKLJUČIVO podatke ispod - NE izmišljaj ništa!
+        content: `Ti si FPL stručnjak za sezonu ${seasonLabel}. Koristi ISKLJUČIVO podatke ispod - NE izmišljaj ništa!
 
 TIMOVI I ID-ovi: ${JSON.stringify(teams)}
 
@@ -329,8 +335,8 @@ ${completedMatches.split("\n").slice(0, 15).join("\n")}
 SLEDEĆI MEČEVI (format: "GW: Tim1 vs Tim2 (Tim1 home, Tim2 away)"):
 ${upcomingMatches.split("\n").slice(0, 12).join("\n")}
 
-TRENUTNO KOLO: GW${current_event} | Datum: ${today}${
-          userTeamInfo ? "\n\nKORISNIKOV TIM:\n" + userTeamInfo.substring(0, 500) : ""
+TRENUTNO KOLO: GW${gwContext.currentGW ?? current_event} | SLJEDEĆE KOLO: GW${gwContext.targetGW} | Datum: ${today}${
+          userTeamInfo ? "\n\nKORISNIKOV TIM:\n" + userTeamInfo : ""
         }
 
 KLJUČNA PRAVILA:
@@ -338,7 +344,7 @@ KLJUČNA PRAVILA:
 2. Koristi SAMO igrače iz gornje liste - ako nema igrača, reci "nije u bazi"
 3. Za fixtures: Tim1 home = domaćin, Tim2 away = gost
 4. NE izmišljaj rezultate, protivnike ili podatke
-5. Burnley se možda NIJE kvalificirao za 2025/26 - provjeri da li je u timovima!
+5. Sastav lige je ISKLJUČIVO onaj iz TIMOVI liste iznad - ne oslanjaj se na pamćenje ranijih sezona
 6. Za pitanja o "idućem kolu" - koristi SLEDEĆI MEČEVI sekciju`,
       },
       ...chatHistory.slice(-2),
@@ -405,7 +411,7 @@ KLJUČNA PRAVILA:
         const summaryInput = [
           {
             role: "system" as const,
-            content: `Ti si FPL ekspert. Koristi podatke ispod za odgovor.
+            content: `Ti si FPL ekspert za sezonu ${seasonLabel}. Koristi podatke ispod za odgovor.
 
 GAMEWEEK DATA: ${gameweekData}
 Format: GW[round]:pts|min|goals|assists

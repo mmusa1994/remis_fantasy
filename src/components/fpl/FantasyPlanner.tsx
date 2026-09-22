@@ -36,7 +36,8 @@ import EnhancedPitchView from "./EnhancedPitchView";
 import AdvancedFilterPanel from "./AdvancedFilterPanel";
 import SmartReplacementPanel from "./SmartReplacementPanel";
 import AILoadingShow from "./AILoadingShow";
-import AIAnalysisReveal from "./AIAnalysisReveal";
+import AITeamAnalysisReport, { type AnalysisMeta } from "./AITeamAnalysisReport";
+import type { FplTeamAnalysisReport } from "@/lib/ai/fpl-analysis-prompt";
 import PriceChangesWidget from "./widgets/PriceChangesWidget";
 import OwnershipChangesWidget from "./widgets/OwnershipChangesWidget";
 import TransferTrendsWidget from "./widgets/TransferTrendsWidget";
@@ -237,7 +238,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
   // AI Chat Widget State
   const [showAIChat, setShowAIChat] = useState(false);
   const [aiChatLoading, setAiChatLoading] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [aiReport, setAiReport] = useState<FplTeamAnalysisReport | null>(null);
+  const [aiMeta, setAiMeta] = useState<AnalysisMeta | null>(null);
+  const [aiError, setAiError] = useState<{
+    code: string;
+    message: string;
+    hint?: string;
+  } | null>(null);
   const [canUseAI, setCanUseAI] = useState(true);
   const [lastAIUsage, setLastAIUsage] = useState<string | null>(null);
 
@@ -1343,60 +1350,117 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     return false;
   }, [session?.user?.id]);
 
+  const aiErrorCopy = useCallback(
+    (code: string, extra?: { nextAvailableAt?: string }) => {
+      const bs = i18n.language === "bs";
+      const when = extra?.nextAvailableAt
+        ? new Date(extra.nextAvailableAt).toLocaleDateString(bs ? "bs-BA" : "en-GB")
+        : null;
+      switch (code) {
+        case "unauthenticated":
+          return {
+            message: bs ? "Sesija je istekla." : "Your session expired.",
+            hint: bs ? "Prijavi se ponovo pa pokreni analizu." : "Sign in again and rerun the analysis.",
+          };
+        case "no_manager_id":
+          return {
+            message: bs ? "Nije povezan FPL Manager ID." : "No FPL Manager ID connected.",
+            hint: bs
+              ? "Dodaj svoj Manager ID u profilu — bez njega AI ne vidi tvoj kadar."
+              : "Add your Manager ID in your profile — without it the AI cannot see your squad.",
+          };
+        case "weekly_limit":
+          return {
+            message: bs ? "Sedmični limit je iskorišten." : "Weekly limit reached.",
+            hint: when
+              ? bs
+                ? `Sljedeća analiza dostupna ${when}.`
+                : `Next analysis available ${when}.`
+              : undefined,
+          };
+        case "fpl_unavailable":
+          return {
+            message: bs ? "FPL API trenutno ne odgovara." : "The FPL API is not responding.",
+            hint: bs ? "Pokušaj ponovo za par minuta." : "Try again in a few minutes.",
+          };
+        case "ai_no_credit":
+          return {
+            message: bs
+              ? "AI nalog nema kredita."
+              : "The AI account has no credits left.",
+            hint: bs
+              ? "Dopuni balans na platform.openai.com → Billing. Ključ je ispravan, samo je potrošnja na nuli."
+              : "Top up the balance at platform.openai.com → Billing. The key is valid, the balance is not.",
+          };
+        case "ai_invalid_key":
+          return {
+            message: bs ? "AI ključ nije prihvaćen." : "The AI key was rejected.",
+            hint: bs
+              ? "Provjeri OPENAI_API_KEY u Vercel env varijablama i redeploy-aj."
+              : "Check OPENAI_API_KEY in the Vercel env vars and redeploy.",
+          };
+        case "ai_rate_limited":
+          return {
+            message: bs ? "AI servis je preopterećen." : "The AI service is rate limited.",
+            hint: bs ? "Pokušaj ponovo za minutu." : "Try again in a minute.",
+          };
+        default:
+          return {
+            message: bs ? "Analiza nije uspjela." : "The analysis failed.",
+            hint: bs ? "Pokušaj ponovo za koji trenutak." : "Please try again shortly.",
+          };
+      }
+    },
+    [i18n.language]
+  );
+
   const requestAIAnalysis = useCallback(async () => {
-    if (!session?.user?.id || !userTeamData || aiChatLoading) return;
+    if (!session?.user?.id || aiChatLoading) return;
 
     setAiChatLoading(true);
-    setAiAnalysis(null);
+    setAiReport(null);
+    setAiMeta(null);
+    setAiError(null);
 
     try {
-      // Use i18n from the hook that's already called at component level
-      const isBosnian = i18n.language === "bs";
-
-      const analysisPrompt = isBosnian
-        ? "Analiziraj moj FPL tim i predloži poboljšanja za iduće gameweek-ove. Fokusiraj se na transfere, kapetana, formacije i strategiju. Budi konkretan sa preporučenim igračima i objasni zašto."
-        : "Analyze my FPL team and suggest improvements for upcoming gameweeks. Focus on transfers, captain choices, formations, and strategy. Be specific with recommended players and explain why.";
-
-      const response = await fetch("/api/ai-chat", {
+      const response = await fetch("/api/fpl/ai-team-analysis", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: analysisPrompt,
-          chatHistory: [],
+          language: i18n.language === "bs" ? "bs" : "en",
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setAiAnalysis(data.response);
+      const data = await response.json().catch(() => ({}));
 
-        // Update AI usage tracking
-        await fetch("/api/user/ai-usage", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            type: "team_analysis",
-          }),
-        });
-
-        setCanUseAI(false);
-        setLastAIUsage(new Date().toISOString());
-      } else {
-        throw new Error("Failed to get AI analysis");
+      if (!response.ok) {
+        const copy = aiErrorCopy(data?.code ?? "server_error", data);
+        setAiError({ code: data?.code ?? "server_error", ...copy });
+        if (data?.code === "weekly_limit") {
+          setCanUseAI(false);
+          if (data?.nextAvailableAt) {
+            setLastAIUsage(
+              new Date(
+                new Date(data.nextAvailableAt).getTime() - 7 * 24 * 60 * 60 * 1000
+              ).toISOString()
+            );
+          }
+        }
+        return;
       }
+
+      setAiReport(data.report as FplTeamAnalysisReport);
+      setAiMeta(data.meta as AnalysisMeta);
+      setCanUseAI(false);
+      setLastAIUsage(new Date().toISOString());
     } catch (error) {
       console.error("AI Analysis failed:", error);
-      setAiAnalysis(
-        "Došlo je do greške prilikom analize. Pokušajte ponovo później."
-      );
+      const copy = aiErrorCopy("server_error");
+      setAiError({ code: "server_error", ...copy });
     } finally {
       setAiChatLoading(false);
     }
-  }, [session?.user?.id, userTeamData, aiChatLoading, i18n.language]);
+  }, [session?.user?.id, aiChatLoading, i18n.language, aiErrorCopy]);
 
   // Check AI usage on mount
   useEffect(() => {
@@ -3323,7 +3387,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 280 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-2xl max-h-[88vh] overflow-hidden rounded-2xl shadow-2xl border border-violet-300/30 dark:border-violet-700/40 bg-gradient-to-br from-white via-violet-50/60 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950/40"
+            className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl border border-violet-300/30 dark:border-violet-700/40 bg-gradient-to-br from-white via-violet-50/60 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950/40"
           >
             {/* Floating particles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -3409,8 +3473,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             </div>
 
             {/* Content */}
-            <div className="relative px-5 sm:px-6 py-5 max-h-[60vh] overflow-y-auto">
-              {!aiAnalysis && !aiChatLoading && canUseAI && (
+            <div className="relative px-5 sm:px-6 py-5 max-h-[74vh] overflow-y-auto">
+              {!aiReport && !aiError && !aiChatLoading && canUseAI && (
                 <div className="text-center py-4">
                   <div className="relative overflow-hidden rounded-2xl p-6 sm:p-8 bg-white/70 dark:bg-slate-900/60 border border-violet-200/50 dark:border-violet-800/30 shadow-sm backdrop-blur-sm">
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-500" />
@@ -3467,7 +3531,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       <span className="relative">{i18n.language === "bs" ? "Pokreni AI Analizu" : "Run AI Analysis"}</span>
                     </motion.button>
                     <p className="mt-3 text-[10px] text-slate-400 dark:text-slate-500">
-                      {i18n.language === "bs" ? "Traje ~10 sekundi · Personalizovano za tvoj tim" : "Takes ~10 seconds · Personalized for your team"}
+                      {i18n.language === "bs" ? "Traje ~30 sekundi · Personalizovano za tvoj tim" : "Takes ~30 seconds · Personalized for your team"}
                     </p>
                   </div>
                 </div>
@@ -3475,69 +3539,52 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
               {aiChatLoading && <AILoadingShow lang={i18n.language} />}
 
-              {aiAnalysis && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                  <div className="relative overflow-hidden rounded-xl p-5 bg-white/80 dark:bg-slate-900/60 border border-violet-200/50 dark:border-violet-800/30 shadow-sm">
-                    {/* Animated top bar shimmer */}
-                    <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500" />
-                      <motion.div
-                        className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/50 to-transparent"
-                        animate={{ x: ["-100%", "300%"] }}
-                        transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-                      />
-                    </div>
-                    {/* Sparkle burst */}
-                    <div className="absolute -top-1 -right-1 pointer-events-none">
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <motion.span
-                          key={i}
-                          className="absolute text-violet-400 dark:text-fuchsia-400"
-                          style={{ fontSize: 10 + (i % 3) * 2 }}
-                          initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-                          animate={{
-                            opacity: 0,
-                            x: Math.cos((i / 6) * Math.PI * 2) * 30,
-                            y: Math.sin((i / 6) * Math.PI * 2) * 30,
-                            scale: 0.5,
-                          }}
-                          transition={{ duration: 1.2, delay: 0.2 + i * 0.05 }}
-                        >
-                          ✦
-                        </motion.span>
-                      ))}
-                    </div>
+              {aiReport && aiMeta && !aiChatLoading && (
+                <AITeamAnalysisReport
+                  report={aiReport}
+                  meta={aiMeta}
+                  lang={i18n.language}
+                />
+              )}
 
-                    <div className="flex items-center gap-2 mb-3">
-                      <motion.div
-                        initial={{ scale: 0.6, rotate: -20 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: "spring", damping: 14 }}
-                        className="relative inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-sm"
-                      >
-                        <FaRobot className="w-3.5 h-3.5" />
-                        <span className="absolute -inset-0.5 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 opacity-30 blur-md -z-10" />
-                      </motion.div>
-                      <h4 className="font-bold text-slate-800 dark:text-slate-100">
-                        {i18n.language === "bs" ? "AI Preporuke" : "AI Recommendations"}
-                      </h4>
-                      <motion.span
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.3, type: "spring", damping: 14 }}
-                        className="ml-auto text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 shadow-sm"
-                      >
-                        ✓ {i18n.language === "bs" ? "Spremno" : "Ready"}
-                      </motion.span>
-                    </div>
-                    <div className="prose prose-sm dark:prose-invert max-w-none prose-strong:text-violet-700 dark:prose-strong:text-violet-300 prose-headings:text-slate-800 dark:prose-headings:text-slate-100">
-                      <AIAnalysisReveal text={aiAnalysis} />
-                    </div>
+              {aiError && !aiChatLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-rose-50 to-amber-50 dark:from-rose-950/30 dark:to-amber-950/20 border border-rose-200/60 dark:border-rose-800/40 text-center"
+                >
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-rose-500 to-amber-500" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-lg shadow-rose-500/30 mb-3">
+                    <FaRobot className="w-5 h-5" />
                   </div>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-1.5">
+                    {aiError.message}
+                  </h4>
+                  {aiError.hint && (
+                    <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                      {aiError.hint}
+                    </p>
+                  )}
+                  {aiError.code !== "weekly_limit" && (
+                    <button
+                      onClick={requestAIAnalysis}
+                      className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-br from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 shadow-lg shadow-violet-500/30 transition-all"
+                    >
+                      <FaPaperPlane className="w-3.5 h-3.5" />
+                      {i18n.language === "bs" ? "Pokušaj ponovo" : "Try again"}
+                    </button>
+                  )}
+                  <p className="mt-3 text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                    {aiError.code}
+                  </p>
                 </motion.div>
               )}
 
-              {!canUseAI && lastAIUsage && (
+              {!canUseAI &&
+                lastAIUsage &&
+                !aiReport &&
+                !aiError &&
+                !aiChatLoading && (
                 <div className="text-center py-6">
                   <div className="relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-amber-50 to-rose-50 dark:from-amber-950/30 dark:to-rose-950/30 border border-amber-200/60 dark:border-amber-800/40">
                     <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-rose-400" />
@@ -3562,7 +3609,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             </div>
 
             {/* Footer hint */}
-            {(aiAnalysis || aiChatLoading) && (
+            {(aiReport || aiError || aiChatLoading) && (
               <div className="relative px-5 py-3 border-t border-violet-200/40 dark:border-violet-800/30 bg-gradient-to-r from-violet-50/40 via-fuchsia-50/30 to-indigo-50/40 dark:from-violet-950/20 dark:via-fuchsia-950/10 dark:to-indigo-950/20">
                 <p className="text-[10px] text-center text-slate-500 dark:text-slate-400">
                   {i18n.language === "bs"
