@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import I18nProvider from "@/components/providers/I18nProvider";
+import { AITeamAnalysisProvider } from "@/contexts/AITeamAnalysisContext";
+import AIAnalysisToast from "@/components/fpl/AIAnalysisToast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -12,7 +14,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ThemeProvider>
         <OnboardingProvider>
           <I18nProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              <AITeamAnalysisProvider>
+                {children}
+                <AIAnalysisToast />
+              </AITeamAnalysisProvider>
+            </ToastProvider>
           </I18nProvider>
         </OnboardingProvider>
       </ThemeProvider>

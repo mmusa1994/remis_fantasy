@@ -6,12 +6,14 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { HelpCircle } from "lucide-react";
 import OnboardingModal from "./OnboardingModal";
+import { useAIToastVisible } from "@/contexts/AITeamAnalysisContext";
 
 const OnboardingWidget = () => {
   const { theme } = useTheme();
   const { t } = useTranslation("onboarding");
   const [showModal, setShowModal] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const aiToastVisible = useAIToastVisible();
 
   const handleComplete = () => {
     setShowModal(false);
@@ -19,8 +21,12 @@ const OnboardingWidget = () => {
 
   return (
     <>
-      {/* Floating Widget */}
-      <div className="fixed bottom-20 right-3 z-40 flex flex-col items-end gap-2">
+      {/* Floating Widget — sakriven dok je AI toast u istom uglu */}
+      <div
+        className={`fixed bottom-20 right-3 z-40 flex flex-col items-end gap-2 transition-opacity duration-300 ${
+          aiToastVisible ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
+      >
         {/* Tooltip */}
         <AnimatePresence>
           {showTooltip && (

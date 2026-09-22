@@ -18,20 +18,9 @@ import {
   Users,
   Wand2,
 } from "lucide-react";
-import type { FplTeamAnalysisReport } from "@/lib/ai/fpl-analysis-prompt";
+import type { FplTeamAnalysisReport, AnalysisMeta } from "@/lib/ai/fpl-analysis-prompt";
+export type { AnalysisMeta };
 
-export interface AnalysisMeta {
-  season: string;
-  targetGW: number;
-  currentGW: number | null;
-  deadline: string | null;
-  picksGW: number | null;
-  hasSquad: boolean;
-  teamName: string | null;
-  managerName: string | null;
-  model: string;
-  generatedAt: string;
-}
 
 interface Props {
   report: FplTeamAnalysisReport;

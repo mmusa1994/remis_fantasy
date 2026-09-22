@@ -50,6 +50,12 @@ export function buildTeamAnalysisSystemPrompt(args: {
 • Nikad se ne oslanjaj na pamćenje iz prethodnih sezona. Transferi, promocije i ispadanja su se desili — sastav lige je onaj iz podataka.
 • Ako nešto nije u podacima, eksplicitno napiši da podatak nije dostupan umjesto da pretpostaviš.
 • Svaka tvrdnja mora biti potkrijepljena brojem iz podataka (forma, PPG, xGI90, xGC90, DC90, minute, FDR, vlasništvo, cijena). Bez golih fraza tipa "u dobroj je formi".
+• PODACI IMAJU TRI SEKCIJE I NE SMIJEŠ IH MIJEŠATI:
+  A. MOJ TIM = jedini igrači koje korisnik POSJEDUJE. Samo odavde biraš: hitne slučajeve (urgent), kapitena, klupu i igrače koje prodaješ (out).
+  B. RASPORED = FDR po klubu.
+  C. TRŽIŠTE = igrači koje korisnik NEMA. Samo odavde biraš dolazne transfere (in) i watchlist. Lista "POVREDE NA TRŽIŠTU" su tuđi igrači — oni NIKAD nisu tvoj hitni slučaj.
+• Red "POVREDE/FLAGOVI U KADRU" je jedini izvor za urgent. Ako piše "NEMA", polje urgent je prazan niz — bez izuzetka.
+• Prije nego upišeš bilo koje ime u urgent/captaincy/lineup/out: provjeri da je to ime u sekciji A. Prije nego upišeš ime u in/watchlist: provjeri da je u sekciji C.
 
 ╔══════════════════════════════╗
 ║ 2. SEZONSKE ČINJENICE (LIVE) ║
@@ -74,13 +80,13 @@ export function buildTeamAnalysisSystemPrompt(args: {
 ║ 4. METOD ANALIZE (ovim redoslijedom) ║
 ╚════════════════════════════════════╝
 Prije nego napišeš i jednu riječ, prođi kroz ovih 9 koraka nad podacima:
-1. DOSTUPNOST: prođi svih ${rules.squadSize} igrača i izdvoj svakog sa statusom ≠ OK ili sa news porukom. To su hitni slučajevi.
+1. DOSTUPNOST: pročitaj red "POVREDE/FLAGOVI U KADRU" i STATUS kolonu svih ${rules.squadSize} igrača iz sekcije A. Samo oni su hitni slučajevi. Tržišne povrede iz sekcije C ignoriši ovdje.
 2. MINUTE: starts i minute u odnosu na odigrana kola. Igrač ispod ~60 min po kolu je rotacijski rizik čak i ako mu je forma dobra.
 3. PODLOGA: uporedi bodove sa xGI90 (napad) i xGC90 (odbrana). Traži i preformere (bodovi >> podloga → pad dolazi) i underperformere (podloga >> bodovi → kupovina).
 4. RASPORED: za svaki klub iz kadra izračunaj prosječan FDR kroz prikazani horizont i označi ko ima najteži i najlakši niz, plus BLANK/DGW.
 5. STRUKTURA: raspored budžeta po pozicijama, previše mrtvog kapitala na klupi, limit od ${rules.clubLimit} po klubu, ima li tim uopšte ${rules.startingSize} igrača koji igraju.
 6. TRANSFERI: napravi konkretan plan — koga van, koga unutra, tačna računica banke, i da li se isplati čekati (hold) umjesto trošiti.
-7. KAPITEN: rangiraj 3 kandidata iz KADRA korisnika po očekivanim bodovima (forma × xGI90 × FDR × sigurnost minuta). Ako je najbolji kapiten van kadra, to spomeni kao transfer argument, ne kao kapitena.
+7. KAPITEN: rangiraj 3 kandidata ISKLJUČIVO iz sekcije A po očekivanim bodovima (forma × xGI90 × FDR × sigurnost minuta). Igrač koji nije u sekciji A ne može biti kapiten — ako je bolji kandidat na tržištu, to je transfer argument.
 8. CHIPOVI: pogledaj koji su chipovi dostupni i njihove prozore — preporuči konkretno kolo, ne "uskoro".
 9. RANG: prilagodi rizik. Loš rang → agresivnije, diferencijali. Dobar rang → čuvaj poziciju, template igrači.
 
@@ -91,7 +97,8 @@ Prije nego napišeš i jednu riječ, prođi kroz ovih 9 koraka nad podacima:
 • Svaki savjet mora biti izvodljiv do deadlinea: ime igrača + klub + cijena + razlog sa brojem.
 • Ako je najbolji potez NE URADITI NIŠTA, reci to jasno i objasni zašto je čuvanje transfera vrednije.
 • Ne ponavljaj isti argument u dvije sekcije.
-• Nikad ne predlaži igrača koji je već u kadru kao dolazni transfer.
+• Nikad ne predlaži igrača koji je već u kadru kao dolazni transfer. Dolazni igrač mora biti iste pozicije kao odlazni.
+• Server nakon tebe provjerava svako ime, cijenu, kadar, budžet i klub limit protiv stvarnih podataka — svaka greška se briše iz izvještaja. Radije manje tvrdnji, ali sve tačne.
 • Nikad ne predlaži igrača sa statusom povrede kao rješenje, osim ako eksplicitno ne objasniš rizik.
 ${hasSquad ? "• Korisnikov kadar je dostupan — analiza mora biti 100% personalizovana, bez generičkih savjeta." : "• PAŽNJA: korisnikov kadar NIJE dostupan. Reci to u verdict.summary i daj analizu tržišta i rasporeda umjesto personalizovanih transfera; polja koja zavise od kadra ostavi prazna ili sa jasnom napomenom."}
 
@@ -418,3 +425,20 @@ export type FplTeamAnalysisReport = {
   risks: string[];
   actionPlan: string[];
 };
+
+/** Meta podaci uz izvještaj — dijele ih ruta, provider i UI. */
+export interface AnalysisMeta {
+  season: string;
+  targetGW: number;
+  currentGW: number | null;
+  deadline: string | null;
+  picksGW: number | null;
+  hasSquad: boolean;
+  teamName: string | null;
+  managerName: string | null;
+  model: string;
+  generatedAt: string;
+  durationMs: number;
+  repaired: string[];
+  mock?: boolean;
+}
