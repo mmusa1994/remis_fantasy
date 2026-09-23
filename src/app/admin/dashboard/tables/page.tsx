@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import AdminGalleryManager from "@/components/admin/AdminGalleryManager";
 import AdminChampionsManager from "@/components/admin/AdminChampionsManager";
+import FplSyncPanel from "@/components/admin/FplSyncPanel";
 import Toast from "@/components/shared/Toast";
 import LoadingCard from "@/components/shared/LoadingCard";
 import { useTranslation } from "react-i18next";
@@ -165,8 +166,6 @@ export default function AdminTablesCleanPage() {
     message: string;
     type: "success" | "error";
   }>({ show: false, message: "", type: "success" });
-  const [updatingFromFPL, setUpdatingFromFPL] = useState<string | null>(null);
-  const [fullSyncing, setFullSyncing] = useState<string | null>(null);
   const [showLoginRedirect, setShowLoginRedirect] = useState(false);
   const [showCreatePlayer, setShowCreatePlayer] = useState(false);
   const [creatingPlayer, setCreatingPlayer] = useState(false);
@@ -393,129 +392,6 @@ export default function AdminTablesCleanPage() {
   const refreshTables = async () => {
     setLoading(true);
     await loadTables();
-  };
-
-  // FPL League configurations with hardcoded IDs
-  const fplLeagues = [
-    {
-      key: "premium",
-      name: "Premium",
-      id: 277005,
-      color: "yellow",
-      url: "https://fantasy.premierleague.com/leagues/277005/standings/c",
-    },
-    {
-      key: "standard",
-      name: "Standard",
-      id: 277449,
-      color: "blue",
-      url: "https://fantasy.premierleague.com/leagues/277449/standings/c",
-    },
-    {
-      key: "h2h",
-      name: "H2H",
-      id: 277479,
-      color: "red",
-      url: "https://fantasy.premierleague.com/leagues/277479/matches/h",
-    },
-    {
-      key: "h2h2",
-      name: "H2H2",
-      id: 451227,
-      color: "red",
-      url: "https://fantasy.premierleague.com/leagues/451227/matches/h",
-    },
-  ];
-
-  const updateFromFPL = async (leagueType: string) => {
-    try {
-      setUpdatingFromFPL(leagueType);
-
-      const response = await fetch("/api/admin/update-from-fpl", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ leagueType, season }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update from FPL");
-      }
-
-      const result = await response.json();
-
-      // Refresh the tables after update
-      await loadTables();
-
-      const totalInLeague =
-        result.totalFPLPlayers ||
-        result.updatedPlayers + (result.notFoundPlayers?.length || 0);
-      let message = `${result.leagueType.toUpperCase()} liga ažurirana! Ažurirano ${
-        result.updated || result.updatedPlayers || 0
-      } od ${totalInLeague} igrača.`;
-      if (result.notFound && result.notFound.length > 0) {
-        message += ` Nije pronađeno: ${result.notFound.length}`;
-      }
-
-      setToast({
-        show: true,
-        message,
-        type: "success",
-      });
-    } catch (error) {
-      console.error("Error updating from FPL:", error);
-      setToast({
-        show: true,
-        message: `Greška pri ažuriranju ${leagueType} lige sa FPL API-ja`,
-        type: "error",
-      });
-    } finally {
-      setUpdatingFromFPL(null);
-    }
-  };
-
-  // FULL SYNC - Briše postojeće i uvozi sve s FPL-a
-  const fullSyncFromFPL = async (leagueType: string) => {
-    if (!confirm(`FULL SYNC za ${leagueType.toUpperCase()}?\n\nOvo će OBRISATI sve postojeće podatke za ovu ligu i uvesti sve igrače direktno s FPL-a.\n\nNastavi?`)) {
-      return;
-    }
-
-    try {
-      setFullSyncing(leagueType);
-
-      const response = await fetch("/api/admin/update-from-fpl", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ leagueType, fullSync: true, season }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to full sync from FPL");
-      }
-
-      const result = await response.json();
-
-      // Refresh the tables after sync
-      await loadTables();
-
-      setToast({
-        show: true,
-        message: `FULL SYNC ${leagueType.toUpperCase()}: ${result.inserted || 0} uneseno, ${result.updated || 0} ažurirano, ${result.errors || 0} grešaka`,
-        type: result.errors > 0 ? "error" : "success",
-      });
-    } catch (error) {
-      console.error("Error full syncing from FPL:", error);
-      setToast({
-        show: true,
-        message: `Greška pri full sync-u ${leagueType} lige`,
-        type: "error",
-      });
-    } finally {
-      setFullSyncing(null);
-    }
   };
 
   const handleSignOut = () => {
@@ -1253,94 +1129,13 @@ export default function AdminTablesCleanPage() {
             </div>
 
             {/* FPL Sync Section */}
-            <div className={`px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
-              <div className="flex items-center gap-2 mb-3">
-                <RefreshCw className={`w-3.5 h-3.5 ${getMainTabIconColor(mainTab)}`} />
-                <h3 className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                  FPL Sync
-                </h3>
-              </div>
-              <div className="space-y-3">
-                {/* Update Row */}
-                <div className="flex items-start sm:items-center gap-3">
-                  <span className={`text-xs font-semibold w-20 shrink-0 pt-1.5 sm:pt-0 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                    Ažuriraj:
-                  </span>
-                  <div className="flex gap-2 flex-wrap">
-                    {fplLeagues
-                      .filter(
-                        (league) =>
-                          season === "25_26" || league.key !== "h2h2"
-                      )
-                      .map((league) => (
-                      <button
-                        key={league.key}
-                        onClick={() => updateFromFPL(league.key)}
-                        disabled={updatingFromFPL === league.key || fullSyncing !== null || loading}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all duration-150 text-xs ${
-                          updatingFromFPL === league.key
-                            ? "bg-gray-300 cursor-not-allowed text-gray-500"
-                            : league.color === "yellow"
-                            ? "bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border border-yellow-300"
-                            : league.color === "blue"
-                            ? "bg-blue-100 hover:bg-blue-200 text-blue-800 border border-blue-300"
-                            : "bg-red-100 hover:bg-red-200 text-red-800 border border-red-300"
-                        }`}
-                        title={`Update ${league.name}`}
-                      >
-                        <RefreshCw
-                          className={`w-3 h-3 ${
-                            updatingFromFPL === league.key ? "animate-spin" : ""
-                          }`}
-                        />
-                        <span>{updatingFromFPL === league.key ? "..." : league.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className={`border-t ${isDark ? "border-gray-800" : "border-gray-200"}`} />
-
-                {/* Full Sync Row */}
-                <div className="flex items-start sm:items-center gap-3">
-                  <span className={`text-xs font-bold w-20 shrink-0 pt-1.5 sm:pt-0 ${isDark ? "text-red-400" : "text-red-900"}`}>
-                    Full Sync:
-                  </span>
-                  <div className="flex gap-2 flex-wrap">
-                    {fplLeagues
-                      .filter(
-                        (league) =>
-                          season === "25_26" || league.key !== "h2h2"
-                      )
-                      .map((league) => (
-                      <button
-                        key={`full-${league.key}`}
-                        onClick={() => fullSyncFromFPL(league.key)}
-                        disabled={fullSyncing === league.key || updatingFromFPL !== null || loading}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold transition-all duration-150 text-xs shadow-sm ${
-                          fullSyncing === league.key
-                            ? "bg-gray-400 cursor-not-allowed text-white"
-                            : league.color === "yellow"
-                            ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                            : league.color === "blue"
-                            ? "bg-blue-500 hover:bg-blue-600 text-white"
-                            : "bg-red-500 hover:bg-red-600 text-white"
-                        }`}
-                        title={`FULL SYNC ${league.name} - Briše i uvozi sve s FPL-a`}
-                      >
-                        <Upload
-                          className={`w-3 h-3 ${
-                            fullSyncing === league.key ? "animate-pulse" : ""
-                          }`}
-                        />
-                        <span>{fullSyncing === league.key ? "..." : league.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <FplSyncPanel
+              season={season}
+              isDark={isDark}
+              disabled={loading}
+              onSynced={loadTables}
+              onToast={(message, type) => setToast({ show: true, message, type })}
+            />
 
             {/* League Filters */}
             <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">

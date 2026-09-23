@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { motion } from "framer-motion";
-import { Menu, Search, BarChart3 } from "lucide-react";
+import { Menu, Search, BarChart3, House } from "lucide-react";
 import { SiPremierleague } from "react-icons/si";
 import { GiF1Car } from "react-icons/gi";
 import { PiSoccerBall } from "react-icons/pi";
@@ -14,7 +14,7 @@ interface BottomNavProps {
   onMenuToggle: () => void;
 }
 
-type BrandKey = "neutral" | "premier" | "champions" | "f1" | "predictor";
+type BrandKey = "neutral" | "home" | "premier" | "champions" | "f1" | "predictor";
 
 const BRAND_STYLES: Record<
   BrandKey,
@@ -25,6 +25,12 @@ const BRAND_STYLES: Record<
     iconTint: string;
   }
 > = {
+  home: {
+    activeText: "text-gray-900 dark:text-white",
+    activeBg: "bg-gray-900/[0.06] dark:bg-white/10",
+    indicator: "bg-gray-900 dark:bg-white",
+    iconTint: "text-gray-900 dark:text-white",
+  },
   neutral: {
     activeText: "text-gray-900 dark:text-white",
     activeBg: "bg-gray-100 dark:bg-gray-700/60",
@@ -88,6 +94,14 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
     brand: BrandKey;
   }> = [
     {
+      name: t("home", "Početna"),
+      shortName: t("home", "Početna"),
+      href: "/",
+      icon: House,
+      id: "home",
+      brand: "home",
+    },
+    {
       name: t("premierLeague", "Premier League"),
       shortName: "PL",
       href: "/premier-league/tables",
@@ -129,24 +143,33 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
   const dark = theme === "dark";
   const inactiveText = dark ? "text-gray-400" : "text-gray-500";
 
+  // Icon-only floating dock. Labels live in aria-label for screen readers.
   return (
     <motion.nav
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      transition={{ type: "spring", damping: 28, stiffness: 320 }}
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden transform-gpu"
+      initial={{ y: 110, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "spring", damping: 26, stiffness: 300 }}
+      className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden transform-gpu pointer-events-none"
       style={{ willChange: "transform", WebkitBackfaceVisibility: "hidden" }}
       aria-label={t("mobileNavLabel")}
     >
-      {/* Bar surface — fully solid (no transparency / blur) for a clean, jank-free dock */}
       <div
-        className={`relative border-t shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.35)] ${
+        className={`pointer-events-auto relative mx-auto max-w-sm overflow-hidden rounded-[26px] border ${
           dark
-            ? "bg-gray-950 border-white/10"
-            : "bg-white border-gray-200"
+            ? "bg-[#0b0b12] border-white/[0.08] shadow-[0_18px_40px_-12px_rgba(0,0,0,0.8)]"
+            : "bg-white border-black/[0.06] shadow-[0_18px_40px_-14px_rgba(15,23,42,0.35)]"
         }`}
       >
-        <div className="mx-auto flex max-w-screen-sm items-stretch justify-around gap-0.5 px-1.5 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        {/* hairline highlight along the top edge */}
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute inset-x-6 top-0 h-px ${
+            dark
+              ? "bg-gradient-to-r from-transparent via-white/25 to-transparent"
+              : "bg-gradient-to-r from-transparent via-black/10 to-transparent"
+          }`}
+        />
+        <div className="flex items-center justify-between px-2 py-2">
           {navItems.map((item) => {
             const isActive = isActiveLink(item.href);
             const IconComponent = item.icon;
@@ -158,53 +181,54 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
                 href={item.href}
                 className="flex-1 min-w-0"
                 aria-label={item.name}
+                title={item.name}
                 aria-current={isActive ? "page" : undefined}
               >
                 <motion.div
-                  className={`group relative flex flex-col items-center justify-center gap-1 rounded-2xl px-0.5 py-1.5 min-h-[56px] transition-colors duration-200 ${
+                  className={`relative mx-auto flex h-12 w-12 flex-col items-center justify-center rounded-2xl transition-colors duration-200 ${
                     isActive ? brand.activeText : inactiveText
                   }`}
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={{ scale: 0.86 }}
                 >
-                  {/* Pill highlight behind the active item */}
                   {isActive && (
                     <motion.span
                       layoutId="bottomNavPill"
-                      transition={{ type: "spring", damping: 26, stiffness: 340 }}
-                      className={`absolute inset-x-1 inset-y-0.5 -z-10 rounded-2xl ${brand.activeBg}`}
+                      transition={{ type: "spring", damping: 26, stiffness: 360 }}
+                      className={`absolute inset-0 -z-10 rounded-2xl ${brand.activeBg}`}
                     />
                   )}
                   <motion.div
-                    animate={{ scale: isActive ? 1.12 : 1, y: isActive ? -1 : 0 }}
+                    animate={{ y: isActive ? -2 : 0, scale: isActive ? 1.08 : 1 }}
                     transition={{ type: "spring", damping: 18, stiffness: 320 }}
                     className={isActive ? brand.iconTint : ""}
                   >
                     <IconComponent className="w-[22px] h-[22px]" />
                   </motion.div>
-                  <span
-                    className={`text-[10.5px] leading-none tracking-tight truncate max-w-full px-0.5 transition-all ${
-                      isActive ? "font-semibold" : "font-medium"
-                    }`}
-                  >
-                    <span className="hidden xs:inline">{item.name}</span>
-                    <span className="xs:hidden">{item.shortName}</span>
-                  </span>
+                  {isActive && (
+                    <motion.span
+                      layoutId="bottomNavDot"
+                      transition={{ type: "spring", damping: 26, stiffness: 360 }}
+                      className={`absolute bottom-[7px] h-1 w-1 rounded-full ${brand.indicator}`}
+                    />
+                  )}
                 </motion.div>
               </Link>
             );
           })}
 
+          <span aria-hidden className={`mx-0.5 h-6 w-px shrink-0 ${dark ? "bg-white/10" : "bg-black/10"}`} />
+
           <div className="flex-1 min-w-0">
             <motion.button
               onClick={onMenuToggle}
-              className={`group relative flex w-full flex-col items-center justify-center gap-1 rounded-2xl px-0.5 py-1.5 min-h-[56px] transition-colors duration-200 ${inactiveText} hover:text-gray-900 dark:hover:text-gray-200`}
-              whileTap={{ scale: 0.9 }}
+              className={`relative mx-auto flex h-12 w-12 items-center justify-center rounded-2xl transition-colors duration-200 ${inactiveText} ${
+                dark ? "hover:text-white" : "hover:text-gray-900"
+              }`}
+              whileTap={{ scale: 0.86 }}
               aria-label={t("menu", "Meni")}
+              title={t("menu", "Meni")}
             >
               <Menu className="w-[22px] h-[22px]" />
-              <span className="text-[10.5px] leading-none font-medium tracking-tight truncate max-w-full px-0.5">
-                {t("menu")}
-              </span>
             </motion.button>
           </div>
         </div>

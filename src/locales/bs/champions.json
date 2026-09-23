@@ -191,6 +191,12 @@
     "prizeFundLine": "Nagradni fond: {{total}} | 1. mjesto: {{first}} | 2. mjesto: {{second}} | 3. mjesto: {{third}}",
     "prizeSplitLine": "Raspodjela nagradnog fonda: 1. mjesto {{first}}% | 2. mjesto {{second}}% | 3. mjesto {{third}}%",
     "participants_few": "{{count}} učesnika",
-    "footerParticipants_few": "Ukupno {{count}} učesnika u ligi."
+    "footerParticipants_few": "Ukupno {{count}} učesnika u ligi.",
+    "search": "Pronađi igrača ili tim…",
+    "noResults": "Nema rezultata za \"{{q}}\"",
+    "prizeZone": "Zona nagrada",
+    "pts": "bod.",
+    "leader": "Lider",
+    "lastMdShort": "Kolo"
   }
 }

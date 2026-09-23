@@ -58,7 +58,7 @@ export default function LayoutContent({
       <main>
         <Navbar />
         <div className="hidden md:block h-16" aria-hidden="true" />
-        <div className="pb-16 md:pb-0">{children}</div>
+        <div className="pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">{children}</div>
 
         {/* Bottom Navigation for Mobile */}
         <BottomNavigation onMenuToggle={() => setIsMobileMenuOpen(true)} />
@@ -79,8 +79,10 @@ export default function LayoutContent({
       <VisitorTracker />
       <Navbar />
       <div className="hidden md:block h-16" aria-hidden="true" />
-      <main className="pb-16 md:pb-0">{children}</main>
+      <main>{children}</main>
       <Footer />
+      {/* Room for the floating mobile dock */}
+      <div className="h-[calc(6rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden="true" />
 
       {/* Bottom Navigation for Mobile */}
       <BottomNavigation onMenuToggle={() => setIsMobileMenuOpen(true)} />

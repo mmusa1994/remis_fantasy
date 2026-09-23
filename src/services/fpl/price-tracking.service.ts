@@ -157,57 +157,32 @@ export class FPLPriceTrackingService extends BaseFPLService {
   }
 
   /**
-   * Get predicted price changes based on transfer trends
+   * Predicted price changes straight from FPL's official projections
+   * (bootstrap-static price_change_projections: ±4 likely, ±5 very likely).
    */
   private async getPredictedPriceChanges(players: any[], teamsMap: Map<number, string>): Promise<PriceChange[]> {
-    // Mock prediction algorithm - in reality this would use transfer trends data
-    const highTransferInPlayers = players
-      .filter(player => player.transfers_in_event > 50000) // High transfer activity
-      .filter(player => player.cost_change_event === 0) // Haven't changed yet
-      .slice(0, 5);
+    const tonight = (p: any) => p.price_change_projections?.[0]?.likelihood ?? 0;
+    const byProgress = (a: any, b: any) =>
+      Math.abs(parseFloat(b.price_change_percent) || 0) - Math.abs(parseFloat(a.price_change_percent) || 0);
 
-    const highTransferOutPlayers = players
-      .filter(player => player.transfers_out_event > 50000)
-      .filter(player => player.cost_change_event === 0)
-      .slice(0, 5);
-
-    const predictions: PriceChange[] = [];
-
-    // Predict rises
-    highTransferInPlayers.forEach(player => {
-      predictions.push({
-        player_id: player.id,
-        web_name: player.web_name,
-        team_id: player.team,
-        team_name: teamsMap.get(player.team) || 'Unknown',
-        position: this.getPositionName(player.element_type),
-        old_price: player.now_cost,
-        new_price: player.now_cost + 1,
-        change_amount: 1,
-        change_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        change_type: 'rise' as const,
-        predicted: true,
-      });
+    const toChange = (player: any, rise: boolean): PriceChange => ({
+      player_id: player.id,
+      web_name: player.web_name,
+      team_id: player.team,
+      team_name: teamsMap.get(player.team) || 'Unknown',
+      position: this.getPositionName(player.element_type),
+      old_price: player.now_cost,
+      new_price: player.now_cost + (rise ? 1 : -1),
+      change_amount: 1,
+      change_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      change_type: rise ? 'rise' : 'fall',
+      predicted: true,
     });
 
-    // Predict falls
-    highTransferOutPlayers.forEach(player => {
-      predictions.push({
-        player_id: player.id,
-        web_name: player.web_name,
-        team_id: player.team,
-        team_name: teamsMap.get(player.team) || 'Unknown',
-        position: this.getPositionName(player.element_type),
-        old_price: player.now_cost,
-        new_price: player.now_cost - 1,
-        change_amount: 1,
-        change_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        change_type: 'fall' as const,
-        predicted: true,
-      });
-    });
+    const rises = players.filter((p) => !p.price_change_locked_until && tonight(p) >= 4).sort(byProgress).slice(0, 5);
+    const falls = players.filter((p) => !p.price_change_locked_until && tonight(p) <= -4).sort(byProgress).slice(0, 5);
 
-    return predictions;
+    return [...rises.map((p) => toChange(p, true)), ...falls.map((p) => toChange(p, false))];
   }
 
   private getPositionName(elementType: number): string {

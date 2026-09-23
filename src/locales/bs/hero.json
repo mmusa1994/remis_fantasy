@@ -131,5 +131,27 @@
       "desc": "Pobjednik turnira, najbolji strijelac, poredak u grupama — predvidi sve. Takmiči se na rang listi i osvoji prave nagrade.",
       "cta": "Pregledaj turnire"
     }
+  },
+  "plHub": {
+    "eyebrow": "Premier Liga · Sezona 2026/27",
+    "title": "Tvoj FPL komandni centar",
+    "subtitle": "Sve što ti treba za pobjedu u Fantasy Premier League — na jedan klik.",
+    "featured": "Najpopularnije",
+    "more": "Još alata",
+    "open": "Otvori",
+    "live": "Uživo",
+    "new": "AI",
+    "desc": {
+      "fplLive": "Bodovi, rang i bonusi u realnom vremenu dok utakmice traju.",
+      "fantasyCommand": "Planiraj transfere, čipove i postavu za naredna kola.",
+      "aiTeamAnalysis": "AI pregleda tvoj tim i daje konkretne savjete.",
+      "tables": "Poredak svih REMIS liga — ko vodi, ko lovi.",
+      "prices": "Rast i pad cijena igrača prije deadlinea.",
+      "bestDifferentials": "Igrači niskog vlasništva koji donose prednost.",
+      "teamNews": "Povrede, suspenzije i vijesti iz klubova.",
+      "registration": "Pridruži se REMIS ligama.",
+      "prizes": "Nagradni fondovi i pehari.",
+      "gallery": "Proglašenja i trenuci sezone."
+    }
   }
 }

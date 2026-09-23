@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { dateLocale } from "@/components/fpl/live/ui";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -8,7 +9,7 @@ import {
   MdTrendingUp,
   MdTrendingDown,
 } from "react-icons/md";
-import LoadingCard from "@/components/shared/LoadingCard";
+import { F1TableSkeleton } from "@/components/shared/TableSkeletons";
 
 interface Entry {
   rank: number;
@@ -77,8 +78,8 @@ export default function F1TabeleFromDBPage() {
   if (loading && !entries.length) {
     return (
       <div className="min-h-screen bg-theme-background">
-        <div className="container mx-auto px-4 py-12 max-w-3xl">
-          <LoadingCard title={t("leaderboard.loading")} />
+        <div className="container mx-auto px-4 py-10 max-w-3xl">
+          <F1TableSkeleton />
         </div>
       </div>
     );
@@ -167,64 +168,82 @@ export default function F1TabeleFromDBPage() {
           })}
         </div>
 
-        {/* ── Race Info ── */}
-        <div className="text-center mb-8">
-          <p
-            className={`font-anta text-sm tracking-wide ${
-              isDark ? "text-white/70" : "text-black/60"
-            }`}
-          >
-            {t("nextLast", { next: nextRace, last: lastRace })}
-          </p>
-        </div>
-
-        {/* ── Prize Strip ── */}
+        {/* ── Hero: race info + prizes on the REMIS F1 banner ── */}
         <div
-          className={`grid grid-cols-3 divide-x mb-10 ${
-            isDark ? "divide-white/[0.06]" : "divide-black/[0.06]"
-          }`}
+          className="relative isolate mb-10 overflow-hidden rounded-3xl text-white shadow-2xl"
+          style={{
+            background:
+              "radial-gradient(80% 100% at 100% 0%, rgba(225,6,0,0.35) 0%, transparent 60%), linear-gradient(150deg, #120405 0%, #1c0607 55%, #0b0304 100%)",
+            boxShadow: "0 40px 80px -48px rgba(225,6,0,0.55)",
+          }}
         >
-          {season === "26"
-            ? prizes26.map((p, i) => (
-                <div key={i} className="text-center py-4 px-2">
-                  <span
-                    className="block font-anta text-[11px] uppercase tracking-[0.2em] mb-1"
-                    style={{ color: p.color }}
-                  >
-                    {p.place}
-                  </span>
-                  <span
-                    className="block font-anta text-2xl md:text-3xl leading-none mb-1"
-                    style={{ color: accent }}
-                  >
-                    {p.pct}
-                  </span>
-                  <span
-                    className={`block text-[10px] tracking-wide ${
-                      isDark ? "text-white/50" : "text-black/45"
-                    }`}
-                  >
-                    + {p.extra}
-                  </span>
-                </div>
-              ))
-            : prizes25.map((p, i) => (
-                <div key={i} className="text-center py-4 px-2">
-                  <span
-                    className="block font-anta text-[11px] uppercase tracking-[0.2em] mb-1"
-                    style={{ color: p.color }}
-                  >
-                    {p.place}
-                  </span>
-                  <span
-                    className={`block font-anta text-2xl md:text-3xl leading-none ${
-                      isDark ? "text-white/90" : "text-black/80"
-                    }`}
-                  >
-                    {p.amount}
-                  </span>
-                </div>
-              ))}
+          {/* banner crest only (top of the poster), feathered left and down */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-0 top-0 -z-10 aspect-[1024/400] w-[72%] sm:w-[52%]"
+            style={{
+              maskImage: "linear-gradient(90deg, transparent 0%, black 35%)",
+              WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 35%)",
+            }}
+          >
+            <div
+              className="relative h-full w-full"
+              style={{
+                maskImage: "linear-gradient(180deg, black 55%, transparent 100%)",
+                WebkitMaskImage: "linear-gradient(180deg, black 55%, transparent 100%)",
+              }}
+            >
+              <Image
+                src="/images/f1/final-bs.png"
+                alt=""
+                fill
+                sizes="(max-width: 640px) 72vw, 400px"
+                className="object-cover object-top opacity-90"
+                priority
+              />
+            </div>
+          </div>
+          {/* blurred F1 mark */}
+          <div aria-hidden className="pointer-events-none absolute -bottom-10 -left-10 -z-10 h-56 w-56 opacity-25 blur-[10px]">
+            <Image src="/images/logos/f1.png" alt="" fill sizes="224px" className="object-contain" />
+          </div>
+          {/* red rim */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-[2px]"
+            style={{ background: "linear-gradient(90deg, transparent, #E10600, transparent)" }}
+          />
+
+          <div className="relative p-5 sm:p-7">
+            <div className="flex items-center gap-2 font-anta text-[10px] uppercase tracking-[0.24em] text-white/60">
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: accent, boxShadow: `0 0 10px ${accent}` }} />
+              Formula 1 Fantasy · 20{season}
+            </div>
+            <p className="mt-[22vw] font-anta text-sm leading-relaxed tracking-wide text-white/85 sm:mt-3 sm:max-w-[55%]">
+              {t("nextLast", { next: nextRace, last: lastRace })}
+            </p>
+
+            <div className="mt-6 grid max-w-md grid-cols-3 gap-2">
+              {season === "26"
+                ? prizes26.map((p, i) => (
+                    <div key={i} className="rounded-2xl bg-black/40 px-2 py-3 text-center backdrop-blur-md">
+                      <span className="mb-1 block font-anta text-[11px] uppercase tracking-[0.2em]" style={{ color: p.color }}>
+                        {p.place}
+                      </span>
+                      <span className="mb-1 block font-anta text-2xl leading-none text-white md:text-3xl">{p.pct}</span>
+                      <span className="block text-[10px] leading-tight tracking-wide text-white/55">+ {p.extra}</span>
+                    </div>
+                  ))
+                : prizes25.map((p, i) => (
+                    <div key={i} className="rounded-2xl bg-black/40 px-2 py-3 text-center backdrop-blur-md">
+                      <span className="mb-1 block font-anta text-[11px] uppercase tracking-[0.2em]" style={{ color: p.color }}>
+                        {p.place}
+                      </span>
+                      <span className="block font-anta text-xl leading-none text-white md:text-2xl">{p.amount}</span>
+                    </div>
+                  ))}
+            </div>
+          </div>
         </div>
 
         {/* ── Leaderboard ── */}

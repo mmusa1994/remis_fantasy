@@ -1502,12 +1502,12 @@
     "players": "players"
   },
   "prices": {
-    "title": "LiveFPL Price Change Predictor",
-    "subtitle": "These are predicted rises and falls to take place at 1:30 am GMT tonight",
+    "title": "Price changes",
+    "subtitle": "Official FPL predictions: every player's progress towards a price change and the likelihood of a change over the next three days.",
     "loading": "Loading price predictions...",
     "loadingDescription": "Fetching latest price change predictions",
-    "nextUpdate": "Next price change countdown",
-    "updateInfo": "Price changes occur at 1:30 am GMT daily",
+    "nextUpdate": "Next price change",
+    "updateInfo": "Source: official Fantasy Premier League data. +100% means a rise, −100% a drop.",
     "predictedRises": "Predicted Rises",
     "predictedFalls": "Predicted Falls",
     "totalPredictions": "Total Players",
@@ -1549,7 +1549,20 @@
     "retry": "Retry",
     "twoDays": "2 days",
     "formValue": "{{value}} form",
-    "ownedPct": "{{pct}}% owned"
+    "ownedPct": "{{pct}}% owned",
+    "veryLikelyRise": "Very likely to rise",
+    "likelyRise": "Likely to rise",
+    "likelyDrop": "Likely to drop",
+    "veryLikelyDrop": "Very likely to drop",
+    "unlikelyChange": "Unlikely to change",
+    "locked": "Locked",
+    "lockedDays_one": "Unlocks in {{count}} day",
+    "lockedDays_other": "Unlocks in {{count}} days",
+    "calibrating": "Calibrating",
+    "perHour": "{{rate}}%/h",
+    "officialSource": "Official FPL data",
+    "showAll": "Show all ({{count}})",
+    "showLess": "Show less"
   },
   "gallery": {
     "title": "Premier League Gallery",

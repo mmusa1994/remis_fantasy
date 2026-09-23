@@ -23,6 +23,7 @@ import {
 import { MdLiveTv } from "react-icons/md";
 import { ArrowRight, Trophy, Target } from "lucide-react";
 import HowItWorks from "@/components/shared/HowItWorks";
+import PremierLeagueHub from "@/components/landing/PremierLeagueHub";
 
 // TypeScript types for league and stat data
 interface LeagueCard {
@@ -162,7 +163,7 @@ export default function Home() {
   return (
     <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pb-16 px-4 pt-5 md:pt-8">
+      <section className="relative overflow-hidden pb-10 px-4 pt-5 md:pt-8">
         <div className="max-w-6xl mx-auto text-center">
           {/* Logo */}
           <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 mx-auto mb-8 flex items-center justify-center drop-shadow-xl">
@@ -268,6 +269,11 @@ export default function Home() {
           </div>
 
         </div>
+      </section>
+
+      {/* Premier League one-click hub — between the league cards and Predictor */}
+      <section className="px-4 pt-2 pb-4 md:pt-4">
+        <PremierLeagueHub />
       </section>
 
       {/* Predictor & Tournament Promo */}

@@ -25,6 +25,7 @@ import {
   TrendingUp,
   Newspaper,
   Search,
+  House,
 } from "lucide-react";
 import { FaUser, FaGoogle, FaMagic } from "react-icons/fa";
 
@@ -636,6 +637,34 @@ const Navbar = React.memo(function Navbar() {
 
           {/* Navigation Links - Right */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
+            {/* Home */}
+            <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>
+              <motion.div
+                className={`relative font-semibold transition-all duration-500 text-xs uppercase tracking-widest font-anta theme-transition px-2 lg:px-3 py-1.5 cursor-pointer ${
+                  pathname === "/"
+                    ? "text-theme-foreground"
+                    : "text-theme-text-secondary hover:text-theme-foreground"
+                }`}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className="relative z-10 flex items-center gap-2 whitespace-nowrap" title={t("home", "Home")}>
+                  <House className="w-[17px] h-[17px]" strokeWidth={2.2} />
+                  <span className="hidden lg:inline">{t("home", "Home")}</span>
+                </span>
+                {pathname === "/" && (
+                  <motion.div
+                    className="absolute -bottom-2 left-0 right-0 h-0.5 origin-center bg-gradient-to-r from-transparent via-theme-foreground to-transparent"
+                    initial={{ scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                  />
+                )}
+              </motion.div>
+            </Link>
+
             {/* League Nav Items with Mega Dropdown */}
             {leagueNavItems.map((league, index) => {
               const isActive = isActivePath(league.href);
@@ -658,7 +687,7 @@ const Navbar = React.memo(function Navbar() {
                       transition={{ duration: 0.6, delay: index * 0.1 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <span className="relative z-10 flex items-center gap-2">
+                      <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
                         <Image
                           src={league.logo}
                           alt={league.id}

@@ -19,6 +19,8 @@ export interface LeagueData {
   cupPrizeEUR: number;
   prizes: Prize[];
   maxParticipants: number;
+  // Non-positional awards (cup winner, best gameweek…) — i18n keys
+  specialPrizes?: { titleKey: string; prizeKey: string }[];
 }
 
 export interface LeagueTableData {
@@ -279,6 +281,98 @@ export const leagueData: LeagueData[] = [
   },
 ];
 
-export const getLeagueDataForReusableTable = (leagueType: string) => {
+// Sezona 26/27 — nagrade sa zvaničnih vizuala (KM; EUR po kursu 1,95583)
+const cash = (position: number, km: number, eur: number): Prize => ({
+  position,
+  description: "",
+  amountKM: km,
+  amountEUR: eur,
+  percentage: 0,
+});
+const perk = (position: number, description: string): Prize => ({
+  position,
+  description,
+  amountKM: 0,
+  amountEUR: 0,
+  percentage: 0,
+});
+
+export const leagueData2627: LeagueData[] = [
+  {
+    name: "Premium Liga",
+    type: "premium",
+    totalPrizeFundKM: 4650,
+    totalPrizeFundEUR: 2377,
+    entryFeeKM: 100,
+    entryFeeEUR: 50,
+    monthlyPrizeKM: 0,
+    monthlyPrizeEUR: 0,
+    cupPrizeKM: 0,
+    cupPrizeEUR: 0,
+    maxParticipants: 52,
+    prizes: [
+      cash(1, 3000, 1534),
+      cash(2, 1000, 511),
+      cash(3, 650, 332),
+      perk(4, "ORIGINAL_JERSEY_PL"),
+      perk(5, "FREE_ENTRY_PLACEHOLDER"),
+    ],
+    specialPrizes: [
+      { titleKey: "leagueTables.special.cupWinner", prizeKey: "leagueTables.special.dedicJersey" },
+      { titleKey: "leagueTables.special.bestGameweek", prizeKey: "leagueTables.special.muharemovicJersey" },
+    ],
+  },
+  {
+    name: "Standard Liga",
+    type: "standard",
+    totalPrizeFundKM: 2480,
+    totalPrizeFundEUR: 1267,
+    entryFeeKM: 40,
+    entryFeeEUR: 20,
+    monthlyPrizeKM: 0,
+    monthlyPrizeEUR: 0,
+    cupPrizeKM: 0,
+    cupPrizeEUR: 0,
+    maxParticipants: 72,
+    prizes: [
+      cash(1, 1000, 511),
+      cash(2, 500, 256),
+      cash(3, 300, 153),
+      cash(4, 220, 112),
+      cash(5, 180, 92),
+      cash(6, 150, 77),
+      cash(7, 130, 66),
+      perk(8, "FREE_ENTRY_PLACEHOLDER"),
+      perk(9, "FREE_ENTRY_PLACEHOLDER"),
+      perk(10, "FREE_ENTRY_PLACEHOLDER"),
+    ],
+    specialPrizes: [
+      { titleKey: "leagueTables.special.cupWinner", prizeKey: "leagueTables.special.dedicJersey" },
+    ],
+  },
+  {
+    name: "H2H Liga",
+    type: "h2h",
+    totalPrizeFundKM: 1500,
+    totalPrizeFundEUR: 767,
+    entryFeeKM: 30,
+    entryFeeEUR: 15,
+    monthlyPrizeKM: 0,
+    monthlyPrizeEUR: 0,
+    cupPrizeKM: 0,
+    cupPrizeEUR: 0,
+    maxParticipants: 59,
+    prizes: [cash(1, 600, 307), cash(2, 350, 179), cash(3, 250, 128), cash(4, 180, 92), cash(5, 120, 61)],
+  },
+];
+
+export const getLeagueDataForReusableTable = (
+  leagueType: string,
+  season: "25_26" | "26_27" = "25_26"
+) => {
+  if (season === "26_27") {
+    const current = leagueData2627.find((league) => league.type === leagueType);
+    if (current) return current;
+  }
   return leagueData.find((league) => league.type === leagueType);
 };

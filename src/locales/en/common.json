@@ -322,5 +322,50 @@
   "match": {
     "homeTeam": "home team",
     "awayTeam": "away team"
+  },
+  "leagueTables": {
+    "season": "Season {{season}}",
+    "players": "Players",
+    "prizePool": "Prize pool",
+    "entryFee": "Entry fee",
+    "leader": "Leader",
+    "free": "Free",
+    "standings": "Standings",
+    "prizes": "Prizes",
+    "prizeZone": "Prize zone",
+    "place": "{{n}}. place",
+    "searchPlaceholder": "Find a player or team…",
+    "noResults": "No results for \"{{q}}\"",
+    "points": "pts",
+    "pointsLong": "Points",
+    "overall": "Overall",
+    "h2hPoints": "H2H",
+    "won": "W",
+    "drawn": "D",
+    "lost": "L",
+    "behind": "{{n}} behind leader",
+    "leaderBadge": "Leader",
+    "comingSoonTitle": "Season 2026/27 kicks off soon",
+    "comingSoonText": "The table appears as soon as the league plays its first gameweek. Until then — get your team ready.",
+    "errorTitle": "Table is currently unavailable",
+    "retry": "Try again",
+    "completed": "Completed",
+    "originalJerseyPL": "Original PL jersey",
+    "places": "{{from}}–{{to}}. place",
+    "special": {
+      "title": "Special prizes",
+      "cupWinner": "Cup winner",
+      "bestGameweek": "Most points in a single gameweek",
+      "dedicJersey": "Amar Dedić jersey",
+      "muharemovicJersey": "Tarik Muharemović jersey"
+    },
+    "freeEntry": "Free entry next season",
+    "participants": "Participants",
+    "prizesPage": {
+      "eyebrow": "REMIS Fantasy · Season 2026/27",
+      "title": "Season prizes",
+      "subtitle": "Prize pools, trophies and special awards across every REMIS Premier League league."
+    },
+    "league": "League"
   }
 }

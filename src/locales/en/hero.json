@@ -131,5 +131,27 @@
       "desc": "Tournament winner, top scorer, group standings — predict it all. Compete on the leaderboard and win real prizes.",
       "cta": "Browse tournaments"
     }
+  },
+  "plHub": {
+    "eyebrow": "Premier League · Season 2026/27",
+    "title": "Your FPL command center",
+    "subtitle": "Everything you need to win at Fantasy Premier League — one click away.",
+    "featured": "Most popular",
+    "more": "More tools",
+    "open": "Open",
+    "live": "Live",
+    "new": "AI",
+    "desc": {
+      "fplLive": "Points, rank and bonus in real time while matches are on.",
+      "fantasyCommand": "Plan transfers, chips and line-ups for the next gameweeks.",
+      "aiTeamAnalysis": "AI reviews your team and gives concrete advice.",
+      "tables": "Standings of every REMIS league — who leads, who chases.",
+      "prices": "Player price rises and falls before the deadline.",
+      "bestDifferentials": "Low-ownership players that give you an edge.",
+      "teamNews": "Injuries, suspensions and club news.",
+      "registration": "Join the REMIS leagues.",
+      "prizes": "Prize pools and trophies.",
+      "gallery": "Awards and moments of the season."
+    }
   }
 }

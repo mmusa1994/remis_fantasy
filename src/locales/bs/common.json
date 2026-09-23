@@ -322,5 +322,50 @@
   "match": {
     "homeTeam": "domaćin",
     "awayTeam": "gost"
+  },
+  "leagueTables": {
+    "season": "Sezona {{season}}",
+    "players": "Igrača",
+    "prizePool": "Nagradni fond",
+    "entryFee": "Kotizacija",
+    "leader": "Lider",
+    "free": "Besplatno",
+    "standings": "Poredak",
+    "prizes": "Nagrade",
+    "prizeZone": "Zona nagrada",
+    "place": "{{n}}. mjesto",
+    "searchPlaceholder": "Pronađi igrača ili tim…",
+    "noResults": "Nema rezultata za \"{{q}}\"",
+    "points": "bod.",
+    "pointsLong": "Bodovi",
+    "overall": "Ukupno",
+    "h2hPoints": "H2H",
+    "won": "P",
+    "drawn": "N",
+    "lost": "I",
+    "behind": "{{n}} iza lidera",
+    "leaderBadge": "Lider",
+    "comingSoonTitle": "Sezona 2026/27 uskoro kreće",
+    "comingSoonText": "Tabela će se pojaviti čim liga odigra prvo kolo. Do tada — pripremi tim.",
+    "errorTitle": "Tabela trenutno nije dostupna",
+    "retry": "Pokušaj ponovo",
+    "completed": "Završena",
+    "originalJerseyPL": "Originalan dres PL",
+    "places": "{{from}}.–{{to}}. mjesto",
+    "special": {
+      "title": "Specijalne nagrade",
+      "cupWinner": "Pobjednik kupa",
+      "bestGameweek": "Najviše bodova u jednom kolu",
+      "dedicJersey": "Dres Amara Dedića",
+      "muharemovicJersey": "Dres Tarika Muharemovića"
+    },
+    "freeEntry": "Besplatno učešće naredne sezone",
+    "participants": "Učesnika",
+    "prizesPage": {
+      "eyebrow": "REMIS Fantasy · Sezona 2026/27",
+      "title": "Nagrade za sezonu",
+      "subtitle": "Nagradni fondovi, pehari i specijalne nagrade svih REMIS Premier League liga."
+    },
+    "league": "Liga"
   }
 }

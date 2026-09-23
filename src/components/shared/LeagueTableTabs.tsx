@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTheme } from "@/contexts/ThemeContext";
 import ReusableLeagueTable from "./ReusableLeagueTable";
 import { getLeagueDataForReusableTable } from "@/data/leagueTableData";
-import LoadingCard from "@/components/shared/LoadingCard";
+import { Trophy } from "lucide-react";
+import { LeagueTableSkeleton } from "./TableSkeletons";
 import { useTranslation } from "react-i18next";
 
 interface LeaguePlayer {
@@ -50,37 +50,7 @@ export default function LeagueTableTabs() {
   const [tables, setTables] = useState<LeagueTables | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { theme } = useTheme();
-
-  const getTabColors = (color: string) => {
-    const colors = {
-      yellow: {
-        active: theme === "dark" ? "bg-yellow-500" : "bg-yellow-400",
-        hover: theme === "dark" ? "hover:bg-yellow-600" : "hover:bg-yellow-500",
-        text: theme === "dark" ? "text-yellow-300" : "text-yellow-800",
-        border: theme === "dark" ? "border-yellow-500" : "border-yellow-400",
-      },
-      blue: {
-        active: theme === "dark" ? "bg-blue-500" : "bg-blue-400",
-        hover: theme === "dark" ? "hover:bg-blue-600" : "hover:bg-blue-500",
-        text: theme === "dark" ? "text-blue-300" : "text-blue-800",
-        border: theme === "dark" ? "border-blue-500" : "border-blue-400",
-      },
-      red: {
-        active: theme === "dark" ? "bg-red-500" : "bg-red-400",
-        hover: theme === "dark" ? "hover:bg-red-600" : "hover:bg-red-500",
-        text: theme === "dark" ? "text-red-300" : "text-red-800",
-        border: theme === "dark" ? "border-red-500" : "border-red-400",
-      },
-      purple: {
-        active: theme === "dark" ? "bg-purple-500" : "bg-purple-400",
-        hover: theme === "dark" ? "hover:bg-purple-600" : "hover:bg-purple-500",
-        text: theme === "dark" ? "text-purple-300" : "text-purple-800",
-        border: theme === "dark" ? "border-purple-500" : "border-purple-400",
-      },
-    };
-    return colors[color as keyof typeof colors] || colors.yellow;
-  };
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const loadTables = async () => {
@@ -106,11 +76,11 @@ export default function LeagueTableTabs() {
     };
 
     loadTables();
-  }, [t, season]);
+  }, [t, season, reloadKey]);
 
   const getLeagueData = (leagueType: string) => {
     // Get static league configuration (prizes, fees, etc.) from original data
-    const staticLeagueData = getLeagueDataForReusableTable(leagueType);
+    const staticLeagueData = getLeagueDataForReusableTable(leagueType, season);
 
     // Special handling for free league if no static data found
     if (leagueType === "free") {
@@ -241,159 +211,168 @@ export default function LeagueTableTabs() {
     };
   };
 
+  const ACCENT: Record<string, string> = {
+    yellow: "#f5b50a",
+    blue: "#3b82f6",
+    red: "#f43f5e",
+    purple: "#8b5cf6",
+  };
+
+  const renderBody = () => {
+    if (loading) return <LeagueTableSkeleton />;
+
+    if (error) {
+      return (
+        <div className="mx-auto max-w-md rounded-2xl border border-theme-border bg-theme-card px-6 py-10 text-center">
+          <p className="font-bold text-theme-foreground">{t("leagueTables.errorTitle")}</p>
+          <p className="mt-1 text-sm text-theme-text-muted">{error}</p>
+          <button
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="mt-4 rounded-full bg-theme-foreground px-4 py-2 text-sm font-bold text-theme-background"
+          >
+            {t("leagueTables.retry")}
+          </button>
+        </div>
+      );
+    }
+
+    const leagueData = getLeagueData(activeTab);
+    // 26/27: show the league card (prizes etc.) even before standings exist
+    if (leagueData && leagueData.players.length === 0 && season === "26_27" && activeTab !== "free") {
+      return (
+        <ReusableLeagueTable {...leagueData} seasonLabel="2026/27" className="mb-8" />
+      );
+    }
+
+    if (!leagueData || leagueData.players.length === 0) {
+      const accent = ACCENT[tabs.find((tab) => tab.id === activeTab)?.color || "purple"];
+      if (season === "26_27") {
+        return (
+          <div
+            className="relative mx-auto max-w-2xl overflow-hidden rounded-3xl px-6 py-14 text-center text-white"
+            style={{
+              background: `radial-gradient(90% 120% at 50% 0%, ${accent}66 0%, transparent 60%), linear-gradient(160deg, #07071a, #12122e)`,
+            }}
+          >
+            <motion.div
+              className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl"
+              style={{ background: `${accent}33`, boxShadow: `0 0 40px ${accent}55` }}
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Trophy className="h-8 w-8" style={{ color: accent }} />
+            </motion.div>
+            <h3 className="text-xl sm:text-2xl font-black">{t("leagueTables.comingSoonTitle")}</h3>
+            <p className="mx-auto mt-2 max-w-md text-sm text-white/70">{t("leagueTables.comingSoonText")}</p>
+          </div>
+        );
+      }
+      return (
+        <div className="py-12 text-center text-theme-text-muted">
+          {t("fplLive.noDataFor", {
+            league: tabs.find((tab) => tab.id === activeTab)?.label,
+          })}
+        </div>
+      );
+    }
+
+    return (
+      <ReusableLeagueTable
+        {...leagueData}
+        seasonLabel={season === "26_27" ? "2026/27" : "2025/26"}
+        className="mb-8"
+      />
+    );
+  };
+
   return (
     <div className="w-full">
       {/* Season switcher */}
-      <div className="flex justify-center gap-8 mb-6">
-        {(["25_26", "26_27"] as Season[]).map((s) => {
-          const isActive = season === s;
-          const label = s === "26_27" ? "2026/27" : "2025/26";
-          return (
-            <button
-              key={s}
-              onClick={() => {
-                setSeason(s);
-                if (s === "26_27" && activeTab === "h2h2") {
-                  setActiveTab("h2h");
-                }
-              }}
-              className="relative pb-1.5 font-bold text-base md:text-lg transition-colors duration-300"
-              style={{
-                color: isActive
-                  ? theme === "dark"
-                    ? "#a78bfa"
-                    : "#7c3aed"
-                  : theme === "dark"
-                    ? "rgba(255,255,255,0.45)"
-                    : "rgba(0,0,0,0.45)",
-              }}
-            >
-              {label}
-              {s === "25_26" && !isActive && (
-                <span className="ml-1 text-[10px] font-medium opacity-60">
-                  ({t("fplLive.seasonCompleted", "Završena")})
-                </span>
-              )}
-              <span
-                className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full transition-all duration-300"
-                style={{
-                  backgroundColor: isActive
-                    ? theme === "dark"
-                      ? "#a78bfa"
-                      : "#7c3aed"
-                    : "transparent",
+      <div className="mb-5 flex justify-center">
+        <div className="inline-flex rounded-full border border-theme-border bg-theme-card p-1 shadow-sm">
+          {(["25_26", "26_27"] as Season[]).map((s) => {
+            const isActive = season === s;
+            return (
+              <button
+                key={s}
+                onClick={() => {
+                  setSeason(s);
+                  if (s === "26_27" && activeTab === "h2h2") setActiveTab("h2h");
                 }}
-              />
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tabs */}
-      <div className="flex flex-wrap justify-center gap-2 mb-8">
-        {tabs.map((tab) => {
-          const colors = getTabColors(tab.color);
-          const isActive = activeTab === tab.id;
-
-          return (
-            <motion.button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 border-2 ${
-                isActive
-                  ? `${colors.active} ${colors.border} text-white shadow-lg`
-                  : `${colors.hover} ${colors.text} border-transparent hover:border-current`
-              }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {tab.label}
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          {(() => {
-            if (loading) {
-              return (
-                <div className="py-4 flex justify-center">
-                  <LoadingCard 
-                    title={t("fplLive.loadingLeague", {
-                      league: tabs.find((tab) => tab.id === activeTab)?.label,
-                    })}
-                    description={t("fplLive.loadingLeagueDesc")}
-                    className="w-full max-w-md mx-auto"
+                className={`relative rounded-full px-4 sm:px-5 py-1.5 text-sm font-bold transition-colors ${
+                  isActive ? "text-theme-background" : "text-theme-text-muted hover:text-theme-foreground"
+                }`}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="season-pill"
+                    className="absolute inset-0 rounded-full bg-theme-foreground"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
                   />
-                </div>
-              );
-            }
+                )}
+                <span className="relative">
+                  {s === "26_27" ? "2026/27" : "2025/26"}
+                  {s === "25_26" && (
+                    <span className="ml-1 text-[10px] font-semibold opacity-70">· {t("leagueTables.completed")}</span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-            if (error) {
-              return (
-                <div className="text-center py-12">
-                  <p
-                    className={
-                      theme === "dark" ? "text-red-400" : "text-red-600"
-                    }
-                  >
-                    {error}
-                  </p>
-                </div>
-              );
-            }
+      {/* League tabs */}
+      <div className="-mx-4 mb-6 overflow-x-auto px-4 scrollbar-hide sm:mx-0 sm:px-0">
+        <div className="mx-auto flex w-max gap-2">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const accent = ACCENT[tab.color];
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative whitespace-nowrap rounded-2xl border px-4 py-2.5 text-sm font-bold transition-all ${
+                  isActive
+                    ? "border-transparent text-white"
+                    : "border-theme-border bg-theme-card text-theme-text-secondary hover:text-theme-foreground"
+                }`}
+                style={
+                  isActive
+                    ? {
+                        background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+                        boxShadow: `0 10px 24px -10px ${accent}`,
+                      }
+                    : undefined
+                }
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: isActive ? "#fff" : accent }}
+                  />
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-            const leagueData = getLeagueData(activeTab);
-            if (!leagueData || leagueData.players.length === 0) {
-              if (season === "26_27") {
-                return (
-                  <div
-                    className={`text-center py-14 px-6 mx-auto max-w-xl rounded-2xl border ${
-                      theme === "dark"
-                        ? "border-purple-500/30 bg-purple-500/5"
-                        : "border-purple-300 bg-purple-50/50"
-                    }`}
-                  >
-                    <p
-                      className={`font-semibold ${
-                        theme === "dark" ? "text-purple-300" : "text-purple-700"
-                      }`}
-                    >
-                      {t(
-                        "fplLive.newSeasonComingSoon",
-                        "Nova sezona 2026/27 uskoro počinje — tabele će biti dostupne kada liga krene."
-                      )}
-                    </p>
-                  </div>
-                );
-              }
-              return (
-                <div className="text-center py-12">
-                  <p
-                    className={
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }
-                  >
-                    {t("fplLive.noDataFor", {
-                      league: tabs.find((tab) => tab.id === activeTab)?.label,
-                    })}
-                  </p>
-                </div>
-              );
-            }
-
-            return <ReusableLeagueTable {...leagueData} className="mb-8" />;
-          })()}
-        </motion.div>
-      </AnimatePresence>
+      {/* Content — fixed min height so switching never jumps the page */}
+      <div className="min-h-[60vh]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${season}-${activeTab}-${loading ? "l" : "d"}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22 }}
+          >
+            {renderBody()}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

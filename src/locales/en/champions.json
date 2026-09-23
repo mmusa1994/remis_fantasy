@@ -191,6 +191,12 @@
     "prizeFundLine": "Prize fund: {{total}} | 1st place: {{first}} | 2nd place: {{second}} | 3rd place: {{third}}",
     "prizeSplitLine": "Prize fund split: 1st place {{first}}% | 2nd place {{second}}% | 3rd place {{third}}%",
     "participants_few": "{{count}} participants",
-    "footerParticipants_few": "{{count}} participants in the league."
+    "footerParticipants_few": "{{count}} participants in the league.",
+    "search": "Find a player or team…",
+    "noResults": "No results for \"{{q}}\"",
+    "prizeZone": "Prize zone",
+    "pts": "pts",
+    "leader": "Leader",
+    "lastMdShort": "MD"
   }
 }

@@ -1,14 +1,12 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Medal, Award, Shirt, Gift } from "lucide-react";
-import { BsCash } from "react-icons/bs";
+import Image from "next/image";
+import { Trophy, Medal, Shirt, Ticket, Banknote, Search, Crown, Users, Coins, Star } from "lucide-react";
 import { GiDiamondTrophy } from "react-icons/gi";
-import { LuGift } from "react-icons/lu";
-import { FaTshirt } from "react-icons/fa";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { dateLocale } from "@/components/fpl/live/ui";
 
 // League names come from static Bosnian data — show them in the UI language
 const LEAGUE_NAME_KEYS: Record<string, string> = {
@@ -52,8 +50,40 @@ export interface ReusableLeagueTableProps {
   cupPrizeKM?: number;
   cupPrizeEUR?: number;
   maxParticipants: number;
+  seasonLabel?: string;
+  specialPrizes?: { titleKey: string; prizeKey: string }[];
   className?: string;
 }
+
+interface Accent {
+  main: string;
+  soft: string;
+  deep: string;
+}
+
+const ACCENTS: Record<ReusableLeagueTableProps["leagueType"], Accent> = {
+  premium: { main: "#f5b50a", soft: "#ffe08a", deep: "#7a4d00" },
+  standard: { main: "#3b82f6", soft: "#93c5fd", deep: "#1e3a8a" },
+  h2h: { main: "#f43f5e", soft: "#fda4af", deep: "#881337" },
+  h2h2: { main: "#f43f5e", soft: "#fda4af", deep: "#881337" },
+  free: { main: "#8b5cf6", soft: "#c4b5fd", deep: "#4c1d95" },
+};
+
+const MEDALS = [
+  { ring: "linear-gradient(135deg,#fff3b0,#f5b50a 45%,#a86b00)", glow: "rgba(245,181,10,0.45)", text: "#4a2f00" },
+  { ring: "linear-gradient(135deg,#ffffff,#c7ccd6 45%,#7b8494)", glow: "rgba(170,180,195,0.40)", text: "#2b313b" },
+  { ring: "linear-gradient(135deg,#ffd9b0,#d9822b 45%,#7a3d0a)", glow: "rgba(217,130,43,0.40)", text: "#3d1d02" },
+];
+
+const rgba = (hex: string, a: number) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+};
+
+const initials = (p: TablePlayer) =>
+  `${p.firstName?.[0] ?? ""}${p.lastName?.[0] ?? ""}`.toUpperCase() || (p.teamName?.[0] ?? "?").toUpperCase();
+
+const fmt = (n: number) => new Intl.NumberFormat("de-DE").format(n);
 
 export default function ReusableLeagueTable({
   leagueName,
@@ -64,789 +94,489 @@ export default function ReusableLeagueTable({
   totalPrizeFundEUR,
   entryFeeKM,
   entryFeeEUR,
+  seasonLabel,
+  specialPrizes = [],
   className = "",
 }: ReusableLeagueTableProps) {
   const { theme } = useTheme();
-  const { t, i18n } = useTranslation();
-  const displayName = LEAGUE_NAME_KEYS[leagueType]
-    ? t(LEAGUE_NAME_KEYS[leagueType])
-    : leagueName;
+  const isDark = theme === "dark";
+  const { t } = useTranslation();
+  const [query, setQuery] = useState("");
 
-  const getLeagueColors = (leagueType: string) => {
-    switch (leagueType) {
-      case "premium":
-        return {
-          primary: theme === "dark" ? "#fbbf24" : "#f59e0b", // gold
-          secondary: theme === "dark" ? "#fcd34d" : "#f7c94b",
-          light: theme === "dark" ? "yellow-500/20" : "yellow-100",
-          border: theme === "dark" ? "yellow-500/30" : "yellow-300",
-          text: theme === "dark" ? "yellow-300" : "yellow-800",
-          headerBg:
-            theme === "dark"
-              ? "bg-gradient-to-r from-yellow-500/20 to-yellow-600/10"
-              : "bg-gradient-to-r from-yellow-100 to-yellow-50",
-        };
-      case "standard":
-        return {
-          primary: theme === "dark" ? "#60a5fa" : "#3b82f6", // baby blue
-          secondary: theme === "dark" ? "#93c5fd" : "#7dd3fc",
-          light: theme === "dark" ? "blue-400/20" : "sky-100",
-          border: theme === "dark" ? "blue-400/30" : "sky-300",
-          text: theme === "dark" ? "blue-300" : "sky-800",
-          headerBg:
-            theme === "dark"
-              ? "bg-gradient-to-r from-blue-400/20 to-sky-400/10"
-              : "bg-gradient-to-r from-sky-100 to-blue-50",
-        };
-      case "h2h":
-      case "h2h2":
-        return {
-          primary: theme === "dark" ? "#dc2626" : "#b91c1c", // burgundy/red
-          secondary: theme === "dark" ? "#ef4444" : "#dc2626",
-          light: theme === "dark" ? "red-600/20" : "red-100",
-          border: theme === "dark" ? "red-600/30" : "red-400",
-          text: theme === "dark" ? "red-400" : "red-800",
-          headerBg:
-            theme === "dark"
-              ? "bg-gradient-to-r from-red-600/20 to-red-700/10"
-              : "bg-gradient-to-r from-red-100 to-red-50",
-        };
-      case "free":
-        return {
-          primary: theme === "dark" ? "#a855f7" : "#8b5cf6", // purple
-          secondary: theme === "dark" ? "#c084fc" : "#a78bfa",
-          light: theme === "dark" ? "purple-600/20" : "purple-100",
-          border: theme === "dark" ? "purple-600/30" : "purple-400",
-          text: theme === "dark" ? "purple-400" : "purple-800",
-          headerBg:
-            theme === "dark"
-              ? "bg-gradient-to-r from-purple-600/20 to-purple-700/10"
-              : "bg-gradient-to-r from-purple-100 to-purple-50",
-        };
-      default:
-        return {
-          primary: theme === "dark" ? "#fbbf24" : "#f59e0b",
-          secondary: theme === "dark" ? "#fcd34d" : "#f7c94b",
-          light: theme === "dark" ? "yellow-500/20" : "yellow-100",
-          border: theme === "dark" ? "yellow-500/30" : "yellow-300",
-          text: theme === "dark" ? "yellow-300" : "yellow-800",
-          headerBg:
-            theme === "dark"
-              ? "bg-gradient-to-r from-yellow-500/20 to-yellow-600/10"
-              : "bg-gradient-to-r from-yellow-100 to-yellow-50",
-        };
-    }
+  const accent = ACCENTS[leagueType] ?? ACCENTS.premium;
+  const isH2H = leagueType === "h2h" || leagueType === "h2h2";
+  const displayName = LEAGUE_NAME_KEYS[leagueType] ? t(LEAGUE_NAME_KEYS[leagueType]) : leagueName;
+
+  const score = (p: TablePlayer) => (isH2H ? p.h2h_points ?? 0 : p.points);
+  const leader = players[0];
+  const leaderScore = leader ? score(leader) : 0;
+  // Bars scale across the league's own range (last → leader) so small gaps stay visible
+  const minScore = players.length ? Math.min(...players.map(score)) : 0;
+  const range = leaderScore - minScore;
+  const prizeByPos = useMemo(() => new Map(prizes.map((p) => [p.position, p])), [prizes]);
+  const lastPrizePos = prizes.length ? Math.max(...prizes.map((p) => p.position)) : 0;
+
+  const prizeText = (prize?: TablePrize) => {
+    if (!prize) return "";
+    if (prize.amountKM > 0) return `${fmt(prize.amountKM)} KM`;
+    const d = prize.description || "";
+    if (d === "ORIGINAL_JERSEY_PL") return t("leagueTables.originalJerseyPL");
+    if (d.includes("ORIGINAL DRES") || d.includes("ORIGINAL JERSEY") || d === "ORIGINAL_JERSEY_PLACEHOLDER")
+      return t("prizes.originalJersey");
+    if (d.includes("BESPLATNO") || d.includes("FREE ENTRY") || d === "FREE_ENTRY_PLACEHOLDER")
+      return t("leagueTables.freeEntry");
+    return d;
   };
 
-  const colors = getLeagueColors(leagueType);
-
-  const getPositionIcon = (position: number, leagueType: string) => {
-    if (leagueType === "premium") {
-      switch (position) {
-        case 1:
-          return (
-            <GiDiamondTrophy className="w-5 h-5" style={{ color: "#FFD700" }} />
-          );
-        case 2:
-        case 3:
-          return (
-            <Trophy className="w-5 h-5" style={{ color: colors.primary }} />
-          );
-        case 4:
-          return <Shirt className="w-5 h-5 text-blue-500" />;
-        case 5:
-          return <Gift className="w-5 h-5 text-green-500" />;
-        default:
-          return null;
-      }
-    } else {
-      // Za Standard ligu - posebna logika
-      if (leagueType === "standard") {
-        switch (position) {
-          case 1:
-            return (
-              <Trophy className="w-5 h-5" style={{ color: colors.primary }} />
-            );
-          case 2:
-            return <Medal className="w-5 h-5" style={{ color: "#C0C0C0" }} />;
-          case 3:
-            return <Medal className="w-5 h-5" style={{ color: "#CD7F32" }} />;
-          case 4:
-          case 5:
-          case 6:
-          case 7:
-            return <BsCash className="w-5 h-5 text-green-500" />;
-          case 8:
-          case 9:
-          case 10:
-          case 11:
-            return <LuGift className="w-5 h-5 text-green-500" />;
-          default:
-            return null;
-        }
-      }
-
-      // Za ostale lige (H2H, H2H2, Free) - prvo pokazuj trofeje/medalje za top 3
-      if (leagueType === "free") {
-        // Za Free Liga samo dres za prvo mesto
-        if (position === 1) {
-          return (
-            <FaTshirt className="w-5 h-5" style={{ color: colors.primary }} />
-          );
-        }
-        return null;
-      }
-
-      // Za H2H lige
-      switch (position) {
-        case 1:
-          return <Trophy className="w-5 h-5" style={{ color: "#FFD700" }} />;
-        case 2:
-          return <Medal className="w-5 h-5" style={{ color: "#C0C0C0" }} />;
-        case 3:
-          return <Medal className="w-5 h-5" style={{ color: "#CD7F32" }} />;
-        default:
-          // Za pozicije 4+ proverava da li ima novčanu nagradu
-          const prize = prizes.find((p) => p.position === position);
-          if (prize && prize.amountKM > 0) {
-            return <BsCash className="w-5 h-5 text-green-500" />;
-          }
-          return null;
-      }
-    }
+  const prizeIcon = (prize: TablePrize | undefined, size = "w-3.5 h-3.5") => {
+    if (!prize) return null;
+    if (prize.position === 1)
+      return leagueType === "premium" ? <GiDiamondTrophy className={size} /> : <Trophy className={size} />;
+    if (prize.position <= 3) return <Medal className={size} />;
+    if (prize.amountKM > 0) return <Banknote className={size} />;
+    const d = prize.description || "";
+    if (d.includes("DRES") || d.includes("JERSEY")) return <Shirt className={size} />;
+    return <Ticket className={size} />;
   };
 
-  const getPositionRowStyle = (position: number, leagueType: string) => {
-    if (leagueType === "premium") {
-      // Premium liga - osenčene prve 5 pozicija
-      if (position === 1) {
-        return theme === "dark"
-          ? "bg-gradient-to-r from-yellow-500/40 to-yellow-600/30 border-yellow-500/50"
-          : "bg-gradient-to-r from-yellow-200 to-yellow-300 border-yellow-500";
-      }
-      if (position <= 5) {
-        return theme === "dark"
-          ? `bg-gradient-to-r from-${colors.light} to-${colors.light.replace(
-              "/20",
-              "/10"
-            )} border-${colors.border}`
-          : `bg-gradient-to-r from-${colors.light} to-${colors.light.replace(
-              "100",
-              "50"
-            )} border-${colors.border}`;
-      }
-    } else if (leagueType === "standard") {
-      // Standard liga - osenčene prve 11 pozicija
-      if (position === 1) {
-        return theme === "dark"
-          ? "bg-gradient-to-r from-blue-500/40 to-blue-600/30 border-blue-500/50"
-          : "bg-gradient-to-r from-blue-200 to-blue-300 border-blue-500";
-      }
-      if (position <= 11) {
-        return theme === "dark"
-          ? `bg-gradient-to-r from-${colors.light} to-${colors.light.replace(
-              "/20",
-              "/10"
-            )} border-${colors.border}`
-          : `bg-gradient-to-r from-${colors.light} to-${colors.light.replace(
-              "100",
-              "50"
-            )} border-${colors.border}`;
-      }
-    } else if (leagueType === "h2h" || leagueType === "h2h2") {
-      // H2H i H2H2 lige - zlatno pozadina za 1. mjesto, crveno za 2-4
-      if (position === 1) {
-        return theme === "dark"
-          ? "bg-gradient-to-r from-yellow-500/40 to-amber-600/30 border-l-4 border-yellow-500"
-          : "bg-gradient-to-r from-yellow-100 to-amber-100 border-l-4 border-yellow-500";
-      }
-      if (position >= 2 && position <= 4) {
-        return theme === "dark"
-          ? `bg-gradient-to-r from-red-500/20 to-rose-500/10`
-          : `bg-gradient-to-r from-red-50 to-rose-50`;
-      }
-    } else if (leagueType === "free") {
-      // Free liga - jednostavno ljubičasto pozadinsko osencavanje
-      if (position === 1) {
-        return theme === "dark"
-          ? "bg-gradient-to-r from-purple-500/40 to-violet-600/30 border-l-4 border-purple-500"
-          : "bg-gradient-to-r from-purple-100 to-violet-100 border-l-4 border-purple-500";
+  // Collapse consecutive identical non-cash prizes (e.g. 8.–10. free entry) into one chip
+  const prizeGroups = useMemo(() => {
+    const groups: { from: number; to: number; prize: TablePrize }[] = [];
+    for (const p of [...prizes].sort((a, b) => a.position - b.position)) {
+      const last = groups[groups.length - 1];
+      if (last && p.amountKM === 0 && last.prize.amountKM === 0 && last.prize.description === p.description && last.to === p.position - 1) {
+        last.to = p.position;
+      } else {
+        groups.push({ from: p.position, to: p.position, prize: p });
       }
     }
+    return groups;
+  }, [prizes]);
 
-    return theme === "dark"
-      ? "bg-theme-card hover:bg-theme-accent border-theme-border"
-      : "bg-white hover:bg-gray-50 border-gray-200";
-  };
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return players;
+    return players.filter((p) =>
+      `${p.firstName} ${p.lastName} ${p.teamName}`.toLowerCase().includes(q)
+    );
+  }, [players, query]);
+
+  const podium = players.slice(0, 3);
+  // Desktop order: 2 · 1 · 3
+  const podiumOrder = podium.length === 3 ? [podium[1], podium[0], podium[2]] : podium;
+
+  const card = "bg-theme-card border border-theme-border";
 
   return (
-    <motion.div
+    <motion.section
       className={`w-full max-w-6xl mx-auto ${className}`}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
+      transition={{ duration: 0.45 }}
     >
-      {/* Header */}
-      <motion.div
-        className={`mb-6 p-6 rounded-lg border-2 ${colors.headerBg} border-${colors.border}`}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-theme-foreground mb-2">
-          {displayName}
-        </h2>
-        <p className="text-center text-theme-text-secondary">
-          {t("premiumLeague.standingsCount", { count: players.length })}
-        </p>
-        <div className="text-center text-sm text-theme-text-muted mt-2">
-          {t("premiumLeague.prizePool")}: {totalPrizeFundKM} KM /{" "}
-          {totalPrizeFundEUR} € |{t("premiumLeague.entryFee")}: {entryFeeKM} KM
-          / {entryFeeEUR} €
-        </div>
-      </motion.div>
-
-      {/* Dinamička Nagrade Tabela */}
-      <motion.div
-        className={`mb-6 p-6 rounded-lg border-2 ${colors.headerBg} border-${colors.border}`}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
-        <h3 className="text-xl font-bold text-center text-${colors.text} mb-4">
-          🏆 {t("premiumLeague.prizes")}
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-          {prizes.map((prize) => {
-            const getPrizeIcon = (position: number, leagueType: string) => {
-              if (leagueType === "premium") {
-                switch (position) {
-                  case 1:
-                    return (
-                      <GiDiamondTrophy
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: "#FFD700" }}
-                      />
-                    );
-                  case 2:
-                    return (
-                      <Medal
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: "#C0C0C0" }}
-                      />
-                    );
-                  case 3:
-                    return (
-                      <Medal
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: "#CD7F32" }}
-                      />
-                    );
-                  case 4:
-                    return (
-                      <Shirt className="w-4 h-4 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
-                    );
-                  case 5:
-                    return (
-                      <Gift className="w-4 h-4 md:w-6 md:h-6 text-green-600 dark:text-green-400" />
-                    );
-                  default:
-                    return (
-                      <Award
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: colors.primary }}
-                      />
-                    );
-                }
-              } else if (leagueType === "standard") {
-                switch (position) {
-                  case 1:
-                    return (
-                      <Trophy
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: colors.primary }}
-                      />
-                    );
-                  case 2:
-                    return (
-                      <Medal
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: "#C0C0C0" }}
-                      />
-                    );
-                  case 3:
-                    return (
-                      <Medal
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: "#CD7F32" }}
-                      />
-                    );
-                  case 4:
-                  case 5:
-                  case 6:
-                  case 7:
-                    return (
-                      <BsCash className="w-4 h-4 md:w-6 md:h-6 text-green-600 dark:text-green-400" />
-                    );
-                  case 8:
-                  case 9:
-                  case 10:
-                  case 11:
-                    return (
-                      <LuGift className="w-4 h-4 md:w-6 md:h-6 text-orange-600 dark:text-orange-400" />
-                    );
-                  default:
-                    return null;
-                }
-              } else if (leagueType === "h2h" || leagueType === "h2h2") {
-                switch (position) {
-                  case 1:
-                    return (
-                      <Trophy
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: colors.primary }}
-                      />
-                    );
-                  case 2:
-                    return (
-                      <Medal
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: "#C0C0C0" }}
-                      />
-                    );
-                  case 3:
-                    return (
-                      <Medal
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: "#CD7F32" }}
-                      />
-                    );
-                  case 4:
-                    return (
-                      <BsCash className="w-4 h-4 md:w-6 md:h-6 text-green-600 dark:text-green-400" />
-                    );
-                  default:
-                    return (
-                      <Award
-                        className="w-4 h-4 md:w-6 md:h-6"
-                        style={{ color: colors.primary }}
-                      />
-                    );
-                }
-              } else if (leagueType === "free") {
-                // Za Free Liga samo dres za prvo mesto
-                if (position === 1) {
-                  return (
-                    <FaTshirt
-                      className="w-4 h-4 md:w-6 md:h-6"
-                      style={{ color: colors.primary }}
-                    />
-                  );
-                }
-                return null;
-              }
-            };
-
-            const getPrizeBackground = (
-              position: number,
-              leagueType: string
-            ) => {
-              if (leagueType === "premium") {
-                switch (position) {
-                  case 1:
-                    return "bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-800/30 dark:to-amber-800/30 border border-yellow-400 dark:border-yellow-500";
-                  case 2:
-                    return "bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-800/30 dark:to-slate-800/30 border border-gray-300 dark:border-gray-600";
-                  case 3:
-                    return "bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-700/40 dark:to-orange-700/40 border border-amber-400 dark:border-amber-600";
-                  case 4:
-                    return "bg-gradient-to-r from-blue-100 to-sky-100 dark:from-blue-800/30 dark:to-sky-800/30 border border-blue-300 dark:border-blue-500";
-                  case 5:
-                    return "bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-800/30 dark:to-emerald-800/30 border border-green-300 dark:border-green-500";
-                  default:
-                    return `bg-gradient-to-r from-${
-                      colors.light
-                    } to-${colors.light.replace("100", "50")} border border-${
-                      colors.border
-                    }`;
-                }
-              } else if (leagueType === "standard") {
-                switch (position) {
-                  case 1:
-                    return "bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-800/30 dark:to-amber-800/30 border border-yellow-400 dark:border-yellow-500";
-                  case 2:
-                    return "bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-800/30 dark:to-slate-800/30 border border-gray-300 dark:border-gray-600";
-                  case 3:
-                    return "bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-700/40 dark:to-orange-700/40 border border-amber-400 dark:border-amber-600";
-                  default:
-                    return `bg-gradient-to-r from-${
-                      colors.light
-                    } to-${colors.light.replace("100", "50")} border border-${
-                      colors.border
-                    }`;
-                }
-              } else {
-                switch (position) {
-                  case 1:
-                    return `bg-gradient-to-r from-${
-                      colors.light
-                    } to-${colors.light.replace("100", "50")} border border-${
-                      colors.border
-                    }`;
-                  case 2:
-                    return "bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-800/30 dark:to-slate-800/30 border border-gray-300 dark:border-gray-600";
-                  case 3:
-                    return "bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-700/40 dark:to-orange-700/40 border border-amber-400 dark:border-amber-600";
-                  default:
-                    return `bg-gradient-to-r from-${
-                      colors.light
-                    } to-${colors.light.replace("100", "50")} border border-${
-                      colors.border
-                    }`;
-                }
-              }
-            };
-
-            const getPrizeTextColor = (
-              position: number,
-              leagueType: string
-            ) => {
-              if (leagueType === "premium") {
-                switch (position) {
-                  case 1:
-                    return "text-yellow-800 dark:text-yellow-300";
-                  case 2:
-                    return "text-gray-700 dark:text-gray-300";
-                  case 3:
-                    return "text-amber-800 dark:text-amber-400";
-                  case 4:
-                    return "text-blue-700 dark:text-blue-300";
-                  case 5:
-                    return "text-green-700 dark:text-green-300";
-                  default:
-                    return `text-${colors.text}`;
-                }
-              } else if (leagueType === "standard") {
-                switch (position) {
-                  case 1:
-                    return "text-yellow-800 dark:text-yellow-300";
-                  case 2:
-                    return "text-gray-700 dark:text-gray-300";
-                  case 3:
-                    return "text-amber-800 dark:text-amber-400";
-                  default:
-                    return `text-${colors.text}`;
-                }
-              } else {
-                switch (position) {
-                  case 1:
-                    return `text-${colors.text}`;
-                  case 2:
-                    return "text-gray-700 dark:text-gray-300";
-                  case 3:
-                    return "text-amber-800 dark:text-amber-400";
-                  default:
-                    return `text-${colors.text}`;
-                }
-              }
-            };
-
-            const getPrizeDescription = (prize: any) => {
-              if (prize.amountKM > 0) {
-                return `${prize.amountKM} KM / ${prize.amountEUR} €`;
-              }
-              if (prize.description && prize.description !== "") {
-                // Check for special prize descriptions and use translations
-                if (
-                  prize.description.includes("ORIGINAL DRES") ||
-                  prize.description.includes("ORIGINAL JERSEY") ||
-                  prize.description === "ORIGINAL_JERSEY_PLACEHOLDER"
-                ) {
-                  return t("prizes.originalJersey");
-                }
-                if (
-                  prize.description.includes("BESPLATNO UČEŠĆE") ||
-                  prize.description.includes("FREE ENTRY") ||
-                  prize.description === "FREE_ENTRY_PLACEHOLDER"
-                ) {
-                  return t("prizes.freeEntry");
-                }
-                if (prize.description === "Pehar + Medalja + Plaketa") {
-                  return t("prizes.trophyMedalPlaque");
-                }
-                if (prize.description === "Medalja + Plaketa") {
-                  return t("prizes.medalPlaque");
-                }
-                return prize.description;
-              }
-              return "";
-            };
-
-            return (
-              <div
-                key={prize.position}
-                className={`flex items-center p-3 rounded-lg ${getPrizeBackground(
-                  prize.position,
-                  leagueType
-                )}`}
-              >
-                <div className="flex-shrink-0 mr-3">
-                  {getPrizeIcon(prize.position, leagueType)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div
-                    className={`font-semibold text-sm ${getPrizeTextColor(
-                      prize.position,
-                      leagueType
-                    )}`}
-                  >
-                    {prize.position === 1 && t("premiumLeague.firstPlace")}
-                    {prize.position === 2 && t("premiumLeague.secondPlace")}
-                    {prize.position === 3 && t("premiumLeague.thirdPlace")}
-                    {prize.position === 4 && t("premiumLeague.fourthPlace")}
-                    {prize.position === 5 && t("premiumLeague.fifthPlace")}
-                    {prize.position > 5 && `${prize.position}. mjesto`}
-                  </div>
-                  <div className="text-xs text-theme-text-secondary truncate">
-                    {getPrizeDescription(prize)}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </motion.div>
-
-      {/* Table Container */}
-      <motion.div
-        className={`rounded-lg border-2 overflow-hidden shadow-xl bg-theme-card border-${colors.border}`}
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <div
+        className="relative overflow-hidden rounded-3xl p-5 sm:p-8 text-white shadow-2xl"
         style={{
-          boxShadow:
-            theme === "dark"
-              ? `0 0 20px ${colors.primary}15`
-              : `0 0 20px ${colors.primary}20`,
+          background: `radial-gradient(120% 140% at 100% 0%, ${rgba(accent.main, 0.55)} 0%, transparent 55%),
+             radial-gradient(90% 120% at 0% 100%, ${rgba(accent.soft, 0.22)} 0%, transparent 60%),
+             linear-gradient(135deg, #07071a 0%, #10102a 55%, ${accent.deep} 140%)`,
+          boxShadow: `0 30px 60px -30px ${rgba(accent.main, 0.55)}`,
         }}
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
       >
-        {/* Table Header */}
+        {/* pitch lines */}
         <div
-          className={`${
-            leagueType === "h2h" || leagueType === "h2h2"
-              ? "grid grid-cols-9 gap-1 md:gap-2 lg:gap-4"
-              : "grid grid-cols-12 gap-1 md:gap-2 lg:gap-4"
-          } p-2 md:p-4 border-b-2 font-bold text-xs md:text-sm lg:text-base ${
-            colors.headerBg
-          } border-${colors.border} text-${colors.text}`}
-        >
-          <div className="col-span-1 text-center">
-            {t("premiumLeague.tableHeaders.rank")}
-          </div>
-          <div
-            className={
-              leagueType === "h2h" || leagueType === "h2h2"
-                ? "col-span-2"
-                : "col-span-4 md:col-span-3"
-            }
-          >
-            {t("premiumLeague.tableHeaders.name")}
-          </div>
-          <div
-            className={
-              leagueType === "h2h" || leagueType === "h2h2"
-                ? "col-span-2"
-                : "col-span-4 md:col-span-5"
-            }
-          >
-            {t("premiumLeague.tableHeaders.team")}
-          </div>
-          {leagueType === "h2h" || leagueType === "h2h2" ? (
-            <>
-              <div className="col-span-1 text-center text-xs">W/D/L</div>
-              <div className="col-span-2 text-center text-xs">
-                {t("premiumLeague.tableHeaders.overallPoints")}
-              </div>
-              <div className="col-span-1 text-center text-xs">
-                H2H {t("premiumLeague.tableHeaders.points")}
-              </div>
-            </>
-          ) : (
-            <div className="col-span-3 text-center">
-              {t("premiumLeague.tableHeaders.points")}
-            </div>
-          )}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(90deg, #fff 0 1px, transparent 1px 64px), repeating-linear-gradient(0deg, #fff 0 1px, transparent 1px 64px)",
+            maskImage: "radial-gradient(80% 90% at 80% 20%, black, transparent 75%)",
+            WebkitMaskImage: "radial-gradient(80% 90% at 80% 20%, black, transparent 75%)",
+          }}
+        />
+        {/* blurred PL lion fading out on the right */}
+        <div aria-hidden className="pointer-events-none absolute -right-14 -top-8 h-[300px] w-[300px] sm:-right-6 sm:-top-12 sm:h-[400px] sm:w-[400px]">
+          <Image src="/images/logos/pl-logo.png" alt="" fill sizes="400px" className="object-contain opacity-[0.18] blur-[7px]" />
         </div>
+        <div aria-hidden className="pointer-events-none absolute -right-14 -top-8 h-[300px] w-[300px] sm:-right-6 sm:-top-12 sm:h-[400px] sm:w-[400px]">
+          <Image src="/images/logos/pl-logo.png" alt="" fill sizes="400px" className="object-contain opacity-[0.05]" />
+        </div>
+        {/* shimmer sweep */}
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3"
+          style={{ background: "linear-gradient(100deg, transparent, rgba(255,255,255,0.08), transparent)" }}
+          animate={{ x: ["0%", "450%"] }}
+          transition={{ duration: 5.5, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
+        />
 
-        {/* Table Body */}
-        <div className="max-h-96 md:max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
-          {players.map((player, index) => {
+        <div className="relative">
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: accent.soft }}>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: accent.main, boxShadow: `0 0 12px ${accent.main}` }} />
+            REMIS Fantasy{seasonLabel ? ` · ${seasonLabel}` : ""}
+          </div>
+          <h2 className="mt-2 text-3xl sm:text-5xl font-black tracking-tight leading-none">{displayName}</h2>
+
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+            <HeroStat icon={<Users className="w-4 h-4" />} label={t("leagueTables.players")} value={fmt(players.length)} />
+            <HeroStat
+              icon={<Coins className="w-4 h-4" />}
+              label={t("leagueTables.prizePool")}
+              value={totalPrizeFundKM > 0 ? `${fmt(totalPrizeFundKM)} KM` : "—"}
+              sub={totalPrizeFundEUR > 0 ? `${fmt(totalPrizeFundEUR)} €` : undefined}
+            />
+            <HeroStat
+              icon={<Ticket className="w-4 h-4" />}
+              label={t("leagueTables.entryFee")}
+              value={entryFeeKM > 0 ? `${fmt(entryFeeKM)} KM` : t("leagueTables.free")}
+              sub={entryFeeEUR > 0 ? `${fmt(entryFeeEUR)} €` : undefined}
+            />
+            <HeroStat
+              icon={<Crown className="w-4 h-4" />}
+              label={t("leagueTables.leader")}
+              value={leader ? leader.teamName : "—"}
+              sub={leader ? `${fmt(leaderScore)} ${t("leagueTables.points")}` : undefined}
+              truncate
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Podium ───────────────────────────────────────────── */}
+      {podium.length > 0 && (
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:items-end">
+          {podiumOrder.map((p) => {
+            const idx = p.position - 1;
+            const medal = MEDALS[Math.min(idx, 2)];
+            const isFirst = p.position === 1;
+            const prize = prizeByPos.get(p.position);
             return (
               <motion.div
-                key={player.id}
-                className={`${
-                  leagueType === "h2h" || leagueType === "h2h2"
-                    ? "grid grid-cols-9 gap-1 md:gap-2 lg:gap-4"
-                    : "grid grid-cols-12 gap-1 md:gap-2 lg:gap-4"
-                } p-2 md:p-4 border-b transition-all duration-300 hover:scale-[1.01] ${getPositionRowStyle(
-                  player.position,
-                  leagueType
-                )}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                whileHover={{
-                  scale: 1.01,
-                  transition: { duration: 0.2 },
+                key={p.id}
+                className={`relative overflow-hidden rounded-2xl ${card} ${isFirst ? "sm:pb-8 sm:pt-7" : ""} ${
+                  isFirst ? "order-first sm:order-none" : ""
+                } p-4 sm:p-5`}
+                style={{
+                  boxShadow: `0 18px 40px -24px ${medal.glow}`,
+                  background: isDark
+                    ? `linear-gradient(180deg, ${rgba(accent.main, isFirst ? 0.16 : 0.08)}, transparent 70%)`
+                    : `linear-gradient(180deg, ${rgba(accent.main, isFirst ? 0.14 : 0.07)}, #ffffff 70%)`,
                 }}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 + idx * 0.08 }}
               >
-                {/* Position */}
-                <div className="col-span-1 flex items-center justify-center">
-                  <div className="flex items-center space-x-0.5 md:space-x-2">
-                    {getPositionIcon(player.position, leagueType)}
-                    <span className="font-bold text-theme-foreground pr-1 md:pr-0 text-xs md:text-sm lg:text-lg">
-                      {player.position}
-                    </span>
+                <div className="absolute inset-x-0 top-0 h-1" style={{ background: medal.ring }} />
+                <div className="flex items-center gap-3.5 sm:flex-col sm:text-center">
+                  <div className="relative shrink-0">
+                    <div
+                      className={`rounded-full p-[3px] ${isFirst ? "w-16 h-16 sm:w-20 sm:h-20" : "w-14 h-14 sm:w-16 sm:h-16"}`}
+                      style={{ background: medal.ring, boxShadow: `0 0 24px ${medal.glow}` }}
+                    >
+                      <div
+                        className="flex h-full w-full items-center justify-center rounded-full bg-theme-card text-lg sm:text-xl font-black"
+                        style={{ color: isDark ? accent.soft : accent.deep }}
+                      >
+                        {initials(p)}
+                      </div>
+                    </div>
+                    <div
+                      className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full text-xs font-black shadow-md"
+                      style={{ background: medal.ring, color: medal.text }}
+                    >
+                      {p.position}
+                    </div>
+                    {isFirst && (
+                      <Crown
+                        className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-6 h-6 drop-shadow"
+                        style={{ color: "#f5b50a", fill: "#f5b50a" }}
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1 sm:w-full">
+                    <div className="truncate text-base font-extrabold text-theme-foreground">{p.teamName}</div>
+                    <div className="truncate text-xs text-theme-text-secondary">
+                      {p.firstName} {p.lastName}
+                    </div>
+                    <div className="mt-2 flex items-end gap-1.5 sm:justify-center">
+                      <span className={`font-black leading-none tabular-nums text-theme-foreground ${isFirst ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"}`}>
+                        {fmt(score(p))}
+                      </span>
+                      <span className="pb-0.5 text-xs font-semibold text-theme-text-muted">
+                        {isH2H ? t("leagueTables.h2hPoints") : t("leagueTables.points")}
+                      </span>
+                    </div>
+                    {isH2H && p.h2h_stats && (
+                      <div className="mt-2 flex gap-1 sm:justify-center">
+                        <WdlPill kind="w" value={p.h2h_stats.w} label={t("leagueTables.won")} />
+                        <WdlPill kind="d" value={p.h2h_stats.d} label={t("leagueTables.drawn")} />
+                        <WdlPill kind="l" value={p.h2h_stats.l} label={t("leagueTables.lost")} />
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {/* Full Name */}
-                <div
-                  className={
-                    leagueType === "h2h" || leagueType === "h2h2"
-                      ? "col-span-2 flex items-center"
-                      : "col-span-4 md:col-span-3 flex items-center"
-                  }
-                >
-                  <span className="font-semibold text-theme-foreground truncate text-xs md:text-sm lg:text-base">
-                    {player.firstName} {player.lastName}
-                  </span>
-                </div>
-
-                {/* Team Name */}
-                <div
-                  className={
-                    leagueType === "h2h" || leagueType === "h2h2"
-                      ? "col-span-2 flex items-center"
-                      : "col-span-4 md:col-span-5 flex items-center"
-                  }
-                >
-                  <span className="text-theme-text-secondary truncate text-xs md:text-sm lg:text-base">
-                    {player.teamName}
-                  </span>
-                </div>
-
-                {/* Points */}
-                {leagueType === "h2h" || leagueType === "h2h2" ? (
-                  <>
-                    {/* W/D/L */}
-                    <div className="col-span-1 flex items-center justify-center">
-                      <span className="text-xs text-theme-foreground">
-                        {player.h2h_stats
-                          ? `${player.h2h_stats.w}/${player.h2h_stats.d}/${player.h2h_stats.l}`
-                          : "-"}
-                      </span>
-                    </div>
-
-                    {/* Overall Points */}
-                    <div className="col-span-2 flex items-center justify-center">
-                      <span className="font-semibold text-xs md:text-sm text-theme-foreground">
-                        {player.points}
-                      </span>
-                    </div>
-
-                    {/* H2H Points */}
-                    <div className="col-span-1 flex items-center justify-center">
-                      <motion.span
-                        className={`font-bold text-sm md:text-lg px-1 md:px-2 py-1 md:py-2 rounded-lg ${
-                          player.position === 1
-                            ? `text-${colors.text}`
-                            : player.position <= 3
-                            ? theme === "dark"
-                              ? "bg-gray-500/20 text-gray-300"
-                              : "bg-gray-200 text-gray-700"
-                            : "text-theme-foreground"
-                        }`}
-                        style={
-                          player.position === 1
-                            ? {
-                                backgroundColor:
-                                  theme === "dark"
-                                    ? `${colors.primary}30`
-                                    : `${colors.primary}40`,
-                                color: colors.primary,
-                              }
-                            : {}
-                        }
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {player.h2h_points || 0}
-                      </motion.span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="col-span-3 flex items-center justify-center">
-                    <motion.span
-                      className={`font-bold text-sm md:text-lg px-2 md:px-4 py-1 md:py-2 rounded-lg ${
-                        leagueType === "premium" && player.position === 1
-                          ? "text-yellow-800"
-                          : leagueType === "premium" && player.position <= 5
-                          ? `text-${colors.text}`
-                          : player.position === 1
-                          ? `text-${colors.text}`
-                          : player.position <= 3
-                          ? theme === "dark"
-                            ? "bg-gray-500/20 text-gray-300"
-                            : "bg-gray-200 text-gray-700"
-                          : "text-theme-foreground"
-                      }`}
-                      style={
-                        leagueType === "premium" && player.position === 1
-                          ? {
-                              backgroundColor: "#FFD700",
-                              color: "#B8860B",
-                              boxShadow: "0 2px 8px rgba(255, 215, 0, 0.3)",
-                            }
-                          : leagueType === "premium" && player.position <= 5
-                          ? {
-                              backgroundColor:
-                                theme === "dark"
-                                  ? `${colors.primary}30`
-                                  : `${colors.primary}40`,
-                              color: colors.primary,
-                            }
-                          : player.position === 1
-                          ? {
-                              backgroundColor:
-                                theme === "dark"
-                                  ? `${colors.primary}30`
-                                  : `${colors.primary}40`,
-                              color: colors.primary,
-                            }
-                          : {}
-                      }
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.2 }}
+                {prize && (
+                  <div className="mt-3 flex sm:justify-center">
+                    <span
+                      className="inline-flex max-w-full items-center gap-1.5 truncate rounded-full px-2.5 py-1 text-[11px] font-bold"
+                      style={{ backgroundColor: rgba(accent.main, 0.14), color: isDark ? accent.soft : accent.deep }}
                     >
-                      {player.points}
-                    </motion.span>
+                      {prizeIcon(prize)}
+                      <span className="truncate">{prizeText(prize)}</span>
+                    </span>
                   </div>
                 )}
               </motion.div>
             );
           })}
         </div>
+      )}
 
-        {/* Footer */}
-        <div
-          className={`p-2 md:p-4 text-center text-xs md:text-sm border-t-2 bg-theme-secondary border-${colors.border} text-theme-text-muted`}
-        >
-          {t("premiumLeague.lastUpdated")}:{" "}
-          {new Date().toLocaleDateString(dateLocale(i18n.language))}
+      {/* ── Prizes ───────────────────────────────────────────── */}
+      {prizeGroups.length > 0 && (
+        <div className="mt-5 overflow-hidden rounded-2xl bg-theme-card shadow-sm">
+          <div className="flex items-baseline justify-between gap-3 px-4 pt-4 sm:px-5">
+            <div className="flex items-center gap-2">
+              <span className="h-4 w-1 rounded-full" style={{ backgroundColor: accent.main }} />
+              <h3 className="text-sm font-extrabold uppercase tracking-[0.14em] text-theme-foreground">{t("leagueTables.prizes")}</h3>
+            </div>
+            {totalPrizeFundKM > 0 && (
+              <div className="text-right text-xs text-theme-text-muted">
+                {t("leagueTables.prizePool")}{" "}
+                <span className="font-extrabold text-theme-foreground">{fmt(totalPrizeFundKM)} KM</span>
+                {totalPrizeFundEUR > 0 && <span> · {fmt(totalPrizeFundEUR)} €</span>}
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4 px-4 py-4 sm:grid-cols-3 sm:px-5 lg:grid-cols-5">
+            {prizeGroups.map(({ from, to, prize }) => {
+              const medal = from <= 3 ? MEDALS[from - 1] : null;
+              const isCash = prize.amountKM > 0;
+              return (
+                <div key={from} className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-theme-text-muted">
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ background: medal ? medal.ring : rgba(accent.main, 0.55) }}
+                    />
+                    {from === to ? t("leagueTables.place", { n: from }) : t("leagueTables.places", { from, to })}
+                  </div>
+                  {isCash ? (
+                    <div className="mt-1 leading-none">
+                      <span className={`font-black tabular-nums text-theme-foreground ${from === 1 ? "text-2xl" : "text-xl"}`}>
+                        {fmt(prize.amountKM)}
+                      </span>
+                      <span className="ml-1 text-xs font-bold text-theme-text-muted">KM</span>
+                      <div className="mt-1 text-[11px] font-medium text-theme-text-muted">{fmt(prize.amountEUR)} €</div>
+                    </div>
+                  ) : (
+                    <div className="mt-1 text-[13px] font-bold leading-snug text-theme-foreground">{prizeText(prize)}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {specialPrizes.length > 0 && (
+            <div className="flex flex-col gap-2 border-t border-theme-border px-4 py-3 sm:flex-row sm:flex-wrap sm:gap-x-8 sm:px-5">
+              {specialPrizes.map((sp) => (
+                <div key={sp.titleKey} className="flex items-center gap-2 text-[13px]">
+                  <Star className="h-3.5 w-3.5 shrink-0" style={{ color: accent.main, fill: accent.main }} />
+                  <span className="text-theme-text-muted">{t(sp.titleKey)}</span>
+                  <span className="font-bold text-theme-foreground">{t(sp.prizeKey)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </motion.div>
-    </motion.div>
+      )}
+
+      {/* ── Standings ────────────────────────────────────────── */}
+      <div className={`mt-5 overflow-hidden rounded-2xl ${card} shadow-sm`}>
+        <div className="flex flex-col gap-3 border-b border-theme-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <span className="h-5 w-1 rounded-full" style={{ backgroundColor: accent.main }} />
+            <h3 className="text-base font-extrabold text-theme-foreground">{t("leagueTables.standings")}</h3>
+            <span className="rounded-full bg-theme-card-secondary px-2 py-0.5 text-[11px] font-bold text-theme-text-secondary">
+              {players.length}
+            </span>
+          </div>
+          <label className="relative block sm:w-72">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-text-muted" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t("leagueTables.searchPlaceholder")}
+              className="w-full rounded-xl border border-theme-border bg-theme-card-secondary py-2 pl-9 pr-3 text-sm text-theme-foreground placeholder:text-theme-text-muted outline-none transition focus:border-theme-border-strong"
+            />
+          </label>
+        </div>
+
+        {/* column header (desktop) */}
+        <div className="hidden sm:flex items-center gap-3 bg-theme-card-secondary px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-theme-text-muted">
+          <div className="w-10 text-center">#</div>
+          <div className="flex-1">{t("premiumLeague.tableHeaders.team")}</div>
+          {isH2H && <div className="w-28 text-center">{t("leagueTables.won")} · {t("leagueTables.drawn")} · {t("leagueTables.lost")}</div>}
+          {isH2H && <div className="w-20 text-right">{t("leagueTables.overall")}</div>}
+          <div className="w-24 text-right">{isH2H ? t("leagueTables.h2hPoints") : t("leagueTables.pointsLong")}</div>
+        </div>
+
+        <ol>
+          {filtered.map((p, i) => {
+            const prize = prizeByPos.get(p.position);
+            const inZone = !!prize;
+            const s = score(p);
+            const pct = range > 0 ? Math.max(6, Math.round(((s - minScore) / range) * 100)) : 100;
+            const gap = leaderScore - s;
+            const showCutoff = !query && lastPrizePos > 0 && p.position === lastPrizePos && i < filtered.length - 1;
+            const medal = p.position <= 3 ? MEDALS[p.position - 1] : null;
+            return (
+              <li key={p.id}>
+                <motion.div
+                  className="group relative flex items-center gap-3 border-b border-theme-border px-3 py-2.5 sm:px-4 sm:py-3 transition-colors hover:bg-theme-card-secondary"
+                  style={inZone ? { background: `linear-gradient(90deg, ${rgba(accent.main, isDark ? 0.1 : 0.07)}, transparent 60%)` } : undefined}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: Math.min(i, 20) * 0.02 }}
+                >
+                  {inZone && <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: accent.main }} />}
+
+                  {/* rank */}
+                  <div className="w-10 shrink-0 flex justify-center">
+                    <span
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-black tabular-nums"
+                      style={
+                        medal
+                          ? { background: medal.ring, color: medal.text, boxShadow: `0 4px 14px -4px ${medal.glow}` }
+                          : inZone
+                            ? { backgroundColor: rgba(accent.main, 0.16), color: isDark ? accent.soft : accent.deep }
+                            : undefined
+                      }
+                    >
+                      <span className={medal || inZone ? "" : "text-theme-text-secondary"}>{p.position}</span>
+                    </span>
+                  </div>
+
+                  {/* identity */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-sm sm:text-[15px] font-bold text-theme-foreground">{p.teamName}</span>
+                      {prize && (
+                        <span
+                          className="hidden md:inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                          style={{ backgroundColor: rgba(accent.main, 0.14), color: isDark ? accent.soft : accent.deep }}
+                        >
+                          {prizeIcon(prize, "w-3 h-3")}
+                          {prizeText(prize)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="truncate text-xs text-theme-text-secondary">
+                      {p.firstName} {p.lastName}
+                    </div>
+                    {/* progress vs leader */}
+                    <div className="mt-1.5 h-1 w-full max-w-[220px] overflow-hidden rounded-full bg-theme-card-secondary">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ background: `linear-gradient(90deg, ${accent.main}, ${accent.soft})` }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.8, delay: 0.15 + Math.min(i, 20) * 0.02, ease: "easeOut" }}
+                      />
+                    </div>
+                  </div>
+
+                  {isH2H && (
+                    <div className="hidden sm:flex w-28 justify-center gap-1">
+                      <WdlPill kind="w" value={p.h2h_stats?.w ?? 0} />
+                      <WdlPill kind="d" value={p.h2h_stats?.d ?? 0} />
+                      <WdlPill kind="l" value={p.h2h_stats?.l ?? 0} />
+                    </div>
+                  )}
+                  {isH2H && (
+                    <div className="hidden sm:block w-20 text-right text-sm font-semibold tabular-nums text-theme-text-secondary">
+                      {fmt(p.points)}
+                    </div>
+                  )}
+
+                  {/* score */}
+                  <div className="w-24 shrink-0 text-right">
+                    <div className="text-lg sm:text-xl font-black tabular-nums leading-none text-theme-foreground">{fmt(s)}</div>
+                    <div className="mt-1 text-[10px] font-semibold text-theme-text-muted">
+                      {p.position === 1 ? (
+                        <span style={{ color: isDark ? accent.soft : accent.deep }}>{t("leagueTables.leaderBadge")}</span>
+                      ) : isH2H ? (
+                        <span className="sm:hidden">
+                          {p.h2h_stats ? `${p.h2h_stats.w}-${p.h2h_stats.d}-${p.h2h_stats.l}` : ""}
+                        </span>
+                      ) : (
+                        `−${fmt(gap)}`
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+
+                {showCutoff && (
+                  <div className="relative flex items-center gap-2 px-4 py-1.5">
+                    <span className="h-px flex-1 border-t border-dashed" style={{ borderColor: rgba(accent.main, 0.55) }} />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: accent.main }}>
+                      {t("leagueTables.prizeZone")}
+                    </span>
+                    <span className="h-px flex-1 border-t border-dashed" style={{ borderColor: rgba(accent.main, 0.55) }} />
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+
+        {filtered.length === 0 && (
+          <div className="px-4 py-10 text-center text-sm text-theme-text-muted">
+            {players.length === 0 ? t("leagueTables.comingSoonText") : t("leagueTables.noResults", { q: query })}
+          </div>
+        )}
+      </div>
+    </motion.section>
+  );
+}
+
+function HeroStat({
+  icon,
+  label,
+  value,
+  sub,
+  truncate,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  sub?: string;
+  truncate?: boolean;
+}) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5 backdrop-blur-sm">
+      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/60">
+        {icon}
+        {label}
+      </div>
+      <div className={`mt-1 text-base sm:text-lg font-extrabold leading-tight ${truncate ? "truncate" : ""}`}>{value}</div>
+      {sub && <div className="text-[11px] font-semibold text-white/55">{sub}</div>}
+    </div>
+  );
+}
+
+function WdlPill({ kind, value, label }: { kind: "w" | "d" | "l"; value: number; label?: string }) {
+  const styles = {
+    w: "bg-emerald-500 text-white",
+    d: "bg-slate-400 text-white",
+    l: "bg-rose-500 text-white",
+  }[kind];
+  return (
+    <span className={`inline-flex min-w-[26px] items-center justify-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-bold tabular-nums ${styles}`}>
+      {label && <span className="opacity-80">{label}</span>}
+      {value}
+    </span>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Trophy } from "lucide-react";
 import PrizesGallery from "@/components/shared/PrizesGallery";
+import PrizeCards2627 from "@/components/premier-league/PrizeCards2627";
 import { useLeaguePrizes, usePageContent } from "@/hooks/useLeagueData";
 import LoadingCard from "@/components/shared/LoadingCard";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -25,7 +25,7 @@ export default function PremierLeagueNagradePage() {
     error: contentError,
   } = usePageContent("premier");
 
-  if (prizesLoading || contentLoading) {
+  if ((prizesLoading || contentLoading) && season === "25_26") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingCard
@@ -37,7 +37,7 @@ export default function PremierLeagueNagradePage() {
     );
   }
 
-  if (prizesError || contentError) {
+  if ((prizesError || contentError) && season === "25_26") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -96,45 +96,7 @@ export default function PremierLeagueNagradePage() {
     return (
       <div className="min-h-screen">
         {seasonSwitcher}
-        <div className="flex items-center justify-center px-4 py-20">
-          <div
-            className={`text-center max-w-xl w-full rounded-2xl border p-10 md:p-14 ${
-              theme === "dark"
-                ? "border-purple-500/30 bg-purple-500/5"
-                : "border-purple-300 bg-purple-50/50"
-            }`}
-          >
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-600 to-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/25">
-                <Trophy className="w-8 h-8 text-white" />
-              </div>
-            </div>
-            <h1
-              className={`text-2xl md:text-3xl font-black mb-3 ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              {t("fplLive.prizes.tbdTitle", "Nagrade za sezonu 2026/27")}
-            </h1>
-            <p
-              className={`text-lg font-semibold mb-2 ${
-                theme === "dark" ? "text-purple-300" : "text-purple-700"
-              }`}
-            >
-              {t("fplLive.prizes.tbdMessage", "Nagrade će biti objavljene naknadno.")}
-            </p>
-            <p
-              className={`text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              {t(
-                "fplLive.prizes.tbdNote",
-                "Uskoro objavljujemo kompletan nagradni fond i nagrade za novu sezonu. Pratite nas!"
-              )}
-            </p>
-          </div>
-        </div>
+        <PrizeCards2627 />
       </div>
     );
   }
