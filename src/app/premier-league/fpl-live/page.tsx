@@ -117,6 +117,7 @@ export default function FPLLivePage() {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [teamLoaded, setTeamLoaded] = useState(false);
   const tabBarRef = useRef<HTMLDivElement>(null);
+  const tabNavRef = useRef<HTMLElement | null>(null);
   const tabButtonRefs = useRef<Partial<Record<TabType, HTMLButtonElement | null>>>({});
 
   const tabs: Array<{ id: TabType; label: string; icon: React.ComponentType<{ className?: string }> }> = [
@@ -403,11 +404,13 @@ export default function FPLLivePage() {
 
   // Keep the active tab pill visible in the horizontal scroller
   useEffect(() => {
-    tabButtonRefs.current[activeTab]?.scrollIntoView({
-      block: "nearest",
-      inline: "center",
-      behavior: "smooth",
-    });
+    // Scroll only the tab strip itself — scrollIntoView would also scroll the
+    // page (html/body) horizontally and shift the whole screen sideways.
+    const btn = tabButtonRefs.current[activeTab];
+    const nav = tabNavRef.current;
+    if (!btn || !nav) return;
+    const left = btn.offsetLeft - (nav.clientWidth - btn.offsetWidth) / 2;
+    nav.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
   }, [activeTab, teamLoaded]);
 
   const changeGameweek = (next: number) => {
@@ -531,7 +534,7 @@ export default function FPLLivePage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-theme-background theme-transition">
+    <div className="min-h-screen overflow-x-clip bg-theme-background theme-transition">
       <PLAnthemPlayer />
       <FlagLoader />
       <div className="mx-auto max-w-6xl px-3 pb-10 pt-4 sm:px-6 sm:pt-6">
@@ -748,7 +751,8 @@ export default function FPLLivePage() {
               className="sticky top-0 z-30 -mx-3 mt-3 bg-theme-background px-3 py-2 sm:-mx-6 sm:px-6 md:top-16"
             >
               <nav
-                className="-mx-1 overflow-x-auto px-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_10px,black_calc(100%-10px),transparent)]"
+                ref={tabNavRef}
+                className="relative -mx-1 overflow-x-auto px-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_10px,black_calc(100%-10px),transparent)]"
                 aria-label="FPL Live"
               >
                 <div className="flex w-max gap-1">
@@ -780,7 +784,7 @@ export default function FPLLivePage() {
               </nav>
             </div>
 
-            <div className="mt-1 space-y-3 sm:space-y-4">{renderTabContent()}</div>
+            <div className="mt-1 min-h-[70vh] min-w-0 space-y-3 sm:space-y-4">{renderTabContent()}</div>
           </>
         )}
       </div>

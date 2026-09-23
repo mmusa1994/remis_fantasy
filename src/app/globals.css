@@ -155,6 +155,8 @@ body {
 html {
   scroll-behavior: smooth;
   width: 100%;
+  /* Reserve scrollbar space so content doesn't jump sideways when page height changes */
+  scrollbar-gutter: stable;
 }
 
 /* Ensure full width on mobile */
