@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { getTeamColors } from "@/lib/team-colors";
+import { getTeamColors, type TeamKit } from "@/lib/team-colors";
+import TeamJersey from "../TeamJersey";
 import type { TransferTrendsWidgetData } from "@/types/fpl-enhanced";
 
 // Widget-level cache to prevent redundant requests
@@ -460,10 +461,16 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                   >
                     <div className="flex items-center space-x-2">
                       <div
-                        className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold text-white"
-                        style={{ backgroundColor: player.team_colors.primary }}
+                        className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                        style={{
+                          background: `linear-gradient(135deg, ${player.team_colors.primary}26 0%, ${player.team_colors.primary}0d 100%)`,
+                        }}
                       >
-                        {player.web_name.charAt(0)}
+                        <TeamJersey
+                          kit={player.team_colors as TeamKit}
+                          title={player.team_name}
+                          className="w-5 h-5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
+                        />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">
@@ -502,10 +509,16 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                   >
                     <div className="flex items-center space-x-2">
                       <div
-                        className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold text-white"
-                        style={{ backgroundColor: player.team_colors.primary }}
+                        className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                        style={{
+                          background: `linear-gradient(135deg, ${player.team_colors.primary}26 0%, ${player.team_colors.primary}0d 100%)`,
+                        }}
                       >
-                        {player.web_name.charAt(0)}
+                        <TeamJersey
+                          kit={player.team_colors as TeamKit}
+                          title={player.team_name}
+                          className="w-5 h-5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
+                        />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">

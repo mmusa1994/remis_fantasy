@@ -27,12 +27,13 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import FplLoadingSkeleton from "@/components/shared/FplLoadingSkeleton";
 import ManagerIdModal from "@/components/modals/ManagerIdModal";
-import { getTeamColors, registerFplTeams, teamBadge } from "@/lib/team-colors";
+import { getTeamColors, registerFplTeams } from "@/lib/team-colors";
 import { ErrorType, ValidationStatus } from "@/types/validation";
 import FplStatusBanner from "@/components/shared/FplStatusBanner";
 
 // Enhanced Components
 import EnhancedPitchView from "./EnhancedPitchView";
+import TeamJersey from "./TeamJersey";
 import AdvancedFilterPanel from "./AdvancedFilterPanel";
 import SmartReplacementPanel from "./SmartReplacementPanel";
 import AILoadingShow from "./AILoadingShow";
@@ -1839,7 +1840,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                 {/* Enhanced Pitch View */}
                 {currentView === "pitch" && (
                   <>
-                    <div className="p-1 sm:p-3 lg:p-6">
+                    <div className="p-2 sm:p-4 lg:p-6">
                       <EnhancedPitchView
                         teamPlayers={currentTeamForDisplay}
                         allPlayers={allPlayers}
@@ -1886,10 +1887,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     {/* Captain Info - Subtle design above Transfer Market */}
                     {userTeamData?.captain?.player_id && (
                       <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30">
-                        <div className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-8">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-full bg-yellow-400 border-2 border-white dark:border-gray-900 ring-2 ring-yellow-500/40 shadow-[0_0_8px_rgba(250,204,21,0.7)] flex items-center justify-center">
+                        <div className="px-3 py-2.5 sm:px-4 sm:py-3">
+                          <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:justify-center sm:gap-8">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-8 h-8 shrink-0 rounded-full bg-yellow-400 border-2 border-white dark:border-gray-900 ring-2 ring-yellow-500/40 shadow-[0_0_8px_rgba(250,204,21,0.7)] flex items-center justify-center">
                                 <span className="text-sm font-extrabold text-black" style={{ textShadow: "0 1px 1px rgba(255,255,255,0.4)" }}>
                                   C
                                 </span>
@@ -1914,8 +1915,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                             </div>
 
                             {userTeamData?.vice_captain?.player_id && (
-                              <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-blue-600 border-2 border-white dark:border-gray-900 ring-2 ring-blue-500/40 shadow-[0_0_8px_rgba(37,99,235,0.7)] flex items-center justify-center">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-8 h-8 shrink-0 rounded-full bg-blue-600 border-2 border-white dark:border-gray-900 ring-2 ring-blue-500/40 shadow-[0_0_8px_rgba(37,99,235,0.7)] flex items-center justify-center">
                                   <span className="text-sm font-extrabold text-white" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.6)" }}>
                                     V
                                   </span>
@@ -1957,7 +1958,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       </h3>
 
                       {/* Starting XI Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3">
                         {currentTeamForDisplay
                           .filter((tp) => tp.position <= 11)
                           .sort((a, b) => a.position - b.position)
@@ -1975,7 +1976,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 key={teamPlayer.player_id}
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="bg-theme-card rounded-lg p-4 border border-theme-border hover:bg-theme-card-secondary transition-all duration-200 cursor-pointer"
+                                className="bg-theme-card rounded-lg p-3 sm:p-4 border border-theme-border hover:bg-theme-card-secondary transition-all duration-200 cursor-pointer min-w-0 overflow-hidden"
                                 onClick={() => {
                                   if (transferMode) {
                                     if (
@@ -1990,21 +1991,21 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   }
                                 }}
                               >
-                                <div className="flex items-start gap-3">
-                                  {/* Player Avatar with Team Color */}
-                                  <div className="relative">
+                                <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                                  {/* Club kit */}
+                                  <div className="relative shrink-0">
                                     <div
-                                      className="w-12 h-12 rounded-lg flex items-center justify-center text-sm font-bold shadow-sm"
+                                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-sm"
                                       style={{
-                                        backgroundColor: teamBadge(teamColor.primary).bg,
-                                        color: teamBadge(teamColor.primary).ink,
+                                        background: `linear-gradient(135deg, ${teamColor.primary}26 0%, ${teamColor.primary}0d 100%)`,
                                       }}
                                     >
-                                      {player.web_name
-                                        .split(" ")
-                                        .map((n: string) => n[0])
-                                        .join("")
-                                        .slice(0, 2)}
+                                      <TeamJersey
+                                        kit={teamColor}
+                                        isGoalkeeper={player.element_type === 1}
+                                        title={team?.name}
+                                        className="w-8 h-8 sm:w-9 sm:h-9 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
+                                      />
                                     </div>
 
                                     {/* Position Badge */}
@@ -2041,14 +2042,14 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
                                   {/* Player Info */}
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <h4 className="font-semibold text-sm truncate">
+                                    <div className="flex items-center gap-2 mb-1 min-w-0">
+                                      <h4 className="font-semibold text-sm truncate min-w-0">
                                         {player.web_name}
                                       </h4>
                                       {teamPlayer.player_id ===
                                         userTeamData?.captain?.player_id && (
-                                        <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center">
-                                          <span className="text-white text-xs font-bold">
+                                        <div className="w-4 h-4 shrink-0 rounded-full bg-yellow-500 flex items-center justify-center">
+                                          <span className="text-white text-[10px] font-bold leading-none">
                                             C
                                           </span>
                                         </div>
@@ -2056,22 +2057,22 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                       {teamPlayer.player_id ===
                                         userTeamData?.vice_captain
                                           ?.player_id && (
-                                        <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
-                                          <span className="text-white text-xs font-bold">
+                                        <div className="w-4 h-4 shrink-0 rounded-full bg-blue-500 flex items-center justify-center">
+                                          <span className="text-white text-[10px] font-bold leading-none">
                                             V
                                           </span>
                                         </div>
                                       )}
                                     </div>
 
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate">
                                       {team?.name} • £
                                       {(player.now_cost / 10).toFixed(1)}m
                                     </p>
 
-                                    {/* Stats Row */}
-                                    <div className="flex items-center gap-4 text-xs">
-                                      <div className="flex items-center gap-1">
+                                    {/* Stats Row — wraps instead of spilling out of the card */}
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                                      <span className="inline-flex items-center gap-1 whitespace-nowrap">
                                         <span className="font-medium text-green-600 dark:text-green-400">
                                           {teamPlayer.isTransferIn
                                             ? 0
@@ -2081,16 +2082,16 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                         <span className="text-gray-400">
                                           pts
                                         </span>
-                                      </div>
-                                      <div className="flex items-center gap-1">
+                                      </span>
+                                      <span className="inline-flex items-center gap-1 whitespace-nowrap">
                                         <span className="font-medium">
                                           {parseFloat(player.form).toFixed(1)}
                                         </span>
                                         <span className="text-gray-400">
                                           form
                                         </span>
-                                      </div>
-                                      <div className="flex items-center gap-1">
+                                      </span>
+                                      <span className="inline-flex items-center gap-1 whitespace-nowrap">
                                         <span className="font-medium text-purple-600 dark:text-purple-400">
                                           {parseFloat(
                                             player.selected_by_percent
@@ -2100,7 +2101,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                         <span className="text-gray-400">
                                           own
                                         </span>
-                                      </div>
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -2122,7 +2123,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       </h3>
 
                       {/* Substitutes Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-3">
                         {currentTeamForDisplay
                           .filter((tp) => tp.position > 11)
                           .sort((a, b) => a.position - b.position)
@@ -2145,7 +2146,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   theme === "dark"
                                     ? "bg-gray-700/50"
                                     : "bg-gray-50"
-                                } rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-600 opacity-75 hover:opacity-100 transition-all duration-200 cursor-pointer`}
+                                } rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-600 opacity-75 hover:opacity-100 transition-all duration-200 cursor-pointer min-w-0 overflow-hidden`}
                                 onClick={() => {
                                   if (transferMode) {
                                     if (
@@ -2160,21 +2161,21 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   }
                                 }}
                               >
-                                <div className="flex items-start gap-2">
-                                  {/* Player Avatar with Team Color */}
-                                  <div className="relative">
+                                <div className="flex items-start gap-2 min-w-0">
+                                  {/* Club kit */}
+                                  <div className="relative shrink-0">
                                     <div
-                                      className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold shadow-sm"
+                                      className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm"
                                       style={{
-                                        backgroundColor: teamBadge(teamColor.primary).bg,
-                                        color: teamBadge(teamColor.primary).ink,
+                                        background: `linear-gradient(135deg, ${teamColor.primary}26 0%, ${teamColor.primary}0d 100%)`,
                                       }}
                                     >
-                                      {player.web_name
-                                        .split(" ")
-                                        .map((n: string) => n[0])
-                                        .join("")
-                                        .slice(0, 2)}
+                                      <TeamJersey
+                                        kit={teamColor}
+                                        isGoalkeeper={player.element_type === 1}
+                                        title={team?.name}
+                                        className="w-7 h-7 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
+                                      />
                                     </div>
 
                                     {/* Position Badge */}
@@ -2214,21 +2215,21 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                     <h4 className="font-semibold text-sm truncate">
                                       {player.web_name}
                                     </h4>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 truncate">
                                       {team?.short_name} • £
                                       {(player.now_cost / 10).toFixed(1)}m
                                     </p>
 
-                                    {/* Stats Row */}
-                                    <div className="flex items-center gap-3 text-xs">
-                                      <span className="font-medium text-green-600 dark:text-green-400">
+                                    {/* Stats Row — wraps instead of spilling out of the card */}
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
+                                      <span className="font-medium text-green-600 dark:text-green-400 whitespace-nowrap">
                                         {teamPlayer.isTransferIn
                                           ? 0
                                           : teamPlayer.total_points ||
                                             player.total_points}{" "}
                                         pts
                                       </span>
-                                      <span className="text-gray-400">
+                                      <span className="text-gray-400 whitespace-nowrap">
                                         {parseFloat(player.form).toFixed(1)}{" "}
                                         form
                                       </span>
@@ -2865,13 +2866,17 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 {/* Player Info */}
                                 <div className="col-span-3 flex items-center space-x-2">
                                   <div
-                                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold relative"
+                                    className="w-8 h-8 rounded-full flex items-center justify-center relative shrink-0"
                                     style={{
-                                      backgroundColor: teamBadge(teamColor.primary).bg,
-                                      color: teamBadge(teamColor.primary).ink,
+                                      background: `linear-gradient(135deg, ${teamColor.primary}26 0%, ${teamColor.primary}0d 100%)`,
                                     }}
                                   >
-                                    {player.web_name.charAt(0)}
+                                    <TeamJersey
+                                      kit={teamColor}
+                                      isGoalkeeper={player.element_type === 1}
+                                      title={team?.name}
+                                      className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
+                                    />
                                     {/* Transfer Status Indicators */}
                                     {transferMode && (
                                       <>
@@ -3044,13 +3049,17 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 {/* Player Info - Left side */}
                                 <div className="flex items-center space-x-2 flex-1 min-w-0">
                                   <div
-                                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold relative flex-shrink-0"
+                                    className="w-7 h-7 rounded-full flex items-center justify-center relative flex-shrink-0"
                                     style={{
-                                      backgroundColor: teamBadge(teamColor.primary).bg,
-                                      color: teamBadge(teamColor.primary).ink,
+                                      background: `linear-gradient(135deg, ${teamColor.primary}26 0%, ${teamColor.primary}0d 100%)`,
                                     }}
                                   >
-                                    {player.web_name.charAt(0)}
+                                    <TeamJersey
+                                      kit={teamColor}
+                                      isGoalkeeper={player.element_type === 1}
+                                      title={team?.name}
+                                      className="w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
+                                    />
                                     {/* Mobile Transfer Status Indicators */}
                                     {transferMode && (
                                       <>

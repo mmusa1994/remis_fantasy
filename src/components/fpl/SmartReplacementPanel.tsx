@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { FaTimes, FaExchangeAlt } from "react-icons/fa";
 import { getTeamColors } from "@/lib/team-colors";
 import TeamJersey from "./TeamJersey";
@@ -420,6 +420,8 @@ export default function SmartReplacementPanel({
   const [showHelp, setShowHelp] = useState(false);
   const [burstId, setBurstId] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  // Sheet is dragged only by its handle, so the content can scroll freely
+  const dragControls = useDragControls();
 
   // Detect mobile so we can render as bottom-sheet instead of right drawer
   useEffect(() => {
@@ -589,7 +591,7 @@ export default function SmartReplacementPanel({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 bg-slate-900/30 dark:bg-black/50 backdrop-blur-[2px] z-40"
+            className="fixed inset-0 bg-slate-950/50 dark:bg-black/70 backdrop-blur-sm z-[60]"
             onClick={onClose}
           />
 
@@ -601,6 +603,8 @@ export default function SmartReplacementPanel({
             exit={isMobile ? { y: "100%" } : { x: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 280 }}
             drag={isMobile ? "y" : false}
+            dragControls={dragControls}
+            dragListener={false}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.4 }}
             onDragEnd={(_, info) => {
@@ -608,18 +612,21 @@ export default function SmartReplacementPanel({
                 onClose();
               }
             }}
-            className="fixed z-50 flex flex-col overflow-hidden bg-gradient-to-b from-white via-slate-50/80 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/40 shadow-2xl
-              inset-x-0 bottom-0 top-auto max-h-[88vh] rounded-t-2xl border-t border-x-0 border-b-0 border-slate-200/70 dark:border-slate-700/60
+            className="fixed z-[70] flex flex-col overflow-hidden max-sm:block max-sm:overflow-y-auto max-sm:overscroll-contain bg-white dark:bg-slate-950 shadow-2xl
+              inset-x-0 bottom-0 top-auto max-h-[85dvh] rounded-t-3xl pb-[env(safe-area-inset-bottom)] border-t border-x-0 border-b-0 border-slate-200/70 dark:border-slate-700/60
               sm:inset-x-auto sm:bottom-4 sm:top-20 sm:right-4 sm:left-auto sm:w-[480px] sm:max-h-none sm:rounded-2xl sm:border sm:border-x sm:border-y"
           >
             {/* Mobile drag handle */}
             {isMobile && (
-              <div className="sm:hidden flex items-center justify-center pt-2 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
+              <div
+                onPointerDown={(e) => dragControls.start(e)}
+                className="sm:hidden sticky top-0 z-20 flex items-center justify-center pt-2.5 pb-2 shrink-0 cursor-grab active:cursor-grabbing touch-none bg-white/95 dark:bg-slate-950/95 backdrop-blur"
+              >
                 <span className="block w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
               </div>
             )}
             {/* Header */}
-            <div className="relative px-5 pt-5 pb-3 border-b border-slate-200/70 dark:border-slate-700/60">
+            <div className="relative px-4 pt-3 sm:px-5 sm:pt-5 pb-3 border-b border-slate-200/70 dark:border-slate-700/60">
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${positionAccent}`} />
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">
@@ -742,7 +749,7 @@ export default function SmartReplacementPanel({
                 </div>
               </div>
               {availableChips.length > 0 && (
-                <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">{t("fplDashboard.smartReplace.available", "Available")}: {availableChips.map((c) => CHIP_LABEL[c]).join(" · ")}</p>
+                <p className="hidden sm:block mt-1 text-[10px] text-slate-400 dark:text-slate-500">{t("fplDashboard.smartReplace.available", "Available")}: {availableChips.map((c) => CHIP_LABEL[c]).join(" · ")}</p>
               )}
             </div>
 
