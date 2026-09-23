@@ -10,7 +10,7 @@
   "freeAccountIncludes": "Besplatan račun uključuje:",
   "personalizedAdvice": "Personalizovane FPL savjete",
   "realTimeData": "Podatke u realnom vremenu",
-  "freeQuestions": "Besplatna Pitanja", 
+  "freeQuestions": "Besplatna Pitanja",
   "weeklyAllowance": "Sedmična kvota",
   "remaining": "preostalo",
   "resetsOn": "Resetuje se",
@@ -21,7 +21,7 @@
   "apiKeyDescription": "Korišćenje vašeg API ključa uklanja nedeljno ograničenje i omogućava neograničena pitanja.",
   "readyToHelp": "Spreman sam da pomognem sa vašim FPL timom!",
   "askAboutStrategies": "Pitate me o igračima, transferima, kapitenima ili strategijama za sezonu 2026/27.",
-  "inputPlaceholder": "Pitate o FPL igračima, transferima, kapitenima...",
+  "inputPlaceholder": "Pitaj o FPL igračima, transferima, kapitenima...",
   "send": "Pošalji",
   "exampleQuestionsTitle": "💡 Primeri Pitanja:",
   "exampleQuestions": {
@@ -34,5 +34,16 @@
   "loadingTitle": "Učitavam AI Analizu Tima",
   "loadingDescription": "Priprema vašeg FPL asistenta...",
   "errorMessage": "Izvinjavam se, došlo je do greške. Molim pokušajte ponovo.",
-  "rateLimitMessage": "Nedeljno ograničenje je dosegnuto. Molim koristite svoj OpenAI API ključ da nastavite."
+  "rateLimitMessage": "Nedeljno ograničenje je dosegnuto. Molim koristite svoj OpenAI API ključ da nastavite.",
+  "freeQueriesPerWeek_one": "{{count}} AI pitanje sedmično",
+  "freeQueriesPerWeek_other": "{{count}} AI pitanja sedmično",
+  "freeQueriesPerWeek_few": "{{count}} AI pitanja sedmično",
+  "analyzing": "Analiziram...",
+  "confirmQuestion": "Potvrdi pitanje",
+  "confirmDescription": "Da li si siguran da je tvoje pitanje vezano za trenutnu Fantasy Premier League sezonu?",
+  "warningMessage": "Upozorenje: ako pitanje nije vezano za Fantasy, potrošićeš besplatno pitanje, a nećeš dobiti Fantasy odgovor. Naš FPL Guru odgovara samo na pitanja o trenutnoj FPL sezoni.",
+  "cancel": "Otkaži",
+  "confirm": "Potvrdi i pošalji",
+  "yourQuestion": "Tvoje pitanje:",
+  "saveManagerIdError": "Greška pri spremanju Manager ID-a: {{message}}"
 }

@@ -527,7 +527,7 @@ const Navbar = React.memo(function Navbar() {
                 }`}
               >
                 <FaGoogle className="w-4 h-4 text-red-500" />
-                {t("signIn")} with Google
+                {t("continueWithGoogle")}
               </button>
 
               <Link href="/login" onClick={() => setUserMenuOpen(false)}>
@@ -539,7 +539,7 @@ const Navbar = React.memo(function Navbar() {
                   }`}
                 >
                   <LogIn className="w-4 h-4" />
-                  {t("signIn")} with Email
+                  {t("signInWithEmail")}
                 </div>
               </Link>
 
@@ -1051,7 +1051,7 @@ const Navbar = React.memo(function Navbar() {
                   <p
                     className={`text-center text-sm mb-3 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
                   >
-                    {t("signIn")} to access all features
+                    {t("signInToAccessAll")}
                   </p>
 
                   <div className="space-y-2">

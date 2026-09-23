@@ -1,299 +1,460 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TbTrendingUp, TbTrendingDown, TbTransfer } from "react-icons/tb";
-import { MdRefresh, MdInfo } from "react-icons/md";
+import {
+  ArrowLeftRight,
+  Lock,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 
-import { getTeamColors } from "@/lib/team-colors";
+import { getPlayerTeamColors } from "@/lib/team-colors";
+import {
+  Chip,
+  EmptyState,
+  GhostButton,
+  ListRow,
+  Panel,
+  PlayerCell,
+  PosTag,
+  Segmented,
+  SkeletonRows,
+  StatTile,
+  cx,
+  formatCompact,
+  formatPrice,
+} from "./live/ui";
 
-interface TransferData {
-  transfers_in?: Array<{
-    id: number;
-    web_name: string;
-    first_name: string;
-    second_name: string;
-    team: number;
-    position: number;
-    now_cost: number;
-    transfers_in_event: number;
-    transfers_in: number;
-  }>;
-  transfers_out?: Array<{
-    id: number;
-    web_name: string;
-    first_name: string;
-    second_name: string;
-    team: number;
-    position: number;
-    now_cost: number;
-    transfers_out_event: number;
-    transfers_out: number;
-  }>;
+interface TransferPlayer {
+  id: number;
+  web_name: string;
+  team: number;
+  team_code?: number;
+  position: number;
+  element_type?: number;
+  now_cost: number;
+  cost_change_event?: number;
+  selected_by_percent?: number;
+  transfers_in_event: number;
+  transfers_out_event: number;
+  price_change_percent?: number | null;
+  price_change_projected?: number | null;
+  price_change_locked_until?: string | null;
 }
 
-export default function TransfersMarket() {
-  const { t } = useTranslation("fpl");
-  const [transfersData, setTransfersData] = useState<TransferData>({});
-  const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+interface TransferData {
+  transfers_in?: TransferPlayer[];
+  transfers_out?: TransferPlayer[];
+  next_event?: {
+    id: number;
+    deadline_time: string;
+    transfers_made: number;
+  } | null;
+}
 
-  const fetchTransfers = async () => {
+interface TransfersMarketProps {
+  /** Player ids in the manager's squad — flagged in both lists. */
+  squadPlayerIds?: number[];
+}
+
+type Direction = "in" | "out";
+
+const COLLAPSED_ROWS = 10;
+
+const localeFor = (lang?: string) => (lang?.startsWith("bs") ? "sr-Latn-BA" : "en-GB");
+
+export default function TransfersMarket({ squadPlayerIds }: TransfersMarketProps) {
+  const { t, i18n } = useTranslation("fpl");
+  const locale = localeFor(i18n.language);
+
+  const [data, setData] = useState<TransferData>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [view, setView] = useState<Direction>("in");
+  const [expanded, setExpanded] = useState<Record<Direction, boolean>>({
+    in: false,
+    out: false,
+  });
+
+  const fetchTransfers = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetch("/api/fpl/transfers");
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          setTransfersData(result.data);
-          setLastUpdated(result.timestamp);
-        } else {
-          throw new Error(result.error || "Failed to fetch transfers data");
-        }
-      } else {
-        throw new Error(`API request failed: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`API request failed: ${response.status}`);
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || "Failed to fetch transfers data");
+      setData(result.data || {});
+      setLastUpdated(result.timestamp || new Date().toISOString());
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
       console.error("💥 [FRONTEND] Error loading transfers:", err);
-      setError(message);
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
-      setIsInitialLoad(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchTransfers();
-  }, []);
+  }, [fetchTransfers]);
 
-  const getPositionName = (position: number) => {
-    switch (position) {
-      case 1: return "GKP";
-      case 2: return "DEF";  
-      case 3: return "MID";
-      case 4: return "FWD";
-      default: return "UNK";
-    }
-  };
+  const squad = useMemo(() => new Set(squadPlayerIds || []), [squadPlayerIds]);
 
-  const getPositionColor = (position: number) => {
-    switch (position) {
-      case 1: return "bg-yellow-500";
-      case 2: return "bg-green-500";
-      case 3: return "bg-blue-500";
-      case 4: return "bg-red-500";
-      default: return "bg-gray-500";
-    }
-  };
+  // Owned players being sold en masse are the ones whose price is at risk.
+  const ownedSelling = useMemo(
+    () =>
+      (data.transfers_out || [])
+        .slice(0, COLLAPSED_ROWS)
+        .filter((p) => squad.has(p.id))
+        .map((p) => p.web_name),
+    [data.transfers_out, squad]
+  );
 
-  const formatCost = (cost: number) => {
-    return (cost / 10).toFixed(1);
-  };
+  const hasData = !!(data.transfers_in?.length || data.transfers_out?.length);
+  const nextGw = data.next_event?.id;
 
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(1)}M`;
-    } else if (num >= 1000) {
-      return `${(num / 1000).toFixed(0)}k`;
-    }
-    return num.toString();
-  };
+  const refreshButton = (
+    <GhostButton
+      onClick={fetchTransfers}
+      disabled={loading}
+      title={t("fplLive.refresh", "Refresh")}
+    >
+      <RefreshCw className={loading ? "animate-spin" : ""} />
+      <span className="hidden sm:inline">{t("fplLive.refresh", "Refresh")}</span>
+    </GhostButton>
+  );
 
-  if (isInitialLoad || (loading && !transfersData.transfers_in && !transfersData.transfers_out)) {
+  if (loading && !hasData) {
     return (
-      <div className="bg-theme-card rounded-lg border border-theme-border p-4 space-y-2 theme-transition">
-        {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="h-10 bg-theme-card-secondary rounded animate-pulse" />
-        ))}
-      </div>
+      <Panel
+        title={t("fplLive.ui.transfers.title", "Transfer market")}
+        subtitle={t("fplLive.ui.transfers.subtitle", "Most transferred players since the last deadline")}
+        icon={<ArrowLeftRight />}
+        flush
+      >
+        <SkeletonRows rows={8} />
+      </Panel>
     );
   }
 
-  if (error) {
+  if (error && !hasData) {
     return (
-      <div className="bg-theme-card border border-theme-border rounded-lg p-6">
-        <div className="flex items-center gap-3">
-          <MdInfo className="text-red-600 dark:text-red-400 text-xl" />
-          <div>
-            <h3 className="font-semibold text-red-800 dark:text-red-300">
-              {t("fplLive.transfers.error")}
-            </h3>
-            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-          </div>
-        </div>
-      </div>
+      <Panel icon={<ArrowLeftRight />} title={t("fplLive.ui.transfers.title", "Transfer market")}>
+        <EmptyState
+          icon={<ArrowLeftRight />}
+          title={t("fplLive.ui.transfers.error", "Couldn't load transfers")}
+          text={t("fplLive.ui.pages.retryHint", "Check your connection and try again.")}
+          action={
+            <GhostButton onClick={fetchTransfers}>
+              <RefreshCw />
+              {t("fplLive.ui.transfers.retry", "Try again")}
+            </GhostButton>
+          }
+        />
+      </Panel>
     );
   }
+
+  const deadline = data.next_event?.deadline_time
+    ? new Date(data.next_event.deadline_time)
+    : null;
+
+  const renderList = (direction: Direction) => {
+    const players = (direction === "in" ? data.transfers_in : data.transfers_out) || [];
+    const isExpanded = expanded[direction];
+    const visible = isExpanded ? players : players.slice(0, COLLAPSED_ROWS);
+    const Icon = direction === "in" ? TrendingUp : TrendingDown;
+
+    return (
+      <Panel
+        key={direction}
+        className={cx(view === direction ? "block" : "hidden", "lg:block")}
+        icon={<Icon />}
+        title={
+          direction === "in"
+            ? t("fplLive.ui.transfers.mostIn", "Most transferred in")
+            : t("fplLive.ui.transfers.mostOut", "Most transferred out")
+        }
+        subtitle={
+          nextGw
+            ? t("fplLive.ui.transfers.forGw", "For GW{{gw}}", { gw: nextGw })
+            : undefined
+        }
+        flush
+      >
+        {players.length === 0 ? (
+          <EmptyState
+            icon={<ArrowLeftRight />}
+            title={t("fplLive.ui.transfers.noData", "No transfer data yet")}
+          />
+        ) : (
+          <>
+            <div className="divide-y divide-theme-border border-t border-theme-border">
+              {visible.map((player, index) => (
+                <TransferRow
+                  key={player.id}
+                  rank={index + 1}
+                  player={player}
+                  direction={direction}
+                  owned={squad.has(player.id)}
+                />
+              ))}
+            </div>
+            {players.length > COLLAPSED_ROWS && (
+              <button
+                type="button"
+                onClick={() =>
+                  setExpanded((prev) => ({ ...prev, [direction]: !prev[direction] }))
+                }
+                className="w-full border-t border-theme-border py-2.5 text-xs font-medium text-theme-text-secondary transition-colors hover:bg-theme-card-secondary"
+              >
+                {isExpanded
+                  ? t("fplLive.ui.transfers.showLess", "Show less")
+                  : t("fplLive.ui.transfers.showAll", "Show all {{count}}", {
+                      count: players.length,
+                    })}
+              </button>
+            )}
+          </>
+        )}
+      </Panel>
+    );
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-theme-card border border-theme-border rounded-lg p-4 sm:p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <TbTransfer className="text-xl sm:text-2xl text-theme-foreground flex-shrink-0" />
-            <div className="min-w-0">
-              <h2 className="text-lg sm:text-xl font-bold text-theme-foreground">
-                {t("fplLive.transfers.title")}
-              </h2>
-              <p className="text-theme-text-secondary text-xs sm:text-sm">
-                {t("fplLive.transfers.subtitle")}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={fetchTransfers}
-            disabled={loading}
-            className="flex items-center gap-1.5 sm:gap-2 bg-theme-card-secondary hover:bg-theme-border disabled:opacity-50 text-theme-foreground font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-lg transition-all duration-200 text-sm sm:text-base"
-          >
-            <MdRefresh className={`text-base sm:text-lg ${loading ? "animate-spin" : ""}`} />
-            <span className="text-xs sm:text-sm">{t("fplLive.refresh")}</span>
-          </button>
+    <div className="space-y-3 sm:space-y-4">
+      <Panel
+        title={t("fplLive.ui.transfers.title", "Transfer market")}
+        subtitle={
+          nextGw
+            ? t(
+                "fplLive.ui.transfers.subtitleForGw",
+                "Transfers made for GW{{gw}} since the last deadline",
+                { gw: nextGw }
+              )
+            : t("fplLive.ui.transfers.subtitle", "Most transferred players since the last deadline")
+        }
+        icon={<ArrowLeftRight />}
+        action={refreshButton}
+      >
+        <div className="grid grid-cols-2 gap-2">
+          <StatTile
+            label={
+              nextGw
+                ? t("fplLive.ui.transfers.transfersMade", "Transfers for GW{{gw}}", { gw: nextGw })
+                : t("fplLive.ui.transfers.transfersMadeShort", "Transfers made")
+            }
+            value={formatCompact(data.next_event?.transfers_made ?? null)}
+          />
+          <StatTile
+            label={
+              nextGw
+                ? t("fplLive.ui.transfers.deadline", "GW{{gw}} deadline", { gw: nextGw })
+                : t("fplLive.ui.transfers.deadlineShort", "Deadline")
+            }
+            value={
+              deadline
+                ? deadline.toLocaleDateString(locale, { day: "numeric", month: "short" })
+                : "—"
+            }
+            hint={
+              deadline
+                ? deadline.toLocaleString(locale, {
+                    weekday: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : undefined
+            }
+          />
         </div>
-        {lastUpdated && (
-          <div className="mt-3 sm:mt-4 text-xs text-theme-text-secondary">
-            {t("fplLive.lastUpdated")}: {new Date(lastUpdated).toLocaleString()}
+
+        {ownedSelling.length > 0 && (
+          <div className="mt-3 flex items-start gap-2 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] px-3 py-2.5">
+            <TrendingDown className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-500" />
+            <p className="text-xs leading-snug text-theme-text-secondary">
+              {t(
+                "fplLive.ui.transfers.ownedSelling",
+                "Your players among the most sold: {{names}}. Their price could drop.",
+                { names: ownedSelling.join(", ") }
+              )}
+            </p>
           </div>
         )}
+
+        {lastUpdated && (
+          <p className="mt-3 text-[11px] text-theme-text-muted">
+            {t("fplLive.ui.transfers.updatedAt", "Updated {{time}}", {
+              time: new Date(lastUpdated).toLocaleTimeString(locale, {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            })}
+          </p>
+        )}
+      </Panel>
+
+      <Segmented<Direction>
+        className="lg:hidden"
+        value={view}
+        onChange={setView}
+        options={[
+          {
+            value: "in",
+            label: t("fplLive.ui.transfers.in", "In"),
+            count: data.transfers_in?.length,
+          },
+          {
+            value: "out",
+            label: t("fplLive.ui.transfers.out", "Out"),
+            count: data.transfers_out?.length,
+          },
+        ]}
+      />
+
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
+        {renderList("in")}
+        {renderList("out")}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Transfers In */}
-        <div className="bg-theme-card rounded-lg border border-theme-border theme-transition">
-          <div className="bg-theme-card border-b border-theme-border p-3 sm:p-4 rounded-t-lg">
-            <div className="flex items-center gap-3">
-              <TbTrendingUp className="text-green-600 dark:text-green-400 text-lg" />
-              <div>
-                <h3 className="text-base font-semibold text-theme-foreground">
-                  {t("fplLive.transfers.mostTransferredIn")}
-                </h3>
-                <p className="text-theme-text-secondary text-xs">
-                  {t("fplLive.transfers.popularAdditions")}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-4">
-            {transfersData.transfers_in && transfersData.transfers_in.length > 0 ? (
-              <div className="space-y-3">
-                {transfersData.transfers_in.slice(0, 10).map((player, index) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-3 bg-theme-card-secondary rounded-lg hover:bg-theme-border transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col items-center">
-                        <span className="text-sm font-semibold text-theme-text-secondary">
-                          #{index + 1}
-                        </span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium text-white ${getPositionColor(player.position)}`}>
-                          {getPositionName(player.position)}
-                        </span>
-                      </div>
-                      <div className="w-2 h-8 rounded" style={{ backgroundColor: getTeamColors(player.team).primary }}></div>
-                      <div>
-                        <p className="font-semibold text-theme-foreground">
-                          {player.web_name}
-                          <span className="text-xs text-theme-text-secondary ml-1">
-                            ({getTeamColors(player.team).shortName})
-                          </span>
-                        </p>
-                        <p className="text-sm text-theme-text-secondary">
-                          £{formatCost(player.now_cost)}m
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-green-600 dark:text-green-400">
-                        +{formatNumber(player.transfers_in_event || 0)}
-                      </p>
-                      <p className="text-xs text-theme-text-secondary">
-                        {t("fplLive.transfers.thisGW")}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-theme-text-secondary">
-                {t("fplLive.transfers.noData")}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Transfers Out */}
-        <div className="bg-theme-card rounded-lg border border-theme-border theme-transition">
-          <div className="bg-theme-card border-b border-theme-border p-3 sm:p-4 rounded-t-lg">
-            <div className="flex items-center gap-3">
-              <TbTrendingDown className="text-red-600 dark:text-red-400 text-lg" />
-              <div>
-                <h3 className="text-base font-semibold text-theme-foreground">
-                  {t("fplLive.transfers.mostTransferredOut")}
-                </h3>
-                <p className="text-theme-text-secondary text-xs">
-                  {t("fplLive.transfers.popularRemovals")}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-4">
-            {transfersData.transfers_out && transfersData.transfers_out.length > 0 ? (
-              <div className="space-y-3">
-                {transfersData.transfers_out.slice(0, 10).map((player, index) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-3 bg-theme-card-secondary rounded-lg hover:bg-theme-border transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col items-center">
-                        <span className="text-sm font-semibold text-theme-text-secondary">
-                          #{index + 1}
-                        </span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium text-white ${getPositionColor(player.position)}`}>
-                          {getPositionName(player.position)}
-                        </span>
-                      </div>
-                      <div className="w-2 h-8 rounded" style={{ backgroundColor: getTeamColors(player.team).primary }}></div>
-                      <div>
-                        <p className="font-semibold text-theme-foreground">
-                          {player.web_name}
-                          <span className="text-xs text-theme-text-secondary ml-1">
-                            ({getTeamColors(player.team).shortName})
-                          </span>
-                        </p>
-                        <p className="text-sm text-theme-text-secondary">
-                          £{formatCost(player.now_cost)}m
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-red-600 dark:text-red-400">
-                        -{formatNumber(player.transfers_out_event || 0)}
-                      </p>
-                      <p className="text-xs text-theme-text-secondary">
-                        {t("fplLive.transfers.thisGW")}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-theme-text-secondary">
-                {t("fplLive.transfers.noData")}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <p className="px-1 text-[11px] leading-snug text-theme-text-muted">
+        {t(
+          "fplLive.ui.transfers.priceLegend",
+          "The small bar shows FPL's progress towards the player's next price change — at 100% the price moves."
+        )}
+      </p>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+function TransferRow({
+  rank,
+  player,
+  direction,
+  owned,
+}: {
+  rank: number;
+  player: TransferPlayer;
+  direction: Direction;
+  owned: boolean;
+}) {
+  const { t } = useTranslation("fpl");
+  const elementType = player.element_type ?? player.position;
+  const kit = getPlayerTeamColors({ team: player.team, team_code: player.team_code });
+  const count = direction === "in" ? player.transfers_in_event : player.transfers_out_event;
+  const priceMove = player.cost_change_event || 0;
+
+  return (
+    <ListRow highlighted={owned}>
+      <span className="w-5 shrink-0 text-center text-xs font-semibold tabular-nums text-theme-text-muted">
+        {rank}
+      </span>
+      <PlayerCell
+        name={player.web_name}
+        player={{ team: player.team, team_code: player.team_code, element_type: elementType }}
+        badges={
+          owned ? (
+            <Chip tone="accent" className="shrink-0">
+              {t("fplLive.ui.transfers.inSquad", "In your team")}
+            </Chip>
+          ) : null
+        }
+        meta={
+          <>
+            <span className="shrink-0 font-medium text-theme-text-secondary">{kit.shortName}</span>
+            <PosTag type={elementType} className="shrink-0" />
+            <span className="shrink-0 tabular-nums">{formatPrice(player.now_cost)}</span>
+            {priceMove !== 0 && (
+              <span
+                className={cx(
+                  "shrink-0 font-semibold tabular-nums",
+                  priceMove > 0 ? "text-emerald-500" : "text-rose-500"
+                )}
+              >
+                {priceMove > 0 ? "▲" : "▼"}
+                {Math.abs(priceMove / 10).toFixed(1)}
+              </span>
+            )}
+          </>
+        }
+      />
+      <div className="flex w-[4.5rem] shrink-0 flex-col items-end gap-1">
+        <span
+          className={cx(
+            "text-sm font-semibold tabular-nums",
+            direction === "in" ? "text-emerald-500" : "text-rose-500"
+          )}
+        >
+          {direction === "in" ? "+" : "−"}
+          {formatCompact(count || 0)}
+        </span>
+        <PriceProgress
+          percent={player.price_change_percent}
+          projected={player.price_change_projected}
+          locked={!!player.price_change_locked_until}
+        />
+      </div>
+    </ListRow>
+  );
+}
+
+/** FPL's progress towards the next price change, as a tiny bar. */
+function PriceProgress({
+  percent,
+  projected,
+  locked,
+}: {
+  percent?: number | null;
+  projected?: number | null;
+  locked: boolean;
+}) {
+  const { t } = useTranslation("fpl");
+
+  if (locked) {
+    return (
+      <span
+        className="inline-flex items-center gap-1 text-[10px] text-theme-text-muted"
+        title={t("fplLive.ui.transfers.priceLocked", "Price change locked")}
+      >
+        <Lock className="h-3 w-3" />
+      </span>
+    );
+  }
+  if (typeof percent !== "number") return null;
+
+  const rising = percent >= 0;
+  const due = typeof projected === "number" && Math.abs(projected) >= 100 && Math.sign(projected) === Math.sign(percent);
+
+  if (due) {
+    return (
+      <Chip tone={rising ? "positive" : "negative"}>
+        {rising
+          ? t("fplLive.ui.transfers.risesTonight", "Rise tonight")
+          : t("fplLive.ui.transfers.fallsTonight", "Fall tonight")}
+      </Chip>
+    );
+  }
+
+  const width = Math.min(100, Math.abs(percent));
+  return (
+    <span
+      className="flex items-center gap-1.5"
+      title={t("fplLive.ui.transfers.priceProgress", "Progress to next price change")}
+    >
+      <span className="h-1 w-8 overflow-hidden rounded-full bg-theme-card-secondary">
+        <span
+          className={cx("block h-full rounded-full", rising ? "bg-emerald-500" : "bg-rose-500")}
+          style={{ width: `${width}%` }}
+        />
+      </span>
+      <span className="text-[10px] font-medium tabular-nums text-theme-text-muted">
+        {Math.round(Math.abs(percent))}%
+      </span>
+    </span>
   );
 }

@@ -8,6 +8,16 @@ import { LuGift } from "react-icons/lu";
 import { FaTshirt } from "react-icons/fa";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
+import { dateLocale } from "@/components/fpl/live/ui";
+
+// League names come from static Bosnian data — show them in the UI language
+const LEAGUE_NAME_KEYS: Record<string, string> = {
+  premium: "fplLive.premiumLeague",
+  standard: "fplLive.standardLeague",
+  h2h: "fplLive.h2hLeague",
+  h2h2: "fplLive.h2h2League",
+  free: "fplLive.freeLeague",
+};
 
 export interface TablePlayer {
   id: string;
@@ -57,7 +67,10 @@ export default function ReusableLeagueTable({
   className = "",
 }: ReusableLeagueTableProps) {
   const { theme } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const displayName = LEAGUE_NAME_KEYS[leagueType]
+    ? t(LEAGUE_NAME_KEYS[leagueType])
+    : leagueName;
 
   const getLeagueColors = (leagueType: string) => {
     switch (leagueType) {
@@ -281,10 +294,10 @@ export default function ReusableLeagueTable({
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <h2 className="text-2xl md:text-3xl font-bold text-center text-theme-foreground mb-2">
-          {leagueName}
+          {displayName}
         </h2>
         <p className="text-center text-theme-text-secondary">
-          {t("premiumLeague.subtitle").replace("- 50", `- ${players.length}`)}
+          {t("premiumLeague.standingsCount", { count: players.length })}
         </p>
         <div className="text-center text-sm text-theme-text-muted mt-2">
           {t("premiumLeague.prizePool")}: {totalPrizeFundKM} KM /{" "}
@@ -559,6 +572,12 @@ export default function ReusableLeagueTable({
                 ) {
                   return t("prizes.freeEntry");
                 }
+                if (prize.description === "Pehar + Medalja + Plaketa") {
+                  return t("prizes.trophyMedalPlaque");
+                }
+                if (prize.description === "Medalja + Plaketa") {
+                  return t("prizes.medalPlaque");
+                }
                 return prize.description;
               }
               return "";
@@ -647,7 +666,7 @@ export default function ReusableLeagueTable({
             <>
               <div className="col-span-1 text-center text-xs">W/D/L</div>
               <div className="col-span-2 text-center text-xs">
-                Overall {t("premiumLeague.tableHeaders.points")}
+                {t("premiumLeague.tableHeaders.overallPoints")}
               </div>
               <div className="col-span-1 text-center text-xs">
                 H2H {t("premiumLeague.tableHeaders.points")}
@@ -825,7 +844,7 @@ export default function ReusableLeagueTable({
           className={`p-2 md:p-4 text-center text-xs md:text-sm border-t-2 bg-theme-secondary border-${colors.border} text-theme-text-muted`}
         >
           {t("premiumLeague.lastUpdated")}:{" "}
-          {new Date().toLocaleDateString("sr-RS")}
+          {new Date().toLocaleDateString(dateLocale(i18n.language))}
         </div>
       </motion.div>
     </motion.div>

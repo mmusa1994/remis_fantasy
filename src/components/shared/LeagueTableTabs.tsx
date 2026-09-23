@@ -92,7 +92,7 @@ export default function LeagueTableTabs() {
           `/api/premier-league-tables?season=${season}`
         );
         if (!response.ok) {
-          throw new Error("Failed to fetch tables");
+          throw new Error(t("fplLive.leagueTableErrorLoading"));
         }
 
         const data = await response.json();
@@ -115,7 +115,7 @@ export default function LeagueTableTabs() {
     // Special handling for free league if no static data found
     if (leagueType === "free") {
       const freeFallbackData = {
-        name: "Free Liga",
+        name: t("fplLive.freeLeague"),
         type: "free" as const,
         totalPrizeFundKM: 0,
         totalPrizeFundEUR: 0,
@@ -327,8 +327,10 @@ export default function LeagueTableTabs() {
               return (
                 <div className="py-4 flex justify-center">
                   <LoadingCard 
-                    title={`Loading ${tabs.find((t) => t.id === activeTab)?.label}`}
-                    description="Please wait while we fetch the latest league standings"
+                    title={t("fplLive.loadingLeague", {
+                      league: tabs.find((tab) => tab.id === activeTab)?.label,
+                    })}
+                    description={t("fplLive.loadingLeagueDesc")}
                     className="w-full max-w-md mx-auto"
                   />
                 </div>
@@ -380,8 +382,9 @@ export default function LeagueTableTabs() {
                       theme === "dark" ? "text-gray-400" : "text-gray-600"
                     }
                   >
-                    Nema podataka za{" "}
-                    {tabs.find((t) => t.id === activeTab)?.label}.
+                    {t("fplLive.noDataFor", {
+                      league: tabs.find((tab) => tab.id === activeTab)?.label,
+                    })}
                   </p>
                 </div>
               );

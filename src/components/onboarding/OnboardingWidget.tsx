@@ -40,9 +40,7 @@ const OnboardingWidget = () => {
                   : "bg-white text-gray-900 border border-gray-200"
               }`}
             >
-              {t("navigation.skip")
-                ? "Need help? Take the tour!"
-                : "Need help? Take the tour!"}
+              {t("widget.help")}
               {/* Arrow */}
               <div
                 className={`absolute bottom-0 right-6 transform translate-y-1/2 rotate-45 w-2 h-2 ${
@@ -75,7 +73,7 @@ const OnboardingWidget = () => {
             damping: 18,
             delay: 1,
           }}
-          aria-label="Help"
+          aria-label={t("widget.helpLabel")}
         >
           <div className="relative flex items-center justify-center w-full h-full">
             <HelpCircle className="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity" />

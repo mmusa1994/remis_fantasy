@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 type Tournament = { id: string; name: string };
 type Column = {
@@ -40,6 +41,7 @@ export default function EternalTableOwnerTab({
   tournament: Tournament;
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation("predictor");
   const dark = theme === "dark";
   const [activeType, setActiveType] = useState<TableType>("points");
 
@@ -58,10 +60,10 @@ export default function EternalTableOwnerTab({
           <h2
             className={`text-base font-bold ${dark ? "text-white" : "text-gray-900"}`}
           >
-            Vječna tabela
+            {t("eternal.owner.title")}
           </h2>
           <p className={`text-xs ${dark ? "text-gray-500" : "text-gray-500"}`}>
-            Historijske kolone i rezultati po igraču
+            {t("eternal.owner.subtitle")}
           </p>
         </div>
       </div>
@@ -73,8 +75,8 @@ export default function EternalTableOwnerTab({
         }`}
       >
         {([
-          { type: "points" as const, label: "Tabela poena", Icon: Trophy },
-          { type: "exact" as const, label: "Tabela tačnih rezultata", Icon: Target },
+          { type: "points" as const, label: t("eternal.tabPoints"), Icon: Trophy },
+          { type: "exact" as const, label: t("eternal.tabExact"), Icon: Target },
         ]).map(({ type, label, Icon }) => (
           <button
             key={type}
@@ -117,6 +119,7 @@ function EternalTablePanel({
   tableType: TableType;
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation("predictor");
   const dark = theme === "dark";
   const { showToast: globalToast } = useToast();
   const showToast = useCallback(
@@ -160,15 +163,15 @@ function EternalTablePanel({
         `/api/predictor/owner/eternal-table?tournament_id=${tournament.id}${ttParam}`
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to load");
+      if (!res.ok) throw new Error(data?.error || t("eternal.owner.loadFailed"));
       setColumns(data.columns || []);
       setEntries(data.entries || []);
     } catch (e: any) {
-      showToast(e.message || "Greška pri učitavanju", false);
+      showToast(e.message || t("eternal.owner.loadFailed"), false);
     } finally {
       setLoading(false);
     }
-  }, [tournament.id, ttParam, showToast]);
+  }, [tournament.id, ttParam, showToast, t]);
 
   useEffect(() => {
     fetchAll();
@@ -187,16 +190,16 @@ function EternalTablePanel({
           body: fd,
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || "Upload failed");
+        if (!res.ok) throw new Error(data?.error || t("eternal.owner.uploadFailed"));
         return data.url as string;
       } catch (e: any) {
-        showToast(e.message || "Upload neuspješan", false);
+        showToast(e.message || t("eternal.owner.uploadFailed"), false);
         return null;
       } finally {
         setUploading(false);
       }
     },
-    [tournament.id, showToast]
+    [tournament.id, showToast, t]
   );
 
   const addColumn = useCallback(async () => {
@@ -218,24 +221,22 @@ function EternalTablePanel({
         }
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed");
+      if (!res.ok) throw new Error(data?.error || t("eternal.owner.actionFailed"));
       setColumns((prev) => [...prev, data]);
       setNewColLabel("");
       setNewColLogoUrl("");
-      showToast("Kolona dodata");
+      showToast(t("eternal.owner.columnAdded"));
     } catch (e: any) {
       showToast(e.message, false);
     } finally {
       setCreatingCol(false);
     }
-  }, [newColLabel, newColLogoUrl, tournament.id, columns.length, ttBody, showToast]);
+  }, [newColLabel, newColLogoUrl, tournament.id, columns.length, ttBody, showToast, t]);
 
   const deleteColumn = useCallback(
     async (col: Column) => {
       if (
-        !window.confirm(
-          `Obrisati kolonu "${col.label}"? Sve vrijednosti će biti uklonjene.`
-        )
+        !window.confirm(t("eternal.owner.confirmDeleteColumn", { label: col.label }))
       )
         return;
       try {
@@ -244,7 +245,7 @@ function EternalTablePanel({
           { method: "DELETE" }
         );
         const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || "Failed");
+        if (!res.ok) throw new Error(data?.error || t("eternal.owner.actionFailed"));
         setColumns((prev) => prev.filter((c) => c.id !== col.id));
         setEntries((prev) =>
           prev.map((e) => {
@@ -252,12 +253,12 @@ function EternalTablePanel({
             return { ...e, values: rest };
           })
         );
-        showToast("Kolona obrisana");
+        showToast(t("eternal.owner.columnDeleted"));
       } catch (e: any) {
         showToast(e.message, false);
       }
     },
-    [ttParam, showToast]
+    [ttParam, showToast, t]
   );
 
   const startEditCol = (col: Column) => {
@@ -286,12 +287,12 @@ function EternalTablePanel({
         }
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed");
+      if (!res.ok) throw new Error(data?.error || t("eternal.owner.actionFailed"));
       setColumns((prev) =>
         prev.map((c) => (c.id === editingColId ? data : c))
       );
       cancelEditCol();
-      showToast("Kolona snimljena");
+      showToast(t("eternal.owner.columnSaved"));
     } catch (e: any) {
       showToast(e.message, false);
     }
@@ -341,16 +342,16 @@ function EternalTablePanel({
         }
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed");
+      if (!res.ok) throw new Error(data?.error || t("eternal.owner.actionFailed"));
       setEntries((prev) => [...prev, data]);
       setNewEntryName("");
-      showToast("Igrač dodat");
+      showToast(t("eternal.owner.playerAdded"));
     } catch (e: any) {
       showToast(e.message, false);
     } finally {
       setCreatingEntry(false);
     }
-  }, [newEntryName, tournament.id, entries.length, ttBody, showToast]);
+  }, [newEntryName, tournament.id, entries.length, ttBody, showToast, t]);
 
   const startEditEntry = (entry: Entry) => {
     setEditingEntryId(entry.id);
@@ -395,28 +396,28 @@ function EternalTablePanel({
         }
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed");
+      if (!res.ok) throw new Error(data?.error || t("eternal.owner.actionFailed"));
       setEntries((prev) =>
         prev.map((e) => (e.id === editingEntryId ? data : e))
       );
       cancelEditEntry();
-      showToast("Igrač snimljen");
+      showToast(t("eternal.owner.playerSaved"));
     } catch (e: any) {
       showToast(e.message, false);
     }
   };
 
   const deleteEntry = async (entry: Entry) => {
-    if (!window.confirm(`Obrisati igrača "${entry.player_name}"?`)) return;
+    if (!window.confirm(t("eternal.owner.confirmDeletePlayer", { name: entry.player_name }))) return;
     try {
       const res = await fetch(
         `/api/predictor/owner/eternal-table?resource=entries&id=${entry.id}${ttParam}`,
         { method: "DELETE" }
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed");
+      if (!res.ok) throw new Error(data?.error || t("eternal.owner.actionFailed"));
       setEntries((prev) => prev.filter((e) => e.id !== entry.id));
-      showToast("Igrač obrisan");
+      showToast(t("eternal.owner.playerDeleted"));
     } catch (e: any) {
       showToast(e.message, false);
     }
@@ -483,7 +484,7 @@ function EternalTablePanel({
             dark ? "text-gray-400" : "text-gray-600"
           }`}
         >
-          Kolone (takmičenja)
+          {t("eternal.owner.columnsHeading")}
         </h3>
 
         <ul className="mb-4 space-y-2">
@@ -525,13 +526,13 @@ function EternalTablePanel({
                       value={editingColLabel}
                       onChange={(e) => setEditingColLabel(e.target.value)}
                       className={`${inputCls} flex-1 min-w-[140px]`}
-                      placeholder="Naziv kolone"
+                      placeholder={t("eternal.owner.columnName")}
                     />
                     <input
                       value={editingColLogoUrl}
                       onChange={(e) => setEditingColLogoUrl(e.target.value)}
                       className={`${inputCls} flex-1 min-w-[200px]`}
-                      placeholder="URL loga (opciono)"
+                      placeholder={t("eternal.owner.logoUrlOptional")}
                     />
                     <input
                       ref={editFileInputRef}
@@ -554,7 +555,7 @@ function EternalTablePanel({
                       className={subtleBtn}
                     >
                       <Upload className="h-3.5 w-3.5" />
-                      {uploading ? "..." : "Upload"}
+                      {uploading ? "..." : t("eternal.owner.upload")}
                     </button>
                     <button
                       type="button"
@@ -562,13 +563,14 @@ function EternalTablePanel({
                       className={primaryBtn}
                     >
                       <Save className="h-3.5 w-3.5" />
-                      Snimi
+                      {t("owner.common.save")}
                     </button>
                     <button
                       type="button"
                       onClick={cancelEditCol}
                       className={ghostIconBtn}
-                      title="Otkaži"
+                      title={t("owner.common.cancel")}
+                      aria-label={t("owner.common.cancel")}
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -599,7 +601,8 @@ function EternalTablePanel({
                         onClick={() => moveColumn(c, -1)}
                         disabled={i === 0}
                         className={`${ghostIconBtn} disabled:opacity-30`}
-                        title="Pomjeri gore"
+                        title={t("eternal.owner.moveUp")}
+                        aria-label={t("eternal.owner.moveUp")}
                       >
                         <ArrowUp className="h-4 w-4" />
                       </button>
@@ -608,7 +611,8 @@ function EternalTablePanel({
                         onClick={() => moveColumn(c, 1)}
                         disabled={i === columns.length - 1}
                         className={`${ghostIconBtn} disabled:opacity-30`}
-                        title="Pomjeri dole"
+                        title={t("eternal.owner.moveDown")}
+                        aria-label={t("eternal.owner.moveDown")}
                       >
                         <ArrowDown className="h-4 w-4" />
                       </button>
@@ -616,7 +620,8 @@ function EternalTablePanel({
                         type="button"
                         onClick={() => startEditCol(c)}
                         className={ghostIconBtn}
-                        title="Uredi"
+                        title={t("owner.common.edit")}
+                        aria-label={t("owner.common.edit")}
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -624,7 +629,8 @@ function EternalTablePanel({
                         type="button"
                         onClick={() => deleteColumn(c)}
                         className={dangerIconBtn}
-                        title="Obriši"
+                        title={t("owner.common.delete")}
+                        aria-label={t("owner.common.delete")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -643,7 +649,7 @@ function EternalTablePanel({
                   : "border-gray-300 text-gray-500"
               }`}
             >
-              Još uvijek nema kolona. Dodaj prvu ispod.
+              {t("eternal.owner.noColumns")}
             </li>
           ) : null}
         </ul>
@@ -652,13 +658,13 @@ function EternalTablePanel({
           <input
             value={newColLabel}
             onChange={(e) => setNewColLabel(e.target.value)}
-            placeholder="Naziv kolone (npr. SP 2014)"
+            placeholder={t("eternal.owner.columnNameExample")}
             className={`${inputCls} flex-1 min-w-[160px]`}
           />
           <input
             value={newColLogoUrl}
             onChange={(e) => setNewColLogoUrl(e.target.value)}
-            placeholder="URL loga (opciono)"
+            placeholder={t("eternal.owner.logoUrlOptional")}
             className={`${inputCls} flex-1 min-w-[200px]`}
           />
           <input
@@ -681,7 +687,7 @@ function EternalTablePanel({
             className={subtleBtn}
           >
             <Upload className="h-3.5 w-3.5" />
-            {uploading ? "..." : "Upload"}
+            {uploading ? "..." : t("eternal.owner.upload")}
           </button>
           <button
             type="button"
@@ -690,7 +696,7 @@ function EternalTablePanel({
             className={primaryBtn}
           >
             <Plus className="h-3.5 w-3.5" />
-            Dodaj kolonu
+            {t("eternal.owner.addColumn")}
           </button>
         </div>
       </section>
@@ -706,7 +712,7 @@ function EternalTablePanel({
             dark ? "text-gray-400" : "text-gray-600"
           }`}
         >
-          Igrači
+          {t("eternal.owner.playersHeading")}
         </h3>
 
         <div className="overflow-x-auto">
@@ -729,7 +735,7 @@ function EternalTablePanel({
                     dark ? "text-gray-500" : "text-gray-500"
                   }`}
                 >
-                  Igrač
+                  {t("eternal.player")}
                 </th>
                 {columns.map((c) => (
                   <th
@@ -746,7 +752,7 @@ function EternalTablePanel({
                     dark ? "text-amber-400" : "text-amber-600"
                   }`}
                 >
-                  Ukupno
+                  {t("eternal.total")}
                 </th>
                 <th className="px-2 py-2" />
               </tr>
@@ -839,12 +845,14 @@ function EternalTablePanel({
                               className={primaryBtn}
                             >
                               <Check className="h-3.5 w-3.5" />
-                              Snimi
+                              {t("owner.common.save")}
                             </button>
                             <button
                               type="button"
                               onClick={cancelEditEntry}
                               className={ghostIconBtn}
+                              title={t("owner.common.cancel")}
+                              aria-label={t("owner.common.cancel")}
                             >
                               <X className="h-4 w-4" />
                             </button>
@@ -856,7 +864,8 @@ function EternalTablePanel({
                               onClick={() => moveEntry(e, -1)}
                               disabled={i === 0}
                               className={`${ghostIconBtn} disabled:opacity-30`}
-                              title="Gore"
+                              title={t("eternal.owner.moveUp")}
+                              aria-label={t("eternal.owner.moveUp")}
                             >
                               <ArrowUp className="h-4 w-4" />
                             </button>
@@ -865,7 +874,8 @@ function EternalTablePanel({
                               onClick={() => moveEntry(e, 1)}
                               disabled={i === entries.length - 1}
                               className={`${ghostIconBtn} disabled:opacity-30`}
-                              title="Dole"
+                              title={t("eternal.owner.moveDown")}
+                              aria-label={t("eternal.owner.moveDown")}
                             >
                               <ArrowDown className="h-4 w-4" />
                             </button>
@@ -873,7 +883,8 @@ function EternalTablePanel({
                               type="button"
                               onClick={() => startEditEntry(e)}
                               className={ghostIconBtn}
-                              title="Uredi"
+                              title={t("owner.common.edit")}
+                              aria-label={t("owner.common.edit")}
                             >
                               <Pencil className="h-4 w-4" />
                             </button>
@@ -881,7 +892,8 @@ function EternalTablePanel({
                               type="button"
                               onClick={() => deleteEntry(e)}
                               className={dangerIconBtn}
-                              title="Obriši"
+                              title={t("owner.common.delete")}
+                              aria-label={t("owner.common.delete")}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -903,7 +915,7 @@ function EternalTablePanel({
                   : "border-gray-300 text-gray-500"
               }`}
             >
-              Još uvijek nema igrača.
+              {t("eternal.owner.noPlayers")}
             </div>
           ) : null}
         </div>
@@ -912,7 +924,7 @@ function EternalTablePanel({
           <input
             value={newEntryName}
             onChange={(e) => setNewEntryName(e.target.value)}
-            placeholder="Ime igrača (npr. ČOSA)"
+            placeholder={t("eternal.owner.playerNameExample")}
             className={`${inputCls} flex-1 min-w-[200px]`}
           />
           <button
@@ -922,7 +934,7 @@ function EternalTablePanel({
             className={primaryBtn}
           >
             <Plus className="h-3.5 w-3.5" />
-            Dodaj igrača
+            {t("eternal.owner.addPlayer")}
           </button>
         </div>
       </section>

@@ -44,12 +44,13 @@ export async function GET(request: NextRequest) {
       pointsMap.set(el.id, el.stats?.total_points || 0);
     });
 
-    // Find threat players: high ownership, not in your team, scoring points
+    // Threats: players you don't own (or left on your bench) who scored and
+    // are widely owned. Their damage to your rank is roughly points ×
+    // ownership — what the average manager banked from them and you didn't.
     const threats = bootstrap.elements
       .filter((el: any) => {
         const ownership = parseFloat(el.selected_by_percent);
         const points = pointsMap.get(el.id) || 0;
-        // Threats are players you don't own (or on bench) with significant ownership and points
         const isNotOwned = !myPicks.has(el.id);
         const isOnBench = myBenchPicks.has(el.id);
         return (isNotOwned || isOnBench) && ownership > 3 && points > 0;
@@ -57,34 +58,34 @@ export async function GET(request: NextRequest) {
       .map((el: any) => {
         const points = pointsMap.get(el.id) || 0;
         const ownership = parseFloat(el.selected_by_percent);
-        let threatLevel: "high" | "medium" | "low" = "low";
-        if (points >= 8 && ownership > 20) threatLevel = "high";
-        else if (points >= 5 && ownership > 10) threatLevel = "medium";
+        const impact = Number(((points * ownership) / 100).toFixed(2));
+        const threatLevel: "high" | "medium" | "low" =
+          impact >= 2 ? "high" : impact >= 0.75 ? "medium" : "low";
 
         return {
           player_id: el.id,
           web_name: el.web_name,
           team: el.team,
+          team_code: el.team_code,
           element_type: el.element_type,
           points,
           ownership_pct: ownership,
+          // FPL has no public EO; overall ownership is the honest proxy.
           effective_ownership: ownership,
+          impact,
           threat_level: threatLevel,
           is_on_bench: myBenchPicks.has(el.id),
         };
       })
-      .sort((a: any, b: any) => {
-        // Sort by threat level then points
-        const levelOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
-        const levelDiff = (levelOrder[b.threat_level] || 0) - (levelOrder[a.threat_level] || 0);
-        if (levelDiff !== 0) return levelDiff;
-        return b.points - a.points;
-      })
+      .sort((a: any, b: any) => b.impact - a.impact || b.points - a.points)
       .slice(0, 30);
 
     const totalThreatPoints = threats.reduce(
       (sum: number, t: any) => sum + t.points,
       0
+    );
+    const totalImpact = Number(
+      threats.reduce((sum: number, t: any) => sum + t.impact, 0).toFixed(1)
     );
 
     return NextResponse.json({
@@ -92,6 +93,7 @@ export async function GET(request: NextRequest) {
       data: {
         threats,
         totalThreatPoints,
+        totalImpact,
       },
       timestamp: new Date().toISOString(),
     });

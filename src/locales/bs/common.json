@@ -3,7 +3,7 @@
   "loadingHomepage": "Učitavam sadržaj početne stranice...",
   "more": "Više",
   "error": "Greška pri učitavanju podataka",
-  "tryAgain": "Pokušaj Ponovo",
+  "tryAgain": "Pokušaj ponovo",
   "comingSoon": "Uskoro",
   "live": "UŽIVO",
   "finished": "Završeno",
@@ -15,14 +15,14 @@
   "footer": {
     "tagline": "Ultimativna destinacija za ljubitelje fantasy sporta.",
     "subtitle": "Pridruži se hiljadama igrača u najkonkurentnijim fantasy ligama.",
-    "years": "Godina Izvrsnosti",
-    "trust": "Vjeruju Igrači",
+    "years": "Godina izvrsnosti",
+    "trust": "Vjeruju igrači",
     "copyright": "© 2026 REMIS Fantasy. Sva prava zadržana.",
-    "adminPanel": "Admin Panel"
+    "adminPanel": "Admin panel"
   },
   "home": {
     "siteName": "REMIS Fantasy",
-    "currentSeason": "2025/26",
+    "currentSeason": "2026/27",
     "leagues": {
       "premierLeague": {
         "title": "Premier League",
@@ -65,28 +65,30 @@
     "viewGallery": "Slike i uspomene iz prethodnih sezona",
     "tables": "Tabele",
     "viewTables": "Trenutni rezultati i tabele",
-    "quickNavigation": "Brza Navigacija"
+    "quickNavigation": "Brza navigacija"
   },
   "prizes": {
-    "firstPlace": "1. Mjesto",
+    "firstPlace": "1. mjesto",
     "firstPlaceDesc": "Pobjednik lige",
-    "secondPlace": "2. Mjesto",
+    "secondPlace": "2. mjesto",
     "secondPlaceDesc": "Drugoplasirani u ligi",
-    "thirdPlace": "3. Mjesto",
+    "thirdPlace": "3. mjesto",
     "thirdPlaceDesc": "Trećeplasirani u ligi",
-    "viewDetails": "Pogledaj Detalje",
+    "viewDetails": "Pogledaj detalje",
     "moreFeatures": "+{{count}} više",
     "noPrizes": "Nema dostupnih nagrada za ovu ligu.",
     "participants": "učesnika",
     "specialPrize": "Specijalna nagrada",
     "noLimit": "Bez limita",
     "prizesCount": "{{count}} nagrada",
-    "rewardsAndBenefits": "Nagrade i Benefiti",
-    "footerText": "Sve nagrade se dodeljuju na kraju sezone. Mjesečne nagrade se dodeljuju svakog mjeseca.",
+    "rewardsAndBenefits": "Nagrade i benefiti",
+    "footerText": "Sve nagrade se dodjeljuju na kraju sezone. Mjesečne nagrade se dodjeljuju svakog mjeseca.",
     "registerNow": "Registruj se sada i osiguraj svoje mjesto u {{title}}!",
     "originalJersey": "ORIGINAL DRES 25/26 PL",
     "freeEntry": "BESPLATNO UČEŠĆE NAREDNE SEZONE",
-    "freeEntryShort": "Besplatno Učešće"
+    "freeEntryShort": "Besplatno učešće",
+    "trophyMedalPlaque": "Pehar + medalja + plaketa",
+    "medalPlaque": "Medalja + plaketa"
   },
   "leagues": {
     "premier-league": {
@@ -94,7 +96,7 @@
       "description": "Najpopularnija fantasy liga sa 4 različite kategorije"
     },
     "champions-league": {
-      "name": "Liga Šampiona",
+      "name": "Liga prvaka",
       "description": "Evropska elita fantasy fudbala"
     },
     "f1-fantasy": {
@@ -120,33 +122,33 @@
   },
   "hero": {
     "title": "REMIS Fantasy",
-    "season": "Sezona 2025/26",
+    "season": "Sezona 2026/27",
     "subtitle": "Dobrodošli u najuzbudljivije fantasy lige! Odaberite svoju ligu i pokažite svoje znanje sporta.",
     "live": "UŽIVO",
     "liveFpl": "UŽIVO FPL",
     "liveFplDescription": "Pratite uživo Premier Liga utakmice sa ažuriranjima u realnom vremenu, rezultatima i fantasy bodovima!",
-    "watchLive": "Gledaj Uživo",
-    "openLeague": "Otvori Ligu",
+    "watchLive": "Gledaj uživo",
+    "openLeague": "Otvori ligu",
     "premier": {
       "title": "Premier Liga Fantasy",
-      "season": "Sezona 2025/26",
+      "season": "Sezona 2026/27",
       "subtitle": "Najpopularnija fantasy liga sa 4 različite kategorije. Napravi svoj snovski tim i takmiči se protiv drugih menadžera!",
-      "primaryButton": "Pridruži se Ligi",
-      "secondaryButton": "Pogledaj Nagrade"
+      "primaryButton": "Pridruži se ligi",
+      "secondaryButton": "Pogledaj nagrade"
     },
     "champions": {
-      "title": "Liga Šampiona Fantasy",
-      "season": "Sezona 2025/26",
-      "subtitle": "Evropska elita fantasy fudbala. Doživite uzbuđenje Lige Šampiona sa najboljim timovima Evrope!",
-      "primaryButton": "Pridruži se Ligi",
-      "secondaryButton": "Pogledaj Nagrade"
+      "title": "Liga prvaka Fantasy",
+      "season": "Sezona 2026/27",
+      "subtitle": "Evropska elita fantasy fudbala. Doživite uzbuđenje Lige prvaka sa najboljim timovima Evrope!",
+      "primaryButton": "Pridruži se ligi",
+      "secondaryButton": "Pogledaj nagrade"
     },
     "f1": {
-      "title": "F1 Fantasy Trke",
+      "title": "F1 Fantasy trke",
       "season": "Sezona 2025",
       "subtitle": "Brzina, strategija i adrenalin na stazi. Odaberite svoje vozače i konstruktore za ultimativno F1 fantasy iskustvo!",
-      "primaryButton": "Pridruži se Ligi",
-      "secondaryButton": "Pogledaj Nagrade"
+      "primaryButton": "Pridruži se ligi",
+      "secondaryButton": "Pogledaj nagrade"
     }
   },
   "fplLive": {
@@ -156,7 +158,11 @@
     "h2h2League": "H2H2 Liga",
     "freeLeague": "Besplatna Liga",
     "seasonCompleted": "Završena",
-    "newSeasonComingSoon": "Nova sezona 2026/27 uskoro počinje — tabele će biti dostupne kada liga krene."
+    "newSeasonComingSoon": "Nova sezona 2026/27 uskoro počinje — tabele će biti dostupne kada liga krene.",
+    "leagueTableErrorLoading": "Greška pri učitavanju tabela lige",
+    "loadingLeague": "Učitavanje: {{league}}",
+    "loadingLeagueDesc": "Sačekajte dok učitamo najnoviji poredak u ligi",
+    "noDataFor": "Nema podataka za {{league}}."
   },
   "premiumLeague": {
     "title": "Premium Liga",
@@ -173,27 +179,31 @@
     "freeEntry": "BESPLATNO UČEŠĆE NAREDNE SEZONE",
     "tableHeaders": {
       "rank": "#",
-      "name": "Ime i Prezime",
+      "name": "Ime i prezime",
       "team": "Tim",
-      "points": "Poeni"
+      "points": "Bodovi",
+      "overallPoints": "Ukupno bodova"
     },
-    "lastUpdated": "Poslednje ažurirano"
+    "lastUpdated": "Posljednje ažurirano",
+    "standingsCount_one": "Poredak · {{count}} igrač",
+    "standingsCount_few": "Poredak · {{count}} igrača",
+    "standingsCount_other": "Poredak · {{count}} igrača"
   },
   "registration": {
     "title": "PRIJAVI SE ZA NOVU SEZONU",
     "subtitle": "Popuni formu i izaberi ligu za sebe koju želiš igrati, povratne informacije ćeš dobiti u mailu.",
-    "personalData": "Lični Podaci",
+    "personalData": "Lični podaci",
     "firstName": "Ime",
     "lastName": "Prezime",
-    "contactData": "Kontakt Podaci",
-    "emailAddress": "Email Adresa",
-    "phoneNumber": "Broj Telefona",
-    "teamInfo": "Informacije o Ekipi",
-    "teamName": "Ime Ekipe",
+    "contactData": "Kontakt podaci",
+    "emailAddress": "Email adresa",
+    "phoneNumber": "Broj telefona",
+    "teamInfo": "Informacije o ekipi",
+    "teamName": "Ime ekipe",
     "notes": "Napomene (opciono)",
     "notesPlaceholder": "Unesite dodatne napomene ili komentare...",
     "registrationClosed": "REGISTRACIJA TRENUTNO ZATVORENA",
-    "submitButton": "Pošalji Prijavu",
+    "submitButton": "Pošalji prijavu",
     "loading": "Slanje prijave...",
     "successTitle": "PRIJAVA USPJEŠNO POSLATA",
     "successMessage": "Vaša prijava je uspješno poslata. Povratne informacije ćete dobiti u mailu.",
@@ -203,9 +213,9 @@
     "loadingDescription": "Molimo sačekajte dok pripremamo registracijsku formu za vas."
   },
   "featureGate": {
-    "upgrade": "Unaprijedi Sada",
+    "upgrade": "Unaprijedi sada",
     "upgradeToAccess": "Unaprijedi da pristupiš ovoj funkciji",
-    "premiumFeature": "Premium Funkcija",
+    "premiumFeature": "Premium funkcija",
     "unlockFeature": "Otključaj ovu funkciju sa premium planom i dobij pristup naprednim statistikama, uvide i ekskluzivni sadržaj."
   },
   "validation": {
@@ -230,7 +240,7 @@
     "loadingError": "Greška pri učitavanju. Pokušajte ponovo."
   },
   "plSuccess": {
-    "title": "Registracija Potvrđena!",
+    "title": "Registracija potvrđena!",
     "message": "Uspješno ste se registrovali za Premier League Fantasy ligu 2026/27. Plaćanje je primljeno i vaša registracija je aktivna.",
     "messageCash": "Uspješno ste se registrovali za Premier League Fantasy ligu 2026/27. Vaša prijava je zaprimljena, a registracija postaje aktivna nakon dostave uplate u kešu.",
     "emailNoteTitle": "Provjerite email (i spam folder!)",
@@ -238,5 +248,79 @@
     "whatsNext": "Šta dalje?",
     "whatsNextDescription": "Pratite tabele i rezultate na stranici Premier League Fantasy lige. Sretno!",
     "viewTables": "Pogledaj tabele"
+  },
+  "registrationForm": {
+    "registration": "Registracija",
+    "plIntro": "Pridružite se Premier League Fantasy ligi za sezonu 2026/27 i takmičite se za nagrade.",
+    "clIntro": "Pridružite se Champions League Fantasy ligi za sezonu 2026/27 i takmičite se za nagrade.",
+    "perkPrizes": "Takmičenje za nagrade",
+    "perkPrizesSub": "Osvoji nagradni fond",
+    "perkLive": "Live tabela",
+    "perkLiveSub": "Rezultati u realnom vremenu",
+    "perkMonthly": "Mjesečne nagrade",
+    "perkMonthlySub": "Specijalne nagrade po kolu",
+    "perkMatchday": "Nagrade po kolu",
+    "perkMatchdaySub": "Specijalne nagrade po utakmici",
+    "entryFee": "Kotizacija",
+    "chooseLeague": "Odaberite ligu",
+    "standardLeague": "Standard Liga",
+    "standardLeagueDesc": "Osnovna liga sa takmičenjem za nagrade",
+    "premiumLeague": "Premium Liga",
+    "premiumLeagueDesc": "Premium liga sa većim nagradnim fondom",
+    "h2hLeague": "H2H Liga",
+    "h2hLeagueDesc": "Head-to-Head takmičenje (može se kombinovati)",
+    "leagueRequired": "Morate odabrati barem jednu ligu",
+    "personalInfo": "Lični podaci",
+    "firstName": "Ime",
+    "lastName": "Prezime",
+    "contactInfo": "Kontakt informacije",
+    "email": "Email",
+    "phone": "Telefon",
+    "notes": "Napomene",
+    "paymentMethod": "Način plaćanja",
+    "cash": "Gotovina",
+    "cashOnly": "Dostava gotovine — jedini dostupni način plaćanja",
+    "cashPayment": "Gotovinska uplata",
+    "payingCash": "Plaćanje gotovinom",
+    "cashInfo": "Izaberite datum do kojeg ćete dostaviti uplatu od {{amount}}. Vaša registracija će biti potvrđena nakon primanja uplate.",
+    "deliveryDate": "Datum dostave uplate",
+    "deliveryDateRequired": "Morate odabrati datum dostave uplate",
+    "confirmPrefix": "Potvrđujem da ću dostaviti uplatu od",
+    "confirmSuffix": "do odabranog datuma.",
+    "confirmRequired": "Morate potvrditi da ćete dostaviti uplatu",
+    "processing": "Obrađujem registraciju...",
+    "submit": "Registruj se",
+    "secureNote": "Vaši podaci se prenose preko 256-bit SSL enkripcije i koriste se isključivo za potrebe lige."
+  },
+  "registrationClosed": {
+    "title": "Registracija zatvorena",
+    "pl": "Prijave za Premier League sezonu 2026/27 su zatvorene. Hvala svima koji su se prijavili — sretno u takmičenju!",
+    "cl": "Prijave za Champions League sezonu 2026/27 su zatvorene. Hvala svima koji su se prijavili — sretno u takmičenju!",
+    "f1": "Registracija za F1 Fantasy sezonu 2026 je zatvorena. Pratite nas za više informacija."
+  },
+  "errorLoadingPage": "Greška pri učitavanju stranice",
+  "fantasyLeague": "Fantasy Liga",
+  "musicPlayer": {
+    "anthem": "Himna",
+    "wcAnthem": "Himna SP 2026",
+    "minimize": "Smanji",
+    "play": "Pusti",
+    "pause": "Pauziraj",
+    "mute": "Isključi zvuk",
+    "unmute": "Uključi zvuk",
+    "close": "Zatvori"
+  },
+  "loadingWait": "Sačekajte dok učitamo podatke",
+  "themeToggle": {
+    "toLight": "Prebaci na svijetlu temu",
+    "toDark": "Prebaci na tamnu temu"
+  },
+  "fplApiUnavailable": "FPL API trenutno nije dostupan. Pokušajte ponovo uskoro.",
+  "closePrizeModal": "Zatvori detalje nagrade",
+  "heroBackgroundAlt": "Pozadina naslovne sekcije",
+  "title": "REMIS Fantasy",
+  "match": {
+    "homeTeam": "domaćin",
+    "awayTeam": "gost"
   }
 }

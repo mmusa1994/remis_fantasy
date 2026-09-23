@@ -39,6 +39,7 @@ import SmartReplacementPanel from "./SmartReplacementPanel";
 import AILoadingShow from "./AILoadingShow";
 import AITeamAnalysisReport from "./AITeamAnalysisReport";
 import { useAITeamAnalysis } from "@/contexts/AITeamAnalysisContext";
+import { dateLocale } from "./live/ui";
 import PriceChangesWidget from "./widgets/PriceChangesWidget";
 import OwnershipChangesWidget from "./widgets/OwnershipChangesWidget";
 import TransferTrendsWidget from "./widgets/TransferTrendsWidget";
@@ -394,9 +395,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             `❌ No fixture data available for GW${gameweek} or earlier`
           );
           setAllFixtures([]);
-          setFplApiError(
-            "FPL API is currently unavailable or returned no fixtures. Please try again later."
-          );
+          setFplApiError(i18n.t("fpl:teamPlanner.errors.fixturesNoData"));
         }
       } catch (error) {
         console.error("Failed to fetch fixtures:", error);
@@ -405,9 +404,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           return fetchFixtures(gameweek - 1, forceRefresh);
         } else {
           setAllFixtures([]);
-          setFplApiError(
-            "FPL API is currently unavailable. Fixtures could not be loaded."
-          );
+          setFplApiError(i18n.t("fpl:teamPlanner.errors.fixturesUnavailable"));
         }
       }
     },
@@ -559,9 +556,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             return await fetchTeamData(id, targetGameweek - 1, forceRefresh);
           }
 
-          setFplApiError(
-            "FPL API is currently unavailable. Team data could not be loaded."
-          );
+          setFplApiError(i18n.t("fpl:teamPlanner.errors.teamUnavailable"));
           return; // Avoid throwing to keep flow stable
         }
 
@@ -606,9 +601,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           teamDataRequestRef.current = null; // Clear request lock
           return await fetchTeamData(id, targetGameweek - 1, forceRefresh);
         }
-        setFplApiError(
-          "FPL API is currently unavailable. Team data could not be loaded."
-        );
+        setFplApiError(i18n.t("fpl:teamPlanner.errors.teamUnavailable"));
       } finally {
         setLoading(false);
         teamDataRequestRef.current = null; // Clear request lock
@@ -711,7 +704,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             userMessage: data.error,
             canRetry: data.canRetry || false,
             fallbackAvailable: data.fallbackAvailable || false,
-            actionText: "Save Anyway",
+            actionText: t("teamPlanner.managerIdErrors.saveAnyway"),
           },
           showRetryOption: data.canRetry || false,
           showFallbackOption: data.fallbackAvailable || false,
@@ -726,15 +719,15 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           retryCount: 0,
           errorDetails: {
             type: errorType,
-            message: data.error || "Failed to save manager ID",
-            userMessage: data.error || "Failed to save manager ID",
+            message: data.error || t("teamPlanner.managerIdErrors.saveFailed"),
+            userMessage: data.error || t("teamPlanner.managerIdErrors.saveFailed"),
             canRetry: data.canRetry || false,
             fallbackAvailable: data.fallbackAvailable || false,
             actionText: data.canRetry
-              ? "Retry"
+              ? t("teamPlanner.managerIdErrors.retry")
               : data.fallbackAvailable
-              ? "Save Anyway"
-              : "Try Again",
+              ? t("teamPlanner.managerIdErrors.saveAnyway")
+              : t("teamPlanner.managerIdErrors.tryAgain"),
           },
           showRetryOption: data.canRetry || false,
           showFallbackOption: data.fallbackAvailable || false,
@@ -750,11 +743,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         errorDetails: {
           type: ErrorType.NETWORK_ERROR,
           message: (error as Error).message,
-          userMessage:
-            "Network error. Please check your connection and try again.",
+          userMessage: t("teamPlanner.managerIdErrors.network"),
           canRetry: true,
           fallbackAvailable: true,
-          actionText: "Retry",
+          actionText: t("teamPlanner.managerIdErrors.retry"),
         },
         showRetryOption: true,
         showFallbackOption: true,
@@ -996,8 +988,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
   const getPlayerPosition = useCallback((elementType: number) => {
     const positions = { 1: "GK", 2: "DEF", 3: "MID", 4: "FWD" };
-    return positions[elementType as keyof typeof positions] || "Unknown";
-  }, []);
+    return positions[elementType as keyof typeof positions] || t("teamPlanner.unknown");
+  }, [t]);
 
   // Transfer Planning Functions
   const calculateTransferCost = useCallback(
@@ -1197,26 +1189,26 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
     // Validate squad size
     if (finalSquad.length !== 15) {
-      errors.push(
-        `Squad must have 15 players (currently ${finalSquad.length})`
-      );
+      errors.push(t("teamPlanner.squadRules.size", { count: finalSquad.length }));
     }
 
     // Validate position requirements
     if (positionCounts[1] !== 2)
-      errors.push(`Must have 2 goalkeepers (currently ${positionCounts[1]})`);
+      errors.push(t("teamPlanner.squadRules.goalkeepers", { count: positionCounts[1] }));
     if (positionCounts[2] !== 5)
-      errors.push(`Must have 5 defenders (currently ${positionCounts[2]})`);
+      errors.push(t("teamPlanner.squadRules.defenders", { count: positionCounts[2] }));
     if (positionCounts[3] !== 5)
-      errors.push(`Must have 5 midfielders (currently ${positionCounts[3]})`);
+      errors.push(t("teamPlanner.squadRules.midfielders", { count: positionCounts[3] }));
     if (positionCounts[4] !== 3)
-      errors.push(`Must have 3 forwards (currently ${positionCounts[4]})`);
+      errors.push(t("teamPlanner.squadRules.forwards", { count: positionCounts[4] }));
 
     // Validate budget
     const budgetAfterTransfers = calculateBudgetAfterTransfers();
     if (budgetAfterTransfers < 0) {
       errors.push(
-        `Over budget by £${Math.abs(budgetAfterTransfers / 10).toFixed(1)}m`
+        t("teamPlanner.squadRules.overBudget", {
+          amount: Math.abs(budgetAfterTransfers / 10).toFixed(1),
+        })
       );
     }
 
@@ -1233,9 +1225,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
       if (count > 3) {
         const team = getTeamById(Number(teamId));
         errors.push(
-          `Too many players from ${
-            team?.name || "team"
-          } (max 3, currently ${count})`
+          team?.name
+            ? t("teamPlanner.squadRules.tooManyFromTeam", { team: team.name, count })
+            : t("teamPlanner.squadRules.tooManyFromOneTeam", { count })
         );
       }
     });
@@ -1252,6 +1244,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
     getPlayerById,
     calculateBudgetAfterTransfers,
     getTeamById,
+    t,
   ]);
 
   const confirmTransfers = useCallback(() => {
@@ -1337,66 +1330,38 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
 
   const aiErrorCopy = useCallback(
     (code: string, extra?: { nextAvailableAt?: string }) => {
-      const bs = i18n.language === "bs";
       const when = extra?.nextAvailableAt
-        ? new Date(extra.nextAvailableAt).toLocaleDateString(bs ? "bs-BA" : "en-GB")
+        ? new Date(extra.nextAvailableAt).toLocaleDateString(dateLocale(i18n.language))
         : null;
+      const copy = (id: string) => ({
+        message: t(`teamPlanner.aiErrors.${id}.message`),
+        hint: t(`teamPlanner.aiErrors.${id}.hint`),
+      });
       switch (code) {
         case "unauthenticated":
-          return {
-            message: bs ? "Sesija je istekla." : "Your session expired.",
-            hint: bs ? "Prijavi se ponovo pa pokreni analizu." : "Sign in again and rerun the analysis.",
-          };
+          return copy("unauthenticated");
         case "no_manager_id":
-          return {
-            message: bs ? "Nije povezan FPL Manager ID." : "No FPL Manager ID connected.",
-            hint: bs
-              ? "Dodaj svoj Manager ID u profilu — bez njega AI ne vidi tvoj kadar."
-              : "Add your Manager ID in your profile — without it the AI cannot see your squad.",
-          };
+          return copy("noManagerId");
         case "weekly_limit":
           return {
-            message: bs ? "Sedmični limit je iskorišten." : "Weekly limit reached.",
+            message: t("teamPlanner.aiErrors.weeklyLimit.message"),
             hint: when
-              ? bs
-                ? `Sljedeća analiza dostupna ${when}.`
-                : `Next analysis available ${when}.`
+              ? t("teamPlanner.aiErrors.weeklyLimit.hint", { date: when })
               : undefined,
           };
         case "fpl_unavailable":
-          return {
-            message: bs ? "FPL API trenutno ne odgovara." : "The FPL API is not responding.",
-            hint: bs ? "Pokušaj ponovo za par minuta." : "Try again in a few minutes.",
-          };
+          return copy("fplUnavailable");
         case "ai_no_credit":
-          return {
-            message: bs
-              ? "AI nalog nema kredita."
-              : "The AI account has no credits left.",
-            hint: bs
-              ? "Dopuni balans na platform.openai.com → Billing. Ključ je ispravan, samo je potrošnja na nuli."
-              : "Top up the balance at platform.openai.com → Billing. The key is valid, the balance is not.",
-          };
+          return copy("aiNoCredit");
         case "ai_invalid_key":
-          return {
-            message: bs ? "AI ključ nije prihvaćen." : "The AI key was rejected.",
-            hint: bs
-              ? "Provjeri OPENAI_API_KEY u Vercel env varijablama i redeploy-aj."
-              : "Check OPENAI_API_KEY in the Vercel env vars and redeploy.",
-          };
+          return copy("aiInvalidKey");
         case "ai_rate_limited":
-          return {
-            message: bs ? "AI servis je preopterećen." : "The AI service is rate limited.",
-            hint: bs ? "Pokušaj ponovo za minutu." : "Try again in a minute.",
-          };
+          return copy("aiRateLimited");
         default:
-          return {
-            message: bs ? "Analiza nije uspjela." : "The analysis failed.",
-            hint: bs ? "Pokušaj ponovo za koji trenutak." : "Please try again shortly.",
-          };
+          return copy("failed");
       }
     },
-    [i18n.language]
+    [i18n.language, t]
   );
 
   const aiError = useMemo(() => {
@@ -1494,8 +1459,8 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         <FplLoadingSkeleton
           variant="grid"
           count={6}
-          title="Loading Team Data"
-          description="Fetching your FPL team information and player statistics..."
+          title={t("teamPlanner.loadingTitle")}
+          description={t("teamPlanner.loadingDescription")}
         />
       )}
 
@@ -1512,19 +1477,19 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
           <div className="text-center py-8">
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-6 max-w-md mx-auto">
               <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-                FPL API Currently Not Available
+                {t("teamPlanner.apiDown.title")}
               </h3>
               <p className="text-yellow-700 dark:text-yellow-300 text-sm mb-4">
-                The Fantasy Premier League API is temporarily unavailable. This may be due to high traffic or maintenance.
+                {t("teamPlanner.apiDown.text")}
               </p>
               <button 
                 onClick={() => window.location.reload()}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors mr-3"
               >
-                Refresh Page
+                {t("teamPlanner.apiDown.refresh")}
               </button>
               <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-3">
-                Or wait a few minutes and try again
+                {t("teamPlanner.apiDown.wait")}
               </p>
             </div>
           </div>
@@ -1556,7 +1521,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                     </p>
                     {managerIdVerified === false && (
                       <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 w-fit">
-                        Unverified
+                        {t("teamPlanner.unverified")}
                       </span>
                     )}
                   </div>
@@ -1584,11 +1549,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   <button
                     onClick={() => setShowManagerIdModal(true)}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
-                    title={t("teamPlanner.clickToChange") || "Click to change"}
+                    title={t("teamPlanner.clickToChange")}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     <span className="hidden xs:inline">{t("teamPlanner.clickToChange")}</span>
-                    <span className="xs:hidden">Change</span>
+                    <span className="xs:hidden">{t("teamPlanner.change")}</span>
                   </button>
                   
                   {currentManagerId && (
@@ -1597,10 +1562,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
-                      title="Open on fantasy.premierleague.com"
+                      title={t("teamPlanner.openOnFplTitle")}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
-                      <span className="hidden xs:inline">Open on FPL</span>
+                      <span className="hidden xs:inline">{t("teamPlanner.openOnFpl")}</span>
                       <span className="xs:hidden">FPL</span>
                     </a>
                   )}
@@ -1627,14 +1592,14 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                      <span className="font-medium">Verification Notice:</span>{" "}
+                      <span className="font-medium">{t("teamPlanner.verificationNotice")}</span>{" "}
                       {verificationWarning}
                     </p>
                     <button
                       onClick={() => setShowManagerIdModal(true)}
                       className="mt-2 text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 underline"
                     >
-                      Click here to retry verification
+                      {t("teamPlanner.retryVerification")}
                     </button>
                   </div>
                 </div>
@@ -1783,7 +1748,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                           : t("teamPlanner.tabs.transfers")}
                       </span>
                       <span className="xs:hidden">
-                        {transferMode ? "Exit" : "Transfers"}
+                        {transferMode
+                          ? t("teamPlanner.transfers.exitShort")
+                          : t("teamPlanner.tabs.transfers")}
                       </span>
                       {transferMode &&
                         pendingTransfers.transfersOut.length > 0 && (
@@ -1806,10 +1773,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         }`}
                         title={
                           aiChatLoading
-                            ? i18n.language === "bs" ? "Analiza u toku…" : "Analysis running…"
+                            ? t("teamPlanner.ai.running")
                             : aiReport && !canUseAI
-                            ? i18n.language === "bs" ? "Pogledaj svoju AI analizu" : "View your AI analysis"
-                            : t("teamPlanner.tabs.aiAnalyser") + " (1x weekly)"
+                            ? t("teamPlanner.ai.viewReport")
+                            : t("teamPlanner.ai.weeklyHint", { label: t("teamPlanner.tabs.aiAnalyser") })
                         }
                       >
                         {aiChatLoading && (
@@ -1823,9 +1790,9 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         <FaRobot className={`w-4 h-4 relative ${aiChatLoading ? "animate-pulse" : ""}`} />
                         <span className="hidden xs:inline relative">
                           {aiChatLoading
-                            ? i18n.language === "bs" ? "AI radi…" : "AI running…"
+                            ? t("teamPlanner.ai.runningShort")
                             : aiReport && !canUseAI
-                            ? i18n.language === "bs" ? "Moja AI analiza" : "My AI analysis"
+                            ? t("teamPlanner.ai.myReport")
                             : t("teamPlanner.tabs.aiAnalyser")}
                         </span>
                         <span className="xs:hidden relative">AI</span>
@@ -1897,7 +1864,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                               </div>
                               <div>
                                 <p className="text-xs text-theme-text-secondary">
-                                  Captain
+                                  {t("teamPlanner.captain")}
                                 </p>
                                 <p className="text-sm font-medium">
                                   {
@@ -1909,7 +1876,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 <p className="text-xs text-theme-text-secondary">
                                   {userTeamData.captain.stats?.total_points ||
                                     0}{" "}
-                                  pts (x2)
+                                  {t("teamPlanner.ptsX2")}
                                 </p>
                               </div>
                             </div>
@@ -1923,7 +1890,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                 </div>
                                 <div>
                                   <p className="text-xs text-theme-text-secondary">
-                                    Vice Captain
+                                    {t("teamPlanner.viceCaptain")}
                                   </p>
                                   <p className="text-sm font-medium">
                                     {
@@ -1935,7 +1902,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                   <p className="text-xs text-theme-text-secondary">
                                     {userTeamData.vice_captain.stats
                                       ?.total_points || 0}{" "}
-                                    pts
+                                    {t("teamPlanner.ptsShort")}
                                   </p>
                                 </div>
                               </div>
@@ -2080,7 +2047,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                               player.total_points}
                                         </span>
                                         <span className="text-gray-400">
-                                          pts
+                                          {t("teamPlanner.ptsShort")}
                                         </span>
                                       </span>
                                       <span className="inline-flex items-center gap-1 whitespace-nowrap">
@@ -2088,7 +2055,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                           {parseFloat(player.form).toFixed(1)}
                                         </span>
                                         <span className="text-gray-400">
-                                          form
+                                          {t("teamPlanner.formShort")}
                                         </span>
                                       </span>
                                       <span className="inline-flex items-center gap-1 whitespace-nowrap">
@@ -2099,7 +2066,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                           %
                                         </span>
                                         <span className="text-gray-400">
-                                          own
+                                          {t("teamPlanner.ownShort")}
                                         </span>
                                       </span>
                                     </div>
@@ -2227,11 +2194,11 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                           ? 0
                                           : teamPlayer.total_points ||
                                             player.total_points}{" "}
-                                        pts
+                                        {t("teamPlanner.ptsShort")}
                                       </span>
                                       <span className="text-gray-400 whitespace-nowrap">
                                         {parseFloat(player.form).toFixed(1)}{" "}
-                                        form
+                                        {t("teamPlanner.formShort")}
                                       </span>
                                     </div>
                                   </div>
@@ -2385,7 +2352,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                     {pos} {t("teamPlanner.analytics.avgPoints")}
                                   </span>
                                   <span className="font-medium">
-                                    {avgPoints.toFixed(1)} pts
+                                    {avgPoints.toFixed(1)} {t("teamPlanner.ptsShort")}
                                     {benchCount > 0 && (
                                       <span className="text-xs text-gray-500 ml-1">
                                         ({benchCount}{" "}
@@ -2463,7 +2430,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                               ? "text-rose-900 dark:text-rose-100"
                               : "text-slate-700 dark:text-slate-200"
                           }`}>
-                            −{transferCost} pts
+                            −{transferCost} {t("teamPlanner.ptsShort")}
                           </p>
                         </div>
                       </div>
@@ -2573,7 +2540,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                           removePlayerOut(playerId)
                                         }
                                         className="w-6 h-6 bg-rose-500/90 hover:bg-rose-600 text-white rounded-md flex items-center justify-center text-sm font-bold shadow-sm transition-colors"
-                                        title="Remove"
+                                        title={t("teamPlanner.transfers.remove")}
                                       >
                                         ×
                                       </button>
@@ -2626,7 +2593,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                               removePlayerIn(playerId)
                                             }
                                             className="w-6 h-6 bg-rose-500/90 hover:bg-rose-600 text-white rounded-md flex items-center justify-center text-sm font-bold shadow-sm transition-colors"
-                                            title="Remove"
+                                            title={t("teamPlanner.transfers.remove")}
                                           >
                                             ×
                                           </button>
@@ -2744,7 +2711,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                           <div className="flex-1 text-left">
                             {t("teamPlanner.transferMarket.player")}
                           </div>
-                          <div className="w-12 text-center">Pts</div>
+                          <div className="w-12 text-center">{t("teamPlanner.transferMarket.ptsShort")}</div>
                           <div className="w-12 text-center">£</div>
                           <div className="w-8 text-center">%</div>
                         </div>
@@ -2827,15 +2794,13 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                                         addPlayerIn(player.id);
                                       } else {
                                         alert(
-                                          `No ${getPlayerPosition(
-                                            player.element_type
-                                          )} selected for transfer out!`
+                                          t("teamPlanner.transfers.noPositionOut", {
+                                            position: getPlayerPosition(player.element_type),
+                                          })
                                         );
                                       }
                                     } else {
-                                      alert(
-                                        "Not enough budget for this player!"
-                                      );
+                                      alert(t("teamPlanner.transfers.notEnoughBudget"));
                                     }
                                   } else if (isTransferOut) {
                                     // Already marked for transfer out, remove from transfer out
@@ -3204,8 +3169,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                           </span>
                           {uiState.compareMode && (
                             <span className="text-sm text-blue-600 dark:text-blue-400">
-                              {uiState.comparedPlayers.length}/2 players
-                              selected for comparison
+                              {t("teamPlanner.compareSelected", { count: uiState.comparedPlayers.length })}
                             </span>
                           )}
                         </div>
@@ -3311,7 +3275,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             <div className="flex items-center gap-3">
               <div className="animate-spin w-6 h-6 border-2 border-theme-foreground border-t-transparent rounded-full"></div>
               <span className="text-gray-700 dark:text-gray-300">
-                Checking your account...
+                {t("teamPlanner.checkingAccount")}
               </span>
             </div>
           </div>
@@ -3440,16 +3404,14 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-bold bg-gradient-to-r from-violet-700 via-fuchsia-600 to-indigo-700 dark:from-violet-300 dark:via-fuchsia-300 dark:to-indigo-300 bg-clip-text text-transparent">
-                        {i18n.language === "bs" ? "AI Analiza Tima" : "AI Team Analysis"}
+                        {t("teamPlanner.ai.title")}
                       </h3>
                       <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-violet-100 to-fuchsia-100 dark:from-violet-900/50 dark:to-fuchsia-900/50 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40">
                         Premium
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      {i18n.language === "bs"
-                        ? "1x sedmično · Pretvara tvoje podatke u jasan akcioni plan"
-                        : "1x weekly · Turns your data into a clear action plan"}
+                      {t("teamPlanner.ai.subtitle")}
                     </p>
                   </div>
                 </div>
@@ -3477,21 +3439,19 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       <span className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-600 opacity-40 blur-xl -z-10" />
                     </motion.div>
                     <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
-                      {i18n.language === "bs" ? "Spreman za uvid?" : "Ready for insights?"}
+                      {t("teamPlanner.ai.readyTitle")}
                     </h4>
                     <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-5 leading-relaxed">
-                      {i18n.language === "bs"
-                        ? "AI analizira tvoju formaciju, transfere, chip-ove i fixture-e — pa daje konkretne preporuke za sljedeće kolo."
-                        : "AI analyzes your formation, transfers, chips and fixtures — then gives concrete recommendations for the next gameweek."}
+                      {t("teamPlanner.ai.readyText")}
                     </p>
 
                     {/* Feature pills */}
                     <div className="flex flex-wrap items-center justify-center gap-1.5 mb-6">
                       {[
-                        { label: i18n.language === "bs" ? "Slabe tačke" : "Weak spots", color: "from-rose-500/10 to-rose-600/10 text-rose-700 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40" },
-                        { label: i18n.language === "bs" ? "Transfer ideje" : "Transfer ideas", color: "from-emerald-500/10 to-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40" },
-                        { label: i18n.language === "bs" ? "Kapiten" : "Captain pick", color: "from-amber-500/10 to-amber-600/10 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40" },
-                        { label: i18n.language === "bs" ? "Chip strategija" : "Chip strategy", color: "from-violet-500/10 to-fuchsia-500/10 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-800/40" },
+                        { label: t("teamPlanner.ai.pillWeakSpots"), color: "from-rose-500/10 to-rose-600/10 text-rose-700 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40" },
+                        { label: t("teamPlanner.ai.pillTransfers"), color: "from-emerald-500/10 to-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40" },
+                        { label: t("teamPlanner.ai.pillCaptain"), color: "from-amber-500/10 to-amber-600/10 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40" },
+                        { label: t("teamPlanner.ai.pillChips"), color: "from-violet-500/10 to-fuchsia-500/10 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-800/40" },
                       ].map((p) => (
                         <span key={p.label} className={`text-[10px] font-semibold px-2 py-1 rounded-full border bg-gradient-to-br ${p.color}`}>
                           {p.label}
@@ -3518,10 +3478,10 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                         transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
                       />
                       <FaPaperPlane className="relative w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                      <span className="relative">{i18n.language === "bs" ? "Pokreni AI Analizu" : "Run AI Analysis"}</span>
+                      <span className="relative">{t("teamPlanner.ai.run")}</span>
                     </motion.button>
                     <p className="mt-3 text-[10px] text-slate-400 dark:text-slate-500">
-                      {i18n.language === "bs" ? "Traje ~30 sekundi · Personalizovano za tvoj tim" : "Takes ~30 seconds · Personalized for your team"}
+                      {t("teamPlanner.ai.runHint")}
                     </p>
                   </div>
                 </div>
@@ -3549,16 +3509,16 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                   {canUseAI && (
                     <div className="flex items-center justify-between gap-3 rounded-xl border border-violet-200/60 dark:border-violet-800/40 bg-violet-50/60 dark:bg-violet-950/30 px-3 py-2">
                       <p className="text-xs text-slate-600 dark:text-slate-300">
-                        {i18n.language === "bs"
-                          ? `Prikazana analiza od ${new Date(aiMeta.generatedAt).toLocaleDateString("bs-BA")} · nova je dostupna`
-                          : `Showing analysis from ${new Date(aiMeta.generatedAt).toLocaleDateString("en-GB")} · a new one is available`}
+                        {t("teamPlanner.ai.showingFrom", {
+                          date: new Date(aiMeta.generatedAt).toLocaleDateString(dateLocale(i18n.language)),
+                        })}
                       </p>
                       <button
                         onClick={requestAIAnalysis}
                         className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 shadow-md shadow-violet-500/30 transition-all"
                       >
                         <FaPaperPlane className="w-3 h-3" />
-                        {i18n.language === "bs" ? "Nova analiza" : "New analysis"}
+                        {t("teamPlanner.ai.newAnalysis")}
                       </button>
                     </div>
                   )}
@@ -3594,7 +3554,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-br from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 shadow-lg shadow-violet-500/30 transition-all"
                     >
                       <FaPaperPlane className="w-3.5 h-3.5" />
-                      {i18n.language === "bs" ? "Pokušaj ponovo" : "Try again"}
+                      {t("teamPlanner.ai.tryAgain")}
                     </button>
                   )}
                   <p className="mt-3 text-[10px] font-mono text-slate-400 dark:text-slate-500">
@@ -3615,14 +3575,12 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
                       <FaRobot className="w-5 h-5" />
                     </div>
                     <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-2">
-                      {i18n.language === "bs" ? "Sedmični limit dostignut" : "Weekly limit reached"}
+                      {t("teamPlanner.ai.limitTitle")}
                     </h4>
                     <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-                      {i18n.language === "bs"
-                        ? `Već si koristio AI analizu ove sedmice. Sljedeća dostupna `
-                        : `You've used AI analysis this week. Next available `}
+                      {t("teamPlanner.ai.limitText")}{" "}
                       <span className="font-bold text-amber-700 dark:text-amber-300">
-                        {new Date(aiNextAvailableAt).toLocaleDateString(i18n.language === "bs" ? "bs-BA" : "en-GB")}
+                        {new Date(aiNextAvailableAt).toLocaleDateString(dateLocale(i18n.language))}
                       </span>
                       .
                     </p>
@@ -3635,9 +3593,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             {(aiReport || aiError || aiChatLoading || aiFinishing) && (
               <div className="relative px-5 py-3 border-t border-violet-200/40 dark:border-violet-800/30 bg-gradient-to-r from-violet-50/40 via-fuchsia-50/30 to-indigo-50/40 dark:from-violet-950/20 dark:via-fuchsia-950/10 dark:to-indigo-950/20">
                 <p className="text-[10px] text-center text-slate-500 dark:text-slate-400">
-                  {i18n.language === "bs"
-                    ? "AI uvidi su preporuke, ne garancije · Donosi odluke pažljivo"
-                    : "AI insights are suggestions, not guarantees · Decide carefully"}
+                  {t("teamPlanner.ai.disclaimer")}
                 </p>
               </div>
             )}

@@ -29,5 +29,31 @@
   "viewHistory": "Prikaži historiju",
   "comingSoon": "Uskoro",
   "failedToLoadProfile": "Neuspješno učitavanje profila",
-  "failedToUpdateProfile": "Neuspješno ažuriranje profila"
+  "failedToUpdateProfile": "Neuspješno ažuriranje profila",
+  "redirectingToLogin": "Preusmjeravanje na prijavu...",
+  "goToLogin": "Idi na prijavu",
+  "managerIdPlaceholder": "npr. 123456",
+  "save": "Sačuvaj",
+  "cancel": "Otkaži",
+  "managerIdHint": "Svoj ID možete pronaći u FPL linku:",
+  "managerIdUrlPattern": "fantasy.premierleague.com/entry/VAŠ_ID/event/",
+  "notSet": "Nije postavljeno",
+  "notVerified": "Nije potvrđeno",
+  "editManagerId": "Uredi Manager ID",
+  "managerIdEmpty": "Manager ID ne može biti prazan",
+  "managerIdSavedVerified": "Manager ID je sačuvan i potvrđen!",
+  "managerIdSaved": "Manager ID je sačuvan! Potvrda može potrajati nekoliko trenutaka.",
+  "managerIdUpdateFailed": "Ažuriranje Manager ID-a nije uspjelo",
+  "photo": {
+    "loginRequired": "Morate biti prijavljeni da biste postavili fotografiju",
+    "tooLarge": "Fotografija mora biti manja od 5MB",
+    "notImage": "Odaberite fotografiju (slikovni fajl)",
+    "uploadFailed": "Postavljanje fotografije nije uspjelo",
+    "deleteFailed": "Brisanje fotografije nije uspjelo",
+    "alt": "Profilna fotografija",
+    "upload": "Postavi fotografiju",
+    "delete": "Obriši fotografiju",
+    "hintSize": "Kliknite za postavljanje (najviše 5MB)",
+    "hintFormats": "Podržani formati: JPG, PNG, GIF"
+  }
 }

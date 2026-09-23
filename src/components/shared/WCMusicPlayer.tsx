@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, X } from "lucide-react";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 const ANTHEM_SRC = "/wc2026/The Official FIFA World Cup 26 Theme.mp3";
 
@@ -12,6 +13,7 @@ export default function WCMusicPlayer({
 }: {
   src?: string;
 }) {
+  const { t } = useTranslation("common");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -120,7 +122,7 @@ export default function WCMusicPlayer({
                 exit={{ opacity: 0, scale: 0.92 }}
                 onClick={() => setCollapsed(false)}
                 className="relative z-10 flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 group"
-                title="WC26 Anthem"
+                title={t("musicPlayer.wcAnthem")}
               >
                 <Image
                   src="/images/logos/wc-logo.png"
@@ -150,7 +152,7 @@ export default function WCMusicPlayer({
                 <button
                   onClick={() => setCollapsed(true)}
                   className="relative shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                  title="Minimize"
+                  title={t("musicPlayer.minimize")}
                 >
                   <Image
                     src="/images/logos/wc-logo.png"
@@ -164,7 +166,7 @@ export default function WCMusicPlayer({
                 {/* Title */}
                 <div className="min-w-0 hidden xs:block sm:block">
                   <p className="text-[10px] uppercase tracking-widest font-bold text-[#FFD100]/90 leading-none">
-                    Anthem
+                    {t("musicPlayer.anthem")}
                   </p>
                   <p className="text-xs sm:text-sm font-semibold text-white leading-tight truncate max-w-[120px] sm:max-w-[140px]">
                     World Cup 26
@@ -176,7 +178,7 @@ export default function WCMusicPlayer({
                   <button
                     onClick={togglePlay}
                     className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#C8102E] to-[#071B4E] hover:from-[#e01a3a] hover:to-[#0a2470] text-white flex items-center justify-center shadow-md transition-all"
-                    title={isPlaying ? "Pause" : "Play"}
+                    title={isPlaying ? t("musicPlayer.pause") : t("musicPlayer.play")}
                   >
                     {isPlaying ? (
                       <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -187,7 +189,7 @@ export default function WCMusicPlayer({
                   <button
                     onClick={toggleMute}
                     className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors bg-white/10 hover:bg-white/20 text-white"
-                    title={isMuted ? "Unmute" : "Mute"}
+                    title={isMuted ? t("musicPlayer.unmute") : t("musicPlayer.mute")}
                   >
                     {isMuted ? (
                       <VolumeX className="relative w-3.5 h-3.5" />
@@ -198,7 +200,7 @@ export default function WCMusicPlayer({
                   <button
                     onClick={() => setDismissed(true)}
                     className="w-6 h-6 sm:w-7 sm:h-7 rounded-full hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-colors"
-                    title="Close"
+                    title={t("musicPlayer.close")}
                   >
                     <X className="w-3 h-3" />
                   </button>

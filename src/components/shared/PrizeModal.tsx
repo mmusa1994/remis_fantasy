@@ -193,7 +193,7 @@ export default function PrizeModal({
             onKeyDown={handleBackdropKeyDown}
             role="button"
             tabIndex={0}
-            aria-label="Close prize modal"
+            aria-label={t("closePrizeModal")}
             style={{ zIndex: 1 }}
           />
 

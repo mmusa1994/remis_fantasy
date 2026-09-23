@@ -1,9 +1,26 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { MdRefresh } from "react-icons/md";
-import { FaCrown } from "react-icons/fa";
+import { Crown, RefreshCw } from "lucide-react";
+
+import { getPlayerTeamColors } from "@/lib/team-colors";
+import {
+  Bar,
+  Chip,
+  Delta,
+  EmptyState,
+  GhostButton,
+  ListRow,
+  Panel,
+  PlayerCell,
+  Segmented,
+  SkeletonRows,
+  StatTile,
+  POSITION_SHORT,
+  cx,
+  formatCompact,
+} from "./live/ui";
 
 interface CaptainsAnalysisProps {
   managerId?: number;
@@ -11,12 +28,22 @@ interface CaptainsAnalysisProps {
   managerData?: any;
 }
 
-interface CaptainEntry {
+interface PlayerRef {
   player_id: number;
   web_name: string;
   team: number;
-  ownership_pct: number;
+  team_code?: number;
+  element_type: number;
   points: number;
+}
+
+interface CaptainEntry extends PlayerRef {
+  ownership_pct: number;
+  captain_count?: number;
+  /** Share of the sampled top managers who captained him. */
+  captain_pct?: number;
+  captain_pct_top10?: number;
+  tc_count?: number;
   effective_points: number;
 }
 
@@ -27,473 +54,397 @@ interface ChipUsage {
   triplecaptain: number;
 }
 
-interface TierCaptain {
-  web_name: string;
-  ownership_pct: number;
-  points: number;
-}
-
-interface CaptainsByTier {
-  tier: string;
-  captains: TierCaptain[];
-}
-
 interface CaptainsData {
   topCaptains: CaptainEntry[];
   chipUsage: ChipUsage;
-  captainsByTier: CaptainsByTier[];
+  sample?: { size: number; top10_size: number; chips: ChipUsage } | null;
+  overall?: {
+    ranked_count: number;
+    most_captained: PlayerRef | null;
+  };
 }
 
-const CHIP_KEYS: Array<{
-  key: keyof ChipUsage;
-  labelKey: string;
-  labelFallback: string;
-  abbr: string;
-  color: string;
-}> = [
-  {
-    key: "wildcard",
-    labelKey: "captains.chipWildcard",
-    labelFallback: "Wildcard",
-    abbr: "WC",
-    color: "text-red-600 dark:text-red-400",
-  },
-  {
-    key: "freehit",
-    labelKey: "captains.chipFreeHit",
-    labelFallback: "Free Hit",
-    abbr: "FH",
-    color: "text-cyan-600 dark:text-cyan-400",
-  },
-  {
-    key: "benchboost",
-    labelKey: "captains.chipBenchBoost",
-    labelFallback: "Bench Boost",
-    abbr: "BB",
-    color: "text-green-600 dark:text-green-400",
-  },
-  {
-    key: "triplecaptain",
-    labelKey: "captains.chipTripleCaptain",
-    labelFallback: "Triple Captain",
-    abbr: "TC",
-    color: "text-purple-600 dark:text-purple-400",
-  },
+type Tier = "top10" | "top100";
+
+const CHIPS: Array<{ key: keyof ChipUsage; labelKey: string; fallback: string }> = [
+  { key: "wildcard", labelKey: "captains.chipWildcard", fallback: "Wildcard" },
+  { key: "freehit", labelKey: "captains.chipFreeHit", fallback: "Free Hit" },
+  { key: "benchboost", labelKey: "captains.chipBenchBoost", fallback: "Bench Boost" },
+  { key: "triplecaptain", labelKey: "captains.chipTripleCaptain", fallback: "Triple Captain" },
 ];
 
-function getPointsColor(points: number): string {
-  if (points >= 10) return "text-green-600 dark:text-green-400";
-  if (points >= 5) return "text-emerald-600 dark:text-emerald-400";
-  if (points >= 2) return "text-yellow-600 dark:text-yellow-400";
-  return "text-red-600 dark:text-red-400";
-}
+const COLLAPSED_ROWS = 8;
 
-function getPointsBg(points: number): string {
-  if (points >= 10) return "bg-green-100 dark:bg-green-900/30";
-  if (points >= 5) return "bg-emerald-100 dark:bg-emerald-900/30";
-  if (points >= 2) return "bg-yellow-100 dark:bg-yellow-900/30";
-  return "bg-red-100 dark:bg-red-900/30";
-}
+const clubOf = (player: { team?: number; team_code?: number }) =>
+  getPlayerTeamColors(player).shortName;
 
-function OwnershipBar({ pct }: { pct: number }) {
+/** One of the three headline captain picks. */
+function CaptainCard({
+  label,
+  player,
+  meta,
+  points,
+  highlight = false,
+}: {
+  label: string;
+  player: PlayerRef;
+  meta: React.ReactNode;
+  points: number;
+  highlight?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-2 w-full">
-      <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full bg-blue-500 theme-transition"
-          style={{ width: `${Math.min(pct, 100)}%` }}
-        />
+    <div
+      className={cx(
+        "min-w-0 rounded-xl border px-3 py-2.5",
+        highlight
+          ? "border-violet-500/30 bg-violet-500/[0.06]"
+          : "border-theme-border bg-theme-card-secondary"
+      )}
+    >
+      <div className="truncate text-[10px] font-medium uppercase tracking-wider text-theme-text-muted">
+        {label}
       </div>
-      <span className="text-xs font-medium text-theme-text-secondary w-12 text-right">
-        {pct.toFixed(1)}%
-      </span>
-    </div>
-  );
-}
-
-function SkeletonLoader() {
-  return (
-    <div className="bg-theme-card rounded-lg border border-theme-border p-4 space-y-2 theme-transition">
-      {Array.from({ length: 6 }, (_, i) => (
-        <div key={i} className="h-10 bg-theme-card-secondary rounded animate-pulse" />
-      ))}
+      <div className="mt-1.5 flex items-center gap-3">
+        <PlayerCell player={player} name={player.web_name} meta={meta} size="sm" />
+        <span className="shrink-0 text-xl font-semibold leading-none tabular-nums text-theme-heading-primary">
+          {points}
+        </span>
+      </div>
     </div>
   );
 }
 
 const CaptainsAnalysis = React.memo(function CaptainsAnalysis({
-  managerId,
   gameweek,
   managerData,
 }: CaptainsAnalysisProps) {
   const { t } = useTranslation("fpl");
   const [data, setData] = useState<CaptainsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // GW whose request has settled; anything else means we're still loading
+  const [loadedGw, setLoadedGw] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [tier, setTier] = useState<Tier>("top100");
+  const [expanded, setExpanded] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    if (!gameweek) return;
-
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `/api/fpl/captains-stats?gameweek=${gameweek}`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch captains data");
-      }
-      const result = await response.json();
-      if (result.success && result.data) {
-        setData(result.data);
-      } else {
-        throw new Error(result.error || "Invalid response");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [gameweek]);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    setLoading(true);
-    fetchData();
-  }, [fetchData]);
+    if (!gameweek) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch(`/api/fpl/captains-stats?gameweek=${gameweek}`);
+        if (!response.ok) throw new Error("Failed to fetch captains data");
+        const result = await response.json();
+        if (!result.success || !result.data) {
+          throw new Error(result.error || "Invalid response");
+        }
+        if (!cancelled) {
+          setData(result.data);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        if (!cancelled) {
+          setLoadedGw(gameweek);
+          setRefreshing(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [gameweek, reloadKey]);
+
+  const loading = loadedGw !== gameweek;
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchData();
+    setReloadKey((key) => key + 1);
   };
 
-  if (loading) {
-    return <SkeletonLoader />;
-  }
+  // The manager's own captain, straight from the loaded team
+  const own = useMemo(() => {
+    const pick = (managerData?.team_with_stats ?? []).find((p: any) => p.is_captain);
+    if (!pick?.player) return null;
+    const points = pick.live_stats?.total_points ?? 0;
+    const multiplier = pick.multiplier || 2;
+    return {
+      ref: {
+        player_id: pick.player_id,
+        web_name: pick.player.web_name,
+        team: pick.player.team,
+        team_code: pick.player.team_code,
+        element_type: pick.player.element_type,
+        points,
+      } as PlayerRef,
+      multiplier,
+      total: points * multiplier,
+    };
+  }, [managerData?.team_with_stats]);
 
-  if (error) {
+  const rows = useMemo(() => {
+    if (!data) return [];
+    const pctOf = (c: CaptainEntry) =>
+      (tier === "top10" ? c.captain_pct_top10 : c.captain_pct) ?? 0;
+    return data.topCaptains
+      .filter((c) => pctOf(c) > 0)
+      .map((c) => ({ ...c, pct: pctOf(c) }))
+      .sort((a, b) => b.pct - a.pct || b.points - a.points);
+  }, [data, tier]);
+
+  const title = t("fplLive.ui.captains.title", "Captains · GW{{gw}}", { gw: gameweek });
+  const refreshButton = (
+    <GhostButton
+      onClick={handleRefresh}
+      disabled={refreshing}
+      title={t("refresh", "Refresh")}
+    >
+      <RefreshCw className={cx(refreshing && "animate-spin")} />
+    </GhostButton>
+  );
+
+  if (loading) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-        <div className="w-full">
-          <h3 className="font-semibold text-red-800 dark:text-red-300 mb-2">
-            {t("common.error", "Error")}
-          </h3>
-          <p className="text-red-600 dark:text-red-400 text-sm mb-3">
-            {error}
-          </p>
-          <button
-            onClick={handleRefresh}
-            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
-          >
-            {t("common.retry", "Retry")}
-          </button>
-        </div>
-      </div>
+      <Panel title={title} flush>
+        <SkeletonRows rows={7} />
+      </Panel>
     );
   }
 
-  if (!data) return null;
+  if (error || !data) {
+    return (
+      <Panel title={title}>
+        <EmptyState
+          icon={<Crown />}
+          title={t("captains.error", "Error loading captain data")}
+          text={error ? t("fplLive.ui.pages.retryHint", "Check your connection and try again.") : undefined}
+          action={
+            <GhostButton onClick={handleRefresh}>
+              <RefreshCw />
+              {t("fplLive.ui.captains.retry", "Try again")}
+            </GhostButton>
+          }
+        />
+      </Panel>
+    );
+  }
 
-  const { topCaptains, chipUsage, captainsByTier } = data;
-  const tcPlayers = topCaptains.filter(
-    (c) => c.effective_points > c.points * 1.5
-  );
+  const sample = data.sample ?? null;
+  const mostCaptained = data.overall?.most_captained ?? null;
+  const topPick = sample ? rows[0] ?? null : null;
+  const rankedCount = data.overall?.ranked_count ?? 0;
+  const tierSize = sample ? (tier === "top10" ? sample.top10_size : sample.size) : 0;
+  const shownRows = expanded ? rows : rows.slice(0, COLLAPSED_ROWS);
+  const vsCrowd = own && mostCaptained && own.ref.player_id !== mostCaptained.player_id
+    ? own.total - mostCaptained.points * 2
+    : 0;
 
   return (
-    <div className="space-y-5">
-      {/* Section Header */}
-      <div className="bg-theme-card rounded-lg border border-theme-border p-4 theme-transition">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FaCrown className="text-lg text-amber-500" />
-            <div>
-              <h2 className="text-lg font-bold text-theme-foreground">
-                {t("captains.title", "Captains Analysis")}
-              </h2>
-              <p className="text-theme-text-secondary text-sm">
-                {t(
-                  "captains.subtitle",
-                  `GW${gameweek} captain picks & chip usage`
-                )}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="p-2 rounded-md border border-theme-border text-theme-text-secondary hover:text-theme-foreground transition-colors disabled:opacity-50"
-            title={t("common.refresh", "Refresh")}
-          >
-            <MdRefresh
-              className={`text-lg ${refreshing ? "animate-spin" : ""}`}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Top Captains Table */}
-      <div className="bg-theme-card rounded-lg border border-theme-border shadow-sm overflow-hidden theme-transition">
-        <div className="px-4 py-3 border-b border-theme-border">
-          <h3 className="text-sm font-semibold text-theme-foreground">
-            {t("captains.topCaptains", "Top Captains")}
-          </h3>
-        </div>
-
-        {topCaptains.length === 0 ? (
-          <div className="p-6 text-center text-theme-text-secondary text-sm">
-            {t("captains.noCaptainData", "No captain data available")}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-theme-border text-theme-text-secondary text-xs">
-                  <th className="text-left px-4 py-2 font-medium">#</th>
-                  <th className="text-left px-4 py-2 font-medium">
-                    {t("captains.player", "Player")}
-                  </th>
-                  <th className="text-left px-4 py-2 font-medium min-w-[120px]">
-                    {t("captains.ownership", "Captaincy %")}
-                  </th>
-                  <th className="text-center px-4 py-2 font-medium">
-                    {t("captains.points", "Pts")}
-                  </th>
-                  <th className="text-center px-4 py-2 font-medium">
-                    {t("captains.effective", "Eff. Pts")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {topCaptains.map((captain, index) => (
-                  <tr
-                    key={captain.player_id}
-                    className="border-b border-theme-border last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 theme-transition"
-                  >
-                    <td className="px-4 py-3 text-theme-text-secondary font-medium">
-                      {index + 1}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {index === 0 && (
-                          <FaCrown className="text-amber-500 text-xs flex-shrink-0" />
-                        )}
-                        <span className="font-medium text-theme-foreground">
-                          {captain.web_name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <OwnershipBar pct={captain.ownership_pct} />
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span
-                        className={`font-semibold ${getPointsColor(captain.points)}`}
-                      >
-                        {captain.points}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${getPointsBg(captain.effective_points)} ${getPointsColor(captain.effective_points)}`}
-                      >
-                        {captain.effective_points}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+    <div className="space-y-3 sm:space-y-4">
+      {/* Headline picks */}
+      <Panel
+        title={title}
+        subtitle={t(
+          "fplLive.ui.captains.subtitle",
+          "Your captain against the whole game and the top managers"
         )}
-      </div>
-
-      {/* Chips Used This GW */}
-      <div className="bg-theme-card rounded-lg border border-theme-border shadow-sm theme-transition">
-        <div className="px-4 py-3 border-b border-theme-border">
-          <h3 className="text-sm font-semibold text-theme-foreground">
-            {t("captains.chipsUsed", "Chips Used This GW")}
-          </h3>
+        action={refreshButton}
+      >
+        <div className="grid gap-2 sm:grid-cols-3 sm:gap-3">
+          {own && (
+            <CaptainCard
+              highlight
+              label={t("fplLive.ui.captains.yourCaptain", "Your captain")}
+              player={own.ref}
+              points={own.total}
+              meta={
+                <>
+                  <span className="shrink-0">{clubOf(own.ref)}</span>
+                  <span className="shrink-0 tabular-nums">
+                    {own.ref.points}×{own.multiplier}
+                  </span>
+                  {vsCrowd !== 0 && (
+                    <Delta value={vsCrowd} className="text-[11px]" />
+                  )}
+                </>
+              }
+            />
+          )}
+          {mostCaptained && (
+            <CaptainCard
+              label={t("fplLive.ui.captains.mostCaptained", "Most captained · all")}
+              player={mostCaptained}
+              points={mostCaptained.points * 2}
+              meta={
+                <>
+                  <span className="shrink-0">{clubOf(mostCaptained)}</span>
+                  <span className="shrink-0 tabular-nums">{mostCaptained.points}×2</span>
+                </>
+              }
+            />
+          )}
+          {topPick && sample && (
+            <CaptainCard
+              label={t("fplLive.ui.captains.topPick", "Top {{n}} pick", { n: tierSize })}
+              player={topPick}
+              points={topPick.points * 2}
+              meta={
+                <>
+                  <span className="shrink-0">{clubOf(topPick)}</span>
+                  <span className="shrink-0 tabular-nums">{topPick.pct}%</span>
+                </>
+              }
+            />
+          )}
         </div>
-        <div className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {CHIP_KEYS.map(({ key, labelKey, labelFallback, abbr, color }) => {
-              const usage = chipUsage[key] ?? 0;
-              return (
-                <div
-                  key={key}
-                  className="rounded-lg border border-theme-border p-3 text-center theme-transition"
-                >
-                  <div
-                    className={`text-xs font-bold uppercase tracking-wider mb-1 ${color}`}
-                  >
-                    {abbr}
-                  </div>
-                  <div className="text-2xl font-bold text-theme-foreground">
-                    {usage >= 1000000
-                      ? `${(usage / 1000000).toFixed(1)}M`
-                      : usage >= 1000
-                        ? `${(usage / 1000).toFixed(1)}k`
-                        : usage.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-theme-text-secondary mt-1">
-                    {t(labelKey, labelFallback)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      </Panel>
 
-      {/* Captain by Rank Tier */}
-      {captainsByTier && captainsByTier.length > 0 && (
-        <div className="bg-theme-card rounded-lg border border-theme-border shadow-sm overflow-hidden theme-transition">
-          <div className="px-4 py-3 border-b border-theme-border">
-            <h3 className="text-sm font-semibold text-theme-foreground">
-              {t("captains.byRankTier", "Captain by Rank Tier")}
-            </h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-theme-border text-theme-text-secondary text-xs">
-                  <th className="text-left px-4 py-2 font-medium">
-                    {t("captains.tier", "Tier")}
-                  </th>
-                  <th className="text-left px-4 py-2 font-medium">
-                    {t("captains.topPick", "Top Pick")}
-                  </th>
-                  <th className="text-left px-4 py-2 font-medium min-w-[100px]">
-                    {t("captains.ownership", "Captaincy %")}
-                  </th>
-                  <th className="text-center px-4 py-2 font-medium">
-                    {t("captains.points", "Pts")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {captainsByTier.map((tierData) => {
-                  const topCaptain = tierData.captains[0];
-                  if (!topCaptain) return null;
+      {/* Top managers' captains */}
+      <Panel
+        flush
+        title={t("fplLive.ui.captains.listTitle", "Top managers' captains")}
+        subtitle={
+          sample
+            ? t(
+                "fplLive.ui.captains.listSubtitle",
+                "% = share of the top {{n}} in the overall standings who captained him",
+                { n: tierSize }
+              )
+            : undefined
+        }
+      >
+        {!sample || rows.length === 0 ? (
+          <EmptyState
+            icon={<Crown />}
+            title={t("fplLive.ui.captains.noSample", "No captain picks yet")}
+            text={t(
+              "fplLive.ui.captains.noSampleText",
+              "Top managers' captains become public after the GW{{gw}} deadline.",
+              { gw: gameweek }
+            )}
+          />
+        ) : (
+          <>
+            <div className="px-4 pb-3 sm:px-5">
+              <Segmented<Tier>
+                value={tier}
+                onChange={(value) => {
+                  setTier(value);
+                  setExpanded(false);
+                }}
+                options={[
+                  { value: "top10", label: `Top ${sample.top10_size}` },
+                  { value: "top100", label: `Top ${sample.size}` },
+                ]}
+              />
+            </div>
 
-                  return (
-                    <tr
-                      key={tierData.tier}
-                      className="border-b border-theme-border last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 theme-transition"
-                    >
-                      <td className="px-4 py-3">
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-                          {tierData.tier}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-medium text-theme-foreground">
-                        {topCaptain.web_name}
-                      </td>
-                      <td className="px-4 py-3">
-                        <OwnershipBar pct={topCaptain.ownership_pct} />
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span
-                          className={`font-semibold ${getPointsColor(topCaptain.points)}`}
-                        >
-                          {topCaptain.points}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+            <div className="flex items-center gap-3 border-t border-theme-border px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-theme-text-muted sm:px-5">
+              <span className="w-4 shrink-0">#</span>
+              <span className="min-w-0 flex-1">{t("captains.player", "Player")}</span>
+              <span className="w-20 shrink-0 sm:w-32">
+                {t("fplLive.ui.captains.captaincy", "Captaincy")}
+              </span>
+              <span className="w-8 shrink-0 text-right">×2</span>
+            </div>
 
-          {/* Expanded tier details */}
-          <div className="px-4 pb-4 pt-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {captainsByTier.map((tierData) => (
-                <div
-                  key={`detail-${tierData.tier}`}
-                  className="rounded-lg border border-theme-border p-3 theme-transition"
-                >
-                  <div className="text-xs font-semibold text-theme-text-secondary uppercase tracking-wider mb-2">
-                    {tierData.tier}
-                  </div>
-                  <div className="space-y-1.5">
-                    {tierData.captains.slice(0, 3).map((captain, idx) => (
-                      <div
-                        key={`${tierData.tier}-${captain.web_name}`}
-                        className="flex items-center justify-between text-xs"
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-theme-text-secondary w-4">
-                            {idx + 1}.
-                          </span>
-                          <span className="text-theme-foreground font-medium">
-                            {captain.web_name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-theme-text-secondary">
-                            {captain.ownership_pct.toFixed(1)}%
-                          </span>
-                          <span
-                            className={`font-semibold ${getPointsColor(captain.points)}`}
-                          >
-                            {captain.points}{t("captains.ptsAbbr", "pts")}
-                          </span>
-                        </div>
+            <div className="divide-y divide-theme-border border-t border-theme-border">
+              {shownRows.map((captain, index) => {
+                const isOwn = own?.ref.player_id === captain.player_id;
+                return (
+                  <ListRow key={captain.player_id} highlighted={isOwn}>
+                    <span className="w-4 shrink-0 text-xs tabular-nums text-theme-text-muted">
+                      {index + 1}
+                    </span>
+                    <PlayerCell
+                      player={captain}
+                      name={captain.web_name}
+                      badges={
+                        isOwn ? (
+                          <Chip tone="accent">{t("fplLive.ui.captains.yours", "Yours")}</Chip>
+                        ) : undefined
+                      }
+                      meta={
+                        <>
+                          <span className="shrink-0">{clubOf(captain)}</span>
+                          <span className="shrink-0 text-theme-border-strong">·</span>
+                          <span className="shrink-0">{POSITION_SHORT[captain.element_type]}</span>
+                          {(captain.tc_count ?? 0) > 0 && (
+                            <span
+                              className="shrink-0"
+                              title={t(
+                                "fplLive.ui.captains.tcTitle",
+                                "Triple captained by {{n}} top managers",
+                                { n: captain.tc_count }
+                              )}
+                            >
+                              <Chip>TC {captain.tc_count}</Chip>
+                            </span>
+                          )}
+                        </>
+                      }
+                    />
+                    <div className="w-20 shrink-0 sm:w-32">
+                      <div className="mb-1 text-xs font-semibold tabular-nums text-theme-heading-primary">
+                        {captain.pct}%
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                      <Bar value={captain.pct} />
+                    </div>
+                    <span className="w-8 shrink-0 text-right text-base font-semibold tabular-nums text-theme-heading-primary">
+                      {captain.points * 2}
+                    </span>
+                  </ListRow>
+                );
+              })}
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Top Triple Captains */}
-      {tcPlayers.length > 0 && (
-        <div className="bg-theme-card rounded-lg border border-theme-border shadow-sm overflow-hidden theme-transition">
-          <div className="px-4 py-3 border-b border-theme-border">
-            <h3 className="text-sm font-semibold text-theme-foreground">
-              {t("captains.tripleCaptains", "Top Triple Captains")}
-            </h3>
-          </div>
-          <div className="p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {tcPlayers.map((player) => (
-                <div
-                  key={`tc-${player.player_id}`}
-                  className="flex items-center gap-3 rounded-lg border border-theme-border p-3 theme-transition"
-                >
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                    <span className="text-purple-700 dark:text-purple-300 text-xs font-bold">3x</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-theme-foreground text-sm truncate">
-                      {player.web_name}
-                    </div>
-                    <div className="text-xs text-theme-text-secondary">
-                      {player.ownership_pct.toFixed(1)}% {t("captains.ownership", "Captaincy %")}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div
-                      className={`text-lg font-bold ${getPointsColor(player.effective_points)}`}
-                    >
-                      {player.effective_points}
-                    </div>
-                    <div className="text-xs text-theme-text-secondary">
-                      ({player.points} x3)
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+            {rows.length > COLLAPSED_ROWS && (
+              <div className="flex justify-center border-t border-theme-border px-4 py-3">
+                <GhostButton onClick={() => setExpanded((value) => !value)}>
+                  {expanded
+                    ? t("fplLive.ui.captains.showLess", "Show less")
+                    : t("fplLive.ui.captains.showAll", "Show all ({{n}})", { n: rows.length })}
+                </GhostButton>
+              </div>
+            )}
+          </>
+        )}
+      </Panel>
+
+      {/* Chips */}
+      <Panel
+        title={t("fplLive.ui.captains.chipsTitle", "Chips in GW{{gw}}", { gw: gameweek })}
+        subtitle={t("fplLive.ui.captains.chipsSubtitle", "Across all managers")}
+      >
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+          {CHIPS.map(({ key, labelKey, fallback }) => {
+            const usage = data.chipUsage?.[key] ?? 0;
+            const share = rankedCount > 0 ? ((usage / rankedCount) * 100).toFixed(1) : null;
+            const hintParts = [
+              share !== null
+                ? t("fplLive.ui.captains.chipShare", "{{pct}}% of managers", { pct: share })
+                : null,
+              sample
+                ? t("fplLive.ui.captains.chipTop", "top {{n}}: {{used}}", {
+                    n: sample.size,
+                    used: sample.chips[key],
+                  })
+                : null,
+            ].filter(Boolean);
+            return (
+              <StatTile
+                key={key}
+                label={t(labelKey, fallback)}
+                value={formatCompact(usage)}
+                hint={hintParts.length ? hintParts.join(" · ") : undefined}
+              />
+            );
+          })}
         </div>
-      )}
+      </Panel>
     </div>
   );
 });

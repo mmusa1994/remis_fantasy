@@ -2,466 +2,548 @@
 
 import React from "react";
 import { useTranslation } from "react-i18next";
-import FlagLoader from "@/components/shared/FlagLoader";
-import LoadingCard from "@/components/shared/LoadingCard";
-import { getCountryFlagCode } from "@/utils/countryMapping";
-import { formatTeamValueWithCurrency } from "@/utils/teamValueFormatter";
+import { ArrowDownRight, ArrowRight, ArrowUpRight, Repeat } from "lucide-react";
+
+import {
+  Bar,
+  Chip,
+  Panel,
+  PlayerCell,
+  StatTile,
+  cx,
+  formatCompact,
+  formatNumber,
+  formatPrice,
+  formatRank,
+} from "@/components/fpl/live/ui";
+import type {
+  OverviewEntryHistory,
+  OverviewGameweekStatus,
+  OverviewManager,
+  OverviewSquadPlayer,
+  OverviewTeamTotals,
+} from "@/components/fpl/live/overview-types";
+
+/* ------------------------------------------------------------------ */
+/* Derived numbers                                                     */
+/* ------------------------------------------------------------------ */
+
+export interface OverviewNumbers {
+  /** Live GW points (auto-subs + provisional bonus), before hits. */
+  heroPoints: number;
+  /** FPL's own figure for the GW, when it differs from the live one. */
+  officialPoints: number | null;
+  gwRank: number | null;
+  overallRank: number | null;
+  previousOverallRank: number | null;
+  rankChange: number | null;
+  arrow: "green" | "red" | "neutral" | null;
+  totalPoints: number | null;
+  percentile: number | null;
+  value: number | null;
+  bank: number | null;
+  transfers: number | null;
+  hitCost: number;
+  benchPoints: number | null;
+  activeChip: string | null;
+  bonus: number;
+}
+
+const num = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) ? v : null;
+
+/**
+ * Picks every headline number from the most specific source: the loaded
+ * gameweek's history (gameweek-status / entry_history) before the manager
+ * summary, which only ever describes the latest gameweek.
+ */
+export function deriveOverviewNumbers({
+  manager,
+  teamTotals,
+  entryHistory,
+  gameweekStatus,
+  bonusAdded,
+  activeChip,
+}: {
+  manager?: OverviewManager | null;
+  teamTotals?: OverviewTeamTotals | null;
+  entryHistory?: OverviewEntryHistory | null;
+  gameweekStatus?: OverviewGameweekStatus | null;
+  bonusAdded: boolean;
+  activeChip?: string | null;
+}): OverviewNumbers {
+  const status = gameweekStatus ?? null;
+  const official =
+    num(entryHistory?.points) ?? num(status?.gameweek_points) ?? num(manager?.summary_event_points);
+  // The scoring service reports zeros when it fails — only trust a live
+  // figure that is non-zero, or when FPL itself has nothing yet.
+  const liveRaw = num(teamTotals?.with_autosubs?.live_points_gross);
+  const live = liveRaw !== null && (liveRaw > 0 || !official) ? liveRaw : null;
+  const heroPoints = live ?? official ?? 0;
+  const liveTotalRaw = num(teamTotals?.with_autosubs?.live_total);
+  const liveTotal = liveTotalRaw !== null && liveTotalRaw > 0 ? liveTotalRaw : null;
+
+  const hasRealArrow =
+    !!status && num(status.previous_overall_rank) !== null && num(status.overall_rank) !== null;
+
+  return {
+    heroPoints,
+    officialPoints: official !== null && live !== null && official !== live ? official : null,
+    gwRank: num(status?.gameweek_rank) ?? num(entryHistory?.rank) ?? num(manager?.summary_event_rank),
+    overallRank:
+      num(status?.overall_rank) ?? num(entryHistory?.overall_rank) ?? num(manager?.summary_overall_rank),
+    previousOverallRank: num(status?.previous_overall_rank),
+    rankChange: hasRealArrow ? status!.rank_change : null,
+    arrow: hasRealArrow ? status!.arrow_direction : null,
+    totalPoints:
+      liveTotal ??
+      num(status?.total_points) ??
+      num(entryHistory?.total_points) ??
+      num(manager?.summary_overall_points),
+    percentile: num(status?.percentile_rank) ?? num(entryHistory?.percentile_rank),
+    value: num(status?.value) ?? num(entryHistory?.value) ?? num(manager?.last_deadline_value),
+    bank: num(status?.bank) ?? num(entryHistory?.bank) ?? num(manager?.last_deadline_bank),
+    transfers: num(status?.event_transfers) ?? num(entryHistory?.event_transfers),
+    hitCost: num(status?.event_transfers_cost) ?? num(entryHistory?.event_transfers_cost) ?? 0,
+    benchPoints:
+      num(teamTotals?.bench_points_final) ?? num(status?.points_on_bench) ?? num(entryHistory?.points_on_bench),
+    activeChip: activeChip ?? status?.active_chip ?? null,
+    bonus: (bonusAdded ? teamTotals?.final_bonus : teamTotals?.predicted_bonus) ?? 0,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero                                                                */
+/* ------------------------------------------------------------------ */
+
+const RANK_MILESTONES = [
+  { label: "Top 10K", threshold: 10_000 },
+  { label: "Top 50K", threshold: 50_000 },
+  { label: "Top 100K", threshold: 100_000 },
+  { label: "Top 250K", threshold: 250_000 },
+  { label: "Top 500K", threshold: 500_000 },
+  { label: "Top 1M", threshold: 1_000_000 },
+  { label: "Top 2M", threshold: 2_000_000 },
+  { label: "Top 5M", threshold: 5_000_000 },
+];
+
+function useChipLabel() {
+  const { t } = useTranslation("fpl");
+  return (chip: string) =>
+    ({
+      wildcard: t("fplLive.ui.overview.chipWildcard", "Wildcard"),
+      freehit: t("fplLive.ui.overview.chipFreeHit", "Free Hit"),
+      bboost: t("fplLive.ui.overview.chipBenchBoost", "Bench Boost"),
+      "3xc": t("fplLive.ui.overview.chipTripleCaptain", "Triple Captain"),
+      manager: t("fplLive.ui.overview.chipAssistantManager", "Assistant Manager"),
+    })[chip] || chip;
+}
+
+interface OverviewHeroProps {
+  manager?: OverviewManager | null;
+  numbers: OverviewNumbers;
+  gameweek: number;
+  bonusAdded: boolean;
+  gameweekStatus?: OverviewGameweekStatus | null;
+}
+
+export function OverviewHero({
+  numbers,
+  gameweek,
+  bonusAdded,
+}: OverviewHeroProps) {
+  const { t } = useTranslation("fpl");
+  const chipLabel = useChipLabel();
+
+  const { overallRank } = numbers;
+  const bracket = overallRank
+    ? RANK_MILESTONES.find((m) => overallRank <= m.threshold) ?? null
+    : null;
+  const next = overallRank
+    ? [...RANK_MILESTONES].reverse().find((m) => m.threshold < overallRank) ?? null
+    : null;
+  // Progress through the current bracket towards the next milestone
+  const bracketProgress =
+    overallRank && next
+      ? (() => {
+          const top = bracket?.threshold ?? next.threshold * 2;
+          const span = top - next.threshold;
+          return span > 0 ? ((top - overallRank) / span) * 100 : 0;
+        })()
+      : 100;
+
+
+  const ArrowIcon =
+    numbers.arrow === "green" ? ArrowUpRight : numbers.arrow === "red" ? ArrowDownRight : ArrowRight;
+
+  return (
+    <Panel>
+      {/* Gameweek label + active chip (team name and live state sit in the page header) */}
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-theme-text-muted">
+          {t("fplLive.ui.overview.heroLabel", "Gameweek {{gw}}", { gw: gameweek })}
+        </span>
+        {numbers.activeChip && <Chip tone="accent">{chipLabel(numbers.activeChip)}</Chip>}
+      </div>
+
+      {/* Points + ranks */}
+      <div className="mt-4 flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <div className="text-[3.25rem] font-semibold leading-none tracking-tight text-theme-heading-primary">
+            {numbers.heroPoints}
+          </div>
+          <div className="mt-2 text-xs text-theme-text-muted">
+            {t("fplLive.ui.overview.gwPoints", "points · GW{{gw}}", { gw: gameweek })}
+            {numbers.bonus > 0 && (
+              <span className="text-theme-text-secondary">
+                {" · "}
+                {bonusAdded
+                  ? t("fplLive.ui.overview.bonusFinal", "bonus +{{bonus}}", { bonus: numbers.bonus })
+                  : t("fplLive.ui.overview.bonusProvisional", "provisional bonus +{{bonus}}", {
+                      bonus: numbers.bonus,
+                    })}
+              </span>
+            )}
+          </div>
+          {numbers.officialPoints !== null && (
+            <div className="mt-0.5 text-[11px] text-theme-text-muted">
+              {t("fplLive.ui.overview.officialPoints", "Official {{points}} · live adds bonus & auto-subs", {
+                points: numbers.officialPoints,
+              })}
+            </div>
+          )}
+        </div>
+
+        <dl className="shrink-0 space-y-2 text-right">
+          <div>
+            <dt className="text-[10px] font-medium uppercase tracking-wider text-theme-text-muted">
+              {t("fplLive.ui.overview.gwRank", "GW rank")}
+            </dt>
+            <dd className="text-[15px] font-semibold tabular-nums text-theme-heading-primary">
+              {formatRank(numbers.gwRank)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[10px] font-medium uppercase tracking-wider text-theme-text-muted">
+              {t("fplLive.ui.overview.overallRank", "Overall rank")}
+            </dt>
+            <dd className="text-[15px] font-semibold tabular-nums text-theme-heading-primary">
+              {formatRank(numbers.overallRank)}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      {/* Arrow */}
+      {numbers.arrow && (
+        <div className="mt-4 flex items-center gap-2.5 border-t border-theme-border pt-3.5">
+          <span
+            className={cx(
+              "flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+              numbers.arrow === "green"
+                ? "bg-emerald-500/10 text-emerald-500"
+                : numbers.arrow === "red"
+                ? "bg-rose-500/10 text-rose-500"
+                : "bg-theme-card-secondary text-theme-text-muted"
+            )}
+          >
+            <ArrowIcon className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 text-xs leading-snug">
+            <div className="font-semibold text-theme-heading-primary">
+              {numbers.arrow === "green"
+                ? t("fplLive.ui.overview.greenArrow", "Green arrow")
+                : numbers.arrow === "red"
+                ? t("fplLive.ui.overview.redArrow", "Red arrow")
+                : t("fplLive.ui.overview.noArrow", "No rank change")}
+            </div>
+            {numbers.rankChange !== null && numbers.rankChange !== 0 && (
+              <div className="text-theme-text-muted">
+                {numbers.rankChange > 0
+                  ? t("fplLive.ui.overview.placesUp", "{{places}} places up from {{from}}", {
+                      places: formatNumber(numbers.rankChange),
+                      from: formatRank(numbers.previousOverallRank),
+                    })
+                  : t("fplLive.ui.overview.placesDown", "{{places}} places down from {{from}}", {
+                      places: formatNumber(Math.abs(numbers.rankChange)),
+                      from: formatRank(numbers.previousOverallRank),
+                    })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Next rank milestone */}
+      {overallRank ? (
+        <div className={cx("mt-3.5", !numbers.arrow && "border-t border-theme-border pt-3.5")}>
+          <div className="mb-1.5 flex items-baseline justify-between gap-2 text-[11px]">
+            <span className="font-medium text-theme-text-secondary">
+              {numbers.percentile
+                ? t("fplLive.ui.overview.topPercent", "Top {{pct}}%", { pct: numbers.percentile })
+                : bracket?.label ?? formatRank(overallRank)}
+            </span>
+            <span className="truncate text-theme-text-muted">
+              {next
+                ? t("fplLive.ui.overview.milestoneNext", "{{places}} places to {{target}}", {
+                    places: formatCompact(overallRank - next.threshold),
+                    target: next.label,
+                  })
+                : t("fplLive.ui.overview.milestoneTop", "Inside the top 10K")}
+            </span>
+          </div>
+          <Bar value={bracketProgress} />
+        </div>
+      ) : null}
+    </Panel>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* KPI tiles                                                           */
+/* ------------------------------------------------------------------ */
+
+export function OverviewKpis({ numbers }: { numbers: OverviewNumbers }) {
+  const { t } = useTranslation("fpl");
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+      <StatTile
+        label={t("fplLive.ui.overview.kpiTotalPoints", "Total points")}
+        value={formatNumber(numbers.totalPoints)}
+        hint={
+          numbers.percentile
+            ? t("fplLive.ui.overview.topPercent", "Top {{pct}}%", { pct: numbers.percentile })
+            : undefined
+        }
+      />
+      <StatTile
+        label={t("fplLive.ui.overview.kpiTeamValue", "Team value")}
+        value={formatPrice(numbers.value)}
+        hint={
+          numbers.bank !== null
+            ? t("fplLive.ui.overview.kpiBank", "In the bank {{bank}}", { bank: formatPrice(numbers.bank) })
+            : undefined
+        }
+      />
+      <StatTile
+        label={t("fplLive.ui.overview.kpiTransfers", "Transfers")}
+        value={numbers.transfers ?? "—"}
+        hint={
+          numbers.hitCost > 0 ? (
+            <span className="text-rose-500">
+              {t("fplLive.ui.overview.kpiHit", "Hit −{{cost}}", { cost: numbers.hitCost })}
+            </span>
+          ) : (
+            t("fplLive.ui.overview.kpiNoHit", "No hit taken")
+          )
+        }
+      />
+      <StatTile
+        label={t("fplLive.ui.overview.kpiBench", "Bench points")}
+        value={numbers.benchPoints ?? "—"}
+        hint={
+          numbers.activeChip === "bboost"
+            ? t("fplLive.ui.overview.kpiBenchBoost", "counted — Bench Boost")
+            : t("fplLive.ui.overview.kpiBenchHint", "left on the bench")
+        }
+      />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Auto-subs                                                           */
+/* ------------------------------------------------------------------ */
+
+export function AutoSubsPanel({
+  teamTotals,
+  teamWithStats,
+}: {
+  teamTotals?: OverviewTeamTotals | null;
+  teamWithStats?: OverviewSquadPlayer[];
+}) {
+  const { t } = useTranslation("fpl");
+  const subs = teamTotals?.with_autosubs?.auto_subs_applied ?? [];
+  const promoted = teamTotals?.with_autosubs?.captain_promoted ?? null;
+  if ((!subs.length && !promoted) || !teamWithStats?.length) return null;
+
+  const byId = new Map(teamWithStats.map((p) => [p.player_id, p]));
+  const pointsOf = (id: number) => byId.get(id)?.live_stats?.total_points ?? 0;
+
+  return (
+    <Panel
+      icon={<Repeat />}
+      title={t("fplLive.ui.overview.autoSubsTitle", "Automatic substitutions")}
+      subtitle={t(
+        "fplLive.ui.overview.autoSubsSubtitle",
+        "Players who didn't play were replaced from the bench"
+      )}
+      flush
+    >
+      <div className="divide-y divide-theme-border border-t border-theme-border">
+        {subs.map((sub) => {
+          const out = byId.get(sub.outId);
+          const inn = byId.get(sub.inId);
+          if (!out?.player || !inn?.player) return null;
+          return (
+            <div key={`${sub.outId}-${sub.inId}`} className="flex items-center gap-2 px-4 py-2.5 sm:px-5">
+              <PlayerCell
+                size="sm"
+                player={out.player}
+                name={<span className="text-theme-text-muted line-through decoration-theme-border-strong">{out.player.web_name}</span>}
+                meta={t("fplLive.ui.overview.didNotPlay", "Didn't play")}
+              />
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-theme-text-muted" />
+              <PlayerCell
+                size="sm"
+                player={inn.player}
+                name={inn.player.web_name}
+                meta={t("fplLive.ui.overview.ptsValue", "{{points}} pts", { points: pointsOf(sub.inId) })}
+              />
+            </div>
+          );
+        })}
+        {promoted && byId.get(promoted.toId)?.player && (
+          <div className="px-4 py-2.5 text-xs text-theme-text-secondary sm:px-5">
+            {t("fplLive.ui.overview.captainPromoted", "{{name}} took the armband", {
+              name: byId.get(promoted.toId)!.player!.web_name,
+            })}
+          </div>
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Squad output                                                        */
+/* ------------------------------------------------------------------ */
+
+export function TeamStatsPanel({ teamTotals }: { teamTotals?: OverviewTeamTotals | null }) {
+  const { t } = useTranslation("fpl");
+  if (!teamTotals) return null;
+  const items = [
+    { key: "goals", label: t("fplLive.ui.overview.goals", "Goals"), value: teamTotals.goals },
+    { key: "assists", label: t("fplLive.ui.overview.assists", "Assists"), value: teamTotals.assists },
+    { key: "cs", label: t("fplLive.ui.overview.cleanSheets", "Clean sheets"), value: teamTotals.clean_sheets },
+    { key: "saves", label: t("fplLive.ui.overview.saves", "Saves"), value: teamTotals.saves },
+    { key: "yc", label: t("fplLive.ui.overview.yellowCards", "Yellow cards"), value: teamTotals.yellow_cards },
+    { key: "rc", label: t("fplLive.ui.overview.redCards", "Red cards"), value: teamTotals.red_cards },
+  ];
+  return (
+    <Panel
+      title={t("fplLive.ui.overview.teamStatsTitle", "Squad output")}
+      subtitle={t("fplLive.ui.overview.teamStatsSubtitle", "All 15 players this gameweek")}
+    >
+      <dl className="grid grid-cols-3 gap-y-4 sm:grid-cols-6">
+        {items.map((item) => (
+          <div key={item.key} className="min-w-0 text-center">
+            <dd className="text-xl font-semibold text-theme-heading-primary">{item.value}</dd>
+            <dt className="mt-0.5 truncate text-[11px] text-theme-text-muted">{item.label}</dt>
+          </div>
+        ))}
+      </dl>
+    </Panel>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Skeleton                                                            */
+/* ------------------------------------------------------------------ */
+
+export function OverviewHeroSkeleton() {
+  return (
+    <div className="space-y-2 sm:space-y-3">
+      <div className="rounded-2xl border border-theme-border bg-theme-card p-4 sm:p-5">
+        <div className="h-3.5 w-28 animate-pulse rounded bg-theme-card-secondary" />
+        <div className="mt-5 flex items-end justify-between">
+          <div className="h-12 w-20 animate-pulse rounded-lg bg-theme-card-secondary" />
+          <div className="space-y-2">
+            <div className="ml-auto h-3 w-16 animate-pulse rounded bg-theme-card-secondary" />
+            <div className="h-4 w-24 animate-pulse rounded bg-theme-card-secondary" />
+          </div>
+        </div>
+        <div className="mt-5 h-1.5 w-full animate-pulse rounded-full bg-theme-card-secondary" />
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="h-[74px] animate-pulse rounded-xl border border-theme-border bg-theme-card-secondary" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Default export — the manager half of the Overview tab               */
+/* ------------------------------------------------------------------ */
 
 interface ManagerSummaryProps {
-  manager?: {
-    id: number;
-    player_first_name: string;
-    player_last_name: string;
-    name: string;
-    summary_overall_points: number;
-    summary_overall_rank: number;
-    summary_event_points: number;
-    summary_event_rank: number;
-    player_region_iso_code_short?: string;
-    player_region_name?: string;
-    club_badge_src?: string;
-    current_event?: number;
-    entered_events?: number[];
-    favourite_team?: number;
-    joined_time?: string;
-    last_deadline_bank?: number;
-    last_deadline_total_transfers?: number;
-    last_deadline_value?: number;
-    started_event?: number;
-    years_active?: number;
-  };
-  teamTotals?: {
-    goals: number;
-    assists: number;
-    clean_sheets: number;
-    yellow_cards: number;
-    red_cards: number;
-    saves: number;
-    total_points_no_bonus: number;
-    total_points_final: number;
-    predicted_bonus: number;
-    final_bonus: number;
-    active_points_no_bonus: number;
-    active_points_final: number;
-    bench_points_no_bonus: number;
-    bench_points_final: number;
-  };
-  captain?: {
-    player_id?: number;
-    stats?: any;
-  };
-  viceCaptain?: {
-    player_id?: number;
-    stats?: any;
-  };
+  manager?: OverviewManager;
+  teamTotals?: OverviewTeamTotals | null;
+  captain?: { player_id?: number; stats?: any };
+  viceCaptain?: { player_id?: number; stats?: any };
   bonusAdded: boolean;
   gameweek: number;
   lastUpdated?: string;
   managerId?: number;
-  loading?: boolean; // Add loading state
+  loading?: boolean;
+  /** Optional extras (wired by LiveOverview). */
+  entryHistory?: OverviewEntryHistory | null;
+  teamWithStats?: OverviewSquadPlayer[];
+  activeChip?: string | null;
+  gameweekStatus?: OverviewGameweekStatus | null;
 }
 
 const ManagerSummary = React.memo(function ManagerSummary({
   manager,
   teamTotals,
-  captain,
   bonusAdded,
   gameweek,
-  lastUpdated,
-  managerId,
   loading = false,
+  entryHistory,
+  teamWithStats,
+  activeChip,
+  gameweekStatus,
 }: ManagerSummaryProps) {
   const { t } = useTranslation("fpl");
-  // Show loading card when loading or when data is not available yet
-  if (loading || !manager || !teamTotals) {
-    return (
-      <LoadingCard
-        title={t("fplLive.managerOverview")}
-        description={
-          loading
-            ? t("fplLive.loadingManagerInfo")
-            : t("fplLive.loadTeamToSeeManagerOverview")
-        }
-        className="bg-theme-card border-theme-border rounded-lg shadow theme-transition"
-      />
+
+  if (!manager || !teamTotals) {
+    return loading ? (
+      <OverviewHeroSkeleton />
+    ) : (
+      <Panel>
+        <p className="py-6 text-center text-sm text-theme-text-muted">
+          {t("fplLive.ui.overview.empty", "Load a team to see the overview")}
+        </p>
+      </Panel>
     );
   }
 
-  const formatNumber = (num: number | undefined | null) => {
-    if (num === undefined || num === null) return "0";
-    return num.toLocaleString();
-  };
-  const formatRank = (rank: number | undefined | null) => {
-    if (rank === undefined || rank === null || rank === 0) return "N/A";
-    return `#${formatNumber(rank)}`;
-  };
-
-  const activePoints = bonusAdded
-    ? teamTotals.active_points_final
-    : teamTotals.active_points_no_bonus;
-  const benchPoints = bonusAdded
-    ? teamTotals.bench_points_final
-    : teamTotals.bench_points_no_bonus;
-  const bonusPoints = bonusAdded
-    ? teamTotals.final_bonus
-    : teamTotals.predicted_bonus;
-  const bonusLabel = bonusAdded
-    ? t("fplLive.finalBonus")
-    : t("fplLive.predictedBonus");
-
-  // Determine arrow direction based on GW rank vs overall rank
-  const gwRank = manager.summary_event_rank || 0;
-  const overallRank = manager.summary_overall_rank || 0;
-  const arrowDirection: "green" | "red" | "neutral" =
-    gwRank > 0 && overallRank > 0
-      ? gwRank < overallRank
-        ? "green"
-        : gwRank > overallRank
-        ? "red"
-        : "neutral"
-      : "neutral";
-
-  // Rank milestones
-  const rankMilestones = [
-    { label: "Top 10K", threshold: 10000 },
-    { label: "Top 50K", threshold: 50000 },
-    { label: "Top 100K", threshold: 100000 },
-    { label: "Top 250K", threshold: 250000 },
-    { label: "Top 500K", threshold: 500000 },
-    { label: "Top 1M", threshold: 1000000 },
-  ];
-  const currentMilestone = rankMilestones.find(
-    (m) => overallRank <= m.threshold
-  );
-  const nextMilestone = rankMilestones.find(
-    (m) => overallRank > m.threshold
-  );
+  const numbers = deriveOverviewNumbers({
+    manager,
+    teamTotals,
+    entryHistory,
+    gameweekStatus,
+    bonusAdded,
+    activeChip,
+  });
 
   return (
-    <div className="bg-theme-card border-theme-border rounded-lg shadow p-6 theme-transition">
-      <FlagLoader />
-      {/* Arrow Indicator Banner */}
-      <div className={`mb-4 p-3 rounded-lg flex items-center justify-between ${
-        arrowDirection === "green"
-          ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
-          : arrowDirection === "red"
-          ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
-          : "bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700"
-      }`}>
-        <div className="flex items-center gap-3">
-          <div className={`text-3xl ${
-            arrowDirection === "green" ? "text-green-500" : arrowDirection === "red" ? "text-red-500" : "text-gray-400"
-          }`}>
-            {arrowDirection === "green" ? "▲" : arrowDirection === "red" ? "▼" : "▬"}
-          </div>
-          <div>
-            <p className={`text-sm font-bold ${
-              arrowDirection === "green"
-                ? "text-green-700 dark:text-green-300"
-                : arrowDirection === "red"
-                ? "text-red-700 dark:text-red-300"
-                : "text-gray-600 dark:text-gray-400"
-            }`}>
-              {arrowDirection === "green"
-                ? t("fplLive.greenArrow")
-                : arrowDirection === "red"
-                ? t("fplLive.redArrow")
-                : t("fplLive.noChange")}
-            </p>
-            <p className="text-xs text-theme-text-secondary">
-              {t("fplLive.gameweekRank")}: {formatRank(gwRank)} | {t("fplLive.overallRank")}: {formatRank(overallRank)}
-            </p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-xl font-bold text-theme-foreground">{manager.summary_event_points || 0}</p>
-          <p className="text-xs text-theme-text-secondary">GW{gameweek} {t("fplLive.points")}</p>
-        </div>
-      </div>
-
-      {/* Rank Milestones */}
-      {currentMilestone && (
-        <div className="mb-4 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 rounded-md border border-purple-200 dark:border-purple-800">
-          <p className="text-xs font-medium text-purple-700 dark:text-purple-300">
-            {currentMilestone.label} ({formatRank(overallRank)})
-            {nextMilestone && (
-              <span className="text-purple-500 dark:text-purple-400 ml-1">
-                — {formatNumber(overallRank - nextMilestone.threshold)} {t("fplLive.position")} → {nextMilestone.label}
-              </span>
-            )}
-          </p>
-        </div>
-      )}
-
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-theme-foreground theme-transition">
-          {t("fplLive.managerOverview")} - GW{gameweek}
-        </h3>
-        {lastUpdated && (
-          <p className="text-sm text-theme-text-secondary mt-1 theme-transition">
-            {t("fplLive.lastUpdated")}{" "}
-            {new Date(lastUpdated).toLocaleTimeString()}
-          </p>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h4 className="font-medium text-theme-foreground mb-3 theme-transition">
-            {t("fplLive.managerInfo")}
-          </h4>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-theme-text-secondary theme-transition">
-                {t("fplLive.name")}
-              </span>
-              <div className="flex items-center space-x-2">
-                {manager.player_region_iso_code_short && (
-                  <span
-                    className={`fi fi-${getCountryFlagCode(
-                      manager.player_region_iso_code_short
-                    )} w-4 h-3 rounded-sm`}
-                    title={manager.player_region_name}
-                  ></span>
-                )}
-                <span className="font-medium text-theme-foreground theme-transition">
-                  {manager.player_first_name} {manager.player_last_name}
-                </span>
-              </div>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-text-secondary theme-transition">
-                {t("fplLive.team")}
-              </span>
-              <span className="font-medium text-theme-foreground theme-transition">
-                {manager.name}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-theme-muted">{t("fplLive.country")}</span>
-              <div className="flex items-center space-x-2">
-                {manager.player_region_name && (
-                  <span
-                    className={`fi fi-${getCountryFlagCode(
-                      manager.player_region_iso_code_short ||
-                        manager.player_region_name
-                    )} w-4 h-3 rounded-sm`}
-                    title={manager.player_region_name}
-                  ></span>
-                )}
-                <span className="font-medium text-theme-primary">
-                  {manager.player_region_name || "Unknown"}
-                </span>
-              </div>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.yearsActive")}
-              </span>
-              <span className="font-medium text-theme-primary">
-                {manager.years_active || 0} {t("fplLive.years")}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.joinedDate")}
-              </span>
-              <span className="font-medium text-theme-primary">
-                {manager.joined_time
-                  ? new Date(manager.joined_time).toLocaleDateString()
-                  : "Unknown"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.startedEvent")}
-              </span>
-              <span className="font-medium text-theme-primary">
-                {t("fplLive.gw")} {manager.started_event || 1}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.overallPoints")}
-              </span>
-              <span className="font-medium text-theme-primary">
-                {formatNumber(manager.summary_overall_points)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.overallRank")}
-              </span>
-              <span className="font-medium text-theme-primary">
-                {formatRank(manager.summary_overall_rank)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.lastDeadlineBank")}
-              </span>
-              <span className="font-medium text-theme-primary">
-                £{((manager.last_deadline_bank || 0) / 10).toFixed(1)}m
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.lastDeadlineValue")}
-              </span>
-              <span className="font-medium text-theme-primary">
-                {formatTeamValueWithCurrency(manager.last_deadline_value || 0)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.totalTransfers")}
-              </span>
-              <span className="font-medium text-theme-primary">
-                {manager.last_deadline_total_transfers || 0}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h4 className="font-medium text-theme-primary mb-3">
-            {t("fplLive.gwPerformance", { gw: gameweek })}
-          </h4>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.gameweekPoints")}
-              </span>
-              <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
-                {manager.summary_event_points || 0} {t("fplLive.points")}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.gameweekRank")}
-              </span>
-              <span className="font-medium text-theme-primary">
-                {formatRank(manager.summary_event_rank)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.activePoints")}
-              </span>
-              <div className="text-right">
-                <span className="font-bold text-lg text-green-600 dark:text-green-400">
-                  {activePoints}
-                </span>
-              </div>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.benchPointsLong")}
-              </span>
-              <span className="font-medium text-theme-secondary">
-                {benchPoints}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">{bonusLabel}:</span>
-              <span
-                className={`font-medium ${
-                  bonusAdded
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-yellow-600 dark:text-yellow-400"
-                }`}
-              >
-                +{bonusPoints}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-theme-muted">
-                {t("fplLive.captainPointsLong")}
-              </span>
-              <span className="font-medium text-theme-primary">
-                {captain?.stats?.total_points
-                  ? captain.stats.total_points * 2
-                  : 0}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-6 pt-4 border-t border-theme-border">
-        <h4 className="font-medium text-theme-primary mb-3">
-          {t("fplLive.teamStats")}
-        </h4>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {teamTotals.goals}
-            </div>
-            <div className="text-xs text-theme-muted">{t("fplLive.goals")}</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {teamTotals.assists}
-            </div>
-            <div className="text-xs text-theme-muted">
-              {t("fplLive.assists")}
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
-              {teamTotals.clean_sheets}
-            </div>
-            <div className="text-xs text-theme-muted">
-              {t("fplLive.cleanSheets")}
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-              {teamTotals.yellow_cards}
-            </div>
-            <div className="text-xs text-theme-muted">
-              {t("fplLive.yellowCards")}
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-              {teamTotals.red_cards}
-            </div>
-            <div className="text-xs text-theme-muted">
-              {t("fplLive.redCards")}
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {teamTotals.saves}
-            </div>
-            <div className="text-xs text-theme-muted">{t("fplLive.saves")}</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 pt-3 border-t border-theme-border flex items-center justify-between">
-        <div className="flex items-center">
-          <div
-            className={`w-2 h-2 rounded-full mr-2 ${
-              bonusAdded ? "bg-green-500" : "bg-yellow-500"
-            }`}
-          ></div>
-          <span className="text-xs text-theme-muted">
-            {bonusAdded
-              ? t("fplLive.bonusFinalized")
-              : t("fplLive.bonusPredicted")}
-          </span>
-        </div>
-        <div className="bg-theme-secondary/10 px-3 py-1 rounded-md border border-theme-border">
-          <span className="text-xs font-medium text-theme-foreground theme-transition">
-            {t("fplLive.managerId")}:{" "}
-            <span className="font-bold text-blue-600 dark:text-blue-400">
-              {managerId || manager.id}
-            </span>
-          </span>
-        </div>
-      </div>
+    <div
+      className={cx("space-y-2 transition-opacity sm:space-y-3", loading && "opacity-60")}
+      aria-busy={loading || undefined}
+    >
+      <OverviewHero
+        manager={manager}
+        numbers={numbers}
+        gameweek={gameweek}
+        bonusAdded={bonusAdded}
+        gameweekStatus={gameweekStatus}
+      />
+      <OverviewKpis numbers={numbers} />
+      <AutoSubsPanel teamTotals={teamTotals} teamWithStats={teamWithStats} />
+      <TeamStatsPanel teamTotals={teamTotals} />
     </div>
   );
 });

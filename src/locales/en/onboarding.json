@@ -18,26 +18,27 @@
     "save": "Save ID",
     "tip": "💡 Manager ID can be found on your FPL page in URL after /entry/. You can change it later in profile settings.",
     "success": "Manager ID saved successfully!",
-    "error": "Please enter a valid Manager ID"
+    "error": "Please enter a valid Manager ID",
+    "label": "FPL Manager ID"
   },
   "featuresStep": {
     "title": "Explore Key Features",
     "subtitle": "Everything you need for FPL success",
     "features": {
       "aiAnalysis": {
-        "title": "🤖 AI Team Analysis",
+        "title": "AI Team Analysis",
         "description": "Get personalized team recommendations and transfer suggestions powered by advanced AI"
       },
       "liveTracking": {
-        "title": "📊 FPL Live Tracking",
+        "title": "FPL Live Tracking",
         "description": "Real-time gameweek tracking with live scores, captain choices, and league positions"
       },
       "transfers": {
-        "title": "🔄 Transfer Planner",
+        "title": "Transfer Planner",
         "description": "Plan your transfers with pitch view, list view, and price change predictions"
       },
       "widgets": {
-        "title": "📈 Performance Widgets",
+        "title": "Performance Widgets",
         "description": "Track your performance with various widgets including differentials, team news, and rankings"
       }
     },
@@ -78,5 +79,9 @@
     "next": "Next",
     "close": "Close",
     "stepOf": "Step {{current}} of {{total}}"
+  },
+  "widget": {
+    "help": "Need help? Take the tour!",
+    "helpLabel": "Help"
   }
 }

@@ -19,6 +19,7 @@ import {
   Wand2,
 } from "lucide-react";
 import type { FplTeamAnalysisReport, AnalysisMeta } from "@/lib/ai/fpl-analysis-prompt";
+import { dateLocale } from "./live/ui";
 export type { AnalysisMeta };
 
 
@@ -180,7 +181,7 @@ export default function AITeamAnalysisReport({ report, meta, lang }: Props) {
   const deadlineText = useMemo(() => {
     if (!meta.deadline) return null;
     const d = new Date(meta.deadline);
-    return d.toLocaleString(lang === "bs" ? "bs-BA" : "en-GB", {
+    return d.toLocaleString(dateLocale(lang), {
       weekday: "short",
       day: "2-digit",
       month: "short",
@@ -672,7 +673,7 @@ export default function AITeamAnalysisReport({ report, meta, lang }: Props) {
 
       <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 pt-1">
         {t(lang, "Generisano", "Generated")}{" "}
-        {new Date(meta.generatedAt).toLocaleString(lang === "bs" ? "bs-BA" : "en-GB")} ·{" "}
+        {new Date(meta.generatedAt).toLocaleString(dateLocale(lang))} ·{" "}
         {meta.model} · {t(lang, "podaci", "data")}: FPL API GW
         {meta.picksGW ?? meta.targetGW}
       </p>

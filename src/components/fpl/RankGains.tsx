@@ -1,8 +1,24 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { getTeamColors } from "@/lib/team-colors";
 import { useTranslation } from "react-i18next";
+import { BarChart3 } from "lucide-react";
+
+import { getPlayerTeamColors } from "@/lib/team-colors";
+import {
+  Bar,
+  Chip,
+  EmptyState,
+  ListRow,
+  Panel,
+  PlayerCell,
+  PlayerJersey,
+  RoleBadge,
+  SectionLabel,
+  StatTile,
+  POSITION_SHORT,
+  cx,
+} from "./live/ui";
 
 interface RankGainsProps {
   managerId?: number;
@@ -22,544 +38,324 @@ interface PlayerPick {
     first_name: string;
     second_name: string;
     team: number;
+    team_code?: number;
     element_type: number;
-  };
+  } | null;
   live_stats: {
     player_id: number;
     minutes: number;
-    goals_scored: number;
-    assists: number;
-    clean_sheets: number;
-    yellow_cards: number;
-    red_cards: number;
-    saves: number;
-    bonus: number;
-    bps: number;
     total_points: number;
   } | null;
 }
 
-type PlayerStatus = "played" | "playing" | "to_play" | "didnt_play";
+interface GwFixture {
+  team_h: number;
+  team_a: number;
+  started?: boolean | null;
+  finished?: boolean;
+  finished_provisional?: boolean;
+}
 
-const getPlayerStatus = (pick: PlayerPick): PlayerStatus => {
-  const minutes = pick.live_stats?.minutes ?? -1;
-  if (minutes < 0 || (!pick.live_stats)) return "to_play";
-  if (minutes === 0) return "didnt_play";
-  // If minutes > 0 and less than 90, could be playing; treat 90 as played
-  // Simple heuristic: if minutes > 0, consider "played" (live data is snapshot)
-  if (minutes > 0 && minutes < 90) return "playing";
-  return "played";
+type PlayerStatus = "played" | "playing" | "to_play" | "didnt_play" | "no_fixture";
+
+interface Contribution {
+  pick: PlayerPick;
+  points: number;
+  status: PlayerStatus;
+}
+
+/**
+ * Status from the gameweek's fixtures, not from minutes alone: a player
+ * subbed off after 80' has finished, a DGW player with one game left has not.
+ */
+const getPlayerStatus = (pick: PlayerPick, fixtures: GwFixture[]): PlayerStatus => {
+  const minutes = pick.live_stats?.minutes ?? 0;
+  const team = pick.player?.team;
+
+  if (!fixtures.length || !team) {
+    return minutes > 0 ? "played" : "to_play";
+  }
+
+  const teamFixtures = fixtures.filter((f) => f.team_h === team || f.team_a === team);
+  if (!teamFixtures.length) return "no_fixture";
+
+  const isDone = (f: GwFixture) => Boolean(f.finished || f.finished_provisional);
+  if (teamFixtures.some((f) => f.started && !isDone(f))) return "playing";
+  if (teamFixtures.some((f) => !f.started && !isDone(f))) return "to_play";
+  return minutes > 0 ? "played" : "didnt_play";
 };
 
-const StatusBadge = ({ status }: { status: PlayerStatus }) => {
+function StatusChip({ status }: { status: PlayerStatus }) {
   const { t } = useTranslation("fpl");
-
-  const config: Record<
-    PlayerStatus,
-    { label: string; dotClass: string; textClass: string }
-  > = {
+  const config: Record<PlayerStatus, { label: string; dot: string }> = {
     played: {
-      label: t("gains.played", "Played"),
-      dotClass: "bg-green-500",
-      textClass: "text-green-700 dark:text-green-400",
+      label: t("fplLive.ui.gains.status.played", "Played"),
+      dot: "bg-emerald-500",
     },
     playing: {
-      label: t("gains.playing", "Playing"),
-      dotClass: "bg-yellow-500 animate-pulse",
-      textClass: "text-yellow-700 dark:text-yellow-400",
+      label: t("fplLive.ui.gains.status.playing", "Playing"),
+      dot: "bg-emerald-500 animate-pulse",
     },
     to_play: {
-      label: t("gains.toPlay", "To Play"),
-      dotClass: "bg-gray-400",
-      textClass: "text-theme-text-secondary",
+      label: t("fplLive.ui.gains.status.toPlay", "To play"),
+      dot: "bg-theme-text-muted",
     },
     didnt_play: {
-      label: t("gains.didntPlay", "Didn't Play"),
-      dotClass: "bg-red-500",
-      textClass: "text-red-700 dark:text-red-400",
+      label: t("fplLive.ui.gains.status.didntPlay", "Didn't play"),
+      dot: "bg-rose-500",
+    },
+    no_fixture: {
+      label: t("fplLive.ui.gains.status.noFixture", "No fixture"),
+      dot: "bg-theme-text-muted",
     },
   };
-
-  const { label, dotClass, textClass } = config[status];
-
+  const { label, dot } = config[status];
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${textClass} theme-transition`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
+    <Chip tone={status === "playing" ? "positive" : "neutral"}>
+      <span className={cx("h-1.5 w-1.5 rounded-full", dot)} />
       {label}
-    </span>
+    </Chip>
   );
-};
+}
 
-const ContributionBar = ({
-  points,
-  maxPoints,
+/** StatTile look-alike that leads with the player's shirt. */
+function PlayerTile({
+  label,
+  contribution,
+  emptyLabel,
 }: {
-  points: number;
-  maxPoints: number;
-}) => {
-  const percentage = maxPoints > 0 ? Math.abs(points) / maxPoints : 0;
-  const isNegative = points < 0;
-  const width = Math.max(percentage * 100, 2);
-
+  label: string;
+  contribution: Contribution | null;
+  emptyLabel: string;
+}) {
+  const { t } = useTranslation("fpl");
   return (
-    <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden theme-transition">
-      <div
-        className={`h-full rounded-full transition-all duration-500 ${
-          isNegative
-            ? "bg-red-500 dark:bg-red-400"
-            : "bg-green-500 dark:bg-green-400"
-        }`}
-        style={{ width: `${Math.min(width, 100)}%` }}
-      />
+    <div className="min-w-0 rounded-xl border border-theme-border bg-theme-card-secondary px-3 py-2.5">
+      <div className="truncate text-[10px] font-medium uppercase tracking-wider text-theme-text-muted">
+        {label}
+      </div>
+      {contribution?.pick.player ? (
+        <>
+          <div className="mt-1 flex min-w-0 items-center gap-1.5">
+            <PlayerJersey player={contribution.pick.player} size="xs" />
+            <span className="truncate text-sm font-semibold leading-tight text-theme-heading-primary">
+              {contribution.pick.player.web_name}
+            </span>
+          </div>
+          <div className="mt-1 truncate text-[11px] tabular-nums text-theme-text-muted">
+            {t("fplLive.ui.gains.pointsShort", "{{pts}} pts", {
+              pts: contribution.points,
+            })}
+          </div>
+        </>
+      ) : (
+        <div className="mt-1 text-sm text-theme-text-muted">{emptyLabel}</div>
+      )}
     </div>
   );
-};
+}
 
-const RankGains = React.memo(function RankGains({
-  managerId,
-  gameweek,
-  managerData,
-}: RankGainsProps) {
+const RankGains = React.memo(function RankGains({ gameweek, managerData }: RankGainsProps) {
   const { t } = useTranslation("fpl");
 
-  const teamData: PlayerPick[] = managerData?.team_with_stats ?? [];
+  const teamData: PlayerPick[] = useMemo(
+    () => (managerData?.team_with_stats ?? []).filter((p: PlayerPick) => p.player),
+    [managerData?.team_with_stats]
+  );
+  const fixtures: GwFixture[] = useMemo(
+    () => managerData?.fixtures ?? [],
+    [managerData?.fixtures]
+  );
 
-  const { starters, bench, totalPoints, bestPlayer, worstPlayer, maxPoints } =
-    useMemo(() => {
-      if (!teamData.length) {
-        return {
-          starters: [],
-          bench: [],
-          totalPoints: 0,
-          bestPlayer: null as PlayerPick | null,
-          worstPlayer: null as PlayerPick | null,
-          maxPoints: 0,
-        };
-      }
+  const summary = useMemo(() => {
+    const starters: Contribution[] = teamData
+      .filter((p) => p.position <= 11)
+      .map((pick) => ({
+        pick,
+        points: (pick.live_stats?.total_points ?? 0) * (pick.multiplier || 1),
+        status: getPlayerStatus(pick, fixtures),
+      }))
+      .sort((a, b) => b.points - a.points || a.pick.position - b.pick.position);
 
-      const starterPicks = teamData
-        .filter((p) => p.position <= 11)
-        .map((p) => ({
-          ...p,
-          effectivePoints: (p.live_stats?.total_points ?? 0) * p.multiplier,
-        }))
-        .sort((a, b) => b.effectivePoints - a.effectivePoints);
+    const bench: Contribution[] = teamData
+      .filter((p) => p.position > 11)
+      .sort((a, b) => a.position - b.position)
+      .map((pick) => ({
+        pick,
+        points: pick.live_stats?.total_points ?? 0,
+        status: getPlayerStatus(pick, fixtures),
+      }));
 
-      const benchPicks = teamData
-        .filter((p) => p.position > 11)
-        .map((p) => ({
-          ...p,
-          effectivePoints: p.live_stats?.total_points ?? 0,
-        }))
-        .sort((a, b) => a.position - b.position);
+    const total = starters.reduce((sum, c) => sum + c.points, 0);
+    const benchTotal = bench.reduce((sum, c) => sum + c.points, 0);
+    const appeared = starters.filter((c) => (c.pick.live_stats?.minutes ?? 0) > 0);
+    const best = appeared.length ? appeared[0] : null;
+    const worst = appeared.length > 1 ? appeared[appeared.length - 1] : null;
+    const captain = starters.find((c) => c.pick.is_captain) ?? null;
+    const done = starters.filter(
+      (c) => c.status === "played" || c.status === "didnt_play" || c.status === "no_fixture"
+    ).length;
+    const live = starters.filter((c) => c.status === "playing").length;
+    const maxPoints = Math.max(
+      1,
+      ...starters.map((c) => Math.abs(c.points)),
+      ...bench.map((c) => Math.abs(c.points))
+    );
 
-      const total = starterPicks.reduce(
-        (sum, p) => sum + p.effectivePoints,
-        0
-      );
+    return { starters, bench, total, benchTotal, best, worst, captain, done, live, maxPoints };
+  }, [teamData, fixtures]);
 
-      const allWithPoints = starterPicks.filter(
-        (p) => p.live_stats && p.live_stats.minutes > 0
-      );
-
-      const best =
-        allWithPoints.length > 0
-          ? allWithPoints.reduce((max, p) =>
-              p.effectivePoints > max.effectivePoints ? p : max
-            )
-          : null;
-
-      const worst =
-        allWithPoints.length > 0
-          ? allWithPoints.reduce((min, p) =>
-              p.effectivePoints < min.effectivePoints ? p : min
-            )
-          : null;
-
-      const maxPts = starterPicks.reduce(
-        (max, p) => Math.max(max, Math.abs(p.effectivePoints)),
-        1
-      );
-
-      return {
-        starters: starterPicks,
-        bench: benchPicks,
-        totalPoints: total,
-        bestPlayer: best,
-        worstPlayer: worst && worst.effectivePoints < 0 ? worst : null,
-        maxPoints: maxPts,
-      };
-    }, [teamData]);
+  const title = t("fplLive.ui.gains.title", "Player contributions");
 
   if (!teamData.length) {
     return (
-      <div className="bg-theme-card border border-theme-border rounded-lg p-4 sm:p-6 theme-transition">
-        <h3 className="text-lg font-semibold mb-4 text-theme-foreground theme-transition">
-          {t("gains.title", "Rank Gains")}
-        </h3>
-        <div className="text-center text-theme-text-secondary theme-transition">
-          {t("gains.loadTeamToSeeSquad", "Load a team to see squad breakdown")}
-        </div>
-      </div>
+      <Panel title={title}>
+        <EmptyState
+          icon={<BarChart3 />}
+          title={t("gains.loadTeamToSeeSquad", "Load your team to see player contributions")}
+        />
+      </Panel>
     );
   }
 
-  const getPointsColorClass = (points: number) => {
-    if (points > 0) return "text-green-600 dark:text-green-400";
-    if (points < 0) return "text-red-600 dark:text-red-400";
-    return "text-gray-500 dark:text-gray-400";
-  };
+  const { starters, bench, total, benchTotal, best, worst, captain, done, live, maxPoints } =
+    summary;
 
-  const PlayerCard = ({
-    pick,
-    effectivePoints,
-    isBench,
-  }: {
-    pick: PlayerPick;
-    effectivePoints: number;
-    isBench: boolean;
-  }) => {
-    const teamColors = getTeamColors(pick.player.team);
-    const status = getPlayerStatus(pick);
+  const renderRow = (contribution: Contribution, isBench: boolean) => {
+    const { pick, points, status } = contribution;
+    const player = pick.player!;
+    const club = getPlayerTeamColors(player).shortName;
+    const raw = pick.live_stats?.total_points ?? 0;
+    const multiplied = !isBench && pick.multiplier > 1;
 
     return (
-      <div
-        className={`flex flex-col gap-2 p-3 rounded-lg border border-theme-border theme-transition ${
-          isBench
-            ? "bg-gray-50 dark:bg-gray-800/50 opacity-70"
-            : "bg-theme-card"
-        }`}
-      >
-        {/* Top row: player info and points */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <span
-              className="w-2.5 h-2.5 rounded-full shrink-0"
-              style={{ backgroundColor: teamColors.primary }}
-            />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold text-theme-foreground truncate theme-transition">
-                  {pick.player.web_name}
-                </span>
-                {pick.is_captain && (
-                  <span className="text-xs font-bold bg-yellow-500 text-white px-1.5 py-0.5 rounded shrink-0">
-                    C
-                  </span>
-                )}
-                {pick.is_vice_captain && (
-                  <span className="text-xs font-bold bg-blue-500 text-white px-1.5 py-0.5 rounded shrink-0">
-                    V
-                  </span>
-                )}
-                {pick.multiplier === 3 && (
-                  <span className="text-xs font-bold bg-purple-500 text-white px-1.5 py-0.5 rounded shrink-0">
-                    TC
-                  </span>
-                )}
-              </div>
-              <span className="text-xs text-theme-text-secondary theme-transition">
-                {teamColors.shortName}
-                {pick.multiplier > 1 && !isBench && (
-                  <span className="ml-1 text-yellow-600 dark:text-yellow-400">
-                    x{pick.multiplier}
-                  </span>
-                )}
+      <ListRow key={pick.player_id} className={cx(isBench && "opacity-70")}>
+        <PlayerCell
+          player={player}
+          name={player.web_name}
+          badges={
+            <>
+              {pick.is_captain && <RoleBadge role={pick.multiplier === 3 ? "TC" : "C"} />}
+              {pick.is_vice_captain && <RoleBadge role="V" />}
+            </>
+          }
+          meta={
+            <>
+              <span className="shrink-0">{club}</span>
+              <span className="shrink-0 text-theme-border-strong">·</span>
+              <span className="shrink-0">{POSITION_SHORT[player.element_type]}</span>
+              <StatusChip status={status} />
+            </>
+          }
+        />
+        <div className="flex w-[4.5rem] shrink-0 flex-col items-end gap-1.5 sm:w-32">
+          <div className="flex items-baseline gap-1">
+            {multiplied && (
+              <span className="text-[10px] tabular-nums text-theme-text-muted">
+                {raw}×{pick.multiplier}
               </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <StatusBadge status={status} />
+            )}
             <span
-              className={`text-lg font-bold ${getPointsColorClass(
-                effectivePoints
-              )} theme-transition`}
+              className={cx(
+                "text-base font-semibold leading-none tabular-nums",
+                points < 0 ? "text-rose-500" : "text-theme-heading-primary"
+              )}
             >
-              {effectivePoints > 0 && "+"}
-              {effectivePoints}
+              {points}
             </span>
           </div>
+          <Bar
+            value={(Math.abs(points) / maxPoints) * 100}
+            tone={points < 0 ? "negative" : isBench ? "neutral" : "accent"}
+          />
         </div>
-
-        {/* Contribution bar */}
-        <ContributionBar points={effectivePoints} maxPoints={maxPoints} />
-      </div>
+      </ListRow>
     );
   };
 
-  const PlayerTableRow = ({
-    pick,
-    effectivePoints,
-    isBench,
-  }: {
-    pick: PlayerPick;
-    effectivePoints: number;
-    isBench: boolean;
-  }) => {
-    const teamColors = getTeamColors(pick.player.team);
-    const status = getPlayerStatus(pick);
-
-    return (
-      <tr
-        className={`border-b border-theme-border theme-transition transition-colors ${
-          isBench
-            ? "bg-gray-50 dark:bg-gray-800/50 opacity-70"
-            : "hover:bg-theme-card-secondary/30"
-        }`}
-      >
-        <td className="px-3 py-3 text-sm">
-          <div className="flex items-center gap-2">
-            <span
-              className="w-2 h-2 rounded-full shrink-0"
-              style={{ backgroundColor: teamColors.primary }}
-            />
-            <span className="font-bold text-theme-foreground theme-transition">
-              {pick.player.web_name}
-            </span>
-            {pick.is_captain && (
-              <span className="text-xs font-bold bg-yellow-500 text-white px-1.5 py-0.5 rounded">
-                C
-              </span>
-            )}
-            {pick.is_vice_captain && (
-              <span className="text-xs font-bold bg-blue-500 text-white px-1.5 py-0.5 rounded">
-                V
-              </span>
-            )}
-            {pick.multiplier === 3 && (
-              <span className="text-xs font-bold bg-purple-500 text-white px-1.5 py-0.5 rounded">
-                TC
-              </span>
-            )}
-          </div>
-        </td>
-        <td className="px-2 py-3 text-center text-xs text-theme-text-secondary theme-transition">
-          {teamColors.shortName}
-        </td>
-        <td className="px-2 py-3 text-center">
-          <StatusBadge status={status} />
-        </td>
-        <td
-          className={`px-3 py-3 text-center text-base font-bold ${getPointsColorClass(
-            effectivePoints
-          )} theme-transition`}
-        >
-          {effectivePoints > 0 && "+"}
-          {effectivePoints}
-        </td>
-        <td className="px-3 py-3 w-40">
-          <ContributionBar points={effectivePoints} maxPoints={maxPoints} />
-        </td>
-        <td className="px-2 py-3 text-center text-xs text-theme-text-secondary theme-transition">
-          {pick.multiplier > 1 && !isBench ? `x${pick.multiplier}` : "-"}
-        </td>
-      </tr>
-    );
-  };
+  const captainShare = captain && total > 0 ? Math.round((captain.points / total) * 100) : 0;
 
   return (
-    <div className="bg-theme-card border border-theme-border rounded-lg overflow-hidden theme-transition">
-      {/* Header */}
-      <div className="px-4 py-4 border-b border-theme-border">
-        <h3 className="text-lg font-bold text-theme-foreground">
-          {t("gains.title", "Rank Gains")}
-        </h3>
-        <p className="text-sm text-theme-text-secondary mt-0.5">
-          {t(
-            "gains.description",
-            "Per-player contribution to your GW rank"
-          )}
-        </p>
-      </div>
-
-      {/* Summary Section */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 border-b border-theme-border theme-transition">
-        {/* Total GW Points */}
-        <div className="flex flex-col items-center p-3 bg-theme-card-secondary/50 rounded-lg theme-transition">
-          <span className="text-xs text-theme-text-secondary uppercase font-semibold theme-transition">
-            {t("gains.totalPoints", "GW Points")}
-          </span>
-          <span
-            className={`text-2xl font-bold mt-1 ${getPointsColorClass(
-              totalPoints
-            )} theme-transition`}
-          >
-            {totalPoints}
-          </span>
+    <div className="space-y-3 sm:space-y-4">
+      <Panel
+        title={title}
+        subtitle={t(
+          "fplLive.ui.gains.subtitle",
+          "How much each player added to your GW{{gw}} score",
+          { gw: gameweek }
+        )}
+      >
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+          <StatTile
+            label={t("fplLive.ui.gains.total", "XI points")}
+            value={total}
+            hint={
+              live > 0
+                ? t("fplLive.ui.gains.progressLive", "{{done}}/11 done · {{live}} playing", {
+                    done,
+                    live,
+                  })
+                : t("fplLive.ui.gains.progress", "{{done}}/11 done", { done })
+            }
+          />
+          <StatTile
+            label={t("fplLive.ui.gains.captain", "Captain")}
+            value={captain ? captain.points : "—"}
+            hint={
+              captain?.pick.player
+                ? t("fplLive.ui.gains.captainShare", "{{name}} · {{share}}% of total", {
+                    name: captain.pick.player.web_name,
+                    share: captainShare,
+                  })
+                : undefined
+            }
+          />
+          <PlayerTile
+            label={t("fplLive.ui.gains.best", "Best")}
+            contribution={best}
+            emptyLabel="—"
+          />
+          <PlayerTile
+            label={t("fplLive.ui.gains.worst", "Weakest")}
+            contribution={worst}
+            emptyLabel="—"
+          />
         </div>
+      </Panel>
 
-        {/* Best Performer */}
-        <div className="flex flex-col items-center p-3 bg-theme-card-secondary/50 rounded-lg theme-transition">
-          <span className="text-xs text-theme-text-secondary uppercase font-semibold theme-transition">
-            {t("gains.bestPerformer", "Best")}
-          </span>
-          {bestPlayer ? (
-            <>
-              <span className="text-sm font-bold text-theme-foreground mt-1 truncate max-w-full theme-transition">
-                {bestPlayer.player.web_name}
-              </span>
-              <span className="text-xs text-green-600 dark:text-green-400 font-semibold theme-transition">
-                +{(bestPlayer as any).effectivePoints} pts
-              </span>
-            </>
-          ) : (
-            <span className="text-xs text-theme-text-secondary mt-1 theme-transition">
-              -
+      <Panel flush>
+        <SectionLabel
+          className="pt-4"
+          action={
+            <span className="text-[11px] tabular-nums text-theme-text-muted">
+              {t("fplLive.ui.gains.pointsShort", "{{pts}} pts", { pts: total })}
             </span>
-          )}
-        </div>
-
-        {/* Worst Performer (only if negative) */}
-        <div className="flex flex-col items-center p-3 bg-theme-card-secondary/50 rounded-lg col-span-2 sm:col-span-1 theme-transition">
-          <span className="text-xs text-theme-text-secondary uppercase font-semibold theme-transition">
-            {t("gains.worstPerformer", "Worst")}
-          </span>
-          {worstPlayer ? (
-            <>
-              <span className="text-sm font-bold text-theme-foreground mt-1 truncate max-w-full theme-transition">
-                {worstPlayer.player.web_name}
-              </span>
-              <span className="text-xs text-red-600 dark:text-red-400 font-semibold theme-transition">
-                {(worstPlayer as any).effectivePoints} pts
-              </span>
-            </>
-          ) : (
-            <span className="text-xs text-theme-text-secondary mt-1 theme-transition">
-              {t("gains.none", "None")}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Starting XI - Mobile Cards */}
-      <div className="block md:hidden">
-        <div className="px-4 py-2 border-b border-theme-border text-sm font-bold uppercase tracking-wide text-theme-text-secondary">
-          {t("gains.startingXI", "Starting XI")}
-        </div>
-        <div className="flex flex-col gap-2 p-3">
-          {starters.map((pick) => (
-            <PlayerCard
-              key={pick.player_id}
-              pick={pick}
-              effectivePoints={(pick as any).effectivePoints}
-              isBench={false}
-            />
-          ))}
+          }
+        >
+          {t("fplLive.ui.gains.startingXI", "Starting XI")}
+        </SectionLabel>
+        <div className="divide-y divide-theme-border">
+          {starters.map((c) => renderRow(c, false))}
         </div>
 
         {bench.length > 0 && (
           <>
-            <div className="px-4 py-2 border-b border-theme-border text-sm font-bold uppercase tracking-wide text-theme-text-secondary">
-              {t("gains.bench", "Bench")}
-            </div>
-            <div className="flex flex-col gap-2 p-3">
-              {bench.map((pick) => (
-                <PlayerCard
-                  key={pick.player_id}
-                  pick={pick}
-                  effectivePoints={(pick as any).effectivePoints}
-                  isBench={true}
-                />
-              ))}
+            <SectionLabel
+              className="border-t border-theme-border pt-3"
+              action={
+                <span className="text-[11px] tabular-nums text-theme-text-muted">
+                  {t("fplLive.ui.gains.pointsShort", "{{pts}} pts", { pts: benchTotal })}
+                </span>
+              }
+            >
+              {t("fplLive.ui.gains.bench", "Bench")}
+            </SectionLabel>
+            <div className="divide-y divide-theme-border pb-1">
+              {bench.map((c) => renderRow(c, true))}
             </div>
           </>
         )}
-      </div>
-
-      {/* Starting XI - Desktop Table */}
-      <div className="hidden md:block">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-theme-card-secondary border-b-2 border-theme-border theme-transition">
-              <tr>
-                <th className="px-3 py-3 text-left text-xs font-bold text-theme-text-primary uppercase theme-transition">
-                  {t("gains.player", "Player")}
-                </th>
-                <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
-                  {t("gains.teamColumn", "Team")}
-                </th>
-                <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
-                  {t("gains.status", "Status")}
-                </th>
-                <th className="px-3 py-3 text-center text-xs font-bold text-green-600 dark:text-green-400 uppercase theme-transition">
-                  {t("gains.points", "Pts")}
-                </th>
-                <th className="px-3 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
-                  {t("gains.contribution", "Contribution")}
-                </th>
-                <th className="px-2 py-3 text-center text-xs font-bold text-theme-text-primary uppercase theme-transition">
-                  {t("gains.multiplier", "Mult.")}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-theme-card theme-transition">
-              {/* Starting XI header row */}
-              <tr className="border-b border-theme-border">
-                <td
-                  colSpan={6}
-                  className="px-4 py-2 text-sm font-bold uppercase tracking-wide text-theme-text-secondary"
-                >
-                  {t("gains.startingXI", "Starting XI")}
-                </td>
-              </tr>
-              {starters.map((pick) => (
-                <PlayerTableRow
-                  key={pick.player_id}
-                  pick={pick}
-                  effectivePoints={(pick as any).effectivePoints}
-                  isBench={false}
-                />
-              ))}
-
-              {bench.length > 0 && (
-                <>
-                  <tr className="border-b border-theme-border">
-                    <td
-                      colSpan={6}
-                      className="px-4 py-2 text-sm font-bold uppercase tracking-wide text-theme-text-secondary"
-                    >
-                      {t("gains.bench", "Bench")}
-                    </td>
-                  </tr>
-                  {bench.map((pick) => (
-                    <PlayerTableRow
-                      key={pick.player_id}
-                      pick={pick}
-                      effectivePoints={(pick as any).effectivePoints}
-                      isBench={true}
-                    />
-                  ))}
-                </>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Footer legend */}
-      <div className="px-4 py-3 text-xs text-theme-text-secondary border-t border-theme-border theme-transition">
-        <div className="flex flex-wrap justify-between items-center gap-2">
-          <div>{t("gains.legendCaptain", "(C) = Captain")} &bull; {t("gains.legendVice", "(V) = Vice Captain")} &bull; {t("gains.legendTriple", "(TC) = Triple Captain")}</div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span>{t("gains.played", "Played")}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-              <span>{t("gains.playing", "Playing")}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-gray-400 rounded-full" />
-              <span>{t("gains.toPlay", "To Play")}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-red-500 rounded-full" />
-              <span>{t("gains.didntPlay", "Didn't Play")}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      </Panel>
     </div>
   );
 });

@@ -7,6 +7,7 @@ import Link from "next/link";
 import LoadingCard from "@/components/shared/LoadingCard";
 import LeagueChipPill from "@/components/fpl/league-table/LeagueChipPill";
 import type { FPLActiveChip, FPLChipUsageResponse } from "@/types/fpl";
+import { dateLocale } from "@/components/fpl/live/ui";
 
 const CHIP_LABEL: Record<NonNullable<FPLActiveChip>, string> = {
   "3xc": "Triple Captain",
@@ -16,7 +17,7 @@ const CHIP_LABEL: Record<NonNullable<FPLActiveChip>, string> = {
 };
 
 export default function ChipsPage() {
-  const { t } = useTranslation("fpl");
+  const { t, i18n } = useTranslation("fpl");
   const [gameweek, setGameweek] = useState<number | null>(null);
   const [data, setData] = useState<FPLChipUsageResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,11 +53,12 @@ export default function ChipsPage() {
       setData(json.data);
       setLastUpdated(json.last_updated || new Date().toISOString());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      console.error("Chip usage failed:", err);
+      setError(t("fplLive.ui.pages.loadError", "Couldn't load the data. Please try again."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     (async () => {
@@ -90,7 +92,10 @@ export default function ChipsPage() {
               )}
               {lastUpdated && (
                 <span className="ml-2">
-                  · {new Date(lastUpdated).toLocaleTimeString()}
+                  · {new Date(lastUpdated).toLocaleTimeString(dateLocale(i18n.language), {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               )}
             </p>

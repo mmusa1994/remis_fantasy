@@ -14,5 +14,77 @@
   "errors": {
     "required": "Manager ID is required",
     "invalidFormat": "Manager ID must be a number (1-10 digits)"
+  },
+  "validatingWithFpl": "Validating Manager ID with FPL servers...",
+  "retryingAttempt": "Retrying validation... (attempt {{attempt}})",
+  "retry": "Retry",
+  "saveAnyway": "Save anyway",
+  "validationErrors": {
+    "network_error": {
+      "title": "Connection issue",
+      "description": "Unable to connect to FPL servers. This could be a network issue or FPL server maintenance.",
+      "suggestions": [
+        "Check your internet connection",
+        "Try again in a few moments",
+        "FPL servers may be temporarily down"
+      ],
+      "retry": "Retry connection",
+      "fallback": "Save anyway"
+    },
+    "rate_limit": {
+      "title": "Too many requests",
+      "description": "FPL servers are limiting requests. This is normal during busy periods.",
+      "suggestions": [
+        "Wait 30 seconds before trying again",
+        "FPL servers are busy at popular times",
+        "Try during off-peak hours for a faster response"
+      ],
+      "retry": "Wait and retry",
+      "fallback": "Save for later"
+    },
+    "invalid_id": {
+      "title": "Manager ID not found",
+      "description": "The Manager ID you entered does not exist in the FPL database.",
+      "suggestions": [
+        "Double-check your Manager ID in your FPL account",
+        "Look for the number after \"/entry/\" in your FPL URL",
+        "Make sure you're using your own Manager ID"
+      ],
+      "retry": "",
+      "fallback": ""
+    },
+    "timeout": {
+      "title": "Request timeout",
+      "description": "Validation is taking longer than expected. FPL servers may be slow.",
+      "suggestions": [
+        "FPL servers are responding slowly",
+        "Try again with a fresh request",
+        "Consider saving anyway and verifying later"
+      ],
+      "retry": "Try again",
+      "fallback": "Save anyway"
+    },
+    "server_error": {
+      "title": "FPL server error",
+      "description": "Fantasy Premier League servers are having issues.",
+      "suggestions": [
+        "FPL is having technical difficulties",
+        "Your Manager ID will be saved and verified later",
+        "Check FPL's official social media for updates"
+      ],
+      "retry": "Retry",
+      "fallback": "Save for later"
+    },
+    "unknown": {
+      "title": "Unexpected error",
+      "description": "Something unexpected happened during validation.",
+      "suggestions": [
+        "Try refreshing the page",
+        "Check your internet connection",
+        "Contact support if the problem persists"
+      ],
+      "retry": "Try again",
+      "fallback": "Save anyway"
+    }
   }
 }

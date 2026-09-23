@@ -10,7 +10,7 @@
     "participants": "participants",
     "position": "Position",
     "player": "Player",
-    "team": "Team", 
+    "team": "Team",
     "points": "Points"
   },
   "prizes": {
@@ -48,8 +48,7 @@
   },
   "season": "Season",
   "seasonCompleted": "(Completed)",
-  "grandPrix": "Grand Prix"
-  ,
+  "grandPrix": "Grand Prix",
   "pageTitle": "Remis Fantasy F1 League",
   "nextLast": "Next: {{next}} • Last: {{last}}",
   "registration": {

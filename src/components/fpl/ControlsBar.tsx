@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { MdDownload } from "react-icons/md";
 import { useTranslation } from "react-i18next";
-import Image from "next/image";
+import { ArrowRight, Loader2 } from "lucide-react";
 import TeamSearchInput from "./TeamSearchInput";
 
 interface ControlsBarProps {
@@ -19,8 +18,12 @@ interface ControlsBarProps {
   loading: boolean;
 }
 
+const inputClass =
+  "w-full rounded-xl border border-theme-border bg-theme-card-secondary px-3.5 py-2.5 text-sm font-medium tabular-nums text-theme-heading-primary placeholder:text-theme-text-muted transition-colors focus:border-violet-500/60 focus:outline-none focus:ring-2 focus:ring-violet-500/20 disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+
 export default function ControlsBar({
   managerId,
+  gameweek,
   onManagerIdChange,
   onGameweekChange,
   onLoadTeam,
@@ -29,31 +32,25 @@ export default function ControlsBar({
   const { t } = useTranslation("fpl");
   const { data: session, status } = useSession();
 
-  // Simple state - will be populated from localStorage or database
-  const [localManagerId, setLocalManagerId] = useState("");
+  const [localManagerId, setLocalManagerId] = useState(
+    managerId ? String(managerId) : ""
+  );
   const [isLoadingManagerId, setIsLoadingManagerId] = useState(false);
+  // Follows the live gameweek the page resolved from FPL until the user types
+  const [gameweekInput, setGameweekInput] = useState<string | null>(null);
+  const localGameweek = gameweekInput ?? (gameweek ? String(gameweek) : "");
 
-  const [localGameweek, setLocalGameweek] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("fpl-gameweek");
-      return stored || "";
-    }
-    return "";
-  });
-
-  // Load manager ID from localStorage or database
+  // Manager ID from localStorage, or from the account for signed-in users
   useEffect(() => {
     const loadManagerId = async () => {
       if (typeof window === "undefined") return;
 
-      // First check localStorage
       const storedManagerId = localStorage.getItem("fpl-manager-id");
       if (storedManagerId) {
         setLocalManagerId(storedManagerId);
         return;
       }
 
-      // If not in localStorage and user is authenticated, check database
       if (status === "authenticated" && session?.user) {
         setIsLoadingManagerId(true);
         try {
@@ -61,9 +58,8 @@ export default function ControlsBar({
           if (response.ok) {
             const data = await response.json();
             if (data.managerId) {
-              setLocalManagerId(data.managerId);
-              // Also save to localStorage for future use
-              localStorage.setItem("fpl-manager-id", data.managerId);
+              setLocalManagerId(String(data.managerId));
+              localStorage.setItem("fpl-manager-id", String(data.managerId));
             }
           }
         } catch (error) {
@@ -77,7 +73,16 @@ export default function ControlsBar({
     loadManagerId();
   }, [status, session]);
 
-  // Simple handlers - update state and localStorage
+  const managerIdNum = parseInt(localManagerId, 10);
+  const gameweekNum = parseInt(localGameweek, 10);
+  const canLoad =
+    !loading &&
+    !isNaN(managerIdNum) &&
+    managerIdNum > 0 &&
+    !isNaN(gameweekNum) &&
+    gameweekNum >= 1 &&
+    gameweekNum <= 38;
+
   const handleManagerIdChange = (value: string) => {
     setLocalManagerId(value);
     if (typeof window !== "undefined") {
@@ -85,31 +90,10 @@ export default function ControlsBar({
     }
   };
 
-  const handleGameweekChange = (value: string) => {
-    setLocalGameweek(value);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fpl-gameweek", value);
-    }
-  };
-
   const handleLoadTeam = () => {
-    const managerIdNum = parseInt(localManagerId, 10);
-    const gameweekNum = parseInt(localGameweek, 10);
-
-    // Validate input values
-    if (isNaN(managerIdNum) || managerIdNum <= 0) {
-      return; // Button should be disabled, but just in case
-    }
-
-    if (isNaN(gameweekNum) || gameweekNum < 1 || gameweekNum > 38) {
-      return; // Button should be disabled, but just in case
-    }
-
-    // Update parent state first
+    if (!canLoad) return;
     onManagerIdChange(managerIdNum);
     onGameweekChange(gameweekNum);
-
-    // Call load team with the actual values from input
     onLoadTeam(managerIdNum, gameweekNum);
   };
 
@@ -126,54 +110,31 @@ export default function ControlsBar({
     if (e.key === "Enter") {
       e.preventDefault();
       e.stopPropagation();
-      if (!loading) {
-        handleLoadTeam();
-      }
+      handleLoadTeam();
     }
   };
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-r from-blue-500/90 to-purple-600/90 rounded-lg shadow-lg p-4 md:p-6 border border-blue-300/30 backdrop-blur-sm">
-      {/* PL logo, top-right, transparent — adjusted per breakpoint so it's fully visible */}
-      <Image
-        src="/images/logos/pl-logo.png"
-        alt="Premier League"
-        width={140}
-        height={140}
-        className="absolute top-3 right-2 sm:top-3 sm:right-3 md:top-2 md:right-3 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 object-contain opacity-20 pointer-events-none select-none"
+    <div className="rounded-2xl border border-theme-border bg-theme-card p-4 shadow-sm sm:p-5">
+      <label className="mb-1.5 block text-xs font-medium text-theme-text-secondary">
+        {t("fplLive.ui.shell.searchLabel", "Find your team")}
+      </label>
+      <TeamSearchInput
+        onManagerIdFound={handleTeamSearchFound}
+        placeholder={t("fplLive.search.searchInputPlaceholder")}
       />
-      {/* Header */}
-      <div className="relative z-10 text-center mb-4">
-        <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
-          {t("fplLive.enterManagerId")}
-        </h2>
-        <p className="text-blue-100 text-sm">
-          {managerId
-            ? `${t("fplLive.currentManagerId")} ${managerId}`
-            : t("pleaseEnterManagerId")}
-        </p>
+
+      <div className="my-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-theme-text-muted">
+        <span className="h-px flex-1 bg-theme-border" />
+        {t("fplLive.ui.shell.or", "or")}
+        <span className="h-px flex-1 bg-theme-border" />
       </div>
 
-      {/* Team Search */}
-      <div className="mb-4">
-        <div className="text-center mb-2">
-          <p className="text-white/80 text-sm">
-            {t("fplLive.search.orSearchByTeamName")}
-          </p>
-        </div>
-        <TeamSearchInput
-          onManagerIdFound={handleTeamSearchFound}
-          placeholder={t("fplLive.search.searchInputPlaceholder")}
-          className="max-w-md mx-auto"
-        />
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-3 items-stretch justify-center bg-white/10 rounded-lg p-3 md:p-4 backdrop-blur">
-        {/* Manager ID Input */}
-        <div className="flex-1 min-w-0">
+      <div className="flex gap-2.5">
+        <div className="min-w-0 flex-1">
           <label
             htmlFor="manager-id-input"
-            className="block text-xs font-medium text-white/70 mb-1 text-center"
+            className="mb-1.5 block text-xs font-medium text-theme-text-secondary"
           >
             {t("fplLive.managerId")}
           </label>
@@ -181,29 +142,26 @@ export default function ControlsBar({
             <input
               id="manager-id-input"
               type="number"
+              inputMode="numeric"
               value={localManagerId}
               onChange={(e) => handleManagerIdChange(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isLoadingManagerId}
-              className="w-full px-4 py-2.5 text-center text-sm font-medium border border-white/20 bg-white/15 text-white rounded-md focus:ring-2 focus:ring-white/40 focus:border-white/40 placeholder-white/40 backdrop-blur transition-all duration-200 disabled:opacity-50"
-              placeholder={isLoadingManagerId ? "Loading..." : "133790"}
-              title="Press Enter to load team"
+              className={inputClass}
+              placeholder="133790"
             />
             {isLoadingManagerId && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              </div>
+              <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-theme-text-muted" />
             )}
           </div>
         </div>
 
-        {/* Gameweek Input */}
-        <div className="w-full md:w-24 flex-shrink-0">
+        <div className="w-20 shrink-0">
           <label
             htmlFor="gameweek-input"
-            className="block text-xs font-medium text-white/70 mb-1 text-center"
+            className="mb-1.5 block text-xs font-medium text-theme-text-secondary"
           >
-            {t("fplLive.gameweek")}
+            GW
           </label>
           <input
             id="gameweek-input"
@@ -212,43 +170,33 @@ export default function ControlsBar({
             max="38"
             step="1"
             inputMode="numeric"
-            pattern="[0-9]*"
             value={localGameweek}
-            onChange={(e) => handleGameweekChange(e.target.value)}
+            onChange={(e) => setGameweekInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full px-2 py-2.5 text-center text-sm font-medium border border-white/20 bg-white/15 text-white rounded-md focus:ring-2 focus:ring-white/40 focus:border-white/40 placeholder-white/40 backdrop-blur transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className={`${inputClass} text-center`}
             placeholder="1-38"
           />
         </div>
-
-        {/* Load Team Button */}
-        <div className="flex-shrink-0 flex items-end">
-          <button
-            onClick={handleLoadTeam}
-            disabled={
-              loading ||
-              isNaN(parseInt(localManagerId, 10)) ||
-              parseInt(localManagerId, 10) <= 0 ||
-              isNaN(parseInt(localGameweek, 10)) ||
-              parseInt(localGameweek, 10) < 1 ||
-              parseInt(localGameweek, 10) > 38
-            }
-            className="w-full md:w-auto flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white font-medium py-2.5 px-5 rounded-md shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-sm">{t("fplLive.loading")}</span>
-              </>
-            ) : (
-              <>
-                <MdDownload className="text-lg" />
-                <span className="text-sm">{t("fplLive.loadTeam")}</span>
-              </>
-            )}
-          </button>
-        </div>
       </div>
+
+      <button
+        type="button"
+        onClick={handleLoadTeam}
+        disabled={!canLoad}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-theme-foreground px-4 py-3 text-sm font-semibold text-theme-background shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {loading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {t("fplLive.loading")}
+          </>
+        ) : (
+          <>
+            {t("fplLive.loadTeam")}
+            <ArrowRight className="h-4 w-4" />
+          </>
+        )}
+      </button>
     </div>
   );
 }

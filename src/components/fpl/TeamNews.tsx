@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { dateLocale } from "@/components/fpl/live/ui";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
@@ -307,7 +308,7 @@ function PlayerRow({ player }: { player: InjuredPlayer }) {
 }
 
 export default function TeamNews() {
-  const { t } = useTranslation("fpl");
+  const { t, i18n } = useTranslation("fpl");
   const [loading, setLoading] = useState(false);
   const [teamNews, setTeamNews] = useState<Record<number, TeamRecord>>({});
   const [error, setError] = useState<string | null>(null);
@@ -338,11 +339,11 @@ export default function TeamNews() {
       }
     } catch (err) {
       console.error("Error fetching team news:", err);
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(t("fplLive.ui.pages.loadError", "Couldn't load the data. Please try again."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchTeamNewsData();
@@ -487,7 +488,7 @@ export default function TeamNews() {
           <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
           <div>
             <h3 className="font-semibold text-rose-800 dark:text-rose-300">
-              {t("common.error", "Error")}
+              {t("fplLive.ui.pages.errorTitle", "Something went wrong")}
             </h3>
             <p className="text-rose-600 dark:text-rose-400 text-sm">{error}</p>
           </div>
@@ -524,7 +525,7 @@ export default function TeamNews() {
             onClick={fetchTeamNewsData}
             disabled={loading}
             className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-colors disabled:opacity-50"
-            title="Refresh"
+            title={t("refresh", "Refresh")}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">{t("fplDashboard.teamNews.refresh", "Refresh")}</span>
@@ -912,7 +913,9 @@ export default function TeamNews() {
       {/* Footer */}
       {lastUpdated && (
         <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center">
-          {t("fplDashboard.teamNews.updatedAt", "Updated at {{time}}", { time: lastUpdated.toLocaleTimeString() })}
+          {t("fplDashboard.teamNews.updatedAt", "Updated at {{time}}", {
+            time: lastUpdated.toLocaleTimeString(dateLocale(i18n.language), { hour: "2-digit", minute: "2-digit" }),
+          })}
         </p>
       )}
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import EnhancedPlayerCard from "./EnhancedPlayerCard";
@@ -23,6 +23,14 @@ interface EnhancedPitchViewProps {
     total_transfers: number;
     points: number;
   };
+  /** Custom points plate per player (live points, next opponent...). */
+  getPointsLabel?: (player: any) => ReactNode;
+  /** Marker at the shirt's bottom-right per player (auto-sub arrows...). */
+  getCornerBadge?: (player: any) => ReactNode;
+  /** Price-change arrows on shirts. Default true. */
+  showPriceChange?: boolean;
+  /** Extra content on the right of the bench label (e.g. bench points). */
+  benchExtra?: ReactNode;
 }
 
 export default function EnhancedPitchView({
@@ -36,6 +44,10 @@ export default function EnhancedPitchView({
   onFormationChange,
   showStats = true,
   interactive = true,
+  getPointsLabel,
+  getCornerBadge,
+  showPriceChange = true,
+  benchExtra,
 }: EnhancedPitchViewProps) {
   const { t } = useTranslation("fpl");
 
@@ -129,6 +141,9 @@ export default function EnhancedPitchView({
         isSelected={selectedPlayers.includes(player.id)}
         interactive={interactive}
         showStats={showStats}
+        pointsLabel={getPointsLabel?.(player)}
+        cornerBadge={getCornerBadge?.(player)}
+        showPriceChange={showPriceChange}
         position={
           player.element_type === 1
             ? "GK"
@@ -212,8 +227,9 @@ export default function EnhancedPitchView({
       {/* Bench */}
       {benchPlayers.length > 0 && (
         <div className="mt-2 sm:mt-3 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-800/60 ring-1 ring-black/5 dark:ring-white/10 px-1 sm:px-4 pt-2 pb-3">
-          <div className="mb-1.5 px-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {t("bench", "Bench")}
+          <div className="mb-1.5 px-2 flex items-center justify-between gap-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <span>{t("bench", "Bench")}</span>
+            {benchExtra}
           </div>
           <div className="grid grid-cols-4 place-items-center">
             {benchPlayers.map((player: any, index) => (

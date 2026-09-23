@@ -136,7 +136,7 @@ const BottomNavigation = ({ onMenuToggle }: BottomNavProps) => {
       transition={{ type: "spring", damping: 28, stiffness: 320 }}
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden transform-gpu"
       style={{ willChange: "transform", WebkitBackfaceVisibility: "hidden" }}
-      aria-label="Glavna mobilna navigacija"
+      aria-label={t("mobileNavLabel")}
     >
       {/* Bar surface — fully solid (no transparency / blur) for a clean, jank-free dock */}
       <div

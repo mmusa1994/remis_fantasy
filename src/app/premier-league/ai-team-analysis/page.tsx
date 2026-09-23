@@ -31,7 +31,7 @@ interface Usage {
 export default function AITeamAnalysis() {
   const { data: session, status } = useSession();
   const { theme } = useTheme();
-  const { t, ready, i18n } = useTranslation("ai");
+  const { t, ready } = useTranslation("ai");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -144,11 +144,11 @@ export default function AITeamAnalysis() {
         proceedWithMessage();
       } else {
         const data = await response.json();
-        throw new Error(data.error || "Failed to save manager ID");
+        throw new Error(data.error || t("fpl:teamPlanner.managerIdErrors.saveFailed"));
       }
     } catch (error) {
       console.error("Failed to save manager ID:", error);
-      alert("Greška pri spremanju Manager ID-a: " + (error as Error).message);
+      alert(t("saveManagerIdError", { message: (error as Error).message }));
     } finally {
       setManagerIdLoading(false);
     }
@@ -408,7 +408,7 @@ export default function AITeamAnalysis() {
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                <li>• {t("freeQueries")} AI questions per week</li>
+                <li>• {t("freeQueriesPerWeek", { count: 5 })}</li>
                 <li>• {t("personalizedAdvice")}</li>
                 <li>• {t("realTimeData")}</li>
               </ul>
@@ -915,7 +915,7 @@ export default function AITeamAnalysis() {
                                 : "text-purple-600"
                             }`}
                           >
-                            {t("analyzing", "Analiziram...")}
+                            {t("analyzing")}
                           </span>
                         </div>
                       </motion.div>
@@ -942,7 +942,7 @@ export default function AITeamAnalysis() {
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask about FPL players, transfers, captains..."
+                    placeholder={t("inputPlaceholder")}
                     disabled={isLoading}
                     className={`flex-1 px-5 py-3 rounded-md border backdrop-blur-sm shadow-lg ${
                       theme === "dark"
@@ -978,7 +978,7 @@ export default function AITeamAnalysis() {
                         <BiSend className="w-4 h-4" />
                       )}
                     </motion.div>
-                    {isLoading ? t("analyzing", "Analiziram...") : t("send")}
+                    {isLoading ? t("analyzing") : t("send")}
                   </motion.button>
                 </div>
               </motion.form>
@@ -1043,12 +1043,7 @@ export default function AITeamAnalysis() {
                           theme === "dark" ? "text-white" : "text-gray-900"
                         }`}
                       >
-                        {t(
-                          "confirmQuestion",
-                          ready && i18n.language === "bs"
-                            ? "Potvrdi pitanje"
-                            : "Confirm Question"
-                        )}
+                        {t("confirmQuestion")}
                       </h3>
 
                       <p
@@ -1056,12 +1051,7 @@ export default function AITeamAnalysis() {
                           theme === "dark" ? "text-gray-300" : "text-gray-600"
                         }`}
                       >
-                        {t(
-                          "confirmDescription",
-                          ready && i18n.language === "bs"
-                            ? "Da li si siguran da je tvoje pitanje vezano za Fantasy Premier League sezonu 2025/26?"
-                            : "Are you sure your question is related to Fantasy Premier League season 2025/26?"
-                        )}
+                        {t("confirmDescription")}
                       </p>
 
                       <div
@@ -1071,12 +1061,7 @@ export default function AITeamAnalysis() {
                           className={`text-xs font-medium text-yellow-800 dark:text-yellow-200`}
                         >
                           ⚠️{" "}
-                          {t(
-                            "warningMessage",
-                            ready && i18n.language === "bs"
-                              ? "Upozorenje: Ako pitanje nije vezano za Fantasy, izgubit ćeš besplatne tokene a nećeš dobiti odgovor vezan za Fantasy od našeg FPL Guru-a. On samo odgovara na pitanja vezana za FPL sezonu 2025/26."
-                              : "Warning: If your question is not Fantasy-related, you'll lose free tokens without getting a Fantasy-related answer from our FPL Guru. He only answers questions about FPL season 2025/26."
-                          )}
+                          {t("warningMessage")}
                         </p>
                       </div>
 
@@ -1084,9 +1069,7 @@ export default function AITeamAnalysis() {
                         className={`text-xs p-2 rounded bg-gray-100 dark:bg-gray-800 mb-4`}
                       >
                         <strong>
-                          {ready && i18n.language === "bs"
-                            ? "Tvoje pitanje:"
-                            : "Your question:"}
+                          {t("yourQuestion")}
                         </strong>
                         <p
                           className={`mt-1 ${
@@ -1109,10 +1092,7 @@ export default function AITeamAnalysis() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        {t(
-                          "cancel",
-                          ready && i18n.language === "bs" ? "Otkaži" : "Cancel"
-                        )}
+                        {t("cancel")}
                       </motion.button>
 
                       <motion.button
@@ -1121,12 +1101,7 @@ export default function AITeamAnalysis() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        {t(
-                          "confirm",
-                          ready && i18n.language === "bs"
-                            ? "Potvrdi & Pošalji"
-                            : "Confirm & Send"
-                        )}
+                        {t("confirm")}
                       </motion.button>
                     </div>
                   </motion.div>

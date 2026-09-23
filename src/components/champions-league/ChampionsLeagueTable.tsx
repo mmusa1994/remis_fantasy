@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaTrophy, FaMedal, FaAward } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import LoadingCard from "@/components/shared/LoadingCard";
 
@@ -36,7 +37,7 @@ interface PrizeInfo {
 interface SeasonConfig {
   title: string;
   completed: boolean;
-  participantsLabel: string | null;
+  participantsCount: number | null;
   // null dok nagradni fond za sezonu nije objavljen — UI tada prikazuje
   // procente (50/30/20) umjesto iznosa
   prize: PrizeInfo | null;
@@ -46,7 +47,7 @@ const SEASON_CONFIG: Record<ClSeason, SeasonConfig> = {
   "25_26": {
     title: "REMIS Champions League 2025/26",
     completed: true,
-    participantsLabel: "48 učesnika",
+    participantsCount: 48,
     prize: {
       total_km: 750, // 15 * 50 KM
       total_eur: 385, // ~385€
@@ -61,7 +62,7 @@ const SEASON_CONFIG: Record<ClSeason, SeasonConfig> = {
   "26_27": {
     title: "REMIS Champions League 2026/27",
     completed: false,
-    participantsLabel: null,
+    participantsCount: null,
     prize: null,
   },
 };
@@ -79,6 +80,7 @@ export default function ChampionsLeagueTable({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { theme } = useTheme();
+  const { t } = useTranslation("champions");
 
   const config = SEASON_CONFIG[season];
 
@@ -91,19 +93,19 @@ export default function ChampionsLeagueTable({
           `/api/champions-league/table?season=${season}`
         );
         if (!response.ok) {
-          throw new Error("Failed to fetch table data");
+          throw new Error(t("table.fetchFailed"));
         }
         const data = await response.json();
         setPlayers(data.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
+        setError(err instanceof Error ? err.message : t("table.unknownError"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchTableData();
-  }, [season]);
+  }, [season, t]);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -160,7 +162,7 @@ export default function ChampionsLeagueTable({
   if (loading) {
     return (
       <div className="space-y-6">
-        <LoadingCard title="Učitavanje Champions League tabele..." />
+        <LoadingCard title={t("table.loading")} />
       </div>
     );
   }
@@ -174,7 +176,7 @@ export default function ChampionsLeagueTable({
           </div>
           <div>
             <h3 className="font-semibold text-red-800 dark:text-red-300">
-              Greška prilikom učitavanja tabele
+              {t("table.errorTitle")}
             </h3>
             <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
           </div>
@@ -183,9 +185,12 @@ export default function ChampionsLeagueTable({
     );
   }
 
+  const participantsCount =
+    config.participantsCount ?? (players.length > 0 ? players.length : null);
   const participantsLabel =
-    config.participantsLabel ||
-    (players.length > 0 ? `${players.length} učesnika` : null);
+    participantsCount !== null
+      ? t("table.participants", { count: participantsCount })
+      : null;
 
   return (
     <div className="space-y-6">
@@ -202,11 +207,11 @@ export default function ChampionsLeagueTable({
               {config.title}
               {config.completed && (
                 <span className="text-xs font-bold uppercase tracking-wider bg-white/20 rounded-full px-3 py-1">
-                  Sezona završena
+                  {t("table.seasonFinished")}
                 </span>
               )}
             </h2>
-            <p className="text-blue-100">Ukupan nagradni fond</p>
+            <p className="text-blue-100">{t("table.totalPrizeFund")}</p>
           </div>
           <div className="text-center">
             {config.prize ? (
@@ -215,7 +220,7 @@ export default function ChampionsLeagueTable({
               </div>
             ) : (
               <div className="text-2xl md:text-3xl font-black">
-                Uskoro
+                {t("table.comingSoon")}
               </div>
             )}
             {participantsLabel && (
@@ -230,10 +235,10 @@ export default function ChampionsLeagueTable({
             <div className="font-bold text-lg">
               {config.prize
                 ? `${config.prize.first_km}KM / ${config.prize.first_eur}€`
-                : `${PRIZE_SPLIT.first}% fonda`}
+                : t("table.fundShare", { pct: PRIZE_SPLIT.first })}
             </div>
             <div className="text-blue-100 text-sm">
-              1. mjesto ({PRIZE_SPLIT.first}%)
+              {t("table.place1")} ({PRIZE_SPLIT.first}%)
             </div>
           </div>
           <div className="bg-white/10 rounded-lg p-4 text-center">
@@ -241,10 +246,10 @@ export default function ChampionsLeagueTable({
             <div className="font-bold text-lg">
               {config.prize
                 ? `${config.prize.second_km}KM / ${config.prize.second_eur}€`
-                : `${PRIZE_SPLIT.second}% fonda`}
+                : t("table.fundShare", { pct: PRIZE_SPLIT.second })}
             </div>
             <div className="text-blue-100 text-sm">
-              2. mjesto ({PRIZE_SPLIT.second}%)
+              {t("table.place2")} ({PRIZE_SPLIT.second}%)
             </div>
           </div>
           <div className="bg-white/10 rounded-lg p-4 text-center">
@@ -252,10 +257,10 @@ export default function ChampionsLeagueTable({
             <div className="font-bold text-lg">
               {config.prize
                 ? `${config.prize.third_km}KM / ${config.prize.third_eur}€`
-                : `${PRIZE_SPLIT.third}% fonda`}
+                : t("table.fundShare", { pct: PRIZE_SPLIT.third })}
             </div>
             <div className="text-blue-100 text-sm">
-              3. mjesto ({PRIZE_SPLIT.third}%)
+              {t("table.place3")} ({PRIZE_SPLIT.third}%)
             </div>
           </div>
         </div>
@@ -283,8 +288,7 @@ export default function ChampionsLeagueTable({
               theme === "dark" ? "text-blue-300" : "text-blue-700"
             }`}
           >
-            Nova sezona 2026/27 uskoro počinje — tabela će biti dostupna kada
-            liga krene.
+            {t("table.newSeasonSoon")}
           </p>
         </motion.div>
       ) : (
@@ -300,12 +304,12 @@ export default function ChampionsLeagueTable({
             <div className="bg-theme-card-secondary border-b border-theme-border p-4">
               <h3 className="text-xl font-bold text-theme-foreground flex items-center gap-2">
                 <FaTrophy className="w-5 h-5 text-yellow-500" />
-                REMIS CL Paid Liga
+                {t("table.paidLeague")}
               </h3>
               <p className="text-theme-text-secondary text-sm mt-1">
                 {config.completed
-                  ? "Konačan poredak — sezona završena"
-                  : "Trenutno stanje"}
+                  ? t("table.finalStandings")
+                  : t("table.currentStandings")}
               </p>
             </div>
 
@@ -313,11 +317,11 @@ export default function ChampionsLeagueTable({
             <div className="hidden md:block">
               <div className="bg-theme-card-secondary border-b border-theme-border">
                 <div className="grid grid-cols-12 gap-4 items-center px-6 py-3 text-sm font-bold text-theme-text-secondary uppercase">
-                  <div className="col-span-1">Rang</div>
-                  <div className="col-span-6">Igrač</div>
-                  <div className="col-span-2 text-center">Last MD</div>
-                  <div className="col-span-2 text-center">Ukupno</div>
-                  <div className="col-span-1 text-center">Nagrada</div>
+                  <div className="col-span-1">{t("table.colRank")}</div>
+                  <div className="col-span-6">{t("table.colPlayer")}</div>
+                  <div className="col-span-2 text-center">{t("table.colLastMd")}</div>
+                  <div className="col-span-2 text-center">{t("table.colTotal")}</div>
+                  <div className="col-span-1 text-center">{t("table.colPrize")}</div>
                 </div>
               </div>
 
@@ -474,7 +478,7 @@ export default function ChampionsLeagueTable({
                     <div className="flex justify-between text-sm">
                       <div>
                         <span className="text-theme-text-secondary">
-                          LastMD:{" "}
+                          {t("table.colLastMd")}:{" "}
                         </span>
                         <span className="font-bold text-theme-foreground">
                           {player.last_md_points}
@@ -482,7 +486,7 @@ export default function ChampionsLeagueTable({
                       </div>
                       <div>
                         <span className="text-theme-text-secondary">
-                          Ukupno:{" "}
+                          {t("table.colTotal")}:{" "}
                         </span>
                         <span className="font-bold text-green-600 dark:text-green-400">
                           {player.points}
@@ -505,27 +509,25 @@ export default function ChampionsLeagueTable({
             <div className="text-center text-sm text-theme-text-secondary">
               <p>
                 {config.completed
-                  ? "Sezona je završena — prikazan je konačan poredak."
-                  : "Podaci se ažuriraju nakon svakog Matchday-a."}
-                {participantsLabel &&
-                  ` Ukupno ${participantsLabel.replace(" učesnika", "")} učesnika u ligi.`}
+                  ? t("table.footerFinished")
+                  : t("table.footerUpdates")}
+                {participantsCount !== null &&
+                  ` ${t("table.footerParticipants", { count: participantsCount })}`}
               </p>
               <p className="mt-2">
                 {config.prize ? (
-                  <>
-                    Nagradni fond: {config.prize.total_km}KM /{" "}
-                    {config.prize.total_eur}€ | 1. mjesto:{" "}
-                    {config.prize.first_km}KM/{config.prize.first_eur}€ | 2.
-                    mjesto: {config.prize.second_km}KM/
-                    {config.prize.second_eur}€ | 3. mjesto:{" "}
-                    {config.prize.third_km}KM/{config.prize.third_eur}€
-                  </>
+                  t("table.prizeFundLine", {
+                    total: `${config.prize.total_km}KM / ${config.prize.total_eur}€`,
+                    first: `${config.prize.first_km}KM/${config.prize.first_eur}€`,
+                    second: `${config.prize.second_km}KM/${config.prize.second_eur}€`,
+                    third: `${config.prize.third_km}KM/${config.prize.third_eur}€`,
+                  })
                 ) : (
-                  <>
-                    Raspodjela nagradnog fonda: 1. mjesto {PRIZE_SPLIT.first}% |
-                    2. mjesto {PRIZE_SPLIT.second}% | 3. mjesto{" "}
-                    {PRIZE_SPLIT.third}%
-                  </>
+                  t("table.prizeSplitLine", {
+                    first: PRIZE_SPLIT.first,
+                    second: PRIZE_SPLIT.second,
+                    third: PRIZE_SPLIT.third,
+                  })
                 )}
               </p>
             </div>

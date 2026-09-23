@@ -35,29 +35,8 @@ import {
   localizedMatchVenue,
   matchdayLabel,
 } from "@/utils/predictor-i18n";
+import { dateLocale } from "@/components/fpl/live/ui";
 
-const STAGE_LABELS_PUB: Record<string, string> = {
-  group: "Grupna faza",
-  group_a: "Grupa A",
-  group_b: "Grupa B",
-  group_c: "Grupa C",
-  group_d: "Grupa D",
-  group_e: "Grupa E",
-  group_f: "Grupa F",
-  group_g: "Grupa G",
-  group_h: "Grupa H",
-  group_i: "Grupa I",
-  group_j: "Grupa J",
-  group_k: "Grupa K",
-  group_l: "Grupa L",
-  round_of_32: "Šesnaestina finala",
-  round_of_16: "Osmina finala",
-  quarter_final: "Četvrtfinale",
-  semi_final: "Polufinale",
-  third_place: "Utakmica za 3. mjesto",
-  final: "FINALE",
-  other: "Ostalo",
-};
 
 const STAGE_ORDER_PUB = [
   "group_a","group_b","group_c","group_d","group_e","group_f",
@@ -353,12 +332,7 @@ export default function MatchesPublicTab({
         >
           <LogIn className="w-5 h-5 flex-shrink-0" />
           <div className="flex-1 text-sm">
-            {t(
-              "auth.signInToPredict",
-              lang === "en"
-                ? "Sign in to predict match results and compete for rewards."
-                : "Prijavi se da bi predviđao rezultate utakmica i borio se za nagrade.",
-            )}
+            {t("auth.signInToPredict")}
           </div>
           <button
             onClick={() => signIn()}
@@ -427,10 +401,7 @@ export default function MatchesPublicTab({
         >
           <Lock className="h-4 w-4 flex-shrink-0" />
           <span>
-            {t(
-              "matchesLockedNotice",
-              "Utakmice su zaključane od strane organizatora.",
-            )}
+            {t("matchesLockedNotice")}
           </span>
         </div>
       )}
@@ -440,7 +411,7 @@ export default function MatchesPublicTab({
         const past = roundIsPast(list);
         const label = MATCHDAY_LABELS[Number(stage)]
           ? matchdayLabel(Number(stage), lang)
-          : t(`stage.${stage}`, STAGE_LABELS_PUB[stage] ?? stage);
+          : t(`stage.${stage}`, { defaultValue: stage });
         return (
           <div
             key={stage}
@@ -598,7 +569,7 @@ export default function MatchesPublicTab({
             {savedAt && (
               <span className="text-xs text-theme-text-secondary flex items-center gap-1 opacity-70">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                {savedAt.toLocaleTimeString(lang === "bs" ? "sr-Latn" : "en-GB", { hour: "2-digit", minute: "2-digit" })}
+                {savedAt.toLocaleTimeString(dateLocale(lang), { hour: "2-digit", minute: "2-digit" })}
               </span>
             )}
           </div>
@@ -611,12 +582,8 @@ export default function MatchesPublicTab({
             {saving
               ? t("saving")
               : completion.done === 0
-                ? lang === "en"
-                  ? "Enter scores first"
-                  : "Unesi prvo rezultate"
-                : lang === "en"
-                  ? `Save ${completion.done} prediction${completion.done === 1 ? "" : "s"}`
-                  : `Sačuvaj ${completion.done} predikcij${completion.done === 1 ? "u" : completion.done < 5 ? "e" : "a"}`}
+                ? t("matchSave.enterScoresFirst")
+                : t("matchSave.saveCount", { count: completion.done })}
           </button>
           <style jsx>{`
             .save-pulse {
@@ -934,7 +901,7 @@ function MatchCard({
       if (days > 0) countdown = `${days}d ${hours % 24}h`;
       else if (hours > 0) countdown = `${hours}h ${minutes % 60}m`;
       else if (minutes > 0) countdown = `${minutes}m`;
-      else countdown = t("soon", lang === "en" ? "soon" : "uskoro");
+      else countdown = t("soon");
     }
   }
 
@@ -1030,7 +997,7 @@ function MatchCard({
               }`}
             >
               <CheckCircle2 className="w-2.5 h-2.5" />{" "}
-              {t("matchStatusBadge.finished", lang === "en" ? "FINISHED" : "ZAVRŠENO")}
+              {t("matchStatusBadge.finished")}
             </span>
           )}
           {stageLabel && (
@@ -1046,7 +1013,7 @@ function MatchCard({
               <span className="inline-flex items-center gap-1 font-semibold">
                 <CalendarClock className="w-3 h-3 opacity-70" />
                 {new Date(match.kickoff_at).toLocaleString(
-                  lang === "bs" ? "sr-Latn" : "en-GB",
+                  dateLocale(lang),
                   {
                     weekday: "short",
                     month: "short",
@@ -1063,7 +1030,7 @@ function MatchCard({
           {match.force_unlocked && !isFinished && !liveNow && (
             <span
               className={`text-[10px] uppercase font-bold inline-flex items-center gap-1 ${ac.textPair600_400}`}
-              title={t("extendedTitle", lang === "en" ? "Admin extended the deadline" : "Admin je produžio rok za predviđanje")}
+              title={t("extendedTitle")}
             >
               <Unlock className="w-2.5 h-2.5" /> {t("unlockedExtended")}
             </span>
@@ -1192,7 +1159,7 @@ function MatchCard({
               </div>
               {userPred && (
                 <div className="text-[11px] text-theme-text-secondary mt-1">
-                  {t("yourPredictionShort", lang === "en" ? "yours" : "tvoja")}: {userPred.home_score} − {userPred.away_score}
+                  {t("yourPredictionShort")}: {userPred.home_score} − {userPred.away_score}
                 </div>
               )}
             </div>
@@ -1320,7 +1287,7 @@ function MatchCard({
                 +{userPred.points_awarded}
               </span>
               <span className="text-[9px] uppercase tracking-wider font-bold leading-none">
-                pts
+                {t("ptsShort")}
               </span>
             </span>
           )}
@@ -1332,21 +1299,21 @@ function MatchCard({
           className={`mt-2.5 pt-2 border-t flex items-center justify-end gap-3 text-[10px] uppercase tracking-wider font-bold ${dark ? "border-gray-700/60 text-gray-500" : "border-gray-200/80 text-gray-500"}`}
         >
           <span>
-            {lang === "en" ? "Exact" : "Tačno"}{" "}
+            {t("pointsBreakdown.exact")}{" "}
             <span className={`${ac.textPair600_400} font-black`}>
               {match.points_exact}
             </span>
           </span>
           <span className="opacity-30">·</span>
           <span>
-            {lang === "en" ? "Margin" : "Razlika"}{" "}
+            {t("pointsBreakdown.margin")}{" "}
             <span className={`${ac.textPair600_400} font-black`}>
               {match.points_diff}
             </span>
           </span>
           <span className="opacity-30">·</span>
           <span>
-            {lang === "en" ? "Winner" : "Pobjednik"}{" "}
+            {t("pointsBreakdown.winner")}{" "}
             <span className={`${ac.textPair600_400} font-black`}>
               {match.points_winner}
             </span>

@@ -32,5 +32,7 @@
   "continueWithGoogle": "Continue with Google",
   "signInWithEmail": "Sign in with Email",
   "profile": "Profile",
-  "predictor": "Predictor"
+  "predictor": "Predictor",
+  "signInToAccessAll": "Sign in to access all features",
+  "mobileNavLabel": "Main mobile navigation"
 }

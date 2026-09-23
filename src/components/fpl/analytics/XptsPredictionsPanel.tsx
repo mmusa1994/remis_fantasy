@@ -1,11 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MdRefresh } from "react-icons/md";
-import LoadingCard from "@/components/shared/LoadingCard";
-import { getTeamColors } from "@/lib/team-colors";
-import TeamJersey from "../TeamJersey";
+import { TrendingUp } from "lucide-react";
+import {
+  cx,
+  EmptyState,
+  PlayerCell,
+  POSITION_SHORT,
+  Segmented,
+  SkeletonRows,
+} from "@/components/fpl/live/ui";
+import {
+  AnalyticsToolbar,
+  Footnote,
+  InlineError,
+  ShowMoreButton,
+} from "@/components/fpl/live/AnalyticsParts";
 import type { FPLXPointsPrediction } from "@/types/fpl";
 
 interface BootstrapElement {
@@ -13,16 +24,13 @@ interface BootstrapElement {
   web_name: string;
   element_type: number;
   team: number;
+  team_code?: number;
 }
 
-const POSITION_LABEL: Record<number, string> = {
-  1: "GK",
-  2: "DEF",
-  3: "MID",
-  4: "FWD",
-};
-
 type TabKey = "xpts" | "captaincy" | "bonus";
+
+const COLLAPSED_ROWS = 25;
+const MAX_ROWS = 80;
 
 export default function XptsPredictionsPanel() {
   const { t } = useTranslation("fpl");
@@ -33,6 +41,7 @@ export default function XptsPredictionsPanel() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("xpts");
+  const [showAll, setShowAll] = useState(false);
 
   const detectGameweek = useCallback(async () => {
     const res = await fetch("/api/fpl/bootstrap-static");
@@ -78,171 +87,141 @@ export default function XptsPredictionsPanel() {
     })();
   }, [detectGameweek, fetchPredictions]);
 
-  const elementMap = new Map(elements.map((el) => [el.id, el]));
+  const elementMap = useMemo(() => new Map(elements.map((el) => [el.id, el])), [elements]);
 
-  const sorted = [...predictions].sort((a, b) => {
-    if (tab === "captaincy") return b.captaincy_score - a.captaincy_score;
-    if (tab === "bonus") return b.bonus_probability - a.bonus_probability;
-    return b.expected_points - a.expected_points;
-  });
+  const sorted = useMemo(
+    () =>
+      [...predictions]
+        .sort((a, b) => {
+          if (tab === "captaincy") return b.captaincy_score - a.captaincy_score;
+          if (tab === "bonus") return b.bonus_probability - a.bonus_probability;
+          return b.expected_points - a.expected_points;
+        })
+        .slice(0, MAX_ROWS),
+    [predictions, tab]
+  );
+  const visible = showAll ? sorted : sorted.slice(0, COLLAPSED_ROWS);
+
+  const primary = (p: FPLXPointsPrediction) =>
+    tab === "captaincy"
+      ? p.captaincy_score.toFixed(1)
+      : tab === "bonus"
+        ? `${Math.round(p.bonus_probability * 100)}%`
+        : p.expected_points.toFixed(1);
+
+  const secondary = (p: FPLXPointsPrediction) =>
+    tab === "xpts"
+      ? `${t("fplLive.ui.leagues.capShort", "C")} ${p.captaincy_score.toFixed(1)}`
+      : `xP ${p.expected_points.toFixed(1)}`;
+
+  const columnLabel =
+    tab === "captaincy"
+      ? t("predictions.captaincyScore", "Captaincy")
+      : tab === "bonus"
+        ? t("fplLive.ui.leagues.bonusChance", "Bonus %")
+        : "xPts";
 
   return (
-    <div className="space-y-4 p-4">
-      <header className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-theme-foreground">
-            {t("predictions.title", "xPts Predictions")}
-          </h2>
-          {gameweek && (
-            <p className="text-sm text-theme-text-secondary">
-              GW {gameweek}
-              {lastUpdated && (
-                <span className="ml-2">
-                  · {new Date(lastUpdated).toLocaleTimeString()}
-                </span>
-              )}
-            </p>
-          )}
-        </div>
-        {gameweek && (
-          <button
-            onClick={() => fetchPredictions(gameweek)}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md disabled:opacity-50"
-          >
-            <MdRefresh className="w-4 h-4" />
-            {t("leagueTables.refresh", "Refresh")}
-          </button>
-        )}
-      </header>
+    <div>
+      <AnalyticsToolbar
+        gameweek={gameweek}
+        updatedAt={lastUpdated}
+        loading={loading}
+        onRefresh={gameweek ? () => fetchPredictions(gameweek) : undefined}
+      >
+        <Segmented<TabKey>
+          value={tab}
+          onChange={(next) => {
+            setTab(next);
+            setShowAll(false);
+          }}
+          options={[
+            { value: "xpts", label: t("predictions.expectedPoints", "xPts") },
+            { value: "captaincy", label: t("predictions.captaincyScore", "Captaincy") },
+            { value: "bonus", label: t("predictions.bonusProbability", "Bonus Prob.") },
+          ]}
+        />
+      </AnalyticsToolbar>
 
-      <div className="inline-flex rounded-md border border-theme-border overflow-hidden">
-        <button
-          onClick={() => setTab("xpts")}
-          className={`px-3 py-1.5 text-sm ${
-            tab === "xpts"
-              ? "bg-purple-600 text-white"
-              : "bg-theme-card text-theme-foreground"
-          }`}
-        >
-          {t("predictions.expectedPoints", "xPts")}
-        </button>
-        <button
-          onClick={() => setTab("captaincy")}
-          className={`px-3 py-1.5 text-sm border-l border-theme-border ${
-            tab === "captaincy"
-              ? "bg-purple-600 text-white"
-              : "bg-theme-card text-theme-foreground"
-          }`}
-        >
-          {t("predictions.captaincyScore", "Captaincy")}
-        </button>
-        <button
-          onClick={() => setTab("bonus")}
-          className={`px-3 py-1.5 text-sm border-l border-theme-border ${
-            tab === "bonus"
-              ? "bg-purple-600 text-white"
-              : "bg-theme-card text-theme-foreground"
-          }`}
-        >
-          {t("predictions.bonusProbability", "Bonus Prob.")}
-        </button>
-      </div>
+      {error && <InlineError message={t("fplLive.ui.leagues.loadError", "Couldn't load data. Try refreshing.")} />}
 
-      {error && (
-        <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
-          {error}
-        </div>
+      {loading && predictions.length === 0 && <SkeletonRows rows={6} className="border-t border-theme-border" />}
+
+      {!loading && predictions.length === 0 && !error && (
+        <EmptyState
+          className="border-t border-theme-border"
+          icon={<TrendingUp />}
+          title={t("fplLive.ui.leagues.noData", "No data yet for this gameweek.")}
+        />
       )}
 
-      {loading && predictions.length === 0 && <LoadingCard title="" description="" />}
-
-      {predictions.length > 0 && (
-        <div className="bg-theme-card border border-theme-border rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs sm:text-sm">
-              <thead className="bg-theme-card-secondary text-theme-text-secondary uppercase">
-                <tr>
-                  <th className="px-2 py-2 text-left">#</th>
-                  <th className="px-2 py-2 text-left">{t("bps.thPlayer", "Player")}</th>
-                  <th className="px-2 py-2 text-center">{t("bps.thPos", "Pos")}</th>
-                  <th className="px-2 py-2 text-right">xPts</th>
-                  <th className="px-2 py-2 text-right">
-                    {t("predictions.captaincyScore", "Captaincy")}
-                  </th>
-                  <th className="px-2 py-2 text-right">
-                    {t("predictions.bonusProbability", "Bonus Prob.")}
-                  </th>
-                  <th className="px-2 py-2 text-right">
-                    {t("predictions.minutesExpected", "Min Exp.")}
-                  </th>
-                  <th className="px-2 py-2 text-right">
-                    {t("predictions.csProbability", "CS Prob.")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.slice(0, 80).map((p, idx) => {
-                  const el = elementMap.get(p.player_id);
-                  const colors = getTeamColors(el?.team || 1);
-                  return (
-                    <tr
-                      key={p.player_id}
-                      className="border-t border-theme-border"
-                    >
-                      <td className="px-2 py-2 font-bold">{idx + 1}</td>
-                      <td className="px-2 py-2 font-medium text-theme-foreground max-w-[160px]">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div
-                            className="flex items-center justify-center w-6 h-6 rounded-md shrink-0"
-                            style={{
-                              background: `linear-gradient(135deg, ${colors.primary}1a 0%, ${colors.primary}0d 100%)`,
-                            }}
-                          >
-                            <TeamJersey
-                              kit={colors}
-                              isGoalkeeper={el?.element_type === 1}
-                              className="w-3.5 h-3.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
-                            />
-                          </div>
-                          <span className="truncate">
-                            {p.web_name || el?.web_name || `#${p.player_id}`}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-2 py-2 text-center text-theme-text-secondary">
-                        {POSITION_LABEL[el?.element_type || 3] || ""}
-                      </td>
-                      <td className="px-2 py-2 text-right font-bold">
-                        {p.expected_points.toFixed(2)}
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        {p.captaincy_score.toFixed(2)}
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        {(p.bonus_probability * 100).toFixed(0)}%
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        {p.components.minutes_expected.toFixed(0)}
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        {(p.components.cs_probability * 100).toFixed(0)}%
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      {sorted.length > 0 && (
+        <>
+          <div className="grid grid-cols-[1.25rem_minmax(0,1fr)_3.75rem] items-center gap-x-2.5 border-y border-theme-border bg-theme-card-secondary px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-theme-text-muted sm:px-5">
+            <span>#</span>
+            <span>{t("bps.thPlayer", "Player")}</span>
+            <span className="text-right">{columnLabel}</span>
           </div>
-        </div>
+          <div className={cx("divide-y divide-theme-border", loading && "opacity-60")}>
+            {visible.map((p, idx) => {
+              const el = elementMap.get(p.player_id);
+              return (
+                <div
+                  key={p.player_id}
+                  className="grid grid-cols-[1.25rem_minmax(0,1fr)_3.75rem] items-center gap-x-2.5 px-4 py-2 sm:px-5"
+                >
+                  <span className="text-[11px] tabular-nums text-theme-text-muted">{idx + 1}</span>
+                  <PlayerCell
+                    size="sm"
+                    player={el}
+                    name={p.web_name || el?.web_name || `#${p.player_id}`}
+                    meta={
+                      <>
+                        <span>{POSITION_SHORT[el?.element_type ?? 0] ?? ""}</span>
+                        <span aria-hidden>·</span>
+                        <span className="tabular-nums">
+                          {Math.round(p.components.minutes_expected)}&apos;
+                        </span>
+                        {el && el.element_type <= 2 && (
+                          <>
+                            <span aria-hidden>·</span>
+                            <span className="tabular-nums">
+                              {t("fplLive.ui.leagues.csShort", "CS")}{" "}
+                              {Math.round(p.components.cs_probability * 100)}%
+                            </span>
+                          </>
+                        )}
+                      </>
+                    }
+                  />
+                  <div className="text-right">
+                    <div className="text-sm font-semibold leading-none tabular-nums text-theme-heading-primary">
+                      {primary(p)}
+                    </div>
+                    <div className="mt-1 text-[10px] leading-none tabular-nums text-theme-text-muted">
+                      {secondary(p)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {sorted.length > COLLAPSED_ROWS && (
+            <ShowMoreButton
+              expanded={showAll}
+              onClick={() => setShowAll((v) => !v)}
+              count={sorted.length - COLLAPSED_ROWS}
+            />
+          )}
+        </>
       )}
 
-      <p className="text-xs text-theme-text-secondary">
+      <Footnote>
         {t(
           "predictions.disclaimer",
           "MVP heuristic blending form, ICT, xG/xA and clean-sheet probability. Not ML-grade."
         )}
-      </p>
+      </Footnote>
     </div>
   );
 }

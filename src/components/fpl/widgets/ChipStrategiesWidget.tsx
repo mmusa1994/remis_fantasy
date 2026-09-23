@@ -12,6 +12,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { dateLocale } from "../live/ui";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -121,7 +122,7 @@ function buildChipStrategies(
         if (position > 0.1 && position < 0.6) score += 15;
         if (data.hasDouble) score += 20;
         score += (5 - data.avgDifficulty) * 8;
-        return { gw, score, reason: data.hasDouble ? "DGW fixture swing" : "Fixture swing" };
+        return { gw, score, reason: data.hasDouble ? "dgwSwing" : "fixtureSwing" };
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 5),
@@ -135,7 +136,7 @@ function buildChipStrategies(
         if (data.fixtureCount < 10) score += (10 - data.fixtureCount) * 12;
         if (data.hasDouble) score += 30;
         score += (5 - data.avgDifficulty) * 5;
-        return { gw, score, reason: data.fixtureCount < 10 ? "Blank GW" : data.hasDouble ? "DGW opportunity" : "Fixture advantage" };
+        return { gw, score, reason: data.fixtureCount < 10 ? "blankGw" : data.hasDouble ? "dgwOpportunity" : "fixtureAdvantage" };
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 5),
@@ -149,7 +150,7 @@ function buildChipStrategies(
         if (data.hasDouble) score += 50;
         score += (data.fixtureCount - 10) * 3;
         score += (5 - data.avgDifficulty) * 8;
-        return { gw, score, reason: data.hasDouble ? "DGW - bench plays twice" : "High fixture count" };
+        return { gw, score, reason: data.hasDouble ? "dgwBench" : "highFixtureCount" };
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 5),
@@ -163,7 +164,7 @@ function buildChipStrategies(
         if (data.hasDouble) score += 55;
         score += (5 - data.avgDifficulty) * 12;
         if (data.fixtureCount >= 10) score += 5;
-        return { gw, score, reason: data.hasDouble ? "DGW - captain plays twice" : "Easy fixtures" };
+        return { gw, score, reason: data.hasDouble ? "dgwCaptain" : "easyFixtures" };
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 5),
@@ -209,7 +210,7 @@ export default function ChipStrategiesWidget({
   maxWeeksShown = 5,
   currentGameweek = 1,
 }: ChipStrategiesWidgetProps) {
-  const { t } = useTranslation("fpl");
+  const { t, i18n } = useTranslation("fpl");
   const [data, setData] = useState<ChipStrategyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -374,10 +375,10 @@ export default function ChipStrategiesWidget({
           </button>
         </div>
         <div className="text-sm text-theme-text-secondary text-center py-4">
-          {error}
+          {t("teamPlanner.widgets.chipLoadFailed")}
           <br />
           <button onClick={handleManualRefresh} className="text-theme-text-secondary hover:text-theme-foreground underline mt-2">
-            Try again
+            {t("teamPlanner.widgets.tryAgain")}
           </button>
         </div>
       </div>
@@ -399,16 +400,16 @@ export default function ChipStrategiesWidget({
           </div>
           <div>
             <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 leading-none">
-              Strategija čipova
+              {t("teamPlanner.widgets.chipStrategies")}
             </h3>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Kad iskoristiti WC/FH/BB/TC
+              {t("teamPlanner.widgets.chipStrategiesSubtitle")}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
-            GW{data.currentGW} · {data.remainingGWs} ostalo
+            {t("teamPlanner.widgets.gwRemaining", { gw: data.currentGW, count: data.remainingGWs })}
           </span>
           <button onClick={handleManualRefresh} className="p-1 rounded-md text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
             <RefreshCw className="w-3.5 h-3.5" />
@@ -440,7 +441,7 @@ export default function ChipStrategiesWidget({
             </span>
           </div>
           <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-snug">
-            {data.topRecommendation.reason}
+            {t(`teamPlanner.widgets.chipReason.${data.topRecommendation.reason}`)}
           </p>
         </motion.div>
       )}
@@ -485,8 +486,8 @@ export default function ChipStrategiesWidget({
                 </h4>
                 <p className="text-xs text-theme-text-secondary">
                   {activeChipData.bestWeeks.length > 0
-                    ? `Best upcoming GWs based on fixtures`
-                    : "No upcoming gameweeks to analyze"}
+                    ? t("teamPlanner.widgets.bestUpcoming")
+                    : t("teamPlanner.widgets.noUpcoming")}
                 </p>
               </div>
             </div>
@@ -495,7 +496,7 @@ export default function ChipStrategiesWidget({
               <div className="space-y-2">
                 <h5 className="text-xs font-medium flex items-center gap-1 text-theme-text-secondary uppercase tracking-wider">
                   <Calendar className="w-3 h-3" />
-                  Recommended GWs
+                  {t("teamPlanner.widgets.recommendedGws")}
                 </h5>
                 {activeChipData.bestWeeks.slice(0, maxWeeksShown).map((week, index) => (
                   <motion.div
@@ -514,7 +515,7 @@ export default function ChipStrategiesWidget({
                           GW {week.gw}
                         </span>
                         <p className="text-xs text-theme-text-secondary">
-                          {week.reason}
+                          {t(`teamPlanner.widgets.chipReason.${week.reason}`)}
                         </p>
                       </div>
                     </div>
@@ -526,7 +527,7 @@ export default function ChipStrategiesWidget({
               </div>
             ) : (
               <div className="text-sm text-theme-text-secondary text-center py-4">
-                No data available for remaining gameweeks
+                {t("teamPlanner.widgets.noDataRemaining")}
               </div>
             )}
           </motion.div>
@@ -536,7 +537,9 @@ export default function ChipStrategiesWidget({
       {/* Last Update */}
       {lastUpdate && (
         <div className="text-[10px] text-slate-400 dark:text-slate-500 text-center pt-2 border-t border-slate-200/60 dark:border-slate-700/40 mt-3">
-          Ažurirano u {lastUpdate.toLocaleTimeString()}
+          {t("teamPlanner.widgets.updatedAt", {
+            time: lastUpdate.toLocaleTimeString(dateLocale(i18n.language), { hour: "2-digit", minute: "2-digit" }),
+          })}
         </div>
       )}
       </div>

@@ -21,6 +21,7 @@ import WCBackground from "@/components/shared/WCBackground";
 import type { Tournament, TournamentStatus } from "@/types/predictor";
 import { getLogoFilter } from "@/utils/predictor-logo";
 import { getAccentClasses } from "@/utils/predictor-accent";
+import { dateLocale } from "@/components/fpl/live/ui";
 import {
   localizedTournamentName,
   localizedTournamentShort,
@@ -1100,7 +1101,7 @@ function TournamentCard({
             <span
               className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded-full ${badge.cls}`}
             >
-              {badge.label}
+              {t(`card.status.${tournament.status}`, { defaultValue: badge.label })}
             </span>
           </div>
         </div>
@@ -1125,7 +1126,7 @@ function TournamentCard({
               }`}
             >
               <Calendar className="w-3 h-3 opacity-70" />
-              {new Date(tournament.starts_at).toLocaleDateString(lang === "bs" ? "sr-Latn" : "en-GB")}
+              {new Date(tournament.starts_at).toLocaleDateString(dateLocale(lang))}
             </span>
           )}
           {tournament.registration_lock_at && (
@@ -1138,7 +1139,7 @@ function TournamentCard({
             >
               <Lock className="w-3 h-3 opacity-70" />
               {new Date(tournament.registration_lock_at).toLocaleString(
-                lang === "bs" ? "sr-Latn" : "en-GB",
+                dateLocale(lang),
                 { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" },
               )}
             </span>

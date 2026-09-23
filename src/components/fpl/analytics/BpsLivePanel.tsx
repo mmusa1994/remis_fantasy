@@ -1,11 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MdRefresh } from "react-icons/md";
-import LoadingCard from "@/components/shared/LoadingCard";
-import { getTeamColors } from "@/lib/team-colors";
-import TeamJersey from "../TeamJersey";
+import { Zap } from "lucide-react";
+import {
+  Chip,
+  cx,
+  EmptyState,
+  LiveDot,
+  PlayerCell,
+  PlayerJersey,
+  POSITION_SHORT,
+  SkeletonRows, dateLocale } from "@/components/fpl/live/ui";
+import {
+  AnalyticsToolbar,
+  Footnote,
+  InlineError,
+  ShowMoreButton,
+} from "@/components/fpl/live/AnalyticsParts";
 
 interface BpsPlayer {
   element: number;
@@ -34,12 +46,11 @@ interface BpsFixture {
   bps_leaderboard: BpsPlayer[];
 }
 
-const POSITION_LABEL: Record<number, string> = {
-  1: "GK",
-  2: "DEF",
-  3: "MID",
-  4: "FWD",
-};
+const COLLAPSED_ROWS = 5;
+const EXPANDED_ROWS = 15;
+
+const isDone = (f: BpsFixture) => f.finished || f.finished_provisional;
+const isLive = (f: BpsFixture) => f.started && !isDone(f);
 
 export default function BpsLivePanel() {
   const { t } = useTranslation("fpl");
@@ -48,6 +59,7 @@ export default function BpsLivePanel() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const detectGameweek = useCallback(async () => {
     try {
@@ -71,25 +83,22 @@ export default function BpsLivePanel() {
     return null;
   }, []);
 
-  const fetchLeaderboard = useCallback(
-    async (gw: number) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/fpl/bps-leaderboard?gw=${gw}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || "Failed to load");
-        setFixtures(json.data.fixtures || []);
-        setLastUpdated(json.data.last_updated || new Date().toISOString());
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+  const fetchLeaderboard = useCallback(async (gw: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/fpl/bps-leaderboard?gw=${gw}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to load");
+      setFixtures(json.data.fixtures || []);
+      setLastUpdated(json.data.last_updated || new Date().toISOString());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -99,147 +108,180 @@ export default function BpsLivePanel() {
     })();
   }, [detectGameweek, fetchLeaderboard]);
 
+  // Live matches first, then finished (latest first), then upcoming.
+  const ordered = useMemo(() => {
+    const byKickoff = (a: BpsFixture, b: BpsFixture) =>
+      new Date(a.kickoff_time).getTime() - new Date(b.kickoff_time).getTime();
+    const live = fixtures.filter(isLive).sort(byKickoff);
+    const done = fixtures.filter(isDone).sort((a, b) => byKickoff(b, a));
+    const upcoming = fixtures.filter((f) => !f.started && !isDone(f)).sort(byKickoff);
+    return [...live, ...done, ...upcoming];
+  }, [fixtures]);
+
+  const toggle = (id: number) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
   return (
-    <div className="space-y-4 p-4">
-      <header className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-theme-foreground">
-            {t("bps.title", "BPS Live Leaderboard")}
-          </h2>
-          {gameweek && (
-            <p className="text-sm text-theme-text-secondary">
-              Gameweek {gameweek}
-              {lastUpdated && (
-                <span className="ml-2">
-                  · {t("leagueTables.updated", "Updated")}:{" "}
-                  {new Date(lastUpdated).toLocaleTimeString()}
-                </span>
-              )}
-            </p>
-          )}
-        </div>
-        {gameweek && (
-          <button
-            onClick={() => fetchLeaderboard(gameweek)}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md disabled:opacity-50"
-          >
-            <MdRefresh className="w-4 h-4" />
-            {t("leagueTables.refresh", "Refresh")}
-          </button>
-        )}
-      </header>
+    <div>
+      <AnalyticsToolbar
+        gameweek={gameweek}
+        updatedAt={lastUpdated}
+        loading={loading}
+        onRefresh={gameweek ? () => fetchLeaderboard(gameweek) : undefined}
+      />
 
-      {error && (
-        <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
-          {error}
-        </div>
-      )}
+      {error && <InlineError message={t("fplLive.ui.leagues.loadError", "Couldn't load data. Try refreshing.")} />}
 
-      {loading && fixtures.length === 0 && <LoadingCard title="" description="" />}
+      {loading && fixtures.length === 0 && <SkeletonRows rows={5} className="border-t border-theme-border" />}
 
       {!loading && fixtures.length === 0 && !error && (
-        <div className="p-4 rounded-md bg-theme-card border border-theme-border text-sm text-theme-text-secondary">
-          {t("bps.noFixtures", "No fixtures available for this gameweek yet.")}
+        <EmptyState
+          className="border-t border-theme-border"
+          icon={<Zap />}
+          title={t("bps.noFixtures", "No fixtures available for this gameweek yet.")}
+        />
+      )}
+
+      {ordered.length > 0 && (
+        <div className="grid grid-cols-1 gap-3 border-t border-theme-border p-3 sm:p-4 lg:grid-cols-2">
+          {ordered.map((fixture) => (
+            <FixtureCard
+              key={fixture.fixture_id}
+              fixture={fixture}
+              expanded={expanded.has(fixture.fixture_id)}
+              onToggle={() => toggle(fixture.fixture_id)}
+            />
+          ))}
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {fixtures.map((fixture) => (
-          <div
-            key={fixture.fixture_id}
-            className="bg-theme-card border border-theme-border rounded-lg overflow-hidden"
-          >
-            <div className="px-3 py-2 bg-theme-card-secondary border-b border-theme-border flex items-center justify-between text-sm">
-              <span className="font-semibold text-theme-foreground">
-                {fixture.team_h} vs {fixture.team_a}
-                {fixture.team_h_score !== null &&
-                  fixture.team_a_score !== null && (
-                    <span className="ml-2 text-theme-text-secondary">
-                      {fixture.team_h_score} - {fixture.team_a_score}
-                    </span>
-                  )}
-              </span>
-              <span
-                className={`text-xs px-2 py-0.5 rounded-md ${
-                  fixture.finished
-                    ? "bg-gray-200 dark:bg-gray-700 text-theme-text-secondary"
-                    : fixture.started
-                      ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300"
-                      : "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                }`}
-              >
-                {fixture.finished
-                  ? t("bps.fixtureFinished", "Finished")
-                  : fixture.started
-                    ? `🔴 ${fixture.minutes}'`
-                    : t("bps.fixtureUpcoming", "Upcoming")}
-              </span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs sm:text-sm">
-                <thead className="bg-theme-card-secondary/60 text-theme-text-secondary uppercase">
-                  <tr>
-                    <th className="px-2 py-1 text-left">{t("bps.thPlayer", "Player")}</th>
-                    <th className="px-2 py-1 text-center">{t("bps.thPos", "Pos")}</th>
-                    <th className="px-2 py-1 text-center">{t("bps.thMin", "Min")}</th>
-                    <th className="px-2 py-1 text-center">{t("bps.thBps", "BPS")}</th>
-                    <th className="px-2 py-1 text-center">{t("bps.thPred", "Pred.")}</th>
-                    <th className="px-2 py-1 text-center">{t("bps.thBonus", "Bonus")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {fixture.bps_leaderboard.slice(0, 15).map((player) => {
-                    const colors = getTeamColors(player.team || 1);
-                    return (
-                    <tr
-                      key={player.element}
-                      className="border-t border-theme-border"
-                    >
-                      <td className="px-2 py-1 font-medium text-theme-foreground max-w-[160px]">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div
-                            className="flex items-center justify-center w-6 h-6 rounded-md shrink-0"
-                            style={{
-                              background: `linear-gradient(135deg, ${colors.primary}1a 0%, ${colors.primary}0d 100%)`,
-                            }}
-                          >
-                            <TeamJersey
-                              kit={colors}
-                              className="w-3.5 h-3.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
-                            />
-                          </div>
-                          <span className="truncate">{player.web_name}</span>
-                        </div>
-                      </td>
-                      <td className="px-2 py-1 text-center text-theme-text-secondary">
-                        {POSITION_LABEL[player.position] || ""}
-                      </td>
-                      <td className="px-2 py-1 text-center">{player.minutes}</td>
-                      <td className="px-2 py-1 text-center font-bold">
-                        {player.bps}
-                      </td>
-                      <td className="px-2 py-1 text-center">
-                        {player.predicted_bonus > 0 ? (
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-[10px] font-bold">
-                            {player.predicted_bonus}
-                          </span>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="px-2 py-1 text-center font-medium">
-                        {player.current_bonus > 0 ? player.current_bonus : "—"}
-                      </td>
-                    </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ))}
-      </div>
+      <Footnote>
+        <span className="inline-flex items-center gap-1.5">
+          <BonusBadge predicted={3} confirmed={0} />
+          {t("fplLive.ui.leagues.bonusPredictedLegend", "provisional bonus")}
+        </span>
+        <span className="mx-2" aria-hidden>
+          ·
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <BonusBadge predicted={0} confirmed={3} />
+          {t("fplLive.ui.leagues.bonusConfirmedLegend", "confirmed bonus")}
+        </span>
+      </Footnote>
     </div>
+  );
+}
+
+function FixtureCard({
+  fixture,
+  expanded,
+  onToggle,
+}: {
+  fixture: BpsFixture;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const { t, i18n } = useTranslation("fpl");
+  const live = isLive(fixture);
+  const done = isDone(fixture);
+  const hasScore = fixture.team_h_score !== null && fixture.team_a_score !== null;
+  const rows = fixture.started ? fixture.bps_leaderboard : [];
+  const visible = rows.slice(0, expanded ? EXPANDED_ROWS : COLLAPSED_ROWS);
+  const hidden = Math.min(rows.length, EXPANDED_ROWS) - COLLAPSED_ROWS;
+
+  const shortFor = (teamId: number) =>
+    teamId === fixture.team_h_id ? fixture.team_h : teamId === fixture.team_a_id ? fixture.team_a : teamId;
+
+  const kickoff = new Date(fixture.kickoff_time);
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-theme-border bg-theme-card">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-2.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <PlayerJersey team={fixture.team_h} size="sm" />
+          <span className="truncate text-sm font-semibold text-theme-heading-primary">{fixture.team_h}</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-base font-semibold leading-none tabular-nums text-theme-heading-primary">
+            {hasScore
+              ? `${fixture.team_h_score} – ${fixture.team_a_score}`
+              : kickoff.toLocaleTimeString(dateLocale(i18n.language), { hour: "2-digit", minute: "2-digit" })}
+          </span>
+          {live ? (
+            <Chip tone="positive">
+              <LiveDot />
+              {fixture.minutes}&apos;
+            </Chip>
+          ) : done ? (
+            <Chip>{t("fplLive.ui.leagues.fullTime", "FT")}</Chip>
+          ) : (
+            <Chip>
+              {kickoff.toLocaleDateString(dateLocale(i18n.language), { weekday: "short", day: "numeric" })}
+            </Chip>
+          )}
+        </div>
+        <div className="flex min-w-0 items-center justify-end gap-2">
+          <span className="truncate text-sm font-semibold text-theme-heading-primary">{fixture.team_a}</span>
+          <PlayerJersey team={fixture.team_a} size="sm" />
+        </div>
+      </div>
+
+      {visible.length > 0 && (
+        <div className="divide-y divide-theme-border border-t border-theme-border">
+          {visible.map((player, idx) => (
+            <div key={player.element} className="flex items-center gap-2.5 px-3 py-2">
+              <span className="w-4 shrink-0 text-center text-[11px] tabular-nums text-theme-text-muted">
+                {idx + 1}
+              </span>
+              <PlayerCell
+                size="sm"
+                team={shortFor(player.team)}
+                isGoalkeeper={player.position === 1}
+                name={player.web_name}
+                meta={
+                  <>
+                    <span>{POSITION_SHORT[player.position] ?? ""}</span>
+                    <span aria-hidden>·</span>
+                    <span className="tabular-nums">{player.minutes}&apos;</span>
+                  </>
+                }
+              />
+              <span className="w-9 shrink-0 text-right text-sm font-semibold tabular-nums text-theme-heading-primary">
+                {player.bps}
+              </span>
+              <BonusBadge predicted={player.predicted_bonus} confirmed={player.current_bonus} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {hidden > 0 && <ShowMoreButton expanded={expanded} onClick={onToggle} count={hidden} />}
+    </div>
+  );
+}
+
+/** Solid = bonus already awarded, outline = where BPS stands right now. */
+function BonusBadge({ predicted, confirmed }: { predicted: number; confirmed: number }) {
+  const value = confirmed > 0 ? confirmed : predicted;
+  return (
+    <span className="flex w-6 shrink-0 justify-center">
+      {value > 0 && (
+        <span
+          className={cx(
+            "inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold tabular-nums",
+            confirmed > 0
+              ? "bg-violet-500 text-white"
+              : "bg-violet-500/10 text-violet-600 ring-1 ring-inset ring-violet-500/30 dark:text-violet-300"
+          )}
+        >
+          {value}
+        </span>
+      )}
+    </span>
   );
 }

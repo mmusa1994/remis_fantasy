@@ -56,7 +56,20 @@ export interface LeagueElementSummary {
   second_name: string;
   web_name: string;
   team: number;
+  /** Permanent club code — lets the shirt resolve without season team ids. */
+  team_code?: number;
   element_type: number;
+}
+
+/** A classic league from the manager's entry (FPL passes these through). */
+export interface ManagerLeague {
+  id: number;
+  name: string;
+  entry_rank: number | null;
+  entry_last_rank: number | null;
+  /** "x" = private/invitational, "s" = system (Overall, country, club...). */
+  league_type?: string;
+  rank_count?: number | null;
 }
 
 export interface FplTeamSummary {

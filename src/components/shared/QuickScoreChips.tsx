@@ -41,7 +41,7 @@ export default function QuickScoreChips({
       <p
         className={`text-[9px] uppercase tracking-widest font-bold mb-1.5 ${dark ? "text-gray-500" : "text-gray-400"}`}
       >
-        {t("quickPick", "Brzi tip")}
+        {t("quickPick")}
       </p>
       <div className="grid grid-cols-5 gap-1">
         {PRESETS.map((p) => {
@@ -58,8 +58,8 @@ export default function QuickScoreChips({
                 winner === "draw"
                   ? `${p.h} : ${p.a}`
                   : winner === "home"
-                    ? `${homeName ?? "domaćin"} ${p.h} : ${p.a}`
-                    : `${p.h} : ${p.a} ${awayName ?? "gost"}`
+                    ? `${homeName ?? t("common:match.homeTeam")} ${p.h} : ${p.a}`
+                    : `${p.h} : ${p.a} ${awayName ?? t("common:match.awayTeam")}`
               }
               className={`inline-flex items-center justify-center gap-0.5 px-1.5 py-1 rounded-lg text-xs font-bold tabular-nums transition-all active:scale-95 ${
                 isSelected

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 import { FaCamera, FaTrash } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { createClient } from "@supabase/supabase-js";
@@ -26,6 +27,7 @@ export default function PhotoUpload({
 }: PhotoUploadProps) {
   const { data: session, update } = useSession();
   const { theme } = useTheme();
+  const { t } = useTranslation("profile");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
@@ -45,7 +47,7 @@ export default function PhotoUpload({
 
   const uploadPhoto = async (file: File) => {
     if (!session?.user?.id) {
-      setError("You must be logged in to upload photos");
+      setError(t("photo.loginRequired"));
       return;
     }
 
@@ -55,12 +57,12 @@ export default function PhotoUpload({
     try {
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        throw new Error("File size must be less than 5MB");
+        throw new Error(t("photo.tooLarge"));
       }
 
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        throw new Error("Please select an image file");
+        throw new Error(t("photo.notImage"));
       }
 
       // Generate unique filename
@@ -109,7 +111,7 @@ export default function PhotoUpload({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update profile");
+        throw new Error(t("failedToUpdateProfile"));
       }
 
       // Update display URL immediately
@@ -120,7 +122,7 @@ export default function PhotoUpload({
 
       onPhotoUpdate(photoUrl);
     } catch (err: any) {
-      setError(err.message || "Failed to upload photo");
+      setError(err.message || t("photo.uploadFailed"));
     } finally {
       setIsUploading(false);
     }
@@ -153,7 +155,7 @@ export default function PhotoUpload({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update profile");
+        throw new Error(t("failedToUpdateProfile"));
       }
 
       // Update display URL immediately
@@ -163,7 +165,7 @@ export default function PhotoUpload({
       await update();
       onPhotoUpdate(null);
     } catch (err: any) {
-      setError(err.message || "Failed to delete photo");
+      setError(err.message || t("photo.deleteFailed"));
     } finally {
       setIsUploading(false);
     }
@@ -191,7 +193,7 @@ export default function PhotoUpload({
           {displayPhotoUrl ? (
             <img
               src={displayPhotoUrl}
-              alt="Profile photo"
+              alt={t("photo.alt")}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -212,7 +214,7 @@ export default function PhotoUpload({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="p-2 bg-red-800 hover:bg-red-900 text-white rounded-md transition-colors"
-                title="Upload photo"
+                title={t("photo.upload")}
               >
                 <FaCamera className="w-3 h-3" />
               </button>
@@ -220,7 +222,7 @@ export default function PhotoUpload({
                 <button
                   onClick={deletePhoto}
                   className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
-                  title="Delete photo"
+                  title={t("photo.delete")}
                 >
                   <FaTrash className="w-3 h-3" />
                 </button>
@@ -243,8 +245,8 @@ export default function PhotoUpload({
           theme === "dark" ? "text-gray-400" : "text-gray-600"
         }`}
       >
-        <p>Click to upload (max 5MB)</p>
-        <p>JPG, PNG, GIF supported</p>
+        <p>{t("photo.hintSize")}</p>
+        <p>{t("photo.hintFormats")}</p>
       </div>
     </div>
   );

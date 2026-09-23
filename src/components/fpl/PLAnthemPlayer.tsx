@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, X } from "lucide-react";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 const ANTHEM_SRC =
   "/pl/The Official Premier League Anthem (Official Audio).mp3";
 
 export default function PLAnthemPlayer() {
+  const { t } = useTranslation("fpl");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -163,7 +165,7 @@ export default function PLAnthemPlayer() {
                 exit={{ opacity: 0, scale: 0.92 }}
                 onClick={() => setCollapsed(false)}
                 className="relative z-10 flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 group"
-                title="PL Anthem"
+                title={t("anthem.title")}
               >
                 <Image
                   src="/images/logos/pl-logo.png"
@@ -193,7 +195,7 @@ export default function PLAnthemPlayer() {
                 <button
                   onClick={() => setCollapsed(true)}
                   className="relative shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                  title="Minimize"
+                  title={t("anthem.minimize")}
                 >
                   <Image
                     src="/images/logos/pl-logo.png"
@@ -207,7 +209,7 @@ export default function PLAnthemPlayer() {
                 {/* Title */}
                 <div className="min-w-0 hidden xs:block sm:block">
                   <p className="text-[10px] uppercase tracking-widest font-bold text-[#04f5ff]/90 leading-none">
-                    Anthem
+                    {t("anthem.label")}
                   </p>
                   <p className="text-xs sm:text-sm font-semibold text-white leading-tight truncate max-w-[120px] sm:max-w-[140px]">
                     Premier League
@@ -219,7 +221,7 @@ export default function PLAnthemPlayer() {
                   <button
                     onClick={togglePlay}
                     className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#e90052] to-[#37003c] hover:from-[#ff1a6b] hover:to-[#4d004f] text-white flex items-center justify-center shadow-md transition-all"
-                    title={isPlaying ? "Pause" : "Play"}
+                    title={isPlaying ? t("anthem.pause") : t("anthem.play")}
                   >
                     {isPlaying ? (
                       <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -235,7 +237,7 @@ export default function PLAnthemPlayer() {
                           ? "bg-[#FFD100] text-black hover:bg-[#FFC400] shadow-lg shadow-[#FFD100]/40"
                           : "bg-white/10 hover:bg-white/20 text-white"
                       }`}
-                      title={isMuted ? "Tap to enable sound" : "Mute"}
+                      title={isMuted ? t("anthem.enableSound") : t("anthem.mute")}
                     >
                       {needsUnmuteHint && (
                         <motion.span
@@ -256,7 +258,7 @@ export default function PLAnthemPlayer() {
                         animate={{ opacity: 1, y: 0 }}
                         className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 rounded-md bg-[#FFD100] text-black text-[10px] font-bold shadow-lg pointer-events-none"
                       >
-                        Tap for sound
+                        {t("anthem.tapForSound")}
                         <span className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 bg-[#FFD100] rotate-45" />
                       </motion.div>
                     )}
@@ -264,7 +266,7 @@ export default function PLAnthemPlayer() {
                   <button
                     onClick={() => setDismissed(true)}
                     className="w-6 h-6 sm:w-7 sm:h-7 rounded-full hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-colors"
-                    title="Close"
+                    title={t("anthem.close")}
                   >
                     <X className="w-3 h-3" />
                   </button>

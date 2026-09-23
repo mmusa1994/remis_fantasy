@@ -28,10 +28,8 @@ export default function I18nProvider({ children }: I18nProviderProps) {
 
   if (!isLoaded) {
     return (
-      <LoadingCard
-        title="Loading translations..."
-        description="Please wait while we fetch the translations"
-      />
+      // Translations are not ready yet — keep this language-neutral
+      <LoadingCard title="REMIS Fantasy" description="" />
     );
   }
 

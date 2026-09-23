@@ -8,6 +8,7 @@ import LoadingCard from "@/components/shared/LoadingCard";
 import TeamJersey from "@/components/fpl/TeamJersey";
 import { getTeamColors, registerFplTeams } from "@/lib/team-colors";
 import type { FPLEOBucket } from "@/types/fpl";
+import { dateLocale } from "@/components/fpl/live/ui";
 
 interface EORow {
   bucket: FPLEOBucket;
@@ -27,10 +28,10 @@ interface Element {
   element_type: number;
 }
 
-const BUCKET_LABEL: Record<FPLEOBucket, string> = {
-  top10k: "Top 10k",
-  top100k: "Top 100k",
-  overall: "Overall",
+const BUCKET_LABEL: Record<FPLEOBucket, { key: string; fallback: string }> = {
+  top10k: { key: "effectiveOwnership.bucketTop10k", fallback: "Top 10k" },
+  top100k: { key: "effectiveOwnership.bucketTop100k", fallback: "Top 100k" },
+  overall: { key: "effectiveOwnership.bucketOverall", fallback: "Overall" },
 };
 
 const POSITION_LABEL: Record<number, string> = {
@@ -41,7 +42,8 @@ const POSITION_LABEL: Record<number, string> = {
 };
 
 export default function EffectiveOwnershipPage() {
-  const { t } = useTranslation("fpl");
+  const { t, i18n } = useTranslation("fpl");
+  const bucketLabel = (b: FPLEOBucket) => t(BUCKET_LABEL[b].key, BUCKET_LABEL[b].fallback);
   const [gameweek, setGameweek] = useState<number | null>(null);
   const [bucket, setBucket] = useState<FPLEOBucket>("top10k");
   const [rows, setRows] = useState<EORow[]>([]);
@@ -86,11 +88,12 @@ export default function EffectiveOwnershipPage() {
       setRows(json.data.ownership || []);
       setLastUpdated(json.data.last_updated || new Date().toISOString());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      console.error("Effective ownership failed:", err);
+      setError(t("fplLive.ui.pages.loadError", "Couldn't load the data. Please try again."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     (async () => {
@@ -123,10 +126,13 @@ export default function EffectiveOwnershipPage() {
           </h1>
           {gameweek && (
             <p className="text-sm text-theme-text-secondary">
-              GW {gameweek} • {BUCKET_LABEL[bucket]}
+              GW {gameweek} • {bucketLabel(bucket)}
               {lastUpdated && (
                 <span className="ml-2">
-                  · {new Date(lastUpdated).toLocaleTimeString()}
+                  · {new Date(lastUpdated).toLocaleTimeString(dateLocale(i18n.language), {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               )}
             </p>
@@ -155,7 +161,7 @@ export default function EffectiveOwnershipPage() {
                 : "bg-theme-card text-theme-foreground"
             }`}
           >
-            {BUCKET_LABEL[b]}
+            {bucketLabel(b)}
           </button>
         ))}
       </div>
@@ -175,8 +181,8 @@ export default function EffectiveOwnershipPage() {
               <thead className="bg-theme-card-secondary text-theme-text-secondary uppercase">
                 <tr>
                   <th className="px-2 py-2 text-left">#</th>
-                  <th className="px-2 py-2 text-left">Player</th>
-                  <th className="px-2 py-2 text-center">Pos</th>
+                  <th className="px-2 py-2 text-left">{t("bps.thPlayer", "Player")}</th>
+                  <th className="px-2 py-2 text-center">{t("bps.thPos", "Pos")}</th>
                   <th className="px-2 py-2 text-right">EO%</th>
                   <th className="px-2 py-2 text-right">
                     {t("effectiveOwnership.capEO", "Cap EO")}%
@@ -184,9 +190,9 @@ export default function EffectiveOwnershipPage() {
                   <th className="px-2 py-2 text-right">
                     {t("effectiveOwnership.tcEO", "TC EO")}%
                   </th>
-                  <th className="px-2 py-2 text-right">TI%</th>
-                  <th className="px-2 py-2 text-right">TO%</th>
-                  <th className="px-2 py-2 text-right">Net%</th>
+                  <th className="px-2 py-2 text-right">{t("effectiveOwnership.transferIn", "TI%")}</th>
+                  <th className="px-2 py-2 text-right">{t("effectiveOwnership.transferOut", "TO%")}</th>
+                  <th className="px-2 py-2 text-right">{t("effectiveOwnership.net", "Net")}%</th>
                 </tr>
               </thead>
               <tbody>

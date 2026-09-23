@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import ChampionsLeagueTable, {
   type ClSeason,
@@ -9,6 +10,7 @@ import ChampionsLeagueTable, {
 
 export default function ChampionsLeagueTabelePage() {
   const { theme } = useTheme();
+  const { t } = useTranslation("champions");
   const [season, setSeason] = useState<ClSeason>("26_27");
 
   return (
@@ -22,7 +24,7 @@ export default function ChampionsLeagueTabelePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          Champions League Tabele
+          {t("table.pageTitle")}
         </motion.h1>
 
         {/* Season switcher */}
@@ -48,7 +50,7 @@ export default function ChampionsLeagueTabelePage() {
                 {label}
                 {s === "25_26" && !isActive && (
                   <span className="ml-1 text-[10px] font-medium opacity-60">
-                    (Završena)
+                    {t("table.finishedTag")}
                   </span>
                 )}
                 <span

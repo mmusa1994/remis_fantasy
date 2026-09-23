@@ -2,10 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MdRefresh } from "react-icons/md";
-import LoadingCard from "@/components/shared/LoadingCard";
-import { getTeamColors } from "@/lib/team-colors";
-import TeamJersey from "../TeamJersey";
+import { Users } from "lucide-react";
+import {
+  cx,
+  EmptyState,
+  PlayerCell,
+  POSITION_SHORT,
+  Segmented,
+  SkeletonRows,
+} from "@/components/fpl/live/ui";
+import {
+  AnalyticsToolbar,
+  Footnote,
+  InlineError,
+  ShowMoreButton,
+} from "@/components/fpl/live/AnalyticsParts";
 import type { FPLEOBucket } from "@/types/fpl";
 
 interface EORow {
@@ -23,35 +34,26 @@ interface Element {
   id: number;
   web_name: string;
   team: number;
+  team_code?: number;
   element_type: number;
 }
 
-const BUCKET_LABEL: Record<FPLEOBucket, string> = {
-  top10k: "Top 10k",
-  top100k: "Top 100k",
-  overall: "Overall",
-};
-
-const POSITION_LABEL: Record<number, string> = {
-  1: "GK",
-  2: "DEF",
-  3: "MID",
-  4: "FWD",
-};
+const COLLAPSED_ROWS = 20;
+const MAX_ROWS = 50;
 
 const compactFmt = new Intl.NumberFormat("en", {
   notation: "compact",
   maximumFractionDigits: 1,
 });
 
-// The API returns `transfer_*` fields computed as
-// `(global player.transfers_*_event / sample_size) * 100`, which is NOT a real
-// percentage (it can easily exceed 100,000). The numerator is the global FPL
-// transfer count for that player this gameweek. We reverse the `* 100` to
-// recover the raw global transfer count proxy and display it compactly.
-const formatTransfers = (rawApiValue: number) => {
-  const transfers = rawApiValue / 100; // undo the broken `* 100`
-  return compactFmt.format(Math.round(transfers));
+// The API returns `net_transfers_percent` computed as
+// `(global player net transfers this GW / sample_size) * 100`, which is NOT a
+// real percentage. Undo the `* 100` to get back the global transfer count
+// proxy and show it compactly.
+const formatNetTransfers = (rawApiValue: number) => {
+  const net = rawApiValue / 100;
+  const sign = net > 0 ? "+" : net < 0 ? "−" : "";
+  return `${sign}${compactFmt.format(Math.round(Math.abs(net)))}`;
 };
 
 const formatPercent = (value: number, digits = 1) => `${value.toFixed(digits)}%`;
@@ -65,6 +67,7 @@ export default function EffectiveOwnershipPanel() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const detectGameweek = useCallback(async () => {
     const res = await fetch("/api/fpl/bootstrap-static");
@@ -89,9 +92,7 @@ export default function EffectiveOwnershipPanel() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `/api/fpl/effective-ownership?gw=${gw}&bucket=${b}`
-      );
+      const res = await fetch(`/api/fpl/effective-ownership?gw=${gw}&bucket=${b}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to load");
@@ -112,161 +113,128 @@ export default function EffectiveOwnershipPanel() {
     })();
   }, [detectGameweek, fetchData, bucket]);
 
-  const elementMap = useMemo(
-    () => new Map(elements.map((el) => [el.id, el])),
-    [elements]
-  );
+  const elementMap = useMemo(() => new Map(elements.map((el) => [el.id, el])), [elements]);
 
-  const topRows = rows.slice(0, 50);
+  const topRows = rows.slice(0, MAX_ROWS);
+  const visible = showAll ? topRows : topRows.slice(0, COLLAPSED_ROWS);
+
+  const bucketLabel: Record<FPLEOBucket, string> = {
+    top10k: t("effectiveOwnership.bucketTop10k", "Top 10k"),
+    top100k: t("effectiveOwnership.bucketTop100k", "Top 100k"),
+    overall: t("effectiveOwnership.bucketOverall", "Overall"),
+  };
 
   return (
-    <div className="space-y-4 p-4">
-      <header className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-theme-foreground">
-            {t("effectiveOwnership.title", "Effective Ownership")}
-          </h2>
-          {gameweek && (
-            <p className="text-sm text-theme-text-secondary">
-              GW {gameweek} • {BUCKET_LABEL[bucket]}
-              {lastUpdated && (
-                <span className="ml-2">
-                  · {new Date(lastUpdated).toLocaleTimeString()}
-                </span>
-              )}
-            </p>
-          )}
-        </div>
-        {gameweek && (
-          <button
-            onClick={() => fetchData(gameweek, bucket)}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md disabled:opacity-50"
-          >
-            <MdRefresh className="w-4 h-4" />
-            {t("leagueTables.refresh", "Refresh")}
-          </button>
-        )}
-      </header>
+    <div>
+      <AnalyticsToolbar
+        gameweek={gameweek}
+        updatedAt={lastUpdated}
+        loading={loading}
+        onRefresh={gameweek ? () => fetchData(gameweek, bucket) : undefined}
+      >
+        <Segmented<FPLEOBucket>
+          value={bucket}
+          onChange={(b) => {
+            setBucket(b);
+            setShowAll(false);
+          }}
+          options={(["top10k", "top100k", "overall"] as FPLEOBucket[]).map((b) => ({
+            value: b,
+            label: bucketLabel[b],
+          }))}
+        />
+      </AnalyticsToolbar>
 
-      <div className="inline-flex rounded-md border border-theme-border overflow-hidden">
-        {(["top10k", "top100k", "overall"] as FPLEOBucket[]).map((b) => (
-          <button
-            key={b}
-            onClick={() => setBucket(b)}
-            className={`px-3 py-1.5 text-sm ${
-              bucket === b
-                ? "bg-purple-600 text-white"
-                : "bg-theme-card text-theme-foreground"
-            }`}
-          >
-            {BUCKET_LABEL[b]}
-          </button>
-        ))}
-      </div>
+      {error && <InlineError message={t("fplLive.ui.leagues.loadError", "Couldn't load data. Try refreshing.")} />}
 
-      {error && (
-        <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
-          {error}
-        </div>
+      {loading && rows.length === 0 && <SkeletonRows rows={6} className="border-t border-theme-border" />}
+
+      {!loading && rows.length === 0 && !error && (
+        <EmptyState
+          className="border-t border-theme-border"
+          icon={<Users />}
+          title={t("fplLive.ui.leagues.noData", "No data yet for this gameweek.")}
+        />
       )}
 
-      {loading && rows.length === 0 && <LoadingCard title="" description="" />}
-
-      {!loading && rows.length > 0 && (
-        <div className="bg-theme-card border border-theme-border rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs sm:text-sm">
-              <thead className="bg-theme-card-secondary text-theme-text-secondary uppercase">
-                <tr>
-                  <th className="px-2 py-2 text-left">#</th>
-                  <th className="px-2 py-2 text-left">{t("bps.thPlayer", "Player")}</th>
-                  <th className="px-2 py-2 text-center">{t("bps.thPos", "Pos")}</th>
-                  <th className="px-2 py-2 text-right">EO%</th>
-                  <th className="px-2 py-2 text-right">
-                    {t("effectiveOwnership.capEO", "Cap EO")}%
-                  </th>
-                  <th className="px-2 py-2 text-right">
-                    {t("effectiveOwnership.tcEO", "TC EO")}%
-                  </th>
-                  <th className="px-2 py-2 text-right">{t("bps.thTi", "TI")}</th>
-                  <th className="px-2 py-2 text-right">{t("bps.thTo", "TO")}</th>
-                  <th className="px-2 py-2 text-right">{t("bps.thNet", "Net")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topRows.map((row, idx) => {
-                  const el = elementMap.get(row.player_id);
-                  const netRaw = row.net_transfers_percent / 100;
-                  const colors = getTeamColors(el?.team || 1);
-                  return (
-                    <tr
-                      key={row.player_id}
-                      className="border-t border-theme-border"
-                    >
-                      <td className="px-2 py-2 font-bold">{idx + 1}</td>
-                      <td className="px-2 py-2 font-medium text-theme-foreground max-w-[160px]">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div
-                            className="flex items-center justify-center w-6 h-6 rounded-md shrink-0"
-                            style={{
-                              background: `linear-gradient(135deg, ${colors.primary}1a 0%, ${colors.primary}0d 100%)`,
-                            }}
-                          >
-                            <TeamJersey
-                              kit={colors}
-                              isGoalkeeper={el?.element_type === 1}
-                              className="w-3.5 h-3.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
-                            />
-                          </div>
-                          <span className="truncate">
-                            {el?.web_name || `#${row.player_id}`}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-2 py-2 text-center text-theme-text-secondary">
-                        {POSITION_LABEL[el?.element_type || 3] || ""}
-                      </td>
-                      <td className="px-2 py-2 text-right font-bold">
-                        {formatPercent(row.ownership_percent)}
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        {formatPercent(row.captain_percent)}
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        {formatPercent(row.triple_captain_percent)}
-                      </td>
-                      <td className="px-2 py-2 text-right text-green-600 dark:text-green-400">
-                        {formatTransfers(row.transfer_in_percent)}
-                      </td>
-                      <td className="px-2 py-2 text-right text-red-600 dark:text-red-400">
-                        {formatTransfers(row.transfer_out_percent)}
-                      </td>
-                      <td
-                        className={`px-2 py-2 text-right font-medium ${
-                          netRaw >= 0
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-red-600 dark:text-red-400"
-                        }`}
-                      >
-                        {netRaw >= 0 ? "+" : "-"}
-                        {compactFmt.format(Math.round(Math.abs(netRaw)))}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      {topRows.length > 0 && (
+        <>
+          <div
+            className={cx(
+              "grid grid-cols-[1.25rem_minmax(0,1fr)_4.25rem] items-center gap-x-2.5 border-y border-theme-border bg-theme-card-secondary px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-theme-text-muted sm:px-5",
+              loading && "opacity-60"
+            )}
+          >
+            <span>#</span>
+            <span>{t("bps.thPlayer", "Player")}</span>
+            <span className="text-right">{t("fplLive.ui.leagues.ownershipShort", "Owned")}</span>
           </div>
-        </div>
+          <div className={cx("divide-y divide-theme-border", loading && "opacity-60")}>
+            {visible.map((row, idx) => {
+              const el = elementMap.get(row.player_id);
+              const net = row.net_transfers_percent / 100;
+              return (
+                <div
+                  key={row.player_id}
+                  className="grid grid-cols-[1.25rem_minmax(0,1fr)_4.25rem] items-center gap-x-2.5 px-4 py-2 sm:px-5"
+                >
+                  <span className="text-[11px] tabular-nums text-theme-text-muted">{idx + 1}</span>
+                  <PlayerCell
+                    size="sm"
+                    player={el}
+                    name={el?.web_name || `#${row.player_id}`}
+                    meta={
+                      <>
+                        <span>{POSITION_SHORT[el?.element_type ?? 0] ?? ""}</span>
+                        <span aria-hidden>·</span>
+                        <span className="tabular-nums">
+                          {t("fplLive.ui.leagues.capShort", "C")} {formatPercent(row.captain_percent)}
+                        </span>
+                        {row.triple_captain_percent > 0 && (
+                          <>
+                            <span aria-hidden>·</span>
+                            <span className="tabular-nums">TC {formatPercent(row.triple_captain_percent)}</span>
+                          </>
+                        )}
+                      </>
+                    }
+                  />
+                  <div className="text-right">
+                    <div className="text-sm font-semibold leading-none tabular-nums text-theme-heading-primary">
+                      {formatPercent(row.ownership_percent)}
+                    </div>
+                    {Math.round(Math.abs(net)) > 0 && (
+                      <div
+                        className={cx(
+                          "mt-1 text-[10px] leading-none tabular-nums",
+                          net > 0 ? "text-emerald-500" : "text-rose-500"
+                        )}
+                        title={t("fplLive.ui.leagues.netTransfers", "Net transfers this GW")}
+                      >
+                        {formatNetTransfers(row.net_transfers_percent)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {topRows.length > COLLAPSED_ROWS && (
+            <ShowMoreButton
+              expanded={showAll}
+              onClick={() => setShowAll((v) => !v)}
+              count={topRows.length - COLLAPSED_ROWS}
+            />
+          )}
+        </>
       )}
 
-      <p className="text-xs text-theme-text-secondary">
+      <Footnote>
         {t(
-          "effectiveOwnership.disclaimer",
-          "Note: bucket data is sampled from top managers in the Overall league. TI/TO/Net columns reflect global FPL transfer counts (compact)."
+          "fplLive.ui.leagues.eoFootnote",
+          "Sampled from top managers in the Overall league. Owned = share of the sample with the player in their 15; C = share captaining him. Green/red = net transfers across all of FPL this GW."
         )}
-      </p>
+      </Footnote>
     </div>
   );
 }

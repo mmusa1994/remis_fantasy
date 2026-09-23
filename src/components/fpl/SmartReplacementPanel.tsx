@@ -650,7 +650,7 @@ export default function SmartReplacementPanel({
                 <button
                   onClick={onClose}
                   className="shrink-0 w-8 h-8 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition-colors"
-                  aria-label="Close"
+                  aria-label={t("fplDashboard.smartReplace.close", "Close")}
                 >
                   <FaTimes className="w-3.5 h-3.5" />
                 </button>
@@ -666,10 +666,10 @@ export default function SmartReplacementPanel({
                     className="overflow-hidden"
                   >
                     <div className="mt-3 rounded-lg p-3 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 text-[11px] text-slate-700 dark:text-slate-300 space-y-1.5">
-                      <p><b className="text-indigo-700 dark:text-indigo-300">xP</b> = {t("fplDashboard.smartReplace.helpXp", "xP = expected points for GW{{gw}} (form + PPG, adjusted for fixture and play chance).", { gw: nextGwNumber })}</p>
-                      <p><b className="text-indigo-700 dark:text-indigo-300">FDR</b> = {t("fplDashboard.smartReplace.helpFdr", "FDR = Fixture Difficulty Rating (1 easiest, 5 hardest). The square color indicates difficulty.")}</p>
-                      <p><b className="text-indigo-700 dark:text-indigo-300">Verdikt</b>: {t("fplDashboard.smartReplace.helpVerdict", "Verdict: Premium / Value / Clearly better = recommended move; Sidegrade = same level; Risk = uncertain minutes.")}</p>
-                      <p><b className="text-indigo-700 dark:text-indigo-300">Score</b> {t("fplDashboard.smartReplace.helpScore", "Score combines: form×11 + PPG×6 + xG/xA + minutes + FDR + team position.")}</p>
+                      <p><b className="text-indigo-700 dark:text-indigo-300">xP</b> = {t("fplDashboard.smartReplace.helpXp", "expected points for GW{{gw}} (form + PPG, adjusted for fixture and play chance).", { gw: nextGwNumber })}</p>
+                      <p><b className="text-indigo-700 dark:text-indigo-300">FDR</b> = {t("fplDashboard.smartReplace.helpFdr", "Fixture Difficulty Rating (1 easiest, 5 hardest). The square colour shows the difficulty.")}</p>
+                      <p><b className="text-indigo-700 dark:text-indigo-300">{t("fplDashboard.smartReplace.verdictLabel")}</b>: {t("fplDashboard.smartReplace.helpVerdict", "Premium / Value / Clearly better = recommended move; Sidegrade = same level; Risk = uncertain minutes.")}</p>
+                      <p><b className="text-indigo-700 dark:text-indigo-300">{t("fplDashboard.smartReplace.scoreLabel")}</b> {t("fplDashboard.smartReplace.helpScore", "combines form×11 + PPG×6 + xG/xA + minutes + FDR + team position.")}</p>
                     </div>
                   </motion.div>
                 )}
@@ -706,7 +706,7 @@ export default function SmartReplacementPanel({
                         <div className="mt-1 flex items-center gap-2.5 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
                           <span className="font-medium text-slate-700 dark:text-slate-200">£{(num(selectedPlayer.now_cost) / 10).toFixed(1)}m</span>
                           <span>F{num(selectedPlayer.form).toFixed(1)}</span>
-                          <span>{num(selectedPlayer.total_points)}pts</span>
+                          <span>{t("fplDashboard.smartReplace.pointsShort", { points: num(selectedPlayer.total_points) })}</span>
                         </div>
                       </div>
                     </div>
@@ -990,7 +990,7 @@ export default function SmartReplacementPanel({
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handlePick(p)}
                             className="relative flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs font-semibold shadow-sm hover:shadow-md transition-all overflow-hidden"
-                            title={isTransferMode ? "Add to transfer" : "Start transfer with this player"}
+                            title={isTransferMode ? t("fplDashboard.smartReplace.addToTransfer") : t("fplDashboard.smartReplace.startTransfer")}
                           >
                             <motion.span
                               className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"

@@ -277,7 +277,7 @@ const OnboardingModal = ({
             theme === "dark" ? "text-gray-300" : "text-gray-700"
           }`}
         >
-          FPL Manager ID
+          {t("managerIdStep.label")}
         </label>
         <input
           ref={managerIdInputRef}
@@ -425,7 +425,7 @@ const OnboardingModal = ({
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >
-              AI Team Analysis
+              {t("featuresStep.features.aiAnalysis.title")}
             </h3>
           </div>
           <p
@@ -451,7 +451,7 @@ const OnboardingModal = ({
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >
-              FPL Live Tracking
+              {t("featuresStep.features.liveTracking.title")}
             </h3>
           </div>
           <p
@@ -477,7 +477,7 @@ const OnboardingModal = ({
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >
-              Transfer Planner
+              {t("featuresStep.features.transfers.title")}
             </h3>
           </div>
           <p
@@ -503,7 +503,7 @@ const OnboardingModal = ({
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >
-              Performance Widgets
+              {t("featuresStep.features.widgets.title")}
             </h3>
           </div>
           <p

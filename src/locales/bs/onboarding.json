@@ -1,12 +1,12 @@
 {
   "welcome": {
     "title": "Dobro došli u Fantasy Command Center!",
-    "subtitle": "Vaš ultimatni FPL saputnik",
+    "subtitle": "Vaš vrhunski FPL saputnik",
     "description": "Dozvolite da vas provedemo kroz najmoćniju platformu za analizu fantasy footballa. Dobijte personalizirane uvide, AI preporuke i alate za praćenje uživo.",
     "getStarted": "Počnimo"
   },
   "managerIdStep": {
-    "title": "Postavite Vaš Manager ID",
+    "title": "Postavite svoj Manager ID",
     "subtitle": "Za personaliziranu FPL analizu",
     "whyNeeded": "Zašto trebam Manager ID?",
     "whyDescription": "Da analiziram vaš tim, potreban mi je pristup vašim igračima, kapitenu i rangovima.",
@@ -18,65 +18,70 @@
     "save": "Spremi ID",
     "tip": "💡 Manager ID možete naći na svojoj FPL stranici u URL-u nakon /entry/. Možete ga promijeniti kasnije u postavkama profila.",
     "success": "Manager ID uspješno spremljen!",
-    "error": "Molimo unesite važeći Manager ID"
+    "error": "Molimo unesite važeći Manager ID",
+    "label": "FPL Manager ID"
   },
   "featuresStep": {
-    "title": "Istražite Ključne Funkcije",
+    "title": "Istražite ključne funkcije",
     "subtitle": "Sve što vam treba za FPL uspjeh",
     "features": {
       "aiAnalysis": {
-        "title": "🤖 AI Analiza Tima",
+        "title": "AI analiza tima",
         "description": "Dobijte personalizirane preporuke za tim i prijedloge transfera pokretane naprednom AI"
       },
       "liveTracking": {
-        "title": "📊 FPL Praćenje Uživo",
+        "title": "FPL praćenje uživo",
         "description": "Praćenje gameweek-a u realnom vremenu sa live rezultatima, izborima kapetana i pozicijama u ligi"
       },
       "transfers": {
-        "title": "🔄 Planer Transfera",
+        "title": "Planer transfera",
         "description": "Planirajte transfere sa pogledom na teren, pogledom na listu i predikcijama promjena cijena"
       },
       "widgets": {
-        "title": "📈 Widget-i za Performanse",
+        "title": "Widgeti performansi",
         "description": "Pratite svoje performanse sa različitim widget-ima uključujući diferent ijale, vijesti o timu i rangove"
       }
     },
-    "next": "Nastavi Tour"
+    "next": "Nastavi obilazak"
   },
   "navigationStep": {
-    "title": "Navigirajte Kao Profesionalac",
-    "subtitle": "Osvojite interfejs",
+    "title": "Snađite se kao profesionalac",
+    "subtitle": "Savladajte interfejs",
     "tips": {
       "commandCenter": {
         "title": "Fantasy Command Center",
         "description": "Vaša glavna kontrolna tabla sa svim alatima na jednom mjestu"
       },
       "quickAccess": {
-        "title": "Dropdown Profila",
+        "title": "Meni profila",
         "description": "Brz pristup vašem Manager ID-u, naplati i AI analizi"
       },
       "mobileReady": {
-        "title": "Optimizirano za Mobilne",
+        "title": "Prilagođeno mobitelima",
         "description": "Puna funkcionalnost na svim uređajima - upravljajte timom bilo gdje"
       }
     },
-    "next": "Skoro Završeno"
+    "next": "Skoro gotovo"
   },
   "completeStep": {
-    "title": "Sve je Spremno!",
+    "title": "Sve je spremno!",
     "subtitle": "Spremni za dominaciju u FPL-u",
     "message": "Sada imate pristup najsveobuhvatnijoj FPL analitičkoj platformi. Počnite istraživanjem svoje personalizirane kontrolne table ili dobijte AI preporuke za svoj sljedeći transfer.",
     "actions": {
-      "dashboard": "Idi na Kontrolnu Tablu",
-      "aiAnalysis": "Probaj AI Analizu"
+      "dashboard": "Idi na kontrolnu tablu",
+      "aiAnalysis": "Probaj AI analizu"
     }
   },
   "navigation": {
-    "skip": "Preskoči Tour",
+    "skip": "Preskoči obilazak",
     "dontShowAgain": "Ne prikazuj više",
     "back": "Nazad",
-    "next": "Sljedeći",
+    "next": "Dalje",
     "close": "Zatvori",
     "stepOf": "Korak {{current}} od {{total}}"
+  },
+  "widget": {
+    "help": "Treba vam pomoć? Pokrenite obilazak!",
+    "helpLabel": "Pomoć"
   }
 }

@@ -234,7 +234,7 @@ export default function HeroSection({
         <div className="absolute inset-0 z-0">
           <Image
             src={backgroundImage}
-            alt="Hero background"
+            alt={t("common:heroBackgroundAlt")}
             fill
             className="object-cover opacity-20 "
             priority
@@ -262,7 +262,7 @@ export default function HeroSection({
             <div className="relative w-20 h-20 md:w-24 md:h-24">
               <Image
                 src={logoPath}
-                alt={`${t("title", "REMIS Fantasy")} logo`}
+                alt={`${t("common:title")} logo`}
                 fill
                 className={`object-contain ${
                   theme === "dark" ? "" : "bg-black"

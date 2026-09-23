@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { dateLocale } from "@/components/fpl/live/ui";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
   MdTrendingUp,
@@ -27,7 +28,7 @@ const MEDAL_COLORS: Record<number, string> = {
 
 export default function F1TabeleFromDBPage() {
   const { theme } = useTheme();
-  const { t } = useTranslation("f1");
+  const { t, i18n } = useTranslation("f1");
   const isDark = theme === "dark";
   const [season, setSeason] = useState<Season>("26");
   const [loading, setLoading] = useState(true);
@@ -48,7 +49,7 @@ export default function F1TabeleFromDBPage() {
         fetch(`/api/f1/race-info?season=${s}`),
       ]);
       const tableJson = await tableRes.json();
-      if (!tableJson.success) throw new Error(tableJson.error || "Failed to fetch");
+      if (!tableJson.success) throw new Error(tableJson.error || t("leaderboard.error"));
       setEntries(tableJson.data.standings || []);
       setLastUpdated(tableJson.data.lastUpdated || null);
       const raceInfoJson = await raceInfoRes.json();
@@ -57,11 +58,11 @@ export default function F1TabeleFromDBPage() {
         setLastRace(raceInfoJson.data.lastRace);
       }
     } catch (e: any) {
-      setError(e.message || "Failed to load data");
+      setError(e.message || t("leaderboard.error"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadData(season);
@@ -431,7 +432,7 @@ export default function F1TabeleFromDBPage() {
           >
             {t("leaderboard.lastUpdated")}{" "}
             {lastUpdated
-              ? new Date(lastUpdated).toLocaleString("sr-RS")
+              ? new Date(lastUpdated).toLocaleString(dateLocale(i18n.language))
               : "—"}
           </p>
         </div>

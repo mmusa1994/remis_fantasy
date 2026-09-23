@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
+import { dateLocale } from "../live/ui";
 import { getTeamColors, type TeamKit } from "@/lib/team-colors";
 import TeamJersey from "../TeamJersey";
 import type { TransferTrendsWidgetData } from "@/types/fpl-enhanced";
@@ -41,7 +42,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
     showFutureWeeks = true,
   }: TransferTrendsWidgetProps) {
     const { theme } = useTheme();
-    const { t } = useTranslation("fpl");
+    const { t, i18n } = useTranslation("fpl");
     const [data, setData] = useState<TransferTrendsWidgetData | null>(null);
     const [loading, setLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -169,8 +170,8 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
         };
 
     const processErrorResponse = (err: any) => {
-      const friendly =
-        "FPL API appears unavailable or returned an error. Please try again later.";
+      // Rendered through t() so it follows the UI language
+      const friendly = "teamPlanner.widgets.fplApiUnavailable";
       console.error(
         "[TransferTrendsWidget] Fetch error:",
         err instanceof Error ? err.message : err
@@ -334,7 +335,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
             </button>
           </div>
           <div className="text-sm py-3 rounded-md border border-yellow-300 bg-yellow-50 text-yellow-900 text-center">
-            {error}
+            {t(error)}
           </div>
           <div className="mt-3 flex justify-center">
             <button
@@ -342,7 +343,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
               className="text-theme-text-secondary hover:text-theme-foreground text-sm underline"
               disabled={loading}
             >
-              {loading ? "Refreshing..." : "Retry now"}
+              {loading ? t("teamPlanner.widgets.refreshing") : t("teamPlanner.widgets.retryNow")}
             </button>
           </div>
         </div>
@@ -452,7 +453,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
               >
                 <h4 className="text-sm font-semibold text-theme-text-secondary flex items-center gap-1">
                   <TrendingUp className="w-4 h-4" />
-                  {t("teamPlanner.widgets.topTransfers", { gw: currentGameweek })} {t("teamPlanner.widgets.in")}
+                  {t("teamPlanner.widgets.topTransfersIn", { gw: currentGameweek })}
                 </h4>
                 {data.top_players_in.map((player) => (
                   <div
@@ -500,7 +501,7 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
               >
                 <h4 className="text-sm font-semibold text-theme-text-secondary flex items-center gap-1">
                   <TrendingDown className="w-4 h-4" />
-                  {t("teamPlanner.widgets.topTransfers", { gw: currentGameweek })} {t("teamPlanner.widgets.out")}
+                  {t("teamPlanner.widgets.topTransfersOut", { gw: currentGameweek })}
                 </h4>
                 {data.top_players_out.map((player) => (
                   <div
@@ -550,14 +551,14 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
                 >
                   <h4 className="text-sm font-semibold text-theme-text-secondary flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    {t("teamPlanner.widgets.future")} Transfers
+                    {t("teamPlanner.widgets.futureTransfers")}
                   </h4>
                   {Object.entries(data.future_transfers)
                     .slice(0, 3)
                     .map(([week, transfers]) => (
                       <div key={week} className="space-y-2">
                         <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                          Week {week}
+                          {t("teamPlanner.widgets.gameweekN", { week })}
                         </div>
                         {(transfers as any).planned_transfers
                           ?.slice(0, 3)
@@ -589,9 +590,12 @@ const TransferTrendsWidget = React.memo<TransferTrendsWidgetProps>(
           {/* Last Update */}
           {lastUpdate && (
             <div className="text-xs text-gray-500 dark:text-gray-400 text-center pt-2 border-t border-gray-200 dark:border-gray-700 flex items-center justify-center gap-1">
-              <span>{t("teamPlanner.widgets.lastUpdated")}: {lastUpdate.toLocaleTimeString()}</span>
+              <span>
+                {t("teamPlanner.widgets.lastUpdated")}:{" "}
+                {lastUpdate.toLocaleTimeString(dateLocale(i18n.language), { hour: "2-digit", minute: "2-digit" })}
+              </span>
               {cacheRef.current && isCacheValid(cacheRef.current) && (
-                <span className="text-green-500" title="Data from cache">
+                <span className="text-green-500" title={t("teamPlanner.widgets.fromCache")}>
                   ({t("teamPlanner.widgets.cached")})
                 </span>
               )}

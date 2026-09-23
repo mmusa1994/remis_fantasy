@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface FplStatusBannerProps {
   message?: string;
@@ -8,9 +9,10 @@ interface FplStatusBannerProps {
 }
 
 export default function FplStatusBanner({
-  message = "FPL API is currently unavailable. Please try again shortly.",
+  message,
   className = "",
 }: FplStatusBannerProps) {
+  const { t } = useTranslation("common");
   return (
     <div
       className={`rounded-md border border-yellow-300 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm flex items-start gap-2 ${className}`}
@@ -29,7 +31,7 @@ export default function FplStatusBanner({
           clipRule="evenodd"
         />
       </svg>
-      <span>{message}</span>
+      <span>{message || t("fplApiUnavailable")}</span>
     </div>
   );
 }

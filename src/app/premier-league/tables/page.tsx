@@ -1,11 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import LeagueTableTabs from "@/components/shared/LeagueTableTabs";
 
 export default function TabelePage() {
   const { theme } = useTheme();
+  const { t } = useTranslation("fpl");
 
   return (
     <div className="min-h-screen pb-20 pt-10 px-4 bg-theme-background">
@@ -18,7 +20,7 @@ export default function TabelePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          Premier League Tabele
+          {t("fplLive.ui.pages.plTablesTitle", "Premier League Tables")}
         </motion.h1>
 
         <LeagueTableTabs />

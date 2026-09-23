@@ -1,18 +1,18 @@
 {
   "hero": {
     "title": "REMIS Fantasy",
-    "season": "Sezona 2025/26",
+    "season": "Sezona 2026/27",
     "subtitle": "Dobrodošli u najuzbudljivije fantasy lige! Odaberite svoju ligu i pokažite svoje znanje sporta.",
-    "openLeague": "Otvori Ligu",
+    "openLeague": "Otvori ligu",
     "explore": "Istraži",
     "liveFpl": "UŽIVO FPL",
     "liveFplDescription": "Pratite uživo Premier Liga utakmice sa ažuriranjima u realnom vremenu, rezultatima i fantasy bodovima!",
-    "watchLive": "Gledaj Uživo",
+    "watchLive": "Gledaj uživo",
     "live": "UŽIVO",
-    "registeredPlayers": "Registrovani Igrači",
-    "availableLeagues": "Dostupne Lige",
-    "totalPrizePool": "Ukupan Nagradni Fond",
-    "yearsOfExperience": "Godine Iskustva"
+    "registeredPlayers": "Registrovani igrači",
+    "availableLeagues": "Dostupne lige",
+    "totalPrizePool": "Ukupan nagradni fond",
+    "yearsOfExperience": "Godine iskustva"
   },
   "features": {
     "title": "Sve Što Vam Je Potrebno Za Dominaciju FPL-a",
@@ -22,93 +22,93 @@
       "description": "Dobijte personalizovanu analizu tima, prijedloge transfera i strateške uvide pokretane naprednom AI."
     },
     "fplLive": {
-      "title": "FPL Uživo Praćenje",
+      "title": "FPL uživo praćenje",
       "description": "Pratite utakmice uživo sa ažuriranjima bodova u realnom vremenu, promjenama kapetana i napretkom gameweek-a."
     },
     "analytics": {
-      "title": "Napredna Analitika",
+      "title": "Napredna analitika",
       "description": "Duboka statistička analiza, trendovi performansi igrača i sveobuhvatni podaci o ligi."
     },
     "prices": {
-      "title": "Cijene i Vrijednosti Igrača",
+      "title": "Cijene i vrijednosti igrača",
       "description": "Cijene igrača u realnom vremenu, predviđanja vrijednosti i optimalne prilike za kupovinu/prodaju."
     },
     "differentials": {
-      "title": "Najbolji Diferencijali",
+      "title": "Najbolji diferencijali",
       "description": "Otkrijte skrivene dragulje i igrače s niskim vlasništvom koji vam mogu dati konkurentsku prednost."
     },
     "teamNews": {
-      "title": "Timske Vijesti i Ažuriranja",
+      "title": "Timske vijesti i ažuriranja",
       "description": "Najnoviji izvještaji o povredama, predviđanja sastava i bitne timske vijesti za informisane odluke."
     },
-    "tryNow": "Probaj Sada",
-    "watchLive": "Gledaj Uživo",
-    "viewStats": "Pogledaj Statistike",
-    "checkPrices": "Provjeri Cijene",
-    "findGems": "Pronađi Dragulje",
-    "readNews": "Čitaj Vijesti"
+    "tryNow": "Probaj sada",
+    "watchLive": "Gledaj uživo",
+    "viewStats": "Pogledaj statistike",
+    "checkPrices": "Provjeri cijene",
+    "findGems": "Pronađi dragulje",
+    "readNews": "Čitaj vijesti"
   },
   "whyChoose": {
     "title": "Zašto Izabrati REMIS Fantasy",
     "subtitle": "Najkompletnija fantasy sportska platforma u regionu.",
     "secureRegistration": {
-      "title": "Sigurna Registracija",
+      "title": "Sigurna registracija",
       "description": "Zaštićena prijava i obrada podataka — enkriptovana konekcija i reCAPTCHA zaštita."
     },
     "autoManagement": {
-      "title": "Automatsko Upravljanje Ligom",
-      "description": "Tabele i poredak se automatski ažuriraju. bez manuelnog rada."
+      "title": "Automatsko upravljanje ligom",
+      "description": "Tabele i poredak se automatski ažuriraju — bez manuelnog rada."
     },
     "prizes": {
-      "title": "Najbolje Nagrade u Regionu",
+      "title": "Najbolje nagrade u regionu",
       "description": "Velikodušni nagradni fondovi koji nagrađuju najbolje igrače svake sezone."
     },
     "aiAnalysis": {
-      "title": "AI Analiza Tima",
+      "title": "AI analiza tima",
       "description": "Besplatni AI uvidi koji vam pomažu da sastavite pobjednički tim."
     },
     "liveTracking": {
-      "title": "FPL Praćenje Uživo",
+      "title": "FPL praćenje uživo",
       "description": "Podaci o utakmicama u realnom vremenu, bodovi i napredak gameweek-a na dohvat ruke."
     },
     "multiLeague": {
-      "title": "Multi-Liga Platforma",
+      "title": "Multi-liga platforma",
       "description": "Premier Liga, Liga Prvaka i F1 Fantasy sve na jednom mjestu."
     }
   },
   "howItWorks": {
-    "title": "Kako Funkcioniše",
+    "title": "Kako funkcioniše",
     "step1": {
       "title": "Registruj se i Plati",
       "description": "Odaberi ligu, popuni podatke i sigurno plati online."
     },
     "step2": {
-      "title": "Pridruži se Ligi",
+      "title": "Pridruži se ligi",
       "description": "Budi dodan u službenu mini-ligu i počni se takmičiti."
     },
     "step3": {
-      "title": "Osvoji Nagrade",
+      "title": "Osvoji nagrade",
       "description": "Penjite se na tabeli, pobjedite konkurenciju i osvojite nagrade."
     }
   },
   "cta": {
     "title": "Spremni da dominirate u fantasy ligi?",
     "register": "Registruj se",
-    "explore": "Istraži Lige"
+    "explore": "Istraži lige"
   },
   "aiGuru": {
     "freeForNow": "BESPLATNO ZASAD",
     "premium": "PREMIUM",
     "cta": {
-      "title": "Upoznajte Svog AI Fantasy Gurua",
+      "title": "Upoznajte svog AI Fantasy gurua",
       "description": "Revolucionarna AI tehnologija koja analizira milione podataka kako bi pružila personalizovane FPL strategije, preporuke za transfere i pobjedničke uvide.",
-      "tryFree": "Probaj Besplatno Sada"
+      "tryFree": "Probaj besplatno sada"
     },
     "features": {
-      "realTime": "Analiza u Realnom Vremenu",
-      "personalized": "Personalizirani Savjeti",
-      "datadriven": "Uvidi Zasnovani na Podacima",
-      "winMore": "Osvoji Više Bodova"
+      "realTime": "Analiza u realnom vremenu",
+      "personalized": "Personalizirani savjeti",
+      "datadriven": "Uvidi zasnovani na podacima",
+      "winMore": "Osvoji više bodova"
     }
   },
   "leagues": {
@@ -121,8 +121,15 @@
       "description": "Takmičite se u elitnoj evropskoj konkurenciji sa naprednom analitikom i ažuriranjima u realnom vremenu."
     },
     "f1-fantasy": {
-      "name": "F1 Fantasy Trke",
+      "name": "F1 Fantasy trke",
       "description": "Doživite uzbuđenje Formule 1 sa našom sveobuhvatnom fantasy trkačkom platformom."
+    }
+  },
+  "promo": {
+    "predictor": {
+      "title": "Predikcije",
+      "desc": "Pobjednik turnira, najbolji strijelac, poredak u grupama — predvidi sve. Takmiči se na rang listi i osvoji prave nagrade.",
+      "cta": "Pregledaj turnire"
     }
   }
 }

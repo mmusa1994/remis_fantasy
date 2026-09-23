@@ -380,7 +380,7 @@ function PaymentInner({ credits, templateId, onBack }: Props) {
                     <code className={`rounded px-1 py-px font-mono text-[10px] ${
                       dark ? "bg-white/5 text-gray-400" : "bg-gray-100 text-gray-600"
                     }`}>
-                      /predictor/{slug || "tvoj-slug"}
+                      /predictor/{slug || t("create.form.fields.slugExample")}
                     </code>
                   </>
                 }

@@ -1,7 +1,7 @@
 {
   "hero": {
     "title": "REMIS Fantasy",
-    "season": "Season 2025/26",
+    "season": "Season 2026/27",
     "subtitle": "Welcome to the most exciting fantasy leagues! Choose your league and show your sports knowledge.",
     "openLeague": "Open League",
     "explore": "Explore",
@@ -57,7 +57,7 @@
     },
     "autoManagement": {
       "title": "Auto League Management",
-      "description": "Tables and standings updated automatically. no manual work."
+      "description": "Tables and standings updated automatically — no manual work."
     },
     "prizes": {
       "title": "Best Prizes in the Region",
@@ -123,6 +123,13 @@
     "f1-fantasy": {
       "name": "F1 Fantasy Racing",
       "description": "Experience the thrill of Formula 1 with our comprehensive fantasy racing platform."
+    }
+  },
+  "promo": {
+    "predictor": {
+      "title": "Predictions",
+      "desc": "Tournament winner, top scorer, group standings — predict it all. Compete on the leaderboard and win real prizes.",
+      "cta": "Browse tournaments"
     }
   }
 }

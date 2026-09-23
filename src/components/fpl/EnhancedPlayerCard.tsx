@@ -1,6 +1,8 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 import { getPlayerTeamColors } from "@/lib/team-colors";
 import TeamJersey from "./TeamJersey";
@@ -18,6 +20,12 @@ interface EnhancedPlayerCardProps {
   showTooltip?: boolean;
   position?: "GK" | "DEF" | "MID" | "FWD";
   compact?: boolean;
+  /** Replaces the points plate content (e.g. live points or "ARS (H)"). */
+  pointsLabel?: ReactNode;
+  /** Price-change arrow on the shirt; off for live views. Default true. */
+  showPriceChange?: boolean;
+  /** Small marker at the shirt's bottom-right (e.g. auto-sub arrow). */
+  cornerBadge?: ReactNode;
 }
 
 /**
@@ -32,7 +40,11 @@ export default function EnhancedPlayerCard({
   isSelected = false,
   interactive = true,
   position,
+  pointsLabel,
+  showPriceChange = true,
+  cornerBadge,
 }: EnhancedPlayerCardProps) {
+  const { t } = useTranslation("fpl");
   if (!player) return null;
 
   const teamColors = getPlayerTeamColors(player);
@@ -107,7 +119,7 @@ export default function EnhancedPlayerCard({
           </span>
         )}
 
-        {priceChange !== 0 && (
+        {showPriceChange && priceChange !== 0 && (
           <span
             className={`absolute bottom-0 -left-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold text-white shadow ${
               priceChange > 0 ? "bg-emerald-500" : "bg-rose-500"
@@ -117,10 +129,14 @@ export default function EnhancedPlayerCard({
           </span>
         )}
 
-        {player.isTransferIn && (
-          <span className="absolute bottom-0 -right-1.5 px-1 rounded bg-emerald-500 text-[8px] font-bold text-white shadow">
-            IN
-          </span>
+        {cornerBadge ? (
+          <span className="absolute bottom-0 -right-1.5">{cornerBadge}</span>
+        ) : (
+          player.isTransferIn && (
+            <span className="absolute bottom-0 -right-1.5 px-1 rounded bg-emerald-500 text-[8px] font-bold text-white shadow">
+              {t("teamPlanner.pitch.inBadge")}
+            </span>
+          )
         )}
       </div>
 
@@ -136,7 +152,7 @@ export default function EnhancedPlayerCard({
           {player.web_name}
         </div>
         <div className="py-[2px] text-center text-[10px] sm:text-[11px] font-bold leading-tight tabular-nums bg-white/95 text-slate-900">
-          {shownPoints}
+          {pointsLabel ?? shownPoints}
         </div>
       </div>
     </motion.div>

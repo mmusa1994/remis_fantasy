@@ -8,6 +8,7 @@ import LoadingCard from "@/components/shared/LoadingCard";
 import TeamJersey from "@/components/fpl/TeamJersey";
 import { getTeamColors, registerFplTeams } from "@/lib/team-colors";
 import type { FPLXPointsPrediction } from "@/types/fpl";
+import { dateLocale } from "@/components/fpl/live/ui";
 
 interface BootstrapElement {
   id: number;
@@ -26,7 +27,7 @@ const POSITION_LABEL: Record<number, string> = {
 type TabKey = "xpts" | "captaincy" | "bonus";
 
 export default function PredictionsPage() {
-  const { t } = useTranslation("fpl");
+  const { t, i18n } = useTranslation("fpl");
   const [gameweek, setGameweek] = useState<number | null>(null);
   const [predictions, setPredictions] = useState<FPLXPointsPrediction[]>([]);
   const [elements, setElements] = useState<BootstrapElement[]>([]);
@@ -67,11 +68,12 @@ export default function PredictionsPage() {
       setPredictions(json.data.predictions || []);
       setLastUpdated(json.data.last_updated || new Date().toISOString());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      console.error("xPts predictions failed:", err);
+      setError(t("fplLive.ui.pages.loadError", "Couldn't load the data. Please try again."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     (async () => {
@@ -108,7 +110,10 @@ export default function PredictionsPage() {
               GW {gameweek}
               {lastUpdated && (
                 <span className="ml-2">
-                  · {new Date(lastUpdated).toLocaleTimeString()}
+                  · {new Date(lastUpdated).toLocaleTimeString(dateLocale(i18n.language), {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               )}
             </p>
@@ -174,9 +179,9 @@ export default function PredictionsPage() {
               <thead className="bg-theme-card-secondary text-theme-text-secondary uppercase">
                 <tr>
                   <th className="px-2 py-2 text-left">#</th>
-                  <th className="px-2 py-2 text-left">Player</th>
-                  <th className="px-2 py-2 text-center">Pos</th>
-                  <th className="px-2 py-2 text-right">xPts</th>
+                  <th className="px-2 py-2 text-left">{t("bps.thPlayer", "Player")}</th>
+                  <th className="px-2 py-2 text-center">{t("bps.thPos", "Pos")}</th>
+                  <th className="px-2 py-2 text-right">{t("predictions.expectedPoints", "xPts")}</th>
                   <th className="px-2 py-2 text-right">
                     {t("predictions.captaincyScore", "Captaincy")}
                   </th>

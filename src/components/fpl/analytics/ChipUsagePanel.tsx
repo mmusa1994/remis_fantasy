@@ -2,25 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MdRefresh } from "react-icons/md";
-import LoadingCard from "@/components/shared/LoadingCard";
-import LeagueChipPill from "@/components/fpl/league-table/LeagueChipPill";
-import { getTeamColors } from "@/lib/team-colors";
-import TeamJersey from "../TeamJersey";
-import type { FPLActiveChip, FPLChipUsageResponse } from "@/types/fpl";
+import { Target } from "lucide-react";
+import LeagueChipPill, { CHIP_FULL_NAME } from "@/components/fpl/league-table/LeagueChipPill";
+import { Bar, EmptyState, PlayerJersey, SkeletonRows } from "@/components/fpl/live/ui";
+import { AnalyticsToolbar, Footnote, InlineError } from "@/components/fpl/live/AnalyticsParts";
+import type { FPLChipUsageResponse } from "@/types/fpl";
 
 interface BootstrapElement {
   id: number;
   web_name: string;
   team: number;
+  team_code?: number;
+  element_type?: number;
 }
-
-const CHIP_LABEL: Record<NonNullable<FPLActiveChip>, string> = {
-  "3xc": "Triple Captain",
-  bboost: "Bench Boost",
-  freehit: "Free Hit",
-  wildcard: "Wildcard",
-};
 
 export default function ChipUsagePanel() {
   const { t } = useTranslation("fpl");
@@ -50,10 +44,7 @@ export default function ChipUsagePanel() {
     return null;
   }, []);
 
-  const elementMap = useMemo(
-    () => new Map(elements.map((el) => [el.id, el])),
-    [elements]
-  );
+  const elementMap = useMemo(() => new Map(elements.map((el) => [el.id, el])), [elements]);
 
   const fetchUsage = useCallback(async (gw: number) => {
     setLoading(true);
@@ -81,111 +72,71 @@ export default function ChipUsagePanel() {
   }, [detectGameweek, fetchUsage]);
 
   return (
-    <div className="space-y-4 p-4">
-      <header className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-theme-foreground">
-            {t("chips.title", "Chip Usage")}
-          </h2>
-          {gameweek && (
-            <p className="text-sm text-theme-text-secondary">
-              GW {gameweek}
-              {data && (
-                <span className="ml-2">
-                  • {t("chips.sampleSize", "Sample")}: {data.sample_size}
-                </span>
-              )}
-              {lastUpdated && (
-                <span className="ml-2">
-                  · {new Date(lastUpdated).toLocaleTimeString()}
-                </span>
-              )}
-            </p>
-          )}
-        </div>
-        {gameweek && (
-          <button
-            onClick={() => fetchUsage(gameweek)}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md disabled:opacity-50"
-          >
-            <MdRefresh className="w-4 h-4" />
-            {t("leagueTables.refresh", "Refresh")}
-          </button>
-        )}
-      </header>
+    <div>
+      <AnalyticsToolbar
+        gameweek={gameweek}
+        updatedAt={lastUpdated}
+        loading={loading}
+        onRefresh={gameweek ? () => fetchUsage(gameweek) : undefined}
+        meta={
+          data
+            ? ` · ${t("fplLive.ui.leagues.sample", "sample {{count}}", { count: data.sample_size })}`
+            : null
+        }
+      />
 
-      {error && (
-        <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
-          {error}
-        </div>
+      {error && <InlineError message={t("fplLive.ui.leagues.loadError", "Couldn't load data. Try refreshing.")} />}
+
+      {loading && !data && <SkeletonRows rows={4} className="border-t border-theme-border" />}
+
+      {!loading && data && data.by_chip.length === 0 && (
+        <EmptyState
+          className="border-t border-theme-border"
+          icon={<Target />}
+          title={t("fplLive.ui.leagues.noData", "No data yet for this gameweek.")}
+        />
       )}
 
-      {loading && !data && <LoadingCard title="" description="" />}
-
-      {data && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {data && data.by_chip.length > 0 && (
+        <div className="grid grid-cols-1 gap-3 border-t border-theme-border p-3 sm:p-4 md:grid-cols-2">
           {data.by_chip.map((stat) => (
-            <div
-              key={stat.chip}
-              className="bg-theme-card border border-theme-border rounded-lg p-4"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
+            <div key={stat.chip ?? "none"} className="rounded-xl border border-theme-border p-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
                   <LeagueChipPill chip={stat.chip} size="sm" />
-                  <span className="font-semibold text-theme-foreground">
-                    {stat.chip ? CHIP_LABEL[stat.chip] : "—"}
+                  <span className="truncate text-sm font-medium text-theme-heading-primary">
+                    {stat.chip ? CHIP_FULL_NAME[stat.chip] : "—"}
                   </span>
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-theme-foreground">
+                <div className="shrink-0 text-right">
+                  <div className="text-lg font-semibold leading-none tabular-nums text-theme-heading-primary">
                     {stat.percentage.toFixed(1)}%
                   </div>
-                  <div className="text-xs text-theme-text-secondary">
+                  <div className="mt-1 text-[11px] tabular-nums text-theme-text-muted">
                     {stat.count} / {data.sample_size}
                   </div>
                 </div>
               </div>
-              <div className="w-full h-2 bg-theme-card-secondary rounded-full overflow-hidden mb-3">
-                <div
-                  className="h-full bg-purple-500"
-                  style={{ width: `${Math.min(stat.percentage, 100)}%` }}
-                />
-              </div>
+              <Bar value={stat.percentage} className="mt-2.5" />
+
               {stat.popular_captains.length > 0 && (
-                <div>
-                  <h4 className="text-xs uppercase font-bold text-theme-text-secondary mb-2">
+                <div className="mt-3">
+                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-theme-text-muted">
                     {t("chips.popularCaptains", "Popular Captains")}
-                  </h4>
-                  <ul className="space-y-1">
+                  </div>
+                  <ul className="space-y-1.5">
                     {stat.popular_captains.map((cap) => {
                       const el = elementMap.get(cap.player_id);
-                      const colors = getTeamColors(el?.team || 1);
                       return (
-                      <li
-                        key={cap.player_id}
-                        className="flex items-center justify-between text-xs"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div
-                            className="flex items-center justify-center w-6 h-6 rounded-md shrink-0"
-                            style={{
-                              background: `linear-gradient(135deg, ${colors.primary}1a 0%, ${colors.primary}0d 100%)`,
-                            }}
-                          >
-                            <TeamJersey
-                              kit={colors}
-                              className="w-3.5 h-3.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
-                            />
-                          </div>
-                          <span className="text-theme-foreground truncate">
+                        <li key={cap.player_id} className="flex items-center gap-2 text-xs">
+                          {el && <PlayerJersey player={el} size="xs" />}
+                          <span className="min-w-0 flex-1 truncate text-theme-text-secondary">
                             {cap.web_name || el?.web_name || `#${cap.player_id}`}
                           </span>
-                        </div>
-                        <span className="font-bold text-theme-foreground">
-                          {cap.percentage.toFixed(1)}%
-                        </span>
-                      </li>
+                          <span className="font-semibold tabular-nums text-theme-heading-primary">
+                            {cap.percentage.toFixed(1)}%
+                          </span>
+                        </li>
                       );
                     })}
                   </ul>
@@ -196,12 +147,9 @@ export default function ChipUsagePanel() {
         </div>
       )}
 
-      <p className="text-xs text-theme-text-secondary">
-        {t(
-          "chips.disclaimer",
-          "Chip usage is sampled from top managers in the Overall league."
-        )}
-      </p>
+      <Footnote>
+        {t("chips.disclaimer", "Chip usage is sampled from top managers in the Overall league.")}
+      </Footnote>
     </div>
   );
 }

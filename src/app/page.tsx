@@ -60,8 +60,8 @@ export default function Home() {
       <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
         <div className="flex items-center justify-center min-h-screen">
           <LoadingCard
-            title="Loading..."
-            description="Loading homepage data..."
+            title={t("loading")}
+            description={t("loadingHomepage")}
             className="w-full max-w-md mx-auto"
           />
         </div>
@@ -74,7 +74,7 @@ export default function Home() {
       <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <p className="text-red-500 mb-4">Error loading page</p>
+            <p className="text-red-500 mb-4">{t("errorLoadingPage")}</p>
             <p className="text-theme-text-secondary">{error}</p>
           </div>
         </div>
@@ -308,24 +308,21 @@ export default function Home() {
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
-                    {t("hero:promo.predictor.title", "Predictions")}
+                    {t("hero:promo.predictor.title")}
                   </h3>
                   <p
                     className={`text-sm leading-relaxed mb-4 ${
                       theme === "dark" ? "text-gray-400" : "text-gray-600"
                     }`}
                   >
-                    {t(
-                      "hero:promo.predictor.desc",
-                      "Tournament winner, top scorer, group standings. predict it all. Compete on the leaderboard and win real prizes.",
-                    )}
+                    {t("hero:promo.predictor.desc")}
                   </p>
                   <span
                     className={`inline-flex items-center gap-1.5 text-sm font-bold group-hover:gap-2.5 transition-all duration-300 ${
                       theme === "dark" ? "text-amber-300" : "text-amber-600"
                     }`}
                   >
-                    {t("hero:promo.predictor.cta", "Browse tournaments")}
+                    {t("hero:promo.predictor.cta")}
                     <ArrowRight className="w-4 h-4" />
                   </span>
                 </div>

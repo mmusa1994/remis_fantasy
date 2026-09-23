@@ -20,6 +20,7 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { MdVerified, MdWarning } from "react-icons/md";
 import { TbTaxEuro } from "react-icons/tb";
 import LoadingCard from "@/components/shared/LoadingCard";
+import { dateLocale } from "@/components/fpl/live/ui";
 import PhotoUpload from "@/components/shared/PhotoUpload";
 import Toast from "@/components/shared/Toast";
 
@@ -52,7 +53,7 @@ interface UserProfile {
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const { theme } = useTheme();
-  const { t, ready } = useTranslation("profile");
+  const { t, i18n, ready } = useTranslation("profile");
   const searchParams = useSearchParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
@@ -194,7 +195,7 @@ export default function ProfilePage() {
 
   const handleSaveManagerId = async () => {
     if (!editManagerId.trim()) {
-      setManagerIdError("Manager ID cannot be empty");
+      setManagerIdError(t("managerIdEmpty"));
       return;
     }
 
@@ -224,16 +225,16 @@ export default function ProfilePage() {
         setManagerIdError("");
         
         // Show success toast
-        const message = data.isVerified 
-          ? "Manager ID successfully saved and verified!" 
-          : "Manager ID saved! Verification may take a moment.";
+        const message = data.isVerified
+          ? t("managerIdSavedVerified")
+          : t("managerIdSaved");
         setSuccessMessage(message);
         setShowSuccessToast(true);
       } else {
-        setManagerIdError(data.error || "Failed to update Manager ID");
+        setManagerIdError(data.error || t("managerIdUpdateFailed"));
       }
     } catch {
-      setManagerIdError("Failed to update Manager ID");
+      setManagerIdError(t("managerIdUpdateFailed"));
     } finally {
       setIsSavingManagerId(false);
     }
@@ -262,13 +263,13 @@ export default function ProfilePage() {
               theme === "dark" ? "text-white" : "text-gray-900"
             }`}
           >
-            Redirecting to login...
+            {t("redirectingToLogin")}
           </p>
           <Link
             href="/login"
             className="bg-red-800 hover:bg-red-900 text-white px-6 py-2 rounded-md transition-all duration-300"
           >
-            Go to Login
+            {t("goToLogin")}
           </Link>
         </div>
       </div>
@@ -521,7 +522,7 @@ export default function ProfilePage() {
                             type="text"
                             value={editManagerId}
                             onChange={(e) => setEditManagerId(e.target.value)}
-                            placeholder="e.g., 123456"
+                            placeholder={t("managerIdPlaceholder")}
                             className={`flex-1 min-w-0 px-3 py-2 rounded-lg border text-sm ${
                               theme === "dark"
                                 ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
@@ -533,7 +534,7 @@ export default function ProfilePage() {
                               onClick={handleSaveManagerId}
                               disabled={isSavingManagerId || !editManagerId.trim()}
                               className="p-2 text-green-600 hover:text-green-700 disabled:opacity-50"
-                              title="Save"
+                              title={t("save")}
                             >
                               {isSavingManagerId ? (
                                 <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin" />
@@ -548,7 +549,7 @@ export default function ProfilePage() {
                                 setManagerIdError("");
                               }}
                               className="p-2 text-gray-600 hover:text-gray-700"
-                              title="Cancel"
+                              title={t("cancel")}
                             >
                               <BiX className="w-4 h-4" />
                             </button>
@@ -557,8 +558,8 @@ export default function ProfilePage() {
                         <p className={`text-xs leading-relaxed ${
                           theme === "dark" ? "text-gray-400" : "text-gray-600"
                         }`}>
-                          Find your ID in your FPL URL:<br />
-                          <span className="font-mono text-xs">fantasy.premierleague.com/entry/YOUR_ID/event/</span>
+                          {t("managerIdHint")}<br />
+                          <span className="font-mono text-xs">{t("managerIdUrlPattern")}</span>
                         </p>
                         {managerIdError && (
                           <p className="text-xs text-red-600 dark:text-red-400">
@@ -574,14 +575,14 @@ export default function ProfilePage() {
                               theme === "dark" ? "text-white" : "text-gray-900"
                             }`}
                           >
-                            {managerData?.managerId || "Not set"}
+                            {managerData?.managerId || t("notSet")}
                           </span>
                           {managerData?.managerId && (
                             <>
                               {managerData.isVerified ? (
-                                <MdVerified className="w-4 h-4 text-green-500" title="Verified" />
+                                <MdVerified className="w-4 h-4 text-green-500" title={t("verified")} />
                               ) : (
-                                <MdWarning className="w-4 h-4 text-yellow-500" title="Not verified" />
+                                <MdWarning className="w-4 h-4 text-yellow-500" title={t("notVerified")} />
                               )}
                             </>
                           )}
@@ -589,7 +590,7 @@ export default function ProfilePage() {
                         <button
                           onClick={() => setIsEditingManagerId(true)}
                           className="p-2 text-gray-500 hover:text-gray-700 flex-shrink-0"
-                          title="Edit Manager ID"
+                          title={t("editManagerId")}
                         >
                           <BiEdit className="w-4 h-4" />
                         </button>
@@ -621,7 +622,7 @@ export default function ProfilePage() {
                       }`}
                     >
                       {new Date(profile.created_at).toLocaleDateString(
-                        "en-GB",
+                        dateLocale(i18n.language),
                         {
                           year: "numeric",
                           month: "long",

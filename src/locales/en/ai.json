@@ -34,5 +34,16 @@
   "loadingTitle": "Loading AI Fantasy Guru",
   "loadingDescription": "Preparing your FPL assistant...",
   "errorMessage": "Sorry, I encountered an error. Please try again.",
-  "rateLimitMessage": "Weekly limit exceeded. Please use your own OpenAI API key to continue."
+  "rateLimitMessage": "Weekly limit exceeded. Please use your own OpenAI API key to continue.",
+  "freeQueriesPerWeek_one": "{{count}} AI question per week",
+  "freeQueriesPerWeek_other": "{{count}} AI questions per week",
+  "freeQueriesPerWeek_few": "{{count}} AI questions per week",
+  "analyzing": "Analyzing...",
+  "confirmQuestion": "Confirm question",
+  "confirmDescription": "Are you sure your question is about the current Fantasy Premier League season?",
+  "warningMessage": "Warning: if your question isn't about Fantasy, you'll use up a free question without getting a Fantasy answer. Our FPL Guru only answers questions about the current FPL season.",
+  "cancel": "Cancel",
+  "confirm": "Confirm & send",
+  "yourQuestion": "Your question:",
+  "saveManagerIdError": "Error saving Manager ID: {{message}}"
 }

@@ -2,18 +2,28 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaArrowDown, FaArrowUp, FaTrophy } from "react-icons/fa";
-import { MdRefresh, MdRemove } from "react-icons/md";
-import LoadingCard from "@/components/shared/LoadingCard";
-import FplLoadingSkeleton from "@/components/shared/FplLoadingSkeleton";
+import { ChevronDown, RefreshCw, Trophy } from "lucide-react";
+import {
+  Chip,
+  cx,
+  EmptyState,
+  formatRank,
+  GhostButton,
+  LiveDot,
+  Panel,
+  Sheet,
+  SkeletonRows, dateLocale } from "@/components/fpl/live/ui";
 import LeagueTableHeader from "./LeagueTableHeader";
 import LeagueTableRow from "./LeagueTableRow";
-import LeagueTableCard from "./LeagueTableCard";
 import LeagueTableExpanded from "./LeagueTableExpanded";
-import LeagueFiltersPanel from "./LeagueFiltersPanel";
+import LeagueFiltersPanel, { type LeagueOwnership } from "./LeagueFiltersPanel";
+import LeaguePicker from "./LeaguePicker";
+import Movement from "./Movement";
 import type {
   FilterState,
+  LeagueElementSummary,
   LeagueTableData,
+  ManagerLeague,
   ProcessedTeam,
   SortDirection,
   SortKey,
@@ -24,31 +34,28 @@ interface LeagueTableProps {
   gameweek: number;
   leagueId?: string;
   isPolling?: boolean;
+  /** Shows a live on/off pill in the standings header when provided. */
+  onToggleLive?: () => void;
 }
+
+const SELECTED_LEAGUE_KEY = "fpl-live-league-id";
 
 export default function LeagueTable({
   managerId,
   gameweek,
   leagueId,
   isPolling = false,
+  onToggleLive,
 }: LeagueTableProps) {
-  const { t } = useTranslation("fpl");
+  const { t, i18n } = useTranslation("fpl");
 
   const [data, setData] = useState<LeagueTableData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedLeagueId, setSelectedLeagueId] = useState(leagueId || "");
-  const [leagues, setLeagues] = useState<
-    Array<{
-      id: number;
-      name: string;
-      entry_rank: number | null;
-      entry_last_rank: number | null;
-    }>
-  >([]);
+  const [leagues, setLeagues] = useState<ManagerLeague[]>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(true);
   const [leaguesInitiallyLoaded, setLeaguesInitiallyLoaded] = useState(false);
-  const [expandedTeams, setExpandedTeams] = useState<Set<number>>(new Set());
   const [includeAutoSubs, setIncludeAutoSubs] = useState(true);
   const [showGwNet, setShowGwNet] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("live_total");
@@ -58,18 +65,29 @@ export default function LeagueTable({
     playerQuery: "",
     scope: "startingXI",
   });
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [openTeamId, setOpenTeamId] = useState<number | null>(null);
 
   const fetchManagerLeagues = useCallback(async () => {
     if (!managerId) return;
-    if (!leaguesInitiallyLoaded || leagues.length > 0) {
-      setLeaguesLoading(true);
-    }
+    setLeaguesLoading(true);
     try {
       const response = await fetch(`/api/fpl/leagues?managerId=${managerId}`);
       if (!response.ok) throw new Error(`HTTP error ${response.status}`);
       const result = await response.json();
       if (result.success) {
-        setLeagues(result.data.classic || []);
+        const classic: ManagerLeague[] = result.data.classic || [];
+        setLeagues(classic);
+        // Reopen the league the manager looked at last time (if he's still in it).
+        let saved: string | null = null;
+        try {
+          saved = localStorage.getItem(SELECTED_LEAGUE_KEY);
+        } catch {
+          // storage unavailable — the picker still works
+        }
+        if (saved && classic.some((l) => String(l.id) === saved)) {
+          setSelectedLeagueId((current) => current || (saved as string));
+        }
       }
     } catch (err) {
       console.error("Failed to load manager leagues", err);
@@ -77,7 +95,7 @@ export default function LeagueTable({
       setLeaguesLoading(false);
       setLeaguesInitiallyLoaded(true);
     }
-  }, [managerId, leaguesInitiallyLoaded, leagues.length]);
+  }, [managerId]);
 
   const fetchLeagueTable = useCallback(async () => {
     if (!managerId || !selectedLeagueId) return;
@@ -118,13 +136,28 @@ export default function LeagueTable({
     }
   }, [managerId, selectedLeagueId, gameweek, includeAutoSubs, fetchLeagueTable]);
 
+  const selectLeague = (id: string) => {
+    setPickerOpen(false);
+    if (id === selectedLeagueId) return;
+    setData(null);
+    setOpenTeamId(null);
+    setFilter({ playerId: null, playerQuery: "", scope: filter.scope });
+    setSelectedLeagueId(id);
+    try {
+      localStorage.setItem(SELECTED_LEAGUE_KEY, id);
+    } catch {
+      // ignore
+    }
+  };
+
   const handleSort = useCallback((key: SortKey) => {
     setSortKey((prev) => {
       if (prev === key) {
         setSortDir((d) => (d === "desc" ? "asc" : "desc"));
         return prev;
       }
-      setSortDir("desc");
+      // Rank reads naturally best-first; every points column highest-first.
+      setSortDir(key === "rank" ? "asc" : "desc");
       return key;
     });
   }, []);
@@ -158,10 +191,30 @@ export default function LeagueTable({
       const bv = valueOf(b);
       if (av < bv) return -1 * sign;
       if (av > bv) return 1 * sign;
-      return 0;
+      return a.rank - b.rank;
     });
     return arr;
   }, [data, sortKey, sortDir]);
+
+  const elementMap = useMemo(() => {
+    const map = new Map<number, LeagueElementSummary>();
+    for (const el of data?.elements ?? []) map.set(el.id, el);
+    return map;
+  }, [data]);
+
+  // League-level ownership: how many of the listed managers start / own each player.
+  const ownership = useMemo(() => {
+    const map = new Map<number, LeagueOwnership>();
+    for (const team of data?.teams ?? []) {
+      for (const pick of team.picks) {
+        const entry = map.get(pick.element) ?? { starting: 0, any: 0 };
+        entry.any += 1;
+        if (pick.position <= 11) entry.starting += 1;
+        map.set(pick.element, entry);
+      }
+    }
+    return map;
+  }, [data]);
 
   const selectedLeague = useMemo(() => {
     const id = Number(selectedLeagueId);
@@ -169,399 +222,330 @@ export default function LeagueTable({
     return leagues.find((l) => l.id === id) || null;
   }, [leagues, selectedLeagueId]);
 
-  const userOutsideTop50 = useMemo(() => {
+  const userOutsideTable = useMemo(() => {
     if (!managerId || !data) return false;
-    return !data.teams.some((t) => t.id === managerId);
+    return !data.teams.some((team) => team.id === managerId);
   }, [managerId, data]);
 
   const matchingTeamIds = useMemo(() => {
     if (!filter.playerId || !data) return new Set<number>();
     const set = new Set<number>();
     for (const team of data.teams) {
-      const has = team.picks.some((p) => {
-        const isStarter = p.position <= 11;
-        if (filter.scope === "startingXI")
-          return isStarter && p.element === filter.playerId;
-        return p.element === filter.playerId;
-      });
+      const has = team.picks.some((p) =>
+        filter.scope === "startingXI"
+          ? p.position <= 11 && p.element === filter.playerId
+          : p.element === filter.playerId
+      );
       if (has) set.add(team.id);
     }
     return set;
   }, [filter.playerId, filter.scope, data]);
 
-  const toggleExpand = (teamId: number) => {
-    setExpandedTeams((prev) => {
-      const next = new Set(prev);
-      if (next.has(teamId)) next.delete(teamId);
-      else next.add(teamId);
-      return next;
-    });
-  };
+  const openTeam = openTeamId ? data?.teams.find((team) => team.id === openTeamId) ?? null : null;
 
-  const renderError = () =>
-    error && (
-      <div className="p-4 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
-        {error}
-      </div>
+  /* ---------------------------------------------------------------- */
+
+  if (leaguesLoading && !leaguesInitiallyLoaded) {
+    return (
+      <Panel
+        flush
+        icon={<Trophy />}
+        title={t("fplLive.ui.leagues.yourLeagues", "Your leagues")}
+        subtitle={t("fplLive.ui.leagues.loadingLeagues", "Loading your leagues…")}
+      >
+        <SkeletonRows rows={4} />
+      </Panel>
     );
+  }
+
+  if (leagues.length === 0) {
+    return (
+      <Panel>
+        <EmptyState
+          icon={<Trophy />}
+          title={t("fplLive.ui.leagues.noLeagues", "No leagues found")}
+          text={t(
+            "fplLive.ui.leagues.noLeaguesText",
+            "We couldn't load this manager's classic leagues. Try again in a moment."
+          )}
+          action={
+            <GhostButton onClick={fetchManagerLeagues}>
+              <RefreshCw />
+              {t("fplLive.ui.leagues.retry", "Try again")}
+            </GhostButton>
+          }
+        />
+      </Panel>
+    );
+  }
+
+  if (!selectedLeagueId) {
+    return (
+      <Panel
+        flush
+        icon={<Trophy />}
+        title={t("fplLive.ui.leagues.yourLeagues", "Your leagues")}
+        subtitle={t("fplLive.ui.leagues.pickLeague", "Pick a league to see its live table")}
+      >
+        <div className="border-t border-theme-border">
+          <LeaguePicker leagues={leagues} selectedId="" onSelect={selectLeague} />
+        </div>
+      </Panel>
+    );
+  }
+
+  const leagueName = data?.league.name ?? selectedLeague?.name ?? "";
+  const updatedAt = data
+    ? new Date(data.last_updated).toLocaleTimeString(dateLocale(i18n.language), { hour: "2-digit", minute: "2-digit" })
+    : null;
 
   return (
-    <div className="space-y-4">
-      <div className="bg-theme-card rounded-lg border border-theme-border p-4">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 sm:gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-theme-foreground mb-2">
-              {t("leagueTables.selectLeague")}
-            </label>
-            {leaguesLoading && !leaguesInitiallyLoaded ? (
-              <LoadingCard
-                title={t("leagueTables.loadingLeagues")}
-                description={t("leagueTables.fetchingManagerLeagues")}
-                className="bg-theme-card border-theme-border rounded-md shadow theme-transition"
-              />
-            ) : (
-              <select
-                value={selectedLeagueId}
-                onChange={(e) => setSelectedLeagueId(e.target.value)}
-                disabled={leaguesLoading}
-                className="w-full px-3 py-2.5 border border-theme-border rounded-md bg-theme-card text-theme-foreground focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
-              >
-                <option value="">{t("leagueTables.chooseLeague")}</option>
-                {leagues.map((league) => (
-                  <option key={league.id} value={league.id}>
-                    {league.name} (
-                    {league.entry_rank
-                      ? `${t("leagueTables.rank")}: ${league.entry_rank}`
-                      : t("leagueTables.unranked")}
-                    )
-                  </option>
-                ))}
-              </select>
+    <div className="space-y-3 sm:space-y-4">
+      <Panel
+        flush
+        title={
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="-mx-1 flex max-w-full items-center gap-1 rounded-md px-1 text-left transition-colors hover:bg-theme-card-secondary"
+          >
+            <span className="truncate">{leagueName || t("fplLive.ui.leagues.chooseLeague", "Choose league")}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-theme-text-muted" />
+          </button>
+        }
+        subtitle={
+          <span className="flex flex-wrap items-center gap-x-1.5">
+            <span>GW {data?.gameweek ?? gameweek}</span>
+            {selectedLeague?.entry_rank ? (
+              <>
+                <span aria-hidden>·</span>
+                <span>
+                  {t("fplLive.ui.leagues.yourRank", "You're")}{" "}
+                  <span className="font-medium text-theme-text-secondary">
+                    {formatRank(selectedLeague.entry_rank)}
+                  </span>
+                </span>
+              </>
+            ) : null}
+            {updatedAt && (
+              <>
+                <span aria-hidden>·</span>
+                <span>
+                  {t("fplLive.ui.leagues.updatedAt", "Updated {{time}}", { time: updatedAt })}
+                </span>
+              </>
             )}
-          </div>
-          {data && (
-            <button
+          </span>
+        }
+        action={
+          <div className="flex items-center gap-1.5">
+            {onToggleLive && (
+              <button
+                type="button"
+                onClick={onToggleLive}
+                title={
+                  isPolling
+                    ? t("fplLive.ui.leagues.pauseLive", "Pause live tracking")
+                    : t("fplLive.ui.leagues.resumeLive", "Resume live tracking")
+                }
+                className={cx(
+                  "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors",
+                  isPolling
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "border-theme-border bg-theme-card text-theme-text-muted hover:bg-theme-card-secondary"
+                )}
+              >
+                {isPolling ? (
+                  <LiveDot />
+                ) : (
+                  <span className="h-2 w-2 rounded-full bg-theme-text-muted" />
+                )}
+                {isPolling
+                  ? t("fplLive.ui.leagues.live", "Live")
+                  : t("fplLive.ui.leagues.paused", "Paused")}
+              </button>
+            )}
+            <GhostButton
               onClick={fetchLeagueTable}
               disabled={loading}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition-colors min-h-[42px]"
+              className="h-8 w-8 !px-0"
+              title={t("fplLive.ui.leagues.refresh", "Refresh")}
             >
-              <MdRefresh className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {t("leagueTables.refresh")}
-              </span>
-            </button>
+              <RefreshCw className={cx(loading && "animate-spin")} />
+            </GhostButton>
+          </div>
+        }
+      >
+        <div className="space-y-3 px-4 pb-3 sm:px-5">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Toggle
+              checked={includeAutoSubs}
+              onChange={() => setIncludeAutoSubs((v) => !v)}
+              label={t("fplLive.ui.leagues.autoSubs", "Auto subs")}
+            />
+            <Toggle
+              checked={showGwNet}
+              onChange={() => setShowGwNet((v) => !v)}
+              label={t("fplLive.ui.leagues.deductHits", "Deduct hits")}
+            />
+            {data && !data.bonus_added && (
+              <Chip tone="warning" className="ml-auto">
+                {t("fplLive.ui.leagues.bonusProvisional", "Bonus provisional")}
+              </Chip>
+            )}
+          </div>
+
+          {data && (
+            <LeagueFiltersPanel
+              elements={data.elements}
+              filter={filter}
+              onChange={setFilter}
+              ownership={ownership}
+              teamCount={data.teams.length}
+            />
           )}
         </div>
 
-        {data && (
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-              <span className="text-sm text-theme-foreground">
-                {t("leagueTables.includeAutoSubs", "Include Auto Subs")}
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={includeAutoSubs}
-                onClick={() => setIncludeAutoSubs((v) => !v)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  includeAutoSubs
-                    ? "bg-purple-600"
-                    : "bg-gray-300 dark:bg-gray-700"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    includeAutoSubs ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </label>
-
-            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-              <span className="text-sm text-theme-foreground">
-                {t("leagueTables.showHits", "Show GW Net (with hits)")}
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={showGwNet}
-                onClick={() => setShowGwNet((v) => !v)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  showGwNet ? "bg-purple-600" : "bg-gray-300 dark:bg-gray-700"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    showGwNet ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </label>
+        {error && (
+          <div className="mx-4 mb-3 flex items-center justify-between gap-3 rounded-xl bg-rose-500/10 px-3 py-2 text-xs text-rose-600 dark:text-rose-400 sm:mx-5">
+            <span className="min-w-0 truncate">
+              {t("fplLive.ui.leagues.tableError", "Couldn't load the live table.")}
+            </span>
+            <GhostButton onClick={fetchLeagueTable} disabled={loading}>
+              {t("fplLive.ui.leagues.retry", "Try again")}
+            </GhostButton>
           </div>
         )}
-      </div>
 
-      {renderError()}
+        {!data && loading && <SkeletonRows rows={8} className="border-t border-theme-border" />}
 
-      {data && (
-        <LeagueFiltersPanel
-          elements={data.elements}
-          filter={filter}
-          onChange={setFilter}
-        />
-      )}
-
-      {loading && !data && <FplLoadingSkeleton />}
-
-      {data && (
-        <div className="bg-theme-card rounded-lg border border-theme-border overflow-hidden">
-          <div className="bg-theme-card-secondary border-b border-theme-border px-3 sm:px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <h3 className="text-sm sm:text-lg font-bold text-theme-foreground flex items-center gap-2">
-                <FaTrophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
-                {data.league.name}
-              </h3>
-              <div className="text-xs sm:text-sm text-theme-text-secondary flex items-center gap-2 flex-wrap">
-                <span>
-                  Gameweek {data.gameweek} • {t("leagueTables.liveTable")}
-                </span>
-                {isPolling && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    {t("leagueTables.live")}
-                  </span>
-                )}
-                {!data.bonus_added && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
-                    {t("leagueTables.bonusPending", "Bonus pending")}
-                  </span>
-                )}
-              </div>
+        {data && (
+          <>
+            <LeagueTableHeader
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={handleSort}
+              showGwNet={showGwNet}
+            />
+            <div className="divide-y divide-theme-border">
+              {sortedTeams.map((team) => (
+                <LeagueTableRow
+                  key={team.id}
+                  team={team}
+                  elementMap={elementMap}
+                  isCurrentUser={managerId === team.id}
+                  isDimmed={!!filter.playerId && !matchingTeamIds.has(team.id)}
+                  showGwNet={showGwNet}
+                  onOpen={() => setOpenTeamId(team.id)}
+                />
+              ))}
             </div>
-            <div className="text-right">
-              <p className="text-xs text-theme-text-secondary">
-                {t("leagueTables.updated")}:{" "}
-                {new Date(data.last_updated).toLocaleTimeString()}
+            {data.teams.length >= 50 && (
+              <p className="border-t border-theme-border px-4 py-2.5 text-center text-[11px] text-theme-text-muted sm:px-5">
+                {t("fplLive.ui.leagues.top50Note", "Live table covers the league's top 50.")}
+              </p>
+            )}
+          </>
+        )}
+      </Panel>
+
+      {data && userOutsideTable && selectedLeague?.entry_rank ? (
+        <Panel>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-medium text-theme-heading-primary">
+                  {t("fplLive.ui.leagues.yourPosition", "Your position")}
+                </span>
+                <Chip tone="accent">{t("fplLive.ui.leagues.you", "You")}</Chip>
+              </div>
+              <p className="mt-0.5 text-xs text-theme-text-muted">
+                {t("fplLive.ui.leagues.outsideTop50", "Outside the live top 50")}
+                {selectedLeague.entry_last_rank
+                  ? ` · ${t("fplLive.ui.leagues.lastGw", "last GW")} ${formatRank(selectedLeague.entry_last_rank)}`
+                  : ""}
               </p>
             </div>
-          </div>
-
-          {/* Mobile (< 640px) — card stack */}
-          <div className="sm:hidden divide-y divide-theme-border">
-            {sortedTeams.map((team, idx) => {
-              const isCurrentUser = managerId === team.id;
-              const isHighlighted = matchingTeamIds.has(team.id);
-              const isExpanded = expandedTeams.has(team.id);
-              return (
-                <div key={team.id} className="p-2">
-                  <LeagueTableCard
-                    team={team}
-                    rankDisplay={includeAutoSubs ? idx + 1 : team.rank}
-                    isCurrentUser={isCurrentUser}
-                    isHighlighted={isHighlighted}
-                    isExpanded={isExpanded}
-                    onToggleExpand={() => toggleExpand(team.id)}
-                    showGwNet={showGwNet}
-                  />
-                  {isExpanded && (
-                    <LeagueTableExpanded team={team} elements={data.elements} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Tablet (640-1023px) — compact table */}
-          <div className="hidden sm:block lg:hidden">
-            <LeagueTableHeader
-              variant="tablet"
-              sortKey={sortKey}
-              sortDir={sortDir}
-              onSort={handleSort}
-            />
-            <div className="divide-y divide-theme-border">
-              {sortedTeams.map((team, idx) => {
-                const isCurrentUser = managerId === team.id;
-                const isHighlighted = matchingTeamIds.has(team.id);
-                const isExpanded = expandedTeams.has(team.id);
-                return (
-                  <div key={team.id}>
-                    <LeagueTableRow
-                      variant="tablet"
-                      team={team}
-                      rankDisplay={includeAutoSubs ? idx + 1 : team.rank}
-                      isCurrentUser={isCurrentUser}
-                      isHighlighted={isHighlighted}
-                      isExpanded={isExpanded}
-                      onToggleExpand={() => toggleExpand(team.id)}
-                      showGwNet={showGwNet}
-                    />
-                    {isExpanded && (
-                      <LeagueTableExpanded
-                        team={team}
-                        elements={data.elements}
-                      />
-                    )}
-                  </div>
-                );
-              })}
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <span className="text-lg font-semibold leading-none tabular-nums text-theme-heading-primary">
+                {formatRank(selectedLeague.entry_rank)}
+              </span>
+              <Movement
+                value={
+                  selectedLeague.entry_last_rank
+                    ? selectedLeague.entry_last_rank - selectedLeague.entry_rank
+                    : 0
+                }
+              />
             </div>
           </div>
+        </Panel>
+      ) : null}
 
-          {/* Desktop (>= 1024px) — full table */}
-          <div className="hidden lg:block">
-            <LeagueTableHeader
-              variant="desktop"
-              sortKey={sortKey}
-              sortDir={sortDir}
-              onSort={handleSort}
-            />
-            <div className="divide-y divide-theme-border">
-              {sortedTeams.map((team, idx) => {
-                const isCurrentUser = managerId === team.id;
-                const isHighlighted = matchingTeamIds.has(team.id);
-                const isExpanded = expandedTeams.has(team.id);
-                return (
-                  <div key={team.id}>
-                    <LeagueTableRow
-                      variant="desktop"
-                      team={team}
-                      rankDisplay={includeAutoSubs ? idx + 1 : team.rank}
-                      isCurrentUser={isCurrentUser}
-                      isHighlighted={isHighlighted}
-                      isExpanded={isExpanded}
-                      onToggleExpand={() => toggleExpand(team.id)}
-                      showGwNet={showGwNet}
-                    />
-                    {isExpanded && (
-                      <LeagueTableExpanded
-                        team={team}
-                        elements={data.elements}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+      <Sheet
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        title={t("fplLive.ui.leagues.yourLeagues", "Your leagues")}
+        subtitle={t("fplLive.ui.leagues.pickLeague", "Pick a league to see its live table")}
+      >
+        <div className="-mx-4 border-t border-theme-border sm:-mx-5">
+          <LeaguePicker leagues={leagues} selectedId={selectedLeagueId} onSelect={selectLeague} />
         </div>
-      )}
+      </Sheet>
 
-      {data && userOutsideTop50 && selectedLeague && selectedLeague.entry_rank && (
-        <UserPositionCard
-          rank={selectedLeague.entry_rank}
-          lastRank={selectedLeague.entry_last_rank}
-          leagueName={data.league.name}
-          t={t}
-        />
-      )}
+      <Sheet
+        open={!!openTeam}
+        onClose={() => setOpenTeamId(null)}
+        title={openTeam?.entry_name}
+        subtitle={
+          openTeam
+            ? `${openTeam.player_name} · #${openTeam.rank} ${t("fplLive.ui.leagues.inLeague", "in league")}`
+            : undefined
+        }
+      >
+        {openTeam && (
+          <LeagueTableExpanded
+            team={openTeam}
+            elementMap={elementMap}
+            bonusAdded={data?.bonus_added}
+          />
+        )}
+      </Sheet>
     </div>
   );
 }
 
-interface UserPositionCardProps {
-  rank: number;
-  lastRank: number | null;
-  leagueName: string;
-  t: (key: string, defaultOrOptions?: any) => string;
-}
-
-function UserPositionCard({
-  rank,
-  lastRank,
-  leagueName,
-  t,
-}: UserPositionCardProps) {
-  const change =
-    lastRank && lastRank > 0 ? lastRank - rank : 0;
-  const arrowIcon =
-    change > 0 ? (
-      <FaArrowUp className="w-4 h-4 text-green-500" />
-    ) : change < 0 ? (
-      <FaArrowDown className="w-4 h-4 text-red-500" />
-    ) : (
-      <MdRemove className="w-4 h-4 text-gray-400" />
-    );
-  const changeLabel =
-    change > 0
-      ? t("leagueTables.yourPositionUp", {
-          count: change,
-          defaultValue: `Up ${change} places`,
-        })
-      : change < 0
-      ? t("leagueTables.yourPositionDown", {
-          count: Math.abs(change),
-          defaultValue: `Down ${Math.abs(change)} places`,
-        })
-      : t("leagueTables.yourPositionNoChange", {
-          defaultValue: "No change",
-        });
-  const changeColor =
-    change > 0
-      ? "text-green-600 dark:text-green-400"
-      : change < 0
-      ? "text-red-600 dark:text-red-400"
-      : "text-theme-text-secondary";
-
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+}) {
   return (
-    <div className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border border-purple-300 dark:border-purple-700 rounded-lg p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500 text-white shrink-0">
-            {t("leagueTables.you", { defaultValue: "YOU" })}
-          </span>
-          <div className="min-w-0">
-            <div className="text-sm font-semibold text-theme-foreground">
-              {t("leagueTables.yourPositionTitle", {
-                defaultValue: "Your position in this league",
-              })}
-            </div>
-            <div className="text-xs text-theme-text-secondary truncate">
-              {leagueName} •{" "}
-              {t("leagueTables.yourPositionInfo", {
-                defaultValue: "outside top 50",
-              })}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 shrink-0">
-          <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wide text-theme-text-secondary">
-              {t("leagueTables.rank", { defaultValue: "Rank" })}
-            </div>
-            <div className="text-2xl font-bold text-theme-foreground leading-tight">
-              #{rank.toLocaleString()}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wide text-theme-text-secondary">
-              {t("leagueTables.change", { defaultValue: "Change" })}
-            </div>
-            <div
-              className={`flex items-center justify-end gap-1 text-sm font-semibold ${changeColor}`}
-            >
-              {arrowIcon}
-              <span>
-                {change !== 0
-                  ? `${change > 0 ? "+" : ""}${change}`
-                  : "—"}
-              </span>
-            </div>
-            <div className={`text-[11px] mt-0.5 ${changeColor}`}>
-              {changeLabel}
-            </div>
-          </div>
-        </div>
-      </div>
-      {lastRank && lastRank > 0 && (
-        <div className="mt-2 pt-2 border-t border-purple-200 dark:border-purple-800 text-[11px] text-theme-text-secondary">
-          {t("leagueTables.lastWeekRank", {
-            defaultValue: "Last week's rank",
-          })}
-          : <span className="font-semibold">#{lastRank.toLocaleString()}</span>
-        </div>
-      )}
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      className="inline-flex items-center gap-2 text-xs text-theme-text-secondary"
+    >
+      <span
+        className={cx(
+          "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",
+          checked ? "bg-violet-500" : "bg-theme-border-strong"
+        )}
+      >
+        <span
+          className={cx(
+            "inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
+            checked ? "translate-x-[18px]" : "translate-x-0.5"
+          )}
+        />
+      </span>
+      {label}
+    </button>
   );
 }

@@ -37,8 +37,8 @@ export default function TeamPlannerPage() {
       <main className="w-full min-h-screen overflow-x-hidden bg-theme-background">
         <div className="flex items-center justify-center min-h-screen">
           <LoadingCard
-            title="Loading Fantasy Planner..."
-            description="Preparing your team management tools..."
+            title={t("teamPlanner.page.loadingTitle")}
+            description={t("teamPlanner.page.loadingDescription")}
             className="w-full max-w-md mx-auto"
           />
         </div>
@@ -57,16 +57,13 @@ export default function TeamPlannerPage() {
               <h1
                 className="text-3xl md:text-4xl font-bold text-theme-foreground"
               >
-                {i18n.language === 'bs' ? 'Fantasy Komandni Centar' : 'Fantasy Command Center'}
+                {t("teamPlanner.title")}
               </h1>
             </div>
             <p
               className="text-lg text-theme-text-secondary"
             >
-              {i18n.language === 'bs' 
-                ? 'Planiraj buduće transfere, čipove, izmjene itd.'
-                : 'Plan future transfers, chips, changes, etc.'
-              }
+              {t("teamPlanner.subtitle")}
             </p>
           </div>
 
@@ -81,16 +78,13 @@ export default function TeamPlannerPage() {
             <h3
               className="text-xl font-bold mb-4 text-theme-foreground"
             >
-              {i18n.language === 'bs' ? 'Prijava Potrebna' : 'Login Required'}
+              {t("teamPlanner.login.title")}
             </h3>
 
             <p
               className="text-sm mb-6 text-theme-text-secondary"
             >
-              {i18n.language === 'bs' 
-                ? 'Prijavite se da biste pristupili Fantasy Komandnom Centru'
-                : 'Sign in to access the Fantasy Command Center'
-              }
+              {t("teamPlanner.login.text")}
             </p>
 
             <div className="space-y-3">
@@ -104,7 +98,7 @@ export default function TeamPlannerPage() {
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-theme-border hover:bg-theme-card-secondary rounded-md text-sm font-medium transition-colors"
               >
                 <FaGoogle className="text-red-500" />
-                {i18n.language === 'bs' ? 'Prijavite se sa Google' : 'Sign in with Google'}
+                {t("teamPlanner.login.google")}
               </button>
 
               {/* Email Sign In */}
@@ -113,19 +107,19 @@ export default function TeamPlannerPage() {
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-theme-foreground text-theme-background hover:opacity-90 rounded-md text-sm font-medium transition-colors"
               >
                 <FaEnvelope />
-                {i18n.language === 'bs' ? 'Prijavite se sa Email' : 'Sign in with Email'}
+                {t("teamPlanner.login.email")}
               </Link>
 
               {/* Sign Up */}
               <div
                 className="text-xs text-theme-text-secondary"
               >
-                {i18n.language === 'bs' ? 'Nemate račun?' : "Don't have an account?"}{" "}
+                {t("teamPlanner.login.noAccount")}{" "}
                 <Link
                   href="/signup"
                   className="text-theme-text-secondary hover:text-theme-foreground font-medium"
                 >
-                  {i18n.language === 'bs' ? 'Kreirajte besplatan račun' : 'Create free account'}
+                  {t("teamPlanner.login.createAccount")}
                 </Link>
               </div>
             </div>
@@ -137,15 +131,15 @@ export default function TeamPlannerPage() {
               <h4
                 className="text-sm font-medium mb-3 text-theme-foreground"
               >
-                {i18n.language === 'bs' ? 'Besplatan račun uključuje:' : 'Free account includes:'}
+                {t("teamPlanner.login.includes")}
               </h4>
               <ul
                 className="text-xs space-y-1 text-theme-text-secondary"
               >
-                <li>• {i18n.language === 'bs' ? 'Transfer planner sa live podacima' : 'Transfer planner with live data'}</li>
-                <li>• {i18n.language === 'bs' ? 'AI analiza tima (1x sedmično)' : 'AI team analysis (1x weekly)'}</li>
-                <li>• {i18n.language === 'bs' ? 'Praćenje cijene i forme igrača' : 'Player price and form tracking'}</li>
-                <li>• {i18n.language === 'bs' ? 'Personalizovane preporuke' : 'Personalized recommendations'}</li>
+                <li>• {t("teamPlanner.login.featurePlanner")}</li>
+                <li>• {t("teamPlanner.login.featureAi")}</li>
+                <li>• {t("teamPlanner.login.featurePrices")}</li>
+                <li>• {t("teamPlanner.login.featureRecommendations")}</li>
               </ul>
             </div>
           </motion.div>

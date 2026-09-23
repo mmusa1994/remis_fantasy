@@ -2,12 +2,14 @@
 
 import PLRegistrationForm from "@/components/PLRegistrationForm";
 import RegistrationClosed from "@/components/RegistrationClosed";
+import { useTranslation } from "react-i18next";
 
 export default function RegistracijaPage() {
+  const { t } = useTranslation("common");
   return (
     <RegistrationClosed
       accent="purple"
-      message="Prijave za Premier League sezonu 2026/27 su zatvorene. Hvala svima koji su se prijavili — sretno u takmičenju!"
+      message={t("registrationClosed.pl")}
     >
       <PLRegistrationForm />
     </RegistrationClosed>

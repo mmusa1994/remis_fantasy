@@ -29,5 +29,31 @@
   "viewHistory": "View History",
   "comingSoon": "Coming Soon",
   "failedToLoadProfile": "Failed to load profile",
-  "failedToUpdateProfile": "Failed to update profile"
+  "failedToUpdateProfile": "Failed to update profile",
+  "redirectingToLogin": "Redirecting to login...",
+  "goToLogin": "Go to login",
+  "managerIdPlaceholder": "e.g. 123456",
+  "save": "Save",
+  "cancel": "Cancel",
+  "managerIdHint": "Find your ID in your FPL URL:",
+  "managerIdUrlPattern": "fantasy.premierleague.com/entry/YOUR_ID/event/",
+  "notSet": "Not set",
+  "notVerified": "Not verified",
+  "editManagerId": "Edit Manager ID",
+  "managerIdEmpty": "Manager ID cannot be empty",
+  "managerIdSavedVerified": "Manager ID saved and verified!",
+  "managerIdSaved": "Manager ID saved! Verification may take a moment.",
+  "managerIdUpdateFailed": "Failed to update Manager ID",
+  "photo": {
+    "loginRequired": "You must be logged in to upload photos",
+    "tooLarge": "The file must be smaller than 5MB",
+    "notImage": "Please select an image file",
+    "uploadFailed": "Failed to upload the photo",
+    "deleteFailed": "Failed to delete the photo",
+    "alt": "Profile photo",
+    "upload": "Upload photo",
+    "delete": "Delete photo",
+    "hintSize": "Click to upload (max 5MB)",
+    "hintFormats": "JPG, PNG and GIF supported"
+  }
 }

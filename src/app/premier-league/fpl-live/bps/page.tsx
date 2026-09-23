@@ -7,6 +7,7 @@ import Link from "next/link";
 import LoadingCard from "@/components/shared/LoadingCard";
 import TeamJersey from "@/components/fpl/TeamJersey";
 import { getTeamColors, registerFplTeams } from "@/lib/team-colors";
+import { dateLocale } from "@/components/fpl/live/ui";
 
 interface BpsPlayer {
   element: number;
@@ -43,7 +44,7 @@ const POSITION_LABEL: Record<number, string> = {
 };
 
 export default function BpsPage() {
-  const { t } = useTranslation("fpl");
+  const { t, i18n } = useTranslation("fpl");
   const [gameweek, setGameweek] = useState<number | null>(null);
   const [fixtures, setFixtures] = useState<BpsFixture[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,12 +89,13 @@ export default function BpsPage() {
         setFixtures(json.data.fixtures || []);
         setLastUpdated(json.data.last_updated || new Date().toISOString());
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
+        console.error("BPS leaderboard failed:", err);
+        setError(t("fplLive.ui.pages.loadError", "Couldn't load the data. Please try again."));
       } finally {
         setLoading(false);
       }
     },
-    []
+    [t]
   );
 
   useEffect(() => {
@@ -120,11 +122,14 @@ export default function BpsPage() {
           </h1>
           {gameweek && (
             <p className="text-sm text-theme-text-secondary">
-              Gameweek {gameweek}
+              {t("fplLive.ui.overview.heroLabel", { gw: gameweek, defaultValue: "Gameweek {{gw}}" })}
               {lastUpdated && (
                 <span className="ml-2">
                   · {t("leagueTables.updated", "Updated")}:{" "}
-                  {new Date(lastUpdated).toLocaleTimeString()}
+                  {new Date(lastUpdated).toLocaleTimeString(dateLocale(i18n.language), {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               )}
             </p>
@@ -199,19 +204,19 @@ export default function BpsPage() {
                   ? t("bps.fixtureFinished", "Finished")
                   : fixture.started
                     ? `🔴 ${fixture.minutes}'`
-                    : "Upcoming"}
+                    : t("bps.fixtureUpcoming", "Upcoming")}
               </span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs sm:text-sm">
                 <thead className="bg-theme-card-secondary/60 text-theme-text-secondary uppercase">
                   <tr>
-                    <th className="px-2 py-1 text-left">Player</th>
-                    <th className="px-2 py-1 text-center">Pos</th>
-                    <th className="px-2 py-1 text-center">Min</th>
-                    <th className="px-2 py-1 text-center">BPS</th>
-                    <th className="px-2 py-1 text-center">Pred.</th>
-                    <th className="px-2 py-1 text-center">Bonus</th>
+                    <th className="px-2 py-1 text-left">{t("bps.thPlayer", "Player")}</th>
+                    <th className="px-2 py-1 text-center">{t("bps.thPos", "Pos")}</th>
+                    <th className="px-2 py-1 text-center">{t("bps.thMin", "Min")}</th>
+                    <th className="px-2 py-1 text-center">{t("bps.thBps", "BPS")}</th>
+                    <th className="px-2 py-1 text-center">{t("bps.thPred", "Pred.")}</th>
+                    <th className="px-2 py-1 text-center">{t("bps.thBonus", "Bonus")}</th>
                   </tr>
                 </thead>
                 <tbody>

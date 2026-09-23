@@ -78,10 +78,10 @@ function F1RegistrationFormInner() {
       }
     }
     if (!cashDeliveryDate) {
-      newErrors.cashDeliveryDate = "Morate odabrati datum dostave uplate";
+      newErrors.cashDeliveryDate = t("f1:payment.cashDeliveryDateRequired");
     }
     if (!cashConfirmed) {
-      newErrors.cashConfirmed = "Morate potvrditi da ćete dostaviti uplatu";
+      newErrors.cashConfirmed = t("f1:payment.cashConfirmationRequired");
     }
 
     if (!recaptchaToken) {
@@ -442,7 +442,7 @@ function F1RegistrationFormInner() {
                 <span className="w-[22px] h-[22px] rounded-md bg-green-600/10 flex items-center justify-center text-[11px] font-black text-green-600 dark:text-green-400">
                   3
                 </span>
-                Gotovinska uplata
+                {t("f1:registration.cashPayment")}
               </h3>
 
               <div className="rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30 p-4 space-y-4">
@@ -451,12 +451,10 @@ function F1RegistrationFormInner() {
                   <Banknote className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-theme-heading-primary">
-                      Plaćanje gotovinom
+                      {t("f1:payment.cashInfo")}
                     </p>
                     <p className="text-xs text-theme-text-secondary mt-1">
-                      Izaberite datum do kojeg ćete dostaviti uplatu od
-                      &euro;10. Vaša registracija će biti potvrđena nakon
-                      primanja uplate.
+                      {t("f1:payment.cashInfoDescription")}
                     </p>
                   </div>
                 </div>
@@ -465,7 +463,7 @@ function F1RegistrationFormInner() {
                 <div>
                   <label className="text-xs font-semibold text-theme-text-secondary mb-1.5 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" />
-                    Datum dostave uplate
+                    {t("f1:payment.cashDeliveryDate")}
                   </label>
                   <input
                     type="date"
@@ -514,11 +512,11 @@ function F1RegistrationFormInner() {
                     </div>
                   </div>
                   <span className="text-sm text-theme-text-secondary leading-relaxed">
-                    Potvrđujem da ću dostaviti uplatu od{" "}
+                    {t("f1:payment.cashConfirmation")}{" "}
                     <strong className="text-theme-heading-primary">
                       &euro;10
                     </strong>{" "}
-                    do odabranog datuma.
+                    {t("f1:payment.bySelectedDate")}
                   </span>
                 </label>
                 {errors.cashConfirmed && (

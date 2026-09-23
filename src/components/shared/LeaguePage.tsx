@@ -49,7 +49,7 @@ export default function LeaguePage({ leagueId }: LeaguePageProps) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{t("common.error")}</p>
+          <p className="text-red-500 mb-4">{t("error")}</p>
           <p className="text-theme-text-secondary">{error}</p>
         </div>
       </div>

@@ -1,54 +1,47 @@
+import { useTranslation } from "react-i18next";
 import type { FPLActiveChip } from "@/types/fpl";
 
 interface LeagueChipPillProps {
   chip: FPLActiveChip;
   size?: "xs" | "sm";
+  /** Render an em dash when no chip is active (table cells). */
+  showEmpty?: boolean;
 }
 
-const CHIP_LABELS: Record<NonNullable<FPLActiveChip>, string> = {
+export const CHIP_LABELS: Record<NonNullable<FPLActiveChip>, string> = {
   "3xc": "TC",
   bboost: "BB",
   freehit: "FH",
   wildcard: "WC",
 };
 
-const CHIP_COLORS: Record<NonNullable<FPLActiveChip>, string> = {
-  "3xc": "bg-purple-500 text-white",
-  bboost: "bg-orange-500 text-white",
-  freehit: "bg-blue-500 text-white",
-  wildcard: "bg-green-500 text-white",
-};
-
-const CHIP_FULL_NAME: Record<NonNullable<FPLActiveChip>, string> = {
+export const CHIP_FULL_NAME: Record<NonNullable<FPLActiveChip>, string> = {
   "3xc": "Triple Captain",
   bboost: "Bench Boost",
   freehit: "Free Hit",
   wildcard: "Wildcard",
 };
 
+/** Active chip marker — one quiet accent style for every chip. */
 export default function LeagueChipPill({
   chip,
   size = "xs",
+  showEmpty = true,
 }: LeagueChipPillProps) {
+  const { t } = useTranslation("fpl");
   if (!chip) {
+    if (!showEmpty) return null;
     return (
-      <span
-        className={`${
-          size === "xs" ? "text-xs" : "text-sm"
-        } text-theme-text-secondary`}
-        aria-label="No chip"
-      >
+      <span className="text-xs text-theme-text-muted" aria-label={t("fplLive.ui.leagues.noChip", "No chip")}>
         —
       </span>
     );
   }
-  const sizeClasses =
-    size === "xs"
-      ? "text-[10px] px-1.5 py-0.5"
-      : "text-xs px-2 py-0.5";
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-md font-bold uppercase tracking-wide ${CHIP_COLORS[chip]} ${sizeClasses}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-md font-semibold uppercase tracking-wide bg-violet-500/10 text-violet-600 ring-1 ring-inset ring-violet-500/25 dark:text-violet-300 ${
+        size === "xs" ? "px-1.5 py-px text-[9px]" : "px-2 py-0.5 text-[11px]"
+      }`}
       title={CHIP_FULL_NAME[chip]}
     >
       {CHIP_LABELS[chip]}

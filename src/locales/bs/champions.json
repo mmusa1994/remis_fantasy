@@ -1,16 +1,16 @@
 {
   "title": "Champions League Fantasy",
-  "subtitle": "Evropska Elitna Konkurencija",
+  "subtitle": "Evropska elitna konkurencija",
   "description": "Najprestižnija fantasy liga koja uključuje najbolje evropske timove i igrače",
   "registration": {
-    "title": "Champions League Registracija",
+    "title": "Champions League registracija",
     "description": "Pridružite se najuzbudljivijoj evropskoj fantasy ligi! Registrujte se za Champions League Fantasy i takmičite se za nagrade od",
     "entryFee": "Kotizacija: 15 KM/ 8 EUR",
     "deadline": "Krajnji rok registracije: 16. septembar 2025.",
     "maxParticipants": "Ograničeno na 50 učesnika",
     "registerTitle": "REGISTRACIJA 2025/26",
     "prizesSummary": "🏆 NAGRADE CHAMPIONS LEAGUE 2025/26 🏆",
-    "entryFeeLabel": "Entry Fee:"
+    "entryFeeLabel": "Kotizacija:"
   },
   "form": {
     "personalInfo": "Lični podaci",
@@ -42,11 +42,11 @@
     "bankName": "Banka:",
     "purpose": "Svrha uplate:",
     "location": "Lokacija:",
-    "contact": "Za keš plaćanje prvo kontaktirajte instagram racun remis_fantasy",
+    "contact": "Za plaćanje gotovinom prvo kontaktirajte Instagram račun remis_fantasy",
     "bankNote": "Svrha uplate: Uplata za Fantasy Football",
     "personalDetails": "Osobni podaci:",
     "personalInfo": "Muhamed Musa, Marcela Snajdera 4b, 71000, Sarajevo, Mob: 062 211 128",
-    "bankAccounts": "Bankovni racuni:",
+    "bankAccounts": "Bankovni računi:",
     "unicreditAccount": "Uni Credit - 3385702526328703",
     "raiffeisenAccount": "Raiffeisen - 1613000045433885",
     "asaAccount": "ASA Banka - 1341055000007711",
@@ -70,7 +70,7 @@
     "fileTypeError": "Dozvoljene su samo slike i PDF fajlovi"
   },
   "success": {
-    "title": "Registracija Potvrđena!",
+    "title": "Registracija potvrđena!",
     "message": "Uspješno ste se registrovali za Champions League Fantasy ligu 2025/26. Plaćanje je primljeno i vaša registracija je aktivna.",
     "welcome": "Dobrodošli u Champions League Fantasy 2025/26!",
     "emailSent": "Poslali smo vam email sa potvrdom prijave.",
@@ -86,12 +86,12 @@
     "emailExists": "Email adresa je već registrovana za Champions League. Molimo koristite drugu email adresu."
   },
   "prizes": {
-    "title": "Champions League Nagrade",
+    "title": "Champions League nagrade",
     "subtitle": "Osvojite nevjerovatne nagrade tokom cijele Champions League sezone",
-    "totalPrizePool": "100% Ukupan Fond Nagrada",
+    "totalPrizePool": "100% ukupan fond nagrada",
     "cards": {
       "1": {
-        "title": "1. Mjesto",
+        "title": "1. mjesto",
         "subtitle": "Pobjednik Champions League 🏆",
         "description": "Ultimativna nagrada za šampiona Champions League Fantasy lige! Dominiraj evropskom elitom i osvoji pobjedu.",
         "features": [
@@ -104,7 +104,7 @@
         ]
       },
       "2": {
-        "title": "2. Mjesto",
+        "title": "2. mjesto",
         "subtitle": "Drugoplasirani Champions League 🥈",
         "description": "Impresivan drugi rezultat u najprestižnijoj evropskoj fantasy ligi zaslužuje priznanje i nagradu.",
         "features": [
@@ -116,7 +116,7 @@
         ]
       },
       "3": {
-        "title": "3. Mjesto",
+        "title": "3. mjesto",
         "subtitle": "Bronzana medalja Champions League 🥉",
         "description": "Podijumski završetak u Champions League Fantasy ligi je izuzetan uspjeh vrijedan proslave.",
         "features": [
@@ -128,7 +128,7 @@
         ]
       },
       "4": {
-        "title": "CL Besplatna",
+        "title": "CL besplatna",
         "subtitle": "Najviše bodova u jednom kolu 🌟",
         "description": "Originalni dres nasumičnog kluba 25/26",
         "features": [
@@ -147,16 +147,50 @@
     "Pratite mečeve uživo"
   ],
   "gallery": {
-    "title": "Champions League Galerija",
+    "title": "Champions League galerija",
     "championsWall": {
       "title": "Zid Šampiona",
       "subtitle": "Naši Champions League fantasy šampioni kroz sezone"
     },
     "awards": {
-      "title": "Dodjela Nagrada",
+      "title": "Dodjela nagrada",
       "subtitle": "Momenti sa prethodnih dodjela nagrada"
     },
     "emptyChampions": "Šampioni će uskoro biti prikazani ovdje.",
     "emptyGallery": "Fotografije sa dodjela nagrada će uskoro biti prikazane ovdje."
+  },
+  "table": {
+    "pageTitle": "Champions League tabele",
+    "finishedTag": "(Završena)",
+    "loading": "Učitavanje Champions League tabele...",
+    "errorTitle": "Greška prilikom učitavanja tabele",
+    "fetchFailed": "Podaci tabele nisu učitani",
+    "unknownError": "Nepoznata greška",
+    "seasonFinished": "Sezona završena",
+    "totalPrizeFund": "Ukupan nagradni fond",
+    "comingSoon": "Uskoro",
+    "participants_one": "{{count}} učesnik",
+    "participants_other": "{{count}} učesnika",
+    "fundShare": "{{pct}}% fonda",
+    "place1": "1. mjesto",
+    "place2": "2. mjesto",
+    "place3": "3. mjesto",
+    "newSeasonSoon": "Nova sezona 2026/27 uskoro počinje — tabela će biti dostupna kada liga krene.",
+    "paidLeague": "REMIS CL Paid Liga",
+    "finalStandings": "Konačan poredak — sezona završena",
+    "currentStandings": "Trenutno stanje",
+    "colRank": "Rang",
+    "colPlayer": "Igrač",
+    "colLastMd": "Zadnje kolo",
+    "colTotal": "Ukupno",
+    "colPrize": "Nagrada",
+    "footerFinished": "Sezona je završena — prikazan je konačan poredak.",
+    "footerUpdates": "Podaci se ažuriraju nakon svakog kola.",
+    "footerParticipants_one": "Ukupno {{count}} učesnik u ligi.",
+    "footerParticipants_other": "Ukupno {{count}} učesnika u ligi.",
+    "prizeFundLine": "Nagradni fond: {{total}} | 1. mjesto: {{first}} | 2. mjesto: {{second}} | 3. mjesto: {{third}}",
+    "prizeSplitLine": "Raspodjela nagradnog fonda: 1. mjesto {{first}}% | 2. mjesto {{second}}% | 3. mjesto {{third}}%",
+    "participants_few": "{{count}} učesnika",
+    "footerParticipants_few": "Ukupno {{count}} učesnika u ligi."
   }
 }

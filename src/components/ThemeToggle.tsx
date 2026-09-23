@@ -3,10 +3,12 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const ThemeToggle = React.memo(function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation("common");
 
   return (
     <motion.button
@@ -15,7 +17,7 @@ const ThemeToggle = React.memo(function ThemeToggle() {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       aria-label={
-        theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+        theme === "dark" ? t("themeToggle.toLight") : t("themeToggle.toDark")
       }
     >
       <motion.div

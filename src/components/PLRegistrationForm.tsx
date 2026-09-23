@@ -74,7 +74,7 @@ function PLRegistrationFormInner() {
 
     // At least one league must be selected
     if (!mainLeague && !h2hSelected) {
-      newErrors.league = "Morate odabrati barem jednu ligu";
+      newErrors.league = t("common:registrationForm.leagueRequired");
     }
 
     if (!formData.first_name.trim()) {
@@ -98,10 +98,10 @@ function PLRegistrationFormInner() {
       }
     }
     if (!cashDeliveryDate) {
-      newErrors.cashDeliveryDate = "Morate odabrati datum dostave uplate";
+      newErrors.cashDeliveryDate = t("common:registrationForm.deliveryDateRequired");
     }
     if (!cashConfirmed) {
-      newErrors.cashConfirmed = "Morate potvrditi da ćete dostaviti uplatu";
+      newErrors.cashConfirmed = t("common:registrationForm.confirmRequired");
     }
     if (!recaptchaToken) {
       newErrors.recaptcha = t("common:validation.recaptchaRequired");
@@ -199,11 +199,11 @@ function PLRegistrationFormInner() {
             </h2>
 
             <h3 className="text-lg xs:text-xl md:text-2xl font-bold mb-3 text-theme-heading-primary">
-              Registracija
+              {t("common:registrationForm.registration")}
             </h3>
 
             <p className="text-theme-text-secondary text-xs xs:text-sm md:text-base max-w-xl mx-auto leading-relaxed font-medium text-center px-2">
-              Pridružite se Premier League Fantasy ligi za sezonu 2026/27 i takmičite se za nagrade.
+              {t("common:registrationForm.plIntro")}
             </p>
           </div>
 
@@ -214,8 +214,8 @@ function PLRegistrationFormInner() {
                 <Trophy className="w-[18px] h-[18px] text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">Takmičenje za nagrade</div>
-                <div className="text-xs text-theme-text-secondary">Osvoji nagradni fond</div>
+                <div className="font-bold text-theme-heading-primary text-sm">{t("common:registrationForm.perkPrizes")}</div>
+                <div className="text-xs text-theme-text-secondary">{t("common:registrationForm.perkPrizesSub")}</div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3.5 rounded-lg bg-purple-500/[0.03] dark:bg-purple-500/[0.06] border border-purple-500/10 hover:border-purple-500/20 transition-colors">
@@ -223,8 +223,8 @@ function PLRegistrationFormInner() {
                 <BarChart3 className="w-[18px] h-[18px] text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">Live tabela</div>
-                <div className="text-xs text-theme-text-secondary">Rezultati u realnom vremenu</div>
+                <div className="font-bold text-theme-heading-primary text-sm">{t("common:registrationForm.perkLive")}</div>
+                <div className="text-xs text-theme-text-secondary">{t("common:registrationForm.perkLiveSub")}</div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3.5 rounded-lg bg-purple-500/[0.03] dark:bg-purple-500/[0.06] border border-purple-500/10 hover:border-purple-500/20 transition-colors">
@@ -232,8 +232,8 @@ function PLRegistrationFormInner() {
                 <Gift className="w-[18px] h-[18px] text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">Mjesečne nagrade</div>
-                <div className="text-xs text-theme-text-secondary">Specijalne nagrade po kolu</div>
+                <div className="font-bold text-theme-heading-primary text-sm">{t("common:registrationForm.perkMonthly")}</div>
+                <div className="text-xs text-theme-text-secondary">{t("common:registrationForm.perkMonthlySub")}</div>
               </div>
             </div>
           </div>
@@ -248,7 +248,7 @@ function PLRegistrationFormInner() {
               <div className={`text-white px-5 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all duration-300 ${
                 tierPrice > 0 ? "bg-purple-600 shadow-purple-600/20" : "bg-gray-400 shadow-gray-400/20"
               }`}>
-                <span className="text-sm font-medium opacity-90">Kotizacija</span>
+                <span className="text-sm font-medium opacity-90">{t("common:registrationForm.entryFee")}</span>
                 <span className="text-lg font-black">{tierPrice > 0 ? <>&euro;{tierPrice}</> : "—"}</span>
               </div>
             </div>
@@ -257,7 +257,7 @@ function PLRegistrationFormInner() {
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
                 <span className="w-[22px] h-[22px] rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">1</span>
-                Odaberite ligu
+                {t("common:registrationForm.chooseLeague")}
               </h3>
 
               {/* Main league: Standard or Premium (mutually exclusive) */}
@@ -282,9 +282,9 @@ function PLRegistrationFormInner() {
                   <div className={`text-sm font-bold mb-1 ${
                     mainLeague === "standard" ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
                   }`}>
-                    Standard Liga
+                    {t("common:registrationForm.standardLeague")}
                   </div>
-                  <div className="text-xs text-theme-text-secondary">Osnovna liga sa takmičenjem za nagrade</div>
+                  <div className="text-xs text-theme-text-secondary">{t("common:registrationForm.standardLeagueDesc")}</div>
                   <div className={`text-lg font-black mt-2 ${
                     mainLeague === "standard" ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
                   }`}>
@@ -312,9 +312,9 @@ function PLRegistrationFormInner() {
                   <div className={`text-sm font-bold mb-1 ${
                     mainLeague === "premium" ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
                   }`}>
-                    Premium Liga
+                    {t("common:registrationForm.premiumLeague")}
                   </div>
-                  <div className="text-xs text-theme-text-secondary">Premium liga sa većim nagradnim fondom</div>
+                  <div className="text-xs text-theme-text-secondary">{t("common:registrationForm.premiumLeagueDesc")}</div>
                   <div className={`text-lg font-black mt-2 ${
                     mainLeague === "premium" ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
                   }`}>
@@ -341,9 +341,9 @@ function PLRegistrationFormInner() {
                     <div className={`text-sm font-bold mb-1 ${
                       h2hSelected ? "text-purple-600 dark:text-purple-400" : "text-theme-heading-primary"
                     }`}>
-                      H2H Liga
+                      {t("common:registrationForm.h2hLeague")}
                     </div>
-                    <div className="text-xs text-theme-text-secondary">Head-to-Head takmičenje (može se kombinovati)</div>
+                    <div className="text-xs text-theme-text-secondary">{t("common:registrationForm.h2hLeagueDesc")}</div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className={`text-lg font-black ${
@@ -376,7 +376,7 @@ function PLRegistrationFormInner() {
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
                 <span className="w-[22px] h-[22px] rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">2</span>
-                Lični podaci
+                {t("common:registrationForm.personalInfo")}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -392,7 +392,7 @@ function PLRegistrationFormInner() {
                       className={inputClassName("first_name")}
                     />
                     <label htmlFor="pl_first_name" className={labelClassName("first_name", formData.first_name)}>
-                      Ime *
+                      {t("common:registrationForm.firstName")} *
                     </label>
                   </div>
                   {errors.first_name && (
@@ -415,7 +415,7 @@ function PLRegistrationFormInner() {
                       className={inputClassName("last_name")}
                     />
                     <label htmlFor="pl_last_name" className={labelClassName("last_name", formData.last_name)}>
-                      Prezime *
+                      {t("common:registrationForm.lastName")} *
                     </label>
                   </div>
                   {errors.last_name && (
@@ -432,7 +432,7 @@ function PLRegistrationFormInner() {
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
                 <span className="w-[22px] h-[22px] rounded-md bg-purple-600/10 flex items-center justify-center text-[11px] font-black text-purple-600 dark:text-purple-400">3</span>
-                Kontakt informacije
+                {t("common:registrationForm.contactInfo")}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -448,7 +448,7 @@ function PLRegistrationFormInner() {
                       className={inputClassName("email")}
                     />
                     <label htmlFor="pl_email" className={labelClassName("email", formData.email)}>
-                      Email *
+                      {t("common:registrationForm.email")} *
                     </label>
                   </div>
                   {errors.email && (
@@ -471,7 +471,7 @@ function PLRegistrationFormInner() {
                       className={inputClassName("phone")}
                     />
                     <label htmlFor="pl_phone" className={labelClassName("phone", formData.phone)}>
-                      Telefon *
+                      {t("common:registrationForm.phone")} *
                     </label>
                   </div>
                   {errors.phone && (
@@ -498,7 +498,7 @@ function PLRegistrationFormInner() {
                     className={inputClassName("notes")}
                   />
                   <label htmlFor="pl_notes" className={labelClassName("notes", formData.notes)}>
-                    Napomene
+                    {t("common:registrationForm.notes")}
                   </label>
                 </div>
               </div>
@@ -512,7 +512,7 @@ function PLRegistrationFormInner() {
                 </div>
                 <div className="relative flex justify-center">
                   <span className="bg-theme-background px-4 text-xs text-theme-text-secondary font-medium uppercase tracking-wider">
-                    Način plaćanja
+                    {t("common:registrationForm.paymentMethod")}
                   </span>
                 </div>
               </div>
@@ -523,10 +523,10 @@ function PLRegistrationFormInner() {
                 </div>
                 <div>
                   <div className="text-sm font-bold text-green-600 dark:text-green-400">
-                    Gotovina
+                    {t("common:registrationForm.cash")}
                   </div>
                   <div className="text-[10px] text-theme-text-secondary mt-0.5">
-                    Dostava gotovine — jedini dostupni način plaćanja
+                    {t("common:registrationForm.cashOnly")}
                   </div>
                 </div>
               </div>
@@ -536,7 +536,7 @@ function PLRegistrationFormInner() {
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
                 <span className="w-[22px] h-[22px] rounded-md bg-green-600/10 flex items-center justify-center text-[11px] font-black text-green-600 dark:text-green-400">4</span>
-                Gotovinska uplata
+                {t("common:registrationForm.cashPayment")}
               </h3>
 
               <div className="rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30 p-4 space-y-4">
@@ -544,8 +544,8 @@ function PLRegistrationFormInner() {
                 <div className="flex items-start gap-3 p-3 rounded-md bg-green-500/5 border border-green-500/15">
                   <Banknote className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-theme-heading-primary">Plaćanje gotovinom</p>
-                    <p className="text-xs text-theme-text-secondary mt-1">Izaberite datum do kojeg ćete dostaviti uplatu od &euro;{tierPrice}. Vaša registracija će biti potvrđena nakon primanja uplate.</p>
+                    <p className="text-sm font-medium text-theme-heading-primary">{t("common:registrationForm.payingCash")}</p>
+                    <p className="text-xs text-theme-text-secondary mt-1">{t("common:registrationForm.cashInfo", { amount: `€${tierPrice}` })}</p>
                   </div>
                 </div>
 
@@ -553,7 +553,7 @@ function PLRegistrationFormInner() {
                 <div>
                   <label className="text-xs font-semibold text-theme-text-secondary mb-1.5 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" />
-                    Datum dostave uplate
+                    {t("common:registrationForm.deliveryDate")}
                   </label>
                   <input
                     type="date"
@@ -600,7 +600,7 @@ function PLRegistrationFormInner() {
                     </div>
                   </div>
                   <span className="text-sm text-theme-text-secondary leading-relaxed">
-                    Potvrđujem da ću dostaviti uplatu od <strong className="text-theme-heading-primary">&euro;{tierPrice}</strong> do odabranog datuma.
+                    {t("common:registrationForm.confirmPrefix")} <strong className="text-theme-heading-primary">&euro;{tierPrice}</strong> {t("common:registrationForm.confirmSuffix")}
                   </span>
                 </label>
                 {errors.cashConfirmed && (
@@ -646,18 +646,18 @@ function PLRegistrationFormInner() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Obrađujem registraciju...
+                  {t("common:registrationForm.processing")}
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-2.5">
                   <CheckCircle className="w-[18px] h-[18px]" />
-                  Registruj se
+                  {t("common:registrationForm.submit")}
                 </span>
               )}
             </button>
 
             <p className="text-center text-[11px] text-theme-text-secondary mt-3 leading-relaxed">
-              Vaši podaci se prenose preko 256-bit SSL enkripcije i koriste se isključivo za potrebe lige.
+              {t("common:registrationForm.secureNote")}
             </p>
           </form>
         </div>

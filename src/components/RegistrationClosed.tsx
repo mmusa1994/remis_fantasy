@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 import { Lock } from "lucide-react";
 
 type Accent = "purple" | "blue" | "red";
@@ -26,11 +27,12 @@ interface Props {
  */
 export default function RegistrationClosed({
   message,
-  title = "Registracija Zatvorena",
+  title,
   accent = "purple",
   children,
 }: Props) {
   const { theme } = useTheme();
+  const { t } = useTranslation("common");
   const dark = theme === "dark";
   const accentClass = dark
     ? ACCENT_CLASSES[accent].dark
@@ -51,7 +53,7 @@ export default function RegistrationClosed({
               dark ? "text-white" : "text-gray-900"
             }`}
           >
-            {title}
+            {title ?? t("registrationClosed.title")}
           </h2>
           <p className={`text-sm ${dark ? "text-gray-400" : "text-gray-600"}`}>
             {message}

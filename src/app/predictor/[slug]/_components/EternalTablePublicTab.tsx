@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Trophy, Target } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type Column = {
   id: string;
@@ -32,6 +33,7 @@ export default function EternalTablePublicTab({
   theme: "dark" | "light";
   ac: Record<string, string>;
 }) {
+  const { t } = useTranslation("predictor");
   const [pointsData, setPointsData] = useState<TableData>({
     columns: [],
     entries: [],
@@ -86,7 +88,7 @@ export default function EternalTablePublicTab({
           (eData.entries?.length || 0) > 0;
         if (!hasPoints && hasExact) setActiveType("exact");
       } catch (e: any) {
-        if (!cancelled) setError(e.message || "Greška");
+        if (!cancelled) setError(e.message || "error");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -104,7 +106,7 @@ export default function EternalTablePublicTab({
         }`}
       >
         <Trophy className="w-5 h-5 mr-2 animate-pulse" />
-        Učitavanje...
+        {t("loading")}
       </div>
     );
   }
@@ -123,12 +125,10 @@ export default function EternalTablePublicTab({
   const { columns, entries } = data;
 
   const isExact = activeType === "exact";
-  const title = isExact
-    ? "Vječna tabela tačnih pogodaka"
-    : "Vječna tabela osvojenih poena";
+  const title = isExact ? t("eternal.titleExact") : t("eternal.titlePoints");
   const subtitle = isExact
-    ? "Historijski tačno pogođeni rezultati po takmičenjima"
-    : "Historijski rezultati po takmičenjima";
+    ? t("eternal.subtitleExact")
+    : t("eternal.subtitlePoints");
   const accent = isExact ? "emerald" : "amber";
 
   const rankColor = (idx: number, isDark: boolean) => {
@@ -162,7 +162,7 @@ export default function EternalTablePublicTab({
             }`}
           >
             <Trophy className="w-4 h-4" />
-            Tabela poena
+            {t("eternal.tabPoints")}
           </button>
           <button
             onClick={() => setActiveType("exact")}
@@ -177,7 +177,7 @@ export default function EternalTablePublicTab({
             }`}
           >
             <Target className="w-4 h-4" />
-            Tabela tačnih rezultata
+            {t("eternal.tabExact")}
           </button>
         </div>
       )}
@@ -389,7 +389,7 @@ export default function EternalTablePublicTab({
                     dark ? "text-gray-500" : "text-gray-500"
                   }`}
                 >
-                  Igrač
+                  {t("eternal.player")}
                 </th>
                 {columns.map((c) => (
                   <th
@@ -424,7 +424,7 @@ export default function EternalTablePublicTab({
                         : "text-amber-600"
                   }`}
                 >
-                  Ukupno
+                  {t("eternal.total")}
                 </th>
               </tr>
             </thead>

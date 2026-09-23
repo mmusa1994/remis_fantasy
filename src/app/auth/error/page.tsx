@@ -2,20 +2,20 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 
-const authErrors: { [key: string]: string } = {
-  Configuration: "There is a problem with the server configuration.",
-  AccessDenied: "You do not have permission to sign in.",
-  Verification: "The verification token has expired or has already been used.",
-  Default: "Unable to sign in.",
-};
+// NextAuth error codes with a dedicated message (auth:authError.<code>)
+const KNOWN_ERRORS = ["Configuration", "AccessDenied", "Verification"];
 
 export default function AuthErrorPage() {
   const searchParams = useSearchParams();
   const { theme } = useTheme();
+  const { t } = useTranslation("auth");
   const error = searchParams.get("error");
-  const errorMessage = authErrors[error as string] || authErrors.Default;
+  const errorMessage = t(
+    `authError.${error && KNOWN_ERRORS.includes(error) ? error : "Default"}`
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-theme-background px-4">
@@ -33,7 +33,7 @@ export default function AuthErrorPage() {
         </div>
         
         <h1 className={`text-xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-          Authentication Error
+          {t("authError.title")}
         </h1>
         
         <p className={`text-sm mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -44,7 +44,7 @@ export default function AuthErrorPage() {
           <div className={`text-xs p-3 rounded-lg mb-6 ${
             theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
           }`}>
-            Error code: {error}
+            {t("authError.code", { code: error })}
           </div>
         )}
 
@@ -53,7 +53,7 @@ export default function AuthErrorPage() {
             href="/login"
             className="w-full inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-purple-600 hover:bg-purple-700 transition-colors"
           >
-            Try Again
+            {t("authError.tryAgain")}
           </Link>
           
           <Link
@@ -64,7 +64,7 @@ export default function AuthErrorPage() {
                 : 'border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
           >
-            Go Home
+            {t("authError.goHome")}
           </Link>
         </div>
       </div>

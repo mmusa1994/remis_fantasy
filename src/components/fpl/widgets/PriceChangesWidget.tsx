@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
+import { dateLocale } from "../live/ui";
 import { getTeamColors } from "@/lib/team-colors";
 import TeamJersey from "../TeamJersey";
 import type { PriceChangesWidgetData } from "@/types/fpl-enhanced";
@@ -30,7 +31,7 @@ export default function PriceChangesWidget({
   maxItems = 10,
 }: PriceChangesWidgetProps) {
   const { theme } = useTheme();
-  const { t } = useTranslation("fpl");
+  const { t, i18n } = useTranslation("fpl");
   const [data, setData] = useState<PriceChangesWidgetData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -307,7 +308,7 @@ export default function PriceChangesWidget({
                   {t("teamPlanner.widgets.yourTeam")}
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-                  {data.user_team_impact.affected_players} {t("teamPlanner.widgets.playersAffected")}
+                  {t("teamPlanner.widgets.playersAffectedCount", { count: data.user_team_impact.affected_players })}
                 </p>
               </div>
               <div
@@ -399,7 +400,9 @@ export default function PriceChangesWidget({
           {/* Last Update */}
           {lastUpdate && (
             <div className="text-[10px] text-slate-400 dark:text-slate-500 text-center pt-2 border-t border-slate-200/60 dark:border-slate-700/40">
-              {t("teamPlanner.widgets.updatedAt", { time: lastUpdate.toLocaleTimeString() })}
+              {t("teamPlanner.widgets.updatedAt", {
+                time: lastUpdate.toLocaleTimeString(dateLocale(i18n.language), { hour: "2-digit", minute: "2-digit" }),
+              })}
             </div>
           )}
         </div>

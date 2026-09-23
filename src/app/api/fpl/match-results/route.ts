@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { mockMatchResults, mockStats } from "@/data/mock-match-results";
+import { FPLBonusService } from "@/services/fpl/bonus.service";
+
+/**
+ * Gameweek match results built from each fixture's own `stats` block, so
+ * scorers, assists, own goals, cards and bonus belong to the right match
+ * (the old version attributed a player's whole-GW stats to every fixture of
+ * his team, which double-counted in double gameweeks).
+ *
+ * Per-fixture FPL points come from the live `explain` breakdown.
+ */
+
+const FPL_BASE = "https://fantasy.premierleague.com/api";
 
 // Cache for bootstrap data to reduce API calls
 let bootstrapCache: any = null;
@@ -10,13 +22,35 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const USE_MOCK_DATA =
   process.env.NODE_ENV === "development" && process.env.FPL_USE_MOCK === "true";
 
+const bonusService = FPLBonusService.getInstance();
+
+async function fplJson(path: string, revalidate: number) {
+  const response = await fetch(`${FPL_BASE}${path}`, {
+    headers: { "User-Agent": "Mozilla/5.0" },
+    next: { revalidate },
+  });
+  if (!response.ok) {
+    throw new Error(`${path} failed: ${response.status} ${response.statusText}`);
+  }
+  return response.json();
+}
+
+type StatEntry = { value: number; element: number };
+
+const statEntries = (fixture: any, identifier: string, side: "h" | "a"): StatEntry[] => {
+  const stat = Array.isArray(fixture?.stats)
+    ? fixture.stats.find((s: any) => s?.identifier === identifier)
+    : null;
+  const list = stat && Array.isArray(stat[side]) ? stat[side] : [];
+  return list.filter((e: any) => typeof e?.element === "number" && e.value > 0);
+};
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const gameweek = parseInt(url.searchParams.get("gameweek") || "1");
   const statsOnly = url.searchParams.get("stats") === "true";
 
   try {
-
     if (isNaN(gameweek) || gameweek < 1 || gameweek > 38) {
       return NextResponse.json(
         {
@@ -60,312 +94,283 @@ export async function GET(request: NextRequest) {
     if (bootstrapCache && now - bootstrapCacheTime < CACHE_TTL) {
       bootstrapData = bootstrapCache;
     } else {
-      const bootstrapResponse = await fetch(
-        "https://fantasy.premierleague.com/api/bootstrap-static/"
-      );
-
-      if (!bootstrapResponse.ok) {
-        throw new Error(
-          `Bootstrap API failed: ${bootstrapResponse.status} ${bootstrapResponse.statusText}`
-        );
-      }
-
-      bootstrapData = await bootstrapResponse.json();
+      bootstrapData = await fplJson("/bootstrap-static/", 300);
       bootstrapCache = bootstrapData;
       bootstrapCacheTime = now;
     }
 
-    // Fetch fixtures using the correct endpoint
-    const fixturesResponse = await fetch(
-      "https://fantasy.premierleague.com/api/fixtures/"
-    );
+    // Only this gameweek's fixtures, and the live data behind them. A short
+    // revalidate keeps polling cheap without going stale during matches.
+    const [gameweekFixtures, liveData] = await Promise.all([
+      fplJson(`/fixtures/?event=${gameweek}`, 30),
+      fplJson(`/event/${gameweek}/live/`, 30),
+    ]);
 
-    if (!fixturesResponse.ok) {
-      throw new Error(
-        `Fixtures API failed: ${fixturesResponse.status} ${fixturesResponse.statusText}`
-      );
+    const teamsMap = new Map<number, any>();
+    const playersMap = new Map<number, any>();
+    bootstrapData.teams.forEach((team: any) => teamsMap.set(team.id, team));
+    bootstrapData.elements.forEach((player: any) => playersMap.set(player.id, player));
+
+    const liveElements: any[] = liveData.elements || [];
+
+    // Per-fixture FPL points and defensive contributions from `explain`.
+    const fixturePoints = new Map<string, number>();
+    const fixtureDefcon = new Map<number, Array<{ element: number; value: number; points: number }>>();
+    const fixtureElements = new Map<number, Set<number>>();
+    for (const element of liveElements) {
+      for (const explain of element.explain || []) {
+        const fixtureId = explain.fixture;
+        const stats: any[] = explain.stats || [];
+        const points = stats.reduce((sum, s) => sum + (s.points || 0), 0);
+        fixturePoints.set(`${fixtureId}:${element.id}`, points);
+
+        const minutes = stats.find((s) => s.identifier === "minutes")?.value || 0;
+        if (minutes > 0) {
+          if (!fixtureElements.has(fixtureId)) fixtureElements.set(fixtureId, new Set());
+          fixtureElements.get(fixtureId)!.add(element.id);
+        }
+
+        const defcon = stats.find((s) => s.identifier === "defensive_contribution");
+        if (defcon && defcon.points > 0) {
+          if (!fixtureDefcon.has(fixtureId)) fixtureDefcon.set(fixtureId, []);
+          fixtureDefcon.get(fixtureId)!.push({
+            element: element.id,
+            value: defcon.value,
+            points: defcon.points,
+          });
+        }
+      }
     }
 
-    const allFixtures = await fixturesResponse.json();
-
-    // Filter fixtures for the specified gameweek
-    const gameweekFixtures = allFixtures.filter(
-      (f: any) => f.event === gameweek
-    );
-
-    // Fetch live gameweek data
-    const liveResponse = await fetch(
-      `https://fantasy.premierleague.com/api/event/${gameweek}/live/`
-    );
-
-    if (!liveResponse.ok) {
-      throw new Error(
-        `Live API failed: ${liveResponse.status} ${liveResponse.statusText}`
-      );
-    }
-
-    const liveData = await liveResponse.json();
-
-    // Create team lookup maps
-    const teamsMap = new Map();
-    const playersMap = new Map();
-
-    bootstrapData.teams.forEach((team: any) => {
-      teamsMap.set(team.id, team);
-    });
-
-    bootstrapData.elements.forEach((player: any) => {
-      playersMap.set(player.id, player);
-    });
-
-    // Return stats only if requested
-    if (statsOnly) {
-      // Calculate key stats from live data
-      const liveElements = liveData.elements || [];
-      const topPerformers = liveElements
-        .filter((e: any) => e.stats.total_points > 0)
-        .sort((a: any, b: any) => b.stats.total_points - a.stats.total_points)
-        .slice(0, 10);
-
-      const stats = {
-        totalGoals: liveElements.reduce(
-          (sum: number, e: any) => sum + (e.stats.goals_scored || 0),
-          0
-        ),
-        totalAssists: liveElements.reduce(
-          (sum: number, e: any) => sum + (e.stats.assists || 0),
-          0
-        ),
-        highestScorer:
-          topPerformers.length > 0
-            ? {
-                id: topPerformers[0].id,
-                web_name:
-                  playersMap.get(topPerformers[0].id)?.web_name || "Unknown",
-                team_id: playersMap.get(topPerformers[0].id)?.team || 0,
-                ownership_top10k:
-                  playersMap.get(topPerformers[0].id)?.selected_by_percent || 0,
-                points: topPerformers[0].stats.total_points,
-              }
-            : null,
-        mostOwned: null, // Can be calculated if needed
-        biggestDifferential: null, // Can be calculated if needed
-        gameweek: gameweek,
-        timestamp: new Date().toISOString(),
+    const toPlayer = (elementId: number, fixtureId?: number) => {
+      const player = playersMap.get(elementId);
+      const ownership = parseFloat(player?.selected_by_percent || "0");
+      return {
+        id: elementId,
+        web_name: player?.web_name || "Unknown",
+        team_id: player?.team || 0,
+        team_code: player?.team_code,
+        element_type: player?.element_type,
+        // Kept under its old name for compatibility — this is overall ownership.
+        ownership_top10k: ownership,
+        ownership_overall: ownership,
+        points:
+          fixtureId !== undefined
+            ? fixturePoints.get(`${fixtureId}:${elementId}`) ?? 0
+            : 0,
       };
+    };
 
+    // GW-level summary (also served on its own with ?stats=true)
+    const topPerformer = [...liveElements]
+      .filter((e: any) => (e.stats?.total_points || 0) > 0)
+      .sort((a: any, b: any) => b.stats.total_points - a.stats.total_points)[0];
+
+    const fixturesList: any[] = Array.isArray(gameweekFixtures) ? gameweekFixtures : [];
+    const isOver = (f: any) => !!(f.finished || f.finished_provisional);
+
+    const summary = {
+      totalGoals: liveElements.reduce(
+        (sum: number, e: any) => sum + (e.stats?.goals_scored || 0),
+        0
+      ),
+      totalAssists: liveElements.reduce(
+        (sum: number, e: any) => sum + (e.stats?.assists || 0),
+        0
+      ),
+      highestScorer: topPerformer
+        ? {
+            ...toPlayer(topPerformer.id),
+            points: topPerformer.stats.total_points,
+          }
+        : null,
+      mostOwned: null,
+      biggestDifferential: null,
+      matchesTotal: fixturesList.length,
+      matchesFinished: fixturesList.filter(isOver).length,
+      matchesLive: fixturesList.filter((f) => f.started && !isOver(f)).length,
+      matchesUpcoming: fixturesList.filter((f) => !f.started).length,
+      gameweek,
+      timestamp: new Date().toISOString(),
+    };
+
+    if (statsOnly) {
       return NextResponse.json({
         success: true,
-        data: stats,
+        data: summary,
         gameweek,
         timestamp: new Date().toISOString(),
       });
     }
 
-    // Process match results
+    const matchResults = fixturesList
+      .slice()
+      .sort((a, b) => {
+        const ta = a.kickoff_time ? Date.parse(a.kickoff_time) : Infinity;
+        const tb = b.kickoff_time ? Date.parse(b.kickoff_time) : Infinity;
+        return ta - tb || a.id - b.id;
+      })
+      .map((fixture: any) => {
+        const fid = fixture.id;
+        const homeTeam = teamsMap.get(fixture.team_h);
+        const awayTeam = teamsMap.get(fixture.team_a);
 
-    const matchResults = gameweekFixtures.map((fixture: any) => {
-      const homeTeam = teamsMap.get(fixture.team_h);
-      const awayTeam = teamsMap.get(fixture.team_a);
-
-      // Get live stats for players in this fixture
-      const fixtureElements =
-        liveData.elements?.filter((e: any) => {
-          const player = playersMap.get(e.id);
-          return (
-            player &&
-            (player.team === fixture.team_h || player.team === fixture.team_a)
+        const goalsFor = (side: "h" | "a") => {
+          const goals = statEntries(fixture, "goals_scored", side).flatMap((g) =>
+            Array.from({ length: g.value }, () => ({
+              player: toPlayer(g.element, fid),
+              minute: 0, // FPL does not expose goal minutes
+              own_goal: false,
+              penalty: false,
+            }))
           );
-        }) || [];
+          // An own goal by the other side counts for this team.
+          const ownGoals = statEntries(fixture, "own_goals", side === "h" ? "a" : "h").flatMap(
+            (g) =>
+              Array.from({ length: g.value }, () => ({
+                player: toPlayer(g.element, fid),
+                minute: 0,
+                own_goal: true,
+                penalty: false,
+              }))
+          );
+          return [...goals, ...ownGoals];
+        };
 
-      // Extract goals and assists from live data
-      const homeGoals: any[] = [];
-      const awayGoals: any[] = [];
-      const homeAssists: any[] = [];
-      const awayAssists: any[] = [];
+        const assistsFor = (side: "h" | "a") =>
+          statEntries(fixture, "assists", side).flatMap((a) =>
+            Array.from({ length: a.value }, () => ({
+              player: toPlayer(a.element, fid),
+              minute: 0,
+              goal_player_id: 0,
+            }))
+          );
 
-      fixtureElements.forEach((element: any) => {
-        const player = playersMap.get(element.id);
-        if (!player) return;
+        const players = (identifier: string) =>
+          (["h", "a"] as const).flatMap((side) =>
+            statEntries(fixture, identifier, side).map((e) => ({
+              player: toPlayer(e.element, fid),
+              side: side === "h" ? "home" : "away",
+              value: e.value,
+            }))
+          );
 
-        const isHomeTeam = player.team === fixture.team_h;
+        // Bonus: official once FPL marks the fixture finished, otherwise
+        // predicted from live BPS with the official tie-break rules.
+        const bpsAll = [...statEntries(fixture, "bps", "h"), ...statEntries(fixture, "bps", "a")].sort(
+          (a, b) => b.value - a.value
+        );
+        const bpsById = new Map(bpsAll.map((e) => [e.element, e.value]));
+        let predictions = fixture.started ? bonusService.predictBonusForFixture(fixture) : [];
+        if (fixture.finished && predictions.length === 0) {
+          predictions = bonusService.predictBonusForFixture({ ...fixture, finished: false });
+        }
+        const bonusById = new Map(predictions.map((p) => [p.element, p.predicted_bonus]));
+        const bonus = predictions
+          .filter((p) => p.predicted_bonus > 0)
+          .map((p) => ({
+            player: toPlayer(p.element, fid),
+            bps: bpsById.get(p.element) ?? p.bps,
+            bonus: p.predicted_bonus,
+          }))
+          .sort((a, b) => b.bonus - a.bonus || b.bps - a.bps);
 
-        // Add goals
-        for (let i = 0; i < (element.stats.goals_scored || 0); i++) {
-          const goalData = {
-            player: {
-              id: player.id,
-              web_name: player.web_name,
-              team_id: player.team,
-              ownership_top10k: parseFloat(player.selected_by_percent || "0"),
-              points: element.stats.total_points,
-            },
-            minute: 45, // Default minute (can't get exact from API)
-            own_goal: false,
-            penalty: false, // Could be determined from explain array if needed
-          };
+        const bpsTop = bpsAll.slice(0, 6).map((e) => ({
+          player: toPlayer(e.element, fid),
+          bps: e.value,
+          bonus: bonusById.get(e.element) || 0,
+        }));
 
-          if (isHomeTeam) {
-            homeGoals.push(goalData);
-          } else {
-            awayGoals.push(goalData);
-          }
+        // Top FPL scorers of this match, per side.
+        const played = Array.from(fixtureElements.get(fid) || []);
+        const performers = (teamId: number) =>
+          played
+            .filter((id) => playersMap.get(id)?.team === teamId)
+            .map((id) => toPlayer(id, fid))
+            .filter((p) => p.points > 0)
+            .sort((a, b) => b.points - a.points)
+            .slice(0, 5);
+
+        const ownership = (teamId: number) => {
+          const team = played.filter((id) => playersMap.get(id)?.team === teamId);
+          if (team.length === 0) return 0;
+          const total = team.reduce(
+            (sum, id) => sum + parseFloat(playersMap.get(id)?.selected_by_percent || "0"),
+            0
+          );
+          return Math.round((total / team.length) * 10) / 10;
+        };
+
+        let status = "SCHEDULED";
+        let minutes = 0;
+        if (isOver(fixture)) {
+          status = "FT";
+          minutes = fixture.minutes || 90;
+        } else if (fixture.started) {
+          status = "LIVE";
+          minutes = fixture.minutes || 0;
         }
 
-        // Add assists
-        for (let i = 0; i < (element.stats.assists || 0); i++) {
-          const assistData = {
-            player: {
-              id: player.id,
-              web_name: player.web_name,
-              team_id: player.team,
-              ownership_top10k: parseFloat(player.selected_by_percent || "0"),
-              points: element.stats.total_points,
-            },
-            minute: 45, // Default minute
-            goal_player_id: 0, // Would need additional processing to link
-          };
-
-          if (isHomeTeam) {
-            homeAssists.push(assistData);
-          } else {
-            awayAssists.push(assistData);
-          }
-        }
+        return {
+          fixture_id: fid,
+          gameweek: fixture.event,
+          home_team: {
+            id: fixture.team_h,
+            code: homeTeam?.code,
+            name: homeTeam?.name || "Unknown",
+            short_name: homeTeam?.short_name || "UNK",
+          },
+          away_team: {
+            id: fixture.team_a,
+            code: awayTeam?.code,
+            name: awayTeam?.name || "Unknown",
+            short_name: awayTeam?.short_name || "UNK",
+          },
+          home_score: fixture.team_h_score ?? 0,
+          away_score: fixture.team_a_score ?? 0,
+          status,
+          kickoff_time: fixture.kickoff_time,
+          minutes,
+          bonus_status: !fixture.started ? "none" : fixture.finished ? "official" : "provisional",
+          home_goals: goalsFor("h"),
+          away_goals: goalsFor("a"),
+          home_assists: assistsFor("h"),
+          away_assists: assistsFor("a"),
+          top_performers: {
+            home: performers(fixture.team_h),
+            away: performers(fixture.team_a),
+          },
+          bonus,
+          bps_top: bpsTop,
+          yellow_cards: players("yellow_cards"),
+          red_cards: players("red_cards"),
+          penalties_saved: players("penalties_saved"),
+          penalties_missed: players("penalties_missed"),
+          saves: players("saves").sort((a, b) => b.value - a.value),
+          defensive_contributions: (fixtureDefcon.get(fid) || [])
+            .map((d) => ({
+              player: toPlayer(d.element, fid),
+              side: playersMap.get(d.element)?.team === fixture.team_h ? "home" : "away",
+              value: d.value,
+              points: d.points,
+            }))
+            .sort((a, b) => b.value - a.value),
+          home_ownership: ownership(fixture.team_h),
+          away_ownership: ownership(fixture.team_a),
+        };
       });
-
-      // Get top performers for each team (by points)
-      const homePerformers = fixtureElements
-        .filter((e: any) => {
-          const player = playersMap.get(e.id);
-          return (
-            player && player.team === fixture.team_h && e.stats.total_points > 0
-          );
-        })
-        .sort((a: any, b: any) => b.stats.total_points - a.stats.total_points)
-        .slice(0, 5)
-        .map((e: any) => {
-          const player = playersMap.get(e.id);
-          return {
-            id: player.id,
-            web_name: player.web_name,
-            team_id: player.team,
-            ownership_top10k: parseFloat(player.selected_by_percent || "0"),
-            points: e.stats.total_points,
-          };
-        });
-
-      const awayPerformers = fixtureElements
-        .filter((e: any) => {
-          const player = playersMap.get(e.id);
-          return (
-            player && player.team === fixture.team_a && e.stats.total_points > 0
-          );
-        })
-        .sort((a: any, b: any) => b.stats.total_points - a.stats.total_points)
-        .slice(0, 5)
-        .map((e: any) => {
-          const player = playersMap.get(e.id);
-          return {
-            id: player.id,
-            web_name: player.web_name,
-            team_id: player.team,
-            ownership_top10k: parseFloat(player.selected_by_percent || "0"),
-            points: e.stats.total_points,
-          };
-        });
-
-      // Calculate team ownership percentages
-      const homeOwnership =
-        fixtureElements
-          .filter((e: any) => {
-            const player = playersMap.get(e.id);
-            return player && player.team === fixture.team_h;
-          })
-          .reduce((sum: number, e: any) => {
-            const player = playersMap.get(e.id);
-            return sum + parseFloat(player?.selected_by_percent || "0");
-          }, 0) /
-        Math.max(
-          fixtureElements.filter((e: any) => {
-            const player = playersMap.get(e.id);
-            return player && player.team === fixture.team_h;
-          }).length,
-          1
-        );
-
-      const awayOwnership =
-        fixtureElements
-          .filter((e: any) => {
-            const player = playersMap.get(e.id);
-            return player && player.team === fixture.team_a;
-          })
-          .reduce((sum: number, e: any) => {
-            const player = playersMap.get(e.id);
-            return sum + parseFloat(player?.selected_by_percent || "0");
-          }, 0) /
-        Math.max(
-          fixtureElements.filter((e: any) => {
-            const player = playersMap.get(e.id);
-            return player && player.team === fixture.team_a;
-          }).length,
-          1
-        );
-
-      // Determine status
-      let status = "SCHEDULED";
-      let minutes = 0;
-
-      if (fixture.started && !fixture.finished) {
-        status = "LIVE";
-        minutes = fixture.minutes || 0;
-      } else if (fixture.finished) {
-        status = "FT";
-        minutes = 90;
-      }
-
-      return {
-        fixture_id: fixture.id,
-        gameweek: fixture.event,
-        home_team: {
-          id: fixture.team_h,
-          name: homeTeam?.name || "Unknown",
-          short_name: homeTeam?.short_name || "UNK",
-        },
-        away_team: {
-          id: fixture.team_a,
-          name: awayTeam?.name || "Unknown",
-          short_name: awayTeam?.short_name || "UNK",
-        },
-        home_score: fixture.team_h_score || 0,
-        away_score: fixture.team_a_score || 0,
-        status: status,
-        kickoff_time: fixture.kickoff_time,
-        minutes: minutes,
-        home_goals: homeGoals,
-        away_goals: awayGoals,
-        home_assists: homeAssists,
-        away_assists: awayAssists,
-        top_performers: {
-          home: homePerformers,
-          away: awayPerformers,
-        },
-        home_ownership: Math.round(homeOwnership * 10) / 10,
-        away_ownership: Math.round(awayOwnership * 10) / 10,
-      };
-    });
 
     return NextResponse.json({
       success: true,
       data: matchResults,
+      summary,
       gameweek,
       count: matchResults.length,
       timestamp: new Date().toISOString(),
       data_sources: {
-        fixtures_api: "https://fantasy.premierleague.com/api/fixtures/",
-        live_api: `https://fantasy.premierleague.com/api/event/${gameweek}/live/`,
-        bootstrap_api:
-          "https://fantasy.premierleague.com/api/bootstrap-static/",
+        fixtures_api: `${FPL_BASE}/fixtures/?event=${gameweek}`,
+        live_api: `${FPL_BASE}/event/${gameweek}/live/`,
+        bootstrap_api: `${FPL_BASE}/bootstrap-static/`,
       },
     });
   } catch (error) {

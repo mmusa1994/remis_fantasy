@@ -96,7 +96,7 @@ export default function SignUpPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to send OTP");
+        throw new Error(data.error || t("otpSendError"));
       }
 
       setOtpSent(true);
@@ -203,7 +203,7 @@ export default function SignUpPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to resend OTP");
+        throw new Error(data.error || t("otpResendError"));
       }
 
       setOtpSent(true);

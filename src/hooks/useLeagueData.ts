@@ -28,7 +28,7 @@ export const useLeagueData = (leagueType: string) => {
                 id: "premier",
                 name: t("common:home.leagues.premierLeague.title"),
                 title: t("common:home.leagues.premierLeague.title"),
-                subtitle: "Fantasy Liga",
+                subtitle: t("common:fantasyLeague"),
                 description: t("common:home.leagues.premierLeague.description"),
                 logoPath: "/images/logos/pl-logo.png",
                 basePath: "/premier-league",
@@ -41,7 +41,7 @@ export const useLeagueData = (leagueType: string) => {
                 id: "champions",
                 name: t("common:home.leagues.championsLeague.title"),
                 title: t("common:home.leagues.championsLeague.title"),
-                subtitle: "Fantasy Liga",
+                subtitle: t("common:fantasyLeague"),
                 description: t(
                   "common:home.leagues.championsLeague.description"
                 ),
@@ -56,7 +56,7 @@ export const useLeagueData = (leagueType: string) => {
                 id: "f1",
                 name: t("common:home.leagues.f1Fantasy.title"),
                 title: t("common:home.leagues.f1Fantasy.title"),
-                subtitle: "Fantasy Liga",
+                subtitle: t("common:fantasyLeague"),
                 description: t("common:home.leagues.f1Fantasy.description"),
                 logoPath: "/images/logos/f1.png",
                 basePath: "/f1-fantasy",
@@ -68,7 +68,7 @@ export const useLeagueData = (leagueType: string) => {
                 id: "premier",
                 name: t("common:home.leagues.premierLeague.title"),
                 title: t("common:home.leagues.premierLeague.title"),
-                subtitle: "Fantasy Liga",
+                subtitle: t("common:fantasyLeague"),
                 description: t("common:home.leagues.premierLeague.description"),
                 logoPath: "/images/logos/pl-logo.png",
                 basePath: "/premier-league",
@@ -171,7 +171,7 @@ export const useLeagueData = (leagueType: string) => {
         setLeagueData(transformedData);
       } catch (err) {
         console.error("Error loading league data:", err);
-        setError(t("common.error"));
+        setError(t("common:error"));
       } finally {
         setLoading(false);
       }
@@ -255,7 +255,7 @@ export const useLeaguePrizes = (leagueType: string) => {
         setData(translatedPrizes);
       } catch (err) {
         console.error("Error loading prizes:", err);
-        setError(t("common.error"));
+        setError(t("common:error"));
       } finally {
         setLoading(false);
       }
@@ -288,7 +288,7 @@ export const usePageContent = (leagueType: string) => {
                 id: "premier",
                 name: t("common:home.leagues.premierLeague.title"),
                 title: t("common:home.leagues.premierLeague.title"),
-                subtitle: "Fantasy Liga",
+                subtitle: t("common:fantasyLeague"),
                 description: t("common:home.leagues.premierLeague.description"),
                 logoPath: "/images/logos/pl-logo.png",
                 primaryColor: "purple",
@@ -299,7 +299,7 @@ export const usePageContent = (leagueType: string) => {
                 id: "champions",
                 name: t("common:home.leagues.championsLeague.title"),
                 title: t("common:home.leagues.championsLeague.title"),
-                subtitle: "Fantasy Liga",
+                subtitle: t("common:fantasyLeague"),
                 description: t(
                   "common:home.leagues.championsLeague.description"
                 ),
@@ -312,7 +312,7 @@ export const usePageContent = (leagueType: string) => {
                 id: "f1",
                 name: t("common:home.leagues.f1Fantasy.title"),
                 title: t("common:home.leagues.f1Fantasy.title"),
-                subtitle: "Fantasy Liga",
+                subtitle: t("common:fantasyLeague"),
                 description: t("common:home.leagues.f1Fantasy.description"),
                 logoPath: "/images/logos/f1-logo.png",
                 primaryColor: "red",
@@ -322,7 +322,7 @@ export const usePageContent = (leagueType: string) => {
                 id: "premier",
                 name: t("common:home.leagues.premierLeague.title"),
                 title: t("common:home.leagues.premierLeague.title"),
-                subtitle: "Fantasy Liga",
+                subtitle: t("common:fantasyLeague"),
                 description: t("common:home.leagues.premierLeague.description"),
                 logoPath: "/images/logos/pl-logo.png",
                 primaryColor: "purple",
@@ -333,7 +333,7 @@ export const usePageContent = (leagueType: string) => {
         setData(getContentData());
       } catch (err) {
         console.error("Error loading content:", err);
-        setError(t("common.error"));
+        setError(t("common:error"));
       } finally {
         setLoading(false);
       }
@@ -422,7 +422,7 @@ export const useHomepageData = () => {
         });
       } catch (err) {
         console.error("Error loading homepage data:", err);
-        setError("Failed to load homepage data");
+        setError(t("common:error"));
       } finally {
         setLoading(false);
       }
@@ -525,7 +525,7 @@ export const useRegistrationConfig = (leagueType: string) => {
         setData(getRegistrationConfig());
       } catch (err) {
         console.error("Error loading registration config:", err);
-        setError(t("common.error"));
+        setError(t("common:error"));
       } finally {
         setLoading(false);
       }

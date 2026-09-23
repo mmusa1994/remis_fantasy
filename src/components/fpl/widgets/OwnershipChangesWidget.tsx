@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
+import { dateLocale } from "../live/ui";
 import { getTeamColors } from "@/lib/team-colors";
 import TeamJersey from "../TeamJersey";
 import type { OwnershipChangesWidgetData } from "@/types/fpl-enhanced";
@@ -44,7 +45,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
     timeframe = "1h",
   }: OwnershipChangesWidgetProps) {
     const { theme } = useTheme();
-    const { t } = useTranslation("fpl");
+    const { t, i18n } = useTranslation("fpl");
     const [data, setData] = useState<OwnershipChangesWidgetData | null>(null);
     const [loading, setLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -193,9 +194,8 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
 
         const handleErrorResponse = (err: any) => {
           console.error("[OwnershipChangesWidget] Error:", err);
-          setError(
-            "FPL API appears unavailable. Ownership changes could not be loaded."
-          );
+          // Translated at render time so it follows the UI language
+          setError("teamPlanner.widgets.fplApiUnavailableOwnership");
         };
 
         // Check cache first
@@ -396,7 +396,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
             </button>
           </div>
           <div className="text-sm py-3 rounded-md border border-yellow-300 bg-yellow-50 text-yellow-900 text-center">
-            {error}
+            {t(error)}
           </div>
           <div className="mt-3 flex justify-center">
             <button
@@ -404,7 +404,7 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
               className="text-theme-text-secondary hover:text-theme-foreground text-sm underline"
               disabled={loading}
             >
-              {loading ? "Refreshing..." : "Retry now"}
+              {loading ? t("teamPlanner.widgets.refreshing") : t("teamPlanner.widgets.retryNow")}
             </button>
           </div>
         </div>
@@ -571,7 +571,9 @@ const OwnershipChangesWidget = React.memo<OwnershipChangesWidgetProps>(
             {lastUpdate && (
               <div className="text-[10px] text-slate-400 dark:text-slate-500 text-center pt-2 border-t border-slate-200/60 dark:border-slate-700/40 flex items-center justify-center gap-1">
                 <Clock className="w-2.5 h-2.5" />
-                <span>{t("teamPlanner.widgets.updatedAt", { time: lastUpdate.toLocaleTimeString() })}</span>
+                <span>{t("teamPlanner.widgets.updatedAt", {
+                    time: lastUpdate.toLocaleTimeString(dateLocale(i18n.language), { hour: "2-digit", minute: "2-digit" }),
+                  })}</span>
                 {cacheRef.current && isCacheValid(cacheRef.current) && (
                   <span className="text-emerald-500" title={t("teamPlanner.widgets.fromCache")}>
                     ({t("teamPlanner.widgets.cached")})

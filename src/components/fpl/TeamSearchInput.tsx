@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { MdSearch, MdClose } from "react-icons/md";
-// import { useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
+import { Search, X, Loader2, ChevronRight, ExternalLink } from "lucide-react";
 
 interface TeamSearchInputProps {
   onManagerIdFound: (managerId: number) => void;
@@ -24,6 +24,7 @@ export default function TeamSearchInput({
   placeholder,
   className = "",
 }: TeamSearchInputProps) {
+  const { t } = useTranslation("fpl");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<{
@@ -59,21 +60,14 @@ export default function TeamSearchInput({
 
     setIsSearching(true);
     setIsDropdownOpen(true);
-    
+
     try {
       const response = await fetch(
         `/api/fpl/search-team?q=${encodeURIComponent(searchQuery)}`
       );
       if (response.ok) {
         const result = await response.json();
-        if (result.success) {
-          setSearchResults(result.data);
-          
-          // If we found a manager directly, show it
-          if (result.data.found && result.data.manager) {
-            // Don't auto-load, let user choose
-          }
-        }
+        if (result.success) setSearchResults(result.data);
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -101,184 +95,132 @@ export default function TeamSearchInput({
     }
   };
 
+  const renderManagerRow = (m: ManagerResult) => (
+    <button
+      key={m.id}
+      type="button"
+      onClick={() => handleSelectManager(m.id)}
+      className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-theme-card-secondary"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-theme-heading-primary">
+          {m.team_name || m.name}
+        </p>
+        <p className="mt-0.5 truncate text-[11px] text-theme-text-muted">
+          {m.name} · ID {m.id}
+          {m.overall_rank ? ` · #${m.overall_rank.toLocaleString("en-US")}` : ""}
+        </p>
+      </div>
+      {typeof m.total_points === "number" && m.total_points > 0 && (
+        <span className="shrink-0 text-xs font-semibold tabular-nums text-theme-text-secondary">
+          {m.total_points} {t("fplLive.ui.shell.pts", "pts")}
+        </span>
+      )}
+      <ChevronRight className="h-4 w-4 shrink-0 text-theme-text-muted" />
+    </button>
+  );
+
+  const externalLinks = [
+    {
+      href: `https://www.google.com/search?q=${encodeURIComponent(
+        `"${searchQuery}" FPL manager ID fantasy premier league`
+      )}`,
+      label: "Google",
+    },
+    {
+      href: `https://www.reddit.com/r/FantasyPL/search/?q=${encodeURIComponent(searchQuery)}`,
+      label: "r/FantasyPL",
+    },
+  ];
+
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <div className="relative">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-text-muted" />
         <input
           ref={inputRef}
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => searchQuery && setIsDropdownOpen(true)}
-          placeholder={placeholder || "Search team name or manager ID..."}
-          className="w-full pl-10 pr-10 py-2 text-sm border-2 border-white/30 bg-white/20 text-white rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 placeholder-white/60 backdrop-blur transition-all duration-200"
+          onFocus={() => searchQuery && searchResults && setIsDropdownOpen(true)}
+          placeholder={placeholder || t("fplLive.search.searchInputPlaceholder", "Search team name or manager ID...")}
+          enterKeyHint="search"
+          className="w-full rounded-xl border border-theme-border bg-theme-card-secondary py-2.5 pl-10 pr-10 text-sm text-theme-heading-primary placeholder:text-theme-text-muted transition-colors focus:border-violet-500/60 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
         />
-        
-        <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
-        
-        {(searchQuery || isSearching) && (
-          <button
-            onClick={() => {
-              setSearchQuery("");
-              setSearchResults(null);
-              setIsDropdownOpen(false);
-            }}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white/80"
-          >
-            <MdClose className="w-4 h-4" />
-          </button>
-        )}
-        
-        {isSearching && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin"></div>
-          </div>
+        {isSearching ? (
+          <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-theme-text-muted" />
+        ) : (
+          searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setSearchResults(null);
+                setIsDropdownOpen(false);
+              }}
+              aria-label={t("fplLive.ui.shell.clear", "Clear")}
+              className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-theme-text-muted hover:bg-theme-card-secondary"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )
         )}
       </div>
 
-      {/* Search Dropdown */}
       {isDropdownOpen && searchResults && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto">
-          {/* Direct Manager Found (Manager ID search) */}
+        <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 overflow-y-auto rounded-xl border border-theme-border bg-theme-card shadow-xl">
+          {/* Exact manager ID match */}
           {searchResults.found && searchResults.manager && !searchResults.searchResults && (
-            <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-              <div 
-                className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg p-3 transition-colors"
-                onClick={() => handleSelectManager(searchResults.manager!.id)}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-green-600 dark:text-green-400 text-sm">
-                    ✅ Manager Found
-                  </h4>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    Click to select
-                  </span>
-                </div>
-                
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Player:</span>
-                    <span className="text-gray-600 dark:text-gray-400">{searchResults.manager.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Team:</span>
-                    <span className="text-gray-600 dark:text-gray-400">{searchResults.manager.team_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Manager ID:</span>
-                    <span className="text-gray-600 dark:text-gray-400">{searchResults.manager.id}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Points:</span>
-                    <span className="text-gray-600 dark:text-gray-400">{searchResults.manager.total_points}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Multiple Teams Found (Team name search) */}
-          {searchResults.found && searchResults.teams && searchResults.searchResults && (
-            <div className="p-3">
-              <div className="mb-3">
-                <h4 className="font-semibold text-green-600 dark:text-green-400 text-sm mb-1">
-                  ✅ {searchResults.message}
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Click on a team to select:</p>
-              </div>
-              
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {searchResults.teams.map((team) => (
-                  <div
-                    key={team.id}
-                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 transition-colors"
-                    onClick={() => handleSelectManager(team.id)}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                        {team.name}
-                      </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        ID: {team.id}
-                      </span>
-                    </div>
-                    
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                      Team: <span className="font-medium">{team.team_name}</span>
-                    </div>
-                    
-                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-500">
-                      <span>Points: {team.total_points || 'N/A'}</span>
-                      <span>Rank: {team.overall_rank ? `#${team.overall_rank}` : 'N/A'}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Search Info */}
-              {searchResults.searchInfo && (
-                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                    {searchResults.searchInfo}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* No Results Found - Show search info */}
-          {searchResults.found === false && searchResults.searchInfo && (
-            <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-              <div className="mb-2">
-                <h4 className="font-medium text-yellow-600 dark:text-yellow-400 text-sm">
-                  ⚠️ {searchResults.message}
-                </h4>
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                {searchResults.searchInfo}
-              </div>
-            </div>
-          )}
-
-          {/* Search Suggestions */}
-          {!searchResults.found && !searchResults.hasOwnProperty('found') && (
-            <div className="p-3">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                {searchResults.message}
+            <div className="py-1">
+              <p className="px-3.5 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-theme-text-muted">
+                {t("fplLive.ui.shell.managerFound", "Manager found")}
               </p>
-              
-              <div className="space-y-2">
-                <a
-                  href={`https://www.google.com/search?q=${encodeURIComponent(
-                    `"${searchQuery}" FPL manager ID fantasy premier league`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
-                >
-                  🔍 Search Google for &quot;{searchQuery}&quot;
-                </a>
-                
-                <a
-                  href={`https://www.reddit.com/r/FantasyPL/search/?q=${encodeURIComponent(
-                    searchQuery
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
-                >
-                  🏆 Search FPL Reddit
-                </a>
-                
-                <a
-                  href="https://www.fplgameweek.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
-                >
-                  🎯 Try FPLGameweek
-                </a>
+              {renderManagerRow(searchResults.manager)}
+            </div>
+          )}
+
+          {/* Team name matches */}
+          {searchResults.found && searchResults.teams && searchResults.searchResults && (
+            <div className="py-1">
+              {/* The search API's own message/info text is English-only */}
+              <p className="px-3.5 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-theme-text-muted">
+                {t("fplLive.ui.shell.teamsFound", {
+                  count: searchResults.teams.length,
+                  defaultValue: "{{count}} teams found",
+                })}
+              </p>
+              <div className="divide-y divide-theme-border">
+                {searchResults.teams.map(renderManagerRow)}
+              </div>
+            </div>
+          )}
+
+          {/* Nothing found */}
+          {!searchResults.found && (
+            <div className="px-3.5 py-3">
+              <p className="text-sm font-medium text-theme-heading-secondary">
+                {t("fplLive.ui.shell.noTeamFound", "No team found")}
+              </p>
+              <p className="mt-1 text-xs text-theme-text-muted">
+                {t(
+                  "fplLive.ui.shell.searchHint",
+                  "Try the exact team name, or enter your Manager ID below."
+                )}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {externalLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-lg border border-theme-border px-2.5 py-1 text-xs font-medium text-theme-text-secondary hover:bg-theme-card-secondary"
+                  >
+                    {link.label}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                ))}
               </div>
             </div>
           )}

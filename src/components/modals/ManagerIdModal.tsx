@@ -7,7 +7,6 @@ import { HiXMark, HiShieldCheck, HiExclamationTriangle } from "react-icons/hi2";
 import { BiUser, BiSave, BiRefresh } from "react-icons/bi";
 import { FaQuestionCircle, FaTimesCircle } from "react-icons/fa";
 import { ValidationStatus, ErrorType } from "@/types/validation";
-import { getErrorMessage } from "@/utils/error-messages";
 
 interface ManagerIdModalProps {
   isOpen: boolean;
@@ -37,6 +36,19 @@ export default function ManagerIdModal({
 }: ManagerIdModalProps) {
   const { t } = useTranslation("manager");
   const [managerId, setManagerId] = useState("");
+
+  // Localised copy for each validation error type (see manager.json → validationErrors)
+  const errorCopy = (type: ErrorType) => {
+    const key = `validationErrors.${Object.values(ErrorType).includes(type) ? type : ErrorType.UNKNOWN}`;
+    const suggestions = t(`${key}.suggestions`, { returnObjects: true });
+    return {
+      title: t(`${key}.title`),
+      description: t(`${key}.description`),
+      suggestions: Array.isArray(suggestions) ? (suggestions as string[]) : [],
+      retryText: t(`${key}.retry`),
+      fallbackText: t(`${key}.fallback`),
+    };
+  };
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,15 +108,15 @@ export default function ManagerIdModal({
 
   const getValidationMessage = () => {
     if (validationStatus.isValidating) {
-      return "Validating Manager ID with FPL servers...";
+      return t("validatingWithFpl");
     }
     
     if (validationStatus.isRetrying) {
-      return `Retrying validation... (Attempt ${validationStatus.retryCount + 1})`;
+      return t("retryingAttempt", { attempt: validationStatus.retryCount + 1 });
     }
     
     if (validationStatus.errorDetails) {
-      const errorInfo = getErrorMessage(validationStatus.errorDetails.type);
+      const errorInfo = errorCopy(validationStatus.errorDetails.type);
       return {
         title: errorInfo.title,
         description: errorInfo.description,
@@ -298,7 +310,7 @@ export default function ManagerIdModal({
                     className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400 text-white rounded-lg transition-colors"
                   >
                     <BiRefresh className="w-4 h-4" />
-                    <span>{getErrorMessage(validationStatus.errorDetails.type).retryText || 'Retry'}</span>
+                    <span>{errorCopy(validationStatus.errorDetails.type).retryText || t("retry")}</span>
                   </button>
                 )}
                 
@@ -311,7 +323,7 @@ export default function ManagerIdModal({
                     className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white rounded-lg transition-colors"
                   >
                     <BiSave className="w-4 h-4" />
-                    <span>{getErrorMessage(validationStatus.errorDetails.type).fallbackText || 'Save Anyway'}</span>
+                    <span>{errorCopy(validationStatus.errorDetails.type).fallbackText || t("saveAnyway")}</span>
                   </button>
                 )}
                 

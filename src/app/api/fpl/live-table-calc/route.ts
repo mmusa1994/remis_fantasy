@@ -344,6 +344,7 @@ export async function GET(request: NextRequest) {
           second_name: p.second_name,
           web_name: p.web_name,
           team: p.team,
+          team_code: p.team_code,
           element_type: p.element_type,
         })),
         fpl_teams: teams,

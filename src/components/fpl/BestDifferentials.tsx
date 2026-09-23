@@ -47,11 +47,11 @@ export default function BestDifferentials() {
       }
     } catch (error) {
       console.error("Error fetching differentials data:", error);
-      setError(error instanceof Error ? error.message : "Unknown error");
+      setError(t("fplLive.ui.pages.loadError", "Couldn't load the data. Please try again."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchDiamondData();
@@ -124,24 +124,27 @@ export default function BestDifferentials() {
         <div className="flex items-center gap-3">
           <div className="w-full">
             <h3 className="font-semibold text-red-800 dark:text-red-300 mb-2">
-              {t("common.error")}
+              {t("fplLive.ui.pages.errorTitle", "Something went wrong")}
             </h3>
             <p className="text-red-600 dark:text-red-400 text-sm mb-4">{error}</p>
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-                FPL API Currently Not Available
+                {t("fplLive.ui.pages.fplApiDownTitle", "FPL API currently not available")}
               </h4>
               <p className="text-yellow-700 dark:text-yellow-300 text-xs mb-3">
-                The Fantasy Premier League API is temporarily unavailable. This may be due to high traffic or maintenance.
+                {t(
+                  "fplLive.ui.pages.fplApiDownText",
+                  "The Fantasy Premier League API is temporarily unavailable. This may be due to high traffic or maintenance."
+                )}
               </p>
               <button 
                 onClick={() => window.location.reload()}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
               >
-                Refresh Page
+                {t("fplLive.ui.pages.refreshPage", "Refresh page")}
               </button>
               <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-                Or wait a few minutes and try again
+                {t("fplLive.ui.pages.waitAndRetry", "Or wait a few minutes and try again")}
               </p>
             </div>
           </div>

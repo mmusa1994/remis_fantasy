@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { dateLocale } from "@/components/fpl/live/ui";
 import { getTeamColors, registerFplTeams } from "@/lib/team-colors";
 import TeamJersey from "@/components/fpl/TeamJersey";
 import TeamSelect from "@/components/fpl/TeamSelect";
@@ -187,15 +188,16 @@ function calculatePrediction(
   const prob = isRiser ? result.prob_up : result.prob_down;
   const delta = Math.round(Math.min(100, Math.max(0, prob * 100)));
 
+  // Translation key suffix (prices.*), rendered with t() in the rows
   let change_time: string;
   if (delta >= 90) {
-    change_time = "Tonight";
+    change_time = "tonight";
   } else if (delta >= 75) {
-    change_time = "Tomorrow";
+    change_time = "tomorrow";
   } else if (delta >= 55) {
-    change_time = "2 days";
+    change_time = "twoDays";
   } else {
-    change_time = ">2 days";
+    change_time = "moreThan2Days";
   }
 
   const target_reached = result.signal !== "neutral";
@@ -234,7 +236,7 @@ function getStatusFlag(status: string): string {
 type SortKey = "delta" | "price" | "net" | "ownership" | "form";
 
 export default function PricesPage() {
-  const { t } = useTranslation("fpl");
+  const { t, i18n } = useTranslation("fpl");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [risers, setRisers] = useState<PricePlayer[]>([]);
@@ -400,13 +402,12 @@ export default function PricesPage() {
       setRisers(riserList);
       setFallers(fallerList);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load price data"
-      );
+      console.error("Price data failed:", err);
+      setError(t("fplLive.ui.pages.loadError", "Couldn't load the data. Please try again."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchData();
@@ -524,7 +525,7 @@ export default function PricesPage() {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="bg-theme-card border border-theme-border rounded-lg p-8 text-center">
             <p className="text-theme-foreground font-medium mb-2">
-              {t("common.error")}
+              {t("fplLive.ui.pages.errorTitle", "Something went wrong")}
             </p>
             <p className="text-theme-text-secondary text-sm mb-4">{error}</p>
             <button
@@ -650,7 +651,10 @@ export default function PricesPage() {
             <p>{t("prices.updateInfo")}</p>
             <p>
               {t("prices.lastUpdated")}:{" "}
-              {new Date().toLocaleTimeString()}
+              {new Date().toLocaleTimeString(dateLocale(i18n.language), {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </p>
           </div>
         </div>
@@ -738,7 +742,7 @@ function PriceTable({
               </th>
               <th className="px-3 py-2.5 text-center w-36">
                 <SortButton
-                  label="Delta"
+                  label={t("prices.progress", "Progress")}
                   sortKeyName="delta"
                   className="justify-center"
                 />
@@ -810,6 +814,7 @@ function PlayerRowDesktop({
   player: PricePlayer;
   isRiser: boolean;
 }) {
+  const { t } = useTranslation("fpl");
   const teamColors = getTeamColors(player.team);
   const isTarget = player.target_reached;
   const seasonChange = player.now_cost - player.cost_change_start;
@@ -904,7 +909,7 @@ function PlayerRowDesktop({
           {player.selected_by_percent.toFixed(1)}%
         </span>
         <div className="text-xs text-theme-text-secondary tabular-nums">
-          {player.form.toFixed(1)} form
+          {t("prices.formValue", { value: player.form.toFixed(1), defaultValue: "{{value}} form" })}
         </div>
       </td>
 
@@ -915,7 +920,7 @@ function PlayerRowDesktop({
             isTarget ? "text-theme-foreground" : "text-theme-text-secondary"
           }`}
         >
-          {player.change_time}
+          {t(`prices.${player.change_time}`)}
         </span>
       </td>
     </tr>
@@ -931,6 +936,7 @@ function PlayerRowMobile({
   player: PricePlayer;
   isRiser: boolean;
 }) {
+  const { t } = useTranslation("fpl");
   const teamColors = getTeamColors(player.team);
   const isTarget = player.target_reached;
 
@@ -995,7 +1001,7 @@ function PlayerRowMobile({
             {formatNet(player.net_transfers)}
           </span>
           <div className="text-xs text-theme-text-secondary">
-            {player.selected_by_percent.toFixed(1)}% own
+            {t("prices.ownedPct", { pct: player.selected_by_percent.toFixed(1), defaultValue: "{{pct}}% owned" })}
           </div>
         </div>
       </div>
@@ -1008,7 +1014,7 @@ function PlayerRowMobile({
             isTarget ? "text-theme-foreground" : "text-theme-text-secondary"
           }`}
         >
-          {player.change_time}
+          {t(`prices.${player.change_time}`)}
         </span>
       </div>
     </div>

@@ -78,10 +78,10 @@ function CLRegistrationFormInner() {
       }
     }
     if (!cashDeliveryDate) {
-      newErrors.cashDeliveryDate = "Morate odabrati datum dostave uplate";
+      newErrors.cashDeliveryDate = t("common:registrationForm.deliveryDateRequired");
     }
     if (!cashConfirmed) {
-      newErrors.cashConfirmed = "Morate potvrditi da ćete dostaviti uplatu";
+      newErrors.cashConfirmed = t("common:registrationForm.confirmRequired");
     }
     if (!recaptchaToken) {
       newErrors.recaptcha = t("common:validation.recaptchaRequired");
@@ -178,11 +178,11 @@ function CLRegistrationFormInner() {
             </h2>
 
             <h3 className="text-lg xs:text-xl md:text-2xl font-bold mb-3 text-theme-heading-primary">
-              Registracija
+              {t("common:registrationForm.registration")}
             </h3>
 
             <p className="text-theme-text-secondary text-xs xs:text-sm md:text-base max-w-xl mx-auto leading-relaxed font-medium text-center px-2">
-              Pridružite se Champions League Fantasy ligi za sezonu 2026/27 i takmičite se za nagrade.
+              {t("common:registrationForm.clIntro")}
             </p>
           </div>
 
@@ -193,8 +193,8 @@ function CLRegistrationFormInner() {
                 <Trophy className="w-[18px] h-[18px] text-blue-700 dark:text-blue-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">Takmičenje za nagrade</div>
-                <div className="text-xs text-theme-text-secondary">Osvoji nagradni fond</div>
+                <div className="font-bold text-theme-heading-primary text-sm">{t("common:registrationForm.perkPrizes")}</div>
+                <div className="text-xs text-theme-text-secondary">{t("common:registrationForm.perkPrizesSub")}</div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3.5 rounded-lg bg-blue-500/[0.03] dark:bg-blue-500/[0.06] border border-blue-500/10 hover:border-blue-500/20 transition-colors">
@@ -202,8 +202,8 @@ function CLRegistrationFormInner() {
                 <BarChart3 className="w-[18px] h-[18px] text-blue-700 dark:text-blue-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">Live tabela</div>
-                <div className="text-xs text-theme-text-secondary">Rezultati u realnom vremenu</div>
+                <div className="font-bold text-theme-heading-primary text-sm">{t("common:registrationForm.perkLive")}</div>
+                <div className="text-xs text-theme-text-secondary">{t("common:registrationForm.perkLiveSub")}</div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3.5 rounded-lg bg-blue-500/[0.03] dark:bg-blue-500/[0.06] border border-blue-500/10 hover:border-blue-500/20 transition-colors">
@@ -211,8 +211,8 @@ function CLRegistrationFormInner() {
                 <Gift className="w-[18px] h-[18px] text-blue-700 dark:text-blue-400" />
               </div>
               <div>
-                <div className="font-bold text-theme-heading-primary text-sm">Nagrade po kolu</div>
-                <div className="text-xs text-theme-text-secondary">Specijalne nagrade po utakmici</div>
+                <div className="font-bold text-theme-heading-primary text-sm">{t("common:registrationForm.perkMatchday")}</div>
+                <div className="text-xs text-theme-text-secondary">{t("common:registrationForm.perkMatchdaySub")}</div>
               </div>
             </div>
           </div>
@@ -225,7 +225,7 @@ function CLRegistrationFormInner() {
             {/* Price badge */}
             <div className="flex justify-center -mt-10 sm:-mt-11 mb-7">
               <div className="bg-blue-700 text-white px-5 py-2 rounded-lg shadow-md shadow-blue-700/20 flex items-center gap-2">
-                <span className="text-sm font-medium opacity-90">Kotizacija</span>
+                <span className="text-sm font-medium opacity-90">{t("common:registrationForm.entryFee")}</span>
                 <span className="text-lg font-black">20 KM / &euro;10</span>
               </div>
             </div>
@@ -234,7 +234,7 @@ function CLRegistrationFormInner() {
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
                 <span className="w-[22px] h-[22px] rounded-md bg-blue-700/10 flex items-center justify-center text-[11px] font-black text-blue-700 dark:text-blue-400">1</span>
-                Lični podaci
+                {t("common:registrationForm.personalInfo")}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -250,7 +250,7 @@ function CLRegistrationFormInner() {
                       className={inputClassName("first_name")}
                     />
                     <label htmlFor="cl_first_name" className={labelClassName("first_name", formData.first_name)}>
-                      Ime *
+                      {t("common:registrationForm.firstName")} *
                     </label>
                   </div>
                   {errors.first_name && (
@@ -273,7 +273,7 @@ function CLRegistrationFormInner() {
                       className={inputClassName("last_name")}
                     />
                     <label htmlFor="cl_last_name" className={labelClassName("last_name", formData.last_name)}>
-                      Prezime *
+                      {t("common:registrationForm.lastName")} *
                     </label>
                   </div>
                   {errors.last_name && (
@@ -290,7 +290,7 @@ function CLRegistrationFormInner() {
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
                 <span className="w-[22px] h-[22px] rounded-md bg-blue-700/10 flex items-center justify-center text-[11px] font-black text-blue-700 dark:text-blue-400">2</span>
-                Kontakt informacije
+                {t("common:registrationForm.contactInfo")}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -306,7 +306,7 @@ function CLRegistrationFormInner() {
                       className={inputClassName("email")}
                     />
                     <label htmlFor="cl_email" className={labelClassName("email", formData.email)}>
-                      Email *
+                      {t("common:registrationForm.email")} *
                     </label>
                   </div>
                   {errors.email && (
@@ -329,7 +329,7 @@ function CLRegistrationFormInner() {
                       className={inputClassName("phone")}
                     />
                     <label htmlFor="cl_phone" className={labelClassName("phone", formData.phone)}>
-                      Telefon *
+                      {t("common:registrationForm.phone")} *
                     </label>
                   </div>
                   {errors.phone && (
@@ -356,7 +356,7 @@ function CLRegistrationFormInner() {
                     className={inputClassName("notes")}
                   />
                   <label htmlFor="cl_notes" className={labelClassName("notes", formData.notes)}>
-                    Napomene
+                    {t("common:registrationForm.notes")}
                   </label>
                 </div>
               </div>
@@ -370,7 +370,7 @@ function CLRegistrationFormInner() {
                 </div>
                 <div className="relative flex justify-center">
                   <span className="bg-theme-background px-4 text-xs text-theme-text-secondary font-medium uppercase tracking-wider">
-                    Način plaćanja
+                    {t("common:registrationForm.paymentMethod")}
                   </span>
                 </div>
               </div>
@@ -381,10 +381,10 @@ function CLRegistrationFormInner() {
                 </div>
                 <div>
                   <div className="text-sm font-bold text-green-600 dark:text-green-400">
-                    Gotovina
+                    {t("common:registrationForm.cash")}
                   </div>
                   <div className="text-[10px] text-theme-text-secondary mt-0.5">
-                    Dostava gotovine — jedini dostupni način plaćanja
+                    {t("common:registrationForm.cashOnly")}
                   </div>
                 </div>
               </div>
@@ -394,22 +394,22 @@ function CLRegistrationFormInner() {
             <div className="mb-6">
               <h3 className="text-sm xs:text-base font-bold mb-3 text-theme-heading-primary flex items-center gap-2">
                 <span className="w-[22px] h-[22px] rounded-md bg-green-600/10 flex items-center justify-center text-[11px] font-black text-green-600 dark:text-green-400">3</span>
-                Gotovinska uplata
+                {t("common:registrationForm.cashPayment")}
               </h3>
 
               <div className="rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30 p-4 space-y-4">
                 <div className="flex items-start gap-3 p-3 rounded-md bg-green-500/5 border border-green-500/15">
                   <Banknote className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-theme-heading-primary">Plaćanje gotovinom</p>
-                    <p className="text-xs text-theme-text-secondary mt-1">Izaberite datum do kojeg ćete dostaviti uplatu od 20 KM (&euro;10). Vaša registracija će biti potvrđena nakon primanja uplate.</p>
+                    <p className="text-sm font-medium text-theme-heading-primary">{t("common:registrationForm.payingCash")}</p>
+                    <p className="text-xs text-theme-text-secondary mt-1">{t("common:registrationForm.cashInfo", { amount: "20 KM (€10)" })}</p>
                   </div>
                 </div>
 
                 <div>
                   <label className="text-xs font-semibold text-theme-text-secondary mb-1.5 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" />
-                    Datum dostave uplate
+                    {t("common:registrationForm.deliveryDate")}
                   </label>
                   <input
                     type="date"
@@ -455,7 +455,7 @@ function CLRegistrationFormInner() {
                     </div>
                   </div>
                   <span className="text-sm text-theme-text-secondary leading-relaxed">
-                    Potvrđujem da ću dostaviti uplatu od <strong className="text-theme-heading-primary">20 KM (&euro;10)</strong> do odabranog datuma.
+                    {t("common:registrationForm.confirmPrefix")} <strong className="text-theme-heading-primary">20 KM (&euro;10)</strong> {t("common:registrationForm.confirmSuffix")}
                   </span>
                 </label>
                 {errors.cashConfirmed && (
@@ -501,18 +501,18 @@ function CLRegistrationFormInner() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Obrađujem registraciju...
+                  {t("common:registrationForm.processing")}
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-2.5">
                   <CheckCircle className="w-[18px] h-[18px]" />
-                  Registruj se
+                  {t("common:registrationForm.submit")}
                 </span>
               )}
             </button>
 
             <p className="text-center text-[11px] text-theme-text-secondary mt-3 leading-relaxed">
-              Vaši podaci se prenose preko 256-bit SSL enkripcije i koriste se isključivo za potrebe lige.
+              {t("common:registrationForm.secureNote")}
             </p>
           </form>
         </div>

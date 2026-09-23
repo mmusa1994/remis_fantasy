@@ -40,7 +40,7 @@ const LoadingCard = React.memo<LoadingCardProps>(function LoadingCard({
             theme === "dark" ? "text-white/70" : "text-black/70"
           }`}
         >
-          {description || "Please wait while we fetch the data"}
+          {description || t("common:loadingWait")}
         </p>
       )}
     </motion.div>

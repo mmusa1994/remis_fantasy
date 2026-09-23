@@ -8,11 +8,83 @@
   "findManagerIdHelp": "Kako naći Manager ID?",
   "cancel": "Odustani",
   "saveId": "Spremi ID",
-  "validating": "Validating...",
-  "retrying": "Retrying...",
+  "validating": "Provjera...",
+  "retrying": "Ponovni pokušaj...",
   "helpText": "💡 Manager ID možeš naći na svojoj FPL stranici u URL-u nakon /entry/",
   "errors": {
     "required": "Manager ID je obavezan",
     "invalidFormat": "Manager ID mora biti broj (1-10 cifara)"
+  },
+  "validatingWithFpl": "Provjeravam Manager ID na FPL serverima...",
+  "retryingAttempt": "Ponovna provjera... (pokušaj {{attempt}})",
+  "retry": "Pokušaj ponovo",
+  "saveAnyway": "Ipak spremi",
+  "validationErrors": {
+    "network_error": {
+      "title": "Problem s konekcijom",
+      "description": "Nije moguće povezati se s FPL serverima. Moguć je problem s mrežom ili održavanje FPL servera.",
+      "suggestions": [
+        "Provjeri internet konekciju",
+        "Pokušaj ponovo za nekoliko trenutaka",
+        "FPL serveri su možda privremeno nedostupni"
+      ],
+      "retry": "Ponovo se poveži",
+      "fallback": "Ipak spremi"
+    },
+    "rate_limit": {
+      "title": "Previše zahtjeva",
+      "description": "FPL serveri ograničavaju broj zahtjeva. To je normalno u periodima gužve.",
+      "suggestions": [
+        "Sačekaj 30 sekundi prije novog pokušaja",
+        "FPL serveri su opterećeni u popularnim terminima",
+        "Pokušaj van špica za brži odgovor"
+      ],
+      "retry": "Sačekaj i pokušaj ponovo",
+      "fallback": "Spremi za kasnije"
+    },
+    "invalid_id": {
+      "title": "Manager ID nije pronađen",
+      "description": "Manager ID koji si unio ne postoji u FPL bazi.",
+      "suggestions": [
+        "Provjeri Manager ID na svom FPL računu",
+        "Potraži broj nakon \"/entry/\" u FPL linku",
+        "Provjeri da koristiš svoj Manager ID"
+      ],
+      "retry": "",
+      "fallback": ""
+    },
+    "timeout": {
+      "title": "Isteklo vrijeme",
+      "description": "Provjera traje duže nego inače. FPL serveri su možda spori.",
+      "suggestions": [
+        "FPL serveri sporo odgovaraju",
+        "Pokušaj ponovo s novim zahtjevom",
+        "Možeš ga spremiti sada i provjeriti kasnije"
+      ],
+      "retry": "Pokušaj ponovo",
+      "fallback": "Ipak spremi"
+    },
+    "server_error": {
+      "title": "Greška na FPL serveru",
+      "description": "Fantasy Premier League serveri imaju problema.",
+      "suggestions": [
+        "FPL ima tehničkih poteškoća",
+        "Tvoj Manager ID će biti spremljen i provjeren kasnije",
+        "Prati zvanične FPL društvene mreže za novosti"
+      ],
+      "retry": "Pokušaj ponovo",
+      "fallback": "Spremi za kasnije"
+    },
+    "unknown": {
+      "title": "Neočekivana greška",
+      "description": "Tokom provjere se desilo nešto neočekivano.",
+      "suggestions": [
+        "Osvježi stranicu",
+        "Provjeri internet konekciju",
+        "Javi se podršci ako se problem ponavlja"
+      ],
+      "retry": "Pokušaj ponovo",
+      "fallback": "Ipak spremi"
+    }
   }
 }

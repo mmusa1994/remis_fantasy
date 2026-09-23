@@ -22,7 +22,7 @@
   },
   "home": {
     "siteName": "REMIS Fantasy",
-    "currentSeason": "2025/26",
+    "currentSeason": "2026/27",
     "leagues": {
       "premierLeague": {
         "title": "Premier League",
@@ -86,7 +86,9 @@
     "registerNow": "Register now and secure your spot in {{title}}!",
     "originalJersey": "ORIGINAL JERSEY 25/26 PL",
     "freeEntry": "FREE ENTRY NEXT SEASON",
-    "freeEntryShort": "Free Entry"
+    "freeEntryShort": "Free Entry",
+    "trophyMedalPlaque": "Trophy + medal + plaque",
+    "medalPlaque": "Medal + plaque"
   },
   "leagues": {
     "premier-league": {
@@ -120,7 +122,7 @@
   },
   "hero": {
     "title": "REMIS Fantasy",
-    "season": "Season 2025/26",
+    "season": "Season 2026/27",
     "subtitle": "Welcome to the most exciting fantasy leagues! Choose your league and show your sports knowledge.",
     "live": "LIVE",
     "liveFpl": "LIVE FPL",
@@ -129,14 +131,14 @@
     "openLeague": "Open League",
     "premier": {
       "title": "Premier League Fantasy",
-      "season": "Season 2025/26",
+      "season": "Season 2026/27",
       "subtitle": "The most popular fantasy league with 4 different categories. Build your dream team and compete against other managers!",
       "primaryButton": "Join League",
       "secondaryButton": "View Prizes"
     },
     "champions": {
       "title": "Champions League Fantasy",
-      "season": "Season 2025/26",
+      "season": "Season 2026/27",
       "subtitle": "European elite of fantasy football. Experience the thrill of Champions League with the best teams in Europe!",
       "primaryButton": "Join League",
       "secondaryButton": "View Prizes"
@@ -156,7 +158,11 @@
     "h2h2League": "H2H2 League",
     "freeLeague": "Free League",
     "seasonCompleted": "Completed",
-    "newSeasonComingSoon": "The new 2026/27 season starts soon — tables will be available once the league kicks off."
+    "newSeasonComingSoon": "The new 2026/27 season starts soon — tables will be available once the league kicks off.",
+    "leagueTableErrorLoading": "Couldn't load the league tables",
+    "loadingLeague": "Loading {{league}}",
+    "loadingLeagueDesc": "Please wait while we fetch the latest league standings",
+    "noDataFor": "No data for {{league}}."
   },
   "premiumLeague": {
     "title": "Premium League",
@@ -175,9 +181,13 @@
       "rank": "#",
       "name": "Name and Surname",
       "team": "Team",
-      "points": "Points"
+      "points": "Points",
+      "overallPoints": "Overall points"
     },
-    "lastUpdated": "Last Updated"
+    "lastUpdated": "Last Updated",
+    "standingsCount_one": "Standings · {{count}} player",
+    "standingsCount_few": "Standings · {{count}} players",
+    "standingsCount_other": "Standings · {{count}} players"
   },
   "registration": {
     "title": "REGISTER",
@@ -238,5 +248,79 @@
     "whatsNext": "What's next?",
     "whatsNextDescription": "Follow the tables and results on the Premier League Fantasy league page. Good luck!",
     "viewTables": "View Tables"
+  },
+  "registrationForm": {
+    "registration": "Registration",
+    "plIntro": "Join the Premier League Fantasy league for the 2026/27 season and compete for prizes.",
+    "clIntro": "Join the Champions League Fantasy league for the 2026/27 season and compete for prizes.",
+    "perkPrizes": "Compete for prizes",
+    "perkPrizesSub": "Win the prize fund",
+    "perkLive": "Live table",
+    "perkLiveSub": "Real-time results",
+    "perkMonthly": "Monthly prizes",
+    "perkMonthlySub": "Special prizes every gameweek",
+    "perkMatchday": "Matchday prizes",
+    "perkMatchdaySub": "Special prizes for each matchday",
+    "entryFee": "Entry fee",
+    "chooseLeague": "Choose your league",
+    "standardLeague": "Standard League",
+    "standardLeagueDesc": "The main league with prizes to play for",
+    "premiumLeague": "Premium League",
+    "premiumLeagueDesc": "Premium league with a bigger prize fund",
+    "h2hLeague": "H2H League",
+    "h2hLeagueDesc": "Head-to-head competition (can be combined)",
+    "leagueRequired": "Select at least one league",
+    "personalInfo": "Personal details",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "contactInfo": "Contact details",
+    "email": "Email",
+    "phone": "Phone",
+    "notes": "Notes",
+    "paymentMethod": "Payment method",
+    "cash": "Cash",
+    "cashOnly": "Cash delivery — the only payment method available",
+    "cashPayment": "Cash payment",
+    "payingCash": "Paying in cash",
+    "cashInfo": "Choose the date by which you will deliver the payment of {{amount}}. Your registration will be confirmed once the payment is received.",
+    "deliveryDate": "Payment delivery date",
+    "deliveryDateRequired": "Select the date you will deliver the payment",
+    "confirmPrefix": "I confirm that I will deliver the payment of",
+    "confirmSuffix": "by the selected date.",
+    "confirmRequired": "Confirm that you will deliver the payment",
+    "processing": "Processing registration...",
+    "submit": "Register",
+    "secureNote": "Your data is sent over 256-bit SSL encryption and is used only to run the league."
+  },
+  "registrationClosed": {
+    "title": "Registration closed",
+    "pl": "Registration for the Premier League 2026/27 season is closed. Thanks to everyone who signed up — good luck!",
+    "cl": "Registration for the Champions League 2026/27 season is closed. Thanks to everyone who signed up — good luck!",
+    "f1": "Registration for the F1 Fantasy 2026 season is closed. Follow us for more news."
+  },
+  "errorLoadingPage": "Couldn't load the page",
+  "fantasyLeague": "Fantasy League",
+  "musicPlayer": {
+    "anthem": "Anthem",
+    "wcAnthem": "WC26 anthem",
+    "minimize": "Minimize",
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "close": "Close"
+  },
+  "loadingWait": "Please wait while we fetch the data",
+  "themeToggle": {
+    "toLight": "Switch to light mode",
+    "toDark": "Switch to dark mode"
+  },
+  "fplApiUnavailable": "The FPL API is currently unavailable. Please try again shortly.",
+  "closePrizeModal": "Close prize details",
+  "heroBackgroundAlt": "Hero background",
+  "title": "REMIS Fantasy",
+  "match": {
+    "homeTeam": "home team",
+    "awayTeam": "away team"
   }
 }

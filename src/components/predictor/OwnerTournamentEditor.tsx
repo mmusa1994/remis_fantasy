@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock, Unlock, Check, X, Ban, Trash2, ChevronDown, UserPlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { dateLocale } from "@/components/fpl/live/ui";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import {
@@ -230,7 +231,7 @@ export default function OwnerTournamentEditor({
           body: JSON.stringify({ id: tournament.id, status: next }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || "Status update failed");
+        if (!res.ok) throw new Error(data?.error || t("owner.errors.statusUpdateFailed"));
         setTournament(data);
         const statusMsg =
           next === "published"
@@ -284,7 +285,7 @@ export default function OwnerTournamentEditor({
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || "Lock update failed");
+        if (!res.ok) throw new Error(data?.error || t("owner.errors.lockUpdateFailed"));
         setTournament(data);
         showToast(
           value
@@ -935,6 +936,7 @@ function Modal({
   children: React.ReactNode;
   footer: React.ReactNode;
 }) {
+  const { t } = useTranslation("predictor");
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 px-3 py-20 backdrop-blur-sm sm:px-6 sm:py-24">
       <div
@@ -954,7 +956,7 @@ function Modal({
             type="button"
             onClick={onClose}
             className={`text-xl leading-none ${cls.iconBtnGhost(dark)}`}
-            aria-label="Close"
+            aria-label={t("errors.close")}
           >
             ×
           </button>
@@ -1133,7 +1135,7 @@ function SettingsTab({
         body: JSON.stringify({ id: tournament.id, require_approval: closed }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Save failed");
+      if (!res.ok) throw new Error(data?.error || t("saveFailed"));
       onSaved(data);
       setForm((p: Tournament) => ({ ...p, require_approval: closed }));
       showToast(
@@ -1167,7 +1169,7 @@ function SettingsTab({
         body: JSON.stringify({ ...body, id: tournament.id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Save failed");
+      if (!res.ok) throw new Error(data?.error || t("saveFailed"));
       onSaved(data);
       showToast(t("owner.toast.settingsSaved"));
     } catch (e: any) {
@@ -1187,7 +1189,7 @@ function SettingsTab({
       );
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d?.error || "Delete failed");
+        throw new Error(d?.error || t("owner.errors.deleteFailed"));
       }
       showToast(t("owner.toast.tournamentDeleted"));
       router.push("/predictor/my-tournaments");
@@ -1215,7 +1217,7 @@ function SettingsTab({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Apply failed");
+      if (!res.ok) throw new Error(data?.error || t("owner.errors.applyFailed"));
       // Pull the freshly updated tournament so branding (logo, banner, accent)
       // reflects in the editor immediately — and also re-sync local form state.
       if (applyBranding) {
@@ -1842,19 +1844,22 @@ function TemplateResetSection({
                 }}
                 className={cls.primaryBtn}
               >
-                ↺ Reset
+                ↺ {t("owner.templateReset.reset")}
               </button>
             </>
           }
         >
           <p className="text-sm text-theme-text-secondary">
-            <strong className="text-theme-heading-primary">+ Add:</strong>{" "}
-            adds template categories alongside existing ones.
+            <strong className="text-theme-heading-primary">
+              + {t("owner.common.add")}:
+            </strong>{" "}
+            {t("owner.templateReset.addHelp")}
           </p>
           <p className="mt-3 text-sm text-theme-text-secondary">
-            <strong className="text-theme-heading-primary">↺ Reset:</strong>{" "}
-            clears all existing categories/options/matches/rules/rewards and applies the
-            template fresh (with branding).
+            <strong className="text-theme-heading-primary">
+              ↺ {t("owner.templateReset.reset")}:
+            </strong>{" "}
+            {t("owner.templateReset.resetHelp")}
           </p>
         </Modal>
       )}
@@ -2081,7 +2086,7 @@ function CategoryEditor({
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Save failed");
+      if (!res.ok) throw new Error(data?.error || t("saveFailed"));
       if (needsOptions) {
         const catId = isEdit ? category!.id : data.id;
         await fetch("/api/predictor/owner/options", {
@@ -2371,7 +2376,7 @@ function ImageUpload({
         body: fd,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Upload failed");
+      if (!res.ok) throw new Error(data?.error || t("owner.errors.uploadFailed"));
       onChange(data.url);
     } catch (e: any) {
       onError(
@@ -2546,12 +2551,8 @@ function MatchesTab({
       }
       showToast(
         action === "lock"
-          ? (lang === "bs"
-              ? `${matchday}. kolo zakljucano (${targets.length})`
-              : `Matchday ${matchday} locked (${targets.length})`)
-          : (lang === "bs"
-              ? `${matchday}. kolo otkljucano (${targets.length})`
-              : `Matchday ${matchday} unlocked (${targets.length})`),
+          ? t("owner.matchesTab.round.lockedToast", { md: matchday, n: targets.length })
+          : t("owner.matchesTab.round.unlockedToast", { md: matchday, n: targets.length }),
       );
       load();
     } catch {
@@ -2571,11 +2572,7 @@ function MatchesTab({
       });
       if (res.ok) {
         const data = await res.json();
-        showToast(
-          lang === "bs"
-            ? `Bodovanje ažurirano (${data.scored ?? 0} predikcija)`
-            : `Scoring updated (${data.scored ?? 0} predictions)`,
-        );
+        showToast(t("owner.matchesTab.rescoreDone", { n: data.scored ?? 0 }));
       } else {
         showToast(t("owner.toast.genericError"), false);
       }
@@ -2678,12 +2675,12 @@ function MatchesTab({
           </div>
           <div className="mt-0.5 text-[11px] text-theme-text-secondary">
             {m.kickoff_at
-              ? new Date(m.kickoff_at).toLocaleString(lang === "bs" ? "sr-Latn" : "en-GB", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+              ? new Date(m.kickoff_at).toLocaleString(dateLocale(lang), { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
               : t("owner.matchesTab.noKickoff")}{" "}
             · {stageName}
             {m.matchday != null && (
               <span className={cls.badgeAccent(dark) + " ml-1"}>
-                {lang === "bs" ? `${m.matchday}. kolo` : `MD${m.matchday}`}
+                {t("owner.matchesTab.round.label", { md: m.matchday })}
               </span>
             )}
           </div>
@@ -2692,11 +2689,11 @@ function MatchesTab({
           <button
             type="button"
             onClick={() => setPickFor(m)}
-            title={lang === "bs" ? "Upiši tip u ime igrača" : "Enter a pick for a player"}
+            title={t("owner.matchesTab.onBehalf.title")}
             className={`inline-flex items-center gap-1.5 ${cls.secondaryBtn(dark)}`}
           >
             <UserPlus className="h-3.5 w-3.5" />
-            {lang === "bs" ? "Tip igrača" : "Player pick"}
+            {t("owner.matchesTab.onBehalf.button")}
           </button>
           <button type="button" onClick={() => setEditing(m)} className={cls.secondaryBtn(dark)}>
             {t("owner.common.edit")}
@@ -2745,7 +2742,7 @@ function MatchesTab({
   };
 
   const roundLabel = (key: string) =>
-    lang === "bs" ? `${key}. kolo` : `MD${key}`;
+    t("owner.matchesTab.round.label", { md: key });
 
   return (
     <>
@@ -2770,8 +2767,8 @@ function MatchesTab({
             }`}
           >
             {rescoring
-              ? (lang === "bs" ? "Ažuriram…" : "Updating…")
-              : (lang === "bs" ? "Ažuriraj bodovanje" : "Update scores")}
+              ? t("owner.matchesTab.rescoring")
+              : t("owner.matchesTab.rescore")}
           </button>
           <button type="button" onClick={() => setCreating(true)} className={cls.primaryBtnLg}>
             + {t("owner.matchesTab.new")}
@@ -2814,10 +2811,10 @@ function MatchesTab({
                   }`}
                 >
                   <Lock className="w-3 h-3" />
-                  {lang === "bs" ? `${md}. kolo` : `MD${md}`}
+                  {t("owner.matchesTab.round.label", { md })}
                   <span className="text-[10px] opacity-70">
                     {allLocked
-                      ? (lang === "bs" ? "zaključano" : "locked")
+                      ? t("owner.matchesTab.round.locked")
                       : `${info.open}/${info.total}`}
                   </span>
                 </button>
@@ -2839,17 +2836,13 @@ function MatchesTab({
           >
             <h3 className={`text-base font-black mb-2 ${dark ? "text-white" : "text-gray-900"}`}>
               {roundConfirm.action === "lock"
-                ? (lang === "bs" ? `Zaključaj ${roundConfirm.md}. kolo?` : `Lock matchday ${roundConfirm.md}?`)
-                : (lang === "bs" ? `Otključaj ${roundConfirm.md}. kolo?` : `Unlock matchday ${roundConfirm.md}?`)}
+                ? t("owner.matchesTab.round.confirmLockTitle", { md: roundConfirm.md })
+                : t("owner.matchesTab.round.confirmUnlockTitle", { md: roundConfirm.md })}
             </h3>
             <p className={`text-sm mb-4 ${dark ? "text-gray-400" : "text-gray-600"}`}>
               {roundConfirm.action === "lock"
-                ? (lang === "bs"
-                    ? "Korisnici vise nece moci mijenjati predikcije za ovo kolo."
-                    : "Users will no longer be able to change predictions for this round.")
-                : (lang === "bs"
-                    ? "Korisnici ce ponovo moci mijenjati predikcije za ovo kolo."
-                    : "Users will be able to change predictions for this round again.")}
+                ? t("owner.matchesTab.round.confirmLockBody")
+                : t("owner.matchesTab.round.confirmUnlockBody")}
             </p>
             <div className="flex items-center justify-end gap-2">
               <button
@@ -2868,8 +2861,8 @@ function MatchesTab({
                 {lockingRound
                   ? "..."
                   : roundConfirm.action === "lock"
-                    ? (lang === "bs" ? "Zaključaj" : "Lock")
-                    : (lang === "bs" ? "Otključaj" : "Unlock")}
+                    ? t("owner.matchesTab.round.lock")
+                    : t("owner.matchesTab.round.unlock")}
               </button>
             </div>
           </div>
@@ -2894,7 +2887,7 @@ function MatchesTab({
           {upcomingGroups.length > 0 && (
             <div className="space-y-2">
               <h3 className="px-1 text-xs font-bold uppercase tracking-wide text-theme-text-secondary">
-                {lang === "bs" ? "Predstojeće utakmice" : "Upcoming matches"}
+                {t("owner.matchesTab.upcoming")}
               </h3>
               {hasMatchdays
                 ? upcomingGroups.map(([k, ms]) =>
@@ -2912,7 +2905,7 @@ function MatchesTab({
           {finishedGroups.length > 0 && (
             <div className="space-y-2">
               <h3 className="px-1 text-xs font-bold uppercase tracking-wide text-theme-text-secondary">
-                {lang === "bs" ? "Završene utakmice" : "Finished matches"}
+                {t("owner.matchesTab.finished")}
               </h3>
               {finishedGroups.map(([k, ms]) =>
                 renderSection(
@@ -2920,9 +2913,7 @@ function MatchesTab({
                   k,
                   hasMatchdays
                     ? roundLabel(k)
-                    : lang === "bs"
-                      ? "Završene"
-                      : "Finished",
+                    : t("owner.matchesTab.finishedShort"),
                   ms,
                 ),
               )}
@@ -2983,6 +2974,7 @@ function OnBehalfPredictionForm({
   onClose: () => void;
   onSaved: (msg: string) => void;
 }) {
+  const { t } = useTranslation("predictor");
   const [participants, setParticipants] = useState<
     Array<{ user_id: string; name: string }>
   >([]);
@@ -3005,7 +2997,7 @@ function OnBehalfPredictionForm({
           setParticipants(
             (rows ?? []).map((r: any) => ({
               user_id: r.user_id,
-              name: r.user_display_name || r.user_email || "Nepoznat igrač",
+              name: r.user_display_name || r.user_email || "",
             })),
           );
         }
@@ -3025,11 +3017,11 @@ function OnBehalfPredictionForm({
   const save = async () => {
     setErr(null);
     if (!userId) {
-      setErr(lang === "bs" ? "Izaberi igrača." : "Pick a player.");
+      setErr(t("owner.matchesTab.onBehalf.pickPlayerError"));
       return;
     }
     if (home === "" || away === "") {
-      setErr(lang === "bs" ? "Unesi rezultat." : "Enter a score.");
+      setErr(t("owner.matchesTab.onBehalf.enterScoreError"));
       return;
     }
     setSaving(true);
@@ -3045,18 +3037,14 @@ function OnBehalfPredictionForm({
         }),
       });
       const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j?.error || "Greška pri upisu");
+      if (!res.ok) throw new Error(j?.error || t("owner.matchesTab.onBehalf.saveError"));
       onSaved(
         j.scored
-          ? lang === "bs"
-            ? `Tip upisan i bodovan (+${j.points})`
-            : `Pick saved and scored (+${j.points})`
-          : lang === "bs"
-            ? "Tip upisan"
-            : "Pick saved",
+          ? t("owner.matchesTab.onBehalf.savedScored", { points: j.points })
+          : t("owner.matchesTab.onBehalf.saved"),
       );
     } catch (e) {
-      setErr((e as Error)?.message || "Greška");
+      setErr((e as Error)?.message || t("owner.toast.genericError"));
     } finally {
       setSaving(false);
     }
@@ -3077,13 +3065,13 @@ function OnBehalfPredictionForm({
         }`}
       >
         <h3 className={`text-base font-black ${dark ? "text-white" : "text-gray-900"}`}>
-          {lang === "bs" ? "Upiši tip u ime igrača" : "Enter a pick for a player"}
+          {t("owner.matchesTab.onBehalf.title")}
         </h3>
         <p className="mt-1 mb-4 text-xs text-theme-text-secondary">
           {homeName} <span className="opacity-60">vs</span> {awayName}
           {hasResult && (
             <span className="ml-1">
-              · {lang === "bs" ? "rezultat" : "result"}{" "}
+              · {t("owner.matchesTab.onBehalf.result")}{" "}
               <b>
                 {match.home_score}:{match.away_score}
               </b>
@@ -3092,7 +3080,7 @@ function OnBehalfPredictionForm({
         </p>
 
         <div className="space-y-3">
-          <Field label={lang === "bs" ? "Igrač" : "Player"}>
+          <Field label={t("owner.matchesTab.onBehalf.player")}>
             <select
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
@@ -3101,16 +3089,12 @@ function OnBehalfPredictionForm({
             >
               <option value="">
                 {loading
-                  ? lang === "bs"
-                    ? "Učitavam…"
-                    : "Loading…"
-                  : lang === "bs"
-                    ? "— izaberi igrača —"
-                    : "— pick a player —"}
+                  ? t("owner.common.loading")
+                  : t("owner.matchesTab.onBehalf.pickPlayerOption")}
               </option>
               {participants.map((p) => (
                 <option key={p.user_id} value={p.user_id}>
-                  {p.name}
+                  {p.name || t("owner.matchesTab.onBehalf.unknownPlayer")}
                 </option>
               ))}
             </select>
@@ -3144,7 +3128,7 @@ function OnBehalfPredictionForm({
 
         <div className="mt-5 flex items-center justify-end gap-2">
           <button type="button" onClick={onClose} className={cls.secondaryBtn(dark)}>
-            {lang === "bs" ? "Otkaži" : "Cancel"}
+            {t("owner.common.cancel")}
           </button>
           <button
             type="button"
@@ -3153,12 +3137,8 @@ function OnBehalfPredictionForm({
             className={cls.primaryBtn}
           >
             {saving
-              ? lang === "bs"
-                ? "Upisujem…"
-                : "Saving…"
-              : lang === "bs"
-                ? "Upiši i boduj"
-                : "Save & score"}
+              ? t("owner.common.saving")
+              : t("owner.matchesTab.onBehalf.saveAndScore")}
           </button>
         </div>
       </div>
@@ -3223,7 +3203,7 @@ function MatchEditor({
       });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d?.error || "Save failed");
+        throw new Error(d?.error || t("saveFailed"));
       }
       onSaved();
     } catch (e: any) {
@@ -3592,7 +3572,7 @@ function RuleEditor({
       });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d?.error || "Save failed");
+        throw new Error(d?.error || t("saveFailed"));
       }
       onSaved();
     } catch (e: any) {
@@ -3858,7 +3838,7 @@ function RewardEditor({
       });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d?.error || "Save failed");
+        throw new Error(d?.error || t("saveFailed"));
       }
       onSaved();
     } catch (e: any) {

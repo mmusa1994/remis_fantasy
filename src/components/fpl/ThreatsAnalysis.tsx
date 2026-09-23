@@ -1,16 +1,25 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { RefreshCw, ShieldAlert, ShieldCheck } from "lucide-react";
+
+import { getPlayerTeamColors } from "@/lib/team-colors";
+
 import {
-  MdWarning,
-  MdFilterList,
-  MdSort,
-  MdShield,
-  MdRefresh,
-} from "react-icons/md";
-import { MdChair } from "react-icons/md";
-import { getTeamColors } from "@/lib/team-colors";
+  Bar,
+  Chip,
+  EmptyState,
+  GhostButton,
+  ListRow,
+  Panel,
+  PlayerCell,
+  PosTag,
+  Segmented,
+  SkeletonRows,
+  StatTile,
+  cx,
+} from "./live/ui";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -20,10 +29,13 @@ interface Threat {
   player_id: number;
   web_name: string;
   team: number;
+  team_code?: number;
   element_type: number;
   points: number;
   ownership_pct: number;
   effective_ownership: number;
+  /** points × ownership: what the average manager banked from him. */
+  impact?: number;
   threat_level: "high" | "medium" | "low";
   is_on_bench: boolean;
 }
@@ -31,6 +43,7 @@ interface Threat {
 interface ThreatsData {
   threats: Threat[];
   totalThreatPoints: number;
+  totalImpact?: number;
 }
 
 interface ThreatsAnalysisProps {
@@ -39,56 +52,19 @@ interface ThreatsAnalysisProps {
   managerData?: any;
 }
 
-// ---------------------------------------------------------------------------
-// Constants & Helpers
-// ---------------------------------------------------------------------------
-
-const POSITION_LABELS: Record<number, string> = {
-  1: "GK",
-  2: "DEF",
-  3: "MID",
-  4: "FWD",
-};
-
-const POSITION_COLORS: Record<number, string> = {
-  1: "bg-yellow-500",
-  2: "bg-green-500",
-  3: "bg-blue-500",
-  4: "bg-red-500",
-};
-
-const THREAT_BADGE: Record<
-  Threat["threat_level"],
-  { dotClass: string; textClass: string; labelKey: string; labelFallback: string }
-> = {
-  high: {
-    dotClass: "bg-red-500",
-    textClass: "text-red-700 dark:text-red-400",
-    labelKey: "threats.levelHigh",
-    labelFallback: "High",
-  },
-  medium: {
-    dotClass: "bg-orange-500",
-    textClass: "text-orange-700 dark:text-orange-400",
-    labelKey: "threats.levelMedium",
-    labelFallback: "Medium",
-  },
-  low: {
-    dotClass: "bg-yellow-500",
-    textClass: "text-yellow-700 dark:text-yellow-400",
-    labelKey: "threats.levelLow",
-    labelFallback: "Low",
-  },
-};
-
 type ThreatFilter = "all" | "high" | "medium" | "low";
-type SortKey = "points" | "ownership" | "threat";
+type SortKey = "impact" | "points" | "ownership";
 
-const THREAT_ORDER: Record<Threat["threat_level"], number> = {
-  high: 3,
-  medium: 2,
-  low: 1,
+const LEVEL_TONE: Record<Threat["threat_level"], "negative" | "warning" | "neutral"> = {
+  high: "negative",
+  medium: "warning",
+  low: "neutral",
 };
+
+const impactOf = (threat: Threat) =>
+  typeof threat.impact === "number"
+    ? threat.impact
+    : (threat.points * threat.ownership_pct) / 100;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -104,9 +80,8 @@ const ThreatsAnalysis = React.memo(function ThreatsAnalysis({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ThreatFilter>("all");
-  const [sortBy, setSortBy] = useState<SortKey>("points");
+  const [sortBy, setSortBy] = useState<SortKey>("impact");
 
-  // ---- Fetch ----------------------------------------------------------
   const fetchThreats = useCallback(async () => {
     if (!managerId) return;
     setLoading(true);
@@ -135,376 +110,231 @@ const ThreatsAnalysis = React.memo(function ThreatsAnalysis({
     fetchThreats();
   }, [fetchThreats]);
 
-  // ---- Derived data ---------------------------------------------------
-  const filteredThreats = React.useMemo(() => {
-    if (!data) return [];
+  const threats = useMemo(
+    () => (Array.isArray(data?.threats) ? data!.threats : []),
+    [data]
+  );
 
-    const base = Array.isArray(data.threats) ? data.threats : [];
-    let list =
-      filter === "all"
-        ? base
-        : base.filter((t) => t.threat_level === filter);
+  const counts = useMemo(
+    () => ({
+      all: threats.length,
+      high: threats.filter((x) => x.threat_level === "high").length,
+      medium: threats.filter((x) => x.threat_level === "medium").length,
+      low: threats.filter((x) => x.threat_level === "low").length,
+    }),
+    [threats]
+  );
 
-    list = [...list].sort((a, b) => {
+  const visible = useMemo(() => {
+    const list =
+      filter === "all" ? threats : threats.filter((x) => x.threat_level === filter);
+    return [...list].sort((a, b) => {
       if (sortBy === "points") return b.points - a.points;
       if (sortBy === "ownership") return b.ownership_pct - a.ownership_pct;
-      return THREAT_ORDER[b.threat_level] - THREAT_ORDER[a.threat_level];
+      return impactOf(b) - impactOf(a);
     });
+  }, [threats, filter, sortBy]);
 
-    return list;
-  }, [data, filter, sortBy]);
+  const totalImpact = useMemo(
+    () =>
+      typeof data?.totalImpact === "number"
+        ? data.totalImpact
+        : threats.reduce((sum, x) => sum + impactOf(x), 0),
+    [data, threats]
+  );
 
-  // ---- Loading --------------------------------------------------------
-  if (loading) {
-    return (
-      <div className="bg-theme-card rounded-lg border border-theme-border p-4 space-y-2 theme-transition">
-        {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="h-10 bg-theme-card-secondary rounded animate-pulse" />
-        ))}
-      </div>
-    );
-  }
+  const title = t("threats.title", "Threats Analysis");
+  const subtitle = t(
+    "fplLive.ui.threats.subtitle",
+    "Players you don't own who scored. Impact = points × ownership: what the average manager gained from them."
+  );
 
-  // ---- Error ----------------------------------------------------------
-  if (error) {
-    return (
-      <div className="bg-theme-card border border-theme-border rounded-lg p-6 theme-transition">
-        <div className="flex items-center gap-3 mb-3">
-          <MdWarning className="text-2xl text-red-500" />
-          <h3 className="text-lg font-semibold text-theme-foreground theme-transition">
-            {t("threats.title", "Threats Analysis")}
-          </h3>
-        </div>
-        <p className="text-red-600 dark:text-red-400 text-sm mb-4">{error}</p>
-        <button
-          onClick={fetchThreats}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
-        >
-          <MdRefresh className="text-lg" />
-          {t("common.retry", "Retry")}
-        </button>
-      </div>
-    );
-  }
-
-  // ---- No manager id --------------------------------------------------
   if (!managerId) {
     return (
-      <div className="bg-theme-card border border-theme-border rounded-lg p-6 theme-transition text-center">
-        <MdShield className="text-4xl text-theme-text-secondary mx-auto mb-2" />
-        <p className="text-theme-text-secondary theme-transition text-sm">
-          {t("threats.noManager", "Enter your Manager ID to see threats.")}
-        </p>
-      </div>
+      <Panel title={title}>
+        <EmptyState
+          icon={<ShieldAlert />}
+          title={t("threats.noManager", "Load your team to see threats")}
+        />
+      </Panel>
     );
   }
 
-  // ---- Empty ----------------------------------------------------------
-  if (!data || data.threats.length === 0) {
+  if (loading && !data) {
     return (
-      <div className="bg-theme-card border border-theme-border rounded-lg p-6 theme-transition text-center">
-        <MdShield className="text-4xl text-green-500 mx-auto mb-2" />
-        <p className="text-theme-text-secondary theme-transition text-sm">
-          {t("threats.noThreats", "No significant threats this gameweek.")}
-        </p>
-      </div>
+      <Panel title={title} subtitle={subtitle} flush>
+        <SkeletonRows rows={7} />
+      </Panel>
     );
   }
 
-  const threatCounts = {
-    high: data.threats.filter((t) => t.threat_level === "high").length,
-    medium: data.threats.filter((t) => t.threat_level === "medium").length,
-    low: data.threats.filter((t) => t.threat_level === "low").length,
-  };
+  if (error) {
+    return (
+      <Panel title={title}>
+        <EmptyState
+          icon={<ShieldAlert />}
+          title={t("threats.error", "Error loading threats data")}
+          text={t("fplLive.ui.pages.retryHint", "Check your connection and try again.")}
+          action={
+            <GhostButton onClick={fetchThreats}>
+              <RefreshCw />
+              {t("fplLive.ui.threats.retry", "Try again")}
+            </GhostButton>
+          }
+        />
+      </Panel>
+    );
+  }
 
-  // ---- Render ---------------------------------------------------------
+  if (!threats.length) {
+    return (
+      <Panel title={title}>
+        <EmptyState
+          icon={<ShieldCheck />}
+          title={t("threats.noThreats", "No threats found")}
+          text={t(
+            "fplLive.ui.threats.noThreatsText",
+            "No widely owned player outside your team has scored yet this gameweek."
+          )}
+        />
+      </Panel>
+    );
+  }
+
+  const levelLabel = (level: Threat["threat_level"]) =>
+    level === "high"
+      ? t("threats.levelHigh", "High")
+      : level === "medium"
+      ? t("threats.levelMedium", "Medium")
+      : t("threats.levelLow", "Low");
+
   return (
-    <div className="bg-theme-card border border-theme-border rounded-lg theme-transition">
-      {/* Summary bar */}
-      <div className="p-4 sm:p-6 border-b border-theme-border">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <MdWarning className="text-2xl text-orange-500 shrink-0" />
-            <div>
-              <h3 className="text-lg font-semibold text-theme-foreground theme-transition">
-                {t("threats.title", "Threats Analysis")}
-              </h3>
-              <p className="text-sm text-theme-text-secondary theme-transition">
-                {t("threats.subtitle", "Players you don't own scoring points")}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-red-500">
-                {data.totalThreatPoints}
-              </p>
-              <p className="text-xs text-theme-text-secondary theme-transition">
-                {t("threats.totalPoints", "Threat Pts")}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-theme-foreground theme-transition">
-                {data.threats.length}
-              </p>
-              <p className="text-xs text-theme-text-secondary theme-transition">
-                {t("threats.count", "Threats")}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter & sort controls */}
-      <div className="p-4 sm:px-6 border-b border-theme-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        {/* Filter buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <MdFilterList className="text-theme-text-secondary shrink-0" />
-          {(["all", "high", "medium", "low"] as ThreatFilter[]).map((level) => {
-            const isActive = filter === level;
-            const count =
-              level === "all" ? data.threats.length : threatCounts[level];
-            return (
-              <button
-                key={level}
-                onClick={() => setFilter(level)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize ${
-                  isActive
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-theme-text-secondary hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {level === "all"
-                  ? t("threats.filterAll", "All")
-                  : t(`threats.filter${level.charAt(0).toUpperCase() + level.slice(1)}`, level)}{" "}
-                ({count})
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Sort select */}
-        <div className="flex items-center gap-2">
-          <MdSort className="text-theme-text-secondary shrink-0" />
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortKey)}
-            className="bg-gray-100 dark:bg-gray-700 text-theme-foreground text-xs rounded-lg px-3 py-1.5 border border-theme-border theme-transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <div className="space-y-3 sm:space-y-4">
+      {/* Summary */}
+      <Panel
+        title={title}
+        subtitle={subtitle}
+        action={
+          <GhostButton
+            onClick={fetchThreats}
+            disabled={loading}
+            title={t("refresh", "Refresh")}
           >
-            <option value="points">
-              {t("threats.sortPoints", "Points")}
-            </option>
-            <option value="ownership">
-              {t("threats.sortOwnership", "Ownership")}
-            </option>
-            <option value="threat">
-              {t("threats.sortThreat", "Threat Level")}
-            </option>
-          </select>
+            <RefreshCw className={cx(loading && "animate-spin")} />
+          </GhostButton>
+        }
+      >
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <StatTile
+            label={t("fplLive.ui.threats.count", "Threats")}
+            value={threats.length}
+            hint={t("fplLive.ui.threats.highCount", "high: {{n}}", {
+              n: counts.high,
+            })}
+          />
+          <StatTile
+            label={t("fplLive.ui.threats.theirPoints", "Their points")}
+            value={data?.totalThreatPoints ?? 0}
+            hint={t("fplLive.ui.threats.gw", "GW{{gw}}", { gw: gameweek })}
+          />
+          <StatTile
+            label={t("fplLive.ui.threats.impact", "Impact")}
+            value={`−${totalImpact.toFixed(1)}`}
+            hint={t("fplLive.ui.threats.vsAverage", "vs average manager")}
+          />
         </div>
-      </div>
+      </Panel>
 
-      {/* Desktop table */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-theme-border text-theme-text-secondary theme-transition">
-              <th className="text-left py-3 px-4 font-medium">
-                {t("threats.player", "Player")}
-              </th>
-              <th className="text-center py-3 px-2 font-medium">
-                {t("threats.pos", "Pos")}
-              </th>
-              <th className="text-center py-3 px-2 font-medium">
-                {t("threats.pts", "Pts")}
-              </th>
-              <th className="text-left py-3 px-4 font-medium">
-                {t("threats.ownership", "Ownership")}
-              </th>
-              <th className="text-center py-3 px-2 font-medium">
-                {t("threats.eo", "EO")}
-              </th>
-              <th className="text-center py-3 px-2 font-medium">
-                {t("threats.level", "Level")}
-              </th>
-              <th className="text-center py-3 px-2 font-medium">
-                {t("threats.status", "Status")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredThreats.map((threat) => {
-              const teamColors = getTeamColors(threat.team);
-              const badge = THREAT_BADGE[threat.threat_level];
+      {/* List */}
+      <Panel flush>
+        <div className="flex flex-col gap-2 px-4 pt-4 pb-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <Segmented<ThreatFilter>
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: "all", label: t("threats.filterAll", "All"), count: counts.all },
+              { value: "high", label: levelLabel("high"), count: counts.high },
+              { value: "medium", label: levelLabel("medium"), count: counts.medium },
+              { value: "low", label: levelLabel("low"), count: counts.low },
+            ]}
+          />
+          <label className="flex items-center gap-2 self-start text-[11px] text-theme-text-muted sm:self-auto">
+            {t("threats.sortBy", "Sort by")}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortKey)}
+              className="rounded-lg border border-theme-border bg-theme-card px-2 py-1.5 text-xs font-medium text-theme-text-secondary focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+            >
+              <option value="impact">{t("fplLive.ui.threats.impact", "Impact")}</option>
+              <option value="points">{t("threats.sortPoints", "Points")}</option>
+              <option value="ownership">{t("threats.sortOwnership", "Ownership")}</option>
+            </select>
+          </label>
+        </div>
 
+        {visible.length === 0 ? (
+          <EmptyState
+            className="border-t border-theme-border"
+            title={t("threats.noMatchingThreats", "No threats matching current filter")}
+          />
+        ) : (
+          <div className="divide-y divide-theme-border border-t border-theme-border">
+            {visible.map((threat) => {
+              const impact = impactOf(threat);
+              const club = getPlayerTeamColors({
+                team: threat.team,
+                team_code: threat.team_code,
+              }).shortName;
               return (
-                <tr
-                  key={threat.player_id}
-                  className="border-b border-theme-border last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors"
-                >
-                  {/* Player name + team dot */}
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: teamColors.primary }}
-                      />
-                      <span className="font-medium text-theme-foreground theme-transition">
-                        {threat.web_name}
-                      </span>
-                      <span className="text-xs text-theme-text-secondary theme-transition">
-                        {teamColors.shortName}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Position badge */}
-                  <td className="py-3 px-2 text-center">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold text-white ${
-                        POSITION_COLORS[threat.element_type] || "bg-gray-500"
-                      }`}
-                    >
-                      {POSITION_LABELS[threat.element_type] || "???"}
-                    </span>
-                  </td>
-
-                  {/* Points */}
-                  <td className="py-3 px-2 text-center">
-                    <span className="font-bold text-theme-foreground theme-transition">
+                <ListRow key={threat.player_id}>
+                  <PlayerCell
+                    player={{
+                      team: threat.team,
+                      team_code: threat.team_code,
+                      element_type: threat.element_type,
+                    }}
+                    name={threat.web_name}
+                    badges={
+                      <>
+                        <PosTag type={threat.element_type} />
+                        {threat.is_on_bench && (
+                          <Chip tone="warning">
+                            {t("fplLive.ui.threats.yourBench", "Your bench")}
+                          </Chip>
+                        )}
+                      </>
+                    }
+                    meta={
+                      <>
+                        <span className="shrink-0">{club}</span>
+                        <span className="shrink-0 text-theme-border-strong">·</span>
+                        <span className="shrink-0 tabular-nums">
+                          {threat.ownership_pct.toFixed(1)}%
+                        </span>
+                        {/* Bar is w-full, so size it through a wrapper */}
+                        <div className="w-14 shrink-0 sm:w-24">
+                          <Bar value={threat.ownership_pct} tone="neutral" />
+                        </div>
+                      </>
+                    }
+                  />
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <span className="text-base font-semibold leading-none tabular-nums text-theme-heading-primary">
                       {threat.points}
                     </span>
-                  </td>
-
-                  {/* Ownership bar */}
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-500 rounded-full transition-all"
-                          style={{
-                            width: `${Math.min(threat.ownership_pct, 100)}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-xs text-theme-text-secondary theme-transition w-12 text-right">
-                        {threat.ownership_pct.toFixed(1)}%
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Effective ownership */}
-                  <td className="py-3 px-2 text-center text-xs text-theme-text-secondary theme-transition">
-                    {threat.effective_ownership.toFixed(1)}%
-                  </td>
-
-                  {/* Threat level badge */}
-                  <td className="py-3 px-2 text-center">
-                    <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${badge.textClass}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${badge.dotClass}`} />
-                      {t(badge.labelKey, badge.labelFallback)}
-                    </span>
-                  </td>
-
-                  {/* On bench indicator */}
-                  <td className="py-3 px-2 text-center">
-                    {threat.is_on_bench && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-semibold">
-                        <MdChair className="text-xs" />
-                        {t("threats.onBench", "Bench")}
-                      </span>
-                    )}
-                  </td>
-                </tr>
+                    <Chip
+                      tone={LEVEL_TONE[threat.threat_level]}
+                      className="tabular-nums"
+                    >
+                      −{impact.toFixed(1)}
+                    </Chip>
+                  </div>
+                </ListRow>
               );
             })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile cards */}
-      <div className="md:hidden divide-y divide-theme-border">
-        {filteredThreats.map((threat) => {
-          const teamColors = getTeamColors(threat.team);
-          const badge = THREAT_BADGE[threat.threat_level];
-
-          return (
-            <div key={threat.player_id} className="p-4 space-y-3">
-              {/* Top row: name, position, points */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: teamColors.primary }}
-                  />
-                  <span className="font-medium text-theme-foreground theme-transition truncate">
-                    {threat.web_name}
-                  </span>
-                  <span className="text-xs text-theme-text-secondary theme-transition shrink-0">
-                    {teamColors.shortName}
-                  </span>
-                  <span
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold text-white shrink-0 ${
-                      POSITION_COLORS[threat.element_type] || "bg-gray-500"
-                    }`}
-                  >
-                    {POSITION_LABELS[threat.element_type] || "???"}
-                  </span>
-                </div>
-                <span className="text-xl font-bold text-theme-foreground theme-transition shrink-0 ml-2">
-                  {threat.points}
-                </span>
-              </div>
-
-              {/* Ownership bar */}
-              <div>
-                <div className="flex items-center justify-between text-xs text-theme-text-secondary theme-transition mb-1">
-                  <span>
-                    {t("threats.ownership", "Ownership")}
-                  </span>
-                  <span>{threat.ownership_pct.toFixed(1)}%</span>
-                </div>
-                <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-500 rounded-full transition-all"
-                    style={{
-                      width: `${Math.min(threat.ownership_pct, 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Bottom row: badges */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${badge.textClass}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${badge.dotClass}`} />
-                  {t(badge.labelKey, badge.labelFallback)}
-                </span>
-                <span className="text-[10px] text-theme-text-secondary theme-transition">
-                  EO: {threat.effective_ownership.toFixed(1)}%
-                </span>
-                {threat.is_on_bench && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-semibold">
-                    <MdChair className="text-xs" />
-                    {t("threats.onBench", "Bench")}
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Empty filtered state */}
-      {filteredThreats.length === 0 && (
-        <div className="p-8 text-center text-theme-text-secondary theme-transition text-sm">
-          {t(
-            "threats.noMatchingThreats",
-            "No threats match the selected filter."
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </Panel>
     </div>
   );
 });
