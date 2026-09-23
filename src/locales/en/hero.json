@@ -53,11 +53,11 @@
     "subtitle": "The most complete fantasy sports platform in the region.",
     "secureRegistration": {
       "title": "Secure Registration",
-      "description": "Protected sign-up and data handling — encrypted connection and reCAPTCHA."
+      "description": "Protected sign-up and data handling: encrypted connection and reCAPTCHA."
     },
     "autoManagement": {
       "title": "Auto League Management",
-      "description": "Tables and standings updated automatically — no manual work."
+      "description": "Tables and standings updated automatically, no manual work."
     },
     "prizes": {
       "title": "Best Prizes in the Region",
@@ -128,14 +128,14 @@
   "promo": {
     "predictor": {
       "title": "Predictions",
-      "desc": "Tournament winner, top scorer, group standings — predict it all. Compete on the leaderboard and win real prizes.",
+      "desc": "Tournament winner, top scorer, group standings. Predict it all. Compete on the leaderboard and win real prizes.",
       "cta": "Browse tournaments"
     }
   },
   "plHub": {
     "eyebrow": "Premier League · Season 2026/27",
     "title": "Your FPL command center",
-    "subtitle": "Everything you need to win at Fantasy Premier League — one click away.",
+    "subtitle": "Everything you need to win at Fantasy Premier League, one click away.",
     "featured": "Most popular",
     "more": "More tools",
     "open": "Open",
@@ -145,7 +145,7 @@
       "fplLive": "Points, rank and bonus in real time while matches are on.",
       "fantasyCommand": "Plan transfers, chips and line-ups for the next gameweeks.",
       "aiTeamAnalysis": "AI reviews your team and gives concrete advice.",
-      "tables": "Standings of every REMIS league — who leads, who chases.",
+      "tables": "Standings of every REMIS league: who leads, who chases.",
       "prices": "Player price rises and falls before the deadline.",
       "bestDifferentials": "Low-ownership players that give you an edge.",
       "teamNews": "Injuries, suspensions and club news.",

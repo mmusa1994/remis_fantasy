@@ -11,8 +11,8 @@
   "limits": {
     "groupCapHit": "Group {{group}}: maximum {{max}} can advance",
     "totalCapHit": "Maximum {{max}} total",
-    "groupOneHit": "Only 1 winner per group — a new pick replaces the previous one",
-    "rankedSwap": "Top {{max}} is full — your earliest pick was replaced",
+    "groupOneHit": "Only 1 winner per group, a new pick replaces the previous one",
+    "rankedSwap": "Top {{max}} is full, your earliest pick was replaced",
     "tooManyForGroup": "You can't pick {{count}} from one group",
     "groupBelowMin": "Group {{group}} needs at least {{min}} picks",
     "maxGroupsWith3": "You already have 8 groups with 3 teams. This group has to stay at 2."
@@ -32,7 +32,7 @@
       },
       "3": {
         "title": "Use a credit",
-        "desc": "A tournament is created with a credit — it is instant. Payments are temporarily switched off; if you need a credit, email us at remis.fantasy@gmail.com."
+        "desc": "A tournament is created with a credit. It is instant. Payments are temporarily switched off; if you need a credit, email us at remis.fantasy@gmail.com."
       },
       "4": {
         "title": "Configure in the editor",
@@ -75,7 +75,7 @@
   },
   "hero": {
     "title": "Predict. Compete. Win.",
-    "subtitle": "The official Remis Predictor — call group standings, finalists, top scorers and the champion of the world's biggest tournaments. One bracket. One leaderboard. Real rewards."
+    "subtitle": "The official Remis Predictor: call group standings, finalists, top scorers and the champion of the world's biggest tournaments. One bracket. One leaderboard. Real rewards."
   },
   "features": {
     "tournamentWinner": "Tournament winner",
@@ -125,7 +125,7 @@
     "byPointsShort": "by points",
     "roundLabel": "Matchday {{n}}",
     "currentRound": "current",
-    "roundOpenNotice": "Round is open — predictions show after it locks. Submit yours in the Predictions tab.",
+    "roundOpenNotice": "Round is open. Predictions show after it locks. Submit yours in the Predictions tab.",
     "playerFallback": "Player",
     "podiumSplit": "cat {{cat}} · match {{match}}"
   },
@@ -169,7 +169,7 @@
         "items": {
           "ownership": "Full owner access to every tournament you create",
           "tracking": "Track all your tournaments and stats in one place",
-          "google": "One-click Google sign-in — no new passwords"
+          "google": "One-click Google sign-in, no new passwords"
         }
       },
       "back": "Predictor"
@@ -211,7 +211,7 @@
     "templates": {
       "title": "Templates",
       "eyebrow": "Quick start",
-      "subtitle": "Pick a template and the basics — including categories and scoring — fill in automatically. Everything is editable afterwards.",
+      "subtitle": "Pick a template and the basics (including categories and scoring) fill in automatically. Everything is editable afterwards.",
       "blank": {
         "name": "Blank tournament",
         "short": "Start from scratch"
@@ -219,31 +219,31 @@
       "items": {
         "wc": {
           "name": "World Cup 2026",
-          "short": "FIFA World Cup — winner, top scorer, top 4, finalists"
+          "short": "FIFA World Cup: winner, top scorer, top 4, finalists"
         },
         "pl": {
           "name": "Premier League 2025/26",
-          "short": "English Premier League — winner, top scorer, top 4"
+          "short": "English Premier League: winner, top scorer, top 4"
         },
         "cl": {
           "name": "Champions League 2025/26",
-          "short": "UEFA Champions League — winner, finalists, best keeper"
+          "short": "UEFA Champions League: winner, finalists, best keeper"
         },
         "bundes": {
           "name": "Bundesliga 2025/26",
-          "short": "German Bundesliga — winner, top scorer, top 3"
+          "short": "German Bundesliga: winner, top scorer, top 3"
         },
         "laliga": {
           "name": "La Liga 2025/26",
-          "short": "Spanish La Liga — winner, top scorer, top 4"
+          "short": "Spanish La Liga: winner, top scorer, top 4"
         },
         "euroleague": {
           "name": "EuroLeague Basketball",
-          "short": "EuroLeague. Final Four, MVP, champion"
+          "short": "EuroLeague: Final Four, MVP, champion"
         },
         "f1": {
           "name": "Formula 1 2026",
-          "short": "F1 season — driver, constructor, pole position"
+          "short": "F1 season: driver, constructor, pole position"
         }
       },
       "pickHint": "Click a template to auto-fill the form."
@@ -258,7 +258,7 @@
       "line2": "Your rules.",
       "line3": "Your tournament."
     },
-    "subtitle": "Run a private prediction tournament for friends, colleagues, or your company — or an open one for the whole community. The same engine that powers Remis Fantasy's official competitions, now in your hands.",
+    "subtitle": "Run a private prediction tournament for friends, colleagues, or your company, or an open one for the whole community. The same engine that powers Remis Fantasy's official competitions, now in your hands.",
     "pricing": {
       "creditTitle": "You have free credits",
       "creditAmount_one": "{{count}} credit",
@@ -281,7 +281,7 @@
         },
         "categories": {
           "title": "Rich prediction categories",
-          "desc": "Winner, top scorer, top 4, exact score, free text — every category type available."
+          "desc": "Winner, top scorer, top 4, exact score, free text. Every category type available."
         },
         "scoring": {
           "title": "Automatic and manual scoring",
@@ -377,12 +377,12 @@
       "predictions": {
         "title": "Predictions (categories)",
         "openDesc": "Players can still change the winner, finalist and other categories.",
-        "lockedDesc": "Locked — nobody can change the tournament winner or other categories."
+        "lockedDesc": "Locked: nobody can change the tournament winner or other categories."
       },
       "matches": {
         "title": "Matches",
         "openDesc": "Players can enter match scores (each match also auto-locks at kickoff).",
-        "lockedDesc": "Locked — match predictions are frozen."
+        "lockedDesc": "Locked: match predictions are frozen."
       },
       "toast": {
         "locked": "Locked",
@@ -437,7 +437,7 @@
       "saveError": "Save error",
       "fetchError": "Load error",
       "settingsSaved": "Tournament settings saved",
-      "tournamentClosed": "Tournament closed — you approve participants",
+      "tournamentClosed": "Tournament closed, you approve participants",
       "tournamentOpened": "Tournament opened to everyone signed in",
       "statusChanged": "Status updated successfully",
       "categorySaved": "Category saved successfully",
@@ -450,9 +450,9 @@
       "rewardDeleted": "Reward deleted",
       "memberUpdated": "Member status updated",
       "memberRemoved": "Member removed",
-      "templateApplied": "Template applied — categories, rules and rewards added",
-      "tournamentPublished": "Tournament published — now visible to all users",
-      "tournamentLocked": "Predictions locked — no more changes allowed",
+      "templateApplied": "Template applied: categories, rules and rewards added",
+      "tournamentPublished": "Tournament published, now visible to all users",
+      "tournamentLocked": "Predictions locked, no more changes allowed",
       "tournamentFinished": "Tournament marked as finished",
       "tournamentDeleted": "Tournament deleted",
       "predictionsSaved": "Predictions saved successfully",
@@ -460,7 +460,7 @@
       "tournamentCreated": "Tournament created successfully",
       "scoringUpdated": "Scoring updated",
       "imageUploaded": "Image uploaded",
-      "genericError": "Something went wrong — please try again"
+      "genericError": "Something went wrong, please try again"
     },
     "statusBanner": {
       "draft": {
@@ -475,7 +475,7 @@
       },
       "locked": {
         "title": "Predictions locked",
-        "desc": "No new predictions accepted — score the results.",
+        "desc": "No new predictions accepted. Score the results.",
         "cta": "Mark as finished"
       },
       "finished": {
@@ -518,7 +518,7 @@
         "statusLabel": "Status",
         "statusHint": "Set to \"Published\" when you're ready for predictions.",
         "visibilityLabel": "Visibility",
-        "visibilityHint": "Private tournaments don't appear in lists — only via direct link.",
+        "visibilityHint": "Private tournaments don't appear in lists, only via direct link.",
         "accentLabel": "Accent colour",
         "approvalLabel": "Member approval",
         "approvalHint": "If on, every new member must be approved by you.",
@@ -527,14 +527,14 @@
       },
       "access": {
         "eyebrow": "Tournament access",
-        "titleOpen": "Open tournament — anyone signed in can predict",
-        "titleClosed": "Closed tournament — you approve participants",
+        "titleOpen": "Open tournament, anyone signed in can predict",
+        "titleClosed": "Closed tournament, you approve participants",
         "descOpen": "Anyone signed in can submit predictions right away. No waiting, no approvals.",
         "descClosed": "Users click 'Request to join' and appear in the 'Approvals' tab. They can only predict once you approve them.",
         "open": "Open",
         "closed": "Closed",
         "goToApprovals": "View approvals",
-        "privateNote": "Private tournaments are automatically closed — you must approve each member."
+        "privateNote": "Private tournaments are automatically closed. You must approve each member."
       },
       "timestamps": {
         "title": "Dates & deadlines",
@@ -651,7 +651,7 @@
       "title": "Matches (optional)",
       "desc": "Match-by-match predictions with automatic scoring from results.",
       "new": "New match",
-      "empty": "No matches yet. Match predictions are optional — the tournament works with categories alone.",
+      "empty": "No matches yet. Match predictions are optional, the tournament works with categories alone.",
       "noKickoff": "No kick-off",
       "deleteConfirm": "Delete match?",
       "editor": {
@@ -672,7 +672,7 @@
         "pointsDiff": "Goal diff",
         "pointsWinner": "Winner",
         "finalScore": "Final score",
-        "finalScoreHint": "Enter once the match is done — scoring runs automatically across all predictions.",
+        "finalScoreHint": "Enter once the match is done, scoring runs automatically across all predictions.",
         "homeScore": "Home goals",
         "awayScore": "Away goals",
         "statusOptions": {
@@ -714,7 +714,7 @@
         "button": "Player pick",
         "result": "result",
         "player": "Player",
-        "pickPlayerOption": "— pick a player —",
+        "pickPlayerOption": "Pick a player",
         "unknownPlayer": "Unknown player",
         "pickPlayerError": "Pick a player.",
         "enterScoreError": "Enter a score.",
@@ -780,7 +780,7 @@
     },
     "membersTab": {
       "title": "Approvals & members",
-      "approvalsOn": "Approval mode is on — you must approve every new member.",
+      "approvalsOn": "Approval mode is on. You must approve every new member.",
       "approvalsOff": "All signed-in users can join. You can still ban them.",
       "empty": "No members or join requests yet.",
       "noName": "(no name)",
@@ -862,7 +862,7 @@
   },
   "empty": {
     "title": "No active tournaments yet",
-    "subtitle": "Predictor tournaments only drop right before the biggest competitions — the World Cup, the Euros, the Champions League. Check back soon and get ready to climb the leaderboard.",
+    "subtitle": "Predictor tournaments only drop right before the biggest competitions: the World Cup, the Euros, the Champions League. Check back soon and get ready to climb the leaderboard.",
     "eyebrow": "Coming soon",
     "exploreFpl": "Open FPL Live",
     "notify": "Notify me when live",
@@ -873,7 +873,7 @@
       },
       "leaderboard": {
         "title": "Global leaderboard",
-        "desc": "Points stack across the tournament — climb to the top."
+        "desc": "Points stack across the tournament. Climb to the top."
       },
       "lock": {
         "title": "Sharp predictions",
@@ -893,7 +893,7 @@
   "matchesLockedNotice": "Matches are locked by the organizer.",
   "sponsor": "Sponsor",
   "progress": "Predictions completed",
-  "noPredictionsToSave": "Nothing to save — make a pick first.",
+  "noPredictionsToSave": "Nothing to save. Make a pick first.",
   "saveFailed": "Save failed",
   "open": "Open predictor",
   "savePredictions": "Save predictions",
@@ -918,13 +918,13 @@
     "title": "Not saved",
     "close": "Close",
     "mustSignIn": "You must be signed in to save predictions. Click Sign in above.",
-    "nothingToSave": "Nothing to save — enter scores first (use + and − buttons).",
+    "nothingToSave": "Nothing to save. Enter scores first (use + and − buttons).",
     "sessionExpired": "Session expired. Please sign in again.",
     "notAllowed": "You don't have permission for this tournament. Request to join if needed.",
     "tournamentNotFound": "Tournament not found.",
     "tournamentNotAcceptingPredictions": "This tournament isn't accepting predictions right now.",
     "draftMessage": "Tournament hasn't been published yet. Admin must publish it before predictions can be saved.",
-    "lockedMessage": "Tournament is locked or finished — predictions can no longer be changed.",
+    "lockedMessage": "Tournament is locked or finished. Predictions can no longer be changed.",
     "genericHttp": "Save failed (HTTP {{status}}).",
     "unknown": "Unknown error while saving.",
     "matchSkipped": "Predictions weren't saved. Reasons: {{reasons}}. Check that matches aren't locked."
@@ -1000,7 +1000,7 @@
   "admin": {
     "explorer": {
       "title": "Predictions overview",
-      "subtitle": "Every prediction from every user — by day, by match, and by tournament category.",
+      "subtitle": "Every prediction from every user: by day, by match, and by tournament category.",
       "tabs": {
         "leaderboard": "Leaderboard",
         "matches": "Matches by day",
@@ -1068,9 +1068,9 @@
         "bgLabel": "Background image",
         "noBg": "No background",
         "musicLabel": "Auto-play the WC 2026 anthem",
-        "musicHint": "When on, the tournament page shows a toggle for the FIFA WC 2026 anthem. State is remembered per user — autoplay-block keeps it from playing without consent.",
-        "musicOn": "Yes — show anthem button",
-        "musicOff": "No — no anthem",
+        "musicHint": "When on, the tournament page shows a toggle for the FIFA WC 2026 anthem. State is remembered per user. Autoplay-block keeps it from playing without consent.",
+        "musicOn": "Yes, show anthem button",
+        "musicOff": "No, no anthem",
         "bg": {
           "bgFull": "FIFA 26 logo (dark, bold)",
           "bg1": "Hero #1",
@@ -1189,7 +1189,7 @@
     "pending": {
       "kicker": "Pending",
       "title": "Request sent",
-      "subtitle": "The admin will review your request. Predictions unlock as soon as you're approved — no need to refresh."
+      "subtitle": "The admin will review your request. Predictions unlock as soon as you're approved. No need to refresh."
     },
     "rejected": {
       "kicker": "Rejected",

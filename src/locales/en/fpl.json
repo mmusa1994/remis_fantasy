@@ -129,7 +129,7 @@
     "autoSubReason": "via {{reason}}",
     "captainPromoted": "Captain promoted: {{from}} → {{to}}",
     "hits": "Hits",
-    "noChip": "—",
+    "noChip": "-",
     "startingXI": "Starting XI",
     "adjustments": "Adjustments",
     "predictedBonus": "predicted bonus",
@@ -207,7 +207,7 @@
       "error": "Error loading data",
       "plTitle": "Premier League Prizes",
       "plSubtitle": "Win amazing prizes throughout the Premier League season!",
-      "historySubtitle": "Season 2025/26 — completed",
+      "historySubtitle": "Season 2025/26, completed",
       "completedSuffix": "Completed",
       "tbdTitle": "Prizes for season 2026/27",
       "tbdMessage": "Prizes will be announced soon.",
@@ -849,7 +849,7 @@
         "highest": "Highest",
         "kpiBank": "In the bank {{bank}}",
         "kpiBench": "Bench points",
-        "kpiBenchBoost": "counted — Bench Boost",
+        "kpiBenchBoost": "counted (Bench Boost)",
         "kpiBenchHint": "left on the bench",
         "kpiHit": "Hit −{{cost}}",
         "kpiNoHit": "No hit taken",
@@ -872,7 +872,7 @@
         "rankTrendTitle": "Rank trend",
         "redArrow": "Red arrow",
         "redCards": "Red cards",
-        "sameAsTemplate": "Same pick as most managers — no rank swing from the armband",
+        "sameAsTemplate": "Same pick as most managers, no rank swing from the armband",
         "saves": "Saves",
         "showAllGws": "Show all {{count}} gameweeks",
         "showLess": "Show less",
@@ -950,7 +950,7 @@
         "bonusPredictedShort": "predicted",
         "breakdown": "Points breakdown",
         "captainMultiplier": "Captain ×{{x}}",
-        "captainPromoted": "Armband moved to {{name}} — captain didn't play",
+        "captainPromoted": "Armband moved to {{name}}, captain didn't play",
         "dnp": "Did not play",
         "form": "Form",
         "hit": "Transfer hit: −{{cost}}",
@@ -1021,7 +1021,7 @@
         "noData": "No transfer data yet",
         "out": "Out",
         "ownedSelling": "Your players among the most sold: {{names}}. Their price could drop.",
-        "priceLegend": "The small bar shows FPL's progress towards the player's next price change — at 100% the price moves.",
+        "priceLegend": "The small bar shows FPL's progress towards the player's next price change. At 100% the price moves.",
         "priceLocked": "Price change locked",
         "priceProgress": "Progress to next price change",
         "retry": "Try again",
@@ -1069,7 +1069,7 @@
         "refreshPage": "Refresh page",
         "waitAndRetry": "Or wait a few minutes and try again",
         "retryHint": "Check your connection and try again.",
-        "refreshFailed": "Refresh failed — showing the last loaded data."
+        "refreshFailed": "Refresh failed. Showing the last loaded data."
       }
     }
   },
@@ -1401,7 +1401,7 @@
       },
       "noManagerId": {
         "message": "No FPL Manager ID connected.",
-        "hint": "Add your Manager ID in your profile — without it the AI cannot see your squad."
+        "hint": "Add your Manager ID in your profile. Without it the AI cannot see your squad."
       },
       "fplUnavailable": {
         "message": "The FPL API is not responding.",
@@ -1451,7 +1451,7 @@
       "title": "AI Team Analysis",
       "subtitle": "1x weekly · Turns your data into a clear action plan",
       "readyTitle": "Ready for insights?",
-      "readyText": "AI analyzes your formation, transfers, chips and fixtures — then gives concrete recommendations for the next gameweek.",
+      "readyText": "AI analyzes your formation, transfers, chips and fixtures, then gives concrete recommendations for the next gameweek.",
       "pillWeakSpots": "Weak spots",
       "pillTransfers": "Transfer ideas",
       "pillCaptain": "Captain pick",

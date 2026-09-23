@@ -53,11 +53,11 @@
     "subtitle": "Najkompletnija fantasy sportska platforma u regionu.",
     "secureRegistration": {
       "title": "Sigurna registracija",
-      "description": "Zaštićena prijava i obrada podataka — enkriptovana konekcija i reCAPTCHA zaštita."
+      "description": "Zaštićena prijava i obrada podataka: enkriptovana konekcija i reCAPTCHA zaštita."
     },
     "autoManagement": {
       "title": "Automatsko upravljanje ligom",
-      "description": "Tabele i poredak se automatski ažuriraju — bez manuelnog rada."
+      "description": "Tabele i poredak se automatski ažuriraju, bez manuelnog rada."
     },
     "prizes": {
       "title": "Najbolje nagrade u regionu",
@@ -128,14 +128,14 @@
   "promo": {
     "predictor": {
       "title": "Predikcije",
-      "desc": "Pobjednik turnira, najbolji strijelac, poredak u grupama — predvidi sve. Takmiči se na rang listi i osvoji prave nagrade.",
+      "desc": "Pobjednik turnira, najbolji strijelac, poredak u grupama. Predvidi sve. Takmiči se na rang listi i osvoji prave nagrade.",
       "cta": "Pregledaj turnire"
     }
   },
   "plHub": {
     "eyebrow": "Premier Liga · Sezona 2026/27",
     "title": "Tvoj FPL komandni centar",
-    "subtitle": "Sve što ti treba za pobjedu u Fantasy Premier League — na jedan klik.",
+    "subtitle": "Sve što ti treba za pobjedu u Fantasy Premier League, na jedan klik.",
     "featured": "Najpopularnije",
     "more": "Još alata",
     "open": "Otvori",
@@ -145,7 +145,7 @@
       "fplLive": "Bodovi, rang i bonusi u realnom vremenu dok utakmice traju.",
       "fantasyCommand": "Planiraj transfere, čipove i postavu za naredna kola.",
       "aiTeamAnalysis": "AI pregleda tvoj tim i daje konkretne savjete.",
-      "tables": "Poredak svih REMIS liga — ko vodi, ko lovi.",
+      "tables": "Poredak svih REMIS liga: ko vodi, ko lovi.",
       "prices": "Rast i pad cijena igrača prije deadlinea.",
       "bestDifferentials": "Igrači niskog vlasništva koji donose prednost.",
       "teamNews": "Povrede, suspenzije i vijesti iz klubova.",

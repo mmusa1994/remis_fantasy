@@ -11,8 +11,8 @@
   "limits": {
     "groupCapHit": "Iz grupe {{group}} maks. {{max}} ekipe mogu proći",
     "totalCapHit": "Maksimalno {{max}} ukupno",
-    "groupOneHit": "Iz svake grupe ide samo 1 pobjednik — novi izbor mijenja prethodni",
-    "rankedSwap": "Top {{max}} je popunjen — prvi izbor je zamijenjen",
+    "groupOneHit": "Iz svake grupe ide samo 1 pobjednik, novi izbor mijenja prethodni",
+    "rankedSwap": "Top {{max}} je popunjen, prvi izbor je zamijenjen",
     "tooManyForGroup": "Ne možeš izabrati {{count}} ekipe iz jedne grupe",
     "groupBelowMin": "Iz grupe {{group}} mora proći bar {{min}} ekipe",
     "maxGroupsWith3": "Već imaš 8 grupa sa 3 ekipe. Ova grupa mora ostati na 2."
@@ -32,7 +32,7 @@
       },
       "3": {
         "title": "Koristi kredit",
-        "desc": "Turnir se kreira uz kredit — proces je trenutačan. Plaćanje je privremeno isključeno; ako ti treba kredit, piši nam na remis.fantasy@gmail.com."
+        "desc": "Turnir se kreira uz kredit. Proces je trenutačan. Plaćanje je privremeno isključeno; ako ti treba kredit, piši nam na remis.fantasy@gmail.com."
       },
       "4": {
         "title": "Konfiguriši u editoru",
@@ -75,7 +75,7 @@
   },
   "hero": {
     "title": "Predvidi. Takmiči se. Pobijedi.",
-    "subtitle": "Zvanični Remis Predictor — pogodi poredak u grupama, finaliste, najbolje strijelce i prvaka najvećih svjetskih turnira. Jedan tip. Jedna tabela. Prave nagrade."
+    "subtitle": "Zvanični Remis Predictor: pogodi poredak u grupama, finaliste, najbolje strijelce i prvaka najvećih svjetskih turnira. Jedan tip. Jedna tabela. Prave nagrade."
   },
   "features": {
     "tournamentWinner": "Pobjednik turnira",
@@ -126,7 +126,7 @@
     "byPointsShort": "po poenima",
     "roundLabel": "{{n}}. kolo",
     "currentRound": "aktuelno",
-    "roundOpenNotice": "Kolo je otključano — tipovi se prikazuju nakon zaključavanja. Tipuj u tabu Predikcije.",
+    "roundOpenNotice": "Kolo je otključano. Tipovi se prikazuju nakon zaključavanja. Tipuj u tabu Predikcije.",
     "playerFallback": "Igrač",
     "podiumSplit": "kat {{cat}} · ut {{match}}"
   },
@@ -170,7 +170,7 @@
         "items": {
           "ownership": "Pun vlasnički pristup nad svim svojim turnirima",
           "tracking": "Pratiš sve turnire i statistike na jednom mjestu",
-          "google": "Google prijava — bez novih lozinki"
+          "google": "Google prijava, bez novih lozinki"
         }
       },
       "back": "Predictor"
@@ -213,7 +213,7 @@
     "templates": {
       "title": "Šabloni",
       "eyebrow": "Brzi start",
-      "subtitle": "Odaberi šablon i osnovni podaci se popunjavaju automatski — uključujući kategorije i bodovanje. Sve možeš urediti kasnije.",
+      "subtitle": "Odaberi šablon i osnovni podaci se popunjavaju automatski, uključujući kategorije i bodovanje. Sve možeš urediti kasnije.",
       "blank": {
         "name": "Prazan turnir",
         "short": "Krenem od nule"
@@ -221,23 +221,23 @@
       "items": {
         "wc": {
           "name": "Svjetsko prvenstvo 2026",
-          "short": "FIFA World Cup — prvak, top strijelac, top 4, finalisti"
+          "short": "FIFA World Cup: prvak, top strijelac, top 4, finalisti"
         },
         "pl": {
           "name": "Premier League 2025/26",
-          "short": "Engleska Premier liga — prvak, top strijelac, top 4"
+          "short": "Engleska Premier liga: prvak, top strijelac, top 4"
         },
         "cl": {
           "name": "Liga prvaka 2025/26",
-          "short": "UEFA Champions League — prvak, finalisti, najbolji golman"
+          "short": "UEFA Champions League: prvak, finalisti, najbolji golman"
         },
         "bundes": {
           "name": "Bundesliga 2025/26",
-          "short": "Njemačka Bundesliga — prvak, top strijelac, top 3"
+          "short": "Njemačka Bundesliga: prvak, top strijelac, top 3"
         },
         "laliga": {
           "name": "La Liga 2025/26",
-          "short": "Španska La Liga — prvak, top strijelac, top 4"
+          "short": "Španska La Liga: prvak, top strijelac, top 4"
         },
         "euroleague": {
           "name": "EuroLeague Košarka",
@@ -245,7 +245,7 @@
         },
         "f1": {
           "name": "Formula 1 2026",
-          "short": "F1 sezona — prvak vozač, prvak konstruktor, pole position"
+          "short": "F1 sezona: prvak vozač, prvak konstruktor, pole position"
         }
       },
       "pickHint": "Klikni šablon da automatski popuni podatke."
@@ -260,7 +260,7 @@
       "line2": "Tvoja pravila.",
       "line3": "Tvoj turnir."
     },
-    "subtitle": "Pokreni privatni predikcioni turnir za prijatelje, kolege ili kompaniju — ili otvoreni za cijelu zajednicu. Isti alat koji vodi Remis Fantasy zvanične lige, sada u tvojim rukama.",
+    "subtitle": "Pokreni privatni predikcioni turnir za prijatelje, kolege ili kompaniju, ili otvoreni za cijelu zajednicu. Isti alat koji vodi Remis Fantasy zvanične lige, sada u tvojim rukama.",
     "pricing": {
       "creditTitle": "Imaš besplatne kredite",
       "creditAmount_one": "{{count}} kredit",
@@ -284,7 +284,7 @@
         },
         "categories": {
           "title": "Bogate kategorije predikcija",
-          "desc": "Pobjednik, najbolji strijelac, top 4, tačan rezultat, slobodan tekst — sve dostupno."
+          "desc": "Pobjednik, najbolji strijelac, top 4, tačan rezultat, slobodan tekst. Sve dostupno."
         },
         "scoring": {
           "title": "Automatsko i ručno bodovanje",
@@ -380,12 +380,12 @@
       "predictions": {
         "title": "Predikcije (kategorije)",
         "openDesc": "Učesnici mogu mijenjati pobjednika, finalistu i ostale kategorije.",
-        "lockedDesc": "Zaključano — niko ne može mijenjati pobjednika prvenstva ni ostale kategorije."
+        "lockedDesc": "Zaključano: niko ne može mijenjati pobjednika prvenstva ni ostale kategorije."
       },
       "matches": {
         "title": "Utakmice",
         "openDesc": "Učesnici mogu unositi rezultate utakmica (svaka se i sama zaključava na početku).",
-        "lockedDesc": "Zaključano — predikcije utakmica su zamrznute."
+        "lockedDesc": "Zaključano: predikcije utakmica su zamrznute."
       },
       "toast": {
         "locked": "Zaključano",
@@ -440,7 +440,7 @@
       "saveError": "Greška",
       "fetchError": "Greška pri učitavanju",
       "settingsSaved": "Postavke turnira snimljene",
-      "tournamentClosed": "Turnir je zatvoren — ti odobravaš učesnike",
+      "tournamentClosed": "Turnir je zatvoren, ti odobravaš učesnike",
       "tournamentOpened": "Turnir je otvoren za sve prijavljene",
       "statusChanged": "Status uspješno ažuriran",
       "categorySaved": "Kategorija uspješno snimljena",
@@ -453,9 +453,9 @@
       "rewardDeleted": "Nagrada obrisana",
       "memberUpdated": "Status člana ažuriran",
       "memberRemoved": "Član uklonjen",
-      "templateApplied": "Šablon primijenjen — kategorije, pravila i nagrade su dodane",
-      "tournamentPublished": "Turnir objavljen — sada vidljiv svim korisnicima",
-      "tournamentLocked": "Predikcije zaključane — više nije moguće mijenjati",
+      "templateApplied": "Šablon primijenjen: kategorije, pravila i nagrade su dodane",
+      "tournamentPublished": "Turnir objavljen, sada vidljiv svim korisnicima",
+      "tournamentLocked": "Predikcije zaključane, više nije moguće mijenjati",
       "tournamentFinished": "Turnir označen kao završen",
       "tournamentDeleted": "Turnir obrisan",
       "predictionsSaved": "Predikcije uspješno sačuvane",
@@ -463,7 +463,7 @@
       "tournamentCreated": "Turnir uspješno kreiran",
       "scoringUpdated": "Bodovanje ažurirano",
       "imageUploaded": "Slika uploadovana",
-      "genericError": "Nešto je pošlo po zlu — pokušaj ponovo"
+      "genericError": "Nešto je pošlo po zlu, pokušaj ponovo"
     },
     "statusBanner": {
       "draft": {
@@ -478,7 +478,7 @@
       },
       "locked": {
         "title": "Predikcije zaključane",
-        "desc": "Više se ne primaju nove predikcije — boduj rezultate.",
+        "desc": "Više se ne primaju nove predikcije. Boduj rezultate.",
         "cta": "Označi kao završen"
       },
       "finished": {
@@ -521,7 +521,7 @@
         "statusLabel": "Status",
         "statusHint": "Stavi na \"Objavljen\" kad si spreman da prima predikcije.",
         "visibilityLabel": "Vidljivost",
-        "visibilityHint": "Privatni turniri se ne pojavljuju u listi — samo preko direktnog linka.",
+        "visibilityHint": "Privatni turniri se ne pojavljuju u listi, samo preko direktnog linka.",
         "accentLabel": "Akcent boja",
         "approvalLabel": "Odobravanje članova",
         "approvalHint": "Ako uključeno, svaki novi član mora biti odobren od tebe.",
@@ -530,14 +530,14 @@
       },
       "access": {
         "eyebrow": "Pristup turniru",
-        "titleOpen": "Otvoren turnir — svi prijavljeni mogu predviđati",
-        "titleClosed": "Zatvoren turnir — ti odobravaš učesnike",
+        "titleOpen": "Otvoren turnir, svi prijavljeni mogu predviđati",
+        "titleClosed": "Zatvoren turnir, ti odobravaš učesnike",
         "descOpen": "Bilo ko prijavljen može odmah unositi predikcije. Bez čekanja, bez odobrenja.",
         "descClosed": "Korisnici kliknu 'Zatraži učešće' i pojave se u tabu 'Odobrenja'. Tek kad ih odobriš, mogu unositi predikcije.",
         "open": "Otvoren",
         "closed": "Zatvoren",
         "goToApprovals": "Pogledaj odobrenja",
-        "privateNote": "Privatni turniri se automatski zatvaraju — moraš odobriti svakog člana."
+        "privateNote": "Privatni turniri se automatski zatvaraju. Moraš odobriti svakog člana."
       },
       "timestamps": {
         "title": "Vremenske oznake",
@@ -654,7 +654,7 @@
       "title": "Utakmice (opcionalno)",
       "desc": "Predikcije za svaku utakmicu s automatskim bodovanjem rezultata.",
       "new": "Nova utakmica",
-      "empty": "Nema utakmica. Predikcije utakmica su opcionalne — turnir radi i samo sa kategorijama.",
+      "empty": "Nema utakmica. Predikcije utakmica su opcionalne, turnir radi i samo sa kategorijama.",
       "noKickoff": "Bez termina",
       "deleteConfirm": "Obriši utakmicu?",
       "editor": {
@@ -675,7 +675,7 @@
         "pointsDiff": "Razlika",
         "pointsWinner": "Pobjednik",
         "finalScore": "Konačan rezultat",
-        "finalScoreHint": "Unesi kad utakmica završi — bodovanje se automatski računa za sve predikcije.",
+        "finalScoreHint": "Unesi kad utakmica završi, bodovanje se automatski računa za sve predikcije.",
         "homeScore": "Golovi domaćina",
         "awayScore": "Golovi gosta",
         "statusOptions": {
@@ -717,7 +717,7 @@
         "button": "Tip igrača",
         "result": "rezultat",
         "player": "Igrač",
-        "pickPlayerOption": "— izaberi igrača —",
+        "pickPlayerOption": "Izaberi igrača",
         "unknownPlayer": "Nepoznat igrač",
         "pickPlayerError": "Izaberi igrača.",
         "enterScoreError": "Unesi rezultat.",
@@ -783,7 +783,7 @@
     },
     "membersTab": {
       "title": "Odobrenja i članovi",
-      "approvalsOn": "Odobravanje je uključeno — moraš odobriti svakog novog člana.",
+      "approvalsOn": "Odobravanje je uključeno. Moraš odobriti svakog novog člana.",
       "approvalsOff": "Svi prijavljeni mogu odmah ući. Možeš svejedno banovati.",
       "empty": "Još nema članova ni zahtjeva za učešće.",
       "noName": "(bez imena)",
@@ -876,7 +876,7 @@
       },
       "leaderboard": {
         "title": "Globalna tabela",
-        "desc": "Bodovi se zbrajaju kroz cijeli turnir — napadni vrh tabele."
+        "desc": "Bodovi se zbrajaju kroz cijeli turnir. Napadni vrh tabele."
       },
       "lock": {
         "title": "Tačno predviđanje",
@@ -896,7 +896,7 @@
   "matchesLockedNotice": "Utakmice su zaključane od strane organizatora.",
   "sponsor": "Sponzor",
   "progress": "Završene predikcije",
-  "noPredictionsToSave": "Nema šta da se sačuva — prvo napravi izbor.",
+  "noPredictionsToSave": "Nema šta da se sačuva. Prvo napravi izbor.",
   "saveFailed": "Greška pri čuvanju",
   "open": "Otvori predictor",
   "savePredictions": "Sačuvaj predikcije",
@@ -927,7 +927,7 @@
     "tournamentNotFound": "Turnir nije pronađen.",
     "tournamentNotAcceptingPredictions": "Turnir trenutno ne prima predikcije.",
     "draftMessage": "Turnir još nije objavljen. Admin ga mora objaviti prije nego što možeš sačuvati predikcije.",
-    "lockedMessage": "Turnir je zaključan ili završen — predikcije se više ne mogu mijenjati.",
+    "lockedMessage": "Turnir je zaključan ili završen. Predikcije se više ne mogu mijenjati.",
     "genericHttp": "Greška pri čuvanju (HTTP {{status}}).",
     "unknown": "Nepoznata greška pri čuvanju.",
     "matchSkipped": "Predikcije nisu sačuvane. Razlozi: {{reasons}}. Provjeri da utakmice nisu zaključane."
@@ -1003,7 +1003,7 @@
   "admin": {
     "explorer": {
       "title": "Pregled predikcija",
-      "subtitle": "Sve predikcije svih korisnika — po danu, po utakmici i po kategoriji turnira.",
+      "subtitle": "Sve predikcije svih korisnika: po danu, po utakmici i po kategoriji turnira.",
       "tabs": {
         "leaderboard": "Tabela",
         "matches": "Utakmice po danu",
@@ -1071,9 +1071,9 @@
         "bgLabel": "Pozadinska slika",
         "noBg": "Bez pozadine",
         "musicLabel": "Auto-pusti WC 2026 himnu",
-        "musicHint": "Ako uključiš, na stranici turnira će se prikazati toggle za FIFA WC 2026 himnu. Stanje se pamti po korisniku — ne pušta se automatski uz autoplay-block.",
-        "musicOn": "Da — prikaži dugme za himnu",
-        "musicOff": "Ne — bez himne",
+        "musicHint": "Ako uključiš, na stranici turnira će se prikazati toggle za FIFA WC 2026 himnu. Stanje se pamti po korisniku. Ne pušta se automatski uz autoplay-block.",
+        "musicOn": "Da, prikaži dugme za himnu",
+        "musicOff": "Ne, bez himne",
         "bg": {
           "bgFull": "FIFA 26 logo (tamna, brutalna)",
           "bg1": "Hero #1",
@@ -1193,7 +1193,7 @@
     "pending": {
       "kicker": "Na čekanju",
       "title": "Zahtjev poslan",
-      "subtitle": "Admin će pregledati tvoj zahtjev. Otključat ćemo predikcije čim odobri — nema potrebe da osvježavaš."
+      "subtitle": "Admin će pregledati tvoj zahtjev. Otključat ćemo predikcije čim odobri. Nema potrebe da osvježavaš."
     },
     "rejected": {
       "kicker": "Odbijen",

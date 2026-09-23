@@ -130,7 +130,7 @@
     "autoSubReason": "razlog: {{reason}}",
     "captainPromoted": "Kapiten promovisan: {{from}} → {{to}}",
     "hits": "Kazne",
-    "noChip": "—",
+    "noChip": "-",
     "startingXI": "Početnih 11",
     "adjustments": "Promjene",
     "predictedBonus": "predviđeni bonus",
@@ -208,7 +208,7 @@
       "error": "Greška pri učitavanju podataka",
       "plTitle": "Premier League Nagrade",
       "plSubtitle": "Osvojite nevjerovatne nagrade tokom cijele Premier League sezone!",
-      "historySubtitle": "Sezona 2025/26 — završena",
+      "historySubtitle": "Sezona 2025/26, završena",
       "completedSuffix": "Završena",
       "tbdTitle": "Nagrade za sezonu 2026/27",
       "tbdMessage": "Nagrade će biti objavljene naknadno.",
@@ -850,7 +850,7 @@
         "highest": "Najviše",
         "kpiBank": "U banci {{bank}}",
         "kpiBench": "Bodovi na klupi",
-        "kpiBenchBoost": "računaju se — Bench Boost",
+        "kpiBenchBoost": "računaju se (Bench Boost)",
         "kpiBenchHint": "ostalo na klupi",
         "kpiHit": "Hit −{{cost}}",
         "kpiNoHit": "Bez minus bodova",
@@ -873,7 +873,7 @@
         "rankTrendTitle": "Kretanje ranga",
         "redArrow": "Crvena strelica",
         "redCards": "Crveni kartoni",
-        "sameAsTemplate": "Isti kapiten kao kod većine — kapitenski izbor ti ne mijenja rang",
+        "sameAsTemplate": "Isti kapiten kao kod većine, kapitenski izbor ti ne mijenja rang",
         "saves": "Odbrane",
         "showAllGws": "Prikaži sva kola ({{count}})",
         "showLess": "Prikaži manje",
@@ -952,7 +952,7 @@
         "bonusPredictedShort": "predviđen",
         "breakdown": "Struktura bodova",
         "captainMultiplier": "Kapiten ×{{x}}",
-        "captainPromoted": "Traka prelazi na {{name}} — kapiten nije igrao",
+        "captainPromoted": "Traka prelazi na {{name}}, kapiten nije igrao",
         "dnp": "Nije igrao",
         "form": "Forma",
         "hit": "Minus za transfere: −{{cost}}",
@@ -1023,7 +1023,7 @@
         "noData": "Još nema podataka o transferima",
         "out": "Odlasci",
         "ownedSelling": "Tvoji igrači među najprodavanijima: {{names}}. Cijena im može pasti.",
-        "priceLegend": "Mala traka pokazuje FPL-ov napredak do sljedeće promjene cijene igrača — na 100% cijena se mijenja.",
+        "priceLegend": "Mala traka pokazuje FPL-ov napredak do sljedeće promjene cijene igrača. Na 100% cijena se mijenja.",
         "priceLocked": "Promjena cijene je zaključana",
         "priceProgress": "Napredak do sljedeće promjene cijene",
         "retry": "Pokušaj ponovo",
@@ -1071,7 +1071,7 @@
         "refreshPage": "Osvježi stranicu",
         "waitAndRetry": "Ili sačekajte nekoliko minuta i pokušajte ponovo",
         "retryHint": "Provjerite konekciju i pokušajte ponovo.",
-        "refreshFailed": "Osvježavanje nije uspjelo — prikazani su posljednji učitani podaci."
+        "refreshFailed": "Osvježavanje nije uspjelo. Prikazani su posljednji učitani podaci."
       }
     }
   },
@@ -1403,7 +1403,7 @@
       },
       "noManagerId": {
         "message": "Nije povezan FPL Manager ID.",
-        "hint": "Dodaj svoj Manager ID u profilu — bez njega AI ne vidi tvoj kadar."
+        "hint": "Dodaj svoj Manager ID u profilu. Bez njega AI ne vidi tvoj kadar."
       },
       "fplUnavailable": {
         "message": "FPL API trenutno ne odgovara.",
@@ -1453,7 +1453,7 @@
       "title": "AI analiza tima",
       "subtitle": "1x sedmično · Pretvara tvoje podatke u jasan akcioni plan",
       "readyTitle": "Spreman za uvid?",
-      "readyText": "AI analizira tvoju formaciju, transfere, čipove i raspored — pa daje konkretne preporuke za sljedeće kolo.",
+      "readyText": "AI analizira tvoju formaciju, transfere, čipove i raspored, pa daje konkretne preporuke za sljedeće kolo.",
       "pillWeakSpots": "Slabe tačke",
       "pillTransfers": "Transfer ideje",
       "pillCaptain": "Kapiten",
