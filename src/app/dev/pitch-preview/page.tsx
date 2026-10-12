@@ -23,6 +23,8 @@ export default function PitchPreviewPage() {
   const [shape, setShape] = useState("3-5-2");
   const [formation, setFormation] = useState("3-5-2");
   const [selected, setSelected] = useState<any>(null);
+  const [currentGw, setCurrentGw] = useState(5);
+  const [fixtures, setFixtures] = useState<any[]>([]);
 
   useEffect(() => {
     fetch("/api/fpl/bootstrap-static")
@@ -31,6 +33,18 @@ export default function PitchPreviewPage() {
         registerFplTeams(res.data.teams);
         setTeams(res.data.teams);
         setPlayers(res.data.elements);
+        const gw = res.data.events?.find((e: any) => e.is_current)?.id ?? 5;
+        setCurrentGw(gw);
+        // isti izvor kao FantasyPlanner: sljedećih 5 kola za fixture run
+        const targets = [1, 2, 3, 4, 5].map((d) => gw + d).filter((g) => g <= 38);
+        Promise.all(
+          targets.map((g) =>
+            fetch(`/api/fpl/fixtures?event=${g}`)
+              .then((r) => (r.ok ? r.json() : null))
+              .then((d) => ((d?.success ? d.data : d) || []).map((f: any) => ({ ...f, event: f.event ?? g })))
+              .catch(() => [])
+          )
+        ).then((all) => setFixtures(all.flat()));
       });
   }, []);
 
@@ -88,10 +102,10 @@ export default function PitchPreviewPage() {
         selectedPlayer={selected}
         allPlayers={players}
         allTeams={teams}
-        nextGwFixtures={[]}
-        upcomingFixtures={[]}
-        nextGwNumber={6}
-        currentGameweek={5}
+        nextGwFixtures={fixtures.filter((f) => f.event === currentGw + 1)}
+        upcomingFixtures={fixtures}
+        nextGwNumber={currentGw + 1}
+        currentGameweek={currentGw}
         chipsUsed={[]}
         userTeamPlayerIds={squad.map((s) => s.player_id)}
         availableBudget={4}

@@ -1,31 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
-import { FaTimes, FaExchangeAlt } from "react-icons/fa";
-import { getTeamColors } from "@/lib/team-colors";
-import TeamJersey from "./TeamJersey";
-import {
-  TrendingUp,
-  Sparkles,
-  Gem,
-  Flame,
-  Star,
-  ShieldCheck,
-  Target as TargetIcon,
-  Home,
-  Plane,
-  Swords,
-  AlertTriangle,
-  Activity,
-  Zap,
-  ArrowUpRight,
-  ArrowDownRight,
-  Info,
-  HelpCircle,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowLeftRight, ChevronDown, HelpCircle, X } from "lucide-react";
+import { Chip, Delta, PlayerJersey, PosTag, Segmented, cx, formatPrice } from "./live/ui";
 
 interface ChipUsed {
   name: string;
@@ -70,28 +49,23 @@ interface SmartReplacementPanelProps {
   isTransferMode: boolean;
 }
 
-const POSITION_LABEL: Record<number, string> = { 1: "GK", 2: "DEF", 3: "MID", 4: "FWD" };
-const POSITION_ACCENT: Record<number, string> = {
-  1: "from-amber-400 to-yellow-500",
-  2: "from-sky-400 to-blue-500",
-  3: "from-emerald-400 to-teal-500",
-  4: "from-rose-400 to-red-500",
-};
 const CHIP_LABEL: Record<string, string> = {
   wildcard: "Wildcard",
   bboost: "Bench Boost",
   "3xc": "Triple Captain",
   freehit: "Free Hit",
 };
+const CHIP_SHORT: Record<string, string> = { wildcard: "WC", freehit: "FH", bboost: "BB", "3xc": "TC" };
 const ALL_CHIPS = ["wildcard", "freehit", "bboost", "3xc"];
+const PAGE_SIZE = 8;
 
 type FilterKey = "all" | "form" | "value" | "differential" | "reliable" | "premium";
 type SortKey = "score" | "xp" | "form" | "price" | "fdr";
+type Tone = "neutral" | "accent" | "positive" | "negative" | "warning";
 
 interface Reason {
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
+  tone: Tone;
 }
 
 interface FixtureRun {
@@ -106,7 +80,7 @@ interface ScoredCandidate {
   score: number;
   xP: number;
   xPDelta: number;
-  verdict: { label: string; color: string; icon: React.ComponentType<{ className?: string }> };
+  verdict: Reason;
   fixtures: FixtureRun[];
   reasons: Reason[];
   badges: { form: boolean; value: boolean; differential: boolean; reliable: boolean; premium: boolean };
@@ -117,6 +91,18 @@ const num = (v: any): number => {
   const parsed = parseFloat(v);
   return Number.isFinite(parsed) ? parsed : 0;
 };
+
+/** One decimal, so Delta never prints float noise like 2.6000000001. */
+const r1 = (v: number) => Math.round(v * 10) / 10;
+
+/**
+ * How much to trust per-game / per-90 numbers: 0 → 1 over the first ~4 full
+ * games. A 7-minute cameo with one assist otherwise reads as xGI/90 ≈ 12.
+ */
+const sampleWeight = (p: any) => Math.min(1, num(p.minutes) / 360);
+const MIN_MINUTES_PER90 = 180;
+const xgiPer90 = (p: any) =>
+  num(p.expected_goal_involvements_per_90) || num(p.expected_goals_per_90) + num(p.expected_assists_per_90);
 
 function getFixtureRun(teamId: number, fixtures: FixtureLite[], teams: TeamLite[], maxCount = 5): FixtureRun[] {
   const teamFx = fixtures
@@ -136,18 +122,8 @@ type TFn = (key: string, fallback: string, opts?: any) => any;
 
 function teamMotivation(pos: number | undefined, t: TFn): Reason | null {
   if (!pos) return null;
-  if (pos <= 4)
-    return {
-      label: t("fplDashboard.smartReplace.topFourFight", "Top-4 fight"),
-      icon: Swords,
-      color: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-violet-200/60 dark:border-violet-800/40",
-    };
-  if (pos >= 17)
-    return {
-      label: t("fplDashboard.smartReplace.relegationFight", "Relegation fight"),
-      icon: AlertTriangle,
-      color: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200/60 dark:border-orange-800/40",
-    };
+  if (pos <= 4) return { label: t("fplDashboard.smartReplace.topFourFight", "Top-4 fight"), tone: "neutral" };
+  if (pos >= 17) return { label: t("fplDashboard.smartReplace.relegationFight", "Relegation fight"), tone: "neutral" };
   return null;
 }
 
@@ -160,7 +136,7 @@ function computeExpectedPoints(
   // Blank gameweek: no fixture → 0 expected
   if (!fixture && fixturesInGw === 0) return 0;
   const form = num(p.form);
-  const ppg = num(p.points_per_game);
+  const ppg = num(p.points_per_game) * sampleWeight(p);
   const baseRate = form * 0.55 + ppg * 0.45;
   const fdr = fixture?.difficulty ?? 3;
   const fxFactor = 1 + (3 - fdr) * 0.13;
@@ -185,48 +161,39 @@ function buildReasons(
   const reasons: Reason[] = [];
   // Double gameweek - highest signal value
   if ((ctx.fixturesInGw ?? 1) > 1) {
-    reasons.push({
-      label: t("fplDashboard.smartReplace.dgw", "DGW ×{{count}}", { count: ctx.fixturesInGw }),
-      icon: Zap,
-      color: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300 border-fuchsia-300/70 dark:border-fuchsia-800/40",
-    });
+    reasons.push({ label: t("fplDashboard.smartReplace.dgw", "DGW ×{{count}}", { count: ctx.fixturesInGw }), tone: "accent" });
   }
-  // Penalty taker
+  if (ctx.playChance > 0 && ctx.playChance < 100)
+    reasons.push({ label: t("fplDashboard.smartReplace.playChance", "{{chance}}% chance", { chance: ctx.playChance }), tone: "warning" });
   if (typeof p.penalties_order === "number" && p.penalties_order === 1) {
-    reasons.push({
-      label: t("fplDashboard.smartReplace.penaltyTaker", "Penalty taker"),
-      icon: TargetIcon,
-      color: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200/60 dark:border-purple-800/40",
-    });
+    reasons.push({ label: t("fplDashboard.smartReplace.penaltyTaker", "Penalty taker"), tone: "neutral" });
   }
   const form = num(p.form);
-  const ppg = num(p.points_per_game);
+  const ppg = num(p.points_per_game) * sampleWeight(p);
   const ownership = num(p.selected_by_percent);
   const priceChange = num(p.cost_change_event);
-  const xgi90 = num(p.expected_goal_involvements_per_90) || num(p.expected_goals_per_90) + num(p.expected_assists_per_90);
+  const xgi90 = num(p.minutes) >= MIN_MINUTES_PER90 ? xgiPer90(p) : 0;
   const minutes = num(p.minutes);
   const expectedMinutes = Math.max(ctx.currentGw, 1) * 90;
   const reliability = minutes / Math.max(expectedMinutes, 1);
 
-  if (form >= 6) reasons.push({ label: t("fplDashboard.smartReplace.inForm", "In Form"), icon: Flame, color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40" });
+  if (form >= 6) reasons.push({ label: t("fplDashboard.smartReplace.inForm", "In Form"), tone: "positive" });
   if (ppg > 0 && p.now_cost > 0) {
     const myRatio = ppg / (p.now_cost / 10);
     const selRatio = selected ? num(selected.points_per_game) / Math.max(num(selected.now_cost) / 10, 0.1) : 0;
     if (myRatio > selRatio && myRatio > 0.7)
-      reasons.push({ label: t("fplDashboard.smartReplace.valuePick", "Value pick"), icon: Gem, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40" });
+      reasons.push({ label: t("fplDashboard.smartReplace.valuePick", "Value pick"), tone: "neutral" });
   }
-  if (reliability >= 0.85) reasons.push({ label: t("fplDashboard.smartReplace.reliableStarter", "Reliable"), icon: ShieldCheck, color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200/60 dark:border-slate-700/40" });
+  if (ctx.fixture && ctx.fixture.difficulty <= 2) reasons.push({ label: t("fplDashboard.smartReplace.easyMatch", "Easy match"), tone: "positive" });
+  if (reliability >= 0.85) reasons.push({ label: t("fplDashboard.smartReplace.reliableStarter", "Reliable"), tone: "neutral" });
   if (xgi90 >= 0.55 && (p.element_type === 3 || p.element_type === 4))
-    reasons.push({ label: t("fplDashboard.smartReplace.underlying", "Underlying"), icon: Activity, color: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 border-teal-200/60 dark:border-teal-800/40" });
-  if (priceChange > 0) reasons.push({ label: t("fplDashboard.smartReplace.priceRising", "Price rising"), icon: TrendingUp, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40" });
-  if (ctx.fixture && ctx.fixture.difficulty <= 2) reasons.push({ label: t("fplDashboard.smartReplace.easyMatch", "Easy match"), icon: Zap, color: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border-green-200/60 dark:border-green-800/40" });
-  if (ownership > 25) reasons.push({ label: t("fplDashboard.smartReplace.popular", "Popular"), icon: Star, color: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-violet-200/60 dark:border-violet-800/40" });
+    reasons.push({ label: t("fplDashboard.smartReplace.underlying", "Underlying"), tone: "neutral" });
+  if (priceChange > 0) reasons.push({ label: t("fplDashboard.smartReplace.priceRising", "Price rising"), tone: "positive" });
+  if (ownership > 25) reasons.push({ label: t("fplDashboard.smartReplace.popular", "Popular"), tone: "neutral" });
   else if (ownership > 0 && ownership < 5 && form >= 4)
-    reasons.push({ label: t("fplDashboard.smartReplace.differential", "Differential"), icon: Sparkles, color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/40" });
+    reasons.push({ label: t("fplDashboard.smartReplace.differential", "Differential"), tone: "accent" });
   const mot = teamMotivation(ctx.team?.position, t);
   if (mot) reasons.push(mot);
-  if (ctx.playChance > 0 && ctx.playChance < 100)
-    reasons.push({ label: t("fplDashboard.smartReplace.playChance", "{{chance}}% chance", { chance: ctx.playChance }), icon: AlertTriangle, color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-200/60 dark:border-yellow-800/40" });
   return reasons.slice(0, 6);
 }
 
@@ -236,11 +203,12 @@ function computeScore(
   ctx: { fixture: FixtureRun | null; team?: TeamLite; currentGw: number; playChance: number; fixturesInGw: number }
 ): number {
   const form = num(p.form);
-  const ppg = num(p.points_per_game);
+  const sample = sampleWeight(p);
+  const ppg = num(p.points_per_game) * sample;
   const total = num(p.total_points);
   const ict = num(p.ict_index);
-  const xg90 = num(p.expected_goals_per_90);
-  const xa90 = num(p.expected_assists_per_90);
+  const xg90 = num(p.expected_goals_per_90) * sample;
+  const xa90 = num(p.expected_assists_per_90) * sample;
   const xgc90 = num(p.expected_goals_conceded_per_90);
   const minutes = num(p.minutes);
   const priceChange = num(p.cost_change_event);
@@ -270,7 +238,6 @@ function computeScore(
   const isAttacker = p.element_type === 3 || p.element_type === 4;
   const isDefender = p.element_type === 1 || p.element_type === 2;
   const isMid = p.element_type === 3;
-  const isFwd = p.element_type === 4;
 
   let score = 0;
   score += form * 11;
@@ -279,7 +246,7 @@ function computeScore(
   score += ict * 0.35;
   if (isAttacker) score += (xg90 + xa90) * 18;
   // FIX: penalize defenders with bad xGC (formerly capped at 0)
-  if (isDefender) score += Math.max(-12, (4 - xgc90)) * 8;
+  if (isDefender) score += Math.max(-12, (4 - xgc90)) * 8 * sample;
   score += reliability * 14;
   score += fixtureScore + homeBonus;
   score += motivation;
@@ -313,90 +280,82 @@ function computeScore(
   return score;
 }
 
-function difficultyColor(d: number): string {
-  if (d <= 2) return "bg-emerald-500";
-  if (d === 3) return "bg-slate-400";
-  if (d === 4) return "bg-orange-500";
-  return "bg-rose-600";
-}
-
-function difficultyTextColor(d: number): string {
-  if (d <= 2) return "text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/40";
-  if (d === 3) return "text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-800 border-slate-200/60 dark:border-slate-700/40";
-  if (d === 4) return "text-orange-700 bg-orange-50 dark:text-orange-300 dark:bg-orange-950/40 border-orange-200/60 dark:border-orange-800/40";
-  return "text-rose-700 bg-rose-50 dark:text-rose-300 dark:bg-rose-950/40 border-rose-200/60 dark:border-rose-800/40";
-}
-
-function FixtureDots({ fixtures }: { fixtures: FixtureRun[] }) {
-  if (fixtures.length === 0) return null;
-  return (
-    <div className="flex items-center gap-1">
-      {fixtures.map((fx, i) => (
-        <div key={i} className="group relative">
-          <div
-            className={`w-3.5 h-3.5 rounded-sm flex items-center justify-center text-[8px] font-bold text-white shadow-sm ${difficultyColor(fx.difficulty)}`}
-            title={`GW${fx.event} ${fx.isHome ? "vs" : "@"} ${fx.opp} (FDR ${fx.difficulty})`}
-          >
-            {fx.isHome ? "H" : "A"}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Compact 3-GW fixture run with opponent short-name + difficulty colors
-function FixtureRun3({ fixtures }: { fixtures: FixtureRun[] }) {
-  const three = fixtures.slice(0, 3);
-  if (three.length === 0) return null;
-  return (
-    <div className="flex items-center gap-1">
-      {three.map((fx, i) => (
-        <div
-          key={i}
-          className={`flex flex-col items-center justify-center min-w-[36px] px-1 py-0.5 rounded-md text-white shadow-sm ${difficultyColor(fx.difficulty)}`}
-          title={`GW${fx.event} ${fx.isHome ? "vs" : "@"} ${fx.opp} · FDR ${fx.difficulty}`}
-        >
-          <span className="text-[8px] font-medium leading-none opacity-90">GW{fx.event}</span>
-          <span className="text-[10px] font-bold leading-tight tracking-tight">
-            {fx.isHome ? fx.opp : fx.opp.toLowerCase()}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function buildVerdict(
   c: { xPDelta: number; player: any; selected: any; fixture: FixtureRun | null },
   t: TFn
-) {
+): Reason {
   const { xPDelta, player, selected, fixture } = c;
   const costDiff = (num(player.now_cost) - num(selected.now_cost)) / 10;
   const playChance = player.chance_of_playing_next_round;
   const lowChance = playChance !== null && playChance !== undefined && playChance < 75;
   const fdr = fixture?.difficulty ?? 3;
 
-  if (lowChance) {
-    return { label: t("fplDashboard.smartReplace.risk", "Risk"), color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-200/60 dark:border-yellow-800/40", icon: AlertTriangle };
-  }
-  if (xPDelta >= 1.5 && costDiff <= 0) {
-    return { label: t("fplDashboard.smartReplace.valueUpgrade", "Value upgrade"), color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40", icon: Gem };
-  }
-  if (xPDelta >= 2.5) {
-    return { label: t("fplDashboard.smartReplace.premiumUpgrade", "Premium upgrade"), color: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40", icon: ArrowUpRight };
-  }
-  if (xPDelta >= 1.2) {
-    return { label: t("fplDashboard.smartReplace.clearlyBetter", "Clearly better"), color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/40", icon: ArrowUpRight };
-  }
-  if (xPDelta <= -0.5) {
-    return { label: t("fplDashboard.smartReplace.downgrade", "Downgrade"), color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/40", icon: ArrowDownRight };
-  }
-  if (fdr <= 2 && xPDelta >= 0.4) {
-    return { label: t("fplDashboard.smartReplace.fixturePick", "Fixture pick"), color: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200/60 dark:border-green-800/40", icon: Zap };
-  }
-  return { label: t("fplDashboard.smartReplace.sidegrade", "Sidegrade"), color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/40", icon: Info };
+  if (lowChance) return { label: t("fplDashboard.smartReplace.risk", "Risk"), tone: "warning" };
+  if (xPDelta >= 1.5 && costDiff <= 0) return { label: t("fplDashboard.smartReplace.valueUpgrade", "Value upgrade"), tone: "positive" };
+  if (xPDelta >= 2.5) return { label: t("fplDashboard.smartReplace.premiumUpgrade", "Premium upgrade"), tone: "accent" };
+  if (xPDelta >= 1.2) return { label: t("fplDashboard.smartReplace.clearlyBetter", "Clearly better"), tone: "positive" };
+  if (xPDelta <= -0.5) return { label: t("fplDashboard.smartReplace.downgrade", "Downgrade"), tone: "neutral" };
+  if (fdr <= 2 && xPDelta >= 0.4) return { label: t("fplDashboard.smartReplace.fixturePick", "Fixture pick"), tone: "positive" };
+  return { label: t("fplDashboard.smartReplace.sidegrade", "Sidegrade"), tone: "neutral" };
 }
+
+/* ------------------------------------------------------------------ */
+/* Presentational pieces                                               */
+/* ------------------------------------------------------------------ */
+
+const FDR_TONE = {
+  easy: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
+  mid: "bg-theme-card text-theme-text-secondary ring-1 ring-inset ring-theme-border",
+  hard: "bg-orange-500/15 text-orange-700 dark:text-orange-300",
+  veryHard: "bg-rose-500/15 text-rose-700 dark:text-rose-300",
+};
+
+function fdrTone(d: number) {
+  if (d <= 2) return FDR_TONE.easy;
+  if (d === 3) return FDR_TONE.mid;
+  if (d === 4) return FDR_TONE.hard;
+  return FDR_TONE.veryHard;
+}
+
+/** Next fixtures as opponent pills tinted by difficulty. */
+function FixtureStrip({ fixtures, count, homeLabel, awayLabel }: { fixtures: FixtureRun[]; count: number; homeLabel: string; awayLabel: string }) {
+  const list = fixtures.slice(0, count);
+  if (list.length === 0) return <span className="text-[11px] text-theme-text-muted">—</span>;
+  return (
+    <div className="flex min-w-0 flex-wrap items-center gap-1">
+      {list.map((fx, i) => (
+        <span
+          key={`${fx.event}-${i}`}
+          title={`GW${fx.event} · ${fx.isHome ? homeLabel : awayLabel} · FDR ${fx.difficulty}`}
+          className={cx(
+            "inline-flex h-[22px] min-w-[44px] items-center justify-center gap-0.5 rounded-md px-1.5 text-[10px] font-semibold leading-none tabular-nums",
+            fdrTone(fx.difficulty)
+          )}
+        >
+          {fx.opp}
+          <span className="text-[8px] font-medium opacity-70">{fx.isHome ? "H" : "A"}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** Label over value — the compact stat grid used on every row. */
+function StatCell({ label, value, delta, deltaSuffix, invert }: { label: ReactNode; value: ReactNode; delta?: number; deltaSuffix?: string; invert?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <div className="truncate text-[9px] font-medium uppercase tracking-wider text-theme-text-muted">{label}</div>
+      <div className="mt-0.5 flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
+        <span className="whitespace-nowrap text-[13px] font-semibold leading-none tabular-nums text-theme-heading-primary">{value}</span>
+        {typeof delta === "number" && <Delta value={r1(delta)} suffix={deltaSuffix} invert={invert} className="text-[10px]" />}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Panel                                                               */
+/* ------------------------------------------------------------------ */
 
 export default function SmartReplacementPanel({
   open,
@@ -418,7 +377,7 @@ export default function SmartReplacementPanel({
   const [filter, setFilter] = useState<FilterKey>("all");
   const [sort, setSort] = useState<SortKey>("score");
   const [showHelp, setShowHelp] = useState(false);
-  const [burstId, setBurstId] = useState<number | null>(null);
+  const [limit, setLimit] = useState(PAGE_SIZE);
   const [isMobile, setIsMobile] = useState(false);
   // Sheet is dragged only by its handle, so the content can scroll freely
   const dragControls = useDragControls();
@@ -432,13 +391,22 @@ export default function SmartReplacementPanel({
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const handlePick = (p: any) => {
-    if (!onPickReplacement) return;
-    setBurstId(p.id);
-    setTimeout(() => {
-      onPickReplacement(p);
-      setBurstId(null);
-    }, 420);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  // New player → start from the first page again (state adjusted during render)
+  const [limitFor, setLimitFor] = useState<number | undefined>(selectedPlayer?.id);
+  if (limitFor !== selectedPlayer?.id) {
+    setLimitFor(selectedPlayer?.id);
+    setLimit(PAGE_SIZE);
+  }
+  const changeFilter = (value: FilterKey) => {
+    setFilter(value);
+    setLimit(PAGE_SIZE);
   };
 
   const teamsById = useMemo(() => {
@@ -448,7 +416,6 @@ export default function SmartReplacementPanel({
   }, [allTeams]);
 
   const usedChipNames = useMemo(() => new Set(chipsUsed.map((c) => c.name)), [chipsUsed]);
-  const availableChips = ALL_CHIPS.filter((c) => !usedChipNames.has(c));
 
   const selectedFixtures = useMemo(() => {
     if (!selectedPlayer) return [];
@@ -505,7 +472,7 @@ export default function SmartReplacementPanel({
 
         const minutes = num(p.minutes);
         const reliability = minutes / Math.max(expectedMinutes, 1);
-        const ppg = num(p.points_per_game);
+        const ppg = num(p.points_per_game) * sampleWeight(p);
         const cost = num(p.now_cost) / 10;
         const ownership = num(p.selected_by_percent);
         const form = num(p.form);
@@ -535,7 +502,7 @@ export default function SmartReplacementPanel({
     };
   }, [allCandidates]);
 
-  const candidates = useMemo(() => {
+  const sortedCandidates = useMemo(() => {
     let list = allCandidates;
     if (filter !== "all") list = list.filter((c) => c.badges[filter]);
     const sorted = [...list];
@@ -555,21 +522,19 @@ export default function SmartReplacementPanel({
       default:
         sorted.sort((a, b) => b.score - a.score);
     }
-    return sorted.slice(0, 8);
+    return sorted;
   }, [allCandidates, filter, sort]);
 
+  const candidates = sortedCandidates.slice(0, limit);
   const heroPick = allCandidates[0] || null;
 
-  const positionLabel = selectedPlayer ? POSITION_LABEL[selectedPlayer.element_type] || "" : "";
-  const positionAccent = selectedPlayer ? POSITION_ACCENT[selectedPlayer.element_type] || "from-slate-400 to-slate-500" : "from-slate-400 to-slate-500";
-
-  const FILTERS: Array<{ key: FilterKey; label: string; icon: React.ComponentType<{ className?: string }> }> = [
-    { key: "all", label: t("fplDashboard.smartReplace.all", "All"), icon: Sparkles },
-    { key: "form", label: t("fplDashboard.smartReplace.inForm", "In Form"), icon: Flame },
-    { key: "value", label: t("fplDashboard.smartReplace.value", "Value"), icon: Gem },
-    { key: "differential", label: t("fplDashboard.smartReplace.differential", "Differential"), icon: Sparkles },
-    { key: "reliable", label: t("fplDashboard.smartReplace.reliable", "Reliable"), icon: ShieldCheck },
-    { key: "premium", label: t("fplDashboard.smartReplace.premium", "Premium"), icon: Star },
+  const FILTERS: Array<{ value: FilterKey; label: string; count: number }> = [
+    { value: "all", label: t("fplDashboard.smartReplace.all", "All"), count: filterCounts.all },
+    { value: "form", label: t("fplDashboard.smartReplace.inForm", "In Form"), count: filterCounts.form },
+    { value: "value", label: t("fplDashboard.smartReplace.value", "Value"), count: filterCounts.value },
+    { value: "differential", label: t("fplDashboard.smartReplace.differential", "Differential"), count: filterCounts.differential },
+    { value: "reliable", label: t("fplDashboard.smartReplace.reliable", "Reliable"), count: filterCounts.reliable },
+    { value: "premium", label: t("fplDashboard.smartReplace.premium", "Premium"), count: filterCounts.premium },
   ];
 
   const SORTS: Array<{ key: SortKey; label: string }> = [
@@ -580,84 +545,144 @@ export default function SmartReplacementPanel({
     { key: "fdr", label: t("fplDashboard.smartReplace.sortFdr", "FDR") },
   ];
 
+  const homeLabel = t("fplDashboard.smartReplace.home", "Home");
+  const awayLabel = t("fplDashboard.smartReplace.away", "Away");
+
+  // Attackers are judged on xGI/90, defenders and keepers on clean sheets
+  const isAttackerRole = selectedPlayer ? selectedPlayer.element_type >= 3 : false;
+  const threatLabel = isAttackerRole ? "xGI/90" : t("fplDashboard.smartReplace.cleanSheets", "CS");
+  const threatValue = (p: any) => {
+    if (!isAttackerRole) return String(num(p.clean_sheets));
+    // per-90 from a handful of minutes is noise, not signal
+    return num(p.minutes) >= MIN_MINUTES_PER90 ? xgiPer90(p).toFixed(2) : "—";
+  };
+
+  const ownershipLabel = t("fplDashboard.smartReplace.ownership", "Owned");
+  const priceLabel = t("fplDashboard.smartReplace.sortPrice", "Price");
+  const formLabel = t("fplDashboard.smartReplace.sortForm", "Form");
+
+  /** Five numbers every row shares, so rows read like one table. */
+  const statGrid = (p: any) => (
+    <div className="grid grid-cols-5 gap-2">
+      <StatCell label={t("fplDashboard.smartReplace.points", "Points")} value={num(p.total_points)} />
+      <StatCell label={formLabel} value={num(p.form).toFixed(1)} />
+      <StatCell label="PPG" value={num(p.points_per_game).toFixed(1)} />
+      <StatCell label={threatLabel} value={threatValue(p)} />
+      <StatCell label={ownershipLabel} value={`${num(p.selected_by_percent).toFixed(1)}%`} />
+    </div>
+  );
+
+  const transferButton = (p: any, size: "sm" | "md" = "sm") =>
+    onPickReplacement ? (
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.96 }}
+        onClick={() => onPickReplacement(p)}
+        title={isTransferMode ? t("fplDashboard.smartReplace.addToTransfer") : t("fplDashboard.smartReplace.startTransfer")}
+        className={cx(
+          "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-violet-600 font-semibold text-white shadow-sm transition-colors hover:bg-violet-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400",
+          size === "md" ? "px-3.5 py-2 text-xs" : "px-3 py-1.5 text-[11px]"
+        )}
+      >
+        <ArrowLeftRight className="h-3.5 w-3.5" />
+        {isTransferMode ? t("fplDashboard.smartReplace.swap", "Swap") : t("fplDashboard.smartReplace.transfer", "Transfer")}
+      </motion.button>
+    ) : null;
+
+  const heroReasons = (() => {
+    if (!heroPick || !selectedPlayer) return "";
+    const reasons: string[] = [];
+    if (heroPick.xPDelta >= 1.5) reasons.push(t("fplDashboard.smartReplace.extraExpectedPoints", "+{{value}} expected points", { value: heroPick.xPDelta.toFixed(1) }));
+    if (heroPick.fixtures[0] && selectedNextFixture && heroPick.fixtures[0].difficulty < selectedNextFixture.difficulty)
+      reasons.push(t("fplDashboard.smartReplace.easierFixture", "easier fixture (FDR {{fdr}})", { fdr: heroPick.fixtures[0].difficulty }));
+    if (num(heroPick.player.form) > num(selectedPlayer.form) + 1) reasons.push(t("fplDashboard.smartReplace.betterForm", "better form"));
+    if (heroPick.fixtures[0]?.isHome) reasons.push(t("fplDashboard.smartReplace.playsAtHome", "plays at home"));
+    if (heroPick.badges.value) reasons.push(t("fplDashboard.smartReplace.betterValue", "better value"));
+    return reasons.length > 0 ? reasons.join(" · ") : t("fplDashboard.smartReplace.solidAlternative", "Solid alternative by overall score.");
+  })();
+
+  const budgetTenths = selectedPlayer ? num(selectedPlayer.now_cost) + availableBudget : 0;
+  const selectedNews: string = selectedPlayer?.news || "";
+
   return (
     <AnimatePresence>
       {open && selectedPlayer && (
         <>
-          {/* Backdrop */}
           <motion.div
             key="smart-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 bg-slate-950/50 dark:bg-black/70 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 z-[60] bg-slate-950/50 backdrop-blur-sm dark:bg-black/70"
             onClick={onClose}
           />
 
-          {/* Drawer: bottom-sheet on mobile, right-side panel on tablet/desktop */}
+          {/* Bottom sheet on phones, right panel from sm up. One scroll area, so it works at any height. */}
           <motion.aside
             key="smart-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("fplDashboard.smartReplace.title", "Smart Recommendations")}
             initial={isMobile ? { y: "100%" } : { x: "100%" }}
             animate={isMobile ? { y: 0 } : { x: 0 }}
             exit={isMobile ? { y: "100%" } : { x: "100%" }}
-            transition={{ type: "spring", damping: 28, stiffness: 280 }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
             drag={isMobile ? "y" : false}
             dragControls={dragControls}
             dragListener={false}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.4 }}
             onDragEnd={(_, info) => {
-              if (isMobile && (info.offset.y > 120 || info.velocity.y > 600)) {
-                onClose();
-              }
+              if (isMobile && (info.offset.y > 120 || info.velocity.y > 600)) onClose();
             }}
-            className="fixed z-[70] flex flex-col overflow-hidden max-sm:block max-sm:overflow-y-auto max-sm:overscroll-contain bg-white dark:bg-slate-950 shadow-2xl
-              inset-x-0 bottom-0 top-auto max-h-[85dvh] rounded-t-3xl pb-[env(safe-area-inset-bottom)] border-t border-x-0 border-b-0 border-slate-200/70 dark:border-slate-700/60
-              sm:inset-x-auto sm:bottom-4 sm:top-20 sm:right-4 sm:left-auto sm:w-[480px] sm:max-h-none sm:rounded-2xl sm:border sm:border-x sm:border-y"
+            className="fixed inset-x-0 bottom-0 z-[70] flex max-h-[88dvh] flex-col overflow-hidden rounded-t-3xl border-t border-theme-border bg-theme-card pb-[env(safe-area-inset-bottom)] shadow-2xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-20 sm:max-h-none sm:w-[460px] sm:rounded-2xl sm:border sm:pb-0"
           >
-            {/* Mobile drag handle */}
             {isMobile && (
               <div
                 onPointerDown={(e) => dragControls.start(e)}
-                className="sm:hidden sticky top-0 z-20 flex items-center justify-center pt-2.5 pb-2 shrink-0 cursor-grab active:cursor-grabbing touch-none bg-white/95 dark:bg-slate-950/95 backdrop-blur"
+                className="flex shrink-0 cursor-grab touch-none justify-center pb-1 pt-2.5 active:cursor-grabbing"
               >
-                <span className="block w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                <span className="h-1 w-10 rounded-full bg-theme-border-strong" />
               </div>
             )}
+
             {/* Header */}
-            <div className="relative px-4 pt-3 sm:px-5 sm:pt-5 pb-3 border-b border-slate-200/70 dark:border-slate-700/60">
-              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${positionAccent}`} />
+            <header className="shrink-0 border-b border-theme-border px-4 pb-3 pt-2 sm:px-5 sm:pt-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className={`flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br ${positionAccent} text-white shadow-sm shrink-0`}>
-                    <Sparkles className="w-4 h-4" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="truncate text-base font-semibold leading-tight tracking-tight text-theme-heading-primary">
+                      {t("fplDashboard.smartReplace.title", "Smart Recommendations")}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowHelp((v) => !v)}
+                      aria-expanded={showHelp}
+                      title={t("fplDashboard.smartReplace.howCalculated", "How it's calculated")}
+                      className={cx(
+                        "flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors",
+                        showHelp ? "bg-theme-card-secondary text-theme-heading-primary" : "text-theme-text-muted hover:text-theme-text-secondary"
+                      )}
+                    >
+                      <HelpCircle className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{t("fplDashboard.smartReplace.title", "Smart Recommendations")}</h3>
-                      <button
-                        onClick={() => setShowHelp((v) => !v)}
-                        className="text-slate-400 hover:text-indigo-500 transition-colors"
-                        title={t("fplDashboard.smartReplace.howCalculated", "How it's calculated")}
-                      >
-                        <HelpCircle className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("fplDashboard.smartReplace.forGw", "For GW{{gw}}", { gw: nextGwNumber })} · {t("fplDashboard.smartReplace.subtitleMeta", "form, fixture, minutes, team, ICT")}</p>
-                  </div>
+                  <p className="mt-0.5 truncate text-xs text-theme-text-muted">
+                    {t("fplDashboard.smartReplace.forGw", "For GW{{gw}}", { gw: nextGwNumber })} · {t("fplDashboard.smartReplace.subtitleMeta", "form, fixture, minutes, team, ICT")}
+                  </p>
                 </div>
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="shrink-0 w-8 h-8 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition-colors"
                   aria-label={t("fplDashboard.smartReplace.close", "Close")}
+                  className="-mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-theme-text-muted transition-colors hover:bg-theme-card-secondary hover:text-theme-text-secondary"
                 >
-                  <FaTimes className="w-3.5 h-3.5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
-              {/* Help expand */}
-              <AnimatePresence>
+              <AnimatePresence initial={false}>
                 {showHelp && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
@@ -665,390 +690,256 @@ export default function SmartReplacementPanel({
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-3 rounded-lg p-3 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 text-[11px] text-slate-700 dark:text-slate-300 space-y-1.5">
-                      <p><b className="text-indigo-700 dark:text-indigo-300">xP</b> = {t("fplDashboard.smartReplace.helpXp", "expected points for GW{{gw}} (form + PPG, adjusted for fixture and play chance).", { gw: nextGwNumber })}</p>
-                      <p><b className="text-indigo-700 dark:text-indigo-300">FDR</b> = {t("fplDashboard.smartReplace.helpFdr", "Fixture Difficulty Rating (1 easiest, 5 hardest). The square colour shows the difficulty.")}</p>
-                      <p><b className="text-indigo-700 dark:text-indigo-300">{t("fplDashboard.smartReplace.verdictLabel")}</b>: {t("fplDashboard.smartReplace.helpVerdict", "Premium / Value / Clearly better = recommended move; Sidegrade = same level; Risk = uncertain minutes.")}</p>
-                      <p><b className="text-indigo-700 dark:text-indigo-300">{t("fplDashboard.smartReplace.scoreLabel")}</b> {t("fplDashboard.smartReplace.helpScore", "combines form×11 + PPG×6 + xG/xA + minutes + FDR + team position.")}</p>
-                    </div>
+                    <dl className="mt-3 space-y-1.5 rounded-xl bg-theme-card-secondary p-3 text-[11px] leading-snug text-theme-text-secondary">
+                      <div><dt className="inline font-semibold text-theme-heading-primary">xP</dt> — {t("fplDashboard.smartReplace.helpXp", "expected points for GW{{gw}}.", { gw: nextGwNumber })}</div>
+                      <div><dt className="inline font-semibold text-theme-heading-primary">FDR</dt> — {t("fplDashboard.smartReplace.helpFdr", "Fixture Difficulty Rating (1 easiest, 5 hardest).")}</div>
+                      <div><dt className="inline font-semibold text-theme-heading-primary">{t("fplDashboard.smartReplace.verdictLabel")}</dt> — {t("fplDashboard.smartReplace.helpVerdict", "Recommended move, same level or risk.")}</div>
+                      <div><dt className="inline font-semibold text-theme-heading-primary">{t("fplDashboard.smartReplace.scoreLabel")}</dt> — {t("fplDashboard.smartReplace.helpScore", "combines form, PPG, xG/xA, minutes, FDR and team position.")}</div>
+                    </dl>
                   </motion.div>
                 )}
               </AnimatePresence>
+            </header>
 
-              {/* Selected player card */}
-              {(() => {
-                const selColors = getTeamColors(selectedPlayer.team);
-                return (
-                  <div className="mt-3 rounded-lg p-3 bg-white/80 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-700/50 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="flex items-center justify-center w-11 h-11 rounded-lg shrink-0"
-                        style={{
-                          background: `linear-gradient(135deg, ${selColors.primary}1a 0%, ${selColors.primary}0d 100%)`,
-                        }}
-                      >
-                        <TeamJersey
-                          kit={selColors}
-                          isGoalkeeper={selectedPlayer.element_type === 1}
-                          className="w-7 h-7 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-gradient-to-br ${positionAccent} text-white`}>
-                            {positionLabel}
-                          </span>
-                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{selectedPlayer.web_name}</p>
-                          <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400">
-                            {getTeamShortName(selectedPlayer.team)}
-                          </span>
-                        </div>
-                        <div className="mt-1 flex items-center gap-2.5 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
-                          <span className="font-medium text-slate-700 dark:text-slate-200">£{(num(selectedPlayer.now_cost) / 10).toFixed(1)}m</span>
-                          <span>F{num(selectedPlayer.form).toFixed(1)}</span>
-                          <span>{t("fplDashboard.smartReplace.pointsShort", { points: num(selectedPlayer.total_points) })}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2.5 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/40 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("fplDashboard.smartReplace.next5", "Next 5")}</span>
-                        <FixtureDots fixtures={selectedFixtures} />
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400 mr-1">xP GW{nextGwNumber}</span>
-                        <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{selectedXP.toFixed(1)}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Chip status */}
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {t("fplDashboard.smartReplace.budget", "Budget")}: <span className="font-semibold text-slate-700 dark:text-slate-200">£{((num(selectedPlayer.now_cost) + availableBudget) / 10).toFixed(1)}m</span>
-                </span>
-                <div className="flex items-center gap-1">
-                  {ALL_CHIPS.map((c) => {
-                    const used = usedChipNames.has(c);
-                    return (
-                      <span
-                        key={c}
-                        title={`${CHIP_LABEL[c]}: ${used ? t("fplDashboard.smartReplace.used", "used") : t("fplDashboard.smartReplace.availableShort", "available")}`}
-                        className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border ${
-                          used
-                            ? "bg-slate-100 text-slate-400 line-through border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700"
-                            : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/50"
-                        }`}
-                      >
-                        {c === "3xc" ? "TC" : c === "bboost" ? "BB" : c === "wildcard" ? "WC" : "FH"}
-                      </span>
-                    );
-                  })}
+            {/* Everything below the header scrolls together */}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              {/* Player being replaced */}
+              <section className="px-4 pb-4 pt-3 sm:px-5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-theme-text-muted">
+                  {t("fplDashboard.smartReplace.replacing", "Replacing")}
                 </div>
-              </div>
-              {availableChips.length > 0 && (
-                <p className="hidden sm:block mt-1 text-[10px] text-slate-400 dark:text-slate-500">{t("fplDashboard.smartReplace.available", "Available")}: {availableChips.map((c) => CHIP_LABEL[c]).join(" · ")}</p>
-              )}
-            </div>
-
-            {/* Hero verdict card */}
-            {heroPick && (() => {
-              const heroColors = getTeamColors(heroPick.player.team);
-              return (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mx-3 mt-3 relative overflow-hidden rounded-xl p-3 bg-gradient-to-br from-amber-50 via-rose-50 to-violet-50 dark:from-amber-950/30 dark:via-rose-950/20 dark:to-violet-950/30 border border-amber-200/60 dark:border-amber-800/40 shadow-sm"
-              >
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-rose-400 to-violet-500" />
-                <div className="flex items-start gap-2.5">
-                  <div
-                    className="flex items-center justify-center w-11 h-11 rounded-lg shrink-0"
-                    style={{
-                      background: `linear-gradient(135deg, ${heroColors.primary}22 0%, ${heroColors.primary}11 100%)`,
-                    }}
-                  >
-                    <TeamJersey
-                      kit={heroColors}
-                      isGoalkeeper={heroPick.player.element_type === 1}
-                      className="w-7 h-7 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] uppercase tracking-wider font-bold text-amber-700/80 dark:text-amber-300/80">
-                      {t("fplDashboard.smartReplace.mainAdvantageForGw", "Main advantage for GW{{gw}}", { gw: nextGwNumber })}
-                    </p>
-                    <div className="mt-0.5 flex items-baseline gap-2">
-                      <p className="text-base font-bold text-slate-800 dark:text-slate-100 truncate">{heroPick.player.web_name}</p>
-                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">
-                        {getTeamShortName(heroPick.player.team)}
-                      </span>
+                <div className="mt-2 rounded-xl border border-theme-border bg-theme-card-secondary p-3">
+                  <div className="flex items-center gap-3">
+                    <PlayerJersey player={selectedPlayer} size="lg" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <span className="truncate text-sm font-semibold text-theme-heading-primary">{selectedPlayer.web_name}</span>
+                        <PosTag type={selectedPlayer.element_type} />
+                      </div>
+                      <div className="mt-0.5 truncate text-[11px] text-theme-text-muted">
+                        {getTeamShortName(selectedPlayer.team)} · <span className="tabular-nums">{formatPrice(num(selectedPlayer.now_cost))}</span>
+                      </div>
                     </div>
-                    {/* delta strip */}
-                    <div className="mt-2 grid grid-cols-3 gap-2">
-                      <div className="rounded-md p-1.5 bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/40 text-center">
-                        <p className="text-[9px] uppercase text-slate-500 dark:text-slate-400">xP</p>
-                        <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                          {heroPick.xP.toFixed(1)}
-                          <span className="ml-1 text-[10px] text-emerald-600 dark:text-emerald-400">
-                            ({heroPick.xPDelta > 0 ? "+" : ""}
-                            {heroPick.xPDelta.toFixed(1)})
-                          </span>
-                        </p>
-                      </div>
-                      <div className="rounded-md p-1.5 bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/40 text-center">
-                        <p className="text-[9px] uppercase text-slate-500 dark:text-slate-400">{t("fplDashboard.smartReplace.sortForm", "Form")}</p>
-                        <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                          {num(heroPick.player.form).toFixed(1)}
-                          <span className="ml-1 text-[10px] text-slate-500">
-                            ({num(heroPick.player.form) - num(selectedPlayer.form) >= 0 ? "+" : ""}
-                            {(num(heroPick.player.form) - num(selectedPlayer.form)).toFixed(1)})
-                          </span>
-                        </p>
-                      </div>
-                      <div className="rounded-md p-1.5 bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/40 text-center">
-                        <p className="text-[9px] uppercase text-slate-500 dark:text-slate-400">FDR</p>
-                        <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                          {heroPick.fixtures[0]?.difficulty ?? "—"}
-                          {selectedNextFixture && heroPick.fixtures[0] && (
-                            <span className="ml-1 text-[10px] text-slate-500">
-                              ({selectedNextFixture.difficulty - heroPick.fixtures[0].difficulty > 0 ? "−" : "+"}
-                              {Math.abs(selectedNextFixture.difficulty - heroPick.fixtures[0].difficulty)})
-                            </span>
+                    <div className="shrink-0 text-right">
+                      <div className="text-[9px] font-medium uppercase tracking-wider text-theme-text-muted">xP GW{nextGwNumber}</div>
+                      <div className="text-xl font-semibold leading-none tabular-nums text-theme-heading-primary">{selectedXP.toFixed(1)}</div>
+                    </div>
+                  </div>
+
+                  {selectedNews && (
+                    <p className="mt-2.5 rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-[11px] leading-snug text-amber-700 dark:text-amber-300">
+                      {selectedNews}
+                    </p>
+                  )}
+
+                  <div className="mt-3 border-t border-theme-border pt-3">{statGrid(selectedPlayer)}</div>
+
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="w-[72px] shrink-0 text-[9px] font-medium uppercase tracking-wider text-theme-text-muted">
+                      {t("fplDashboard.smartReplace.next5", "Next 5")}
+                    </span>
+                    <FixtureStrip fixtures={selectedFixtures} count={5} homeLabel={homeLabel} awayLabel={awayLabel} />
+                  </div>
+                </div>
+
+                {/* Budget + chips */}
+                <div className="mt-2.5 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-theme-text-muted">
+                    {t("fplDashboard.smartReplace.budget", "Budget")}:{" "}
+                    <span className="font-semibold tabular-nums text-theme-heading-primary">{formatPrice(budgetTenths)}</span>
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {ALL_CHIPS.map((c) => {
+                      const used = usedChipNames.has(c);
+                      return (
+                        <span
+                          key={c}
+                          title={`${CHIP_LABEL[c]}: ${used ? t("fplDashboard.smartReplace.used", "used") : t("fplDashboard.smartReplace.availableShort", "available")}`}
+                          className={cx(
+                            "rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ring-1 ring-inset",
+                            used
+                              ? "text-theme-text-muted line-through opacity-60 ring-theme-border"
+                              : "text-theme-text-secondary ring-theme-border-strong"
                           )}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
-                      {(() => {
-                        const reasons = [];
-                        if (heroPick.xPDelta >= 1.5) reasons.push(t("fplDashboard.smartReplace.extraExpectedPoints", "+{{value}} expected points", { value: heroPick.xPDelta.toFixed(1) }));
-                        if (heroPick.fixtures[0] && selectedNextFixture && heroPick.fixtures[0].difficulty < selectedNextFixture.difficulty)
-                          reasons.push(t("fplDashboard.smartReplace.easierFixture", "easier fixture (FDR {{fdr}})", { fdr: heroPick.fixtures[0].difficulty }));
-                        if (num(heroPick.player.form) > num(selectedPlayer.form) + 1) reasons.push(t("fplDashboard.smartReplace.betterForm", "better form"));
-                        if (heroPick.fixtures[0]?.isHome) reasons.push(t("fplDashboard.smartReplace.playsAtHome", "plays at home"));
-                        if (heroPick.badges.value) reasons.push(t("fplDashboard.smartReplace.betterValue", "better value"));
-                        return reasons.length > 0 ? reasons.join(" · ") : t("fplDashboard.smartReplace.solidAlternative", "Solid alternative by overall score.");
-                      })()}
-                    </p>
+                        >
+                          {CHIP_SHORT[c]}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
-              </motion.div>
-              );
-            })()}
+              </section>
 
-            {/* Filter chips - simpler without icons */}
-            <div className="px-3 pt-3 flex flex-wrap gap-1.5">
-              {FILTERS.map((f) => {
-                const active = filter === f.key;
-                const count = filterCounts[f.key];
-                return (
-                  <button
-                    key={f.key}
-                    onClick={() => setFilter(f.key)}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
-                      active
-                        ? "bg-indigo-500 text-white border-indigo-500 shadow-sm"
-                        : "bg-white dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700"
-                    }`}
-                  >
-                    {f.label}
-                    {count > 0 && (
-                      <span className={`text-[9px] px-1 rounded-full ${active ? "bg-white/20" : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"}`}>
-                        {count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+              {/* Best overall pick, compared head-to-head */}
+              {heroPick && (
+                <section className="px-4 pb-4 sm:px-5">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-theme-text-muted">
+                    {t("fplDashboard.smartReplace.mainAdvantageForGw", "Top pick for GW{{gw}}", { gw: nextGwNumber })}
+                  </div>
+                  <div className="mt-2 rounded-xl border border-violet-500/30 bg-violet-500/[0.06] p-3">
+                    <div className="flex items-center gap-3">
+                      <PlayerJersey player={heroPick.player} size="lg" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className="truncate text-sm font-semibold text-theme-heading-primary">{heroPick.player.web_name}</span>
+                          <span className="shrink-0 text-[10px] font-semibold uppercase text-theme-text-muted">{getTeamShortName(heroPick.player.team)}</span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          <Chip tone={heroPick.verdict.tone}>{heroPick.verdict.label}</Chip>
+                          {heroPick.reasons.slice(0, 2).map((r) => (
+                            <Chip key={r.label} tone={r.tone}>{r.label}</Chip>
+                          ))}
+                        </div>
+                      </div>
+                      {transferButton(heroPick.player, "md")}
+                    </div>
 
-            {/* Sort */}
-            <div className="px-3 pt-2 pb-1 flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{t("fplDashboard.smartReplace.recommendations", "{{count}} recommendations", { count: candidates.length })}</span>
-              <div className="relative">
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as SortKey)}
-                  className="appearance-none text-[11px] font-medium pl-2 pr-6 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-                >
-                  {SORTS.map((s) => (
-                    <option key={s.key} value={s.key}>
-                      {t("fplDashboard.smartReplace.sortLabel", "Sort: {{label}}", { label: s.label })}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+                    <div className="mt-3 grid grid-cols-4 gap-2 border-t border-violet-500/20 pt-3">
+                      <StatCell label="xP" value={heroPick.xP.toFixed(1)} delta={heroPick.xPDelta} />
+                      <StatCell label={formLabel} value={num(heroPick.player.form).toFixed(1)} delta={num(heroPick.player.form) - num(selectedPlayer.form)} />
+                      <StatCell label="PPG" value={num(heroPick.player.points_per_game).toFixed(1)} delta={num(heroPick.player.points_per_game) - num(selectedPlayer.points_per_game)} />
+                      <StatCell
+                        label={priceLabel}
+                        value={formatPrice(num(heroPick.player.now_cost))}
+                        delta={(num(heroPick.player.now_cost) - num(selectedPlayer.now_cost)) / 10}
+                        deltaSuffix="m"
+                        invert
+                      />
+                    </div>
+                    <p className="mt-2.5 text-[11px] leading-snug text-theme-text-secondary">{heroReasons}</p>
+                  </div>
+                </section>
+              )}
+
+              {/* Filters stay reachable while the list scrolls */}
+              <div className="sticky top-0 z-10 border-y border-theme-border bg-theme-card px-4 py-2.5 sm:px-5">
+                <Segmented options={FILTERS} value={filter} onChange={changeFilter} />
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-theme-text-muted">
+                    {t("fplDashboard.smartReplace.recommendations", "{{count}} recommendations", { count: sortedCandidates.length })}
+                  </span>
+                  <div className="relative">
+                    <select
+                      value={sort}
+                      onChange={(e) => {
+                        setSort(e.target.value as SortKey);
+                        setLimit(PAGE_SIZE);
+                      }}
+                      className="appearance-none rounded-lg border border-theme-border bg-theme-card py-1 pl-2.5 pr-7 text-[11px] font-medium text-theme-text-secondary focus:outline-none focus:ring-2 focus:ring-violet-400"
+                    >
+                      {SORTS.map((s) => (
+                        <option key={s.key} value={s.key}>
+                          {t("fplDashboard.smartReplace.sortLabel", "Sort: {{label}}", { label: s.label })}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-theme-text-muted" />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Candidates */}
-            <div className="flex-1 overflow-y-auto px-3 pb-3 pt-1 space-y-2.5">
-              {candidates.length === 0 && (
-                <div className="text-center py-10">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{t("fplDashboard.smartReplace.noRecommendations", "No recommendations in this filter.")}</p>
-                  <button onClick={() => setFilter("all")} className="mt-2 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+              {/* Candidates */}
+              {candidates.length === 0 ? (
+                <div className="px-6 py-10 text-center">
+                  <p className="text-sm text-theme-text-secondary">{t("fplDashboard.smartReplace.noRecommendations", "No recommendations in this filter.")}</p>
+                  <button
+                    type="button"
+                    onClick={() => changeFilter("all")}
+                    className="mt-2 text-xs font-medium text-violet-600 hover:underline dark:text-violet-300"
+                  >
                     {t("fplDashboard.smartReplace.showAll", "Show all")}
                   </button>
                 </div>
-              )}
-              {candidates.map((c, idx) => {
-                const p = c.player;
-                const diff = num(p.now_cost) - num(selectedPlayer.now_cost);
-                const diffSign = diff > 0 ? "+" : "";
-                const isTop = idx === 0 && filter === "all" && sort === "score";
-                const candColors = getTeamColors(p.team);
-                // Keep only the 2 most important reason chips for a clean look
-                const topReasons = c.reasons.slice(0, 2);
-                return (
-                  <motion.div
-                    key={p.id}
-                    initial={{ opacity: 0, x: 12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.04 }}
-                    className={`group rounded-xl p-3 bg-white dark:bg-slate-900/70 border ${
-                      isTop
-                        ? "border-amber-300/70 dark:border-amber-700/60 shadow-md shadow-amber-100/40 dark:shadow-amber-900/10"
-                        : "border-slate-200/70 dark:border-slate-700/50 hover:border-indigo-300 dark:hover:border-indigo-700"
-                    } hover:shadow-md transition-all`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* Jersey */}
-                      <div
-                        className="flex items-center justify-center w-11 h-11 rounded-lg shrink-0 relative"
-                        style={{
-                          background: `linear-gradient(135deg, ${candColors.primary}1a 0%, ${candColors.primary}0d 100%)`,
-                        }}
+              ) : (
+                <ul className="divide-y divide-theme-border">
+                  {candidates.map((c, idx) => {
+                    const p = c.player;
+                    const isTop = p.id === heroPick?.player.id;
+                    const priceDiff = (num(p.now_cost) - num(selectedPlayer.now_cost)) / 10;
+                    const showVerdict = c.xPDelta >= 1.2 || c.xPDelta <= -0.5 || c.verdict.tone === "warning";
+                    return (
+                      <motion.li
+                        key={p.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: Math.min(idx, 8) * 0.03, duration: 0.2 }}
+                        className={cx("px-4 py-3 sm:px-5", isTop && "bg-violet-500/[0.04]")}
                       >
-                        <TeamJersey
-                          kit={candColors}
-                          isGoalkeeper={p.element_type === 1}
-                          className="w-7 h-7 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
-                        />
-                        {isTop && (
-                          <span className="absolute -top-1 -left-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 text-white text-[8px] font-bold shadow-sm">
-                            ★
+                        <div className="flex items-start gap-3">
+                          <span className="mt-2.5 w-4 shrink-0 text-right text-[11px] font-semibold tabular-nums text-theme-text-muted">
+                            {idx + 1}
                           </span>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        {/* Top row: name + team */}
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{p.web_name}</p>
-                          <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 shrink-0">
-                            {getTeamShortName(p.team)}
-                          </span>
-                        </div>
-                        {/* xP and price row */}
-                        <div className="mt-1 flex items-center gap-2.5 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
-                          <span className={`font-bold ${c.xPDelta >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-rose-600 dark:text-rose-400"}`}>
-                            xP {c.xP.toFixed(1)}
-                            <span className="ml-0.5 opacity-80">
-                              ({c.xPDelta > 0 ? "+" : ""}
-                              {c.xPDelta.toFixed(1)})
-                            </span>
-                          </span>
-                          <span className="text-slate-300 dark:text-slate-700">·</span>
-                          <span className="font-medium text-slate-700 dark:text-slate-200">£{(num(p.now_cost) / 10).toFixed(1)}m</span>
-                          {diff !== 0 && (
-                            <span className={`text-[10px] ${diff > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
-                              {diffSign}£{(Math.abs(diff) / 10).toFixed(1)}
-                            </span>
-                          )}
-                          <span className="text-slate-300 dark:text-slate-700">·</span>
-                          <span>F{num(p.form).toFixed(1)}</span>
-                        </div>
-                        {/* Next 3 GWs fixture run */}
-                        {c.fixtures.length > 0 && (
-                          <div className="mt-1.5 flex items-center gap-1.5">
-                            <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">{t("fplDashboard.smartReplace.nextThree", "Next 3:")}</span>
-                            <FixtureRun3 fixtures={c.fixtures} />
+                          <PlayerJersey player={p} size="md" className="mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex min-w-0 items-baseline gap-1.5">
+                              <span className="truncate text-sm font-semibold text-theme-heading-primary">{p.web_name}</span>
+                              <span className="shrink-0 text-[10px] font-semibold uppercase text-theme-text-muted">{getTeamShortName(p.team)}</span>
+                            </div>
+                            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-theme-text-muted">
+                              <span className="tabular-nums">{formatPrice(num(p.now_cost))}</span>
+                              {priceDiff !== 0 && <Delta value={r1(priceDiff)} suffix="m" invert className="text-[10px]" />}
+                            </div>
                           </div>
-                        )}
-                        {/* Reason chips - max 2 + verdict if notable */}
-                        {(topReasons.length > 0 || (c.xPDelta >= 1.2 || c.xPDelta <= -0.5)) && (
-                          <div className="mt-1.5 flex flex-wrap gap-1">
-                            {(c.xPDelta >= 1.2 || c.xPDelta <= -0.5) && (
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold border ${c.verdict.color}`}>
-                                {c.verdict.label}
-                              </span>
-                            )}
-                            {topReasons.map((r, i) => (
-                              <span key={i} className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium border ${r.color}`}>
-                                {r.label}
-                              </span>
-                            ))}
+                          <div className="shrink-0 text-right">
+                            <div className="text-[9px] font-medium uppercase tracking-wider text-theme-text-muted">xP</div>
+                            <div className="text-lg font-semibold leading-none tabular-nums text-theme-heading-primary">{c.xP.toFixed(1)}</div>
+                            <Delta value={r1(c.xPDelta)} showZero className="text-[10px]" />
                           </div>
-                        )}
-                      </div>
-                      {onPickReplacement && (
-                        <div className="relative shrink-0">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handlePick(p)}
-                            className="relative flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs font-semibold shadow-sm hover:shadow-md transition-all overflow-hidden"
-                            title={isTransferMode ? t("fplDashboard.smartReplace.addToTransfer") : t("fplDashboard.smartReplace.startTransfer")}
-                          >
-                            <motion.span
-                              className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-                              animate={{ x: ["-150%", "350%"] }}
-                              transition={{ repeat: Infinity, duration: 2.4, ease: "linear" }}
-                            />
-                            <FaExchangeAlt className="relative w-3 h-3" />
-                            <span className="relative">{isTransferMode ? t("fplDashboard.smartReplace.swap", "Swap") : t("fplDashboard.smartReplace.transfer", "Transfer")}</span>
-                          </motion.button>
-                          {burstId === p.id && (
-                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                              {Array.from({ length: 10 }).map((_, k) => (
-                                <motion.span
-                                  key={k}
-                                  className="absolute text-emerald-400"
-                                  style={{ fontSize: 10 + (k % 3) * 3 }}
-                                  initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-                                  animate={{
-                                    opacity: 0,
-                                    x: Math.cos((k / 10) * Math.PI * 2) * 40,
-                                    y: Math.sin((k / 10) * Math.PI * 2) * 40,
-                                    scale: 0.4,
-                                  }}
-                                  transition={{ duration: 0.6, ease: "easeOut" }}
-                                >
-                                  ✦
-                                </motion.span>
+                        </div>
+
+                        <div className="mt-2.5 pl-7">
+                          {statGrid(p)}
+                          <div className="mt-2.5 flex items-center justify-between gap-2">
+                            <FixtureStrip fixtures={c.fixtures} count={3} homeLabel={homeLabel} awayLabel={awayLabel} />
+                            {transferButton(p)}
+                          </div>
+                          {(showVerdict || c.reasons.length > 0) && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {showVerdict && <Chip tone={c.verdict.tone}>{c.verdict.label}</Chip>}
+                              {c.reasons.slice(0, 3).map((r) => (
+                                <Chip key={r.label} tone={r.tone}>{r.label}</Chip>
                               ))}
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
+                      </motion.li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {sortedCandidates.length > candidates.length && (
+                <div className="px-4 pb-4 pt-1 sm:px-5">
+                  <button
+                    type="button"
+                    onClick={() => setLimit((v) => v + PAGE_SIZE)}
+                    className="w-full rounded-lg border border-theme-border py-2 text-xs font-medium text-theme-text-secondary transition-colors hover:bg-theme-card-secondary"
+                  >
+                    {t("fplDashboard.smartReplace.showMore", "Show {{count}} more", {
+                      count: Math.min(PAGE_SIZE, sortedCandidates.length - candidates.length),
+                    })}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* FDR legend */}
-            <div className="border-t border-slate-200/70 dark:border-slate-700/60 px-4 py-2 bg-white/60 dark:bg-slate-900/40">
-              <div className="flex items-center justify-between gap-2 text-[10px] text-slate-400 dark:text-slate-500">
-                <span>{t("fplDashboard.smartReplace.fdr", "FDR")}:</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-emerald-500" /> {t("fplDashboard.smartReplace.fdrEasy", "Easy")}
+            <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-theme-border px-4 py-2 text-[10px] text-theme-text-muted sm:px-5">
+              <span className="font-semibold uppercase tracking-wider">{t("fplDashboard.smartReplace.fdr", "FDR")}</span>
+              <div className="flex flex-wrap items-center justify-end gap-x-2.5 gap-y-1">
+                {[
+                  { tone: FDR_TONE.easy, label: t("fplDashboard.smartReplace.fdrEasy", "Easy") },
+                  { tone: FDR_TONE.mid, label: t("fplDashboard.smartReplace.fdrMid", "Mid") },
+                  { tone: FDR_TONE.hard, label: t("fplDashboard.smartReplace.fdrHard", "Hard") },
+                  { tone: FDR_TONE.veryHard, label: t("fplDashboard.smartReplace.fdrVeryHard", "Very hard") },
+                ].map((l) => (
+                  <span key={l.label} className="inline-flex items-center gap-1">
+                    <span className={cx("h-2.5 w-2.5 rounded-sm ring-1 ring-inset ring-theme-border", l.tone)} />
+                    {l.label}
                   </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-slate-400" /> {t("fplDashboard.smartReplace.fdrMid", "Mid")}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-orange-500" /> {t("fplDashboard.smartReplace.fdrHard", "Hard")}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-rose-600" /> {t("fplDashboard.smartReplace.fdrVeryHard", "Very hard")}
-                  </span>
-                </div>
+                ))}
               </div>
-            </div>
+            </footer>
           </motion.aside>
         </>
       )}

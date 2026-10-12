@@ -1118,7 +1118,7 @@
       "sortForm": "Form",
       "sortPrice": "Price",
       "sortFdr": "FDR",
-      "mainAdvantageForGw": "Main advantage for GW{{gw}}",
+      "mainAdvantageForGw": "Top pick for GW{{gw}}",
       "nextThree": "Next 3:",
       "next5": "Next 5",
       "recommendations": "{{count}} recommendations",
@@ -1169,7 +1169,14 @@
       "pointsShort": "{{points}} pts",
       "addToTransfer": "Add to transfer",
       "startTransfer": "Start a transfer with this player",
-      "close": "Close"
+      "close": "Close",
+      "points": "Points",
+      "replacing": "Replacing",
+      "ownership": "Owned",
+      "cleanSheets": "CS",
+      "home": "Home",
+      "away": "Away",
+      "showMore": "Show {{count}} more"
     },
     "aiLoading": {
       "scanningPlayers": "Scanning players",

@@ -3333,7 +3333,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-violet-950/60 via-slate-900/70 to-indigo-950/60 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 md:pt-20 bg-gradient-to-br from-violet-950/60 via-slate-900/70 to-indigo-950/60 backdrop-blur-md"
           onClick={() => setShowAIChat(false)}
         >
           <motion.div
@@ -3341,7 +3341,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 280 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl border border-violet-300/30 dark:border-violet-700/40 bg-gradient-to-br from-white via-violet-50/60 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950/40"
+            className="relative flex flex-col w-full max-w-3xl max-h-[calc(100dvh-2rem)] md:max-h-[calc(100dvh-6rem)] overflow-hidden rounded-2xl shadow-2xl border border-violet-300/30 dark:border-violet-700/40 bg-gradient-to-br from-white via-violet-50/60 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950/40"
           >
             {/* Floating particles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -3389,28 +3389,28 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             </div>
 
             {/* Header */}
-            <div className="relative px-6 pt-6 pb-5 border-b border-violet-200/40 dark:border-violet-800/30">
+            <div className="relative shrink-0 px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-5 border-b border-violet-200/40 dark:border-violet-800/30">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <motion.div
                     initial={{ scale: 0.8, rotate: -15 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", damping: 14 }}
-                    className="relative flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-600 text-white shadow-lg shadow-violet-500/30"
+                    className="relative shrink-0 flex items-center justify-center w-11 h-11 aspect-square rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-600 text-white shadow-lg shadow-violet-500/30"
                   >
                     <FaRobot className="w-5 h-5" />
                     <span className="absolute -inset-0.5 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-600 opacity-30 blur-md -z-10" />
                   </motion.div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-bold bg-gradient-to-r from-violet-700 via-fuchsia-600 to-indigo-700 dark:from-violet-300 dark:via-fuchsia-300 dark:to-indigo-300 bg-clip-text text-transparent">
+                      <h3 className="text-base sm:text-lg font-bold leading-tight bg-gradient-to-r from-violet-700 via-fuchsia-600 to-indigo-700 dark:from-violet-300 dark:via-fuchsia-300 dark:to-indigo-300 bg-clip-text text-transparent">
                         {t("teamPlanner.ai.title")}
                       </h3>
                       <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-violet-100 to-fuchsia-100 dark:from-violet-900/50 dark:to-fuchsia-900/50 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40">
                         Premium
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs leading-snug text-slate-500 dark:text-slate-400 mt-0.5">
                       {t("teamPlanner.ai.subtitle")}
                     </p>
                   </div>
@@ -3425,7 +3425,7 @@ export default function FantasyPlanner({ managerId }: FantasyPlannerProps) {
             </div>
 
             {/* Content */}
-            <div className="relative px-5 sm:px-6 py-5 max-h-[74vh] overflow-y-auto">
+            <div className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4 sm:py-5">
               {!aiReport && !aiError && !aiChatLoading && !aiFinishing && canUseAI && (
                 <div className="text-center py-4">
                   <div className="relative overflow-hidden rounded-2xl p-6 sm:p-8 bg-white/70 dark:bg-slate-900/60 border border-violet-200/50 dark:border-violet-800/30 shadow-sm backdrop-blur-sm">
